@@ -1,0 +1,695 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>net.java</groupId>
+        <artifactId>jvnet-parent</artifactId>
+        <version>1</version>
+    </parent>
+
+    <groupId>org.glassfish.jersey</groupId>
+    <artifactId>project</artifactId>
+    <packaging>pom</packaging>
+    <version>2.0-SNAPSHOT</version>
+    <name>jersey</name>
+    <description>
+        Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
+        production quality Reference Implementation for building RESTful Web services.
+    </description>
+
+    <url>https://jersey.java.net/</url>
+
+    <!-- prerequisites -->
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://java.net/jira/browse/JERSEY/</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Hudson</system>
+        <url>http://hudson.glassfish.org/job/Jersey-trunk-multiplatform/</url>
+    </ciManagement>
+
+    <inceptionYear>2010</inceptionYear>
+
+    <mailingLists>
+        <mailingList>
+            <name>Announcements</name>
+            <archive>http://java.net/projects/jersey/lists/announce/archive</archive>
+            <post>announce@jersey.java.net</post>
+        </mailingList>
+        <mailingList>
+            <name>Users List</name>
+            <archive>http://java.net/projects/jersey/lists/users/archive</archive>
+            <post>users@jersey.java.net</post>
+        </mailingList>
+        <mailingList>
+            <name>Developers List</name>
+            <archive>http://java.net/projects/jersey/lists/dev/archive</archive>
+            <post>dev@jersey.java.net</post>
+        </mailingList>
+        <mailingList>
+            <name>Issues</name>
+            <archive>http://java.net/projects/jersey/lists/issues/archive</archive>
+            <post>issues@jersey.java.net</post>
+        </mailingList>
+        <mailingList>
+            <name>Commits</name>
+            <archive>http://java.net/projects/jersey/lists/commits/archive</archive>
+            <post>commits@jersey.java.net</post>
+        </mailingList>
+    </mailingLists>
+
+    <developers>
+        <developer>
+            <name>Pavel Bucek</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Jakub Podlesak</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Santiago Pericas-Geertsen</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Marek Potociar</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <!--contributors></contributors-->
+
+    <licenses>
+        <license>
+            <name>CDDL+GPL License</name>
+            <url>http://glassfish.java.net/public/CDDL+GPL_1_1.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git://java.net/jersey~code</connection>
+        <developerConnection>scm:git:ssh://git.java.net/jersey~code</developerConnection>
+        <url>http://java.net/projects/jersey/sources/code/show</url>
+    </scm>
+
+    <organization>
+        <name>Oracle Corporation</name>
+        <url>http://www.oracle.com/</url>
+    </organization>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>${project.build.directory}/generated-sources/rsrc-gen</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.sun.istack</groupId>
+                    <artifactId>maven-istack-commons-plugin</artifactId>
+                    <version>2.6.1</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>rs-gen</goal>
+                            </goals>
+                            <configuration>
+                                <resources>
+                                    <directory>${basedir}/src/main/resources</directory>
+                                    <includes>
+                                        <include>**/*.properties</include>
+                                    </includes>
+                                </resources>
+                                <destDir>${project.build.directory}/generated-sources/rsrc-gen</destDir>
+                                <localizationUtilitiesPkgName>org.glassfish.jersey.internal.l10n</localizationUtilitiesPkgName>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <inherited>true</inherited>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.11</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.8.1</version>
+                    <configuration>
+                        <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                        <bottom>Copyright &#169; 2007-2012 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
+                        <javaApiLinks>
+                            <property>
+                                <name>api_1.3</name>
+                                <value>http://download.oracle.com/javase/1.3/docs/api/</value>
+                            </property>
+                            <property>
+                                <name>api_1.4</name>
+                                <value>http://download.oracle.com/javase/1.4.2/docs/api/</value>
+                            </property>
+                            <property>
+                                <name>api_1.5</name>
+                                <value>http://download.oracle.com/javase/1.5.0/docs/api/</value>
+                            </property>
+                            <property>
+                                <name>api_1.6</name>
+                                <value>http://download.oracle.com/javase/6/docs/api/</value>
+                            </property>
+                        </javaApiLinks>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.2.2</version>
+                    <configuration>
+                        <mavenExecutorId>forked-path</mavenExecutorId>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <arguments>${release.arguments}</arguments>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                    <configuration>
+                        <generateProjectInfo>false</generateProjectInfo>
+                        <generateReports>true</generateReports>
+                        <reportPlugins>
+                            <!--plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-project-info-reports-plugin</artifactId>
+                                <version>2.4</version>
+                                <configuration>
+                                    <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                                    <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                                </configuration>
+                                <reportSets>
+                                    <reportSet>
+                                        <reports>
+                                            <report>dependencies</report>
+                                            <report>project-team</report>
+                                            <report>mailing-list</report>
+                                            <report>cim</report>
+                                            <report>issue-tracking</report>
+                                            <report>license</report>
+                                            <report>scm</report>
+                                        </reports>
+                                    </reportSet>
+                                </reportSets>
+                            </plugin-->
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-javadoc-plugin</artifactId>
+                                <version>2.8.1</version>
+                                <configuration>
+                                    <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                                    <bottom>Copyright &#169; 2007-2012 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
+                                    <excludePackageNames>
+                                        com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
+                                    </excludePackageNames>
+                                    <stylesheetfile>etc/config/javadoc-stylesheet.css</stylesheetfile>
+                                </configuration>
+                                <reportSets>
+                                    <reportSet>
+                                        <reports>
+                                            <report>aggregate</report>
+                                        </reports>
+                                    </reportSet>
+                                </reportSets>
+                            </plugin>
+
+                            <!--plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-surefire-report-plugin</artifactId>
+                                <version>2.12</version>
+                            </plugin-->
+                            <!--plugin>
+                                <groupId>org.codehaus.mojo</groupId>
+                                <artifactId>cobertura-maven-plugin</artifactId>
+                                <version>2.4</version>
+                                <configuration>
+                                    <formats>
+                                        <format>xml</format>
+                                        <format>html</format>
+                                    </formats>
+                                </configuration>
+                            </plugin-->
+
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-jxr-plugin</artifactId>
+                                <version>2.3</version>
+                                <reportSets>
+                                    <reportSet>
+                                        <reports>
+                                            <report>jxr</report>
+                                            <report>aggregate</report>
+                                        </reports>
+                                    </reportSet>
+                                </reportSets>
+                            </plugin>
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-checkstyle-plugin</artifactId>
+                                <version>2.8</version>
+                                <configuration>
+                                    <!--outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
+                                    <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile-->
+                                    <configLocation>etc/config/checkstyle.xml</configLocation>
+                                </configuration>
+                                <reportSets>
+                                    <reportSet>
+                                        <reports>
+                                            <report>checkstyle</report>
+                                        </reports>
+                                    </reportSet>
+                                </reportSets>
+                            </plugin>
+                        </reportPlugins>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>java</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jxr-plugin</artifactId>
+                    <version>2.3</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>jxr</goal>
+                            </goals>
+                            <phase>validate</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.8</version>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
+                        <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
+                        <configLocation>etc/config/checkstyle.xml</configLocation>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>checkstyle</goal>
+                            </goals>
+                            <phase>validate</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.3.3</version>
+                    <configuration>
+                        <skip>${findbugs.skip}</skip>
+                        <threshold>${findbugs.threshold}</threshold>
+                        <findbugsXmlOutput>true</findbugsXmlOutput>
+                        <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                        <excludeFilterFile>${findbugs.exclude}</excludeFilterFile>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.glassfish</groupId>
+                            <artifactId>findbugs</artifactId>
+                            <version>3.2-b06</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.6</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.glassfish.copyright</groupId>
+                    <artifactId>glassfish-copyright-maven-plugin</artifactId>
+                    <version>1.28</version>
+                    <configuration>
+                        <excludeFile>etc/config/copyright-exclude</excludeFile>
+                        <!--svn|mercurial|git - defaults to svn-->
+                        <scm>git</scm>
+                        <!-- turn on/off debugging -->
+                        <debug>false</debug>
+                        <!-- skip files not under SCM-->
+                        <scmOnly>true</scmOnly>
+                        <!-- turn off warnings -->
+                        <warn>true</warn>
+                        <!-- for use with repair -->
+                        <update>false</update>
+                        <!-- check that year is correct -->
+                        <ignoreYear>false</ignoreYear>
+                        <templateFile>etc/config/copyright.txt</templateFile>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>attach-src-and-docs</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>all-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>tests</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <modules>
+        <!--module>archetypes</module>
+        <module>bundles</module-->
+        <module>connectors</module>
+        <module>containers</module>
+
+        <module>core-common</module>
+        <module>core-server</module>
+        <module>core-client</module>
+
+        <!--module>docs</module-->
+
+        <module>examples</module>
+        <module>ext</module>
+        <module>media</module>
+        <module>security</module>
+        <module>test-framework</module>
+
+        <!--module>tools</module-->
+    </modules>
+
+    <!--distributionManagement /-->
+
+    <repositories>
+        <repository>
+            <id>glassfish-maven-repository</id>
+            <name>Glassfish repository</name>
+            <url>http://maven.glassfish.org/content/groups/glassfish-group/</url>
+            <snapshots>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>snapshots.codehaus.org</id>
+            <name>Codehaus.org Snapshots Maven Repository</name>
+            <url>http://nexus.codehaus.org/snapshots</url>
+            <layout>default</layout>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <!--dependencies></dependencies-->
+    <!--reporting></reporting -->
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>${jaxrs.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>11.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.hk2</groupId>
+                <artifactId>hk2-api</artifactId>
+                <version>${hk2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2</groupId>
+                <artifactId>auto-depends</artifactId>
+                <version>${hk2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2.external</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${hk2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jvnet</groupId>
+                <artifactId>tiger-types</artifactId>
+                <version>1.4</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.grizzly</groupId>
+                <artifactId>grizzly-http-server</artifactId>
+                <version>${grizzly2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.grizzly</groupId>
+                <artifactId>grizzly-http-servlet</artifactId>
+                <version>${grizzly2.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.jettison</groupId>
+                <artifactId>jettison</artifactId>
+                <version>1.1</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>javax.mail</groupId>
+                <artifactId>mail</artifactId>
+                <version>1.4</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>${jaxb.api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-impl</artifactId>
+                <version>${jaxb.ri.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <!-- Test scope -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.10</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <jaxrs.api.version>2.0-m01</jaxrs.api.version>
+        <hk2.version>1.6.32</hk2.version>
+        <grizzly2.version>2.2.1</grizzly2.version>
+        <jackson.version>1.9.2</jackson.version>
+
+        <jaxb.api.version>2.1</jaxb.api.version>
+        <jaxb.ri.version>2.2.3-1</jaxb.ri.version>
+
+        <findbugs.skip>false</findbugs.skip>
+        <findbugs.threshold>Low</findbugs.threshold>
+        <findbugs.exclude></findbugs.exclude>
+    </properties>
+</project>

@@ -1,0 +1,103 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ *
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common Development
+ * and Distribution License("CDDL") (collectively, the "License").  You
+ * may not use this file except in compliance with the License.  You can
+ * obtain a copy of the License at
+ * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+ * or packager/legal/LICENSE.txt.  See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing the software, include this License Header Notice in each
+ * file and include the License file at packager/legal/LICENSE.txt.
+ *
+ * GPL Classpath Exception:
+ * Oracle designates this particular file as subject to the "Classpath"
+ * exception as provided by Oracle in the GPL Version 2 section of the License
+ * file that accompanied this code.
+ *
+ * Modifications:
+ * If applicable, add the following below the License Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
+ * "Portions Copyright [year] [name of copyright owner]"
+ *
+ * Contributor(s):
+ * If you wish your version of this file to be governed by only the CDDL or
+ * only the GPL Version 2, indicate your decision by adding "[Contributor]
+ * elects to include this software in this distribution under the [CDDL or GPL
+ * Version 2] license."  If you don't indicate a single choice of license, a
+ * recipient has the option to distribute your version of this file under
+ * either the CDDL, the GPL Version 2 or to extend the choice of license to
+ * its licensees as provided above.  However, if you add GPL Version 2 code
+ * and therefore, elected the GPL Version 2 license, then the option applies
+ * only if the new code is made subject to such option by the copyright
+ * holder.
+ */
+package org.glassfish.jersey.examples.jaxrstypeinjection;
+
+import java.util.List;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.*;
+import org.jvnet.hk2.annotations.Inject;
+
+/**
+ * Annotated resource.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
+@Path("annotated")
+public class JaxrsInjectionReportingResource {
+
+    @Context
+    HttpHeaders httpHeaders;
+    @Inject
+    RequestHeaders requestHeaders;
+    @Context
+    UriInfo uriInfo;
+    @PathParam(value = "p1")
+    String p1;
+    private PathSegment p2;
+
+    @PathParam(value = "p2")
+    public void setP2(PathSegment p2) {
+        this.p2 = p2;
+    }
+    @QueryParam(value = "q1")
+    private int q1;
+    @QueryParam(value = "q2")
+    private List<String> q2;
+
+    @GET
+    @Path("method/{p1}/{p2}")
+    public String doGet(
+            @Context HttpHeaders httpHeaders,
+            @Context RequestHeaders requestHeaders,
+            @Inject UriInfo uriInfo,
+            @PathParam(value = "p1") String p1,
+            @PathParam(value = "p2") PathSegment p2,
+            @QueryParam(value = "q1") int q1,
+            @QueryParam(value = "q2") List<String> q2) {
+        StringBuilder sb = ReportBuilder.append(
+                new StringBuilder("Injected information:\n"), uriInfo, httpHeaders, requestHeaders);
+        sb.append("\n URI component injection:");
+        sb.append("\n   String path param p1=").append(p1);
+        sb.append("\n   PathSegment path param p2=").append(p2);
+        sb.append("\n   int query param q1=").append(q1);
+        sb.append("\n   List<String> query param q2=").append(q2);
+        return sb.toString();
+    }
+
+    @GET
+    @Path("instance/{p1}/{p2}")
+    public String doGet() {
+        return doGet(httpHeaders, requestHeaders, uriInfo, p1, p2, q1, q2);
+    }
+}
