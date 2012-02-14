@@ -311,7 +311,7 @@
                                     <excludePackageNames>
                                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                                     </excludePackageNames>
-                                    <stylesheetfile>etc/config/javadoc-stylesheet.css</stylesheetfile>
+                                    <stylesheetfile>${javadoc.stylesheet}</stylesheetfile>
                                 </configuration>
                                 <reportSets>
                                     <reportSet>
@@ -691,5 +691,7 @@
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
         <findbugs.exclude></findbugs.exclude>
+
+        <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
     </properties>
 </project>
