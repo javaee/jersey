@@ -39,13 +39,14 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.uri.UriComponent;
+import java.io.InputStream;
+import java.net.URI;
 
 import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.RequestHeaders;
-import java.io.InputStream;
-import java.net.URI;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * Mutable request message implementation class.
@@ -126,14 +127,14 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
             result = requestUriRawPath;
         } else {
             final String applicationRootUriRawPath = applicationRootUri.getRawPath();
-            if(applicationRootUriRawPath.length() > requestUriRawPath.length()) {
+            if (applicationRootUriRawPath.length() > requestUriRawPath.length()) {
                 result = "";
             } else {
                 result = requestUriRawPath.substring(applicationRootUriRawPath.length());
             }
         }
 
-        if(result.equals("")) {
+        if (result.isEmpty()) {
             result = "/";
         }
 

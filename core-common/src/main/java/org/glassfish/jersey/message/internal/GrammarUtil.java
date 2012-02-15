@@ -203,4 +203,10 @@ public final class GrammarUtil {
         }
         return sb.toString();
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private GrammarUtil() {
+    }
 }

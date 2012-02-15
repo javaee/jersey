@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.l10n;
 
 import java.text.MessageFormat;
@@ -55,7 +54,7 @@ import java.util.ResourceBundle;
 public class Localizer {
 
     private final Locale _locale;
-    private final HashMap _resourceBundles;
+    private final HashMap<String, ResourceBundle> _resourceBundles;
 
     public Localizer() {
         this(Locale.getDefault());
@@ -63,7 +62,7 @@ public class Localizer {
 
     public Localizer(Locale l) {
         _locale = l;
-        _resourceBundles = new HashMap();
+        _resourceBundles = new HashMap<String, ResourceBundle>();
     }
 
     public Locale getLocale() {
@@ -72,15 +71,14 @@ public class Localizer {
 
     public String localize(Localizable l) {
         String key = l.getKey();
-        if (key == Localizable.NOT_LOCALIZABLE) {
+        if (Localizable.NOT_LOCALIZABLE.equals(key)) {
             // this message is not localizable
             return (String) l.getArguments()[0];
         }
         String bundlename = l.getResourceBundleName();
 
         try {
-            ResourceBundle bundle =
-                (ResourceBundle) _resourceBundles.get(bundlename);
+            ResourceBundle bundle = _resourceBundles.get(bundlename);
 
             if (bundle == null) {
                 try {
@@ -96,10 +94,10 @@ public class Localizer {
                     int i = bundlename.lastIndexOf('.');
                     if (i != -1) {
                         String alternateBundleName =
-                            bundlename.substring(i + 1);
+                                bundlename.substring(i + 1);
                         try {
                             bundle =
-                                ResourceBundle.getBundle(
+                                    ResourceBundle.getBundle(
                                     alternateBundleName,
                                     _locale);
                         } catch (MissingResourceException e2) {
@@ -116,8 +114,9 @@ public class Localizer {
                 return getDefaultMessage(l);
             }
 
-            if (key == null)
+            if (key == null) {
                 key = "undefined";
+            }
 
             String msg;
             try {
@@ -130,8 +129,9 @@ public class Localizer {
             // localize all arguments to the given localizable object
             Object[] args = l.getArguments();
             for (int i = 0; i < args.length; ++i) {
-                if (args[i] instanceof Localizable)
+                if (args[i] instanceof Localizable) {
                     args[i] = localize((Localizable) args[i]);
+                }
             }
 
             String message = MessageFormat.format(msg, args);
@@ -152,13 +152,13 @@ public class Localizer {
         if (args != null) {
             sb.append('(');
             for (int i = 0; i < args.length; ++i) {
-                if (i != 0)
+                if (i != 0) {
                     sb.append(", ");
+                }
                 sb.append(String.valueOf(args[i]));
             }
             sb.append(')');
         }
         return sb.toString();
     }
-
 }

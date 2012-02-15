@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.l10n;
 
 /**
@@ -52,8 +51,9 @@ public final class LocalizableMessage implements Localizable {
     public LocalizableMessage(String bundlename, String key, Object... args) {
         _bundlename = bundlename;
         _key = key;
-        if(args==null)
+        if (args == null) {
             args = new Object[0];
+        }
         _args = args;
     }
 

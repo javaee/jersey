@@ -39,17 +39,19 @@
  */
 package org.glassfish.jersey.servlet;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.servlet.ServletContext;
+
 import org.glassfish.jersey.server.ResourceFinder;
 import org.glassfish.jersey.server.internal.scanning.JarFileScanner;
 import org.glassfish.jersey.server.internal.scanning.ResourceFinderException;
 import org.glassfish.jersey.server.internal.scanning.ResourceFinderStack;
-
-import javax.servlet.ServletContext;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Stack;
 
 /**
  * A scanner that recursively scans resources within a Web application.
@@ -62,6 +64,7 @@ class WebAppResourcesScanner implements ResourceFinder {
     private final ServletContext sc;
     private ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
     private static String[] paths = new String[]{"/WEB-INF/lib/", "/WEB-INF/classes/"};
+
     /**
      * Scan from a set of web resource paths.
      * <p>
@@ -78,29 +81,34 @@ class WebAppResourcesScanner implements ResourceFinder {
         for (final String path : paths) {
 
             final Set<String> resourcePaths = sc.getResourcePaths(path);
-            if(resourcePaths == null)
+            if (resourcePaths == null) {
                 break;
+            }
 
             resourceFinderStack.push(new ResourceFinder() {
 
-                private Stack<String> resourcePathsStack = new Stack<String>() {{
-                    for(String resourcePath : resourcePaths) {
-                        push(resourcePath);
-                    }
-                }};
+                private Deque<String> resourcePathsStack = new LinkedList<String>() {
 
+                    private static final long serialVersionUID = 3109256773218160485L;
+
+                    {
+                        for (String resourcePath : resourcePaths) {
+                            push(resourcePath);
+                        }
+                    }
+                };
                 private String current;
                 private String next;
 
                 @Override
                 public boolean hasNext() {
-                    while(next == null && !resourcePathsStack.empty()) {
+                    while (next == null && !resourcePathsStack.isEmpty()) {
                         next = resourcePathsStack.pop();
 
-                        if(next.endsWith("/")) {
+                        if (next.endsWith("/")) {
                             processPaths(next);
                             next = null;
-                        } else if(next.endsWith(".jar")) {
+                        } else if (next.endsWith(".jar")) {
                             try {
                                 resourceFinderStack.push(new JarFileScanner(sc.getResourceAsStream(next), ""));
                             } catch (IOException ioe) {
@@ -110,11 +118,12 @@ class WebAppResourcesScanner implements ResourceFinder {
                         }
                     }
 
-                    return next != null;                }
+                    return next != null;
+                }
 
                 @Override
                 public String next() {
-                    if(next != null || hasNext()) {
+                    if (next != null || hasNext()) {
                         current = next;
                         next = null;
                         return current;

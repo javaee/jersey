@@ -45,7 +45,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.core.CacheControl;
+
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
 /**
@@ -67,7 +69,7 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
 
     @Override
     public String toString(CacheControl header) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         if (header.isPrivate()) {
             appendQuotedWithSeparator(b, "private", buildListValue(header.getPrivateFields()));
         }
@@ -179,14 +181,14 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
         }
     }
 
-    private void appendWithSeparator(StringBuffer b, String field) {
+    private void appendWithSeparator(StringBuilder b, String field) {
         if (b.length() > 0) {
             b.append(", ");
         }
         b.append(field);
     }
 
-    private void appendQuotedWithSeparator(StringBuffer b, String field, String value) {
+    private void appendQuotedWithSeparator(StringBuilder b, String field, String value) {
         appendWithSeparator(b, field);
         if (value != null && value.length() > 0) {
             b.append("=\"");
@@ -195,7 +197,7 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
         }
     }
 
-    private void appendWithSeparator(StringBuffer b, String field, String value) {
+    private void appendWithSeparator(StringBuilder b, String field, String value) {
         appendWithSeparator(b, field);
         if (value != null && value.length() > 0) {
             b.append("=");
@@ -203,14 +205,14 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
         }
     }
 
-    private void appendWithSeparator(StringBuffer b, String field, int value) {
+    private void appendWithSeparator(StringBuilder b, String field, int value) {
         appendWithSeparator(b, field);
         b.append("=");
         b.append(value);
     }
 
     private String buildListValue(List<String> values) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         for (String value : values) {
             appendWithSeparator(b, value);
         }

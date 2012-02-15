@@ -87,9 +87,9 @@ public final class ReaderWriter {
                 return i;
             } catch (NumberFormatException e) {
                 LOGGER.log(Level.CONFIG,
-                        "Value of " + MessageProperties.IO_BUFFER_SIZE +
-                        " property is not a valid positive integer [" + value + "]." +
-                        " Reverting to default [" + MessageProperties.IO_DEFAULT_BUFFER_SIZE + "].",
+                        "Value of " + MessageProperties.IO_BUFFER_SIZE
+                        + " property is not a valid positive integer [" + value + "]."
+                        + " Reverting to default [" + MessageProperties.IO_DEFAULT_BUFFER_SIZE + "].",
                         e);
             }
         }
@@ -186,5 +186,11 @@ public final class ReaderWriter {
                 getCharset(type)));
         osw.write(s);
         osw.flush();
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private ReaderWriter() {
     }
 }

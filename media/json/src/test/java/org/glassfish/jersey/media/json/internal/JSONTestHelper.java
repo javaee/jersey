@@ -71,4 +71,10 @@ public class JSONTestHelper {
             return null;
         }
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private JSONTestHelper() {
+    }
 }

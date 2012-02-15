@@ -80,8 +80,9 @@ public class JaxbCollectionResource {
     public List<JaxbXmlRootElement> postXmlType(List<JaxbXmlType> tl) {
         List<JaxbXmlRootElement> el = new ArrayList<JaxbXmlRootElement>();
 
-        for (JaxbXmlType t : tl)
+        for (JaxbXmlType t : tl) {
             el.add(new JaxbXmlRootElement(t.value));
+        }
 
         return el;
     }

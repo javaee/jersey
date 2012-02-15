@@ -39,12 +39,18 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.internal.util.AnnotatedMethod;
-import org.glassfish.jersey.internal.util.MethodList;
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.model.Parameter.Source;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
@@ -60,18 +66,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.glassfish.jersey.internal.util.AnnotatedMethod;
+import org.glassfish.jersey.internal.util.MethodList;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.Parameter.Source;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -588,5 +589,11 @@ public class IntrospectionModeller {
         }
 
         return ClassTypePair.of(c, t);
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private IntrospectionModeller() {
     }
 }

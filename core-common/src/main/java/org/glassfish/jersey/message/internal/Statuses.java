@@ -96,4 +96,10 @@ public final class Statuses {
     public static StatusType from(StatusType status, String reason) {
         return new StatusImpl(status.getStatusCode(), reason);
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private Statuses() {
+    }
 }

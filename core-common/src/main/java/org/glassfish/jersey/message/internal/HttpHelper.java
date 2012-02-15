@@ -39,14 +39,6 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
-
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Collections;
@@ -57,6 +49,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * Helper classes for HTTP.
@@ -169,7 +170,7 @@ final class HttpHelper {
         try {
             return HttpHeaderReader.readMatchingEntityTag(ifMatch);
         } catch (java.text.ParseException e) {
-            throw exception("If-Match", ifMatch , e);
+            throw exception("If-Match", ifMatch, e);
         }
     }
 
@@ -208,7 +209,7 @@ final class HttpHelper {
     }
 
     public static List<AcceptableMediaType> getAccept(final Headers headers,
-                                                      List<QualitySourceMediaType> priorityMediaTypes) {
+            List<QualitySourceMediaType> priorityMediaTypes) {
         final String accept = headers.header(HttpHeaders.ACCEPT);
         if (accept == null || accept.length() == 0) {
             return MediaTypes.GENERAL_ACCEPT_MEDIA_TYPE_LIST;
@@ -396,5 +397,11 @@ final class HttpHelper {
         } catch (IllegalArgumentException ex) {
             throw exception("Location", value, ex);
         }
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private HttpHelper() {
     }
 }

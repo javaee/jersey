@@ -39,9 +39,11 @@
  */
 package org.glassfish.jersey.servlet;
 
-import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.uri.UriComponent;
+import java.io.IOException;
+import java.net.URI;
+import java.util.regex.Pattern;
+
+import javax.ws.rs.core.UriBuilder;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -53,10 +55,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.net.URI;
-import java.util.regex.Pattern;
+
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  /**
@@ -219,7 +221,7 @@ public class ServletContainer extends HttpServlet implements Filter {
             // however still leaves it broken for the very rare case if a standard path
             // servlet mapping would include dot in the last segment (e.g. /.webresources/*)
             // and somebody would want to hit the root resource without the trailing slash
-            int i = servletPath.lastIndexOf("/");
+            int i = servletPath.lastIndexOf('/');
             if (servletPath.substring(i + 1).indexOf('.') < 0) {
                 // TODO
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {

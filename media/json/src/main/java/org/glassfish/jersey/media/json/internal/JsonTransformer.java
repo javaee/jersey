@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.media.json.internal;
 
 import java.util.Collection;
@@ -56,6 +55,7 @@ import org.codehaus.jettison.json.JSONObject;
  * @author Jakub Podlesak
  */
 final class JsonTransformer {
+
     @SuppressWarnings("unchecked")
     static <T> Map<String, T> asMap(String jsonObjectVal) throws JSONException {
         if (null == jsonObjectVal) {
@@ -67,11 +67,10 @@ final class JsonTransformer {
         Iterator<String> keyIterator = sourceMap.keys();
         while (keyIterator.hasNext()) {
             String key = keyIterator.next();
-            result.put(key, (T)sourceMap.get(key));
+            result.put(key, (T) sourceMap.get(key));
         }
         return result;
     }
-
 
     @SuppressWarnings("unchecked")
     static <T> Collection<T> asCollection(String jsonArrayVal) throws JSONException {
@@ -82,7 +81,7 @@ final class JsonTransformer {
 
         JSONArray arrayVal = new JSONArray(jsonArrayVal);
         for (int i = 0; i < arrayVal.length(); i++) {
-            result.add((T)arrayVal.get(i));
+            result.add((T) arrayVal.get(i));
         }
         return result;
     }
@@ -93,5 +92,11 @@ final class JsonTransformer {
 
     static String asJsonObject(Map map) {
         return (null == map) ? "{}" : (new JSONObject(map)).toString();
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private JsonTransformer() {
     }
 }

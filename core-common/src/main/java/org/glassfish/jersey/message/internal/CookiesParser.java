@@ -162,4 +162,10 @@ import javax.ws.rs.core.NewCookie;
 
         return cookie.getImmutableNewCookie();
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private CookiesParser() {
+    }
 }

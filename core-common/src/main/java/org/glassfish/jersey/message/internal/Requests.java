@@ -134,7 +134,7 @@ public final class Requests {
      *     by an internal Jersey request type.
      * @return decoded relative request path.
      */
-     // TODO expose as part of JAX-RS Request API?
+    // TODO expose as part of JAX-RS Request API?
     public static String relativePath(Request request) {
         return JaxrsRequestView.unwrap(request).relativePath(true);
     }
@@ -199,5 +199,11 @@ public final class Requests {
      */
     public static MessageBodyWorkers getMessageWorkers(Request request) {
         return JaxrsRequestView.unwrap(request).workers();
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private Requests() {
     }
 }

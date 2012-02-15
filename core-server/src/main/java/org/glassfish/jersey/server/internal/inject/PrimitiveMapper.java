@@ -84,4 +84,10 @@ final class PrimitiveMapper {
 
         return Collections.unmodifiableMap(m);
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private PrimitiveMapper() {
+    }
 }

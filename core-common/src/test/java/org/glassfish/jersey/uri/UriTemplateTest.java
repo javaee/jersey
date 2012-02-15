@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.uri;
 
 import java.util.ArrayList;
@@ -91,7 +90,7 @@ public class UriTemplateTest extends TestCase {
         assertEquals(names.length, regexNames.size());
 
         Iterator<String> i = regexNames.iterator();
-        for(String name : names) {
+        for (String name : names) {
             assertEquals(name, i.next());
         }
     }
@@ -204,7 +203,7 @@ public class UriTemplateTest extends TestCase {
 
         System.out.println("LIST: " + matchedValues);
 
-        for (int i = 0; i < values.length; i++){
+        for (int i = 0; i < values.length; i++) {
             assertEquals(values[i], matchedValues.get(i));
         }
 
@@ -308,7 +307,7 @@ public class UriTemplateTest extends TestCase {
         _testSubstitutionMap("http://example.org/{a}/{b}/",
                 "http://example.org/fred/barney/",
                 "a", "fred",
-                "b","barney");
+                "b", "barney");
         _testSubstitutionMap("http://example.org/page1#{a}",
                 "http://example.org/page1#fred",
                 "a", "fred");
@@ -339,8 +338,9 @@ public class UriTemplateTest extends TestCase {
         UriTemplate t = new UriTemplate(template);
 
         Map<String, String> variableMap = new HashMap<String, String>();
-        for (int i = 0; i < variablesAndvalues.length; i+=2)
-            variableMap.put(variablesAndvalues[i], variablesAndvalues[i+1]);
+        for (int i = 0; i < variablesAndvalues.length; i += 2) {
+            variableMap.put(variablesAndvalues[i], variablesAndvalues[i + 1]);
+        }
 
         assertEquals(uri, t.createURI(variableMap));
     }

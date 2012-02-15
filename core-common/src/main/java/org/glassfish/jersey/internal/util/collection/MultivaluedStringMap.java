@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.util.collection;
 
 import java.lang.reflect.Constructor;
@@ -88,13 +87,14 @@ public class MultivaluedStringMap extends MultivaluedHashMap<String, String> {
 
     public final <A> A getFirst(String key, Class<A> type) {
         String value = getFirst(key);
-        if (value == null)
+        if (value == null) {
             return null;
+        }
         Constructor<A> c = null;
         try {
             c = type.getConstructor(String.class);
         } catch (Exception ex) {
-            throw new IllegalArgumentException(type.getName()+" has no String constructor", ex);
+            throw new IllegalArgumentException(type.getName() + " has no String constructor", ex);
         }
         A retVal = null;
         try {
@@ -107,16 +107,17 @@ public class MultivaluedStringMap extends MultivaluedHashMap<String, String> {
     @SuppressWarnings("unchecked")
     public final <A> A getFirst(String key, A defaultValue) {
         String value = getFirst(key);
-        if (value == null)
+        if (value == null) {
             return defaultValue;
+        }
 
-        Class<A> type = (Class<A>)defaultValue.getClass();
+        Class<A> type = (Class<A>) defaultValue.getClass();
 
         Constructor<A> c = null;
         try {
             c = type.getConstructor(String.class);
         } catch (Exception ex) {
-            throw new IllegalArgumentException(type.getName()+" has no String constructor", ex);
+            throw new IllegalArgumentException(type.getName() + " has no String constructor", ex);
         }
         A retVal = defaultValue;
         try {

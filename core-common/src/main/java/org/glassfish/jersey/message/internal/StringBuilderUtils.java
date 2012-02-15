@@ -127,4 +127,10 @@ public class StringBuilderUtils {
             b.append(c);
         }
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private StringBuilderUtils() {
+    }
 }

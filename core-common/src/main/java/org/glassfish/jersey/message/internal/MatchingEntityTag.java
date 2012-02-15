@@ -63,11 +63,11 @@ class MatchingEntityTag extends EntityTag {
      */
     public static final Set<MatchingEntityTag> ANY_MATCH = Collections.emptySet();
 
-    public MatchingEntityTag(String value) {
+    private MatchingEntityTag(String value) {
         super(value, false);
     }
 
-    public MatchingEntityTag(String value, boolean weak) {
+    private MatchingEntityTag(String value, boolean weak) {
         super(value, weak);
     }
 

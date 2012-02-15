@@ -106,4 +106,10 @@ public class GrizzlyHttpServerFactory {
 
         return server;
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private GrizzlyHttpServerFactory() {
+    }
 }

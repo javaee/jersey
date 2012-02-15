@@ -126,4 +126,10 @@ public class MethodParameterHelper {
                     p.getDefaultValue());
         }
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private MethodParameterHelper() {
+    }
 }

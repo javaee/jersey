@@ -52,8 +52,13 @@ import java.io.OutputStream;
  */
 public abstract class CommittingOutputStream extends OutputStream {
 
-    private OutputStream o;
-
+    /**
+     * Wrapped output stream.
+     */
+    private OutputStream wrappedOutput;
+    /**
+     * Determines whether the stream was already commited or not.
+     */
     private boolean isCommitted;
 
     /**
@@ -72,40 +77,41 @@ public abstract class CommittingOutputStream extends OutputStream {
      * @throws IllegalArgumentException if <code>o</code> is null.
      */
     public CommittingOutputStream(OutputStream o) {
-        if (o == null)
+        if (o == null) {
             throw new IllegalArgumentException();
+        }
 
-        this.o = o;
+        this.wrappedOutput = o;
     }
 
     @Override
     public void write(byte b[]) throws IOException {
         commitWrite();
-        o.write(b);
+        wrappedOutput.write(b);
     }
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
         commitWrite();
-        o.write(b, off, len);
+        wrappedOutput.write(b, off, len);
     }
 
     @Override
     public void write(int b) throws IOException {
         commitWrite();
-        o.write(b);
+        wrappedOutput.write(b);
     }
 
     @Override
     public void flush() throws IOException {
         commitWrite();
-        o.flush();
+        wrappedOutput.flush();
     }
 
     @Override
     public void close() throws IOException {
         commitWrite();
-        o.close();
+        wrappedOutput.close();
     }
 
     private void commitWrite() throws IOException {
@@ -114,8 +120,9 @@ public abstract class CommittingOutputStream extends OutputStream {
 
             commit();
 
-            if (o == null)
-                o = getOutputStream();
+            if (wrappedOutput == null) {
+                wrappedOutput = getOutputStream();
+            }
         }
     }
 

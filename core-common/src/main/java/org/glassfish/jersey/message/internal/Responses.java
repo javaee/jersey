@@ -263,4 +263,10 @@ public final class Responses {
     public static MessageBodyWorkers getMessageWorkers(Response response) {
         return JaxrsResponseView.unwrap(response).workers();
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private Responses() {
+    }
 }

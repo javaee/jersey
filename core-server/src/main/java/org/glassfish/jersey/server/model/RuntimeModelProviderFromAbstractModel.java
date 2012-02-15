@@ -65,7 +65,6 @@ import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
 
-
 /**
  * TODO: unify with RuntimeModelProvider to a RuntimeModel- or TreeAcceptor- Builder.
  *
@@ -81,11 +80,9 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
     Injector injector;
     @Inject
     Services services;
-
     private MessageBodyWorkers workers;
-
-    @Inject Factory<RoutingContext> ctxFactory;
-
+    @Inject
+    Factory<RoutingContext> ctxFactory;
     private String currentResourcePath = null;
     private RouteToPathBuilder<PathPattern> lastRoutedBuilder;
     private Map<PathPattern, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>>> method2Inflector =
@@ -93,7 +90,8 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
     private Map<PathPattern, Pair<SubResourceLocator, TreeAcceptor>> locator2Acceptor =
             new HashMap<PathPattern, Pair<SubResourceLocator, TreeAcceptor>>();
 
-    public RuntimeModelProviderFromAbstractModel() {}
+    public RuntimeModelProviderFromAbstractModel() {
+    }
 
     private RuntimeModelProviderFromAbstractModel(Factory<RoutingContext> ctxFactory, MessageBodyWorkers msgBodyWorkers) {
         this.ctxFactory = ctxFactory;
@@ -108,8 +106,8 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
             for (PathPattern path : pathPatterns) {
                 List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> methodInflectors = method2Inflector.get(path);
                 lastRoutedBuilder = ((lastRoutedBuilder == null) ? rootBuilder : lastRoutedBuilder).route(path).to(
-                                        new PushResourceAndDelegateTreeAcceptor(injector, ctxFactory, getDeclaringResource(methodInflectors),
-                                            new MultipleMethodAcceptor(injector, workers, ctxFactory, methodInflectors)));
+                        new PushResourceAndDelegateTreeAcceptor(injector, ctxFactory, getDeclaringResource(methodInflectors),
+                        new MultipleMethodAcceptor(injector, workers, ctxFactory, methodInflectors)));
             }
             method2Inflector.clear();
         }
@@ -118,7 +116,7 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
             pathPatterns.addAll(locator2Acceptor.keySet());
             for (PathPattern path : pathPatterns) {
                 lastRoutedBuilder = (routedBuilder()).route(path).to(
-                    new PushResourceAndDelegateTreeAcceptor(injector, ctxFactory, locator2Acceptor.get(path).left().getResource(), locator2Acceptor.get(path).right()));
+                        new PushResourceAndDelegateTreeAcceptor(injector, ctxFactory, locator2Acceptor.get(path).left().getResource(), locator2Acceptor.get(path).right()));
             }
             locator2Acceptor.clear();
         }
@@ -178,9 +176,9 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
     @Override
     public void visitSubResourceLocator(SubResourceLocator locator) {
         locator2Acceptor.put(new PathPattern(joinUriPaths(currentResourcePath, locator.getPath().getValue())),
-                                    Tuples.<SubResourceLocator, TreeAcceptor>of(locator,
-                                            new SubResourceLocatorAcceptor(injector, services, ctxFactory, workers, locator)));
-        }
+                Tuples.<SubResourceLocator, TreeAcceptor>of(locator,
+                new SubResourceLocatorAcceptor(injector, services, ctxFactory, workers, locator)));
+    }
 
     @Override
     public void visitResourceConstructor(ResourceConstructor constructor) {
@@ -212,8 +210,8 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
 
     private void trimTrailingSlashes(StringBuilder result) {
         // TODO: what about encoded slashes?
-        while (result.length() > 0 && result.charAt(result.length()-1) == '/') {
-            result.deleteCharAt(result.length()-1);
+        while (result.length() > 0 && result.charAt(result.length() - 1) == '/') {
+            result.deleteCharAt(result.length() - 1);
         }
     }
 
@@ -223,11 +221,14 @@ public class RuntimeModelProviderFromAbstractModel extends RuntimeModelProvider 
             return s;
         }
 
-        if(s.equals("/")) {
+        if (s.equals("/")) {
             return "";
         }
 
-        int i = 0; while(s.charAt(i) == '/') i++;
+        int i = 0;
+        while (s.charAt(i) == '/') {
+            i++;
+        }
         return s.substring(i);
     }
 }

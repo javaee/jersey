@@ -37,19 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.grizzly2.servlet;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+
+import javax.servlet.Servlet;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.servlet.ServletContainer;
-
-import javax.servlet.Servlet;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
 
 /**
  * Factory for creating and starting Grizzly 2 {@link HttpServer} instances
@@ -66,7 +67,8 @@ import java.util.Map;
  */
 public final class GrizzlyWebContainerFactory {
 
-    private GrizzlyWebContainerFactory() {}
+    private GrizzlyWebContainerFactory() {
+    }
 
     /**
      * Create a {@link HttpServer} that registers the {@link ServletContainer}.
@@ -81,8 +83,9 @@ public final class GrizzlyWebContainerFactory {
      */
     public static HttpServer create(String u)
             throws IOException, IllegalArgumentException {
-        if (u == null)
+        if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
+        }
 
         return create(URI.create(u));
     }
@@ -101,8 +104,9 @@ public final class GrizzlyWebContainerFactory {
      */
     public static HttpServer create(String u, Map<String, String> initParams)
             throws IOException, IllegalArgumentException {
-        if (u == null)
+        if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
+        }
 
         return create(URI.create(u), initParams);
     }
@@ -154,8 +158,9 @@ public final class GrizzlyWebContainerFactory {
      * @throws IllegalArgumentException if <code>u</code> is null
      */
     public static HttpServer create(String u, Class<? extends Servlet> c) throws IOException {
-        if (u == null)
+        if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
+        }
 
         return create(URI.create(u), c);
     }
@@ -176,8 +181,9 @@ public final class GrizzlyWebContainerFactory {
      */
     public static HttpServer create(String u, Class<? extends Servlet> c,
             Map<String, String> initParams) throws IOException {
-        if (u == null)
+        if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
+        }
 
         return create(URI.create(u), c, initParams);
     }
@@ -215,23 +221,23 @@ public final class GrizzlyWebContainerFactory {
      */
     public static HttpServer create(URI u, Class<? extends Servlet> c,
             Map<String, String> initParams) throws IOException {
-        if (u == null)
+        if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
+        }
 
         String path = u.getPath();
-        if (path == null)
-            throw new IllegalArgumentException("The URI path, of the URI " + u +
-                    ", must be non-null");
-        else if (path.length() == 0)
-            throw new IllegalArgumentException("The URI path, of the URI " + u +
-                    ", must be present");
-        else if (path.charAt(0) != '/')
-            throw new IllegalArgumentException("The URI path, of the URI " + u +
-                    ". must start with a '/'");
+        if (path == null) {
+            throw new IllegalArgumentException("The URI path, of the URI " + u + ", must be non-null");
+        } else if (path.isEmpty()) {
+            throw new IllegalArgumentException("The URI path, of the URI " + u + ", must be present");
+        } else if (path.charAt(0) != '/') {
+            throw new IllegalArgumentException("The URI path, of the URI " + u + ". must start with a '/'");
+        }
 
         if (path.length() > 1) {
-            if (path.endsWith("/"))
+            if (path.endsWith("/")) {
                 path = path.substring(0, path.length() - 1);
+            }
         }
 
         WebappContext context = new WebappContext("GrizzlyContext", path);
@@ -248,5 +254,4 @@ public final class GrizzlyWebContainerFactory {
         context.deploy(server);
         return server;
     }
-
 }

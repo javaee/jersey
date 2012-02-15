@@ -767,4 +767,10 @@ public class ReflectionHelper {
         }
         return true;
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private ReflectionHelper() {
+    }
 }

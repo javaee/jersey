@@ -114,4 +114,10 @@ public class JSONNormalizer {
 
         return result.append(']').toString();
     }
+
+    /**
+     * Prevents instantiation.
+     */
+    private JSONNormalizer() {
+    }
 }
