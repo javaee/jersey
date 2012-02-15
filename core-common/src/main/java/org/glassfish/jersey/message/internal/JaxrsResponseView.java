@@ -112,9 +112,16 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
         return !wrapped.isEmpty();
     }
 
-    // TODO Where should this be implemented?
+    //@Override
+    // TODO uncomment @Override
+    public boolean isEntityRetrievable() {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     @Override
     public void bufferEntity() throws MessageProcessingException {
+        // TODO Where should this be implemented?
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

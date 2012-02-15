@@ -120,6 +120,26 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return !wrapped.isEmpty();
     }
 
+    //@Override
+    // TODO uncomment @Override
+    public boolean isEntityRetrievable() {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public void bufferEntity() throws MessageProcessingException {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public void close() throws MessageProcessingException {
+        wrapped.close();
+    }
+
     @Override
     public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
         if (variants == null || variants.isEmpty()) {
