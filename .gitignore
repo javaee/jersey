@@ -9,5 +9,6 @@ profile
 *.iws
 *.ipr
 *.iml
+*.releaseBackup
 nbactions.xml
 /nb-configuration.xml
