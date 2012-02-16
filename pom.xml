@@ -266,6 +266,9 @@
                     <version>2.2.2</version>
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <preparationGoals>clean install</preparationGoals>
+                        <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
                         <arguments>${release.arguments}</arguments>
                     </configuration>
