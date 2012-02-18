@@ -49,11 +49,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -62,6 +66,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
@@ -73,7 +78,6 @@ import org.glassfish.jersey.server.spi.ContainerContext;
 import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Module;
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
 
 /**
  * An abstract Web component that may be extended by a Servlet and/or
@@ -180,7 +184,7 @@ public class WebComponent {
         Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final Context containerContext = new Context(false, response);
+            final Context containerContext = new Context(false, request, response);
             application.apply(jaxRsRequest, containerContext);
 
             return containerContext.cResponse.getStatus();
@@ -372,15 +376,19 @@ public class WebComponent {
 //    }
     private final static class Context implements ContainerContext {
 
+        private final HttpServletRequest request;
         private final HttpServletResponse response;
-        private OutputStream out;
+        private final AtomicBoolean isSuspended;
+        private volatile AsyncContext asyncContext;
+        private final OutputStream out;
         private final boolean useSetStatusOn404;
         private Response cResponse;
         private long contentLength;
-        private boolean statusAndHeadersWritten = false;
+        private final AtomicBoolean statusAndHeadersWritten;
 
-        Context(final boolean useSetStatusOn404, final HttpServletResponse response) {
+        Context(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response) {
             this.useSetStatusOn404 = useSetStatusOn404;
+            this.request = request;
             this.response = response;
             this.out = new CommittingOutputStream() {
 
@@ -394,68 +402,102 @@ public class WebComponent {
                     return Context.this.response.getOutputStream();
                 }
             };
+
+            this.isSuspended = new AtomicBoolean(false);
+            this.statusAndHeadersWritten = new AtomicBoolean(false);
+            this.asyncContext = null;
         }
 
         @Override
         public boolean resume() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return isSuspended.compareAndSet(true, false);
         }
 
         @Override
-        public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler)
+                throws IllegalStateException {
+            asyncContext = request.startAsync(request, response);
+            isSuspended.set(true);
+            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
+            asyncContext.addListener(new AsyncListener() {
+
+                @Override
+                public void onComplete(AsyncEvent event) throws IOException {
+                    // TODO ?
+                }
+
+                @Override
+                public void onTimeout(AsyncEvent event) throws IOException {
+                    timeoutHandler.onTimeout(Context.this);
+                }
+
+                @Override
+                public void onError(AsyncEvent event) throws IOException {
+                    // TODO ?
+                }
+
+                @Override
+                public void onStartAsync(AsyncEvent event) throws IOException {
+                    // TODO ?
+                }
+            });
         }
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, Response cResponse) throws ContainerException {
             this.contentLength = contentLength;
             this.cResponse = cResponse;
-            this.statusAndHeadersWritten = false;
+            this.statusAndHeadersWritten.set(false);
             return out;
         }
 
         @Override
         public void close() {
-            if (statusAndHeadersWritten) {
+            if (!statusAndHeadersWritten.compareAndSet(false, true)) {
                 return;
             }
 
-            // Note that the writing of headers MUST be performed before
-            // the invocation of sendError as on some Servlet implementations
-            // modification of the response headers will have no effect
-            // after the invocation of sendError.
-            writeHeaders();
+            try {
+                // Note that the writing of headers MUST be performed before
+                // the invocation of sendError as on some Servlet implementations
+                // modification of the response headers will have no effect
+                // after the invocation of sendError.
+                writeHeaders();
 
-            final int status = cResponse.getStatus();
-            if (status >= 400) {
-                if (useSetStatusOn404 && status == 404) {
-                    response.setStatus(status);
-                } else {
-                    final String reason = cResponse.getStatusEnum().getReasonPhrase();
-                    try {
-                        if (reason == null || reason.isEmpty()) {
-                            response.sendError(status);
-                        } else {
-                            response.sendError(status, reason);
+                final int status = cResponse.getStatus();
+                if (status >= 400) {
+                    if (useSetStatusOn404 && status == 404) {
+                        response.setStatus(status);
+                    } else {
+                        final String reason = cResponse.getStatusEnum().getReasonPhrase();
+                        try {
+                            if (reason == null || reason.isEmpty()) {
+                                response.sendError(status);
+                            } else {
+                                response.sendError(status, reason);
+                            }
+                        } catch (IOException ex) {
+                            throw new ContainerException(
+                                    "I/O exception occured while sending [" + status + "] error response.", ex);
                         }
-                    } catch (IOException ex) {
-                        throw new ContainerException(
-                                "I/O exception occured while sending [" + status + "] error response.", ex);
                     }
+                } else {
+                    response.setStatus(status);
                 }
-            } else {
-                response.setStatus(status);
+            } finally {
+                if (asyncContext != null) {
+                    asyncContext.complete();
+                }
             }
         }
 
         private void writeStatusAndHeaders() {
-            if (statusAndHeadersWritten) {
+            if (!statusAndHeadersWritten.compareAndSet(false, true)) {
                 return;
             }
 
             writeHeaders();
             response.setStatus(cResponse.getStatus());
-            statusAndHeadersWritten = true;
         }
 
         private void writeHeaders() {
