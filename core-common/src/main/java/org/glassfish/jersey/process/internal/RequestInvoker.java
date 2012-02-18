@@ -288,13 +288,6 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         public Future<?> suspend(long time, TimeUnit unit);
 
         /**
-         * Get the remaining time to the suspension timeout in milliseconds.
-         *
-         * @return the remaining time to the suspension timeout in milliseconds.
-         */
-        public long suspesionTimeout();
-
-        /**
          * Set the default response to be used in case the suspended request invocation
          * times out.
          *

@@ -50,6 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
@@ -86,6 +88,8 @@ import org.glassfish.hk2.Module;
  * @author Paul Sandoz
  */
 public class WebComponent {
+
+    private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
     private class WebComponentModule extends AbstractModule {
 
@@ -487,6 +491,18 @@ public class WebComponent {
             } finally {
                 if (asyncContext != null) {
                     asyncContext.complete();
+                }
+            }
+        }
+
+        @Override
+        public void cancel() {
+            if (!response.isCommitted()) {
+                try {
+                    response.reset();
+                } catch (IllegalStateException ex) {
+                    // a race condition externally commiting the response can still occur...
+                    LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
                 }
             }
         }

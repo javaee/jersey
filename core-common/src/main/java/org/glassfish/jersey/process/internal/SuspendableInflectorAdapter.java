@@ -218,7 +218,7 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
         } else {
             LOGGER.log(Level.FINE, "Failed to suspend request invocation context in state \"{0}\"", status);
         }
-        
+
         return this;
     }
 
@@ -230,12 +230,6 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
 
     @Override
     public Future<?> suspend(long time, TimeUnit unit) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public long suspesionTimeout() {
         // TODO implement
         throw new UnsupportedOperationException("Not supported yet.");
     }

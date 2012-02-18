@@ -119,8 +119,8 @@ public interface ContainerContext {
     /**
      * Resume the container context.
      *
-     * This indicates to the container that the
-     * {@link org.glassfish.jersey.server.Application Jersey application}
+     * By invoking this method, {@link org.glassfish.jersey.server.Application
+     * Jersey application} indicates to the container that the application
      * is ready to send a response back to the client. The method must be
      * implemented as thread-safe.
      * <p />
@@ -143,11 +143,25 @@ public interface ContainerContext {
     public boolean resume();
 
     /**
+     * Cancel the context processing.
+     *
+     * By invoking this method, {@link org.glassfish.jersey.server.Application
+     * Jersey application} indicates to the container that the request processing
+     * related to this container context has been canceled.
+     * <p />
+     * Similarly to {@link #close()}, this enables the container context to release
+     * any resources, clean up any state, etc. The main difference is that a call
+     * to the {@code cancel()} method indicates that any unsent response data
+     * should be discarded.
+     */
+    public void cancel();
+
+    /**
      * Close the context.
      *
      * Indicates to the container that request has been fully processed and response
      * has been fully written. This enables the container context to finish processing,
      * clean up any state, flush any streams, etc.
      */
-    void close();
+    public void close();
 }

@@ -111,6 +111,11 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         }
 
         @Override
+        public void cancel() {
+            grizzlyResponse.cancel();
+        }
+
+        @Override
         public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
             suspended.set(true);
             grizzlyResponse.suspend(timeOut, timeUnit, EMPTY_COMPLETION_HANDLER,
