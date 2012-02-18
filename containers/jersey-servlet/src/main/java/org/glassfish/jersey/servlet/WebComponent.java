@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
@@ -64,16 +65,18 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ContainerResponseWriter;
+import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.spi.ContainerContext;
 
 import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Module;
+import org.glassfish.jersey.internal.util.CommittingOutputStream;
 
 /**
- * An abstract Web component that may be extended a Servlet and/or
+ * An abstract Web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
  * @author Paul Sandoz
@@ -136,6 +139,7 @@ public class WebComponent {
 
         }
     }
+    //
     private Application application;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {
@@ -176,10 +180,10 @@ public class WebComponent {
         Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final Writer writer = new Writer(false, response);
-            application.apply(jaxRsRequest, writer);
+            final Context containerContext = new Context(false, response);
+            application.apply(jaxRsRequest, containerContext);
 
-            return writer.cResponse.getStatus();
+            return containerContext.cResponse.getStatus();
         } catch (Exception e) {
             // TODO: proper error handling.
             throw new ServletException(e);
@@ -360,37 +364,58 @@ public class WebComponent {
         return resourceConfigBuilder.build();
     }
 
-    private ResourceConfig getWebAppResourceConfig(Map<String, Object> props,
-            WebConfig webConfig) throws ServletException {
+// TODO is this needed or can be removed?
+//    private ResourceConfig getWebAppResourceConfig(Map<String, Object> props,
+//            WebConfig webConfig) throws ServletException {
+//
+//        return ResourceConfig.builder().addFinder(new WebAppResourcesScanner(webConfig.getServletContext())).build();
+//    }
+    private final static class Context implements ContainerContext {
 
-        return ResourceConfig.builder().addFinder(new WebAppResourcesScanner(webConfig.getServletContext())).build();
-    }
+        private final HttpServletResponse response;
+        private OutputStream out;
+        private final boolean useSetStatusOn404;
+        private Response cResponse;
+        private long contentLength;
+        private boolean statusAndHeadersWritten = false;
 
-    private final static class Writer extends OutputStream implements ContainerResponseWriter {
-
-        final HttpServletResponse response;
-        final boolean useSetStatusOn404;
-        Response cResponse;
-        long contentLength;
-        OutputStream out;
-        boolean statusAndHeadersWritten = false;
-
-        Writer(boolean useSetStatusOn404, HttpServletResponse response) {
+        Context(final boolean useSetStatusOn404, final HttpServletResponse response) {
             this.useSetStatusOn404 = useSetStatusOn404;
             this.response = response;
+            this.out = new CommittingOutputStream() {
+
+                @Override
+                protected void commit() throws IOException {
+                    Context.this.writeStatusAndHeaders();
+                }
+
+                @Override
+                protected OutputStream getOutputStream() throws IOException {
+                    return Context.this.response.getOutputStream();
+                }
+            };
         }
 
         @Override
-        public OutputStream writeStatusAndHeaders(long contentLength,
-                Response cResponse) throws IOException {
+        public boolean resume() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, Response cResponse) throws ContainerException {
             this.contentLength = contentLength;
             this.cResponse = cResponse;
             this.statusAndHeadersWritten = false;
-            return this;
+            return out;
         }
 
         @Override
-        public void finish() throws IOException {
+        public void close() {
             if (statusAndHeadersWritten) {
                 return;
             }
@@ -401,66 +426,29 @@ public class WebComponent {
             // after the invocation of sendError.
             writeHeaders();
 
-            if (cResponse.getStatus() >= 400) {
-                if (useSetStatusOn404 && cResponse.getStatus() == 404) {
-                    response.setStatus(cResponse.getStatus());
+            final int status = cResponse.getStatus();
+            if (status >= 400) {
+                if (useSetStatusOn404 && status == 404) {
+                    response.setStatus(status);
                 } else {
                     final String reason = cResponse.getStatusEnum().getReasonPhrase();
-                    if (reason == null || reason.isEmpty()) {
-                        response.sendError(cResponse.getStatus());
-                    } else {
-                        response.sendError(cResponse.getStatus(), reason);
+                    try {
+                        if (reason == null || reason.isEmpty()) {
+                            response.sendError(status);
+                        } else {
+                            response.sendError(status, reason);
+                        }
+                    } catch (IOException ex) {
+                        throw new ContainerException(
+                                "I/O exception occured while sending [" + status + "] error response.", ex);
                     }
                 }
             } else {
-                response.setStatus(cResponse.getStatus());
+                response.setStatus(status);
             }
         }
 
-        @Override
-        public void write(int b) throws IOException {
-            initiate();
-            out.write(b);
-        }
-
-        @Override
-        public void write(byte b[]) throws IOException {
-            if (b.length > 0) {
-                initiate();
-                out.write(b);
-            }
-        }
-
-        @Override
-        public void write(byte b[], int off, int len) throws IOException {
-            if (len > 0) {
-                initiate();
-                out.write(b, off, len);
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-            writeStatusAndHeaders();
-            if (out != null) {
-                out.flush();
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            initiate();
-            out.close();
-        }
-
-        void initiate() throws IOException {
-            if (out == null) {
-                writeStatusAndHeaders();
-                out = response.getOutputStream();
-            }
-        }
-
-        void writeStatusAndHeaders() {
+        private void writeStatusAndHeaders() {
             if (statusAndHeadersWritten) {
                 return;
             }
@@ -470,7 +458,7 @@ public class WebComponent {
             statusAndHeadersWritten = true;
         }
 
-        void writeHeaders() {
+        private void writeHeaders() {
             if (contentLength != -1 && contentLength < Integer.MAX_VALUE) {
                 response.setContentLength((int) contentLength);
             }

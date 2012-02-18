@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.server.spi.ContainerContext;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -339,38 +340,42 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * @param request request data.
      * @param callback response callback called when the request transformation is done.
      *     Must not be {@code null}.
-     * @return response future.
      */
-    public Future<Response> apply(Request request, Callback callback) {
+    public void apply(Request request, Callback callback) {
         try {
             requestScope.enter();
             configureProviders();
             // FIXME: This must be moved into the acceptor chain otherwise exception mapping & possibly
             //        other stuff may not work!
             final Pair<Request, Optional<LinearAcceptor>> pair = preMatchFilterAcceptor.apply(request);
-            return invoker.apply(pair.left(), callback);
+            invoker.apply(pair.left(), callback);
         } finally {
             requestScope.exit();
         }
     }
 
     /**
-     * Invokes a request writes the response to provided {@link ContainerResponseWriter writer}.
+     * The main request/response processing entry point for Jersey container
+     * implementations.
+     *
+     * The method invokes the request processing and uses the provided
+     * {@link ContainerContext container context} to suspend & resume the
+     * processing as well as write the response back to the container.
      *
      * @param request request data.
-     * @param writer where response will be written
+     * @param context request-scoped container context.
      */
-    public void apply(final Request request, final ContainerResponseWriter writer) {
+    public void apply(final Request request, final ContainerContext context) {
         apply(request, new Callback() {
 
             @Override
             public void result(Response response) {
-                writeResponse(writer, request, response);
+                writeResponse(context, request, response);
             }
 
             @Override
             public void failure(Throwable exception) {
-                writeResponse(writer, request, handleFailure(exception));
+                writeResponse(context, request, handleFailure(exception));
             }
         });
     }
@@ -401,7 +406,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
     }
 
     @SuppressWarnings("unchecked")
-    private void writeResponse(ContainerResponseWriter writer, Request request, Response response) {
+    private void writeResponse(ContainerContext writer, Request request, Response response) {
         try {
             final boolean entityExists = response.hasEntity();
 
@@ -422,7 +427,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
                     entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
                 }
 
-                final OutputStream os = writer.writeStatusAndHeaders(-1, response);
+                final OutputStream os = writer.writeResponseStatusAndHeaders(-1, response);
 
                 final MessageBodyWriter bWriter = workers.getMessageBodyWriter(
                         entity.getClass(), entityType, outputAnnotations, outputType);
@@ -431,11 +436,13 @@ public final class Application implements Inflector<Request, Future<Response>> {
                         entity.getClass(),
                         entityType, outputAnnotations, outputType, response.getMetadata(), os);
             } else {
-                writer.writeStatusAndHeaders(0, response);
+                writer.writeResponseStatusAndHeaders(0, response);
             }
         } catch (IOException ex) {
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             throw new MappableException(ex);
+        } finally {
+            writer.close();
         }
     }
 

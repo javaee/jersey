@@ -37,42 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.spi;
 
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.Application;
 
 /**
  * Service-provider interface for creating container instances.
- * <p>
- * A container instance will be created according to the
- * the supporting generic type of the container.
- * <p>
+ *
+ * If supported by the provider, a container instance of the requested Java type
+ * will be created.
+ * <p />
+ * The created container is responsible for listening on a communication chanel
+ * for new client requests, dispatching these requests to the registered
+ * {@link Application Jersey application} using the application's
+ * {@link Application#apply(javax.ws.rs.core.Request, ContainerContext)
+ * apply(request, context)} method and sending the responses provided by the
+ * application back to the client.
+ * <p />
  * A provider shall support a one-to-one mapping between a type that is not of
  * the type Object. A provider may support
  * more than one one-to-one mapping or a mapping of sub-types of a type
  * (that is not of the type Object). A provider shall not conflict with other
  * providers.
- * <p>
- * An implementation (a service-provider) identifies itself by placing a
- * provider-configuration file (if not already present),
- * "com.sun.jersey.spi.container.ContainerProvider" in the
- * resource directory <tt>META-INF/services</tt>, and including the fully qualified
- * service-provider-class of the implementation in the file.
+ * <p />
+ * An implementation (a service-provider) identifies itself by registering a proper
+ * HK2 {@code ContainterProvider} contract binding in a custom HK2 module configured
+ * in the {@link org.glassfish.jersey.server.Application Jersey application}.
+ * Alternatively, the implementation can identify itself by placing a provider-configuration
+ * file (if not already present), "org.glassfish.jersey.server.spi.ContainerProvider"
+ * in the resource directory <tt>META-INF/services</tt>, and adding the fully
+ * qualified service-provider-class of the implementation in the file.
  *
- * @param <T> the type of the container.
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ContainerProvider<T> {
+public interface ContainerProvider {
 
     /**
-     * Create an container of type T.
+     * Create an container of a given type.
      * <p>
-     * The container provider SHOULD NOT initiate the Web application. The container
+     * The container provider SHOULD NOT initiate the web application. The container
      * provider MAY modify the resource configuration.
      * <p>
+     * @param <T> the type of the container.
+     *
      * @return the container, otherwise null if the provider does not support
      *         the requested <code>type</code>.
      * @param type the type of the container.
@@ -80,7 +91,5 @@ public interface ContainerProvider<T> {
      *         the handling of HTTP requests.
      * @throws ProcessingException if there is an error creating the container.
      */
-    T createContainer(Class<T> type, // TODO: add config parameter(s) (ResourceConfig)
-            Application application)
-            throws ProcessingException;
+    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException;
 }

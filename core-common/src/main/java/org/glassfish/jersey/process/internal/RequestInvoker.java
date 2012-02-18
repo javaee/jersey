@@ -383,15 +383,16 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     }
 
     /**
-     * Transform request data of a given type into a response result of the different type.
+     * Transform request data of a given type into a response result of the
+     * different type.
      * <p/>
-     * After the result is produced a supplied {@link Callback result callback}
-     * is invoked. The result callback can be invoked on a different thread but still in the
-     * same {@link InvocationContext request invocation context}.
+     * After the result is produced the provided {@link Callback result callback}
+     * is invoked. The result callback can be invoked on a different thread but
+     * still in the same {@link InvocationContext request invocation context}.
      *
      * @param request request data to be transformed into a response result.
-     * @param callback result callback called when the request transformation is done.
-     *     Must not be {@code null}.
+     * @param callback result callback called when the request transformation is
+     *     done. Must not be {@code null}.
      * @return future response.
      */
     public ListenableFuture<Response> apply(final Request request, final Callback callback) {

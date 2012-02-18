@@ -81,7 +81,7 @@ import org.glassfish.jersey.internal.MappableException;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ResponseProcessor extends AbstractFuture<Response> implements Runnable, RequestInvoker.Callback {
+public final class ResponseProcessor extends AbstractFuture<Response> implements Runnable {
 
     /**
      * Injectable context that can be used during the data processing for
@@ -223,8 +223,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         }
     }
 
-    @Override
-    public void result(Response response) {
+    private void result(Response response) {
         if (requestScope.isActive()) {
             // running inside a scope already (same-thread execution
             _result(response);
@@ -283,8 +282,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         return response;
     }
 
-    @Override
-    public void failure(Throwable exception) {
+    private void failure(Throwable exception) {
         super.setException(exception);
         // nested callback invocation failed; don't invoke it again
         if (exception instanceof CallbackInvocationException == false) {

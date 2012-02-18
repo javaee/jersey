@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.client;
 
+import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.message.internal.Responses;

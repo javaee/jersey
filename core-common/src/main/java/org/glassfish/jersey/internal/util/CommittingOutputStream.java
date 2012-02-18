@@ -37,81 +37,99 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client;
+package org.glassfish.jersey.internal.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * A committing output stream that commits before
- * the first byte is written to the adapted {@link OutputStream}.
- * <p>
- * This class may be overridden to provide the commit functionality.
+ * An abstract committing output stream adapter that performs a {@link #commit()
+ * commit} before the first byte is written to the adapted {@link OutputStream}.
+ *
+ * Concrete implementations of the class typically override the commit operation
+ * to perform any initialization on the adapted output stream.
  *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class CommittingOutputStream extends OutputStream {
 
     /**
-     * Wrapped output stream.
+     * Adapted output stream.
      */
-    private OutputStream wrappedOutput;
+    private OutputStream adaptedOutput;
     /**
-     * Determines whether the stream was already commited or not.
+     * Determines whether the stream was already committed or not.
      */
-    private boolean isCommitted;
+    private boolean isCommitted = false;
 
     /**
-     * Construct a new instance.
-     * <p>
-     * The method {@link #getOutputStream() } MUST be overridden
-     * to return an output stream.
+     * Construct a new committing output stream using a deferred initialization
+     * of the adapted output stream.
+     * <p />
+     * When this constructor is utilized to construct a committing output stream
+     * instance, the method {@link #getOutputStre
+     * am()} MUST be overridden to return
+     * the adapted output stream.
+     *
+     * @see #CommittingOutputStream(OutputStream) adapting constructor
      */
     public CommittingOutputStream() {
     }
 
     /**
-     * Construct a new instance with an output stream to adapt.
+     * Construct a new committing output stream using an eager initialization of
+     * the adapted output stream.
+     * <p />
+     * When this constructor is utilized to construct a committing output stream
+     * instance, the method {@link #getOutputStream()} will be ignored and never
+     * invoked to retrieve the adapted output stream.
      *
-     * @param o the adapted output stream.
-     * @throws IllegalArgumentException if <code>o</code> is null.
+     * @param out the adapted output stream.
+     * @throws IllegalArgumentException if supplied output stream is {@code null}.
+     *
+     * @see #CommittingOutputStream(OutputStream) deferred initialization constructor
      */
-    public CommittingOutputStream(OutputStream o) {
-        if (o == null) {
+    public CommittingOutputStream(OutputStream out) {
+        if (out == null) {
             throw new IllegalArgumentException();
         }
 
-        this.wrappedOutput = o;
+        this.adaptedOutput = out;
     }
 
     @Override
     public void write(byte b[]) throws IOException {
-        commitWrite();
-        wrappedOutput.write(b);
+        if (b.length > 0) {
+            commitWrite();
+            adaptedOutput.write(b);
+        }
     }
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
-        commitWrite();
-        wrappedOutput.write(b, off, len);
+        if (len > 0) {
+            commitWrite();
+            adaptedOutput.write(b, off, len);
+        }
     }
 
     @Override
     public void write(int b) throws IOException {
         commitWrite();
-        wrappedOutput.write(b);
+        adaptedOutput.write(b);
     }
 
     @Override
     public void flush() throws IOException {
         commitWrite();
-        wrappedOutput.flush();
+        adaptedOutput.flush();
     }
 
     @Override
     public void close() throws IOException {
         commitWrite();
-        wrappedOutput.close();
+        adaptedOutput.close();
     }
 
     private void commitWrite() throws IOException {
@@ -120,17 +138,23 @@ public abstract class CommittingOutputStream extends OutputStream {
 
             commit();
 
-            if (wrappedOutput == null) {
-                wrappedOutput = getOutputStream();
+            if (adaptedOutput == null) {
+                adaptedOutput = getOutputStream();
             }
         }
     }
 
     /**
      * Get the adapted output stream.
+     *
+     * The method is called at most once (in case the internal adapted output stream
+     * has not been initialized via {@link #CommittingOutputStream(java.io.OutputStream)
+     * adapting constructor}) as part of the commit operation immediately after
+     * the {@link #commit()} method has been invoked.
      * <p>
-     * This method MUST be overriden if the empty constructor is
-     * utilized to construct an instance of this class.
+     * This method MUST be overridden if the empty {@link #CommittingOutputStream()
+     * deferred initialization constructor} is utilized to construct an instance
+     * of this class.
      *
      * @return the adapted output stream.
      * @throws java.io.IOException

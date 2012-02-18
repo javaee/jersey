@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,40 +39,27 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.OutputStream;
+import org.glassfish.jersey.internal.ProcessingException;
 
 /**
- * Containers implement this interface and provide an instance to the
- * {@link Application}.
+ * Exception thrown by the container components in to notify Jersey runtime about
+ * any errors.
  *
- * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ContainerResponseWriter {
-    /**
-     * Write the status and headers of the response and return an output stream
-     * for the web application to write the entity of the response.
-     *
-     * @param contentLength >=0 if the content length in bytes of the
-     *        entity to be written is known, otherwise -1. Containers
-     *        may use this value to determine whether the "Content-Length"
-     *        header can be set or utilize chunked transfer encoding.
-     * @param response the container response. The status and headers are
-     *        obtained from the response.
-     * @return the output stream to write the entity (if any).
-     * @throws java.io.IOException if an error occurred when writing out the
-     *         status and headers or obtaining the output stream.
-     */
-    OutputStream writeStatusAndHeaders(
-            long contentLength,
-            Response response) throws IOException;
+public class ContainerException extends ProcessingException {
 
-    /**
-     * Finish writing the response. This enables the container response
-     * writer to clean up any state or flush any streams.
-     *
-     * @throws java.io.IOException
-     */
-    void finish() throws IOException;
+    private static final long serialVersionUID = -1721209891860592440L;
+
+    public ContainerException(Throwable cause) {
+        super(cause);
+    }
+
+    public ContainerException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ContainerException(String message) {
+        super(message);
+    }
 }

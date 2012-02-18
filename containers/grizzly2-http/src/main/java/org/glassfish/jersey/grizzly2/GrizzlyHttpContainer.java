@@ -39,23 +39,28 @@
  */
 package org.glassfish.jersey.grizzly2;
 
-import org.glassfish.grizzly.http.server.HttpHandler;
-import org.glassfish.grizzly.http.server.Request;
-import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.utils.Charsets;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ContainerResponseWriter;
-
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request.RequestBuilder;
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Request.RequestBuilder;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.spi.ContainerContext;
+
+import org.glassfish.grizzly.CompletionHandler;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
+import org.glassfish.grizzly.utils.Charsets;
 
 /**
  *
@@ -65,21 +70,72 @@ import java.util.Map;
  */
 public final class GrizzlyHttpContainer extends HttpHandler {
 
-    private final static class Writer implements ContainerResponseWriter {
+    private static final CompletionHandler<Response> EMPTY_COMPLETION_HANDLER = new CompletionHandler<Response>() {
 
-        final Response grizzlyResponse;
+        @Override
+        public void cancelled() {
+            // no-op
+        }
 
-        Writer(final Response response) {
+        @Override
+        public void failed(Throwable throwable) {
+            // no-op
+        }
+
+        @Override
+        public void completed(Response result) {
+            // no-op
+        }
+
+        @Override
+        public void updated(Response result) {
+            // no-op
+        }
+    };
+
+    private final static class Context implements ContainerContext {
+
+        private final Response grizzlyResponse;
+        private final AtomicBoolean suspended;
+
+        Context(final Response response) {
             this.grizzlyResponse = response;
+            this.suspended = new AtomicBoolean(false);
         }
 
         @Override
-        public void finish() throws IOException {
+        public void close() {
+            if (grizzlyResponse.isSuspended()) {
+                grizzlyResponse.resume();
+            }
         }
 
         @Override
-        public OutputStream writeStatusAndHeaders(final long contentLength,
-                final javax.ws.rs.core.Response jaxrsResponse) throws IOException {
+        public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
+            suspended.set(true);
+            grizzlyResponse.suspend(timeOut, timeUnit, EMPTY_COMPLETION_HANDLER,
+                    new org.glassfish.grizzly.http.server.TimeoutHandler() {
+
+                        @Override
+                        public boolean onTimeout(Response response) {
+                            timeoutHandler.onTimeout(Context.this);
+
+                            // TODO should we return true ins some cases instead?
+                            // Returning false relies on the fact that the timeoutHandler
+                            // will resume the response.
+                            return false;
+                        }
+                    });
+        }
+
+        @Override
+        public boolean resume() {
+            return suspended.compareAndSet(true, false);
+        }
+
+        @Override
+        public OutputStream writeResponseStatusAndHeaders(final long contentLength,
+                final javax.ws.rs.core.Response jaxrsResponse) throws ContainerException {
 
             grizzlyResponse.setStatus(jaxrsResponse.getStatus());
 
@@ -112,8 +168,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
     // HttpRequestProcessor
     @Override
     public void service(final Request request, final Response response) {
-        application.apply(toJaxrsRequest(request), new Writer(response));
-        response.finish();
+        application.apply(toJaxrsRequest(request), new Context(response));
     }
 
     private URI getBaseUri(final Request request) {

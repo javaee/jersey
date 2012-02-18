@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.grizzly2;
 
-import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ContainerProvider;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.spi.ContainerProvider;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
 
@@ -49,10 +49,14 @@ import org.glassfish.grizzly.http.server.HttpHandler;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class GrizzlyHttpContainerProvider implements ContainerProvider<HttpHandler> {
+public class GrizzlyHttpContainerProvider implements ContainerProvider {
 
     @Override
-    public HttpHandler createContainer(Class<HttpHandler> type, Application application) throws ProcessingException {
-        return new GrizzlyHttpContainer(application);
+    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
+        if (HttpHandler.class.isAssignableFrom(type)) {
+            return type.cast(new GrizzlyHttpContainer(application));
+        }
+
+        return null;
     }
 }

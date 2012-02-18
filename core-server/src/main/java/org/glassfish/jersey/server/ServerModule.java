@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 
+import org.glassfish.jersey.server.spi.ContainerProvider;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.RequestHeaders;

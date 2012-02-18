@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.server.spi.ContainerProvider;
+
 /**
  * Factory for creating specific HTTP-based containers.
  *
@@ -58,7 +60,7 @@ public final class ContainerFactory {
      * service-provider will be iterated over until one returns a non-null
      * container instance.
      * <p>
-     * @param <A> the type of the container.
+     * @param <T> container type
      * @param type
      * @param application
      * @return the container.
@@ -66,17 +68,17 @@ public final class ContainerFactory {
      * @throws IllegalArgumentException if no container provider supports the type.
      */
     @SuppressWarnings("unchecked")
-    public static <A> A createContainer(Class<A> type, Application application) {
+    public static <T> T createContainer(Class<T> type, Application application) {
 
-        for (ContainerProvider<A> cp : application.getServiceProviders().getCustom(ContainerProvider.class)) {
-            A c = cp.createContainer(type, application);
+        for (ContainerProvider cp : application.getServiceProviders().getCustom(ContainerProvider.class)) {
+            T c = cp.createContainer(type, application);
             if (c != null) {
                 return c;
             }
         }
 
-        for (ContainerProvider<A> cp : application.getServiceProviders().getDefault(ContainerProvider.class)) {
-            A c = cp.createContainer(type, application);
+        for (ContainerProvider cp : application.getServiceProviders().getDefault(ContainerProvider.class)) {
+            T c = cp.createContainer(type, application);
             if (c != null) {
                 return c;
             }
