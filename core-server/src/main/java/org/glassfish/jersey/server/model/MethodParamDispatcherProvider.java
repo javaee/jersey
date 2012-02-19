@@ -51,7 +51,7 @@ import org.glassfish.hk2.Factory;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MethodParamDispatcherProvider extends AbstractJavaResourceMethodDispatcherProvider {
+class MethodParamDispatcherProvider extends AbstractJavaResourceMethodDispatcherProvider {
 
     @Override
     protected List<Factory<?>> createValueProviders(final InvocableResourceMethod resourceMethod) {

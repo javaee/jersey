@@ -54,7 +54,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
- * A composite {@link LinearStage linear stage} request processor.
+ * A composite {@link LinearAcceptor linear acceptor} request processor.
  * <p/>
  * When {@link #apply(java.lang.Object) invoked}, the supplied data are first
  * transformed by the nested linear stage chain. Once a terminal stage is reached
@@ -70,7 +70,7 @@ public class LinearRequestProcessor implements RequestProcessor {
     private final Factory<StagingContext<Request>> contextProvider;
 
     /**
-     * Construct a {@link LinearStage linear stage} request processor.
+     * Construct a {@link LinearAcceptor linear acceptor} request processor.
      *
      * @param rootAcceptor head of the nested linear stage chain to be run.
      * @param contextProvider provider of the staging context to be invoked

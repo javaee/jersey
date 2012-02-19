@@ -49,7 +49,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * {@inheritDoc}
+ * Jersey implementation of {@link javax.ws.rs.client.Configuration JAX-RS client
+ * configuration} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

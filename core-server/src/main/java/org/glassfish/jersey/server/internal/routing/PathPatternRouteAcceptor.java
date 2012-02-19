@@ -66,9 +66,10 @@ import com.google.common.collect.Iterators;
 public class PathPatternRouteAcceptor implements TreeAcceptor {
 
     /**
-     * "Assisted injection" factory interface for {@link PathPatternRouteTreeAcceptor}.
+     * "Assisted injection" factory interface for {@link PathPatternRouteAcceptor}.
      *
-     * @see com.google.inject.assistedinject.FactoryModuleBuilder
+     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
+     * assisted injection in Guice</a>.
      */
     public class Builder {
 

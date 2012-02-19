@@ -83,7 +83,7 @@ public class JaxbStringReaderProvider {
     private final ContextResolver<Unmarshaller> unmarshaller;
 
     /**
-     * TODO javadoc.
+     * Create JAXB string reader provider.
      *
      * @param ps
      */
@@ -93,11 +93,11 @@ public class JaxbStringReaderProvider {
     }
 
     /**
-     * TODO javadoc.
+     * Get JAXB unmarshaller for the type.
      *
-     * @param type
-     * @return
-     * @throws JAXBException
+     * @param type Java type to be unmarshalled.
+     * @return JAXB unmarshaller for the given type.
+     * @throws JAXBException in case there's an error retrieving the unmarshaller.
      */
     protected final Unmarshaller getUnmarshaller(Class type) throws JAXBException {
         if (unmarshaller != null) {
@@ -122,11 +122,11 @@ public class JaxbStringReaderProvider {
     }
 
     /**
-     * TODO javadoc.
+     * Get the stored JAXB context supporting the Java type.
      *
-     * @param type
-     * @return
-     * @throws JAXBException
+     * @param type Java type supported by the stored JAXB context.
+     * @return stored JAXB context supporting the Java type.
+     * @throws JAXBException in case JAXB context retrieval fails.
      */
     protected JAXBContext getStoredJAXBContext(Class type) throws JAXBException {
         synchronized (jaxbContexts) {
@@ -140,7 +140,7 @@ public class JaxbStringReaderProvider {
     }
 
     /**
-     * TODO javadoc.
+     * Root element JAXB string reader provider.
      */
     public static class RootElementProvider extends JaxbStringReaderProvider implements StringValueReaderProvider {
 

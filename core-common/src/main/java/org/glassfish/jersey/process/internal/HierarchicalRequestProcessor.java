@@ -55,10 +55,10 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.base.Optional;
 
 /**
- * A composite {@link TreeStage hierarchical} request processor.
+ * A composite {@link TreeAcceptor hierarchical} request processor.
  * <p/>
  * When {@link #apply(java.lang.Object) invoked}, the supplied request is continuously
- * transformed by the nested {@link TreeStage stage hierarchy} using a depth-first
+ * transformed by the nested {@link TreeAcceptor acceptor hierarchy} using a depth-first
  * transformation strategy until a request-to-response inflector is
  * {@link Inflecting found on a leaf stage node}, in which case the hierarchical
  * stage transformation is terminated and a continuation with the transformed
@@ -73,7 +73,7 @@ public class HierarchicalRequestProcessor implements RequestProcessor {
     private final Factory<StagingContext<Request>> contextProvider;
 
     /**
-     * Construct a {@link TreeStage hierarchical} request processor.
+     * Construct a {@link TreeAcceptor hierarchical} request processor.
      *
      * @param rootStage head of the nested stage hierarchy to be applied.
      * @param contextProvider staging context to be invoked before and after each
@@ -89,7 +89,7 @@ public class HierarchicalRequestProcessor implements RequestProcessor {
     /**
      * {@inheritDoc}
      * <p/>
-     * This implementation applies the nested {@link TreeStage stage hierarchy}
+     * This implementation applies the nested {@link TreeAcceptor acceptor hierarchy}
      * using a depth-first transformation strategy until a request-to-response
      * inflector is {@link Inflecting found on a leaf stage node}, in which case
      * the hierarchical stage transformation is terminated and a continuation with

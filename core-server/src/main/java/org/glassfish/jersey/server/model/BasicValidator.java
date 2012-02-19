@@ -81,7 +81,7 @@ import org.glassfish.jersey.uri.UriTemplate;
  *
  * <p>To check a single resource class, one could
  * use the {@link IntrospectionModeller#createResource(java.lang.Class)} method
- * to get an abstract resource model. {@link ResourceModelValidator#validate(com.sun.jersey.api.model.AbstractModelComponent)}
+ * to get an abstract resource model. {@link ResourceModelValidator#validate(org.glassfish.jersey.server.model.ResourceModelComponent)}
  * method then populates the issue list, which could be then obtained by the {@link ResourceModelValidator#getIssueList()}.
  * Unless you explicitly clear the list, subsequent calls to the validate method will add new items to the list,
  * so that you can build the issue list for more than one resource. To clear the list, you may want to call

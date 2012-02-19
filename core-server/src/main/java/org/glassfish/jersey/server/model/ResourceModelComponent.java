@@ -43,25 +43,25 @@ import java.util.List;
 
 /**
  * Marker interface for all abstract resource model components,
- * so that they are traversable using the visitor pattern. 
- * 
- * {@see ResourceModelVisitor}
- * 
+ * so that they are traversable using the visitor pattern.
+ *
+ * @see ResourceModelVisitor
+ *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public interface ResourceModelComponent {
-    
+
     /**
-     * A component should call the visitor back with an appropriate 
+     * A component should call the visitor back with an appropriate
      * visitor interface method to give it a chance to process.
-     * 
-     * @see ResourceModelVisitor
+     *
+     * @param visitor resource model visitor.
      */
     public void accept(ResourceModelVisitor visitor);
-    
+
     /**
      * Should return all existing resource model sub-components.
-     * 
+     *
      * @return list of all sub-components
      */
     public List<ResourceModelComponent> getComponents();

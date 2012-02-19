@@ -48,7 +48,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 /**
- * Default implementation of {@link RequestInvoker.RespondingContext responding context}.
+ * Default implementation of the request-scoped
+ * {@link ResponseProcessor.RespondingContext responding context}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

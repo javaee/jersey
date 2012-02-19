@@ -106,14 +106,15 @@ public interface ResourceMethodDispatcher {
      * returned response of an arbitrary Java type to a JAX-RS {@link Response response}
      * instance.
      * <p />
-     * When the method is invoked, the dispatcher will extract the Java
-     * {@link Method method} information from the invocable resource method and
-     * use the information to retrieve the required input parameters from either
-     * the request instance or any other available run-time information. Once the
-     * set of input parameter values is computed, the underlying invocation handler
-     * instance is invoked to process (invoke) the Java resource method with the
-     * computed input parameter values. The returned response is subsequently converted
-     * into a JAX-RS {@code Response} type and returned from the dispatcher.
+     * When the method is invoked, the dispatcher will extract the
+     * {@link java.lang.reflect.Method Java method} information from the invocable
+     * resource method and use the information to retrieve the required input
+     * parameters from either the request instance or any other available run-time
+     * information. Once the set of input parameter values is computed, the underlying
+     * invocation handler instance is invoked to process (invoke) the Java resource
+     * method with the computed input parameter values. The returned response is
+     * subsequently converted into a JAX-RS {@code Response} type and returned
+     * from the dispatcher.
      * <p />
      * It is assumed that the supplied resource implements the invocable method.
      * Dispatcher implementation should not need to do any additional checks in

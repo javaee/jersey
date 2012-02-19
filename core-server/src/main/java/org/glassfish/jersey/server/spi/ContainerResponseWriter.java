@@ -62,7 +62,7 @@ public interface ContainerResponseWriter {
      * suspended.
      *
      * Should the suspend operation time out, the container is responsible for
-     * invoking the {@link TimeoutHandler#onTimeout(org.glassfish.jersey.server.ContainerResponseWriter)}
+     * invoking the {@link TimeoutHandler#onTimeout(ContainerResponseWriter)}
      * callback method to get the response that should be returned to the client.
      */
     public interface TimeoutHandler {
@@ -127,7 +127,7 @@ public interface ContainerResponseWriter {
      * <p />
      * The writer will return {@code true} if it has been suspended previously
      * and has not been resumed yet. If the writer has been resumed already, it
-     * will return {@link false}.
+     * will return {@code false}.
      * <p />
      * The result returned by this method allows to synchronize the the main
      * request-response processing flow in the application with the code that

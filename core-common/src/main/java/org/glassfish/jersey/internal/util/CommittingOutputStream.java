@@ -68,8 +68,7 @@ public abstract class CommittingOutputStream extends OutputStream {
      * of the adapted output stream.
      * <p />
      * When this constructor is utilized to construct a committing output stream
-     * instance, the method {@link #getOutputStre
-     * am()} MUST be overridden to return
+     * instance, the method {@link #getOutputStream()} MUST be overridden to return
      * the adapted output stream.
      *
      * @see #CommittingOutputStream(OutputStream) adapting constructor

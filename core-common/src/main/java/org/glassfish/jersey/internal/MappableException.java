@@ -51,17 +51,17 @@ package org.glassfish.jersey.internal;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class MappableException extends ProcessingException {
-    
+
     private static final long serialVersionUID = -7326005523956892754L;
 
     /**
      * Construct a mappable container exception.
      *
      * @param cause the cause. If the cause is an instance of
-     *        {@link MappableContainerException} then the cause of this exception
-     *        will be obtained from the cause of that MappableContainerException
-     *        instance, and the process will repeat until a cause is obtained
-     *        that is not an instance of MappableContainerException.
+     *     {@link MappableException} then the cause of this exception
+     *     will be obtained by recursively searching though the exception
+     *     causes until a cause is obtained that is not an instance of
+     *     {@code MappableException}.
      */
     public MappableException(Throwable cause) {
         super(unwrap(cause));

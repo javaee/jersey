@@ -58,54 +58,53 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
- /**
  * A {@link javax.servlet.Servlet} or {@link Filter} for deploying root resource classes.
- * <p>
+ * <p />
  * The following sections make reference to initialization parameters. Unless
  * otherwise specified the initialization parameters apply to both server
  * and filter initialization parameters.
- * <p>
+ * <p />
  * The servlet or filter may be configured to have an initialization
- * parameter "javax.ws.rs.Application" and whose value is a
+ * parameter {@value ServerProperties#JAXRS_APPLICATION_CLASS}
+ * (see {@link ServerProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
  * fully qualified name of a class that implements {@link javax.ws.rs.core.Application}.
  * The class is instantiated as a singleton component
  * managed by the runtime, and injection may be performed (the artifacts that
  * may be injected are limited to injectable providers registered when
  * the servlet or filter is configured).
- * <p>
- * If the initialization parameter "javax.ws.rs.Application" is not present and a
- * initialization parameter "org.glassfish.jersey.config.property.packages" is present
- * (see {@link ResourceConfig#PROPERTY_PACKAGES}) a new instance of
+ * <p />
+ * If the initialization parameter {@value ServerProperties#JAXRS_APPLICATION_CLASS}
+ * is not present and a initialization parameter {@value ServerProperties#PROVIDER_PACKAGES}
+ * is present (see {@link ServerProperties#PROVIDER_PACKAGES}) a new instance of
  * {@link ResourceConfig} with this configuration is created. The initialization parameter
- * "com.sun.jersey.config.property.packages" MUST be set to provide one or
+ * {@value ServerProperties#PROVIDER_PACKAGES} MUST be set to provide one or
  * more package names. Each package name MUST be separated by ';'.
- *
- * <p>
+ * <p />
  * If none of the above resource configuration related initialization parameters
- * are present a new instance of {@link ResourceConfig} with {@link WebAppResourcesScanner} is created. The
- * initialization parameter "org.glassfish.jersey.config.property.classpath" MAY be
+ * are present a new instance of {@link ResourceConfig} with {@link WebAppResourcesScanner}
+ * is created. The initialization parameter{@value ServerProperties#PROVIDER_CLASSPATH}
+ * is present (see {@link ServerProperties#PROVIDER_CLASSPATH}) MAY be
  * set to provide one or more resource paths. Each path MUST be separated by ';'.
- *
  * If the initialization parameter is not present then the following resource
- * paths are utilized:
- * "/WEB-INF/lib" and "/WEB-INF/classes".
- * <p>
+ * paths are utilized: {@code "/WEB-INF/lib"} and {@code "/WEB-INF/classes"}.
+ * <p />
  * All initialization parameters are added as properties of the created
  * {@link ResourceConfig}.
- * <p>
+ * <p />
  * A new {@link org.glassfish.jersey.server.Application} instance will be created and configured such
  * that the following classes may be injected onto a root resource, provider
- * and {@link javax.ws.rs.core.Application} classes using {@link javax.ws.rs.core.Context}:
+ * and {@link javax.ws.rs.core.Application} classes using {@link javax.ws.rs.core.Context
+ * &#64;Context} annotation:
  * {@link HttpServletRequest}, {@link HttpServletResponse},
  * {@link ServletContext}, {@link javax.servlet.ServletConfig} and {@link WebConfig}.
  * If this class is used as a Servlet then the {@link javax.servlet.ServletConfig} class may
- * be injected. If this class is used as a Filter then the {@link FilterConfig}
+ * be injected. If this class is used as a servlet filter then the {@link FilterConfig}
  * class may be injected. {@link WebConfig} may be injected to abstract
  * servlet or filter deployment.
- * <p>
  *
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -349,12 +348,12 @@ public class ServletContainer extends HttpServlet implements Filter {
     }
 
     /**
-     * Dispatches client requests to the {@link #service(java.net.URI, java.net.URI, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)  }
-     * method.
-     * <p>
+     * Dispatches client requests to the
+     * {@link #service(URI, URI, HttpServletRequest, HttpServletResponse)} method.
+     * <p />
      * If the servlet path matches the regular expression declared by the
-     * property {@link #PROPERTY_WEB_PAGE_CONTENT_REGEX} then the request
-     * is forwarded to the next filter in the filter chain so that the
+     * property {@link ServletProperties#FILTER_STATIC_CONTENT_REGEXP} then the
+     * request is forwarded to the next filter in the filter chain so that the
      * underlying servlet engine can process the request otherwise Jersey
      * will process the request.
      *
@@ -456,10 +455,12 @@ public class ServletContainer extends HttpServlet implements Filter {
     }
 
     /**
+     * Get the static content path pattern.
+     *
      * @return the {@link Pattern} compiled from a regular expression that is
-     * the property value of {@link #PROPERTY_WEB_PAGE_CONTENT_REGEX}.
-     * A <code>null</code> value will be returned if the property is not present
-     * is or an empty String.
+     * the property value of {@link ServletProperties#FILTER_STATIC_CONTENT_REGEXP}.
+     * A {@code null} value will be returned if the property is not set or is
+     * an empty String.
      */
     protected Pattern getStaticContentPattern() {
         return staticContentPattern;

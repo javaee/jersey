@@ -330,22 +330,23 @@ public class WebComponent {
 
     /**
      * Get the default resource configuration if one is not declared in the
-     * web.xml.
-     * <p/>
+     * {@code web.xml}.
+     * <p />
      * This implementation returns an instance of {@link ResourceConfig}
      * that scans in files and directories as declared by the
-     * {@link ResourceConfig#PROVIDER_CLASSPATH} if present, otherwise
-     * in the "WEB-INF/lib" and "WEB-INF/classes" directories.
-     * <p/>
+     * {@link ServerProperties#PROVIDER_CLASSPATH} property value if present,
+     * otherwise in the {@code "WEB-INF/lib"} and {@code "WEB-INF/classes"}
+     * directories.
+     * <p />
      * An inheriting class may override this method to supply a different
      * default resource configuration implementation.
      *
      * @param props the properties to pass to the resource configuration.
-     * @param wc    the web configuration.
+     * @param wc the web configuration.
      * @param modules modules to pass to the {@link Application} configuration.
      * @return the default resource configuration.
-     * @throws javax.servlet.ServletException in case of any issues with providing \
-     *                                        the default resource configuration
+     * @throws javax.servlet.ServletException in case of any issues with providing
+     *     the default resource configuration.
      */
     protected ResourceConfig getDefaultResourceConfig(Map<String, Object> props,
             WebConfig wc,

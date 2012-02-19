@@ -66,7 +66,8 @@ import org.glassfish.jersey.message.internal.AbstractRootElementJaxbProvider;
 
 /**
  * JSON message entity media type provider (reader & writer) for JAXB types that
- * are annotated with {@link XmlRootElement} or {@link XmlType}.
+ * are annotated with {@link javax.xml.bind.annotation.XmlRootElement &#64;XmlRootElement}
+ * or {@link javax.xml.bind.annotation.XmlType &#64;XmlType}.
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak

@@ -59,7 +59,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * {@inheritDoc}
+ * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
+ * request invocation} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

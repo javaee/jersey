@@ -48,16 +48,15 @@ import com.google.common.base.Optional;
  * is resolved until a terminal stage, the one that does not return a continuation that
  * could be further followed, is reached. With each stage the registered staging
  * context callback methods are invoked
- * {@link #beforeStage(org.glassfish.jersey.internal.process.Stage, java.lang.Object) before}
- * and {@link #afterStage(org.glassfish.jersey.internal.process.Stage, java.lang.Object) after}
+ * {@link #beforeStage(org.glassfish.jersey.process.internal.Stage, java.lang.Object) before}
+ * and {@link #afterStage(org.glassfish.jersey.process.internal.Stage, java.lang.Object)  after}
  * a stage is {@link Stage#apply(java.lang.Object) applied}.
  *
  * @param <DATA> supported transformable data type.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @see LinearStageRunner
- * @see LinearStageProcessor
- * @see TreeStageProcessor
+ * @see LinearRequestProcessor
+ * @see HierarchicalRequestProcessor
  */
 public interface StagingContext<DATA> {
 

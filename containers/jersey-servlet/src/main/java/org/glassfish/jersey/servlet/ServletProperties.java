@@ -52,12 +52,12 @@ public final class ServletProperties {
      * by the underlying servlet engine.
      * <p />
      * The property is only applicable when {@link ServletContainer Jersey servlet
-     * container} is configured to run as a {@link Filter}, otherwise this property
-     * will be ignored. If a servlet path matches this regular expression then the
-     * filter forwards the request to the next filter in the filter chain so that
-     * the underlying servlet engine can process the request otherwise Jersey
-     * will process the request. For example if you set the value to
-     * <code>/(image|css)/.*</code> then you can serve up images and CSS files
+     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
+     * this property will be ignored. If a servlet path matches this regular
+     * expression then the filter forwards the request to the next filter in the
+     * filter chain so that the underlying servlet engine can process the request
+     * otherwise Jersey will process the request. For example if you set the value
+     * to {@code /(image|css)/.*} then you can serve up images and CSS files
      * for your Implicit or Explicit Views while still processing your JAX-RS
      * resources.
      * <p />
@@ -83,8 +83,8 @@ public final class ServletProperties {
      * may be invoked when this feature is enabled.
      * <p />
      * The property is only applicable when {@link ServletContainer Jersey servlet
-     * container} is configured to run as a {@link Filter}, otherwise this property
-     * will be ignored.
+     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
+     * this property will be ignored.
      * <p />
      * Application code, such as methods corresponding to sub-resource locators
      * may be invoked when this feature is enabled.
@@ -96,7 +96,7 @@ public final class ServletProperties {
     // TODO: implement support.
     public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOnNotFound";
     /**
-     * If set, indicates the URL pattern of the Jerseyfilter context path.
+     * If set, indicates the URL pattern of the Jersey servlet filter context path.
      * <p>
      * If the URL pattern of a filter is set to a base path and a wildcard,
      * such as "/base/*", then this property can be used to declare a filter
@@ -106,7 +106,7 @@ public final class ServletProperties {
      * without parsing the {@code web.xml}, hence why this property is necessary.)
      * <p>
      * The property is only applicable when {@link ServletContainer Jersey servlet
-     * container} is configured to run as a {@link Filter}, otherwise this property
+     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise this property
      * will be ignored.
      * <p>
      * The value of the property may consist of one or more path segments separate by

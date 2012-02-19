@@ -100,7 +100,12 @@ import com.google.common.util.concurrent.SettableFuture;
 /**
  * Jersey server-side application.
  *
- * @see {@link ResourceConfig}.
+ * Container implementations use the application to instance to process requests
+ * by invoking the {@link #apply(Request, ContainerResponseWriter) apply(request, responseWriter)}
+ * method on a configured application instance.
+ *
+ * @see ResourceConfig
+ * @see org.glassfish.jersey.server.spi.ContainerProvider
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -659,7 +664,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
     /**
      * Dynamically binds HK2 modules.
      *
-     * @see {@link Module}
+     * @see Module
      *
      * @param modules newly bound modules.
      */

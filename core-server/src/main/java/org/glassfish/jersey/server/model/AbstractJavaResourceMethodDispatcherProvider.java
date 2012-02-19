@@ -43,7 +43,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -61,14 +60,14 @@ import org.jvnet.hk2.annotations.Inject;
  * creates instances of {@link ResourceMethodDispatcher}.
  * <p>
  * Implementing classes are required to override the
- * {@link #getInjectableValuesProvider(com.sun.jersey.api.model.AbstractResourceMethod) }
- * method to return a {@link InjectableValuesProvider} associated with the parameters
+ * {@link #createValueProviders(org.glassfish.jersey.server.model.InvocableResourceMethod)}
+ * method to return {@link Factory injection providers} associated with the parameters
  * of the abstract resource method.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
+abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     @Inject
     private Services services;

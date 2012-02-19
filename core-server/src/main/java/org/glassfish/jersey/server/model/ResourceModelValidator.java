@@ -65,28 +65,36 @@ import java.util.List;
  */
 public abstract class ResourceModelValidator implements ResourceModelVisitor {
 
+    /**
+     * Resource model exception.
+     */
     public static class ModelException extends RuntimeException {
+
+        private static final long serialVersionUID = 1505691540024785160L;
         public final List<ResourceModelIssue> issues;
 
         public ModelException(List<ResourceModelIssue> issues) {
             this.issues = new ArrayList<ResourceModelIssue>(issues);
         }
     }
-
     final List<ResourceModelIssue> issueList = new LinkedList<ResourceModelIssue>();
 
     /**
-     * Returns a list of issues found after {@link #validate(com.sun.jersey.api.model.AbstractModelComponent) }
-     * method has been invoked
-     * @return a non-null list of issues
+     * Returns a list of issues found after
+     * {@link #validate(org.glassfish.jersey.server.model.ResourceModelComponent)}
+     * method has been invoked.
+     *
+     * @return a non-null list of issues.
      */
     public List<ResourceModelIssue> getIssueList() {
         return issueList;
     }
 
     /**
-     * Convenience method to see if there were fatal issues found
-     * @return true if there are any fatal issues present in the current issue list
+     * Convenience method to see if there were fatal issues found.
+     *
+     * @return {@code true} if there are any fatal issues present in the current
+     *     issue list.
      */
     public boolean fatalIssuesFound() {
         for (ResourceModelIssue issue : getIssueList()) {
@@ -99,7 +107,7 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
 
     /**
      * Removes all issues from the current issue list. The method could be used
-     * to re-use the same ResourceModelValidator for another resource model
+     * to re-use the same ResourceModelValidator for another resource model.
      */
     public void cleanIssueList() {
         issueList.clear();
@@ -108,9 +116,9 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
     /**
      * The validate method validates a component and adds possible
      * issues found to it's list. The list of issues could be then retrieved
-     * via getIssueList method
+     * via getIssueList method.
      *
-     * @param component
+     * @param component resource model component.
      */
     public void validate(final ResourceModelComponent component) {
         component.accept(this);

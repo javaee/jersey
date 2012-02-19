@@ -52,7 +52,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * {@inheritDoc}
+ * Jersey implementation of {@link javax.ws.rs.client.Target JAX-RS client target}
+ * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

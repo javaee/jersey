@@ -103,7 +103,7 @@
  * represents an array, thus enabling consuming of such JSON values the same way on
  * the client side no matter how many elements the array contains.
  *
- * <p>The {@link com.sun.jersey.api.json.JSONJAXBContext} may be configured to enable
+ * <p>The {@link org.glassfish.jersey.media.json.JsonJaxbContext} may be configured to enable
  * such required production of JSON as described above in the following manner:
  * <blockquote><pre>
  * <span style="font-weight:bold">&#064;Provider</span>

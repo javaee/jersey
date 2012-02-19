@@ -81,7 +81,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * {@inheritDoc}
+ * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS Client}
+ * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

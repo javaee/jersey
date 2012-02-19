@@ -51,8 +51,8 @@ import org.glassfish.jersey.server.Application;
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
  * {@link Application Jersey application} using the application's
- * {@link Application#apply(javax.ws.rs.core.Request, ContainerContext)
- * apply(request, context)} method and sending the responses provided by the
+ * {@link Application#apply(javax.ws.rs.core.Request, org.glassfish.jersey.server.spi.ContainerResponseWriter)
+ * apply(request, responseWriter)} method and sending the responses provided by the
  * application back to the client.
  * <p />
  * A provider shall support a one-to-one mapping between a type that is not of
@@ -65,7 +65,7 @@ import org.glassfish.jersey.server.Application;
  * HK2 {@code ContainterProvider} contract binding in a custom HK2 module configured
  * in the {@link org.glassfish.jersey.server.Application Jersey application}.
  * Alternatively, the implementation can identify itself by placing a provider-configuration
- * file (if not already present), "org.glassfish.jersey.server.spi.ContainerProvider"
+ * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}
  * in the resource directory <tt>META-INF/services</tt>, and adding the fully
  * qualified service-provider-class of the implementation in the file.
  *

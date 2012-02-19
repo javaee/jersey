@@ -41,7 +41,6 @@ package org.glassfish.jersey.internal;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,7 +48,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Sets;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -58,6 +56,7 @@ import org.glassfish.hk2.Services;
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Combines access to custom provider classes and instances
@@ -159,7 +158,7 @@ public class ServiceProviders {
      * service provider lookup in {@code META-INF/services}.
      * <p/>
      * The returned provider list, if not empty, is sorted using the supplied
-     * {@link comparator} before it is returned.
+     * {@link Comparator comparator} before it is returned.
      *
      * @param <T> provider Java type.
      * @param providerContract provider contract class.
@@ -194,7 +193,7 @@ public class ServiceProviders {
      * internally registered provider instances or classes.
      * <p/>
      * The returned provider list, if not empty, is sorted using the supplied
-     * {@link comparator} before it is returned.
+     * {@link Comparator comparator} before it is returned.
      *
      * @param <T> provider Java type.
      * @param providerContract provider contract class.
@@ -213,7 +212,7 @@ public class ServiceProviders {
      * Get all provider instances of the requested provider type found both
      * in the internal storage as well as by performing service provider lookup
      * in {@code META-INF/services}. This method returns a result that is a
-     * combination of the results returned by {@link #findProviders(java.lang.Class)}
+     * combination of the results returned by {@link #getCustom(java.lang.Class)}
      * and {@link #getDefault(java.lang.Class)}.
      *
      * @param <T> provider Java type.
@@ -231,11 +230,11 @@ public class ServiceProviders {
      * Get all provider instances of the requested provider type found both
      * in the internal storage as well as by performing service provider lookup
      * in {@code META-INF/services}. This method returns a result that is a
-     * combination of the results returned by {@link #findProviders(java.lang.Class)}
+     * combination of the results returned by {@link #getCustom(java.lang.Class)}
      * and {@link #getDefault(java.lang.Class)}.
      * <p/>
      * The returned provider list, if not empty, is sorted using the supplied
-     * {@link comparator} before it is returned.
+     * {@link Comparator comparator} before it is returned.
      *
      * @param <T> provider Java type.
      * @param providerContract provider contract class.
