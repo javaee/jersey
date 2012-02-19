@@ -54,7 +54,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.spi.ContainerContext;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -93,7 +93,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         }
     };
 
-    private final static class Context implements ContainerContext {
+    private final static class Context implements ContainerResponseWriter {
 
         private final Response grizzlyResponse;
         private final AtomicBoolean suspended;

@@ -75,7 +75,7 @@ import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.spi.ContainerContext;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
@@ -378,7 +378,7 @@ public class WebComponent {
 //
 //        return ResourceConfig.builder().addFinder(new WebAppResourcesScanner(webConfig.getServletContext())).build();
 //    }
-    private final static class Context implements ContainerContext {
+    private final static class Context implements ContainerResponseWriter {
 
         private final HttpServletRequest request;
         private final HttpServletResponse response;

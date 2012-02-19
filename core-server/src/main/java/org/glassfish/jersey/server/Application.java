@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.server.spi.ContainerContext;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -108,16 +108,87 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
     /**
      * Jersey application builder that provides programmatic API for creating
-     * server-side JAX-RS / Jersey applications.
+     * server-side JAX-RS / Jersey applications. The programmatic API complements
+     * the annotation-based resource API defined by JAX-RS.
+     * <p />
+     * A typical use case for the programmatic resource binding API is demonstrated
+     * by the following example:
+     *
+     * <pre>  Application.Builder appBuilder = Application.builder();
+     *
+     *  appBuilder.bind("a")
+     *     .method("GET").to(new Inflector&lt;Request, Response&gt;() {
+     *          &#64;Override
+     *          public Response apply(Request data) {
+     *              // ...GET "/a" request method processing
+     *          }
+     *      })
+     *      .method("HEAD", "OPTIONS").to(new Inflector&lt;Request, Response&gt;() {
+     *          &#64;Override
+     *          public Response apply(Request data) {
+     *              // ...HEAD & OPTIONS "/a" request methods processing
+     *          }
+     *      });
+     *  appBuilder
+     *     .bind("b")
+     *         .method("GET").to(new Inflector&lt;Request, Response&gt;() {
+     *              &#64;Override
+     *              public Response apply(Request data) {
+     *                  // ...GET "/b" request method processing
+     *              }
+     *          })
+     *          .subPath("c")
+     *             .method("GET").to(new Inflector&lt;Request, Response&gt;() {
+     *                  &#64;Override
+     *                  public Response apply(Request data) {
+     *                      // ...GET "/b/c" request method processing
+     *                  }
+     *              });
+     *
+     *  appBuilder.build();</pre>
+     *
+     * The application built in the example above is equivalent to an
+     * application that contains the following annotation-based resources:
+     *
+     * <pre>  &#64;Path("a")
+     *  public class ResourceA {
+     *
+     *      &#64;GET
+     *      public Response get(Request request) { ... }
+     *
+     *      &#64;OPTIONS &#64;HEAD
+     *      public Response optionsAndHead(Request request) { ... }
+     *  }
+     *
+     *  &#64;Path("b")
+     *  public class ResourceB {
+     *
+     *      &#64;GET
+     *      public Response getB(Request request) { ... }
+     *
+     *      &#64;Path("c")
+     *      &#64;GET
+     *      public Response getBC(Request request) { ... }
+     *  }
+     * </pre>
+     *
      */
     public interface Builder {
 
         /**
-         * Bind a resource to a path within the application.
-         * <p/>
-         * TODO elaborate on javadoc.
+         * Bind a new resource to a path within the application.
          *
-         * @param path resource path.
+         * The method is an entry point to the Jersey application builder
+         * fluent programmatic resource binding API. It is equivalent to placing
+         * {@link javax.ws.rs.Path &#64;Path} annotation on an annotation-based
+         * resource class. See the {@link Builder application builder example} for
+         * more information.
+         * <p />
+         * When invoked, the application builder creates a new {@link BoundBuilder
+         * bound resource builder} that is bound to the supplied {@code path},
+         * relative to the base application URI.
+         *
+         * @param path resource path relative to the base application URI.
          * @return resource builder bound to the {@code path}.
          */
         Builder.BoundBuilder bind(String path);
@@ -139,20 +210,43 @@ public final class Application implements Inflector<Request, Future<Response>> {
         public interface ResourceMethodBuilder {
 
             /**
-             * Bind previously specified method(s) to provided transformation.
+             * Bind previously specified method(s) to provided request-to-response
+             * {@link Inflector inflector} instance.
+             * <p />
+             * Invoking is method is equivalent to defining a resource method
+             * in an annotation-based resource class. See the {@link Builder
+             * application builder example} for more information.
              *
-             * @param transformation request to response transformation implemented
-             * as an {@link Inflector Inflector&lt;Request, Response&gt;}.
+             * @param inflector request to response transformation implemented
+             *     as an {@link Inflector Inflector&lt;Request, Response&gt;}.
              * @return {@link BoundBuilder parent bound builder} that can be used to
-             * add more resource methods or sub-resource locators.
+             *     add more resource methods or sub-resource locators.
              */
-            public Builder.BoundBuilder to(Inflector<Request, Response> transformation);
-
-            public Builder.BoundBuilder to(Class<? extends Inflector<Request, Response>> transformationClass);
+            public Builder.BoundBuilder to(Inflector<Request, Response> inflector);
 
             /**
-             * Set supported response media types (equivalent of {@link javax.ws.rs.Produces}).
+             * Bind previously specified method(s) to provided request-to-response
+             * {@link Inflector inflector} class.
+             * <p />
+             * Invoking is method is equivalent to defining a resource method
+             * in an annotation-based resource class. See the {@link Builder
+             * application builder example} for more information.
+             *
+             * @param inflectorClass request to response transformation implemented
+             *     as an {@link Inflector Inflector&lt;Request, Response&gt;}.
+             * @return {@link BoundBuilder parent bound builder} that can be used to
+             *     add more resource methods or sub-resource locators.
+             */
+            public Builder.BoundBuilder to(Class<? extends Inflector<Request, Response>> inflectorClass);
+
+            /**
+             * Set supported response media types on a resource method.
              * Overrides any previously set values.
+             * <p />
+             * Invoking is method is equivalent to placing {@link javax.ws.rs.Produces
+             * &#64;Produces} annotation on a resource method in an annotation-based
+             * resource class. See the {@link Builder application builder example}
+             * for more information.
              *
              * @param mediaTypes supported response media types.
              * @return {@link ResourceMethodBuilder} updated builder instance}.
@@ -160,10 +254,15 @@ public final class Application implements Inflector<Request, Future<Response>> {
             public Builder.ResourceMethodBuilder produces(MediaType... mediaTypes);
 
             /**
-             * Set supported request media types (equivalent of {@link javax.ws.rs.Consumes}).
+             * Set accepted request media types on a resource method.
              * Overrides any previously set values.
+             * <p />
+             * Invoking is method is equivalent to placing {@link javax.ws.rs.Consumes
+             * &#64;Consumes} annotation on a resource method in an annotation-based
+             * resource class. See the {@link Builder application builder example}
+             * for more information.
              *
-             * @param mediaTypes supported request media types.
+             * @param mediaTypes accepted request media types.
              * @return {@link ResourceMethodBuilder} updated builder instance}.
              */
             public Builder.ResourceMethodBuilder consumes(MediaType... mediaTypes);
@@ -178,20 +277,29 @@ public final class Application implements Inflector<Request, Future<Response>> {
             /**
              * Bind new HTTP methods to the path previously configured in this
              * {@link BoundBuilder builder}.
-             * <p/>
              * If any of the specified methods has already been bound earlier, the
              * previous method binding will be overridden.
+             * <p />
+             * Invoking is method is equivalent to placing a {@link javax.ws.rs.HttpMethod
+             * http method meta-annotated} annotation on a resource method in an
+             * annotation-based resource class. See the {@link Builder application
+             * builder example} for more information.
              *
              * @param methods set of HTTP methods to be bound. Any duplicate values
-             * will be automatically discarded.
+             *     will be automatically discarded.
              * @return configured {@link ResourceMethodBuilder resource method builder}
-             * instance.
+             *     instance.
              */
             public Builder.ResourceMethodBuilder method(String... methods);
 
             /**
              * Set supported response media types (equivalent of {@link javax.ws.rs.Produces})
-             * fir the current path. Overrides any previously set values.
+             * for the current path. Overrides any previously set values.
+             * <p />
+             * Invoking is method is equivalent to placing {@link javax.ws.rs.Produces
+             * &#64;Produces} annotation on a resource class in an annotation-based
+             * resource class. See the {@link Builder application builder example}
+             * for more information.
              *
              * @param mediaTypes supported response media types.
              * @return {@link ResourceMethodBuilder} updated builder instance}.
@@ -201,6 +309,11 @@ public final class Application implements Inflector<Request, Future<Response>> {
             /**
              * Set supported request media types (equivalent of {@link javax.ws.rs.Consumes})
              * for the current path. Overrides any previously set values.
+             * <p />
+             * Invoking is method is equivalent to placing {@link javax.ws.rs.Consumes
+             * &#64;Consumes} annotation on a resource class in an annotation-based
+             * resource class. See the {@link Builder application builder example}
+             * for more information.
              *
              * @param mediaTypes supported request media types.
              * @return {@link BoundBuilder} updated builder instance}.
@@ -209,11 +322,16 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
             /**
              * Append sub-path to the current path which can be used to bind new
-             * sub-resource locators.
+             * sub-resource methods and locators.
+             * <p />
+             * Invoking is method is equivalent to putting {@link javax.ws.rs.Path
+             * &#64;Path} annotation on a sub-resource method or sub-resource locator
+             * in an annotation-based resource class. See the {@link Builder application
+             * builder example} for more information.
              *
              * @param subPath path to be appended to the current path value.
              * @return {@link BoundBuilder updated builder instance} bound the the
-             * new path.
+             *     new path.
              */
             public Builder.BoundBuilder subPath(String subPath);
         }
@@ -310,7 +428,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
     }
 
     /**
-     * Invokes a request and returns the response {@link Future future}.
+     * Invokes a request and returns the {@link Future response future}.
      *
      * @param request request data.
      * @return response future.
@@ -335,13 +453,13 @@ public final class Application implements Inflector<Request, Future<Response>> {
     }
 
     /**
-     * Invokes a request and returns the response {@link Future future}.
+     * Invokes a request. Supplied callback is notified about the invocation result.
      *
      * @param request request data.
-     * @param callback response callback called when the request transformation is done.
-     *     Must not be {@code null}.
+     * @param callback request invocation callback called when the request
+     *     transformation is done, suspended, resumed etc. Must not be {@code null}.
      */
-    public void apply(Request request, Callback callback) {
+    private void apply(Request request, Callback callback) {
         try {
             requestScope.enter();
             configureProviders();
@@ -359,13 +477,13 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * implementations.
      *
      * The method invokes the request processing and uses the provided
-     * {@link ContainerContext container context} to suspend & resume the
+     * {@link ContainerResponseWriter container context} to suspend & resume the
      * processing as well as write the response back to the container.
      *
      * @param request request data.
      * @param context request-scoped container context.
      */
-    public void apply(final Request request, final ContainerContext context) {
+    public void apply(final Request request, final ContainerResponseWriter context) {
         apply(request, new Callback() {
 
             @Override
@@ -406,7 +524,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
     }
 
     @SuppressWarnings("unchecked")
-    private void writeResponse(ContainerContext writer, Request request, Response response) {
+    private void writeResponse(ContainerResponseWriter writer, Request request, Response response) {
         try {
             final boolean entityExists = response.hasEntity();
 
