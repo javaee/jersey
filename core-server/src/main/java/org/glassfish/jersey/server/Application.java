@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,16 +69,19 @@ import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.InflectorNotFoundException;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
 import org.glassfish.jersey.process.internal.PreMatchRequestFilterAcceptor;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestInvoker.Callback;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.RuntimeModelProvider;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -93,7 +96,6 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Monitor;
 import com.google.common.util.concurrent.SettableFuture;
-import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 
 /**
  * Jersey server-side application.
@@ -436,7 +438,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
     @Override
     public Future<Response> apply(Request request) {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        apply(request, new Callback() {
+        apply(request, new InvocationCallback() {
 
             @Override
             public void result(Response response) {
@@ -446,6 +448,16 @@ public final class Application implements Inflector<Request, Future<Response>> {
             @Override
             public void failure(Throwable exception) {
                 responseFuture.set(handleFailure(exception));
+            }
+
+            @Override
+            public void cancelled() {
+                responseFuture.cancel(true);
+            }
+
+            @Override
+            public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                // TODO implement suspend timeout processing
             }
         });
 
@@ -459,7 +471,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * @param callback request invocation callback called when the request
      *     transformation is done, suspended, resumed etc. Must not be {@code null}.
      */
-    private void apply(Request request, Callback callback) {
+    private void apply(Request request, InvocationCallback callback) {
         try {
             requestScope.enter();
             configureProviders();
@@ -481,19 +493,43 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * processing as well as write the response back to the container.
      *
      * @param request request data.
-     * @param context request-scoped container context.
+     * @param reponseWriter request-scoped container context.
      */
-    public void apply(final Request request, final ContainerResponseWriter context) {
-        apply(request, new Callback() {
+    public void apply(final Request request, final ContainerResponseWriter reponseWriter) {
+        apply(request, new InvocationCallback() {
 
             @Override
             public void result(Response response) {
-                writeResponse(context, request, response);
+                writeResponse(reponseWriter, request, response);
             }
 
             @Override
             public void failure(Throwable exception) {
-                writeResponse(context, request, handleFailure(exception));
+                writeResponse(reponseWriter, request, handleFailure(exception));
+            }
+
+            @Override
+            public void cancelled() {
+                reponseWriter.cancel();
+            }
+
+            @Override
+            public void suspended(long time, TimeUnit unit, final InvocationContext context) {
+                reponseWriter.suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
+
+                    @Override
+                    public void onTimeout(ContainerResponseWriter responseWriter) {
+                        if (responseWriter.resume()) {
+                            Response response = context.getResponse();
+                            if (response == null) {
+                                response = Response.serverError()
+                                        .entity("Request processing has timed out.")
+                                        .type(MediaType.TEXT_PLAIN).build();
+                            }
+                            writeResponse(reponseWriter, request, response);
+                        }
+                    }
+                });
             }
         });
     }
@@ -520,7 +556,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
             Logger.getLogger(Application.class.getName()).log(Level.FINE, message, failure);
         }
 
-        return Response.status(statusCode).entity(message).type("text/plain").build();
+        return Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build();
     }
 
     @SuppressWarnings("unchecked")

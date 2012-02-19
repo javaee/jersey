@@ -39,11 +39,23 @@
  */
 package org.glassfish.jersey.client;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
+import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import static javax.ws.rs.HttpMethod.POST;
+import static javax.ws.rs.HttpMethod.PUT;
+
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ServiceProviders;
@@ -51,29 +63,22 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
+
+import org.glassfish.hk2.HK2;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
+
 import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkState;
-import static javax.ws.rs.HttpMethod.POST;
-import static javax.ws.rs.HttpMethod.PUT;
 
 /**
  * {@inheritDoc}
@@ -189,7 +194,8 @@ public class Client implements javax.ws.rs.client.Client {
         this.invoker = services.forContract(RequestInvoker.class).get();
     }
 
-    /*package*/ ListenableFuture<Response> submit(final Invocation invocation, final InvocationCallback<? super javax.ws.rs.core.Response> callback) {
+    /*package*/ ListenableFuture<Response> submit(final Invocation invocation,
+            final javax.ws.rs.client.InvocationCallback<? super javax.ws.rs.core.Response> callback) {
         try {
             requestScope.enter();
 
@@ -197,10 +203,7 @@ public class Client implements javax.ws.rs.client.Client {
             References refs = injector.inject(References.class);
 
             final Configuration cfg = invocation.configuration();
-            final ServiceProviders providers = refs.serviceProvidersBuilder
-                    .setProviderClasses(cfg.getProviderClasses())
-                    .setProviderInstances(cfg.getProviderInstances())
-                    .build();
+            final ServiceProviders providers = refs.serviceProvidersBuilder.setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances()).build();
             final ExceptionMapperFactory mappers = new ExceptionMapperFactory(providers);
             final MessageBodyWorkers workers = new MessageBodyFactory(providers);
             final ContextResolvers resolvers = new ContextResolverFactory(providers);
@@ -211,7 +214,7 @@ public class Client implements javax.ws.rs.client.Client {
             refs.messageBodyWorkers.set(workers);
             refs.contextRespolvers.set(resolvers);
 
-            return invoker.apply(injector.inject(invocation.request()), new RequestInvoker.Callback() {
+            return invoker.apply(injector.inject(invocation.request()), new InvocationCallback() {
 
                 @Override
                 public void result(Response response) {
@@ -223,6 +226,16 @@ public class Client implements javax.ws.rs.client.Client {
                     // TODO JAX-RS client callback interface as well as invocation exception
                     // need to be fixed
                     callback.failed(new InvocationException(exception.getMessage(), exception));
+                }
+
+                @Override
+                public void cancelled() {
+                    // TODO implement client-side cancel event logic
+                }
+
+                @Override
+                public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                    // TODO implement client-side suspend event logic
                 }
             });
         } finally {

@@ -188,7 +188,7 @@ public class WebComponent {
         Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final Context containerContext = new Context(false, request, response);
+            final ResponseWriter containerContext = new ResponseWriter(false, request, response);
             application.apply(jaxRsRequest, containerContext);
 
             return containerContext.cResponse.getStatus();
@@ -378,7 +378,7 @@ public class WebComponent {
 //
 //        return ResourceConfig.builder().addFinder(new WebAppResourcesScanner(webConfig.getServletContext())).build();
 //    }
-    private final static class Context implements ContainerResponseWriter {
+    private final static class ResponseWriter implements ContainerResponseWriter {
 
         private final HttpServletRequest request;
         private final HttpServletResponse response;
@@ -390,7 +390,7 @@ public class WebComponent {
         private long contentLength;
         private final AtomicBoolean statusAndHeadersWritten;
 
-        Context(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response) {
+        ResponseWriter(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response) {
             this.useSetStatusOn404 = useSetStatusOn404;
             this.request = request;
             this.response = response;
@@ -398,12 +398,12 @@ public class WebComponent {
 
                 @Override
                 protected void commit() throws IOException {
-                    Context.this.writeStatusAndHeaders();
+                    ResponseWriter.this.writeStatusAndHeaders();
                 }
 
                 @Override
                 protected OutputStream getOutputStream() throws IOException {
-                    return Context.this.response.getOutputStream();
+                    return ResponseWriter.this.response.getOutputStream();
                 }
             };
 
@@ -432,7 +432,7 @@ public class WebComponent {
 
                 @Override
                 public void onTimeout(AsyncEvent event) throws IOException {
-                    timeoutHandler.onTimeout(Context.this);
+                    timeoutHandler.onTimeout(ResponseWriter.this);
                 }
 
                 @Override

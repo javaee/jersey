@@ -93,12 +93,12 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         }
     };
 
-    private final static class Context implements ContainerResponseWriter {
+    private final static class ResponseWriter implements ContainerResponseWriter {
 
         private final Response grizzlyResponse;
         private final AtomicBoolean suspended;
 
-        Context(final Response response) {
+        ResponseWriter(final Response response) {
             this.grizzlyResponse = response;
             this.suspended = new AtomicBoolean(false);
         }
@@ -123,7 +123,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
 
                         @Override
                         public boolean onTimeout(Response response) {
-                            timeoutHandler.onTimeout(Context.this);
+                            timeoutHandler.onTimeout(ResponseWriter.this);
 
                             // TODO should we return true ins some cases instead?
                             // Returning false relies on the fact that the timeoutHandler
@@ -173,7 +173,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
     // HttpRequestProcessor
     @Override
     public void service(final Request request, final Response response) {
-        application.apply(toJaxrsRequest(request), new Context(response));
+        application.apply(toJaxrsRequest(request), new ResponseWriter(response));
     }
 
     private URI getBaseUri(final Request request) {

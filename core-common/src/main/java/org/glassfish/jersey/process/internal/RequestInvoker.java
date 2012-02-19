@@ -42,7 +42,6 @@ package org.glassfish.jersey.process.internal;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
@@ -84,7 +83,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * into a {@link SuspendableInflectorAdapter suspendable inflector} which is subsequently
  * invoked. Once a response from the inflector is available, it is processed by
  * a {@link ResponseProcessor response processor} before it is made available in the
- * response future returned by the request invoker. If a {@link Callback response callback}
+ * response future returned by the request invoker. If a {@link InvocationCallback response callback}
  * is supplied, it is invoked at the end of the response processing chain.
  * <p/>
  * Request and response processing tasks are handled by a pair of dedicated customizable
@@ -101,29 +100,7 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class RequestInvoker implements Inflector<Request, ListenableFuture<Response>> {
 
-    /**
-     * {@link RequestInvoker} request transformation callback.
-     * <p/>
-     * The callback is invoked when the request transformation is terminated either
-     * successfully or by a failure.
-     */
-    public static interface Callback {
-
-        /**
-         * Invoked after a successful request transformation.
-         *
-         * @param response request transformation result.
-         */
-        public void result(Response response);
-
-        /**
-         * Invoked in case of a transformation failure.
-         *
-         * @param exception exception describing the failure.
-         */
-        public void failure(Throwable exception);
-    }
-    private static final Callback EMPTY_CALLBACK = new Callback() {
+    private static final InvocationCallback EMPTY_CALLBACK = new InvocationCallback() {
 
         @Override
         public void result(Response response) {
@@ -132,185 +109,15 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         @Override
         public void failure(Throwable exception) {
         }
-    };
 
-    /**
-     * Injectable invocation context that can be used to control various aspects
-     * of the invocation, e.g. the threading model.
-     */
-    public static interface InvocationContext {
-
-        /**
-         * Invocation context status.
-         */
-        public static enum Status {
-
-            /**
-             * Indicates the invocation context is running. This is a default state
-             * the invocation context is in case the invocation execution flow
-             * has not been explicitly modified (yet).
-             */
-            RUNNING,
-            /**
-             * Indicates the invocation running in the invocation context has been
-             * canceled.
-             */
-            CANCELLED,
-            /**
-             * Indicates the invocation running in the invocation context has been
-             * suspended.
-             *
-             * @see InvocationContext#suspend()
-             * @see InvocationContext#suspend(long)
-             * @see InvocationContext#suspend(long, TimeUnit)
-             */
-            SUSPENDED,
-            /**
-             * Indicates the invocation running in the invocation context has been
-             * resumed.
-             *
-             * @see InvocationContext#resume(Response)
-             * @see InvocationContext#resume(Throwable)
-             */
-            RESUMED
+        @Override
+        public void suspended(long time, TimeUnit unit, InvocationContext context) {
         }
 
-        /**
-         * Store a request scope snapshot in the internal stack.
-         *
-         * @param snapshot request scope snapshot to be stored.
-         */
-        public void pushRequestScope(RequestScope.Snapshot snapshot);
-
-        /**
-         * Retrieve a request scope snapshot stored in the internal stack.
-         * <p/>
-         * Note: the method blocks if no scope snapshot is stored and waits
-         * until a snapshot is available.
-         *
-         * @return the most recently stored request scope snapshot.
-         */
-        public RequestScope.Snapshot popRequestScope();
-
-        /**
-         * Get the current status of the invocation context.
-         *
-         * @return current status of the invocation context
-         */
-        public Status status();
-
-        /**
-         * Resume the previously suspended request invocation with a response.
-         *
-         * @param response response to be used in the resumed invocation processing.
-         * @throws IllegalStateException in case the invocation context
-         *     has not been suspended yet or has already been resumed.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#resume(Object)
-         */
-        public void resume(Response response);
-
-        /**
-         * Resume the previously suspended request invocation with an exception.
-         *
-         * @param exception exception to be used in the resumed invocation processing.
-         * @throws IllegalStateException in case the invocation context
-         *     has not been suspended yet or has already been resumed.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#resume(Exception)
-         */
-        public void resume(Throwable exception);
-
-        /**
-         * Suspend a request invocation. The method is re-entrant, IOW calling
-         * the method multiple times has the same effect as calling it only once.
-         *
-         * In case the invocation has been {@link Status#RESUMED resumed} or
-         * {@link Status#CANCELLED canceled} already, the call to suspend is ignored.
-         *
-         * @return {@link Future future} representing a handle of the suspended
-         *    request invocation that can be used for querying its current state
-         *    via one of the {@code Future.isXxx()} methods. The handle can also
-         *    be used to {@link Future#cancel(boolean) cancel} the invocation
-         *    altogether.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#suspend()
-         */
-        public Future<?> suspend();
-
-        /**
-         * Suspend a request invocation for up to the specified time in milliseconds.
-         * <p/>
-         * If called on an already suspended invocation, the existing timeout value
-         * is overridden by a new value and the suspension timeout counter is reset.
-         * This means that the suspended invocation will time out in:
-         * <pre>
-         *     System.currentTimeMillis() + timeInMillis
-         * </pre>
-         * .
-         * In case the invocation has been {@link Status#RESUMED resumed} or
-         * {@link Status#CANCELLED canceled} already, the call to suspend is ignored.
-         *
-         * @param timeInMillis suspension timeout in milliseconds.
-         * @return {@link Future future} representing a handle of the suspended
-         *    request invocation that can be used for querying its current state
-         *    via one of the {@code Future.isXxx()} methods. The handle can also
-         *    be used to {@link Future#cancel(boolean) cancel} the invocation
-         *    altogether.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#suspend(long)
-         */
-        public Future<?> suspend(long timeInMillis);
-
-        /**
-         * Suspend a request invocation for up to the specified time.
-         * <p/>
-         * If called on an already suspended invocation, the existing timeout value
-         * is overridden by a new value and the suspension timeout counter is reset.
-         * This means that the suspended invocation will time out in:
-         * <pre>
-         *     System.currentTimeMillis() + unit.toMillis(time)
-         * </pre>
-         * .
-         * In case the invocation has been {@link Status#RESUMED resumed} or
-         * {@link Status#CANCELLED canceled} already, the call to suspend is ignored.
-         *
-         * @param time suspension timeout value.
-         * @param unit suspension timeout time unit.
-         * @return {@link Future future} representing a handle of the suspended
-         *    request invocation that can be used for querying its current state
-         *    via one of the {@code Future.isXxx()} methods. The handle can also
-         *    be used to {@link Future#cancel(boolean) cancel} the invocation
-         *    altogether.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#suspend(long, TimeUnit)
-         */
-        public Future<?> suspend(long time, TimeUnit unit);
-
-        /**
-         * Set the default response to be used in case the suspended request invocation
-         * times out.
-         *
-         * @param response data to be sent back to the client in case the suspended
-         *     request invocation times out.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#setResponse(Object)
-         */
-        public void setResponse(Response response);
-
-        /**
-         * Returns default response to be send back to the client in case the suspended
-         * request invocation times out. The method may return {@code null} if no default
-         * response was set in the invocation context.
-         *
-         * @return default response to be sent back to the client in case the suspended
-         *     request invocation times out or {@code null} if no default response
-         *     was set.
-         *
-         * @see javax.ws.rs.core.ExecutionContext#getResponse()
-         */
-        public Response getResponse();
-    }
+        @Override
+        public void cancelled() {
+        }
+    };
     //
     @Inject
     private RequestScope requestScope;
@@ -379,7 +186,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
      * Transform request data of a given type into a response result of the
      * different type.
      * <p/>
-     * After the result is produced the provided {@link Callback result callback}
+     * After the result is produced the provided {@link InvocationCallback result callback}
      * is invoked. The result callback can be invoked on a different thread but
      * still in the same {@link InvocationContext request invocation context}.
      *
@@ -388,7 +195,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
      *     done. Must not be {@code null}.
      * @return future response.
      */
-    public ListenableFuture<Response> apply(final Request request, final Callback callback) {
+    public ListenableFuture<Response> apply(final Request request, final InvocationCallback callback) {
         final Callable<ListenableFuture<Response>> requester = new Callable<ListenableFuture<Response>>() {
 
             @Override
@@ -397,7 +204,8 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
-                final Ref<MessageBodyWorkers> workersRef = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {}).get();
+                final Ref<MessageBodyWorkers> workersRef = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
+                }).get();
                 final RequestBuilder rb = Requests.toBuilder(request);
                 Requests.setMessageWorkers(rb, workersRef.get());
                 Request requestWithWorkers = rb.build();

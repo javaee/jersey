@@ -41,10 +41,10 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.ExecutionException;
 
-import javax.ws.rs.core.Response;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.process.internal.RequestInvoker.InvocationContext;
+import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -57,7 +57,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
-import org.glassfish.jersey.internal.MappableException;
 
 /**
  * Processes result of the request transformation (successful or not). The response
@@ -145,9 +144,9 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         }
 
         public ResponseProcessor build(
-                final RequestInvoker.Callback callback,
+                final InvocationCallback callback,
                 final ListenableFuture<Response> response,
-                final RequestInvoker.InvocationContext invocationContext,
+                final InvocationContext invocationContext,
                 final ExceptionMappers exceptionMappers) {
 
             return new ResponseProcessor(
@@ -161,9 +160,9 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         }
     }
     //
-    private final RequestInvoker.Callback callback;
+    private final InvocationCallback callback;
     private final ListenableFuture<Response> inflectedResponse;
-    private final RequestInvoker.InvocationContext invocationContext;
+    private final InvocationContext invocationContext;
     //
     private final RequestScope requestScope;
     private final ExceptionMappers exceptionMappers;
@@ -171,7 +170,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
     private final Factory<StagingContext<Response>> responseStagingCtxProvider;
 
     private ResponseProcessor(
-            RequestInvoker.Callback callback,
+            InvocationCallback callback,
             ListenableFuture<Response> inflectedResponse,
             InvocationContext invocationContext,
             RequestScope requestScope,
@@ -186,7 +185,6 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         this.respondingCtxProvider = respondingCtxProvider;
         this.responseStagingCtxProvider = responseStagingCtxProvider;
     }
-
 
     @Override
     public void run() {

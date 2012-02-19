@@ -39,17 +39,19 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.process.Inflector;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.process.internal.RequestInvoker.InvocationContext.Status;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
 
 import org.glassfish.hk2.ComponentException;
@@ -62,9 +64,6 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Monitor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * Suspendable {@link Request} to {@link Response} inflector adapter that provides
@@ -75,7 +74,9 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class SuspendableInflectorAdapter extends AbstractFuture<Response> implements Inflector<Request, ListenableFuture<Response>>, RequestInvoker.InvocationContext {
+class SuspendableInflectorAdapter extends AbstractFuture<Response>
+        implements Inflector<Request, ListenableFuture<Response>>, InvocationContext {
+
     private static final Logger LOGGER = Logger.getLogger(SuspendableInflectorAdapter.class.getName());
 
     public static class Builder {
@@ -97,20 +98,20 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     }
     private final BlockingDeque<Snapshot> requestScopeSnapshots = new LinkedBlockingDeque<Snapshot>();
     //
-    private Status status = Status.RUNNING;
+    private State status = State.RUNNING;
     private final Monitor statusMonitor = new Monitor();
     private final Monitor.Guard statusRunningOrSuspended = new Monitor.Guard(statusMonitor) {
 
         @Override
         public boolean isSatisfied() {
-            return status == Status.RUNNING || status == Status.SUSPENDED;
+            return status == State.RUNNING || status == State.SUSPENDED;
         }
     };
     private final Monitor.Guard statusRunning = new Monitor.Guard(statusMonitor) {
 
         @Override
         public boolean isSatisfied() {
-            return status == Status.RUNNING;
+            return status == State.RUNNING;
         }
     };
     //
@@ -128,10 +129,10 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     public ListenableFuture<Response> apply(Request request) {
         try {
             final DynamicBinderFactory dynamicBindings = services.bindDynamically();
-            dynamicBindings.bind(RequestInvoker.InvocationContext.class).toFactory(new Factory<RequestInvoker.InvocationContext>() {
+            dynamicBindings.bind(InvocationContext.class).toFactory(new Factory<InvocationContext>() {
 
                 @Override
-                public RequestInvoker.InvocationContext get() throws ComponentException {
+                public InvocationContext get() throws ComponentException {
                     return SuspendableInflectorAdapter.this;
                 }
             }).in(RequestScope.class);
@@ -141,7 +142,7 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
             if (statusMonitor.enterIf(statusRunning)) {
                 // resume synchronously
                 try {
-                    status = Status.RESUMED;
+                    status = State.RESUMED;
                     set(response);
                 } finally {
                     statusMonitor.leave();
@@ -170,7 +171,7 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     }
 
     @Override
-    public Status status() {
+    public State state() {
         statusMonitor.enter();
         try {
             return status;
@@ -183,7 +184,7 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     public void resume(final Response response) {
         if (statusMonitor.enterIf(statusRunningOrSuspended)) {
             try {
-                status = Status.RESUMED;
+                status = State.RESUMED;
             } finally {
                 statusMonitor.leave();
             }
@@ -197,7 +198,7 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     public void resume(final Throwable response) {
         if (statusMonitor.enterIf(statusRunningOrSuspended)) {
             try {
-                status = Status.RESUMED;
+                status = State.RESUMED;
             } finally {
                 statusMonitor.leave();
             }
@@ -209,9 +210,20 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
 
     @Override
     public Future<?> suspend() {
+        return suspend(0L, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Future<?> suspend(long millis) {
+        return suspend(millis, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Future<?> suspend(long time, TimeUnit unit) {
         if (statusMonitor.enterIf(statusRunningOrSuspended)) {
             try {
-                status = Status.SUSPENDED;
+                status = State.SUSPENDED;
+                // TODO invoke callback
             } finally {
                 statusMonitor.leave();
             }
@@ -223,14 +235,8 @@ class SuspendableInflectorAdapter extends AbstractFuture<Response> implements In
     }
 
     @Override
-    public Future<?> suspend(long millis) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Future<?> suspend(long time, TimeUnit unit) {
-        // TODO implement
+    public void cancel() {
+        // TODO implement request processing cancellation.
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

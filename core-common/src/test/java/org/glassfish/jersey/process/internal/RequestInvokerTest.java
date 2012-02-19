@@ -39,18 +39,21 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.RuntimeDelegate;
+
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+
+import org.glassfish.hk2.HK2;
+import org.glassfish.hk2.Services;
+
 import org.junit.Test;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.RuntimeDelegate;
-import java.util.concurrent.Future;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -99,7 +102,7 @@ public class RequestInvokerTest {
 
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new RequestInvoker.Callback() {
+                    new InvocationCallback() {
 
                         @Override
                         public void result(Response response) {
@@ -110,6 +113,14 @@ public class RequestInvokerTest {
                         public void failure(Throwable exception) {
                             fail(exception.getMessage());
                         }
+
+                        @Override
+                        public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                        }
+
+                        @Override
+                        public void cancelled() {
+                        }
                     });
 
             Future<Response> result = invoker.apply(
@@ -118,7 +129,7 @@ public class RequestInvokerTest {
 
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new RequestInvoker.Callback() {
+                    new InvocationCallback() {
 
                         @Override
                         public void result(Response response) {
@@ -128,6 +139,14 @@ public class RequestInvokerTest {
                         @Override
                         public void failure(Throwable exception) {
                             fail(exception.getMessage());
+                        }
+
+                        @Override
+                        public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                        }
+
+                        @Override
+                        public void cancelled() {
                         }
                     });
 
@@ -149,7 +168,7 @@ public class RequestInvokerTest {
             requestScope.enter();
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new RequestInvoker.Callback() {
+                    new InvocationCallback() {
 
                         @Override
                         public void result(Response response) {
@@ -160,6 +179,14 @@ public class RequestInvokerTest {
                         public void failure(Throwable exception) {
                             fail(exception.getMessage());
                         }
+
+                        @Override
+                        public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                        }
+
+                        @Override
+                        public void cancelled() {
+                        }
                     });
 
             Future<Response> result = invoker.apply(
@@ -168,7 +195,7 @@ public class RequestInvokerTest {
 
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new RequestInvoker.Callback() {
+                    new InvocationCallback() {
 
                         @Override
                         public void result(Response response) {
@@ -178,6 +205,14 @@ public class RequestInvokerTest {
                         @Override
                         public void failure(Throwable exception) {
                             fail(exception.getMessage());
+                        }
+
+                        @Override
+                        public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                        }
+
+                        @Override
+                        public void cancelled() {
                         }
                     });
 

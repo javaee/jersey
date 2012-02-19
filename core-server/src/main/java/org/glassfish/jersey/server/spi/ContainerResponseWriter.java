@@ -81,9 +81,9 @@ public interface ContainerResponseWriter {
          * between an application layer resume event and the processed time-out
          * event.
          *
-         * @param context suspended container response writer that timed out.
+         * @param responseWriter suspended container response writer that timed out.
          */
-        public void onTimeout(ContainerResponseWriter context);
+        public void onTimeout(ContainerResponseWriter responseWriter);
     }
 
     /**

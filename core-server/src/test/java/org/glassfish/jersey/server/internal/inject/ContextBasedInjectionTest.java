@@ -53,7 +53,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.RequestInvoker.InvocationContext;
+import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
