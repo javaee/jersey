@@ -141,7 +141,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(r.getDate(), date);
     }
@@ -182,7 +182,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.LAST_MODIFIED, "Tue, 29 Jan 2002 22:14:02 -0500");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(r.getLastModified(), date);
     }

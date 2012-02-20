@@ -128,7 +128,7 @@ public class JaxrsRequestViewTest {
         MutableRequest mr = new MutableRequest("", "http://example.org/app/resource", "GET");
         mr.header(HttpHeaders.IF_MODIFIED_SINCE, "Sat, 29 Oct 2011 19:43:31 GMT");
         Request r = mr.toJaxrsRequest();
-        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Sat, 29 Oct 2011 19:43:31 GMT");
         assertEquals(r.evaluatePreconditions(date).build().getStatus(),
                 Status.NOT_MODIFIED.getStatusCode());
@@ -141,7 +141,7 @@ public class JaxrsRequestViewTest {
         MutableRequest mr = new MutableRequest("", "http://example.org/app/resource", "GET");
         mr.header(HttpHeaders.IF_UNMODIFIED_SINCE, "Sat, 29 Oct 2011 19:43:31 GMT");
         Request r = mr.toJaxrsRequest();
-        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Sat, 29 Oct 2011 19:43:31 GMT");
         assertNull(r.evaluatePreconditions(date));
         date = f.parse("Sat, 30 Oct 2011 19:43:31 GMT");

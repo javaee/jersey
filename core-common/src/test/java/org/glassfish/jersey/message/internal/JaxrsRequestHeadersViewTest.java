@@ -109,7 +109,7 @@ public class JaxrsRequestHeadersViewTest {
         MutableRequest r = new MutableRequest("", "http://example.org/app/resource", "GET");
         r.header(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
         RequestHeaders v = r.getJaxrsHeaders();
-        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(v.getDate(), date);
     }
