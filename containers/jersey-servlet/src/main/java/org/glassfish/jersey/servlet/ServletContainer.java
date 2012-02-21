@@ -86,7 +86,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * <p />
  * If none of the above resource configuration related initialization parameters
  * are present a new instance of {@link ResourceConfig} with {@link WebAppResourcesScanner}
- * is created. The initialization parameter{@value org.glassfish.jersey.server.ServerProperties#PROVIDER_CLASSPATH}
+ * is created. The initialization parameter {@value org.glassfish.jersey.server.ServerProperties#PROVIDER_CLASSPATH}
  * is present (see {@link ServerProperties#PROVIDER_CLASSPATH}) MAY be
  * set to provide one or more resource paths. Each path MUST be separated by ';'.
  * If the initialization parameter is not present then the following resource
