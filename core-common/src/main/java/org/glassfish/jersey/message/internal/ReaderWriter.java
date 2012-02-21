@@ -59,8 +59,9 @@ import org.glassfish.jersey.message.MessageProperties;
  * A utility class for reading and writing using byte and character streams.
  * <p>
  * If a byte or character array is utilized then the size of the array
- * is by default the value of {@link #DEFAULT_BUFFER_SIZE}. This value can
- * be set using the system property {@link #IO_BUFFER_SIZE}.
+ * is by default the value of {@value org.glassfish.jersey.message.MessageProperties#IO_DEFAULT_BUFFER_SIZE}.
+ * This value can be set using the system property
+ * {@value org.glassfish.jersey.message.MessageProperties#IO_BUFFER_SIZE}.
  *
  * @author Paul Sandoz
  */

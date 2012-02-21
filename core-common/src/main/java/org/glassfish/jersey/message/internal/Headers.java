@@ -133,8 +133,8 @@ public interface Headers {
      * @return a read-only map of header names and values.
      * @throws java.lang.IllegalStateException if called outside of the message
      *     processing scope.
-     * @see #getHeader(String)
-     * @see #getHeaderValues(String)
+     * @see #header(String)
+     * @see #headerValues(String)
      */
     // TODO move from Guaua Multimap to JAX-RS MultivaluedMap
     public ListMultimap<String, String> headers();
@@ -153,8 +153,8 @@ public interface Headers {
      * @return a read-only list of header values.
      * @throws java.lang.IllegalStateException if called outside of the message
      *     processing scope.
-     * @see #getHeaderMap()
-     * @see #getHeader(java.lang.String)
+     * @see #headers()
+     * @see #header(java.lang.String)
      */
     public List<String> headerValues(String name);
 
@@ -171,8 +171,8 @@ public interface Headers {
      * @return a read-only map of header names and values.
      * @throws java.lang.IllegalStateException if called outside of the message
      *     processing scope.
-     * @see #getHeader(java.lang.String)
-     * @see #getHeaderValues(java.lang.String)
+     * @see #header(java.lang.String)
+     * @see #headerValues(java.lang.String)
      */
     public MultivaluedMap<String, String> toJaxrsHeaderMap();
 }

@@ -69,7 +69,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * and filter initialization parameters.
  * <p />
  * The servlet or filter may be configured to have an initialization
- * parameter {@value ServerProperties#JAXRS_APPLICATION_CLASS}
+ * parameter {@value org.glassfish.jersey.server.ServerProperties#JAXRS_APPLICATION_CLASS}
  * (see {@link ServerProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
  * fully qualified name of a class that implements {@link javax.ws.rs.core.Application}.
  * The class is instantiated as a singleton component
@@ -77,16 +77,16 @@ import org.glassfish.jersey.uri.UriComponent;
  * may be injected are limited to injectable providers registered when
  * the servlet or filter is configured).
  * <p />
- * If the initialization parameter {@value ServerProperties#JAXRS_APPLICATION_CLASS}
- * is not present and a initialization parameter {@value ServerProperties#PROVIDER_PACKAGES}
+ * If the initialization parameter {@value org.glassfish.jersey.server.ServerProperties#JAXRS_APPLICATION_CLASS}
+ * is not present and a initialization parameter {@value org.glassfish.jersey.server.ServerProperties#PROVIDER_PACKAGES}
  * is present (see {@link ServerProperties#PROVIDER_PACKAGES}) a new instance of
  * {@link ResourceConfig} with this configuration is created. The initialization parameter
- * {@value ServerProperties#PROVIDER_PACKAGES} MUST be set to provide one or
+ * {@value org.glassfish.jersey.server.ServerProperties#PROVIDER_PACKAGES} MUST be set to provide one or
  * more package names. Each package name MUST be separated by ';'.
  * <p />
  * If none of the above resource configuration related initialization parameters
  * are present a new instance of {@link ResourceConfig} with {@link WebAppResourcesScanner}
- * is created. The initialization parameter{@value ServerProperties#PROVIDER_CLASSPATH}
+ * is created. The initialization parameter{@value org.glassfish.jersey.server.ServerProperties#PROVIDER_CLASSPATH}
  * is present (see {@link ServerProperties#PROVIDER_CLASSPATH}) MAY be
  * set to provide one or more resource paths. Each path MUST be separated by ';'.
  * If the initialization parameter is not present then the following resource

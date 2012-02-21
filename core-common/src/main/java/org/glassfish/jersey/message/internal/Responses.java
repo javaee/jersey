@@ -63,7 +63,7 @@ public final class Responses {
 
     /**
      * Create a response builder with no response entity & status code set to
-     * {@link Response.Status#NO_CONTENT}.
+     * {@link Status#NO_CONTENT}.
      *
      * @return response builder instance.
      */

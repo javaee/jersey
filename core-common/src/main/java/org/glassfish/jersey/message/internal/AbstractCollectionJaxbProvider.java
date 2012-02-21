@@ -124,7 +124,8 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
 
     /**
      * This is to allow customized JAXB collections checking.
-     * @see verifyArrayType and verifyGenericype methods
+     * @see AbstractCollectionJaxbProvider#verifyArrayType
+     * @see AbstractCollectionJaxbProvider#verifyGenericType
      */
     public static interface JaxbTypeChecker {
 

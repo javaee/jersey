@@ -187,7 +187,7 @@ public final class ResourceConfig extends Application implements FeaturesAndProp
         Builder setClassLoader(ClassLoader classLoader);
 
         /**
-         * Adds {@link Set} of {@link Module}.
+         * Adds {@link Set} of {@link org.glassfish.hk2.Module HK2 modules}.
          *
          * These modules will be added when creating {@link Services} instance.
          *
