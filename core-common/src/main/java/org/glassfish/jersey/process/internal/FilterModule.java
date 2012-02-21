@@ -48,7 +48,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 public class FilterModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(javax.ws.rs.ext.FilterContext.class).to(FilterContext.class).in(RequestScope.class);
+        bind(javax.ws.rs.ext.FilterContext.class).to(JerseyFilterContext.class).in(RequestScope.class);
 
         bind().to(RequestFilterAcceptor.class);
         bind().to(ResponseFilterResponder.class);

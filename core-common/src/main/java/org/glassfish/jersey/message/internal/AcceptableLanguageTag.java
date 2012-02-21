@@ -49,10 +49,11 @@ import java.text.ParseException;
  */
 class AcceptableLanguageTag extends LanguageTag implements QualityFactor {
 
-    protected int quality = DEFAULT_QUALITY_FACTOR;
+    private final int quality;
 
     public AcceptableLanguageTag(String primaryTag, String subTags) {
         super(primaryTag, subTags);
+        this.quality = DEFAULT_QUALITY_FACTOR;
     }
 
     public AcceptableLanguageTag(String header) throws ParseException {
@@ -72,11 +73,35 @@ class AcceptableLanguageTag extends LanguageTag implements QualityFactor {
 
         if (reader.hasNext()) {
             quality = HttpHeaderReader.readQualityFactorParameter(reader);
+        } else {
+            quality = DEFAULT_QUALITY_FACTOR;
         }
     }
 
     @Override
     public int getQuality() {
         return quality;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AcceptableMediaType)) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        final AcceptableLanguageTag other = (AcceptableLanguageTag) obj;
+        if (this.quality != other.quality) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 47 * hash + this.quality;
+        return hash;
     }
 }

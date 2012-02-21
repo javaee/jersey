@@ -218,7 +218,7 @@ final class HeadersFactory {
 
             @Override
             public String apply(Object input) {
-                return HeadersFactory.toString(input, rd);
+                return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
             }
         });
     }
@@ -228,7 +228,7 @@ final class HeadersFactory {
 
             @Override
             public String apply(Object input) {
-                return HeadersFactory.toString(input, rd);
+                return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
             }
         });
     }

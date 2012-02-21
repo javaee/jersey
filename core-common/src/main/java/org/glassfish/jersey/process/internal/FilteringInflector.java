@@ -65,7 +65,7 @@ public class FilteringInflector implements Inflector<Request, Response> {
         private ResponseFilterResponder responseFilterResponder;
 
         @Inject
-        private Factory<FilterContext> filterContextFactory;
+        private Factory<JerseyFilterContext> filterContextFactory;
 
         @Inject
         private Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
@@ -83,13 +83,13 @@ public class FilteringInflector implements Inflector<Request, Response> {
     private final Inflector<Request, Response> wrapped;
     private final RequestFilterAcceptor requestFilterAcceptor;
     private final ResponseFilterResponder responseFilterResponder;
-    private final Factory<FilterContext> filterContextFactory;
+    private final Factory<JerseyFilterContext> filterContextFactory;
     private final Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
 
     private FilteringInflector(Inflector<Request, Response> wrapped,
                                RequestFilterAcceptor requestFilterAcceptor,
                                ResponseFilterResponder responseFilterResponder,
-                               Factory<FilterContext> filterContextFactory,
+                               Factory<JerseyFilterContext> filterContextFactory,
                                Factory<ResponseProcessor.RespondingContext> respondingContextFactory) {
         this.wrapped = wrapped;
         this.requestFilterAcceptor = requestFilterAcceptor;
@@ -100,7 +100,7 @@ public class FilteringInflector implements Inflector<Request, Response> {
 
     @Override
     public Response apply(Request request) {
-        FilterContext filterContext = filterContextFactory.get();
+        JerseyFilterContext filterContext = filterContextFactory.get();
 
         respondingContextFactory.get().push(responseFilterResponder);
 

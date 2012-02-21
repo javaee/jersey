@@ -48,7 +48,7 @@ import java.util.Locale;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class LanguageTag {
+class LanguageTag {
 
     protected String tag;
     protected String primaryTag;
@@ -167,44 +167,45 @@ public class LanguageTag {
 
     @Override
     public boolean equals(Object object) {
-        if (object instanceof LanguageTag) {
-            LanguageTag lt = (LanguageTag) object;
-
-            if (this.tag != null) {
-                if (!this.tag.equals(lt.getTag())) {
-                    return false;
-                } else if (lt.getTag() != null) {
-                    return false;
-                }
-            }
-
-            if (this.primaryTag != null) {
-                if (!this.primaryTag.equals(lt.getPrimaryTag())) {
-                    return false;
-                } else if (lt.getPrimaryTag() != null) {
-                    return false;
-                }
-            }
-
-            if (this.subTags != null) {
-                if (!this.subTags.equals(lt.getSubTags())) {
-                    return false;
-                } else if (lt.getSubTags() != null) {
-                    return false;
-                }
-            }
-
-            return true;
-        } else {
+        if (!(object instanceof LanguageTag)) {
             return false;
         }
+        LanguageTag lt = (LanguageTag) object;
+
+        if (this.tag != null) {
+            if (!this.tag.equals(lt.getTag())) {
+                return false;
+            } else if (lt.getTag() != null) {
+                return false;
+            }
+        }
+
+        if (this.primaryTag != null) {
+            if (!this.primaryTag.equals(lt.getPrimaryTag())) {
+                return false;
+            } else if (lt.getPrimaryTag() != null) {
+                return false;
+            }
+        }
+
+        if (this.subTags != null) {
+            if (!this.subTags.equals(lt.getSubTags())) {
+                return false;
+            } else if (lt.getSubTags() != null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return (tag == null ? 0 : tag.hashCode())
-                + (primaryTag == null ? 0 : primaryTag.hashCode())
-                + (subTags == null ? 0 : primaryTag.hashCode());
+        int hash = 7;
+        hash = 47 * hash + (this.tag != null ? this.tag.hashCode() : 0);
+        hash = 47 * hash + (this.primaryTag != null ? this.primaryTag.hashCode() : 0);
+        hash = 47 * hash + (this.subTags != null ? this.subTags.hashCode() : 0);
+        return hash;
     }
 
     @Override

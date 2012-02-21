@@ -75,7 +75,7 @@ abstract class AbstractFilterProcessor<T> {
     @Inject
     private Services services;
     @Inject
-    protected Factory<FilterContext> filterContextFactory;
+    protected Factory<JerseyFilterContext> filterContextFactory;
     //
     private final int ordering;
 

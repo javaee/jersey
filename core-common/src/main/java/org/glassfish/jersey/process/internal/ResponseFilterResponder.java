@@ -61,7 +61,7 @@ public class ResponseFilterResponder extends AbstractFilterProcessor<ResponseFil
 
     @Override
     public Response apply(Response data) {
-        FilterContext filterContext = filterContextFactory.get();
+        JerseyFilterContext filterContext = filterContextFactory.get();
 
         // Initialize filter context
         filterContext.setResponse(data);

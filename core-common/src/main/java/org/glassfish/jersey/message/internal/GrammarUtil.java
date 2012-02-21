@@ -45,7 +45,7 @@ package org.glassfish.jersey.message.internal;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public final class GrammarUtil {
+final class GrammarUtil {
 
     /** Represents token type in the TYPE_TABLE */
     public static final int TOKEN = 0;
@@ -58,15 +58,15 @@ public final class GrammarUtil {
     /** Represents control type in the TYPE_TABLE */
     public static final int CONTROL = 4;
     /** Array of chars representing white spaces */
-    public static final char[] WHITE_SPACE = {'\t', '\r', '\n', ' '};
+    private static final char[] WHITE_SPACE = {'\t', '\r', '\n', ' '};
     /** Array of chars representing separators */
-    public static final char[] SEPARATORS = {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t'};
+    private static final char[] SEPARATORS = {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t'};
     /** Mapping of chars to types */
-    public static final int[] TYPE_TABLE = createEventTable();
+    private static final int[] TYPE_TABLE = createEventTable();
     /** Convenience table mapping chars to true if they are white space chars */
-    public static final boolean[] IS_WHITE_SPACE = createWhiteSpaceTable();
+    private static final boolean[] IS_WHITE_SPACE = createWhiteSpaceTable();
     /** convenience table mapping chars to true if they are tokens */
-    public static final boolean[] IS_TOKEN = createTokenTable();
+    private static final boolean[] IS_TOKEN = createTokenTable();
 
     private static int[] createEventTable() {
         int[] table = new int[128];
@@ -122,30 +122,56 @@ public final class GrammarUtil {
     }
 
     /**
-     * Returns true if the provided char is a white space.
+     * Returns {@code true} if the provided char is a white space.
      *
-     * @param c char to check
-     * @return true if c is a white space
+     * @param c char to check.
+     * @return {@code true} if c is a white space.
      */
-    public static boolean isWhiteSpace(char c) {
+    public static boolean isWhiteSpace(final char c) {
         return (c < 128 && IS_WHITE_SPACE[c]);
     }
 
     /**
-     * Returns true if the provided char is a token.
-     * @param c char to check
-     * @return true if c is a token
+     * Returns {@code true} if the provided char is a token.
+     *
+     * @param c char to check.
+     * @return {@code true} if c is a token.
      */
-    public static boolean isToken(char c) {
+    public static boolean isToken(final char c) {
         return (c < 128 && IS_TOKEN[c]);
     }
 
     /**
-     * Returns true if all chars in string s are tokens.
-     * @param s string to check for tokens
-     * @return true if all chars in s are tokens
+     * Get the character type.
+     *
+     * @param c char to check.
+     * @return character type identifier.
+     * @throws IllegalArgumentException in case the character value is greater than 127.
      */
-    public static boolean isTokenString(String s) {
+    public static int getType(final char c) {
+        if (c > 127) {
+            throw new IllegalArgumentException("Unsupported character - ordinal value too high: " + c);
+        }
+        return TYPE_TABLE[c];
+    }
+
+    /**
+     * Returns {@code true} if the provided char is a separator.
+     *
+     * @param c char to check.
+     * @return {@code true} if c is a token.
+     */
+    public static boolean isSeparator(final char c) {
+        return (c < 128 && TYPE_TABLE[c] == SEPARATOR);
+    }
+
+    /**
+     * Returns {@code true} if all chars in string s are tokens.
+     *
+     * @param s string to check for tokens.
+     * @return {@code true} if all chars in s are tokens.
+     */
+    public static boolean isTokenString(final String s) {
         for (char c : s.toCharArray()) {
             if (!isToken(c)) {
                 return false;
@@ -155,11 +181,12 @@ public final class GrammarUtil {
     }
 
     /**
-     * Returns true if string s contains a white space char.
-     * @param s string to check for white spaces
-     * @return  true if s contains white spaces
+     * Returns {@code true} if string s contains a white space char.
+     *
+     * @param s string to check for white spaces.
+     * @return {@code true} if s contains white spaces.
      */
-    public static boolean containsWhiteSpace(String s) {
+    public static boolean containsWhiteSpace(final String s) {
         for (char c : s.toCharArray()) {
             if (isWhiteSpace(c)) {
                 return true;
@@ -168,7 +195,16 @@ public final class GrammarUtil {
         return false;
     }
 
-    public static String filterToken(String s, int start, int end) {
+    /**
+     * Filter a substring of a string by removing any new-line characters and
+     * un-escaping escaped characters.
+     *
+     * @param s string to use for substring token filtering.
+     * @param start start filtering position in the string.
+     * @param end end filtering position in the string.
+     * @return filtered substring.
+     */
+    public static String filterToken(final String s, final int start, final int end) {
         StringBuilder sb = new StringBuilder();
         char c;
         boolean gotEscape = false;

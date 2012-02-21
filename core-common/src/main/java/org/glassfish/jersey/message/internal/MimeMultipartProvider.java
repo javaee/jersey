@@ -64,7 +64,6 @@ import javax.mail.util.ByteArrayDataSource;
 public final class MimeMultipartProvider extends AbstractMessageReaderWriterProvider<MimeMultipart> {
 
     public MimeMultipartProvider() {
-        Class<?> c = MimeMultipart.class;
     }
 
     @Override

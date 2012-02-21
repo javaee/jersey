@@ -39,19 +39,20 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * A key comparator.
- * 
+ *
  * @param <K> Key's type
  * @author Paul Sandoz
  */
-public interface KeyComparator<K> extends Comparator<K> {
+public interface KeyComparator<K> extends Comparator<K>, Serializable {
 
     /**
      * Compare two keys for equality.
-     * 
+     *
      * @param x the first key
      * @param y the second key
      * @return true if the keys are equal.

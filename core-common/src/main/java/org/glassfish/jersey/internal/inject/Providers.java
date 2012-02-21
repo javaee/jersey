@@ -141,12 +141,6 @@ public class Providers {
         return builder.toString();
     }
 
-    private static String exploreType(TypeLiteral<?> typeLiteral) {
-        StringBuilder builder = new StringBuilder();
-        exploreType(typeLiteral.getType(), builder);
-        return builder.toString();
-    }
-
     /**
      * Build a string definition for a generic contract.
      *

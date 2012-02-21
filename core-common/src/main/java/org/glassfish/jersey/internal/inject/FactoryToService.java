@@ -55,6 +55,6 @@ public final class FactoryToService<T> implements Function<Factory<T>, T> {
 
     @Override
     public T apply(Factory<T> input) {
-        return input.get();
+        return (input != null) ? input.get() : null;
     }
 }

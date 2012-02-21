@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
@@ -60,7 +62,7 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public Link fromString(String value) throws IllegalArgumentException {
-        Builder lb = null;
+        Builder lb;
         StringTokenizer st = new StringTokenizer(value.trim(), "<>;=\"", true);
         try {
             checkToken(st, "<");
@@ -99,10 +101,11 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
         MultivaluedMap<String, String> map = value.getParams();
         StringBuilder sb = new StringBuilder();
         sb.append('<').append(value.getUri()).append('>');
-        for (String key : map.keySet()) {
-            sb.append("; ").append(key).append("=\"");
+
+        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+            sb.append("; ").append(entry.getKey()).append("=\"");
             boolean first = true;
-            for (String v : map.get(key)) {
+            for (String v : entry.getValue()) {
                 sb.append(first ? "" : " ");
                 sb.append(v);
                 first = false;

@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class QualitySourceMediaType extends MediaType {
+class QualitySourceMediaType extends MediaType {
 
     public static final String QUALITY_SOURCE_FACTOR = "qs";
     public static final int DEFAULT_QUALITY_SOURCE_FACTOR = 1000;
@@ -129,5 +129,28 @@ public class QualitySourceMediaType extends MediaType {
             pe.initCause(ex);
             throw pe;
         }
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof QualitySourceMediaType)) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        final QualitySourceMediaType other = (QualitySourceMediaType) obj;
+        if (this.qs != other.qs) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 47 * hash + this.qs;
+        return hash;
     }
 }

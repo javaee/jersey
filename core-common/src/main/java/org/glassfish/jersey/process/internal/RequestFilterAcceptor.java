@@ -57,7 +57,7 @@ public class RequestFilterAcceptor extends AbstractFilterProcessor<RequestFilter
 
     @Override
     public Pair<Request, Optional<LinearAcceptor>> apply(Request data) {
-        FilterContext filterContext = filterContextFactory.get();
+        JerseyFilterContext filterContext = filterContextFactory.get();
 
         // Initialize filter context
         filterContext.setRequest(data);

@@ -204,8 +204,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
-                final Ref<MessageBodyWorkers> workersRef = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
-                }).get();
+                final Ref<MessageBodyWorkers> workersRef = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {}).get();
                 final RequestBuilder rb = Requests.toBuilder(request);
                 Requests.setMessageWorkers(rb, workersRef.get());
                 Request requestWithWorkers = rb.build();
@@ -248,19 +247,16 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 final SuspendableInflectorAdapter suspendableInflector =
                         suspendableInflectorBuilder.build(filteringInflectorBuilder.build(workersAwareResponseInflector));
 
-                ListenableFuture<Response> response = null;
-                try {
-                    response = suspendableInflector.apply(result.left());
-                } finally {
-                    final ExceptionMappers exceptionMappers = services.forContract(ExceptionMappers.class).get();
-                    final ResponseProcessor responseProcessor =
-                            responseProcessorBuilder.build(callback, response, suspendableInflector, exceptionMappers);
+                ListenableFuture<Response> response = suspendableInflector.apply(result.left());
 
-                    suspendableInflector.pushRequestScope(requestScope.takeSnapshot());
-                    response.addListener(responseProcessor, respondingExecutor);
+                final ExceptionMappers exceptionMappers = services.forContract(ExceptionMappers.class).get();
+                final ResponseProcessor responseProcessor =
+                        responseProcessorBuilder.build(callback, response, suspendableInflector, exceptionMappers);
 
-                    return responseProcessor;
-                }
+                suspendableInflector.pushRequestScope(requestScope.takeSnapshot());
+                response.addListener(responseProcessor, respondingExecutor);
+
+                return responseProcessor;
             }
         };
 

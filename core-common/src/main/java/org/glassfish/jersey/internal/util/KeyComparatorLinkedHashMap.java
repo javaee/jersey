@@ -161,6 +161,7 @@ public class KeyComparatorLinkedHashMap<K, V>
      * faster to iterate using our linked list.
      */
     @Override
+    @SuppressWarnings("unchecked")
     void transfer(KeyComparatorHashMap.Entry[] newTable) {
         int newCapacity = newTable.length;
         for (Entry<K, V> e = header.after; e != header; e = e.after) {
@@ -214,6 +215,7 @@ public class KeyComparatorLinkedHashMap<K, V>
      */
     @Override
     public V get(Object key) {
+        @SuppressWarnings("unchecked")
         Entry<K, V> e = (Entry<K, V>) getEntry((K) key);
         if (e == null) {
             return null;
@@ -281,6 +283,16 @@ public class KeyComparatorLinkedHashMap<K, V>
         @Override
         void recordRemoval(KeyComparatorHashMap<K, V> m) {
             remove();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj);
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
     }
 

@@ -55,6 +55,6 @@ public final class ProviderToService<T> implements Function<Provider<T>, T> {
 
     @Override
     public T apply(Provider<T> input) {
-        return input.get();
+        return (input != null) ? input.get() : null;
     }
 }

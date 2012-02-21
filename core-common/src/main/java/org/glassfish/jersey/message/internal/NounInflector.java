@@ -798,7 +798,7 @@ final class NounInflector {
      * match the specified regular expression to a specified word, and
      * (if successful) perform the appropriate substitutions.</p>
      */
-    private class Replacer {
+    private static class Replacer {
 
         // --------------------------------------------------------- Constructor
         public Replacer(String match, String rule, boolean insensitive) {

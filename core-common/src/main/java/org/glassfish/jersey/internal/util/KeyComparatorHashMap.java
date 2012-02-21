@@ -117,10 +117,11 @@ public class KeyComparatorHashMap<K, V>
      *
      * @param  initialCapacity The initial capacity.
      * @param  loadFactor      The load factor.
-     * @param keyComparator The comparator.
+     * @param keyComparator the map key comparator.
      * @throws IllegalArgumentException if the initial capacity is negative
      *         or the load factor is nonpositive.
      */
+    @SuppressWarnings("unchecked")
     public KeyComparatorHashMap(int initialCapacity, float loadFactor, KeyComparator<K> keyComparator) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException(LocalizationMessages.ILLEGAL_INITIAL_CAPACITY(initialCapacity));
@@ -141,9 +142,9 @@ public class KeyComparatorHashMap<K, V>
         this.loadFactor = loadFactor;
         threshold = (int) (capacity * loadFactor);
         table = new Entry[capacity];
-        init();
-
         this.keyComparator = keyComparator;
+
+        init();
     }
 
     /**
@@ -151,9 +152,10 @@ public class KeyComparatorHashMap<K, V>
      * capacity and the default load factor (0.75).
      *
      * @param  initialCapacity the initial capacity.
-     * @param keyComparator the comparator
+     * @param keyComparator the map key comparator.
      * @throws IllegalArgumentException if the initial capacity is negative.
      */
+    @SuppressWarnings("unchecked")
     public KeyComparatorHashMap(int initialCapacity, KeyComparator<K> keyComparator) {
         this(initialCapacity, DEFAULT_LOAD_FACTOR, keyComparator);
     }
@@ -161,15 +163,10 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
      * (16) and the default load factor (0.75).
-     * @param keyComparator the comparator
+     * @param keyComparator the map key comparator.
      */
     public KeyComparatorHashMap(KeyComparator<K> keyComparator) {
-        this.loadFactor = DEFAULT_LOAD_FACTOR;
-        threshold = (int) (DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
-        table = new Entry[DEFAULT_INITIAL_CAPACITY];
-        init();
-
-        this.keyComparator = keyComparator;
+        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, keyComparator);
     }
 
     /**
@@ -189,7 +186,6 @@ public class KeyComparatorHashMap<K, V>
         putAllForCreate(m);
     }
 
-    //
     /**
      * Get the number of times this HashMap has been structurally modified
      * Structural modifications are those that change the number of mappings in
@@ -204,14 +200,15 @@ public class KeyComparatorHashMap<K, V>
 
     // internal utilities
     /**
-     * Initialization hook for subclasses. This method is called
-     * in all constructors and pseudo-constructors (clone, readObject)
+     * Initialization hook for subclasses.
+     *
+     * This method is called in all pseudo-constructors (clone, readObject)
      * after HashMap has been initialized but before any entries have
      * been inserted.  (In the absence of this method, readObject would
      * require explicit knowledge of subclasses.)
      */
-    void init() {}
-
+    void init() {
+    }
     /**
      * Value representing null keys inside tables.
      */

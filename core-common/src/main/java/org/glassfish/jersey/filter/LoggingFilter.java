@@ -39,9 +39,15 @@
  */
 package org.glassfish.jersey.filter;
 
-import org.glassfish.jersey.message.internal.ReaderWriter;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.core.Request;
@@ -51,14 +57,10 @@ import javax.ws.rs.ext.PreMatchRequestFilter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.RequestFilter;
 import javax.ws.rs.ext.ResponseFilter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
+
+import org.glassfish.jersey.message.internal.ReaderWriter;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.Responses;
 
 /**
  * Universal logging filter.
@@ -76,7 +78,7 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
     private static final String NOTIFICATION_PREFIX = "* ";
     private static final String REQUEST_PREFIX = "> ";
     private static final String RESPONSE_PREFIX = "< ";
-
+    //
     @SuppressWarnings("NonConstantLogger")
     private final Logger logger;
     private final AtomicLong _id = new AtomicLong(0);
@@ -137,13 +139,14 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         //      or add special handling for entity streams
         if (printEntity && request.hasEntity()) {
             final Object entity = request.getEntity();
-            if(entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
-                InputStream in = (InputStream)entity;
+            if (entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
+                InputStream in = (InputStream) entity;
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                if(in.available() > 0) {
+                if (in.available() > 0) {
                     ReaderWriter.writeTo(in, out);
                     byte[] requestEntity = out.toByteArray();
-                    b.append(new String(requestEntity)).append("\n");
+                    // TODO figure out the right encoding.
+                    b.append(new String(requestEntity, Charset.defaultCharset())).append("\n");
                     request = Requests.from(request).entity(new ByteArrayInputStream(requestEntity)).build();
                 }
             } else {
@@ -166,13 +169,14 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         //      or add special handling for entity streams
         if (printEntity && response.hasEntity()) {
             final Object entity = response.getEntity();
-            if(entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
-                InputStream in = (InputStream)entity;
+            if (entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
+                InputStream in = (InputStream) entity;
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                if(in.available() > 0) {
+                if (in.available() > 0) {
                     ReaderWriter.writeTo(in, out);
                     byte[] requestEntity = out.toByteArray();
-                    b.append(new String(requestEntity)).append("\n");
+                    // TODO figure out the right encoding.
+                    b.append(new String(requestEntity, Charset.defaultCharset())).append("\n");
                     response = Responses.toBuilder(response).entity(new ByteArrayInputStream(requestEntity)).build();
                 }
             } else {

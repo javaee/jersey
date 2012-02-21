@@ -123,6 +123,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public static final KeyComparator<MediaType> MEDIA_TYPE_COMPARATOR =
             new KeyComparator<MediaType>() {
 
+                private static final long serialVersionUID = 2727819828630827763L;
+
                 @Override
                 public boolean equals(MediaType x, MediaType y) {
                     return x.getType().equalsIgnoreCase(y.getType())

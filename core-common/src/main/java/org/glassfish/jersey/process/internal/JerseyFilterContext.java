@@ -37,9 +37,9 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.process.internal;
 
+import com.google.common.base.Objects;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 
@@ -49,29 +49,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * {@link javax.ws.rs.ext.FilterContext} default implementation.
+ * {@link javax.ws.rs.ext.JerseyFilterContext} default implementation.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-class FilterContext implements javax.ws.rs.ext.FilterContext {
+class JerseyFilterContext implements javax.ws.rs.ext.FilterContext {
 
     private Map<String, Object> properties = null;
     private Request request = null;
     private Response response = null;
 
-    public FilterContext() {
+    public JerseyFilterContext() {
     }
 
-    public FilterContext(Map<String, Object> properties, Request request) {
+    public JerseyFilterContext(Map<String, Object> properties, Request request) {
         this.properties = properties;
         this.request = request;
     }
 
     @Override
     public Map<String, Object> getProperties() {
-        if(properties == null) {
+        if (properties == null) {
             properties = new HashMap<String, Object>();
         }
 
@@ -102,9 +102,9 @@ class FilterContext implements javax.ws.rs.ext.FilterContext {
         this.response = res;
     }
 
-   @Override
+    @Override
     public Request.RequestBuilder getRequestBuilder() {
-       return Requests.toBuilder(request);
+        return Requests.toBuilder(request);
     }
 
     @Override
@@ -115,5 +115,12 @@ class FilterContext implements javax.ws.rs.ext.FilterContext {
     @Override
     public Response.ResponseBuilder createResponse() {
         return Responses.from(Response.Status.OK, request);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("properties", properties).add("request", request).add("response", response)
+                .toString();
     }
 }

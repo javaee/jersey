@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class AcceptableMediaType extends MediaType implements QualityFactor {
+class AcceptableMediaType extends MediaType implements QualityFactor {
 
     private final int q;
 
@@ -96,5 +96,27 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
         }
 
         return new AcceptableMediaType(type, subType, quality, parameters);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AcceptableMediaType)) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        final AcceptableMediaType other = (AcceptableMediaType) obj;
+        if (this.q != other.q) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 47 * hash + this.q;
+        return hash;
     }
 }

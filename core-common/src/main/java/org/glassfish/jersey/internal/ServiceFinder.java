@@ -284,21 +284,31 @@ public final class ServiceFinder<T> implements Iterable<T> {
     }
 
     private static String getJerseyModuleVersion(URL manifestURL) {
+        BufferedReader reader = null;
         try {
             URL moduleVersionURL = new URL(manifestURL.toString().replace(MANIFEST, MODULE_VERSION));
 
-            return new BufferedReader(new InputStreamReader(moduleVersionURL.openStream())).readLine();
+            reader = new BufferedReader(new InputStreamReader(moduleVersionURL.openStream()));
+            return reader.readLine();
         } catch (IOException ioe) {
             LOGGER.log(Level.FINE, "Error loading META-INF/jersey-module-version associated with " + ServiceFinder.class.getName(), ioe);
             return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ServiceFinder.class.getName()).log(Level.FINE, "Error closing manifest located at URL: " + manifestURL, ex);
+                }
+            }
         }
     }
 
     private static Manifest getManifest(Class c) throws IOException {
-        String resource = c.getName().replace(".", "/") + ".class";
+        final String resource = c.getName().replace(".", "/") + ".class";
         URL url = getResource(c.getClassLoader(), resource);
         if (url == null) {
-            throw new IOException("Resource not found: " + url);
+            throw new IOException("Resource not found: " + resource);
         }
 
         return getManifest(resource, url);

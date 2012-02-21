@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -362,7 +361,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
             }
 
             return (type.isArray())
-                    ? createArray((List) l, jaxbElement ? JAXBElement.class : elementType)
+                    ? createArray(l, jaxbElement ? JAXBElement.class : elementType)
                     : l;
         } catch (UnmarshalException ex) {
             throw new WebApplicationException(ex, Status.BAD_REQUEST);
@@ -373,10 +372,11 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
     }
 
-    private Object createArray(List l, Class componentType) {
-        Object array = Array.newInstance(componentType, l.size());
-        for (int i = 0; i < l.size(); i++) {
-            Array.set(array, i, l.get(i));
+    private Object createArray(Collection<?> collection, Class componentType) {
+        Object array = Array.newInstance(componentType, collection.size());
+        int i = 0;
+        for (Object value : collection) {
+            Array.set(array, i++, value);
         }
         return array;
     }

@@ -85,8 +85,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
         }
 
         char c = header.charAt(index);
-        return (TYPE_TABLE[c] == SEPARATOR)
-                ? c == separator : false;
+        return isSeparator(c) ? c == separator : false;
     }
 
     @Override
@@ -170,7 +169,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
             return Event.Control;
         }
 
-        switch (TYPE_TABLE[c]) {
+        switch (getType(c)) {
             case TOKEN: {
                 final int start = index;
                 for (index++; index < length; index++) {
