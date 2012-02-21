@@ -98,7 +98,7 @@ public class ReferencingFactoryTest extends AbstractModule {
     //
     private Request expectedReqest = null;
     private List<Integer> expectedInts = null;
-    private Response expectedResponse = Responses.emtpy().build();
+    private Response expectedResponse = Responses.empty().build();
     private List<String> expectedStrings = new LinkedList<String>();
 
     private static final class RequestReferencingFactory extends ReferencingFactory<Request> {

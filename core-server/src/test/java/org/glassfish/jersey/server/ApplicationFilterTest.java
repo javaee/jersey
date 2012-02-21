@@ -91,7 +91,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -124,7 +124,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -157,7 +157,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -259,7 +259,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();

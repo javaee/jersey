@@ -64,7 +64,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -79,7 +79,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -94,7 +94,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -109,7 +109,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(200).build();
+                return Responses.empty().status(200).build();
             }
         });
         Application application = appBuilder.build();
@@ -126,21 +126,21 @@ public class ApplicationBuilderHttpMethodsTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(201).build();
+                return Responses.empty().status(201).build();
             }
         });
         appBuilder.bind("test2").method("GET", "HEAD").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(202).build();
+                return Responses.empty().status(202).build();
             }
         });
         appBuilder.bind("test1").method("OPTIONS", "HEAD").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
-                return Responses.emtpy().status(203).build();
+                return Responses.empty().status(203).build();
             }
         });
         Application application = appBuilder.build();

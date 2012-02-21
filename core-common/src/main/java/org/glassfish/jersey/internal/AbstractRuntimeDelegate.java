@@ -101,7 +101,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
 
     @Override
     public ResponseBuilder createResponseBuilder() {
-        return Responses.emtpy();
+        return Responses.empty();
     }
 
     @Override

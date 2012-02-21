@@ -123,7 +123,7 @@ public class ProcessingTestModule extends AbstractModule {
             @Override
             public Response toResponse(Throwable exception) {
                 if (exception instanceof NumberFormatException) {
-                    return Responses.emtpy().entity(-1).build();
+                    return Responses.empty().entity(-1).build();
                 }
 
                 throw new RuntimeException(exception);

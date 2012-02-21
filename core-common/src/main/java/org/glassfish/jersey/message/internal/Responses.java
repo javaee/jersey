@@ -67,7 +67,7 @@ public final class Responses {
      *
      * @return response builder instance.
      */
-    public static ResponseBuilder emtpy() {
+    public static ResponseBuilder empty() {
         return new MutableResponse().toJaxrsResponseBuilder();
     }
 
