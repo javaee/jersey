@@ -102,6 +102,6 @@ public class MyObjectMapperProvider implements ContextResolver<ObjectMapper> {
         AnnotationIntrospector jaxbIntrospector = new JaxbAnnotationIntrospector();
         AnnotationIntrospector jacksonIntrospector = new JacksonAnnotationIntrospector();
 
-        return new AnnotationIntrospector.Pair(jaxbIntrospector, jacksonIntrospector);
+        return new AnnotationIntrospector.Pair(jacksonIntrospector, jaxbIntrospector);
     }
 }
