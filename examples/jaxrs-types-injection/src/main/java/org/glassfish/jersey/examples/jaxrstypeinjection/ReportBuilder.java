@@ -82,6 +82,7 @@ class ReportBuilder {
     public static void dumpMultivaluedMap(StringBuilder sb, MultivaluedMap<String, String> map) {
         if (map == null) {
             sb.append("     [ null ]\n");
+            return;
         }
         for (Map.Entry<String, List<String>> headerEntry : map.entrySet()) {
             sb.append("     ").append(headerEntry.getKey()).append(" : ");

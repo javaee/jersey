@@ -39,19 +39,21 @@
  */
 package org.glassfish.jersey.examples.clipboard;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import java.io.IOException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * This is the example entry point, where Jersey application gets populated and published
@@ -70,7 +72,10 @@ public class App {
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(
+                    String.format("Application started.%n"
+                    + "Try out %s%s%n"
+                    + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();
@@ -96,7 +101,7 @@ public class App {
 
             @Override
             public Response apply(Request request) {
-                ClipboardData data = request.readEntity(ClipboardData.class);
+                ClipboardData data = (request != null) ? request.readEntity(ClipboardData.class) : null;
                 return Response.ok(data).build();
             }
         });

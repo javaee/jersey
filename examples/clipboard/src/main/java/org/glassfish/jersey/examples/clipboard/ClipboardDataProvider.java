@@ -60,7 +60,9 @@ import javax.ws.rs.ext.Provider;
  */
 public abstract class ClipboardDataProvider implements MessageBodyWriter, MessageBodyReader {
 
-    @Provider @Consumes("text/plain") @Produces("text/plain")
+    @Provider
+    @Consumes("text/plain")
+    @Produces("text/plain")
     public static class TextPlain extends ClipboardDataProvider {
 
         @Override
@@ -76,7 +78,9 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
         }
     }
 
-    @Provider @Consumes("application/json") @Produces("application/json")
+    @Provider
+    @Consumes("application/json")
+    @Produces("application/json")
     public static class ApplicationJson extends ClipboardDataProvider {
 
         private static final String JsonOpenning = "{\"content\":\"";
@@ -99,7 +103,7 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
         return isKnownType(type);
     }
 
-    private boolean isKnownType(Class type) {
+    private boolean isKnownType(Class<?> type) {
         return type.isAssignableFrom(ClipboardData.class);
     }
 
@@ -113,12 +117,11 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
         return isKnownType(type);
     }
 
-
     private static String readStringFromStream(InputStream entityStream) throws IOException {
         StringBuilder result = new StringBuilder();
         byte[] buf = new byte[2048];
         int i;
-        while ((i=entityStream.read(buf)) != -1) {
+        while ((i = entityStream.read(buf)) != -1) {
             result.append(new String(buf, 0, i));
         }
         return result.toString();

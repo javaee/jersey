@@ -55,42 +55,23 @@ import javax.ws.rs.Produces;
 @Path(value = "/flights")
 public class FlightList {
 
-    private static volatile Flights flightsData = initFlightsData();
-
     @GET
     @Produces({"application/json", "application/xml"})
     public Flights getFlightList() {
-        return flightsData;
+        return FlightsDataStore.getFlights();
     }
 
     @PUT
     @Consumes({"application/json", "application/xml"})
     public void putFlightList(Flights flights) {
-        flightsData = flights;
+        FlightsDataStore.init(flights);
     }
 
     @POST
     @Path("init")
     @Produces({"application/json", "application/xml"})
     public void initData() {
-        flightsData = initFlightsData();
+        FlightsDataStore.init();
     }
 
-    private static Flights initFlightsData() {
-        Flights flights = new Flights();
-        FlightType flight123 = new FlightType();
-        flight123.setCompany("Czech Airlines");
-        flight123.setNumber(123);
-        flight123.setFlightId("OK123");
-        flight123.setAircraft("B737");
-        FlightType flight124 = new FlightType();
-        flight124.setCompany("Czech Airlines");
-        flight124.setNumber(124);
-        flight124.setFlightId("OK124");
-        flight124.setAircraft("AB115");
-        flights.getFlight().add(flight123);
-        flights.getFlight().add(flight124);
-
-        return flights;
-    }
 }

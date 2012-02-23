@@ -69,10 +69,10 @@ public class App {
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
             System.out.println(String.format(
-                    "Application started.\n"
-                    + "To test injection into a programmatic resource, try out:\n  %s%s%s\n"
-                    + "To test instance injection into an annotated resource, try out:\n  %s%s%s\n"
-                    + "To test method injection into an annotated resource, try out:\n  %s%s%s\n"
+                    "Application started.%n"
+                    + "To test injection into a programmatic resource, try out:%n  %s%s%s%n"
+                    + "To test instance injection into an annotated resource, try out:%n  %s%s%s%n"
+                    + "To test method injection into an annotated resource, try out:%n  %s%s%s%n"
                     + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH_PROGRAMMATIC, "?q1=<value_1>&q2=<value_2>&q2=<value_3>",
                     BASE_URI, ROOT_PATH_ANNOTATED_INSTANCE, "?q1=<value_1>&q2=<value_2>&q2=<value_3>",

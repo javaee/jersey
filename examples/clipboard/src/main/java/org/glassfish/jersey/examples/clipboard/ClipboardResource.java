@@ -82,6 +82,10 @@ public class ClipboardResource {
     @Consumes({"text/plain", "application/json"})
     public void setContent(ClipboardData newContent) {
         saveHistory();
+        updateContent(newContent);
+    }
+
+    private static void updateContent(ClipboardData newContent) {
         content = newContent;
     }
 

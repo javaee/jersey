@@ -70,7 +70,7 @@ public class App {
                     HelloWorldResource.class.getPackage().getName());
             final HttpServer server = GrizzlyWebContainerFactory.create(BASE_URI, ServletContainer.class, initParams);
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
                     BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();

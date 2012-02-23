@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.examples.jaxb;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Jersey JAXB example application.
@@ -64,8 +65,8 @@ public class App {
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
 
-            System.out.println(String.format("Application started.\nTry out %s\nHit enter to stop it...",
-                    BASE_URI));
+            System.out.println(
+                    String.format("Application started.%nTry out %s%nHit enter to stop it...", BASE_URI));
             System.in.read();
             server.stop();
         } catch (IOException ex) {

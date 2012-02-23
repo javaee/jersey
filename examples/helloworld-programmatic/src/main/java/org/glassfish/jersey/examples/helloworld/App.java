@@ -70,7 +70,10 @@ public class App {
             final Application app = create();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(
+                    String.format("Application started.%n"
+                    + "Try out %s%s%n"
+                    + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();

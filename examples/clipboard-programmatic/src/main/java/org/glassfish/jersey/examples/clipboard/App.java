@@ -48,7 +48,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.Application;
 
@@ -70,7 +69,10 @@ public class App {
             final Application app = createProgrammaticClipboardApp();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(
+                    String.format("Application started.%n"
+                    + "Try out %s%s%n"
+                    + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();
@@ -92,9 +94,9 @@ public class App {
                     public Response apply(Request data) {
                         final String content = clipboard.content();
                         if (content.isEmpty()) {
-                            return Responses.from(Response.Status.NO_CONTENT, data).build();
+                            return Response.noContent().build();
                         }
-                        return Responses.from(Response.Status.OK, data).entity(content).build();
+                        return Response.ok(content).build();
                     }
                 })
 
@@ -102,8 +104,10 @@ public class App {
 
                     @Override
                     public Response apply(Request data) {
-                        clipboard.setContent(data.readEntity(String.class));
-                        return Responses.from(Response.Status.NO_CONTENT, data).build();
+                        if (data != null) {
+                            clipboard.setContent(data.readEntity(String.class));
+                        }
+                        return Response.noContent().build();
                     }
                 })
 
@@ -111,8 +115,8 @@ public class App {
 
                     @Override
                     public Response apply(Request data) {
-                        String newContent = clipboard.append(data.readEntity(String.class));
-                        return Responses.from(Response.Status.OK, data).entity(newContent).build();
+                        String newContent = (data != null) ? clipboard.append(data.readEntity(String.class)) : "";
+                        return Response.ok(newContent).build();
                     }
                 })
 
@@ -121,7 +125,7 @@ public class App {
                     @Override
                     public Response apply(Request data) {
                         clipboard.clear();
-                        return Responses.from(Response.Status.NO_CONTENT, data).build();
+                        return Response.noContent().build();
                     }
                 });
 

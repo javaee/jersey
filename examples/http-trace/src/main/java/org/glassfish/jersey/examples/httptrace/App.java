@@ -74,8 +74,8 @@ public class App {
 
             System.out.println(String.format(
                     "Application started.\n"
-                    + "To test TRACE with a programmatic resource, send HTTP TRACE request to:\n  %s%s\n"
-                    + "To test TRACE with an annotated resource, send HTTP TRACE request to:\n  %s%s\n"
+                    + "To test TRACE with a programmatic resource, send HTTP TRACE request to:%n  %s%s%n"
+                    + "To test TRACE with an annotated resource, send HTTP TRACE request to:%n  %s%s%n"
                     + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH_PROGRAMMATIC,
                     BASE_URI, ROOT_PATH_ANNOTATED));
@@ -95,7 +95,11 @@ public class App {
 
             @Override
             public Response apply(Request request) {
-                return Response.ok(Stringifier.stringify(request), MediaType.TEXT_PLAIN).build();
+                if (request == null) {
+                    return Response.noContent().build();
+                } else {
+                    return Response.ok(Stringifier.stringify(request), MediaType.TEXT_PLAIN).build();
+                }
             }
         });
 

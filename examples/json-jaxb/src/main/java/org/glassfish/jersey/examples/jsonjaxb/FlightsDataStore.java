@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,44 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonp;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+package org.glassfish.jersey.examples.jsonjaxb;
 
 /**
- * Utility class which can create {@link Application} instance and provides support
- * for running this sample from command line.
+ * TODO javadoc.
  *
- * @author Jakub Podlesak
- * @author Marek Potociar
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class App {
+public class FlightsDataStore {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jsonp/");
-    public static final String ROOT_PATH = "changes";
+    private static volatile Flights flightsData = initFlightsData();
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSONP Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    public static void init() {
+        init(initFlightsData());
     }
 
-    public static Application createApp() {
-        final ResourceConfig.Builder rcb = ResourceConfig.builder();
+    public static void init(final Flights flights) {
+        flightsData = flights;
+    }
 
-        rcb.addClasses(ChangeList.class, JAXBContextResolver.class);
-        rcb.addModules(new JsonJaxbModule());
+    public static Flights getFlights() {
+        return flightsData;
+    }
 
-        return Application.builder(rcb.build()).build();
+    private static Flights initFlightsData() {
+        Flights flights = new Flights();
+        FlightType flight123 = new FlightType();
+        flight123.setCompany("Czech Airlines");
+        flight123.setNumber(123);
+        flight123.setFlightId("OK123");
+        flight123.setAircraft("B737");
+        FlightType flight124 = new FlightType();
+        flight124.setCompany("Czech Airlines");
+        flight124.setNumber(124);
+        flight124.setFlightId("OK124");
+        flight124.setAircraft("AB115");
+        flights.getFlight().add(flight123);
+        flights.getFlight().add(flight124);
+
+        return flights;
     }
 }
