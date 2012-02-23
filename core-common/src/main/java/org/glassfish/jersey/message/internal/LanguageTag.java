@@ -167,7 +167,7 @@ class LanguageTag {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof LanguageTag)) {
+        if (object == null || getClass() != object.getClass()) {
             return false;
         }
         LanguageTag lt = (LanguageTag) object;

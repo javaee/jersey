@@ -85,9 +85,6 @@ class AcceptableLanguageTag extends LanguageTag implements QualityFactor {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AcceptableMediaType)) {
-            return false;
-        }
         if (!super.equals(obj)) {
             return false;
         }
