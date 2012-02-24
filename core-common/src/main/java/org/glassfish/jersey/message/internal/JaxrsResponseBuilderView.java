@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
@@ -113,6 +114,13 @@ final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
     @Override
     public Response.ResponseBuilder entity(Object entity) {
         wrapped.content(entity);
+        return this;
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public ResponseBuilder entity(Object entity, Annotation[] annotations) {
+        wrapped.writeAnnotations(annotations).content(entity);
         return this;
     }
 

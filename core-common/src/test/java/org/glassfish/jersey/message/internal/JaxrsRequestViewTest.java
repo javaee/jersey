@@ -86,13 +86,6 @@ public class JaxrsRequestViewTest {
     }
 
     @Test
-    public void testUriBuilder() throws URISyntaxException {
-        MutableRequest r = new MutableRequest("", "http://example.org/app/resource", "GET");
-        Request v = r.toJaxrsRequest();
-        assertEquals(v.getUriBuilder().build(), URI.create("http://example.org/app/resource"));
-    }
-
-    @Test
     public void testSelectVariant() {
         MutableRequest mr = new MutableRequest("", "http://example.org/app/resource", "GET");
         mr.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);

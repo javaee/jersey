@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Locale;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant;
@@ -101,6 +103,13 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
     @Override
     public JaxrsRequestBuilderView entity(Object entity) {
         wrapped.content(entity);
+        return this;
+    }
+
+    //@Override
+    // TODO  uncomment @Override
+    public RequestBuilder entity(Object entity, Annotation[] annotations) {
+        wrapped.writeAnnotations(annotations).content(entity);
         return this;
     }
 

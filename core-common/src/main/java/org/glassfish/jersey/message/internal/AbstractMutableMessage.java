@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -160,6 +161,10 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return (M) this;
     }
 
+    public Object content() {
+        return entity.content();
+    }
+
     public <T> T content(TypeLiteral<T> type) {
         return entity.content(type);
     }
@@ -168,8 +173,18 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return entity.content(type);
     }
 
-    public Object content() {
-        return entity.content();
+    public <T> T content(TypeLiteral<T> type, Annotation[] annotations) {
+        return entity.content(type, annotations);
+    }
+
+    public <T> T content(Class<T> type, Annotation[] annotations) {
+        return entity.content(type, annotations);
+    }
+
+    @SuppressWarnings("unchecked")
+    public M writeAnnotations(Annotation[] annotations) {
+        entity.writeAnnotations(annotations);
+        return (M) this;
     }
 
     @SuppressWarnings("unchecked")

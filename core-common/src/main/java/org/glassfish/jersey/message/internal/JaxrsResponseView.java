@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import javax.ws.rs.core.MessageProcessingException;
@@ -105,6 +106,18 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     @Override
     public <T> T readEntity(TypeLiteral<T> entityType) throws MessageProcessingException {
         return wrapped.content(entityType);
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
+        return wrapped.content(type, annotations);
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
+        return wrapped.content(entityType, annotations);
     }
 
     @Override

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.core.TypeLiteral;
@@ -57,6 +58,8 @@ public interface Entity {
         public B content(Object content, Type type);
 
         public <T> B content(Object content, TypeLiteral<T> type);
+
+        public B writeAnnotations(Annotation[] annotations);
     }
 
     public boolean isEmpty();
@@ -66,6 +69,10 @@ public interface Entity {
     public <T> T content(Class<T> type);
 
     public <T> T content(TypeLiteral<T> type);
+
+    public <T> T content(Class<T> type, Annotation[] annotations);
+
+    public <T> T content(TypeLiteral<T> type, Annotation[] annotations);
 
     public Type type();
 }

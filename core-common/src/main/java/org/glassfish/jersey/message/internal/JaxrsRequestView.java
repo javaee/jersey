@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.lang.annotation.Annotation;
 import org.glassfish.jersey.uri.internal.UriBuilderImpl;
 
 import javax.ws.rs.core.EntityTag;
@@ -90,7 +91,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return wrapped.uri();
     }
 
-    @Override
+    // TODO remove the method once the updated API snapshot is available.
     public UriBuilder getUriBuilder() {
         return new UriBuilderImpl().uri(getUri());
     }
@@ -113,6 +114,18 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
     @Override
     public <T> T readEntity(TypeLiteral<T> entityType) throws MessageProcessingException {
         return wrapped.content(entityType);
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
+        return wrapped.content(type, annotations);
+    }
+
+    //@Override
+    // TODO uncomment @Override
+    public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
+        return wrapped.content(entityType, annotations);
     }
 
     @Override

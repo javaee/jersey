@@ -313,7 +313,7 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
 
     @Override
     public UriBuilder getRequestUriBuilder() {
-        return request.get().getUriBuilder();
+        return UriBuilder.fromUri(request.get().getUri());
     }
 
     // ExtendedUriInfo

@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.WebApplicationException;
@@ -90,6 +91,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     private InstanceTypePair<?> instanceType;
     // reference to enclosing message
     private AbstractMutableMessage<?> message;
+    // writer annotations
+    private Annotation[] writeAnnotations = EMPTY_ANNOTATIONS;
     // message body workers to read and write entities
     @Inject
     protected MessageBodyWorkers workers;
@@ -133,6 +136,12 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
+    public MutableEntity writeAnnotations(Annotation[] annotations) {
+        this.writeAnnotations = Arrays.copyOf(annotations, annotations.length);
+        return this;
+    }
+
+    @Override
     public Object content() {
         return content(Object.class);
         // TODO the following might be more suitable:
@@ -142,11 +151,27 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     @Override
     public <T> T content(Class<T> rawType) {
         final Type genericSuperclass = rawType.getGenericSuperclass();
-        return content(rawType, (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType);
+        return content(rawType, (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType, EMPTY_ANNOTATIONS);
+    }
+
+    @Override
+    public <T> T content(TypeLiteral<T> type) {
+        return content(type.getRawType(), type.getType(), EMPTY_ANNOTATIONS);
+    }
+
+    @Override
+    public <T> T content(Class<T> rawType, Annotation[] annotations) {
+        final Type genericSuperclass = rawType.getGenericSuperclass();
+        return content(rawType, (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType, annotations);
+    }
+
+    @Override
+    public <T> T content(TypeLiteral<T> type, Annotation[] annotations) {
+        return content(type.getRawType(), type.getType(), annotations);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T content(Class<T> rawType, Type type) {
+    private <T> T content(Class<T> rawType, Type type, Annotation[] readAnnotations) {
         final boolean typeIsAssignableFromMyInstance =
                 (instanceType != null) && (rawType.isAssignableFrom(instanceType.instance().getClass()));
 
@@ -162,14 +187,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             if (myInstanceType == null || workers == null || myInstance == null) {
                 return null;
             }
-            final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, EMPTY_ANNOTATIONS, mediaType);
+            final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, writeAnnotations, mediaType);
             if (writer == null) {
                 // TODO throw an exception?
                 return null;
             } else {
                 try {
                     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    writer.writeTo(instanceType.instance(), myInstanceType.getClass(), myInstanceType, EMPTY_ANNOTATIONS, mediaType, null, baos);
+                    writer.writeTo(instanceType.instance(), myInstanceType.getClass(), myInstanceType, writeAnnotations, mediaType, null, baos);
                     baos.close();
                     contentStream = new ByteArrayInputStream(baos.toByteArray());
                 } catch (IOException ex) {
@@ -185,13 +210,13 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return null;
         }
 
-        final MessageBodyReader<T> br = workers.getMessageBodyReader(rawType, type, EMPTY_ANNOTATIONS, mediaType);
+        final MessageBodyReader<T> br = workers.getMessageBodyReader(rawType, type, readAnnotations, mediaType);
         if (br == null) {
-            return null;        // TODO could not find MBR
+            return null; // TODO could not find MBR
         }
 
         try {
-            T t = br.readFrom(rawType, type, EMPTY_ANNOTATIONS, mediaType, message.toJaxrsHeaderMap(), contentStream);
+            T t = br.readFrom(rawType, type, readAnnotations, mediaType, message.toJaxrsHeaderMap(), contentStream);
             if (br instanceof CompletableReader) {
                 t = ((CompletableReader<T>) br).complete(t);
             }
@@ -216,11 +241,6 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return MediaType.APPLICATION_OCTET_STREAM_TYPE;
         }
         return MediaType.valueOf(result);
-    }
-
-    @Override
-    public <T> T content(TypeLiteral<T> type) {
-        return content(type.getRawType(), type.getType());
     }
 
     @Override
