@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.client;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.Singleton;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -54,6 +54,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.process.internal.DefaultRespondingContext;
 import org.glassfish.jersey.process.internal.DefaultStagingContext;
 import org.glassfish.jersey.process.internal.FilterModule;
@@ -67,10 +68,12 @@ import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.StagingContext;
-import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.Singleton;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Registers all modules necessary for {@link Client} runtime.
@@ -102,6 +105,7 @@ public class ClientModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new RequestScope.Module(), // must go first as it registers the request scope instance.
+                new InvocationContextModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
                 new ServiceProvidersModule(),

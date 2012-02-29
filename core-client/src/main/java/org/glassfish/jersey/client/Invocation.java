@@ -39,8 +39,12 @@
  */
 package org.glassfish.jersey.client;
 
-import com.google.common.util.concurrent.SettableFuture;
-import org.glassfish.jersey.message.internal.Requests;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
@@ -52,11 +56,12 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.TypeLiteral;
-import java.net.URI;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.jvnet.tiger_types.Types;
+
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
@@ -530,6 +535,36 @@ public class Invocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public Response invoke() throws InvocationException {
+        return retrieveResponse(submit());
+    }
+
+    @Override
+    public <T> T invoke(final Class<T> responseType) throws InvocationException {
+        return retrieveResponse(submit(responseType));
+    }
+
+    @Override
+    public <T> T invoke(final TypeLiteral<T> responseType) throws InvocationException {
+        return retrieveResponse(submit(responseType));
+    }
+
+    private <T> T retrieveResponse(Future<T> responseFuture) {
+        try {
+            return responseFuture.get();
+        } catch (InterruptedException ex) {
+            throw new ClientException(ex);
+        } catch (ExecutionException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof ClientException) {
+                throw (ClientException) cause;
+            } else {
+                throw new ClientException(cause);
+            }
+        }
+    }
+
+    @Override
+    public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
         client.submit(this, new InvocationCallback<Response>() {
 
@@ -543,29 +578,26 @@ public class Invocation implements javax.ws.rs.client.Invocation {
                 responseFuture.setException(error);
             }
         });
-        try {
-            return responseFuture.get();
-        } catch (InterruptedException ex) {
-            throw new ClientException(ex);
-        } catch (ExecutionException ex) {
-            throw new ClientException(ex.getCause());
-        }
+
+        return responseFuture;
     }
 
     @Override
-    public <T> T invoke(final Class<T> responseType) throws InvocationException {
+    public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
         client.submit(this, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
-                if (responseType == Response.class) {
-                    responseFuture.set(responseType.cast(response));
-                }
                 if (response.getStatus() < 300) {
-                    responseFuture.set(response.readEntity(responseType));
+                    if (responseType == Response.class) {
+                        responseFuture.set(responseType.cast(response));
+                    } else {
+                        responseFuture.set(response.readEntity(responseType));
+                    }
+                } else {
+                    failed(new InvocationException(response, true));
                 }
-                throw new InvocationException(response, true);
             }
 
             @Override
@@ -573,17 +605,12 @@ public class Invocation implements javax.ws.rs.client.Invocation {
                 responseFuture.setException(error);
             }
         });
-        try {
-            return responseFuture.get();
-        } catch (InterruptedException ex) {
-            throw new ClientException(ex);
-        } catch (ExecutionException ex) {
-            throw new ClientException(ex.getCause());
-        }
+
+        return responseFuture;
     }
 
     @Override
-    public <T> T invoke(final TypeLiteral<T> responseType) throws InvocationException {
+    public <T> Future<T> submit(final TypeLiteral<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
         client.submit(this, new InvocationCallback<Response>() {
 
@@ -591,8 +618,9 @@ public class Invocation implements javax.ws.rs.client.Invocation {
             public void completed(Response response) {
                 if (response.getStatus() < 300) {
                     responseFuture.set(response.readEntity(responseType));
+                } else {
+                    failed(new InvocationException(response, true));
                 }
-                throw new InvocationException(response, true);
             }
 
             @Override
@@ -600,33 +628,43 @@ public class Invocation implements javax.ws.rs.client.Invocation {
                 responseFuture.setException(error);
             }
         });
-        try {
-            return responseFuture.get();
-        } catch (InterruptedException ex) {
-            throw new ClientException(ex);
-        } catch (ExecutionException ex) {
-            throw new ClientException(ex.getCause());
-        }
+
+        return responseFuture;
     }
 
     @Override
-    public Future<Response> submit() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public <T> Future<T> submit(final InvocationCallback<T> callback) {
+        final SettableFuture<T> responseFuture = SettableFuture.create();
 
-    @Override
-    public <T> Future<T> submit(Class<T> responseType) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+        Type callbackType = Types.getTypeArgument(callback.getClass(), 0);
+        final TypeLiteral<T> resultTypeLiteral = TypeLiteral.of(Types.erasure(callbackType), callbackType);
 
-    @Override
-    public <T> Future<T> submit(TypeLiteral<T> responseType) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+        client.submit(this, new InvocationCallback<Response>() {
 
-    @Override
-    public <T> Future<T> submit(InvocationCallback<T> callback) {
-        throw new UnsupportedOperationException("Not supported yet.");
+            @Override
+            public void completed(Response response) {
+                if (response.getStatus() < 300) {
+                    final T result;
+                    if (resultTypeLiteral.getRawType() == Response.class) {
+                        result = resultTypeLiteral.getRawType().cast(response);
+                    } else {
+                        result = response.readEntity(resultTypeLiteral);
+                    }
+                    responseFuture.set(result);
+                    callback.completed(result);
+                } else {
+                    failed(new InvocationException(response, true));
+                }
+            }
+
+            @Override
+            public void failed(InvocationException error) {
+                responseFuture.setException(error);
+                callback.failed(error);
+            }
+        });
+
+        return responseFuture;
     }
 
     @Override

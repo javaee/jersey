@@ -41,6 +41,8 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.Suspend;
+import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.Response;
 
 /**
@@ -49,7 +51,7 @@ import javax.ws.rs.core.Response;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface InvocationContext {
+public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
 
     /**
      * Invocation context state.
@@ -111,48 +113,35 @@ public interface InvocationContext {
     public State state();
 
     /**
-     * Resume the previously suspended request invocation with a response.
+     * Set the default time-out values to be used for {@link #suspend() suspending}
+     * the invocation.
      *
-     * See {@link javax.ws.rs.core.ExecutionContext#resume(java.lang.Object)} for
-     * more details about the expected behavior.
-     *
-     * @param response response to be used in the resumed invocation processing.
-     * @throws IllegalStateException in case the invocation context
-     *     has not been suspended yet or has already been resumed.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#resume(Object)
-     */
-    public void resume(Response response);
-
-    /**
-     * Resume the previously suspended request invocation with an exception.
-     *
-     * See {@link javax.ws.rs.core.ExecutionContext#resume(java.lang.Exception)}
-     * for more details about the expected behavior.
-     *
-     * @param exception exception to be used in the resumed invocation processing.
-     * @throws IllegalStateException in case the invocation context
-     *     has not been suspended yet or has already been resumed.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#resume(Exception)
-     */
-    public void resume(Throwable exception);
-
-    /**
-     * Cancel the request invocation.
-     *
-     * See {@link javax.ws.rs.core.ExecutionContext#cancel()} for more details
-     * about the expected behavior.
-     */
-    public void cancel();
-
-    /**
-     * Suspend a request invocation. The method is re-entrant, IOW calling
-     * the method multiple times has the same effect as calling it only once.
-     *
-     * In case the invocation has been {@link State#RESUMED resumed} or
-     * {@link State#CANCELLED canceled} already, the call to suspend is ignored.
+     * This method can be used to propagate the time-out data from the JAX-RS
+     * {@link javax.ws.rs.Suspend &#64;Suspend} annotation to the invocation context.
      * <p />
+     * Note that the method is not thread safe.
+     *
+     * @param time suspension timeout value.
+     * @param unit suspension timeout time unit.
+     */
+    public void setSuspendTimeout(long time, TimeUnit unit);
+
+    /**
+     * Try to {@link ExecutionContext#suspend() suspend} the request invocation.
+     *
+     * Unlike the {@code suspend()} method, this method does not throw an exception
+     * in case the suspend operation fails. Instead, the method returns {@code true}
+     * if the invocation has been suspended successfully, returns {@code false}
+     * otherwise.
+     *
+     * @return {@code true} if the invocation has been suspended successfully,
+     * returns {@code false} otherwise.
+     */
+    public boolean trySuspend();
+
+    /**
+     * Suspend a request invocation.
+     *
      * See {@link javax.ws.rs.core.ExecutionContext#suspend()} for more details
      * on the expected behavior.
      *
@@ -163,91 +152,8 @@ public interface InvocationContext {
      *    altogether.
      *
      * @see javax.ws.rs.core.ExecutionContext#suspend()
+     * @see #setSuspendTimeout(long, java.util.concurrent.TimeUnit)
      */
+    @Override
     public Future<?> suspend();
-
-    /**
-     * Suspend a request invocation for up to the specified time in milliseconds.
-     * <p/>
-     * If called on an already suspended invocation, the existing timeout value
-     * is overridden by a new value and the suspension timeout counter is reset.
-     * This means that the suspended invocation will time out in:
-     * <pre>
-     *     System.currentTimeMillis() + timeInMillis
-     * </pre>
-     * .
-     * In case the invocation has been {@link State#RESUMED resumed} or
-     * {@link State#CANCELLED canceled} already, the call to suspend is ignored.
-     * <p />
-     * See {@link javax.ws.rs.core.ExecutionContext#suspend(long)} for more details
-     * on the expected behavior.
-     *
-     * @param timeInMillis suspension timeout in milliseconds.
-     * @return {@link Future future} representing a handle of the suspended
-     *    request invocation that can be used for querying its current state
-     *    via one of the {@code Future.isXxx()} methods. The handle can also
-     *    be used to {@link Future#cancel(boolean) cancel} the invocation
-     *    altogether.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#suspend(long)
-     */
-    public Future<?> suspend(long timeInMillis);
-
-    /**
-     * Suspend a request invocation for up to the specified time.
-     * <p/>
-     * If called on an already suspended invocation, the existing timeout value
-     * is overridden by a new value and the suspension timeout counter is reset.
-     * This means that the suspended invocation will time out in:
-     * <pre>
-     *     System.currentTimeMillis() + unit.toMillis(time)
-     * </pre>
-     * .
-     * In case the invocation has been {@link State#RESUMED resumed} or
-     * {@link State#CANCELLED canceled} already, the call to suspend is ignored.
-     * <p />
-     * See {@link javax.ws.rs.core.ExecutionContext#suspend(long, java.util.concurrent.TimeUnit)}
-     * for more details about the expected behavior.
-     *
-     * @param time suspension timeout value.
-     * @param unit suspension timeout time unit.
-     * @return {@link Future future} representing a handle of the suspended
-     *    request invocation that can be used for querying its current state
-     *    via one of the {@code Future.isXxx()} methods. The handle can also
-     *    be used to {@link Future#cancel(boolean) cancel} the invocation
-     *    altogether.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#suspend(long, TimeUnit)
-     */
-    public Future<?> suspend(long time, TimeUnit unit);
-
-    /**
-     * Set the default response to be used in case the suspended request invocation
-     * times out.
-     *
-     * See {@link javax.ws.rs.core.ExecutionContext#setResponse(java.lang.Object)}
-     * for more details about the expected behavior.
-     *
-     * @param response data to be sent back to the client in case the suspended
-     *     request invocation times out.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#setResponse(Object)
-     */
-    public void setResponse(Response response);
-
-    /**
-     * Returns default response to be send back to the client in case the suspended
-     * request invocation times out. The method may return {@code null} if no default
-     * response was set in the invocation context.
-     * <p />
-     * See {@link javax.ws.rs.core.ExecutionContext#getResponse()} for more details
-     * about the expected behavior.
-     *
-     * @return default response to be sent back to the client in case the suspended
-     *     request invocation times out or {@code null} if no default response
-     *     was set.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#getResponse()
-     */
-    public Response getResponse();
 }

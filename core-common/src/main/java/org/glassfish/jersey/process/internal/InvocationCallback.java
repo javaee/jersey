@@ -68,6 +68,20 @@ public interface InvocationCallback {
     public void suspended(long time, TimeUnit unit, InvocationContext context);
 
     /**
+     * Request processing resume event notification.
+     *
+     * {@link RequestInvoker Request invoker} invokes the {@code resumed()}
+     * callback method when it receives an instruction to resume the current
+     * <b>suspended</b> request processing via one of the {@link InvocationContext
+     * invocation context} {@code resume(...)} methods.
+     * <p />
+     * Note that the {@code resumed()} callback method will not be invoked in
+     * case the invocation context has not been in a suspended state when the
+     * {@code resume(...)} method was invoked.
+     */
+    public void resumed();
+
+    /**
      * Request processing cancel event notification.
      *
      * {@link RequestInvoker Request invoker} invokes the {@code cancelled()}

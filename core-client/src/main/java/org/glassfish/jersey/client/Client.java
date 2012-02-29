@@ -238,6 +238,11 @@ public class Client implements javax.ws.rs.client.Client {
                 public void suspended(long time, TimeUnit unit, InvocationContext context) {
                     // TODO implement client-side suspend event logic
                 }
+
+                @Override
+                public void resumed() {
+                    // TODO implement client-side resume event logic
+                }
             });
         } finally {
             requestScope.exit();
