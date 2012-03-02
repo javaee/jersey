@@ -112,8 +112,11 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
         final String encodedRequestPath = getAbsolutePath().toString();
         // TODO: do we need to cut the starting slash ?
-        final int startIndex = ((encodedRequestPath.length() > 1) && (encodedRequestPath.charAt(0) == '/')) ? 1 : 0;
-        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
+//        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
+        if (encodedRequestPath.length() != rhpLength) {
+            final int startIndex = ((encodedRequestPath.length() > 1) && (encodedRequestPath.charAt(0) == '/')) ? 1 : 0;
+            paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
+        }
     }
 
     @Override

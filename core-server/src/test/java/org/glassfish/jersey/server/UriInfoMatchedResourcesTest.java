@@ -73,14 +73,14 @@ public class UriInfoMatchedResourcesTest {
         @GET
         public String getFoo(@Context UriInfo uriInfo) {
             assertMatchedResources(uriInfo, Resource.class);
-            return "OK";
+            return "foo";
         }
 
         @GET
         @Path("bar")
         public String getFooBar(@Context UriInfo uriInfo) {
             assertMatchedResources(uriInfo, Resource.class);
-            return "OK";
+            return "foobar";
         }
 
         @Path("baz")
@@ -95,14 +95,14 @@ public class UriInfoMatchedResourcesTest {
         @GET
         public String getFooBaz(@Context UriInfo uriInfo) {
             assertMatchedResources(uriInfo, SubResource.class, Resource.class);
-            return "OK";
+            return "foobaz";
         }
 
         @GET
         @Path("bar")
         public String getFooBazBar(@Context UriInfo uriInfo) {
             assertMatchedResources(uriInfo, SubResource.class, Resource.class);
-            return "OK";
+            return "foobazbar";
         }
     }
 
@@ -113,19 +113,19 @@ public class UriInfoMatchedResourcesTest {
         Response response;
         response = app.apply(Requests.from("/foo", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getEntity());
+        assertEquals("foo", response.getEntity());
 
         response = app.apply(Requests.from("/foo/bar", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getEntity());
+        assertEquals("foobar", response.getEntity());
 
         response = app.apply(Requests.from("/foo/baz", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getEntity());
+        assertEquals("foobaz", response.getEntity());
 
         response = app.apply(Requests.from("/foo/baz/bar", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("OK", response.getEntity());
+        assertEquals("foobazbar", response.getEntity());
     }
 
     private static void assertMatchedResources(UriInfo uriInfo, Class<?>... expectedMatchedResourceClasses) {

@@ -56,7 +56,7 @@ import org.glassfish.jersey.process.Inflector;
  */
 public class InflectorBasedResourceMethod extends AbstractResourceMethod {
 
-    Inflector<Request, Response> inflector;
+    private Inflector<Request, Response> inflector;
 
     /**
      * Constructs a new instance bound to the given resource class.
@@ -82,7 +82,16 @@ public class InflectorBasedResourceMethod extends AbstractResourceMethod {
         setAreOutputTypesDeclared(!outputMediaTypes.isEmpty());
         getSupportedOutputTypes().addAll(outputMediaTypes);
     }
-    
+
+
+    /**
+     * Getter for inflector.
+     *
+     * @return encapsulated inflector
+     */
+    public Inflector<Request, Response> getInflector() {
+        return inflector;
+    }
 
     // ResourceModelComponent
     @Override

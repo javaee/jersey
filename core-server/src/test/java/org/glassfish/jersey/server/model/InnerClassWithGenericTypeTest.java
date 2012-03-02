@@ -39,40 +39,61 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import javax.ws.rs.core.Request;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.inject.Injector;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
+ * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.InnerClassWithGenericTypeTest
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Paul.Sandoz@Sun.Com
  */
-class PushResourceAndDelegateTreeAcceptor implements TreeAcceptor {
-    final Injector injector;
-    final Factory<RoutingContext> routingCtx;
-    final ResourceClass rc;
-    final TreeAcceptor acceptor;
+public class InnerClassWithGenericTypeTest {
 
-    PushResourceAndDelegateTreeAcceptor(final Injector injector, final Factory<RoutingContext> routingContextFactory, final ResourceClass resource, final TreeAcceptor wrappedAcceptor) {
-        this.injector = injector;
-        this.routingCtx = routingContextFactory;
-        this.rc = resource;
-        this.acceptor = wrappedAcceptor;
+    Application app;
+
+    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
+
+        return Application.builder(resourceConfig);
     }
 
-    @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request data) {
-        if (rc != null) {
-            routingCtx.get().pushMatchedResource(this.injector.inject(rc.getResourceClass()));
-        }
-        routingCtx.get().pushLeftHandPath();
-        return acceptor.apply(data);
+    @Path("/")
+    public static class RootResource {
+
+       @Path("sub")
+       public SubResource getSub() {
+          return new SubResource(new ArrayList<String>(), new HashSet<Integer>());
+       }
+
+       public class SubResource extends RootResource {
+
+          public SubResource(List<String> list, Set<Integer> s) {
+          }
+
+          @GET
+          public String get() {
+              return "sub";
+          }
+       }
+    }
+
+    @Test
+    public void testInnerClass() throws Exception {
+        app = createApplicationBuilder(RootResource.class).build();
+
+        assertEquals("sub", app.apply(Requests.from("/sub","GET").build()).get().readEntity(String.class));
     }
 }

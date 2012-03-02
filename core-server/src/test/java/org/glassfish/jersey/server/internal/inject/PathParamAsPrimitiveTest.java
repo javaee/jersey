@@ -265,7 +265,7 @@ public class PathParamAsPrimitiveTest {
         _test("double", "3.14159265358979");
     }
 
-    // FIXME: should be returning 404 instead of 500
+    // FIXME: should be returning 404 instead of 500 ?
     @Ignore
     @Test
     public void testBadPrimitiveValue() throws Exception {
@@ -273,7 +273,7 @@ public class PathParamAsPrimitiveTest {
         assertEquals(404, response.getStatus());
     }
 
-    // FIXME: should be returning 404 instead of 500
+    // FIXME: should be returning 404 instead of 500 ?
     @Ignore
     @Test
     public void testBadPrimitiveWrapperValue() throws Exception {

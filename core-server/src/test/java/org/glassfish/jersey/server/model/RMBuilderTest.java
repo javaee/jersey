@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model;
 
+import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -120,7 +121,7 @@ public class RMBuilderTest {
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        final RuntimeModelProviderFromAbstractModel rmCreator = services.byType(RuntimeModelProviderFromAbstractModel.class).get();
+        final RuntimeModelProviderFromRootResource rmCreator = services.byType(RuntimeModelProviderFromRootResource.class).get();
         rmCreator.process(IntrospectionModeller.createResource(HelloWorldResource.class));
         appRootModule.setRoot(rmCreator.getRuntimeModel());
 
