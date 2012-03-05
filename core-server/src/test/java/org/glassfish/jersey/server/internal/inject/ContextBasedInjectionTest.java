@@ -39,17 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
+import org.glassfish.hk2.Services;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -57,18 +47,26 @@ import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-
-import org.glassfish.hk2.Services;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * Unit test for creating an application with asynchronously handled request processing
- * via {@link ApplicationBuilder}'s programmatic API.
+ * via {@link Application.Builder}'s programmatic API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -80,9 +78,9 @@ public class ContextBasedInjectionTest {
     @Parameterized.Parameters
     public static List<String[]> testUriSuffixes() {
         return Arrays.asList(new String[][]{
-                    {"a/b/c", "A-B-C"},
-                    {"a/b/d/", "A-B-D"}
-                });
+                {"a/b/c", "A-B-C"},
+                {"a/b/d/", "A-B-D"}
+        });
     }
     private final String uriSuffix;
     private final String expectedResponse;

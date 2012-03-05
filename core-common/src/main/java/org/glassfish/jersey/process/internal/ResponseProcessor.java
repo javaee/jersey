@@ -289,15 +289,16 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
 
     @SuppressWarnings("unchecked")
     private Response mapException(Throwable exception) throws Exception {
-        if (!(exception instanceof MappableException)) {
-            return null;
+        Response response = null;
+
+        if (exception instanceof MappableException) {
+            exception = exception.getCause();
         }
 
-        Response response = null;
-        exception = exception.getCause();
         if (exception instanceof WebApplicationException) {
             response = ((WebApplicationException) exception).getResponse();
         }
+
         if ((response == null || !response.hasEntity()) && exceptionMappers != null) {
             javax.ws.rs.ext.ExceptionMapper mapper = exceptionMappers.find(exception.getClass());
             if (mapper != null) {

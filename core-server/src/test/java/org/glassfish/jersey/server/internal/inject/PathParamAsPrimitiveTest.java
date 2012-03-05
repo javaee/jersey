@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Taken from Jersey-1: jersey-tests: com.sun.jersey.impl.methodparams.PathParamAsPrimitiveTest
@@ -160,7 +160,7 @@ public class PathParamAsPrimitiveTest {
 
         @GET
         public String doGet(@PathParam("arg") Boolean v) {
-            assertEquals(true, v.booleanValue());
+            assertEquals(true, v);
             return "content";
         }
     }
@@ -210,7 +210,7 @@ public class PathParamAsPrimitiveTest {
 
         @GET
         public String doGet(@PathParam("arg") Float v) {
-            assertEquals(3.14159265f, v.floatValue(), 0f);
+            assertEquals(3.14159265f, v, 0f);
             return "content";
         }
     }
@@ -220,7 +220,7 @@ public class PathParamAsPrimitiveTest {
 
         @GET
         public String doGet(@PathParam("arg") Double v) {
-            assertEquals(3.14159265358979d, v.doubleValue(), 0d);
+            assertEquals(3.14159265358979d, v, 0d);
             return "content";
         }
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,82 +37,50 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.server.internal.inject;
 
-import java.net.URI;
-import java.util.Map;
-
-import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import java.util.concurrent.ExecutionException;
 
 /**
+ * Class used for {@link Application} initialization and for executing {@link Request}s.
  *
- * @author Paul Sandoz
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-interface Request extends Entity, Headers {
+public abstract class AbstractTest {
 
-    interface Builder extends Request, Entity.Builder<Request.Builder>, Headers.Builder<Request.Builder> {
-        // Common message methods
+    private Application app;
 
-        public Builder properties(Map<String, Object> properties);
-
-        public Builder property(String name, Object value);
-
-        public Builder clearProperties();
-
-        // Request-specific methods
-        public Builder uri(String uri);
-
-        public Builder uri(URI uri);
-
-        public Builder uris(String applicationRootUri, String requestUri);
-
-        public Builder uris(URI applicationRootUri, URI requestUri);
-
-        public Builder method(String method);
-
-        public Builder workers(MessageBodyWorkers workers);
-
-        public Builder cookie(Cookie cookie);
-
-        @Override
-        public Builder clone();
-
-        public Request build();
-
-        public javax.ws.rs.core.Request.RequestBuilder toJaxrsRequestBuilder();
+    protected void initiateWebApplication(Class<?>... classes) {
+        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
+        app = Application.builder(resourceConfig).build();
     }
 
-    // Common message methods
-    public Map<String, Object> properties();
+    protected Response apply(Request request) throws ExecutionException, InterruptedException {
+        return app.apply(request).get();
+    }
 
-    public void close();
+    protected Response _test(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {
+        return _test(requestUri, null, cookies);
+    }
 
-    // Request-specific methods
-    public Request clone();
+    protected Response _test(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
+        Request.RequestBuilder requestBuilder = Requests.from(requestUri, "GET");
+        if(accept != null) {
+            requestBuilder = requestBuilder.accept(accept);
+        }
 
-    public URI baseUri();
+        for(Cookie cookie : cookies) {
+            requestBuilder = requestBuilder.cookie(cookie);
+        }
 
-    /**
-     * Get the path of the current request relative to the application root (base)
-     * URI as a string.
-     *
-     * @param decode controls whether sequences of escaped octets are decoded
-     *     ({@code true}) or not ({@code false}).
-     * @return relative request path.
-     */
-    public String relativePath(boolean decode);
+        return apply(requestBuilder.build());
+    }
 
-    public URI uri();
-
-    public String method();
-
-    public MessageBodyWorkers workers();
-
-    public javax.ws.rs.core.Request toJaxrsRequest();
-
-    public javax.ws.rs.core.RequestHeaders getJaxrsHeaders();
-
-    public Builder toBuilder();
 }

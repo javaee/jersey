@@ -43,7 +43,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.model.InflectorBasedResourceMethod;
 import org.glassfish.jersey.server.model.ResourceClass;
 import org.glassfish.jersey.server.model.ResourceConstructor;
@@ -65,13 +64,13 @@ public class RuntimeModelFromSubResource extends RuntimeModelProviderBase {
 
     @Override
     TreeAcceptor createFinalTreeAcceptor(RouterModule.RootRouteBuilder<PathPattern> rootRouteBuilder,
-                                                    RouterModule.RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
+                                         RouterModule.RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
         return lastRoutedBuilder.build();
     }
 
     @Override
     public void visitResourceClass(ResourceClass resource) {
-         // no need to do anything here
+        // no need to do anything here
     }
 
     @Override

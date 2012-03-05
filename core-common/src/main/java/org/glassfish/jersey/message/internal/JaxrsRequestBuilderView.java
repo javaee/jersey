@@ -146,7 +146,8 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
 
     @Override
     public JaxrsRequestBuilderView cookie(Cookie cookie) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        wrapped.cookie(cookie);
+        return this;
     }
 
     @Override
