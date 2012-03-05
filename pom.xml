@@ -560,17 +560,6 @@
 
     <!--distributionManagement /-->
 
-    <repositories>
-        <repository>
-            <id>glassfish-maven-repository</id>
-            <name>Glassfish repository</name>
-            <url>http://maven.glassfish.org/content/groups/glassfish-group/</url>
-            <snapshots>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <pluginRepositories>
         <pluginRepository>
             <id>snapshots.codehaus.org</id>
