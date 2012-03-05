@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -55,6 +55,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -64,13 +65,16 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.inject.Injector;
+import org.glassfish.jersey.server.model.AbstractResourceMethod;
+import org.glassfish.jersey.server.model.InvocableResourceMethod;
+import org.glassfish.jersey.server.model.Parameter;
 
 import com.google.common.collect.Iterators;
 
 /**
+ * A single acceptor to be responsible to respond to all HTTP methods defined on a given resource.
+ * Method selection algorithm is implemented here, which takes into account requested media type
+ * and defined resource method media type capabilities.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -101,12 +105,10 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
     final Map<String, List<ConsumesProducesInflector>> method2InflectorMap;
     final MessageBodyWorkers workers;
     final Injector injector;
-    final Factory<RoutingContext> routingCtxFactory;
 
-    /* package */ MultipleMethodAcceptor(Injector injector, MessageBodyWorkers msgWorkers, Factory<RoutingContext> routingCtxFactory, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> method2InflectorList) {
+    /* package */ MultipleMethodAcceptor(Injector injector, MessageBodyWorkers msgWorkers, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> method2InflectorList) {
         this.injector = injector;
         this.workers = msgWorkers;
-        this.routingCtxFactory = routingCtxFactory;
         this.method2InflectorMap = new HashMap<String, List<ConsumesProducesInflector>>();
         for (final Pair<AbstractResourceMethod, Inflector<Request, Response>> methodInflector : method2InflectorList) {
             String httpMethod = methodInflector.left().getHttpMethod();
@@ -170,7 +172,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
     public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
         List<ConsumesProducesInflector> inflectors = method2InflectorMap.get(request.getMethod());
         if (inflectors == null) {
-            throw new WebApplicationException(Response.status(Status.METHOD_NOT_ALLOWED).build());
+            throw new WebApplicationException(Response.Status.METHOD_NOT_ALLOWED);
         }
         List<ConsumesProducesInflector> satisfyingInflectors = new LinkedList<ConsumesProducesInflector>();
         for (ConsumesProducesInflector cpi : inflectors) {
@@ -179,7 +181,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
             }
         }
         if (satisfyingInflectors.isEmpty()) {
-            throw new WebApplicationException(Response.status(Status.UNSUPPORTED_MEDIA_TYPE).build());
+            throw new WebApplicationException(Response.Status.UNSUPPORTED_MEDIA_TYPE);
         }
         // TODO: remove try/catch clauses based on JERSEY-913 resolution
         // TODO: remove try/catch clauses based on JERSEY-913 resolution
@@ -193,7 +195,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
             for (final ConsumesProducesInflector satisfiable : satisfyingInflectors) {
                 if (satisfiable.produces.isCompatible(acceptableMediaType)) {
                     final MediaType effectiveResponseType = typeNotSpecific(satisfiable.produces) ? MediaTypes.mostSpecific(acceptableMediaType, satisfiable.produces) : satisfiable.produces;
-                    routingCtxFactory.get().setEffectiveAcceptableType(effectiveResponseType);
+                    injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
                     final Inflector<Request, Response> inflector = satisfiable.inflector;
                     return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 

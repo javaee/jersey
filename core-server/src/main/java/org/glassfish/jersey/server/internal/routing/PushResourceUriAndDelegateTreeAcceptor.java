@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import org.glassfish.hk2.inject.Injector;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.server.model.ResourceClass;
+
 
 /**
- * Configures injection bindings for resource modeling API.
+ * A wrapper, which will push both the current resource and the actual URI path to the routing context
+ * before delegating to the encapsulated acceptor.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ResourceModelModule extends AbstractModule {
+public class PushResourceUriAndDelegateTreeAcceptor extends AbstractPushRoutingInfoAndDelegateTreeAcceptor {
+
+    final ResourceClass rc;
+
+    /**
+     * Constructs a new wrapper.
+     *
+     * @param injector to be used to obtain the actual resource instance and routing context
+     * @param resource resource class model
+     * @param wrappedAcceptor this will be used to delegate the apply method invocation
+     */
+    public PushResourceUriAndDelegateTreeAcceptor(final Injector injector, final ResourceClass resource, final TreeAcceptor wrappedAcceptor) {
+        super(injector, wrappedAcceptor);
+        this.rc = resource;
+    }
 
     @Override
-    protected void configure() {
-        // Model bindings
-        bind(RuntimeModelProvider.class).to(RuntimeModelProviderFromRootResource.class);
-
-        // Resource method invocation bindings
-        bind().to(ResourceMethodInvoker.Builder.class);
-        bind().to(ResourceMethodDispatcherFactory.class);
-        bind().to(ResourceMethodInvocationHandlerFactory.class);
-
-        // Dispatcher providers
-        bind(ResourceMethodDispatcher.Provider.class).to(VoidVoidDispatcherProvider.class);
-        bind(ResourceMethodDispatcher.Provider.class).to(MethodParamDispatcherProvider.class);
+    void pushMatchedToRoutingContext() {
+        final RoutingContext routingContext = injector.inject(RoutingContext.class);
+        if (rc != null) {
+            routingContext.pushMatchedResource(this.injector.inject(rc.getResourceClass()));
+        }
+        routingContext.pushLeftHandPath();
     }
 }

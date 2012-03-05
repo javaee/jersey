@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.model;
 
-
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
@@ -50,11 +48,13 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 /**
+ * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.AncestorsTest
  *
  * @author Paul Sandoz
  */
@@ -88,8 +88,6 @@ public class AncestorsTest {
         @GET
         public String get(@Context UriInfo ui) {
             assertEquals(n + 1, ui.getMatchedResources().size());
-            // FIXME:
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
 
             for (int i = 0; i <= n; i++) {
                 Node node = (Node) ui.getMatchedResources().get(i);
@@ -97,6 +95,7 @@ public class AncestorsTest {
             }
 
             //FIXME:
+//            assertEquals(n + 1, ui.getMatchedURIs().size());
 //            for (int i = 0; i <= n; i++) {
 //                String p = ui.getMatchedURIs().get(i);
 //                assertEquals(getPath(n - i), p);
@@ -109,15 +108,14 @@ public class AncestorsTest {
         @GET
         public String getSub(@Context UriInfo ui) {
             assertEquals(n + 1, ui.getMatchedResources().size());
-            // FIXME
-//            assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
 
             for (int i = 0; i <= n; i++) {
                 Node node = (Node) ui.getMatchedResources().get(i);
                 assertEquals(n - i, node.n);
             }
 
-            //FIXME
+//            FIXME:
+//            assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
 //            String p = ui.getMatchedURIs().get(0);
 //            assertEquals(getPathLeaf(n), p);
 //            for (int i = 0; i <= n; i++) {
@@ -181,15 +179,13 @@ public class AncestorsTest {
         @GET
         public String get(@Context UriInfo ui) {
             assertEquals(n + 1, ui.getMatchedResources().size());
-            //FIXME
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
-
             for (int i = 0; i <= n; i++) {
                 NodeSlash node = (NodeSlash) ui.getMatchedResources().get(i);
                 assertEquals(n - i, node.n);
             }
 
             //FIXME
+//            assertEquals(n + 1, ui.getMatchedURIs().size());
 //            for (int i = 0; i <= n; i++) {
 //                String p = ui.getMatchedURIs().get(i);
 //                assertEquals(getPath(n - i), p);
@@ -202,15 +198,14 @@ public class AncestorsTest {
         @GET
         public String getSub(@Context UriInfo ui) {
             assertEquals(n + 1, ui.getMatchedResources().size());
-            //FIXME
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
-
+//
             for (int i = 0; i <= n; i++) {
                 NodeSlash node = (NodeSlash) ui.getMatchedResources().get(i);
                 assertEquals(n - i, node.n);
             }
 
 //            FIXME
+//            assertEquals(n + 1, ui.getMatchedURIs().size());
 //            String p = ui.getMatchedURIs().get(0);
 //            assertEquals(getPathLeaf(n), p);
 //            for (int i = 0; i <= n; i++) {
@@ -246,8 +241,6 @@ public class AncestorsTest {
         assertEquals("3", app.apply(Requests.from("/node/node/node/node/", "GET").build()).get().readEntity(String.class));
     }
 
-    // FIXME
-    @Ignore
     @Test
     public void testNodeLeafSlash() throws Exception {
         app = createApplicationBuilder(NodeSlash.class).build();
@@ -267,8 +260,7 @@ public class AncestorsTest {
         public String getFoo() {
             assertEquals(1, ui.getMatchedResources().size());
             assertEquals(this, ui.getMatchedResources().get(0));
-            // FIXME
-            //assertEquals(1, ui.getMatchedURIs().size());
+            assertEquals(1, ui.getMatchedURIs().size());
             assertEquals("foo", ui.getMatchedURIs().get(0));
             return "foo";
         }
@@ -278,8 +270,8 @@ public class AncestorsTest {
             assertEquals(1, ui.getMatchedResources().size());
             assertEquals(this, ui.getMatchedResources().get(0));
             // FIXME
-            //assertEquals(2, ui.getMatchedURIs().size());
-            //assertEquals("foo/bar", ui.getMatchedURIs().get(0));
+//            assertEquals(2, ui.getMatchedURIs().size());
+//            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
             //assertEquals("foo", ui.getMatchedURIs().get(1));
             return new BarResource(ui, this);
         }
@@ -300,9 +292,9 @@ public class AncestorsTest {
             assertEquals(this, ui.getMatchedResources().get(0));
             assertEquals(f, ui.getMatchedResources().get(1));
             //FIXME
-            //assertEquals(2, ui.getMatchedURIs().size());
-            //assertEquals("foo/bar", ui.getMatchedURIs().get(0));
-            //assertEquals("foo", ui.getMatchedURIs().get(1));
+//            assertEquals(2, ui.getMatchedURIs().size());
+//            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
+//            assertEquals("foo", ui.getMatchedURIs().get(1));
             return "bar";
         }
     }

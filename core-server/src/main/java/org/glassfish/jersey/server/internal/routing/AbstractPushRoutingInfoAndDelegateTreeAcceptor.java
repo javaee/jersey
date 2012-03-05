@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,46 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import java.util.Iterator;
+
+import javax.ws.rs.core.Request;
+
+import org.glassfish.hk2.inject.Injector;
+import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
 
 /**
- * Configures injection bindings for resource modeling API.
+ * A common base for an acceptor wrapper. Before delegating the apply method
+ * to an encapsulated acceptor, it pushes current routing information to the routing context.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see {@link PushResourceUriAndDelegateTreeAcceptor}
+ * @see {@link PushUriAndDelegateTreeAcceptor}
+ *
+ * @author Jakub Podlesak
  */
-public class ResourceModelModule extends AbstractModule {
+public abstract class AbstractPushRoutingInfoAndDelegateTreeAcceptor implements TreeAcceptor {
+    final TreeAcceptor acceptor;
+    final Injector injector;
 
+    AbstractPushRoutingInfoAndDelegateTreeAcceptor(final Injector injector, final TreeAcceptor wrappedAcceptor) {
+        this.injector = injector;
+        this.acceptor = wrappedAcceptor;
+    }
+
+    abstract void pushMatchedToRoutingContext();
+
+    /**
+     * Before delegating to the encapsulated acceptor, the actual routing context will be pushed
+     * according to the current {@code pushMatchedToRoutingContext} method implementation.
+     *
+     * @param data current request
+     * @return acceptor chain to respond the request
+     */
     @Override
-    protected void configure() {
-        // Model bindings
-        bind(RuntimeModelProvider.class).to(RuntimeModelProviderFromRootResource.class);
-
-        // Resource method invocation bindings
-        bind().to(ResourceMethodInvoker.Builder.class);
-        bind().to(ResourceMethodDispatcherFactory.class);
-        bind().to(ResourceMethodInvocationHandlerFactory.class);
-
-        // Dispatcher providers
-        bind(ResourceMethodDispatcher.Provider.class).to(VoidVoidDispatcherProvider.class);
-        bind(ResourceMethodDispatcher.Provider.class).to(MethodParamDispatcherProvider.class);
+    public Pair<Request, Iterator<TreeAcceptor>> apply(Request data) {
+        pushMatchedToRoutingContext();
+        return acceptor.apply(data);
     }
 }

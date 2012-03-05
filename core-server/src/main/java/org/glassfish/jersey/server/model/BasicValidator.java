@@ -119,6 +119,7 @@ public class BasicValidator extends ResourceModelValidator {
         }
 
         checkConsumesProducesAmbiguities(resource);
+        checkSRLAmbiguities(resource);
     }
 
     private void checkResourceClassSetters(Class<?> rc) {
@@ -422,6 +423,22 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
 
+    private void checkSRLAmbiguities(ResourceClass resource) {
+
+        final List<SubResourceLocator> subResourceLocators = resource.getSubResourceLocators();
+
+        if (subResourceLocators.size() >= 2) {
+            for (SubResourceLocator m1 : subResourceLocators.subList(0, subResourceLocators.size()-1)) {
+                for (SubResourceLocator m2 : subResourceLocators.subList(subResourceLocators.indexOf(m1)+1, subResourceLocators.size())) {
+                    if (samePath(m1, m2)) {
+                        issueList.add(new ResourceModelIssue(resource, LocalizationMessages.AMBIGUOUS_SRLS(resource.getResourceClass().getName(), m1.getPath(), m2.getPath()), true));
+                    }
+                }
+            }
+        }
+    }
+
+
     private void checkIntersectingMediaTypes(ResourceClass resource, String httpMethod, InvocableResourceMethod im1, InvocableResourceMethod im2, List<ResourceModelIssue> issueList) {
         final List<MediaType> inputTypes1 = getEffectiveInputTypes(im1);
         final List<MediaType> inputTypes2 = getEffectiveInputTypes(im2);
@@ -480,7 +497,7 @@ public class BasicValidator extends ResourceModelValidator {
                         && MediaTypes.intersect(o1, o2);
     }
 
-    private boolean samePath(SubResourceMethod m1, SubResourceMethod m2) {
+    private boolean samePath(PathAnnotated m1, PathAnnotated m2) {
         return new UriTemplate(m1.getPath().getValue()).equals(new UriTemplate(m2.getPath().getValue()));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,60 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Configures injection bindings for resource modeling API.
+ * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.SubResourceNullTest
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Paul.Sandoz@Sun.Com
  */
-public class ResourceModelModule extends AbstractModule {
+public class SubResourceNullTest {
+    
+    Application app;
 
-    @Override
-    protected void configure() {
-        // Model bindings
-        bind(RuntimeModelProvider.class).to(RuntimeModelProviderFromRootResource.class);
+    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        // Resource method invocation bindings
-        bind().to(ResourceMethodInvoker.Builder.class);
-        bind().to(ResourceMethodDispatcherFactory.class);
-        bind().to(ResourceMethodInvocationHandlerFactory.class);
-
-        // Dispatcher providers
-        bind(ResourceMethodDispatcher.Provider.class).to(VoidVoidDispatcherProvider.class);
-        bind(ResourceMethodDispatcher.Provider.class).to(MethodParamDispatcherProvider.class);
+        return Application.builder(resourceConfig);
     }
+
+    @Path("/parent")
+    static public class Parent {
+        @Path("{child}")
+        public Child getChild(@PathParam("child") boolean child) {
+            if (child)
+                return new Child();
+            else
+                return null;
+        }
+    }
+
+    static public class Child {
+        @GET
+        public String getMe() {
+            return "child";
+        }
+    }
+
+    @Test
+    public void testSubResourceNull() throws Exception {
+        app = createApplicationBuilder(Parent.class).build();
+
+        assertEquals("child", app.apply(Requests.from("/parent/true","GET").build()).get().readEntity(String.class));
+
+        assertEquals(404, app.apply(Requests.from("/parent/false","GET").build()).get().getStatus());
+    }  
 }

@@ -271,8 +271,6 @@ public class PathAndResourceMethodErrorsTest {
         public Object l2() { return null; }
     }
 
-    // FIXME: sub resource locators not supported yet
-    @Ignore
     @Test
     public void testAmbiguousSubResourceLocatorsResource() {
         final List<ResourceModelIssue> issues = initiateWebApplication(AmbiguousSubResourceLocatorsResource.class);
@@ -289,7 +287,7 @@ public class PathAndResourceMethodErrorsTest {
         public Object l2() { return null; }
     }
 
-    // FIXME: sub resource locators not supported yet
+    // FIXME: trailing slashes should not matter
     @Ignore
     @Test
     public void testAmbiguousSubResourceLocatorsWithSlashResource() {

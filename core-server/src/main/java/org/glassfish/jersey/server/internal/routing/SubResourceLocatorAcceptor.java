@@ -37,28 +37,38 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
 import org.glassfish.hk2.Factory;
-
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.spi.internal.MethodParameterHelper;
-
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.server.model.IntrospectionModeller;
+import org.glassfish.jersey.server.model.ResourceClass;
+import org.glassfish.jersey.server.model.SubResourceLocator;
+import org.glassfish.jersey.server.spi.internal.MethodParameterHelper;
 
 /**
+ * An acceptor to accept sub-resource requests.
+ * It first retrieves the sub-resource instance by invoking the given locator method.
+ * Then the {@link RuntimeModelFromSubResource} is used to generate corresponding acceptor.
+ * Finally the generated acceptor is invoked to return the request acceptor chain.
+ *
+ * TODO: implement generated sub-resource acceptor caching
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -68,13 +78,11 @@ public class SubResourceLocatorAcceptor implements TreeAcceptor {
     SubResourceLocator locator;
     final List<Factory<?>> valueProviders;
     Injector injector;
-    Factory<RoutingContext> routingContextFactory;
     MessageBodyWorkers workers;
 
-    public SubResourceLocatorAcceptor(Injector injector, Services services, Factory<RoutingContext> routingContextFactory, MessageBodyWorkers workers, SubResourceLocator locator) {
+    public SubResourceLocatorAcceptor(Injector injector, Services services, MessageBodyWorkers workers, SubResourceLocator locator) {
         this.injector = injector;
         this.locator = locator;
-        this.routingContextFactory = routingContextFactory;
         this.workers = workers;
         this.services = services;
         valueProviders = MethodParameterHelper.createValueProviders(services, locator);
@@ -82,18 +90,25 @@ public class SubResourceLocatorAcceptor implements TreeAcceptor {
 
     @Override
     public Pair<Request, Iterator<TreeAcceptor>> apply(Request data) {
-        Object subResource = getResource();
-        final RuntimeModelFromSubResource rmBuilder = new RuntimeModelFromSubResource(routingContextFactory, workers);
+        final RoutingContext routingCtx = injector.inject(RoutingContext.class);
+        Object subResource = getResource(routingCtx);
+        if (subResource == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        if (subResource.getClass().isAssignableFrom(Class.class)) {
+            subResource = services.forContract((Class)subResource).get();
+        }
+        final RuntimeModelFromSubResource rmBuilder = new RuntimeModelFromSubResource(workers);
         injector.inject(rmBuilder);
-        routingContextFactory.get().pushMatchedResource(subResource);
-        routingContextFactory.get().pushLeftHandPath();
+        routingCtx.pushMatchedResource(subResource);
+        routingCtx.pushLeftHandPath();
         final ResourceClass resourceClass = IntrospectionModeller.createResource(subResource.getClass());
         rmBuilder.process(resourceClass);
         return rmBuilder.getRuntimeModel().apply(data);
     }
 
-    private Object getResource() {
-        final Object resource = routingContextFactory.get().peekMatchedResource();
+    private Object getResource(RoutingContext routingCtx) {
+        final Object resource = routingCtx.peekMatchedResource();
         try {
             return locator.getMethod().invoke(resource, MethodParameterHelper.getParameterValues(valueProviders));
         } catch (IllegalAccessException ex) {

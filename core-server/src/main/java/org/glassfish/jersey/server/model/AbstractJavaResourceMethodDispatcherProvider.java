@@ -142,7 +142,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
         }
 
         protected final Object[] getParamValues() {
-            return MethodParameterHelper.getParameterValues(valueProviders);
+                return MethodParameterHelper.getParameterValues(valueProviders);
         }
     }
 

@@ -58,7 +58,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ResourceMethodInvoker implements Inflector<Request, Response> {
+public class ResourceMethodInvoker implements Inflector<Request, Response> {
 
     /**
      * Resource method invoker "assisted" injection helper.
@@ -66,7 +66,7 @@ class ResourceMethodInvoker implements Inflector<Request, Response> {
      * The injectable builder API provides means for constructing a properly
      * injected {@link ResourceMethodInvoker resource method invoker} instances.
      */
-    static class Builder {
+    public static class Builder {
 
         @Inject
         private Injector injector;

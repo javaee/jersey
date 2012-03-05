@@ -56,7 +56,7 @@ import org.glassfish.jersey.server.model.PathValue;
 import org.glassfish.jersey.server.model.ResourceClass;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
-import org.glassfish.jersey.server.model.RuntimeModelProviderFromAbstractModel;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
@@ -184,7 +184,7 @@ import java.util.logging.Logger;
     //
     private Application application;
     private ResourceConfig resourceConfig;
-    private RuntimeModelProviderFromAbstractModel runtimeModelCreator;
+    private RuntimeModelProviderFromRootResource runtimeModelCreator;
     private Services services;
     private Set<ResourceClass> resources = new HashSet<ResourceClass>();
 
@@ -207,7 +207,7 @@ import java.util.logging.Logger;
 
         this.services = HK2.get().create(null, modules);
 
-        this.runtimeModelCreator = services.byType(RuntimeModelProviderFromAbstractModel.class).get();
+        this.runtimeModelCreator = services.byType(RuntimeModelProviderFromRootResource.class).get();
 
         final Class<? extends javax.ws.rs.core.Application> applicationClass = this.resourceConfig.getApplicationClass();
 
