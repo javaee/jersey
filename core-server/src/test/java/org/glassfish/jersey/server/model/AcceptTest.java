@@ -226,6 +226,12 @@ public class AcceptTest {
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getHeaders().getMediaType());
+
+//      FIXME: test for JERSEY-997
+//        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5").build()).get();
+//        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
+//        assertEquals("GET", response.readEntity(String.class));
+//        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
     }
 
     @Path("/")
