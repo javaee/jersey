@@ -195,14 +195,14 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
     }
 
     private void printRequestLine(StringBuilder b, long id, Request request) {
-        prefixId(b, id).append(NOTIFICATION_PREFIX).append("LoggingFilter - Request").append("\n");
+        prefixId(b, id).append(NOTIFICATION_PREFIX).append("LoggingFilter - Request received on thread ").append(Thread.currentThread().getName()).append("\n");
         prefixId(b, id).append(REQUEST_PREFIX).append(request.getMethod()).append(" ").
                 append(request.getUri().toASCIIString()).append("\n");
     }
 
     private void printResponseLine(StringBuilder b, long id, Response response) {
         prefixId(b, id).append(NOTIFICATION_PREFIX).
-                append("LoggingFilter - Response").append("\n");
+                append("LoggingFilter - Response received on thread ").append(Thread.currentThread().getName()).append("\n");
         prefixId(b, id).append(RESPONSE_PREFIX).
                 append(Integer.toString(response.getStatus())).
                 append("\n");

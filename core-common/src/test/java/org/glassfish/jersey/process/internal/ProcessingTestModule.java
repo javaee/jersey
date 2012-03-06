@@ -39,10 +39,13 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.Singleton;
+import java.util.Collections;
+import java.util.Set;
+
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
@@ -55,13 +58,13 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
-import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import java.util.Collections;
-import java.util.Set;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.scopes.Singleton;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * TODO javadoc.
@@ -110,6 +113,7 @@ public class ProcessingTestModule extends AbstractModule {
     protected void configure() {
         install(
                 new RequestScope.Module(),
+                new InvocationContextModule(),
                 new ServiceProvidersModule(Singleton.class, Singleton.class),
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),

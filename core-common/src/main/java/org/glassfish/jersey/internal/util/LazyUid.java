@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,18 +37,60 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.internal.util;
+
+import java.io.Serializable;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * An internal framework exception thrown from the {@link Responder} in case
- * the invocation of the supplied callback fails with an exception.
+ * Lazily initialized, thread-safe, random UUID. Useful for identifying instances
+ * for logging & debugging purposes.
+ * <p />
+ * The UUID value gets initialized with the first call to {@link #value()} method.
+ * Once initialized, the UUID value stays the same.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class CallbackInvocationException extends RuntimeException {
-    private static final long serialVersionUID = -2734163428360646568L;
+public class LazyUid implements Serializable {
+    private static final long serialVersionUID = 4618609413877136867L;
 
-    public CallbackInvocationException(Throwable cause) {
-        super(cause);
+    private final AtomicReference<String> uid = new AtomicReference<String>();
+
+    /**
+     * Return UUID value. The returned value is never {@code null}.
+     *
+     * @return UUID value.
+     */
+    public String value() {
+        if (uid.get() == null) {
+            uid.compareAndSet(null, UUID.randomUUID().toString());
+        }
+
+        return uid.get();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+        if (that == null) {
+            return false;
+        }
+        if (getClass() != that.getClass()) {
+            return false;
+        }
+        final LazyUid other = (LazyUid) that;
+        return this.value().equals(other.value());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 73 * hash + this.value().hashCode();
+        return hash;
+    }
+
+    @Override
+    public String toString() {
+        return value();
     }
 }

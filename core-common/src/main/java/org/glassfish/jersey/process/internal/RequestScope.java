@@ -41,14 +41,19 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.util.LazyUid;
+
 import org.glassfish.hk2.Provider;
 import org.glassfish.hk2.Scope;
 import org.glassfish.hk2.ScopeInstance;
 
+import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkState;
-import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
  * Scopes a single request/response processing execution.
@@ -62,7 +67,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
  *   scope.enter();
  *   try {
  *     // explicitly seed some seed objects...
- *     scope.seed(Key.get(SomeObject.class), someObject);
+ *     scope.seed(Key.value(SomeObject.class), someObject);
  *     // create and access scoped objects
  *   } finally {
  *     scope.exit();
@@ -89,6 +94,8 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
  */
 public class RequestScope implements Scope {
 
+    private static final Logger LOGGER = Logger.getLogger(RequestScope.class.getName());
+
     public static class Module extends AbstractModule {
 
         @Override
@@ -109,20 +116,30 @@ public class RequestScope implements Scope {
     }
 
     private Instance getCurrentScopeInstance() throws IllegalStateException {
-        Instance threadLocalCopy = currentScopeInstance.get();
-        checkState(threadLocalCopy != null, "Not inside a request scope.");
-        return threadLocalCopy;
+        Instance scopeInstance = currentScopeInstance.get();
+        checkState(scopeInstance != null, "Not inside a request scope.");
+        return scopeInstance;
     }
 
     /**
      * Implementation of the request scope instance.
      */
     private static final class Instance implements ScopeInstance {
+        /*
+         * Scope instance UUID.
+         *
+         * For performance reasons, it's only generated if toString() method is invoked,
+         * e.g. as part of some low-level logging.
+         */
 
+        private final LazyUid id = new LazyUid();
         /**
-         * A map of injectable instances in this scope
+         * A map of injectable instances in this scope.
          */
         private final Map<Provider<?>, Object> store;
+        /**
+         * Holds the number of snapshots of this scope.
+         */
         private final AtomicInteger referenceCounter;
 
         private Instance() {
@@ -161,6 +178,15 @@ public class RequestScope implements Scope {
             if (referenceCounter.decrementAndGet() < 1) {
                 store.clear();
             }
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("id", id.value())
+                    .add("referenceCounter", referenceCounter.get())
+                    .add("store size", store.size())
+                    .toString();
         }
     }
 
@@ -213,7 +239,13 @@ public class RequestScope implements Scope {
      */
     public void enter() throws IllegalStateException {
         checkState(currentScopeInstance.get() == null, "A scoped block is already in progress");
-        currentScopeInstance.set(new Instance());
+        final Instance scopeInstance = new Instance();
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.log(Level.FINER,
+                    "Entering scope %s on thread %s",
+                    new Object[]{scopeInstance.toString(), Thread.currentThread().getName()});
+        }
+        currentScopeInstance.set(scopeInstance);
     }
 
     /**
@@ -231,6 +263,11 @@ public class RequestScope implements Scope {
      */
     public void enter(Snapshot snapshot) throws IllegalStateException {
         checkState(currentScopeInstance.get() == null, "A scoped block is already in progress");
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.log(Level.FINER,
+                    "Resuming scope %s on thread %s",
+                    new Object[]{snapshot.scopeInstance.toString(), Thread.currentThread().getName()});
+        }
         currentScopeInstance.set(snapshot.scopeInstance);
     }
 
@@ -244,9 +281,14 @@ public class RequestScope implements Scope {
      *     block to exit in the current thread.
      */
     public void exit() throws IllegalStateException {
-        final Instance threadLocalCopy = currentScopeInstance.get();
-        checkState(threadLocalCopy != null, "No scoped block in progress");
+        final Instance scopeInstance = currentScopeInstance.get();
+        checkState(scopeInstance != null, "No scoped block in progress");
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.log(Level.FINER,
+                    "Exiting scope %s on thread %s",
+                    new Object[]{scopeInstance.toString(), Thread.currentThread().getName()});
+        }
         currentScopeInstance.remove();
-        threadLocalCopy.release();
+        scopeInstance.release();
     }
 }

@@ -80,7 +80,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * until a terminal request processing stage {@link Inflecting referencing} an
  * {@link Inflector}&lt;{@link Request}, {@link Response}&gt; is reached.
  * The inflector referenced by the terminal request processing stage is then wrapped
- * into a {@link SuspendableInflectorAdapter suspendable inflector} which is subsequently
+ * into a {@link AsyncInflectorAdapter suspendable inflector} which is subsequently
  * invoked. Once a response from the inflector is available, it is processed by
  * a {@link ResponseProcessor response processor} before it is made available in the
  * response future returned by the request invoker. If a {@link InvocationCallback response callback}
@@ -115,6 +115,10 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         }
 
         @Override
+        public void resumed() {
+        }
+
+        @Override
         public void cancelled() {
         }
     };
@@ -123,8 +127,6 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     private RequestScope requestScope;
     @Inject
     private RequestProcessor requestProcessor;
-    @Inject
-    private SuspendableInflectorAdapter.Builder suspendableInflectorBuilder;
     @Inject
     private FilteringInflector.Builder filteringInflectorBuilder;
     @Inject
@@ -148,23 +150,20 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     /**
      * All-fields constructor used for direct (non-injection) construction.
      *
-     * @param requestScope
-     * @param requestProcessor
-     * @param suspendableInflectorBuilder
-     * @param responseProcessorBuilder
-     * @param requestingExecutor
-     * @param respondingExecutor
+     * @param requestScope request scope instance.
+     * @param requestProcessor request processor (acceptor) instance.
+     * @param responseProcessorBuilder response processor builder.
+     * @param requestingExecutor request accepting and inflecting executor service.
+     * @param respondingExecutor request responding executor service.
      */
     public RequestInvoker(
             RequestScope requestScope,
             RequestProcessor requestProcessor,
-            SuspendableInflectorAdapter.Builder suspendableInflectorBuilder,
             ResponseProcessor.Builder responseProcessorBuilder,
             ExecutorService requestingExecutor,
             ExecutorService respondingExecutor) {
         this.requestScope = requestScope;
         this.requestProcessor = requestProcessor;
-        this.suspendableInflectorBuilder = suspendableInflectorBuilder;
         this.responseProcessorBuilder = responseProcessorBuilder;
 
         this.requestingExecutor = requestingExecutor;
@@ -200,60 +199,26 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
 
             @Override
             public ListenableFuture<Response> call() {
-
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
-                final Ref<MessageBodyWorkers> workersRef = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {}).get();
-                final RequestBuilder rb = Requests.toBuilder(request);
-                Requests.setMessageWorkers(rb, workersRef.get());
-                Request requestWithWorkers = rb.build();
-                // transform request, inflect and map potential exceptions
-                Pair<Request, Optional<Inflector<Request, Response>>> result;
+                final MessageBodyWorkers workers =
+                        services.forContract(MessageBodyWorkers.class).get();
 
-                try {
-                    result = requestProcessor.apply(requestWithWorkers);
-                } catch (final WebApplicationException wae) {
-                    result = Tuples.<Request, Optional<Inflector<Request, Response>>>of(requestWithWorkers,
-                            Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {
+                final AsyncInflectorAdapter asyncInflector =
+                        new AsyncInflectorAdapter(new AcceptingInvoker(workers), callback);
 
-                        @Override
-                        public Response apply(Request data) {
-                            return wae.getResponse();
-                        }
-                    }));
-                }
+                Ref<InvocationContext> icRef =
+                        services.forContract(new TypeLiteral<Ref<InvocationContext>>() {}).get();
+                icRef.set(asyncInflector);
 
-                final Optional<Inflector<Request, Response>> inflector = result.right();
-                if (!inflector.isPresent()) {
-                    throw new InflectorNotFoundException("Terminal stage did not provide an inflector");
-                }
-
-                final Inflector<Request, Response> workersAwareResponseInflector = new Inflector<Request, Response>() {
-
-                    @Override
-                    public Response apply(Request data) {
-                        final Response originalResponse = inflector.get().apply(data);
-                        if (originalResponse != null) {
-                            final ResponseBuilder rb = Responses.toBuilder(originalResponse);
-                            Responses.setMessageWorkers(rb, workersRef.get());
-                            return rb.build();
-                        } else {
-                            return null;
-                        }
-                    }
-                };
-
-                final SuspendableInflectorAdapter suspendableInflector =
-                        suspendableInflectorBuilder.build(filteringInflectorBuilder.build(workersAwareResponseInflector));
-
-                ListenableFuture<Response> response = suspendableInflector.apply(result.left());
+                ListenableFuture<Response> response = asyncInflector.apply(request);
 
                 final ExceptionMappers exceptionMappers = services.forContract(ExceptionMappers.class).get();
                 final ResponseProcessor responseProcessor =
-                        responseProcessorBuilder.build(callback, response, suspendableInflector, exceptionMappers);
+                        responseProcessorBuilder.build(callback, response, asyncInflector, exceptionMappers);
 
-                suspendableInflector.pushRequestScope(requestScope.takeSnapshot());
+                asyncInflector.pushRequestScope(requestScope.takeSnapshot());
                 response.addListener(responseProcessor, respondingExecutor);
 
                 return responseProcessor;
@@ -281,6 +246,60 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
             } finally {
                 callback.failure(ex);
             }
+        }
+    }
+
+    private class AcceptingInvoker implements Inflector<Request, Response> {
+        private final MessageBodyWorkers workers;
+
+        public AcceptingInvoker(MessageBodyWorkers workers) {
+            this.workers = workers;
+        }
+
+        @Override
+        public Response apply(Request request) {
+            final RequestBuilder rb = Requests.toBuilder(request);
+            Requests.setMessageWorkers(rb, workers);
+            Request requestWithWorkers = rb.build();
+
+            Pair<Request, Optional<Inflector<Request, Response>>> result;
+            try {
+                result = requestProcessor.apply(requestWithWorkers);
+            } catch (final WebApplicationException wae) {
+                result = Tuples.<Request, Optional<Inflector<Request, Response>>>of(requestWithWorkers,
+                        Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {
+
+                    @Override
+                    public Response apply(Request data) {
+                        return wae.getResponse();
+                    }
+                }));
+            }
+
+            final Optional<Inflector<Request, Response>> inflector = result.right();
+            if (!inflector.isPresent()) {
+                throw new InflectorNotFoundException("Terminal stage did not provide an inflector");
+            }
+
+            final Inflector<Request, Response> workersAwareResponseInflector = new Inflector<Request, Response>() {
+
+                @Override
+                public Response apply(Request data) {
+                    final Response originalResponse = inflector.get().apply(data);
+                    if (originalResponse != null) {
+                        final ResponseBuilder rb = Responses.toBuilder(originalResponse);
+                        Responses.setMessageWorkers(rb, workers);
+                        return rb.build();
+                    } else {
+                        return null;
+                    }
+                }
+            };
+
+            // FIXME filter processor should be part of the acceptor chain
+            final FilteringInflector filteringInflector = filteringInflectorBuilder.build(workersAwareResponseInflector);
+
+            return filteringInflector.apply(result.left());
         }
     }
 }

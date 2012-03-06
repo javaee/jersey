@@ -96,6 +96,10 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Monitor;
 import com.google.common.util.concurrent.SettableFuture;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Jersey server-side application.
@@ -405,8 +409,6 @@ public final class Application implements Inflector<Request, Future<Response>> {
     @Inject
     private Factory<RouterModule.RoutingContext> routingContextFactory;
     @Inject
-    private Factory<MessageBodyWorkers> mbwFactory;
-    @Inject
     private References references;
     //
     private volatile TreeAcceptor rootAcceptor;
@@ -443,26 +445,57 @@ public final class Application implements Inflector<Request, Future<Response>> {
     @Override
     public Future<Response> apply(Request request) {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
+        final AtomicReference<Timer> timerRef = new AtomicReference<Timer>(null);
         apply(request, new InvocationCallback() {
+
+            private final AtomicBoolean done = new AtomicBoolean(false);
 
             @Override
             public void result(Response response) {
-                responseFuture.set(response);
+                if (done.compareAndSet(false, true)) {
+                    responseFuture.set(response);
+                }
             }
 
             @Override
             public void failure(Throwable exception) {
-                responseFuture.set(handleFailure(exception));
+                if (done.compareAndSet(false, true)) {
+                    responseFuture.set(handleFailure(exception));
+                }
             }
 
             @Override
             public void cancelled() {
-                responseFuture.cancel(true);
+                if (done.compareAndSet(false, true)) {
+                    responseFuture.cancel(true);
+                }
             }
 
             @Override
-            public void suspended(long time, TimeUnit unit, InvocationContext context) {
-                // TODO implement suspend timeout processing
+            public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
+                if (time <= 0) {
+                    return; // never time out
+                }
+                final Timer timer = new Timer("Application request timer");
+                if (timerRef.compareAndSet(null, timer)) {
+                    timer.schedule(new TimerTask() {
+
+                        @Override
+                        public void run() {
+                            if (done.compareAndSet(false, true)) {
+                                responseFuture.set(prepareTimeoutResponse(context));
+                            }
+                        }
+                    }, unit.toMillis(time));
+                }
+            }
+
+            @Override
+            public void resumed() {
+                final Timer timer = timerRef.getAndSet(null);
+                if (timer != null) {
+                    timer.cancel();
+                }
             }
         });
 
@@ -498,48 +531,55 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * processing as well as write the response back to the container.
      *
      * @param request request data.
-     * @param reponseWriter request-scoped container context.
+     * @param responseWriter request-scoped container context.
      */
-    public void apply(final Request request, final ContainerResponseWriter reponseWriter) {
+    public void apply(final Request request, final ContainerResponseWriter responseWriter) {
         apply(request, new InvocationCallback() {
 
             @Override
             public void result(Response response) {
-                writeResponse(reponseWriter, request, response);
+                writeResponse(responseWriter, request, response);
             }
 
             @Override
             public void failure(Throwable exception) {
-                writeResponse(reponseWriter, request, handleFailure(exception));
+                writeResponse(responseWriter, request, handleFailure(exception));
             }
 
             @Override
             public void cancelled() {
-                reponseWriter.cancel();
+                responseWriter.cancel();
             }
 
             @Override
             public void suspended(long time, TimeUnit unit, final InvocationContext context) {
-                reponseWriter.suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
+                responseWriter.suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
 
                     @Override
                     public void onTimeout(ContainerResponseWriter responseWriter) {
                         if (responseWriter.resume()) {
-                            Response response = context.getResponse();
-                            if (response == null) {
-                                response = Response.serverError()
-                                        .entity("Request processing has timed out.")
-                                        .type(MediaType.TEXT_PLAIN).build();
-                            }
-                            writeResponse(reponseWriter, request, response);
+                            writeResponse(responseWriter, request, prepareTimeoutResponse(context));
                         }
                     }
                 });
             }
+
+            @Override
+            public void resumed() {
+                responseWriter.resume();
+            }
         });
     }
 
-    private Response handleFailure(Throwable failure) {
+    private static Response prepareTimeoutResponse(final InvocationContext context) {
+        Response response = context.getResponse();
+        if (response == null) {
+            response = Response.serverError().entity("Request processing has timed out.").type(MediaType.TEXT_PLAIN).build();
+        }
+        return response;
+    }
+
+    private static Response handleFailure(Throwable failure) {
         Response.StatusType statusCode = Response.Status.INTERNAL_SERVER_ERROR;
         String message = failure.getMessage();
 

@@ -40,10 +40,13 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
@@ -81,6 +84,8 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class ResponseProcessor extends AbstractFuture<Response> implements Runnable {
+
+    private static final Logger LOGGER = Logger.getLogger(ResponseProcessor.class.getName());
 
     /**
      * Injectable context that can be used during the data processing for
@@ -188,54 +193,81 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
 
     @Override
     public void run() {
-        Response response = null;
-        try {
-            response = inflectedResponse.get();
-        } catch (ExecutionException ex) {
-            try {
-                response = tryToMapException(ex.getCause());
-            } catch (Exception ex2) {
-                failure(ex2.getCause());
-            }
-            if (response == null) {
-                failure(ex.getCause());
-                return;
-            }
-        } catch (Exception ex) {    // Framework exception
-            failure(ex.getCause());
+        if (inflectedResponse.isCancelled()) {
+            // the request processing has been cancelled; just cancel this future & return
+            super.cancel(true);
             return;
         }
 
-        try {
-            result(response);
-        } catch (Exception ex) {
-            try {
-                response = tryToMapException(ex.getCause());
-            } catch (Exception ex2) {
-                failure(ex2.getCause());
-                return;
+        runInScope(new Runnable() {
+
+            @Override
+            public void run() {
+                Response response;
+                try {
+                    response = inflectedResponse.get();
+                } catch (Exception ex) {
+                    final Throwable unwrapped = (ex instanceof ExecutionException) ? ex.getCause() : ex;
+                    LOGGER.log(Level.FINE,
+                            "Request-to-response transformation finished with an exception.", unwrapped);
+
+                    try {
+                        response = mapException(unwrapped);
+                    } catch (Exception ex2) {
+                        setResult(ex2);
+                        return;
+                    }
+
+                    if (response == null) {
+                        setResult(unwrapped);
+                        return;
+                    }
+                }
+
+                for (int i = 0; i < 2; i++) {
+                    try {
+                        response = runResponders(response);
+                        break;
+                    } catch (Exception ex) {
+                        LOGGER.log(Level.FINE,
+                                "Responder chain execution finished with an exception.", ex);
+                        if (i == 0) {
+                            // try to map the first responder exception
+                            try {
+                                response = mapException(ex);
+                            } catch (Exception ex2) {
+                                setResult(ex2);
+                                return;
+                            }
+                        }
+
+                        if (response == null) {
+                            setResult(ex);
+                            return;
+                        }
+                    }
+                }
+
+                setResult(response);
             }
-            if (response == null) {
-                failure(ex.getCause());
-            }
-        }
+        });
     }
 
-    private void result(Response response) {
+    private void runInScope(Runnable task) {
         if (requestScope.isActive()) {
             // running inside a scope already (same-thread execution
-            _result(response);
+            task.run();
         } else {
             try {
                 requestScope.enter(invocationContext.popRequestScope());
-                _result(response);
+                task.run();
             } finally {
                 requestScope.exit();
             }
         }
     }
 
-    private void _result(Response response) {
+    private Response runResponders(Response response) {
         Optional<Responder> responder = respondingCtxProvider.get().createStageChain();
 
         if (responder.isPresent()) {
@@ -249,58 +281,55 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
                 context.afterStage(next, continuation.left());
             }
 
-            response = continuation.left();
+            return continuation.left();
         }
 
-        tryInvokeCallback(response);
-        super.set(response);
+        return response;
     }
 
     @SuppressWarnings("unchecked")
-    private Response tryToMapException(Throwable cause) throws Exception {
-        if (cause instanceof MappableException == false) {
+    private Response mapException(Throwable exception) throws Exception {
+        if (!(exception instanceof MappableException)) {
             return null;
         }
 
         Response response = null;
-        cause = cause.getCause();
-        if (cause instanceof WebApplicationException) {
-            response = ((WebApplicationException) cause).getResponse();
+        exception = exception.getCause();
+        if (exception instanceof WebApplicationException) {
+            response = ((WebApplicationException) exception).getResponse();
         }
         if ((response == null || !response.hasEntity()) && exceptionMappers != null) {
-            javax.ws.rs.ext.ExceptionMapper mapper = exceptionMappers.find(cause.getClass());
+            javax.ws.rs.ext.ExceptionMapper mapper = exceptionMappers.find(exception.getClass());
             if (mapper != null) {
-                try {
-                    response = mapper.toResponse(cause);
-                } catch (Exception ex2) {
-                    throw ex2;
-                }
+                response = mapper.toResponse(exception); // may throw exception
             }
         }
         return response;
     }
 
-    private void failure(Throwable exception) {
-        super.setException(exception);
-        // nested callback invocation failed; don't invoke it again
-        if (exception instanceof CallbackInvocationException == false) {
-            tryInvokeCallback(exception);
-        }
+    private void setResult(Response response) {
+        super.set(response);
+        notifyCallback(response);
     }
 
-    private void tryInvokeCallback(Response response) {
+    private void setResult(Throwable exception) {
+        super.setException(exception);
+        notifyCallback(exception);
+    }
+
+    private void notifyCallback(Response response) {
         try {
             callback.result(response);
         } catch (Exception ex) {
-            throw new CallbackInvocationException(ex);
+            LOGGER.log(Level.WARNING, LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("result"), ex);
         }
     }
 
-    private void tryInvokeCallback(Throwable exception) {
+    private void notifyCallback(Throwable exception) {
         try {
             callback.failure(exception);
         } catch (Exception ex) {
-            throw new CallbackInvocationException(ex);
+            LOGGER.log(Level.WARNING, LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("failure"), ex);
         }
     }
 }
