@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.process;
 
-import com.google.common.base.Function;
-
 /**
  * A generic interface for transforming data into a result.
  * <p/>
@@ -51,7 +49,7 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface Inflector<DATA, RESULT> extends Function<DATA, RESULT> {
+public interface Inflector<DATA, RESULT> {
 
     /**
      * Transform data of a given type into a result of the different type.
@@ -59,6 +57,5 @@ public interface Inflector<DATA, RESULT> extends Function<DATA, RESULT> {
      * @param data data to be transformed into a result.
      * @return data transformation result. Return value must not be {@code null}.
      */
-    @Override
     public RESULT apply(DATA data);
 }

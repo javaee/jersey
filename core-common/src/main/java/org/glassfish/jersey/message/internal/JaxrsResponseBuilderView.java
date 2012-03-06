@@ -117,8 +117,7 @@ final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
         return this;
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public ResponseBuilder entity(Object entity, Annotation[] annotations) {
         wrapped.writeAnnotations(annotations).content(entity);
         return this;

@@ -56,7 +56,7 @@ import org.glassfish.jersey.internal.util.collection.ListMultimapAdapter;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
- // TODO Methods in this class should cache results to improve performance
+// TODO Methods in this class should cache results to improve performance
 final class JaxrsResponseView extends javax.ws.rs.core.Response {
 
     private final Response wrapped;
@@ -108,14 +108,12 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
         return wrapped.content(entityType);
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(type, annotations);
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(entityType, annotations);
     }
@@ -125,8 +123,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
         return !wrapped.isEmpty();
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public boolean isEntityRetrievable() {
         // TODO implement
         throw new UnsupportedOperationException("Not supported yet.");

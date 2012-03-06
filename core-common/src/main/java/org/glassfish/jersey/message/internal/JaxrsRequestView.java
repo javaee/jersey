@@ -40,21 +40,19 @@
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
-import org.glassfish.jersey.uri.internal.UriBuilderImpl;
-
-import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.MessageProcessingException;
-import javax.ws.rs.core.RequestHeaders;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.TypeLiteral;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.Variant;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.MessageProcessingException;
+import javax.ws.rs.core.RequestHeaders;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.TypeLiteral;
+import javax.ws.rs.core.Variant;
 
 /**
  * Adapter for {@link Request Jersey Request} to {@link javax.ws.rs.core.Request
@@ -64,7 +62,7 @@ import java.util.Set;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
- // TODO Methods in this class should cache results to improve performance.
+// TODO Methods in this class should cache results to improve performance.
 final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     private Request wrapped;
@@ -91,11 +89,6 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return wrapped.uri();
     }
 
-    // TODO remove the method once the updated API snapshot is available.
-    public UriBuilder getUriBuilder() {
-        return new UriBuilderImpl().uri(getUri());
-    }
-
     @Override
     public RequestHeaders getHeaders() {
         return wrapped.getJaxrsHeaders();
@@ -116,14 +109,12 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return wrapped.content(entityType);
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(type, annotations);
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(entityType, annotations);
     }
@@ -133,22 +124,19 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return !wrapped.isEmpty();
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public boolean isEntityRetrievable() {
         // TODO implement
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public void bufferEntity() throws MessageProcessingException {
         // TODO implement
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    //@Override
-    // TODO uncomment @Override
+    @Override
     public void close() throws MessageProcessingException {
         wrapped.close();
     }
@@ -164,7 +152,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     @Override
     public ResponseBuilder evaluatePreconditions(EntityTag eTag) {
-        if(eTag == null) {
+        if (eTag == null) {
             throw new IllegalArgumentException("Parameter 'eTag' cannot be null.");
         }
 
@@ -177,7 +165,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     @Override
     public ResponseBuilder evaluatePreconditions(Date lastModified) {
-        if(lastModified == null) {
+        if (lastModified == null) {
             throw new IllegalArgumentException("Parameter 'lastModified' cannot be null.");
         }
 
@@ -191,7 +179,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     @Override
     public ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
-        if(lastModified == null || eTag == null) {
+        if (lastModified == null || eTag == null) {
             throw new IllegalArgumentException("Parameters 'lastModified' and 'eTag' cannot be null.");
         }
 

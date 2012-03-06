@@ -106,8 +106,7 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
         return this;
     }
 
-    //@Override
-    // TODO  uncomment @Override
+    @Override
     public RequestBuilder entity(Object entity, Annotation[] annotations) {
         wrapped.writeAnnotations(annotations).content(entity);
         return this;
