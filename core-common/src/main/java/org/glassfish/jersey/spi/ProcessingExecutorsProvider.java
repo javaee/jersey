@@ -37,39 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
 
-import javax.ws.rs.core.ExecutionContext;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import java.util.concurrent.ExecutorService;
 
 /**
- * Binding definitions for the {@link InvocationContext} and JAX-RS
- * {@link ExecutionContext}.
+ * Pluggable provider of {@link ExecutorService executor services} used to run
+ * Jersey request and response processing code.
+ * <p />
+ * When Jersey receives a request for processing, it will use the
+ * {@link #getRequestingExecutor() requesting executor} to run the request
+ * pre-processing and request-to-response transformation code. Once the response
+ * is available, Jersey will use the {@link #getRespondingExecutor() responding
+ * executor} to run the response post-processing code, before the final response
+ * is returned to the application layer.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InvocationContextModule extends AbstractModule {
+public interface ProcessingExecutorsProvider {
+    /**
+     * Get request processing executor.
+     *
+     * This method is called only once at Jersey initialization, before the
+     * first request is processed.
+     *
+     * @return request processing executor.
+     */
+    public ExecutorService getRequestingExecutor();
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
-
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    @Override
-    protected void configure() {
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {})
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
-    }
+    /**
+     * Get response processing executor.
+     *
+     * This method is called only once at Jersey initialization, before the
+     * first request is processed.
+     *
+     * @return response processing executor.
+     */
+    public ExecutorService getRespondingExecutor();
 }

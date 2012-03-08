@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.examples.server.async;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +55,10 @@ import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 /**
+ * Example resource for long running async operations.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -62,8 +66,12 @@ import javax.ws.rs.core.ExecutionContext;
 @Produces("text/plain")
 public class LongRunningAsyncOperationResource {
 
+    public static final String POST_NOTIFICATION_RESPONSE = "Hello async world!";
+    //
     private static final Logger LOGGER = Logger.getLogger(LongRunningAsyncOperationResource.class.getName());
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
+    private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());
     @Context
     private ExecutionContext ctx;
 
@@ -75,14 +83,14 @@ public class LongRunningAsyncOperationResource {
         } catch (InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
         }
-        return "Hello async world!";
+        return POST_NOTIFICATION_RESPONSE;
     }
 
     @GET
     @Suspend(timeOut = 15, timeUnit = SECONDS)
     @Path("suspendViaAnnotation")
     public void suspendViaAnnotationExample() {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -91,7 +99,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume("Hello async world!");
+                ctx.resume(POST_NOTIFICATION_RESPONSE);
             }
         });
 
@@ -102,7 +110,7 @@ public class LongRunningAsyncOperationResource {
     @Suspend(timeOut = 15, timeUnit = SECONDS)
     @Path("suspendViaAnnotation2")
     public void suspendViaAnnotationExample2(@Context final ExecutionContext ctx2) {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -111,7 +119,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx2.resume("Hello async world!");
+                ctx2.resume(POST_NOTIFICATION_RESPONSE);
             }
         });
 
@@ -126,7 +134,7 @@ public class LongRunningAsyncOperationResource {
         }
 
         ctx.suspend(); // programmatic suspend
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -150,7 +158,7 @@ public class LongRunningAsyncOperationResource {
     @Path("timeoutPropagated")
     @Suspend(timeOut = 15000) // default time unit is milliseconds
     public void timeoutValueConflict_PropagationExample() {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -159,7 +167,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume("Hello async world!");
+                ctx.resume(POST_NOTIFICATION_RESPONSE);
             }
         });
         ctx.suspend(); // time-out values propagated from the @Suspend annotation; the call is redundant
@@ -170,7 +178,7 @@ public class LongRunningAsyncOperationResource {
     @Suspend(timeOut = 15000) // default time unit is milliseconds
     public void timeoutValueConflict_OverridingExample(
             @QueryParam("timeOut") Long timeOut, @QueryParam("timeUnit") TimeUnit timeUnit) {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -179,7 +187,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume("Hello async world!");
+                ctx.resume(POST_NOTIFICATION_RESPONSE);
             }
         });
         if (timeOut != null && timeUnit != null) {
@@ -192,7 +200,7 @@ public class LongRunningAsyncOperationResource {
     @GET
     @Path("suspendHandleUsage")
     public void suspendHandleUsageExample() {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
@@ -201,13 +209,13 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume("Hello async world!");
+                ctx.resume(POST_NOTIFICATION_RESPONSE);
             }
         });
 
         final Future<?> handle = ctx.suspend(); // retrieving a handle to monitor the suspended request state
 
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {

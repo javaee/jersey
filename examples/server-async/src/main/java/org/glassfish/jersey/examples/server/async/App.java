@@ -49,6 +49,7 @@ import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.filter.LoggingFilter;
 
 /**
  * Hello world!
@@ -57,7 +58,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ASYNC_MESSAGING_SIMPLE_PATH = "async/messaging/simple";
+    public static final String ASYNC_MESSAGING_FIRE_N_FORGET_PATH = "async/messaging/fireAndForget";
     public static final String ASYNC_MESSAGING_BLOCKING_PATH = "async/messaging/blocking";
     public static final String LONG_RUNNING_ASYNC_OP_PATH = "async/longrunning";
 
@@ -73,7 +74,7 @@ public class App {
                     + "To test blocking version of asynchronous messaging resource, try %s%s\n"
                     + "To test long-running asynchronous operation resource, try %s%s\n"
                     + "Hit enter to stop it...",
-                    BASE_URI, ASYNC_MESSAGING_SIMPLE_PATH,
+                    BASE_URI, ASYNC_MESSAGING_FIRE_N_FORGET_PATH,
                     BASE_URI, ASYNC_MESSAGING_BLOCKING_PATH,
                     BASE_URI, LONG_RUNNING_ASYNC_OP_PATH));
             System.in.read();
@@ -86,7 +87,8 @@ public class App {
 
     public static Application create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(BlockingAsyncEventResource.class, LongRunningAsyncOperationResource.class, SimpleAsyncEventResource.class)
+                .addClasses(BlockingPostChatResource.class, LongRunningAsyncOperationResource.class, FireAndForgetChatResource.class)
+                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
                 .build();
 
         return Application.builder(resourceConfig).build();

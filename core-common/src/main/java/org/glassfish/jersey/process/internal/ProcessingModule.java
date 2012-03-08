@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async;
+package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
-import javax.ws.rs.core.MediaType;
+
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.TypeLiteral;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
+ * Jersey processing framework bindings configuration module.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path(App.ASYNC_MESSAGING_SIMPLE_PATH)
-@Produces(MediaType.TEXT_PLAIN)
-@Consumes(MediaType.TEXT_PLAIN)
-public class SimpleAsyncEventResource {
-    public static final String POST_NOTIFICATION_RESPONSE = "Message sent";
+public class ProcessingModule extends AbstractModule {
 
-    private static final BlockingQueue<ExecutionContext> suspended = new ArrayBlockingQueue<ExecutionContext>(20);
-    @Context
-    ExecutionContext ctx;
+    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
 
-    @GET
-    //@Suspend
-    public void pickUpMessage() throws InterruptedException {
-        System.out.println("GET with context " + ctx.toString() + " on thread name: " + Thread.currentThread().getName());
-        suspended.put(ctx);
-        ctx.suspend();
+        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
+            super(referenceFactory);
+        }
     }
 
-    @POST
-    public String postMessage(final String message) throws InterruptedException {
-        System.out.println("POST with context " + ctx.toString() + " on thread name: " + Thread.currentThread().getName());
+    @Override
+    protected void configure() {
+        // Invocation context
+        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
+        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<InvocationContext>>() {})
+                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
 
-        suspended.take().resume(message);
-        return POST_NOTIFICATION_RESPONSE;
+        // Processing executors
+        bind().to(ProcessingExecutorsFactory.class);
     }
 }

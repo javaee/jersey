@@ -179,7 +179,7 @@ public class ServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new RequestScope.Module(), // must go first as it registers the request scope instance.
-                new InvocationContextModule(),
+                new ProcessingModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
                 new ServiceProvidersModule(),

@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.server.async;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,57 +51,76 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 /**
+ * Example of a simple fire&forget point-to-point messaging resource.
+ *
+ * This version of the messaging resource does not block when POSTing a new message.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path(App.ASYNC_MESSAGING_BLOCKING_PATH)
+@Path(App.ASYNC_MESSAGING_FIRE_N_FORGET_PATH)
 @Produces(MediaType.TEXT_PLAIN)
 @Consumes(MediaType.TEXT_PLAIN)
-public class BlockingAsyncEventResource {
-
-    private static final Logger LOGGER = Logger.getLogger(BlockingAsyncEventResource.class.getName());
-    private static final BlockingQueue<String> messages = new ArrayBlockingQueue<String>(5);
+public class FireAndForgetChatResource {
+    public static final String POST_NOTIFICATION_RESPONSE = "Message sent";
+    //
+    private static final Logger LOGGER = Logger.getLogger(FireAndForgetChatResource.class.getName());
+    private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("fire&forget-chat-resource-executor-%d").build());
+    private static final BlockingQueue<ExecutionContext> suspended = new ArrayBlockingQueue<ExecutionContext>(5);
     @Context
     ExecutionContext ctx;
 
     @GET
-    @Suspend
-    public void pickUpMessage() {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+    //@Suspend
+    public void pickUpMessage() throws InterruptedException {
+        System.out.println(String.format("Received GET with context %s on thread %s",
+                ctx.toString(), Thread.currentThread().getName()));
+        QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    ctx.resume(messages.take());
+                    suspended.put(ctx);
+                    System.out.println(String.format("GET context %s scheduled for resume.",
+                            ctx.toString()));
                 } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Waiting for a message pick-up interrupted.", ex);
+                    LOGGER.log(Level.SEVERE,
+                            "Waiting for a message pick-up interrupted. Cancelling context" + ctx.toString(), ex);
                     ctx.cancel(); // close the open connection
                 }
             }
         });
+
+        ctx.suspend();
     }
 
     @POST
-    @Suspend
-    public void postMessage(final String message) {
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+    public String postMessage(final String message) throws InterruptedException {
+        System.out.println(String.format("Received POST '%s' with context %s on thread %s",
+                message, ctx.toString(), Thread.currentThread().getName()));
+        QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    messages.put(message);
-                    ctx.resume("Message stored.");
+                    final ExecutionContext resumeCtx = suspended.take();
+                    System.out.println(String.format("Resuming GET context '%s' with a message '%s' on thread %s",
+                            resumeCtx.toString(), message, Thread.currentThread().getName()));
+                    resumeCtx.resume(message);
                 } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Waiting for a place in the queue to store a new message interrupted.", ex);
-                    ctx.resume(ex); // proagate info about the problem
+                    LOGGER.log(Level.SEVERE,
+                            "Waiting for a sending a message '" + message + "' has been interrupted.", ex);
                 }
             }
         });
+
+        return POST_NOTIFICATION_RESPONSE;
     }
 }

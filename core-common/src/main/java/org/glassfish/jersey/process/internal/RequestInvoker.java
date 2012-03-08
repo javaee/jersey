@@ -134,40 +134,14 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     @Inject
     private Services services;
     //
-    private final ExecutorService requestingExecutor;
-    private final ExecutorService respondingExecutor;
+    @Inject
+    private ProcessingExecutorsFactory executorsFactory;
 
     /**
      * Default constructor meant to be used by the injection framework.
      */
     public RequestInvoker() {
         // Injection constructor
-
-        this.requestingExecutor = MoreExecutors.sameThreadExecutor();
-        this.respondingExecutor = MoreExecutors.sameThreadExecutor();
-    }
-
-    /**
-     * All-fields constructor used for direct (non-injection) construction.
-     *
-     * @param requestScope request scope instance.
-     * @param requestProcessor request processor (acceptor) instance.
-     * @param responseProcessorBuilder response processor builder.
-     * @param requestingExecutor request accepting and inflecting executor service.
-     * @param respondingExecutor request responding executor service.
-     */
-    public RequestInvoker(
-            RequestScope requestScope,
-            RequestProcessor requestProcessor,
-            ResponseProcessor.Builder responseProcessorBuilder,
-            ExecutorService requestingExecutor,
-            ExecutorService respondingExecutor) {
-        this.requestScope = requestScope;
-        this.requestProcessor = requestProcessor;
-        this.responseProcessorBuilder = responseProcessorBuilder;
-
-        this.requestingExecutor = requestingExecutor;
-        this.respondingExecutor = respondingExecutor;
     }
 
     /**
@@ -219,7 +193,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                         responseProcessorBuilder.build(callback, response, asyncInflector, exceptionMappers);
 
                 asyncInflector.pushRequestScope(requestScope.takeSnapshot());
-                response.addListener(responseProcessor, respondingExecutor);
+                response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
 
                 return responseProcessor;
             }
@@ -227,7 +201,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
 
         try {
             try {
-                return requestingExecutor.submit(requester).get();
+                return executorsFactory.getRequestingExecutor().submit(requester).get();
             } catch (InterruptedException ex) {
                 throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_INTERRUPTED(), ex);
             } catch (ExecutionException ex) {
