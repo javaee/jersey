@@ -160,6 +160,7 @@ public class MediaTypes {
             return 0;
         }
     };
+
     /**
      * Cache containing frequently requested media type values with a wildcard subtype.
      */
@@ -337,6 +338,54 @@ public class MediaTypes {
             throw new IllegalArgumentException(ex);
         }
     }
+
+    /**
+     * Reads quality factor from given media type.
+     * @param mt media type to read quality parameter from
+     * @return quality factor of input media type
+     */
+    public static int getQuality(MediaType mt) {
+
+        final String qParam = mt.getParameters().get(QualityFactor.QUALITY_FACTOR);
+        return readQualityFactor(qParam);
+    }
+
+    private static int readQualityFactor(final String qParam) throws IllegalArgumentException {
+        if (qParam == null) {
+            return QualityFactor.DEFAULT_QUALITY_FACTOR;
+        } else {
+            try {
+                return HttpHeaderReader.readQualityFactor(qParam);
+            } catch (ParseException ex) {
+                throw new IllegalArgumentException(ex);
+            }
+        }
+    }
+
+    /**
+     * Strips any quality parameters, i.e. q and qs from given media type.
+     *
+     * @param media type to strip quality parameters from
+     * @return media type instance corresponding to the given one with quality parameters stripped off
+     *          or the original instance if no such parameters are present
+     */
+    public static MediaType stripQualityParams(MediaType mt) {
+        final Map<String, String> oldParameters = mt.getParameters();
+        if (oldParameters.isEmpty()) {
+            return mt;
+        }
+        Map<String, String> newParameters = new HashMap<String, String>();
+        for (Map.Entry<String, String> e : oldParameters.entrySet()) {
+            final boolean isQs = e.getKey().equals(QualitySourceMediaType.QUALITY_SOURCE_FACTOR);
+            final boolean isQ = e.getKey().equals(QualityFactor.QUALITY_FACTOR);
+            if (!isQ && !isQs) {
+                newParameters.put(e.getKey(), e.getValue());
+            }
+        }
+        return new MediaType(mt.getType(), mt.getSubtype(), null);
+    }
+
+
 
     /**
      * Returns MediaType with wildcard in subtype.

@@ -122,4 +122,9 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
 
         return response;
     }
+
+    @Override
+    public String toString() {
+        return method.getMethod().toString();
+    }
 }

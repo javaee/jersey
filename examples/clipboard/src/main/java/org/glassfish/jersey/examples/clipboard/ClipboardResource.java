@@ -40,6 +40,9 @@
 package org.glassfish.jersey.examples.clipboard;
 
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -47,9 +50,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import java.util.LinkedList;
-import java.util.List;
+import javax.ws.rs.core.Variant;
 
 
 /**
@@ -64,18 +69,31 @@ import java.util.List;
 @Path("clipboard")
 public class ClipboardResource {
 
+    final static List<Variant> supportedVariants =
+                                    Variant.mediaTypes(
+                                        MediaType.APPLICATION_JSON_TYPE,
+                                        MediaType.TEXT_PLAIN_TYPE).add().build();
+
     private static final List<String> history = new LinkedList<String>();
 
     private static ClipboardData content = new ClipboardData("");
 
-    // FIXME: json should not work!
+    @Context Request request;
+
     @GET
-    @Produces({"text/plain", "application/json"})
     public Response content() {
+
         if (content.isEmpty()) {
             return Response.noContent().build();
         }
-        return Response.ok(content, "text/plain").build();
+
+        final Variant variant = request.selectVariant(supportedVariants);
+
+        if (variant == null) {
+            return Response.notAcceptable(supportedVariants).build();
+        } else {
+            return Response.ok(content, variant.getMediaType()).build();
+        }
     }
 
     @PUT
@@ -108,17 +126,6 @@ public class ClipboardResource {
     public List<String> getHistory() {
         return history;
     }
-
-//    @GET @Path("fail")
-//    @Produces({"text/plain", "application/json"})
-//    public Object getFail() {
-//        return new Object() {
-//            @Override
-//            public String toString() {
-//                throw new NullPointerException();
-//            }
-//        };
-//    }
 
     @DELETE @Path("history")
     public void clearHistory() {

@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class QualitySourceMediaType extends MediaType {
+public class QualitySourceMediaType extends MediaType {
 
     public static final String QUALITY_SOURCE_FACTOR = "qs";
     public static final int DEFAULT_QUALITY_SOURCE_FACTOR = 1000;

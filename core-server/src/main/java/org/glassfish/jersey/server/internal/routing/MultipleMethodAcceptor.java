@@ -40,13 +40,15 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
@@ -59,7 +61,6 @@ import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stages;
@@ -70,6 +71,7 @@ import org.glassfish.jersey.server.model.InvocableResourceMethod;
 import org.glassfish.jersey.server.model.Parameter;
 
 import com.google.common.collect.Iterators;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * A single acceptor to be responsible to respond to all HTTP methods defined on a given resource.
@@ -80,7 +82,41 @@ import com.google.common.collect.Iterators;
  */
 final class MultipleMethodAcceptor implements TreeAcceptor {
 
-    /* package */class ConsumesProducesInflector {
+    private static final Logger LOGGER = Logger.getLogger(MultipleMethodAcceptor.class.getName());
+
+    /**
+     * Represents a 1-1-1 relation between input and output media type and an inflector.
+     * <p>E.g. for a single resource method
+     * <pre>
+     *   &#064;Consumes("&#042;/*")
+     *   &#064;Produces("text/plain","text/html")
+     *   &#064;GET
+     *   public String myGetMethod() {
+     *     return "S";
+     *   }
+     * </pre>
+     * the following two relations would be generated:
+     * <table>
+     *   <tr>
+     *     <th>consumes</th>
+     *     <th>produces</th>
+     *     <th>method</th>
+     *   </tr>
+     *   <tr>
+     *       <td>&#042;/*</td>
+     *       <td>text/plain</td>
+     *       <td>myGetMethod</td>
+     *     </td>
+     *    </tr>
+     *    <tr>
+     *       <td>&#042;/*</td>
+     *       <td>text/html</td>
+     *       <td>myGetMethod</td>
+     *     </td>
+     *    </tr>
+     * </table>
+     */
+    class ConsumesProducesInflector {
 
         MediaType consumes;
         MediaType produces;
@@ -99,9 +135,80 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
 
         @Override
         public String toString() {
-            return "ConsumesProducesInflector{" + "consumes=" + consumes + ", produces=" + produces + '}';
+            return String.format("%s->%s:%s", consumes, produces, inflector);
         }
     }
+
+    /**
+     * The same as above ConsumesProducesInflector,
+     * only concrete request content-type and accept header info is included in addition.
+     *
+     * @see CombinedClientServerMediaType
+     */
+    class RequestSpecificConsumesProducesInflector implements Comparable {
+
+        CombinedClientServerMediaType consumes;
+        CombinedClientServerMediaType produces;
+        Inflector<Request, Response> inflector;
+
+        RequestSpecificConsumesProducesInflector(CombinedClientServerMediaType consumes, CombinedClientServerMediaType produces, Inflector<Request, Response> inflector) {
+            this.inflector = inflector;
+            this.consumes = consumes;
+            this.produces = produces;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s->%s:%s", consumes, produces, inflector);
+        }
+
+        @Override
+        public int compareTo(Object o) {
+            if (o == null) {
+                return 1;
+            }
+            if (! (o instanceof RequestSpecificConsumesProducesInflector)) {
+                return 1;
+            }
+            RequestSpecificConsumesProducesInflector other = (RequestSpecificConsumesProducesInflector)o;
+            final int consumedComparism = CombinedClientServerMediaType.COMPARATOR.compare(consumes, other.consumes);
+            return (consumedComparism != 0) ? consumedComparism : CombinedClientServerMediaType.COMPARATOR.compare(produces, other.produces);
+        }
+    }
+
+    /**
+     * Helper class to select matching resource method to be invoked.
+     */
+    class MethodSelector {
+
+        RequestSpecificConsumesProducesInflector selected;
+        List<RequestSpecificConsumesProducesInflector> sameFitnessInflectors;
+
+        MethodSelector(RequestSpecificConsumesProducesInflector i) {
+            selected = i;
+            sameFitnessInflectors = null;
+        }
+
+        void consider(RequestSpecificConsumesProducesInflector i) {
+            final int theGreaterTheBetter = i.compareTo(selected);
+            if (theGreaterTheBetter > 0) {
+                selected = i;
+                sameFitnessInflectors = null;
+            } else {
+                if (theGreaterTheBetter == 0 && (selected.inflector != i.inflector)) {
+                    getSameFitnessList().add(i);
+                }
+            }
+        }
+
+        List<RequestSpecificConsumesProducesInflector> getSameFitnessList() {
+            if (sameFitnessInflectors == null) {
+                sameFitnessInflectors = new LinkedList<RequestSpecificConsumesProducesInflector>();
+            }
+            return sameFitnessInflectors;
+        }
+    }
+
     final Map<String, List<ConsumesProducesInflector>> method2InflectorMap;
     final MessageBodyWorkers workers;
     final Injector injector;
@@ -156,16 +263,6 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
                 list.add(new ConsumesProducesInflector(consumes, produces, methodInflector.right()));
             }
         }
-        // TODO: take server quality factor into account
-        // TODO: take server quality factor into account
-        Collections.sort(list, new Comparator<ConsumesProducesInflector>() {
-
-            @Override
-            public int compare(ConsumesProducesInflector i1, ConsumesProducesInflector i2) {
-                int consumesComparsion = MediaTypes.MEDIA_TYPE_COMPARATOR.compare(i1.consumes, i2.consumes);
-                return (consumesComparsion != 0) ? consumesComparsion : MediaTypes.MEDIA_TYPE_COMPARATOR.compare(i1.produces, i2.produces);
-            }
-        });
     }
 
     @Override
@@ -183,7 +280,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
         if (satisfyingInflectors.isEmpty()) {
             throw new WebApplicationException(Response.Status.UNSUPPORTED_MEDIA_TYPE);
         }
-        // TODO: remove try/catch clauses based on JERSEY-913 resolution
+
         // TODO: remove try/catch clauses based on JERSEY-913 resolution
         List<MediaType> acceptableMediaTypes;
         try {
@@ -191,32 +288,75 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
         } catch (RuntimeException re) {
             throw new WebApplicationException(Response.status(400).entity(re.getMessage()).build());
         }
+
+        final MethodSelector methodSelector = new MethodSelector(null);
+
         for (MediaType acceptableMediaType : acceptableMediaTypes) {
             for (final ConsumesProducesInflector satisfiable : satisfyingInflectors) {
                 if (satisfiable.produces.isCompatible(acceptableMediaType)) {
-                    final MediaType effectiveResponseType = typeNotSpecific(satisfiable.produces) ? MediaTypes.mostSpecific(acceptableMediaType, satisfiable.produces) : satisfiable.produces;
-                    injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
-                    final Inflector<Request, Response> inflector = satisfiable.inflector;
-                    return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 
-                        @Override
-                        public Response apply(Request request) {
-                            injector.inject(inflector);
-                            return typeNotSpecific(effectiveResponseType) ? inflector.apply(request) : responseWithContentTypeHeader(effectiveResponseType, inflector.apply(request));
-                        }
-                    })));
+                    final MediaType requestContentType = request.getHeaders().getMediaType();
+                    final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE : requestContentType;
+
+                    final RequestSpecificConsumesProducesInflector candidate
+                                = new RequestSpecificConsumesProducesInflector(
+                                          CombinedClientServerMediaType.create(effectiveContentType, satisfiable.consumes),
+                                          CombinedClientServerMediaType.create(acceptableMediaType, satisfiable.produces),
+                                          satisfiable.inflector);
+                    methodSelector.consider(candidate);
                 }
             }
         }
+
+        if (methodSelector.selected != null) {
+            final RequestSpecificConsumesProducesInflector selected = methodSelector.selected;
+
+            if (methodSelector.sameFitnessInflectors != null) {
+                reportMethodSelectionAmbiguity(acceptableMediaTypes, selected, methodSelector.sameFitnessInflectors);
+            }
+
+            final MediaType effectiveResponseType = selected.produces.combinedMediaType;
+            injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
+            final Inflector<Request, Response> inflector = selected.inflector;
+            return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+
+                @Override
+                public Response apply(Request request) {
+                    injector.inject(inflector);
+                    return typeNotSpecific(effectiveResponseType) ? inflector.apply(request) : responseWithContentTypeHeader(effectiveResponseType, inflector.apply(request));
+                }
+            })));
+        }
+
         throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
     }
 
+    private void reportMethodSelectionAmbiguity(List<MediaType> acceptableTypes,
+                                                    RequestSpecificConsumesProducesInflector selected,
+                                                        List<RequestSpecificConsumesProducesInflector> sameFitnessInflectors) {
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            StringBuilder msgBuilder =
+                    new StringBuilder(LocalizationMessages.AMBIGUOUS_RESOURCE_METHOD(acceptableTypes)).append('\n');
+            msgBuilder.append('\t').append(selected.inflector).append('\n');
+            final Set<Inflector<Request, Response>> reportedInflectors = new HashSet<Inflector<Request, Response>>();
+            reportedInflectors.add(selected.inflector);
+            for (RequestSpecificConsumesProducesInflector i : sameFitnessInflectors) {
+                if (!reportedInflectors.contains(i.inflector)) {
+                    msgBuilder.append('\t').append(i.inflector).append('\n');
+                }
+                reportedInflectors.add(i.inflector);
+            }
+            LOGGER.log(Level.WARNING, msgBuilder.toString());
+        }
+    }
+
     private Response responseWithContentTypeHeader(final MediaType mt, final Response response) {
-        return Responses.toBuilder(response).header(HttpHeaders.CONTENT_TYPE, mt).build();
+        final boolean contentTypeAlreadySet = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE);
+        return (!response.hasEntity() || contentTypeAlreadySet) ?
+                response : Responses.toBuilder(response).header(HttpHeaders.CONTENT_TYPE, mt).build();
     }
 
     private boolean typeNotSpecific(final MediaType effectiveResponseType) {
         return effectiveResponseType.isWildcardType() || effectiveResponseType.isWildcardSubtype();
     }
-
 }

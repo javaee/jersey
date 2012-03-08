@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.logging.Logger;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -227,11 +228,10 @@ public class AcceptTest {
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getHeaders().getMediaType());
 
-//      FIXME: test for JERSEY-997
-//        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5").build()).get();
-//        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
-//        assertEquals("GET", response.readEntity(String.class));
-//        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5").build()).get();
+        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
+        assertEquals("GET", response.readEntity(String.class));
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
     }
 
     @Path("/")
@@ -246,7 +246,8 @@ public class AcceptTest {
     public void testAcceptNoProduces() throws Exception {
         Application app = createApplication(NoProducesResource.class);
 
-        Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain").build()).get();
+        // media type order in the accept header does not impose output media type!
+        Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.9").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("image/png"), response.getHeaders().getMediaType());
