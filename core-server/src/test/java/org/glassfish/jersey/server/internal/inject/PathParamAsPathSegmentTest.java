@@ -39,19 +39,18 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.List;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
+import java.util.List;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Taken from Jersey-1: jersey-tests: com.sun.jersey.impl.methodparams.PathParamAsPathSegmentTest

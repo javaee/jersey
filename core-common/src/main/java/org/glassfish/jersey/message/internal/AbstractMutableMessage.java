@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.TypeLiteral;
 
@@ -268,5 +269,11 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
 
     public String header(String name) {
         return headers.header(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public M cookie(Cookie cookie) {
+        headers.header("Cookie", cookie);
+        return (M) this;
     }
 }

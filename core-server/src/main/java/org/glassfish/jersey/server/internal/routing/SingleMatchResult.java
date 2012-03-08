@@ -40,8 +40,6 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.MatchResult;
-import javax.ws.rs.core.Request;
-import org.glassfish.jersey.message.internal.Requests;
 
 /**
  * {@link MatchResult} implementation that returns the nested string as a
@@ -61,8 +59,40 @@ final class SingleMatchResult implements MatchResult {
      * @param s matched string.
      */
     public SingleMatchResult(String s) {
-        this.s = s;
+        this.s = stripMatrixParams(s);
     }
+
+    /**
+     * Strip the matrix parameters from a path
+     */
+    private String stripMatrixParams(String path) {
+        int e = path.indexOf(";");
+        if (e == -1) {
+            return path;
+        }
+
+        int s = 0;
+        StringBuilder sb = new StringBuilder();
+        do {
+            // Append everything up to but not including the ';'
+            sb.append(path, s, e);
+
+            // Skip everything up to but not including the '/'
+            s = path.indexOf("/", e + 1);
+            if (s == -1) {
+                break;
+            }
+            e = path.indexOf(";", s);
+        } while (e != -1);
+
+        if (s != -1) {
+            // Append any remaining characters
+            sb.append(path, s, path.length());
+        }
+
+        return sb.toString();
+    }
+
 
     @Override
     public int start() {

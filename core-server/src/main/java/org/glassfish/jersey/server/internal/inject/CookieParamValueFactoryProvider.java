@@ -40,11 +40,14 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import org.glassfish.hk2.inject.Injector;
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.model.Parameter;
 import org.jvnet.hk2.annotations.Inject;
 
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 /**
  * Value factory provider supporting the {@link CookieParam} injection annotation.
@@ -71,14 +74,14 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
 
         @Override
         public Object get(HttpContext context) {
-            throw new UnsupportedOperationException("Cookie injection not implemented yet.");
-// TODO implement
-//            try {
-//                return extractor.extract(context.getRequest().getCookieNameValueMap());
-//            } catch (ExtractorContainerException e) {
-//                throw new ParamException.CookieParamException(e.getCause(),
-//                        extractor.getName(), extractor.getDefaultValueString());
-//            }
+            // TODO: cache?
+            MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
+
+            for (Map.Entry<String, Cookie> e : context.getRequest().getHeaders().getCookies().entrySet()) {
+                cookies.putSingle(e.getKey(), e.getValue().getValue());
+            }
+
+            return extractor.extract(cookies);
         }
     }
 
@@ -92,9 +95,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
 
         @Override
         public Cookie get(HttpContext context) {
-            throw new UnsupportedOperationException("Cookie injection not implemented yet.");
-// TODO implement
-//            return context.getRequest().getCookies().get(name);
+            return context.getRequest().getHeaders().getCookies().get(name);
         }
     }
 

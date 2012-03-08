@@ -37,82 +37,60 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
 
-import java.net.URI;
-import java.util.Map;
+package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.Requests;
+import org.junit.Test;
 
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Paul Sandoz
+ * @author Paul.Sandoz@Sun.Com
  */
-interface Request extends Entity, Headers {
+public class CookieParamAsCookieTest extends AbstractTest {
 
-    interface Builder extends Request, Entity.Builder<Request.Builder>, Headers.Builder<Request.Builder> {
-        // Common message methods
 
-        public Builder properties(Map<String, Object> properties);
+    @Path("/")
+    public static class CookieTypeResource {
+        @POST
+        public void post(
+                @Context HttpHeaders h,
+                @CookieParam("one") Cookie one,
+                @CookieParam("two") Cookie two,
+                @CookieParam("three") Cookie three) {
+            assertEquals("one", one.getName());
+            assertEquals("value_one", one.getValue());
 
-        public Builder property(String name, Object value);
+            assertEquals("two", two.getName());
+            assertEquals("value_two", two.getValue());
 
-        public Builder clearProperties();
+            assertEquals(null, three);
 
-        // Request-specific methods
-        public Builder uri(String uri);
-
-        public Builder uri(URI uri);
-
-        public Builder uris(String applicationRootUri, String requestUri);
-
-        public Builder uris(URI applicationRootUri, URI requestUri);
-
-        public Builder method(String method);
-
-        public Builder workers(MessageBodyWorkers workers);
-
-        public Builder cookie(Cookie cookie);
-
-        @Override
-        public Builder clone();
-
-        public Request build();
-
-        public javax.ws.rs.core.Request.RequestBuilder toJaxrsRequestBuilder();
+            Map<String, Cookie> cs = h.getCookies();
+            assertEquals(2, cs.size());
+            assertEquals("value_one", cs.get("one").getValue());
+            assertEquals("value_two", cs.get("two").getValue());
+        }
     }
 
-    // Common message methods
-    public Map<String, Object> properties();
+    @Test
+    public void testCookieParam() throws ExecutionException, InterruptedException {
+        initiateWebApplication(CookieTypeResource.class);
 
-    public void close();
+        Cookie one = new Cookie("one", "value_one");
+        Cookie two = new Cookie("two", "value_two");
 
-    // Request-specific methods
-    public Request clone();
-
-    public URI baseUri();
-
-    /**
-     * Get the path of the current request relative to the application root (base)
-     * URI as a string.
-     *
-     * @param decode controls whether sequences of escaped octets are decoded
-     *     ({@code true}) or not ({@code false}).
-     * @return relative request path.
-     */
-    public String relativePath(boolean decode);
-
-    public URI uri();
-
-    public String method();
-
-    public MessageBodyWorkers workers();
-
-    public javax.ws.rs.core.Request toJaxrsRequest();
-
-    public javax.ws.rs.core.RequestHeaders getJaxrsHeaders();
-
-    public Builder toBuilder();
+        apply(Requests.from("/", "POST").cookie(one).cookie(two).build());
+    }
 }
