@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
@@ -70,7 +71,6 @@ import org.glassfish.jersey.media.json.JsonConfiguration;
 public class JsonXmlStreamReader implements XMLStreamReader {
 
     private enum LaState {
-
         START,
         END,
         AFTER_OBJ_START_BRACE,
@@ -82,18 +82,20 @@ public class JsonXmlStreamReader implements XMLStreamReader {
         BEFORE_NEXT_ARRAY_ELEM,
         AFTER_ARRAY_ELEM
     };
+
     private static final Logger LOGGER = Logger.getLogger(JsonXmlStreamReader.class.getName());
+
     boolean jsonRootUnwrapping;
     String rootElementName;
     char nsSeparator;
     CharSequence nsSeparatorAsSequence;
     final Map<String, String> revertedXml2JsonNs = new HashMap<String, String>();
     final Collection<String> attrAsElemNames = new LinkedList<String>();
+
     JsonLexer lexer;
     JsonToken lastToken;
 
     private static final class ProcessingState {
-
         String lastName;
         LaState state;
         JsonReaderXmlEvent eventToReadAttributesFor;
@@ -116,7 +118,11 @@ public class JsonXmlStreamReader implements XMLStreamReader {
             return String.format("{lastName:%s,laState:%s}", lastName, state);
         }
     }
+
     final Queue<JsonReaderXmlEvent> eventQueue = new LinkedList<JsonReaderXmlEvent>();
+
+    boolean endDocumentReached = false;
+
     List<ProcessingState> processingStack;
     int depth;
 
@@ -226,10 +232,9 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                                 processingStack.get(depth).state = LaState.END;
                                 break;
                             default:
-                            // TODO: handle problem
+                                throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                         }
                     }
-                    // TODO: if JsonToken.START_OBJECT != lastToken then problem
                     processingStack.get(depth).state = LaState.AFTER_OBJ_START_BRACE;
                     break;
                 case AFTER_OBJ_START_BRACE:
@@ -278,7 +283,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             valueRead();
                             break;
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break;
                 case BEFORE_OBJ_NEXT_KV_PAIR:
@@ -292,7 +297,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             processingStack.get(depth).state = LaState.BEFORE_VALUE_IN_KV_PAIR;
                             break;
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break;
                 case BEFORE_VALUE_IN_KV_PAIR:
@@ -320,7 +325,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             processingStack.get(depth).state = LaState.AFTER_OBJ_KV_PAIR;
                             break;
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break; // AFTER_ARRAY_ELEM
                 case AFTER_OBJ_KV_PAIR:
@@ -336,7 +341,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             valueRead();
                             break; // END_OBJECT
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break; // AFTER_OBJ_KV_PAIR
                 case AFTER_ARRAY_START_BRACE:
@@ -360,7 +365,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             processingStack.get(depth).state = LaState.AFTER_ARRAY_ELEM;
                             break;
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break; // AFTER_ARRAY_ELEM
                 case BEFORE_NEXT_ARRAY_ELEM:
@@ -381,8 +386,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             processingStack.get(depth).state = LaState.AFTER_ARRAY_ELEM;
                             break;
                         default:
-                        // TODO: handle problem
-                    }
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");                   }
                     break; // BEFORE_NEXT_ARRAY_ELEM
                 case AFTER_ARRAY_ELEM:
                     switch (lastToken.tokenType) {
@@ -396,7 +400,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
                             generateEEEvent(processingStack.get(depth - 1).lastName);
                             break;
                         default:
-                        // TODO: handle problem
+                            throw new JsonFormatException(lastToken.tokenText, lastToken.line, lastToken.column, "Unexpected JSON token");
                     }
                     break; // AFTER_ARRAY_ELEM
             }
@@ -411,7 +415,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
             try {
                 readNext(true);
             } catch (IOException e) {
-                // TODO: handle it!!!
+                throw new JsonFormatException("...", -1, -1, "Error counting attributes");
             }
             eventQueue.peek().attributesChecked = true;
         }
@@ -456,9 +460,14 @@ public class JsonXmlStreamReader implements XMLStreamReader {
 
     @Override
     public int next() throws XMLStreamException {
+        endDocumentCheck();
         try {
             readNext();
-            return eventQueue.peek().getEventType();
+            final int nextEventType = eventQueue.peek().getEventType();
+            if (nextEventType == XMLStreamConstants.END_DOCUMENT) {
+                endDocumentReached = true;
+            }
+            return nextEventType;
         } catch (IOException ex) {
             Logger.getLogger(JsonXmlStreamReader.class.getName()).log(Level.SEVERE, null, ex);
             throw new XMLStreamException(ex);
@@ -467,6 +476,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
 
     @Override
     public int nextTag() throws XMLStreamException {
+        endDocumentCheck();
         int eventType = next();
         while ((eventType == XMLStreamConstants.CHARACTERS && isWhiteSpace()) // skip whitespace
                 || (eventType == XMLStreamConstants.CDATA && isWhiteSpace()) // skip whitespace
@@ -491,7 +501,7 @@ public class JsonXmlStreamReader implements XMLStreamReader {
 
     @Override
     public boolean hasNext() throws XMLStreamException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return !endDocumentReached;
     }
 
     @Override
@@ -755,16 +765,16 @@ public class JsonXmlStreamReader implements XMLStreamReader {
     private StartElementEvent generateSEEvent(String name) {
         StartElementEvent event = null;
         if (!"$".equals(name)) {
-            event = new StartElementEvent(createQName(name), new StaxLocation(lexer));
-            eventQueue.add(event);
+           event = new StartElementEvent(createQName(name), new StaxLocation(lexer));
+           eventQueue.add(event);
         }
         return event;
     }
 
     private void generateEEEvent(String name) {
-        if ((null != name) && !"$".equals(name)) {
-            eventQueue.add(new EndElementEvent(createQName(name), new StaxLocation(lexer)));
-        }
+       if ((null != name) && !"$".equals(name)) {
+           eventQueue.add(new EndElementEvent(createQName(name), new StaxLocation(lexer)));
+       }
     }
 
     private QName createQName(String name) {
@@ -775,6 +785,12 @@ public class JsonXmlStreamReader implements XMLStreamReader {
             String prefix = name.substring(0, dotIndex);
             String suffix = name.substring(dotIndex + 1);
             return revertedXml2JsonNs.containsKey(prefix) ? new QName(revertedXml2JsonNs.get(prefix), suffix) : new QName(name);
+        }
+    }
+
+    private void endDocumentCheck() throws NoSuchElementException {
+        if (endDocumentReached) {
+            throw new NoSuchElementException();
         }
     }
 }

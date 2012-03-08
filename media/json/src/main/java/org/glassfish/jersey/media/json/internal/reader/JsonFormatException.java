@@ -91,4 +91,9 @@ public class JsonFormatException extends RuntimeException {
     public int getErrorColumn() {
         return column;
     }
+
+    @Override
+    public String toString() {
+        return "JsonFormatException{" + "text=" + text + ", line=" + line + ", column=" + column + '}';
+    }
 }
