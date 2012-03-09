@@ -41,6 +41,7 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
@@ -63,6 +64,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 @Scoped(Singleton.class)
 class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
 
+    private static final Logger LOGGER = Logger.getLogger(ProcessingExecutorsFactory.class.getName());
+    //
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
 
@@ -76,10 +79,13 @@ class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
         for (ProcessingExecutorsProvider provider : providers) {
             ExecutorService es = provider.getRequestingExecutor();
             if (es != null) {
+                LOGGER.config(String.format("Using custom requesting executor [%s] provided by [%s].",
+                        es.getClass().getName(), provider.getClass().getName()));
                 return es;
             }
         }
 
+        LOGGER.config("Using default requesting executor.");
         return MoreExecutors.sameThreadExecutor();
     }
 
@@ -87,10 +93,13 @@ class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
         for (ProcessingExecutorsProvider provider : providers) {
             ExecutorService es = provider.getRespondingExecutor();
             if (es != null) {
+                LOGGER.config(String.format("Using custom responding executor [%s] provided by [%s].",
+                        es.getClass().getName(), provider.getClass().getName()));
                 return es;
             }
         }
 
+        LOGGER.config("Using default responding executor.");
         return MoreExecutors.sameThreadExecutor();
     }
 

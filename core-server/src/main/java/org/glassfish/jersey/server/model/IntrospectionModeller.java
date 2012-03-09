@@ -52,18 +52,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -166,6 +155,16 @@ public class IntrospectionModeller {
         }
     }
 
+    private static void declareSuspend(
+            AnnotatedMethod am,
+            AbstractResourceMethod resourceMethod) {
+        // Override annotation is present in method
+        final Suspend suspend = am.getAnnotation(Suspend.class);
+        if (suspend != null) {
+            resourceMethod.declareSuspend(suspend.timeOut(), suspend.timeUnit());
+        }
+    }
+
     private static void addProduces(
             AnnotatedMethod am,
             AbstractResourceMethod resourceMethod,
@@ -204,6 +203,7 @@ public class IntrospectionModeller {
 
             addConsumes(m, resourceMethod, classScopeConsumesAnnotation);
             addProduces(m, resourceMethod, classScopeProducesAnnotation);
+            declareSuspend(m, resourceMethod);
             processParameters(
                     resourceMethod.getDeclaringResource().getResourceClass(),
                     resourceMethod.getMethod().getDeclaringClass(),
@@ -245,6 +245,7 @@ public class IntrospectionModeller {
 
                 addConsumes(m, abstractSubResourceMethod, classScopeConsumesAnnotation);
                 addProduces(m, abstractSubResourceMethod, classScopeProducesAnnotation);
+                declareSuspend(m, abstractSubResourceMethod);
                 processParameters(
                         abstractSubResourceMethod.getDeclaringResource().getResourceClass(),
                         abstractSubResourceMethod.getMethod().getDeclaringClass(),

@@ -56,6 +56,7 @@ import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import javax.ws.rs.Suspend;
 
 /**
  * Example of a simple fire&forget point-to-point messaging resource.
@@ -78,7 +79,7 @@ public class FireAndForgetChatResource {
     ExecutionContext ctx;
 
     @GET
-    //@Suspend
+    @Suspend
     public void pickUpMessage() throws InterruptedException {
         System.out.println(String.format("Received GET with context %s on thread %s",
                 ctx.toString(), Thread.currentThread().getName()));
@@ -97,8 +98,6 @@ public class FireAndForgetChatResource {
                 }
             }
         });
-
-        ctx.suspend();
     }
 
     @POST

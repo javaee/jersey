@@ -55,7 +55,7 @@ public class SubResourceMethod extends AbstractSubResourceMethod
                                implements PathAnnotated, Parameterized, InvocableResourceMethod {
 
     private Method method;
-    private Class returnType;
+    private Class<?> returnType;
     private Type genericReturnType;
     private Annotation[] annotations;
     private List<Parameter> parameters;
@@ -88,7 +88,7 @@ public class SubResourceMethod extends AbstractSubResourceMethod
     }
 
     @Override
-    public Class getReturnType() {
+    public Class<?> getReturnType() {
         return returnType;
     }
 

@@ -39,52 +39,89 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.ProcessingExecutorsModule;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Basic request invoker test.
+ * Test for custom processing executors provider support.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class RequestInvokerTest {
+public class CustomProcessingExecutorsProviderTest {
+    private static final Logger LOGGER = Logger.getLogger(CustomProcessingExecutorsProviderTest.class.getName());
+
+    private static final String REQ_THREAD_NAME = "custom-requesting-thread";
+    private static final String RESP_THREAD_NAME = "custom-responding-thread";
 
     public static class Module extends AbstractModule {
 
         @Override
         @SuppressWarnings("unchecked")
         protected void configure() {
+            final LinearAcceptor inflectingStage = Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+
+                @Override
+                public Response apply(Request data) {
+                    return Response.ok(Thread.currentThread().getName()).build();
+                }
+            });
+
+            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(inflectingStage);
+            bind(RequestProcessor.class).to(LinearRequestProcessor.class);
 
             bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
 
             bind().to(ResponseProcessor.Builder.class);
             bind().to(RequestInvoker.class);
+
         }
     }
 
-    public RequestInvokerTest() {
+    public CustomProcessingExecutorsProviderTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
-    private Services init(org.glassfish.hk2.Module acceptorsModule) {
+    private Services init() {
+        final ProcessingExecutorsProvider customExecutorsProvider = new ProcessingExecutorsProvider() {
+
+            @Override
+            public ExecutorService getRequestingExecutor() {
+                return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(REQ_THREAD_NAME + "-%s").build());
+            }
+
+            @Override
+            public ExecutorService getRespondingExecutor() {
+                return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(RESP_THREAD_NAME + "-%s").build());
+            }
+        };
+
         final Services services = HK2.get().create(null,
                 new ProcessingTestModule(),
-                acceptorsModule,
+                new ProcessingExecutorsModule(customExecutorsProvider),
                 new Module());
 
         ProcessingTestModule.initProviders(services);
@@ -93,10 +130,13 @@ public class RequestInvokerTest {
     }
 
     @Test
-    public void testLinear() throws Exception {
-        final Services services = init(new LinearRequestProcessorTest.Module());
+    public void testCustomProcessingExecutors() throws Exception {
+        final Services services = init();
         final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicBoolean passed = new AtomicBoolean(false);
 
         try {
             requestScope.enter();
@@ -107,88 +147,34 @@ public class RequestInvokerTest {
 
                         @Override
                         public void result(Response response) {
-                            assertEquals(123, response.readEntity(Integer.class).intValue());
+
+                            try {
+                                final String reqThreadName = response.readEntity(String.class);
+                                assertTrue("Unexpected request processing thread name: " + reqThreadName,
+                                        reqThreadName.startsWith(REQ_THREAD_NAME));
+
+                                final String respThreadName = Thread.currentThread().getName();
+                                assertTrue("Unexpected response processing thread name: " + respThreadName,
+                                        respThreadName.startsWith(RESP_THREAD_NAME));
+
+                                passed.set(true);
+                            } finally {
+                                latch.countDown();
+                            }
                         }
 
                         @Override
                         public void failure(Throwable exception) {
-                            fail(exception.getMessage());
+                            try {
+                                LOGGER.log(Level.ALL, "Request processing failed.", exception);
+                                fail(exception.getMessage());
+                            } finally {
+                                latch.countDown();
+                            }
                         }
                     });
-
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(123, result.get().readEntity(Integer.class).intValue());
-
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new AbstractInvocationCallback() {
-
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(-1, response.readEntity(Integer.class).intValue());
-                        }
-
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-
-            result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            assertEquals(-1, result.get().readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
-    }
-
-    @Test
-    public void testHiearchical() throws Exception {
-        final Services services = init(new HierarchicalRequestProcessorTest.Module());
-        final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
-        final RequestScope requestScope = services.forContract(RequestScope.class).get();
-
-        try {
-            requestScope.enter();
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new AbstractInvocationCallback() {
-
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(145, response.readEntity(Integer.class).intValue());
-                        }
-
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(145, result.get().readEntity(Integer.class).intValue());
-
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new AbstractInvocationCallback() {
-
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(-1, response.readEntity(Integer.class).intValue());
-                        }
-
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-
-            result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            assertEquals(-1, result.get().readEntity(Integer.class).intValue());
-
+            latch.await();
+            assertTrue("Test failed", passed.get());
         } finally {
             requestScope.exit();
         }

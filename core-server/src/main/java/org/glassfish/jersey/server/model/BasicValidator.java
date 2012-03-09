@@ -93,7 +93,8 @@ public class BasicValidator extends ResourceModelValidator {
 
     private MessageBodyWorkers workers;
 
-    public BasicValidator() {};
+    public BasicValidator() {
+    }
 
     public BasicValidator(MessageBodyWorkers workers) {
         this.workers = workers;
@@ -113,7 +114,7 @@ public class BasicValidator extends ResourceModelValidator {
 
         final Class<?> resourceClass = resource.getResourceClass();
 
-        if(resourceClass != null) {
+        if (resourceClass != null) {
             checkResourceClassSetters(resourceClass);
             checkResourceClassFields(resourceClass);
         }
@@ -125,8 +126,7 @@ public class BasicValidator extends ResourceModelValidator {
     private void checkResourceClassSetters(Class<?> rc) {
         final MethodList methodList = new MethodList(rc);
 
-        for (AnnotatedMethod m : methodList.
-                hasNotMetaAnnotation(HttpMethod.class).
+        for (AnnotatedMethod m : methodList.hasNotMetaAnnotation(HttpMethod.class).
                 hasNotAnnotation(Path.class).
                 hasNumParams(1).
                 hasReturnType(void.class).
@@ -152,20 +152,19 @@ public class BasicValidator extends ResourceModelValidator {
     private void checkResourceClassFields(Class<?> rc) {
         for (Field f : rc.getDeclaredFields()) {
             if (f.getDeclaredAnnotations().length > 0) {
-                    Parameter p = IntrospectionModeller.createParameter(
-                            rc,
-                            f.getDeclaringClass(),
-                            rc.isAnnotationPresent(Encoded.class),
-                            f.getType(),
-                            f.getGenericType(),
-                            f.getAnnotations());
-                    if (null != p) {
-                        checkParameter(p, f, f.toGenericString(), f.getName());
-                    }
+                Parameter p = IntrospectionModeller.createParameter(
+                        rc,
+                        f.getDeclaringClass(),
+                        rc.isAnnotationPresent(Encoded.class),
+                        f.getType(),
+                        f.getGenericType(),
+                        f.getAnnotations());
+                if (null != p) {
+                    checkParameter(p, f, f.toGenericString(), f.getName());
+                }
             }
         }
     }
-
 
     @Override
     public void visitResourceMethod(ResourceMethod method) {
@@ -180,13 +179,13 @@ public class BasicValidator extends ResourceModelValidator {
             return;
         }
 
-        final InvocableResourceMethod invocable = (InvocableResourceMethod)method;
+        final InvocableResourceMethod invocable = (InvocableResourceMethod) method;
 
         checkParameters(invocable, invocable.getMethod());
 
         if ("GET".equals(method.getHttpMethod())) {
             // ensure GET returns non-void value
-            if (void.class == invocable.getMethod().getReturnType()) {
+            if (void.class == invocable.getMethod().getReturnType() && !invocable.isSuspendDeclared()) {
                 issueList.add(new ResourceModelIssue(
                         method,
                         LocalizationMessages.GET_RETURNS_VOID(invocable.getMethod()),
@@ -219,7 +218,7 @@ public class BasicValidator extends ResourceModelValidator {
                 httpAnnotList.add(a.toString());
             } else if ((a.annotationType() == Path.class) && !(method instanceof AbstractSubResourceMethod)) {
                 issueList.add(new ResourceModelIssue(
-                        method, LocalizationMessages.SUB_RES_METHOD_TREATED_AS_RES_METHOD(invocable.getMethod(), ((Path)a).value()), false));
+                        method, LocalizationMessages.SUB_RES_METHOD_TREATED_AS_RES_METHOD(invocable.getMethod(), ((Path) a).value()), false));
             }
         }
         if (httpAnnotList.size() > 1) {
@@ -316,7 +315,7 @@ public class BasicValidator extends ResourceModelValidator {
 
     private boolean isConcreteType(Type t) {
         if (t instanceof ParameterizedType) {
-            return isConcreteParameterizedType((ParameterizedType)t);
+            return isConcreteParameterizedType((ParameterizedType) t);
         } else if (!(t instanceof Class)) {
             // GenericArrayType, WildcardType, TypeVariable
             return false;
@@ -341,12 +340,13 @@ public class BasicValidator extends ResourceModelValidator {
         }
     }
 
-
     private List<Method> getDeclaredMethods(final Class _c) {
         final List<Method> ml = new ArrayList<Method>();
 
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
+
             Class c = _c;
+
             @Override
             public Object run() {
                 while (c != Object.class && c != null) {
@@ -396,12 +396,12 @@ public class BasicValidator extends ResourceModelValidator {
         final List<AbstractResourceMethod> resourceMethods = resource.getResourceMethods();
 
         if (resourceMethods.size() >= 2) {
-            for (AbstractResourceMethod m1 : resourceMethods.subList(0, resourceMethods.size()-1)) {
-                for (AbstractResourceMethod m2 : resourceMethods.subList(resourceMethods.indexOf(m1)+1, resourceMethods.size())) {
+            for (AbstractResourceMethod m1 : resourceMethods.subList(0, resourceMethods.size() - 1)) {
+                for (AbstractResourceMethod m2 : resourceMethods.subList(resourceMethods.indexOf(m1) + 1, resourceMethods.size())) {
                     final boolean bothAreRealJavaMethods = (m1 instanceof InvocableResourceMethod)
-                                                            && (m2 instanceof InvocableResourceMethod);
+                            && (m2 instanceof InvocableResourceMethod);
                     if (sameHttpMethod(m1, m2) && bothAreRealJavaMethods) {
-                        checkIntersectingMediaTypes(resource, m1.getHttpMethod(), (InvocableResourceMethod)m1, (InvocableResourceMethod)m2, issueList);
+                        checkIntersectingMediaTypes(resource, m1.getHttpMethod(), (InvocableResourceMethod) m1, (InvocableResourceMethod) m2, issueList);
                     }
                 }
             }
@@ -410,26 +410,25 @@ public class BasicValidator extends ResourceModelValidator {
         final List<SubResourceMethod> subResourceMethods = resource.getSubResourceMethods();
 
         if (subResourceMethods.size() >= 2) {
-            for (SubResourceMethod m1 : subResourceMethods.subList(0, subResourceMethods.size()-1)) {
-                for (SubResourceMethod m2 : subResourceMethods.subList(subResourceMethods.indexOf(m1)+1, subResourceMethods.size())) {
+            for (SubResourceMethod m1 : subResourceMethods.subList(0, subResourceMethods.size() - 1)) {
+                for (SubResourceMethod m2 : subResourceMethods.subList(subResourceMethods.indexOf(m1) + 1, subResourceMethods.size())) {
                     final boolean bothAreRealJavaMethods = (m1 instanceof InvocableResourceMethod)
-                                                            && (m2 instanceof InvocableResourceMethod);
+                            && (m2 instanceof InvocableResourceMethod);
                     if (samePath(m1, m2) && sameHttpMethod(m1, m2) && bothAreRealJavaMethods) {
-                        checkIntersectingMediaTypes(resource, m1.getHttpMethod(), (InvocableResourceMethod)m1, (InvocableResourceMethod)m2, issueList);
+                        checkIntersectingMediaTypes(resource, m1.getHttpMethod(), (InvocableResourceMethod) m1, (InvocableResourceMethod) m2, issueList);
                     }
                 }
             }
         }
     }
 
-
     private void checkSRLAmbiguities(ResourceClass resource) {
 
         final List<SubResourceLocator> subResourceLocators = resource.getSubResourceLocators();
 
         if (subResourceLocators.size() >= 2) {
-            for (SubResourceLocator m1 : subResourceLocators.subList(0, subResourceLocators.size()-1)) {
-                for (SubResourceLocator m2 : subResourceLocators.subList(subResourceLocators.indexOf(m1)+1, subResourceLocators.size())) {
+            for (SubResourceLocator m1 : subResourceLocators.subList(0, subResourceLocators.size() - 1)) {
+                for (SubResourceLocator m2 : subResourceLocators.subList(subResourceLocators.indexOf(m1) + 1, subResourceLocators.size())) {
                     if (samePath(m1, m2)) {
                         issueList.add(new ResourceModelIssue(resource, LocalizationMessages.AMBIGUOUS_SRLS(resource.getResourceClass().getName(), m1.getPath(), m2.getPath()), true));
                     }
@@ -437,7 +436,6 @@ public class BasicValidator extends ResourceModelValidator {
             }
         }
     }
-
 
     private void checkIntersectingMediaTypes(ResourceClass resource, String httpMethod, InvocableResourceMethod im1, InvocableResourceMethod im2, List<ResourceModelIssue> issueList) {
         final List<MediaType> inputTypes1 = getEffectiveInputTypes(im1);
@@ -454,10 +452,9 @@ public class BasicValidator extends ResourceModelValidator {
             }
         }
     }
-
     private static final List<MediaType> StarTypeList = Arrays.asList(new MediaType("*", "*"));
 
-    private List getEffectiveInputTypes(final InvocableResourceMethod invocableMethod) {
+    private List<MediaType> getEffectiveInputTypes(final InvocableResourceMethod invocableMethod) {
         if (!invocableMethod.getSupportedInputTypes().isEmpty()) {
             return invocableMethod.getSupportedInputTypes();
         }
@@ -466,7 +463,7 @@ public class BasicValidator extends ResourceModelValidator {
             for (Parameter p : invocableMethod.getParameters()) {
                 if (p.getSource() == Parameter.Source.ENTITY) {
                     final Type paramType = p.getParameterType();
-                    final Class paramClass = p.getParameterClass();
+                    final Class<?> paramClass = p.getParameterClass();
                     result.addAll(workers.getMessageBodyReaderMediaTypes(paramClass, paramType, p.getDeclaredAnnotations()));
                 }
             }
@@ -474,16 +471,16 @@ public class BasicValidator extends ResourceModelValidator {
         return result.isEmpty() ? StarTypeList : result;
     }
 
-    private List getEffectiveOutputTypes(final InvocableResourceMethod invocableMethod) {
+    private List<MediaType> getEffectiveOutputTypes(final InvocableResourceMethod invocableMethod) {
         if (!invocableMethod.getSupportedOutputTypes().isEmpty()) {
             return invocableMethod.getSupportedOutputTypes();
         }
         List<MediaType> result = new LinkedList<MediaType>();
         if (workers != null) {
             result.addAll(workers.getMessageBodyWriterMediaTypes(
-                            invocableMethod.getReturnType(),
-                            invocableMethod.getGenericReturnType(),
-                            invocableMethod.getMethod().getDeclaredAnnotations()));
+                    invocableMethod.getReturnType(),
+                    invocableMethod.getGenericReturnType(),
+                    invocableMethod.getMethod().getDeclaredAnnotations()));
         }
         return result.isEmpty() ? StarTypeList : result;
     }
@@ -494,7 +491,7 @@ public class BasicValidator extends ResourceModelValidator {
 
     private boolean intersectingMediaTypes(List<MediaType> i1, List<MediaType> i2, List<MediaType> o1, List<MediaType> o2) {
         return MediaTypes.intersect(i1, i2)
-                        && MediaTypes.intersect(o1, o2);
+                && MediaTypes.intersect(o1, o2);
     }
 
     private boolean samePath(PathAnnotated m1, PathAnnotated m2) {

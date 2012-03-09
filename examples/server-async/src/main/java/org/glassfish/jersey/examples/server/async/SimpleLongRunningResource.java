@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,77 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+package org.glassfish.jersey.examples.server.async;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.Suspend;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.ExecutionContext;
 
 /**
- * Abstraction for a resource method
+ * TODO javadoc.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod extends AbstractResourceMethod implements Parameterized, InvocableResourceMethod {
+@Path(App.ASYNC_LONG_RUNNING_OP_PATH)
+@Produces("text/plain")
+public class SimpleLongRunningResource {
 
-    private Method method;
-    private List<Parameter> parameters;
-    private Class<?> returnType;
-    private Type genericReturnType;
+    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
+    //
+    private static final Logger LOGGER = Logger.getLogger(org.glassfish.jersey.examples.server.async.LongRunningAsyncOperationResource.class.getName());
+    private static final int SLEEP_TIME_IN_MILLIS = 1000;
+    private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
+            new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());
 
-    public ResourceMethod(
-            ResourceClass resource,
-            Method method,
-            Class returnType,
-            Type genericReturnType,
-            String httpMethod,
-            Annotation[] markers) {
+    @Context
+    private ExecutionContext ctx;
 
-        super(resource, httpMethod);
-        this.method = method;
-        this.returnType = returnType;
-        this.genericReturnType = genericReturnType;
-        this.parameters = new ArrayList<Parameter>();
-    }
+    @GET
+    @Suspend
+    public void longGet() {
+        TASK_EXECUTOR.submit(new Runnable() {
 
-    @Override
-    public Method getMethod() {
-        return method;
-    }
-
-    @Override
-    public Class<?> getReturnType() {
-        return returnType;
-    }
-
-    @Override
-    public Type getGenericReturnType() {
-        return genericReturnType;
-    }
-
-    @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
+                } catch (InterruptedException ex) {
+                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
+                }
+                ctx.resume(NOTIFICATION_RESPONSE);
             }
-        }
-        return false;
-    }
-
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceMethod(this);
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractResourceMethod("
-                + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + ")";
+        });
     }
 }

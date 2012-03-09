@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.model;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.ws.rs.Suspend;
 
 /**
  * Abstraction for a resource method defined by a HTTP method and consumed/produced media type list.
@@ -50,7 +52,7 @@ import java.util.List;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public abstract class AbstractResourceMethod implements ResourceModelComponent, ConsumesProducesEnabledComponent {
+public abstract class AbstractResourceMethod implements ResourceModelComponent, ConsumesProducesEnabledComponent, SuspendableComponent {
 
     private ResourceClass resource;
     private String httpMethod;
@@ -58,6 +60,10 @@ public abstract class AbstractResourceMethod implements ResourceModelComponent, 
     private List<MediaType> produceMimeList;
     private boolean isConsumesDeclared;
     private boolean isProducesDeclared;
+    // SuspendableComponent
+    private boolean suspended = false;
+    private long suspendTimeout = Suspend.NEVER;
+    private TimeUnit suspendTimeoutUnit = TimeUnit.MILLISECONDS;
 
     /**
      * Constructs a new resource method associated with given resource.
@@ -124,6 +130,28 @@ public abstract class AbstractResourceMethod implements ResourceModelComponent, 
     @Override
     public boolean areOutputTypesDeclared() {
         return isProducesDeclared;
+    }
+
+    @Override
+    public long getSuspendTimeout() {
+        return suspendTimeout;
+    }
+
+    @Override
+    public TimeUnit getSuspendTimeoutUnit() {
+        return suspendTimeoutUnit;
+    }
+
+    @Override
+    public boolean isSuspendDeclared() {
+        return suspended;
+    }
+
+    @Override
+    public void declareSuspend(long timeout, TimeUnit unit) {
+        suspended = true;
+        suspendTimeout = timeout;
+        suspendTimeoutUnit = unit;
     }
 
     public String getHttpMethod() {

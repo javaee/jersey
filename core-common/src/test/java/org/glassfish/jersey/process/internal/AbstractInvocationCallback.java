@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,77 +37,38 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+package org.glassfish.jersey.process.internal;
+
+import java.util.concurrent.TimeUnit;
+import javax.ws.rs.core.Response;
 
 /**
- * Abstraction for a resource method
+ * Helper abstract invocation callback class that provides empty implementations
+ * for all invocation callback methods.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod extends AbstractResourceMethod implements Parameterized, InvocableResourceMethod {
+abstract class AbstractInvocationCallback implements InvocationCallback {
 
-    private Method method;
-    private List<Parameter> parameters;
-    private Class<?> returnType;
-    private Type genericReturnType;
-
-    public ResourceMethod(
-            ResourceClass resource,
-            Method method,
-            Class returnType,
-            Type genericReturnType,
-            String httpMethod,
-            Annotation[] markers) {
-
-        super(resource, httpMethod);
-        this.method = method;
-        this.returnType = returnType;
-        this.genericReturnType = genericReturnType;
-        this.parameters = new ArrayList<Parameter>();
+    @Override
+    public void cancelled() {
     }
 
     @Override
-    public Method getMethod() {
-        return method;
+    public void failure(Throwable exception) {
     }
 
     @Override
-    public Class<?> getReturnType() {
-        return returnType;
+    public void result(Response response) {
     }
 
     @Override
-    public Type getGenericReturnType() {
-        return genericReturnType;
+    public void resumed() {
     }
 
     @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
-            }
-        }
-        return false;
+    public void suspended(long time, TimeUnit unit, InvocationContext context) {
     }
 
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceMethod(this);
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractResourceMethod("
-                + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + ")";
-    }
 }

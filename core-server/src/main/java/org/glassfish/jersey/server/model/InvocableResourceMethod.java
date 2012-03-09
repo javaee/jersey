@@ -56,7 +56,7 @@ import java.lang.reflect.Type;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface InvocableResourceMethod extends Parameterized, ConsumesProducesEnabledComponent {
+public interface InvocableResourceMethod extends Parameterized, ConsumesProducesEnabledComponent, SuspendableComponent {
 
     /**
      * Getter for the enclosing resource class instance.
@@ -77,7 +77,7 @@ public interface InvocableResourceMethod extends Parameterized, ConsumesProduces
      *
      * @return corresponding Java method return type
      */
-    public Class getReturnType();
+    public Class<?> getReturnType();
 
     /**
      * Getter for the method generic return type

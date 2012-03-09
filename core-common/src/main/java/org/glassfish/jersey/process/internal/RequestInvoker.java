@@ -68,8 +68,8 @@ import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
 
 /**
  * Request invoker is the main request to response processing entry point. It invokes
@@ -169,10 +169,30 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
      * @return future response.
      */
     public ListenableFuture<Response> apply(final Request request, final InvocationCallback callback) {
+        // FIXME: Executing request-scoped code.
+        //        We should enter and exit request scope here, in the invoker.
+        //        All code that needs to run in the scope should be converted
+        //        into stages that are executed by the invoker
+        //        (e.g. RequestExecutionInitStage).
+        final Snapshot scopeSnapshot = requestScope.takeSnapshot();
         final Callable<ListenableFuture<Response>> requester = new Callable<ListenableFuture<Response>>() {
 
             @Override
             public ListenableFuture<Response> call() {
+                if (requestScope.isActive()) {
+                    // running inside a scope already (same-thread execution)
+                    return _call();
+                } else {
+                    try {
+                        requestScope.enter(scopeSnapshot);
+                        return _call();
+                    } finally {
+                        requestScope.exit();
+                    }
+                }
+            }
+
+            public ListenableFuture<Response> _call() {
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
@@ -224,6 +244,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     }
 
     private class AcceptingInvoker implements Inflector<Request, Response> {
+
         private final MessageBodyWorkers workers;
 
         public AcceptingInvoker(MessageBodyWorkers workers) {

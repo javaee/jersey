@@ -46,6 +46,8 @@ import javax.ws.rs.core.MediaType;
 import javax.naming.OperationNotSupportedException;
 
 /**
+ * Jersey model component that may contain {@link javax.ws.rs.Consumes consumes}
+ * and {@link javax.ws.rs.Produces produces} information.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */

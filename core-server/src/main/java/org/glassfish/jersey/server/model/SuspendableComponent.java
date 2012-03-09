@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,77 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Abstraction for a resource method
+ * Jersey model component that is suspendable and may hold suspend-related
+ * information.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod extends AbstractResourceMethod implements Parameterized, InvocableResourceMethod {
+public interface SuspendableComponent {
 
-    private Method method;
-    private List<Parameter> parameters;
-    private Class<?> returnType;
-    private Type genericReturnType;
+    /**
+     * Check if the component is marked for suspending.
+     *
+     * @return {@code true} if the component is marked for suspending,
+     *     {@code false} otherwise.
+     */
+    public boolean isSuspendDeclared();
 
-    public ResourceMethod(
-            ResourceClass resource,
-            Method method,
-            Class returnType,
-            Type genericReturnType,
-            String httpMethod,
-            Annotation[] markers) {
+    /**
+     * Get the suspend timeout value in the given {@link #getSuspendTimeoutUnit()
+     * time unit}.
+     *
+     * @return suspend timeout value.
+     *
+     * @see javax.ws.rs.Suspend#timeOut() &#64;Suspend.timeOut()
+     */
+    public long getSuspendTimeout();
 
-        super(resource, httpMethod);
-        this.method = method;
-        this.returnType = returnType;
-        this.genericReturnType = genericReturnType;
-        this.parameters = new ArrayList<Parameter>();
-    }
+    /**
+     * Get the suspend {@link #getSuspendTimeout() timeout value} time unit.
+     *
+     * @return time unit of the suspend timeout value.
+     *
+     * @see javax.ws.rs.Suspend#timeUnit() &#64;Suspend.timeUnit()
+     */
+    public TimeUnit getSuspendTimeoutUnit();
 
-    @Override
-    public Method getMethod() {
-        return method;
-    }
-
-    @Override
-    public Class<?> getReturnType() {
-        return returnType;
-    }
-
-    @Override
-    public Type getGenericReturnType() {
-        return genericReturnType;
-    }
-
-    @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceMethod(this);
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractResourceMethod("
-                + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + ")";
-    }
+    /**
+     * Mark the component for suspending.
+     *
+     * An invocation of a component (resource or sub-resource method) marked
+     * for suspending will be automatically suspended.
+     *
+     * @param timeout suspend timeout value.
+     * @param unit suspend timeout time unit.
+     */
+    public void declareSuspend(long timeout, TimeUnit unit);
 }

@@ -41,6 +41,7 @@
 package org.glassfish.jersey.spi;
 
 import java.util.concurrent.ExecutorService;
+import org.glassfish.jersey.process.ProcessingExecutorsModule;
 
 /**
  * Pluggable provider of {@link ExecutorService executor services} used to run
@@ -54,6 +55,8 @@ import java.util.concurrent.ExecutorService;
  * is returned to the application layer.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @see ProcessingExecutorsModule
  */
 public interface ProcessingExecutorsProvider {
     /**
@@ -62,7 +65,8 @@ public interface ProcessingExecutorsProvider {
      * This method is called only once at Jersey initialization, before the
      * first request is processed.
      *
-     * @return request processing executor.
+     * @return request processing executor, or {@code null} if the default
+     *     executor should be used.
      */
     public ExecutorService getRequestingExecutor();
 
@@ -72,7 +76,8 @@ public interface ProcessingExecutorsProvider {
      * This method is called only once at Jersey initialization, before the
      * first request is processed.
      *
-     * @return response processing executor.
+     * @return response processing executor, or {@code null} if the default
+     *     executor should be used.
      */
     public ExecutorService getRespondingExecutor();
 }

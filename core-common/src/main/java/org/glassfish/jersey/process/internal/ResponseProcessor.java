@@ -255,7 +255,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
 
     private void runInScope(Runnable task) {
         if (requestScope.isActive()) {
-            // running inside a scope already (same-thread execution
+            // running inside a scope already (same-thread execution)
             task.run();
         } else {
             try {

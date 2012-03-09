@@ -180,4 +180,73 @@ public class AsyncResourceTest extends JerseyTest {
             assertTrue("Detected a message loss: " + i, getResponseValues.contains("" + i));
         }
     }
+
+    @Test
+    public void testLongRunningResource() throws InterruptedException {
+        final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_OP_PATH);
+        final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
+
+        final int MAX_MESSAGES = 50;
+        final int LATCH_WAIT_TIMEOUT = 10;
+        final boolean debugMode = false;
+        final boolean sequentialGet = false;
+        final boolean sequentialPost = false;
+        final Object sequentialGetLock = new Object();
+        final Object sequentialPostLock = new Object();
+
+        final ExecutorService executor = Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+
+        final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
+
+        final CountDownLatch getRequestLatch = new CountDownLatch(MAX_MESSAGES);
+
+        try {
+            for (int i = 0; i < MAX_MESSAGES; i++) {
+                final int requestId = i;
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (debugMode || sequentialGet) {
+                            synchronized (sequentialGetLock) {
+                                get();
+                            }
+                        } else {
+                            get();
+                        }
+                    }
+
+                    private void get() throws InvocationException {
+                        try {
+                            final String response = resourceTarget.request().get(String.class);
+                            getResponses.put(requestId, response);
+                        } finally {
+                            getRequestLatch.countDown();
+                        }
+                    }
+                });
+            }
+
+            if (debugMode) {
+                getRequestLatch.await();
+            } else {
+                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
+            System.out.println("GET response for message " + getResponseEntry.getKey() + ": " + getResponseEntry.getValue());
+        }
+
+        assertEquals(MAX_MESSAGES, getResponses.size());
+        for (Map.Entry<Integer, String> entry : getResponses.entrySet()) {
+            assertEquals(
+                    "Unexpected GET notification response for message " + entry.getKey(),
+                    expectedResponse, entry.getValue());
+        }
+    }
+
 }

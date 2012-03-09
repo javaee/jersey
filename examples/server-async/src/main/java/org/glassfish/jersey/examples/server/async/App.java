@@ -44,12 +44,12 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.filter.LoggingFilter;
 
 /**
  * Hello world!
@@ -60,7 +60,7 @@ public class App {
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
     public static final String ASYNC_MESSAGING_FIRE_N_FORGET_PATH = "async/messaging/fireAndForget";
     public static final String ASYNC_MESSAGING_BLOCKING_PATH = "async/messaging/blocking";
-    public static final String LONG_RUNNING_ASYNC_OP_PATH = "async/longrunning";
+    public static final String ASYNC_LONG_RUNNING_OP_PATH = "async/longrunning";
 
     public static void main(String[] args) {
         try {
@@ -76,7 +76,7 @@ public class App {
                     + "Hit enter to stop it...",
                     BASE_URI, ASYNC_MESSAGING_FIRE_N_FORGET_PATH,
                     BASE_URI, ASYNC_MESSAGING_BLOCKING_PATH,
-                    BASE_URI, LONG_RUNNING_ASYNC_OP_PATH));
+                    BASE_URI, ASYNC_LONG_RUNNING_OP_PATH));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -87,7 +87,7 @@ public class App {
 
     public static Application create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(BlockingPostChatResource.class, LongRunningAsyncOperationResource.class, FireAndForgetChatResource.class)
+                .addClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
                 .build();
 

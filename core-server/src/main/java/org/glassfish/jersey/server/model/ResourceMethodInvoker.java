@@ -41,14 +41,15 @@ package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import org.glassfish.hk2.Factory;
 
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.server.internal.routing.RouterModule;
+import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
+import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -69,32 +70,31 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
     public static class Builder {
 
         @Inject
-        private Injector injector;
-        @Inject
         private Factory<RouterModule.RoutingContext> routingContextFactory;
+        @Inject
+        private Factory<InvocationContext> invocationContextFactory;
         @Inject
         private ResourceMethodDispatcherFactory dispatcherProviderFactory;
         @Inject
         private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
 
         public ResourceMethodInvoker build(InvocableResourceMethod method) {
-            return new ResourceMethodInvoker(injector, routingContextFactory, dispatcherProviderFactory, invocationHandlerProviderFactory, method);
+            return new ResourceMethodInvoker(routingContextFactory, invocationContextFactory, dispatcherProviderFactory, invocationHandlerProviderFactory, method);
         }
     }
-
-    private final Injector injector;
     private Factory<RouterModule.RoutingContext> routingContextFactory;
+    private Factory<InvocationContext> invocationContextFactory;
     private final InvocableResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
 
     private ResourceMethodInvoker(
-            Injector injector,
             Factory<RouterModule.RoutingContext> routingContextFactory,
+            Factory<InvocationContext> invocationContextFactory,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             InvocableResourceMethod method) {
-        this.injector = injector;
         this.routingContextFactory = routingContextFactory;
+        this.invocationContextFactory = invocationContextFactory;
 
         this.method = method;
         this.dispatcher = dispatcherProvider.create(method, invocationHandlerProvider.create(method));
@@ -103,10 +103,22 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
     @Override
     public Response apply(final Request request) {
         final Object resource = routingContextFactory.get().peekMatchedResource();
+
+        final InvocationContext invocationCtx = invocationContextFactory.get();
+        if (method.isSuspendDeclared()) {
+            invocationCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
+        }
+
         final Response response = dispatcher.dispatch(resource, request);
 
-        routingContextFactory.get().setResponseMethodType(method.getGenericReturnType());
-        routingContextFactory.get().setResponseMethodAnnotations(method.getMethod().getDeclaredAnnotations());
+        final RoutingContext routingCtx = routingContextFactory.get();
+        routingCtx.setResponseMethodType(method.getGenericReturnType());
+        routingCtx.setResponseMethodAnnotations(method.getMethod().getDeclaredAnnotations());
+
+        if (method.isSuspendDeclared()) {
+            invocationCtx.setResponse(resource);
+            invocationCtx.trySuspend();
+        }
 
         return response;
     }

@@ -51,6 +51,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.MediaType;
@@ -80,7 +81,7 @@ public class BlockingPostChatResource {
     ExecutionContext ctx;
 
     @GET
-//    @Suspend
+    @Suspend
     public void pickUpMessage() {
         System.out.println(String.format("Received GET with context %s on thread %s. Suspending the context.",
                 ctx.toString(), Thread.currentThread().getName()));
@@ -100,11 +101,9 @@ public class BlockingPostChatResource {
                 }
             }
         });
-        ctx.suspend();
     }
 
     @POST
-//    @Suspend
     public void postMessage(final String message) {
         System.out.println(String.format("Received POST '%s' with context %s on thread %s. Suspending the context.",
                 message, ctx.toString(), Thread.currentThread().getName()));

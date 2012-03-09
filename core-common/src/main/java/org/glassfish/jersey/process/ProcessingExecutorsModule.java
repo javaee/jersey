@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,77 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+package org.glassfish.jersey.process;
+
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
 /**
- * Abstraction for a resource method
+ * Module container for a custom {@link ProcessingExecutorsProvider processing
+ * executors provider}.
+ *
+ * The instance of this module can be registered with Jersey runtime
+ * (client or server) to set the custom processing executor services.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod extends AbstractResourceMethod implements Parameterized, InvocableResourceMethod {
+public final class ProcessingExecutorsModule extends AbstractModule {
 
-    private Method method;
-    private List<Parameter> parameters;
-    private Class<?> returnType;
-    private Type genericReturnType;
+    private final ProcessingExecutorsProvider provider;
 
-    public ResourceMethod(
-            ResourceClass resource,
-            Method method,
-            Class returnType,
-            Type genericReturnType,
-            String httpMethod,
-            Annotation[] markers) {
-
-        super(resource, httpMethod);
-        this.method = method;
-        this.returnType = returnType;
-        this.genericReturnType = genericReturnType;
-        this.parameters = new ArrayList<Parameter>();
+    public ProcessingExecutorsModule(ProcessingExecutorsProvider provider) {
+        this.provider = provider;
     }
 
     @Override
-    public Method getMethod() {
-        return method;
+    protected void configure() {
+        bind(ProcessingExecutorsProvider.class).toInstance(provider);
     }
 
-    @Override
-    public Class<?> getReturnType() {
-        return returnType;
-    }
-
-    @Override
-    public Type getGenericReturnType() {
-        return genericReturnType;
-    }
-
-    @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceMethod(this);
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractResourceMethod("
-                + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + ")";
-    }
 }

@@ -62,11 +62,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path(App.LONG_RUNNING_ASYNC_OP_PATH)
+//TODO move the test to integration tests.
+//@Path(App.LONG_RUNNING_ASYNC_OP_PATH)
 @Produces("text/plain")
 public class LongRunningAsyncOperationResource {
 
-    public static final String POST_NOTIFICATION_RESPONSE = "Hello async world!";
+    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
     //
     private static final Logger LOGGER = Logger.getLogger(LongRunningAsyncOperationResource.class.getName());
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
@@ -83,7 +84,7 @@ public class LongRunningAsyncOperationResource {
         } catch (InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
         }
-        return POST_NOTIFICATION_RESPONSE;
+        return NOTIFICATION_RESPONSE;
     }
 
     @GET
@@ -99,7 +100,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(POST_NOTIFICATION_RESPONSE);
+                ctx.resume(NOTIFICATION_RESPONSE);
             }
         });
 
@@ -119,7 +120,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx2.resume(POST_NOTIFICATION_RESPONSE);
+                ctx2.resume(NOTIFICATION_RESPONSE);
             }
         });
 
@@ -167,7 +168,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(POST_NOTIFICATION_RESPONSE);
+                ctx.resume(NOTIFICATION_RESPONSE);
             }
         });
         ctx.suspend(); // time-out values propagated from the @Suspend annotation; the call is redundant
@@ -187,7 +188,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(POST_NOTIFICATION_RESPONSE);
+                ctx.resume(NOTIFICATION_RESPONSE);
             }
         });
         if (timeOut != null && timeUnit != null) {
@@ -209,7 +210,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(POST_NOTIFICATION_RESPONSE);
+                ctx.resume(NOTIFICATION_RESPONSE);
             }
         });
 
