@@ -39,14 +39,18 @@
  */
 package org.glassfish.jersey.client;
 
-import org.glassfish.jersey.FeaturesAndProperties;
-
-import javax.ws.rs.client.Feature;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.client.Feature;
+
+import org.glassfish.jersey.FeaturesAndProperties;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Configuration JAX-RS client
@@ -74,7 +78,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
              * @return state instance that will be mutated and returned from the
              *     invoked configuration state mutator method.
              */
-            public State onChange(State state);
+            public State onChange(final State state);
         }
         /**
          * Strategy that returns the same state instance.
@@ -82,7 +86,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         private static final StateChangeStrategy IDENTITY = new StateChangeStrategy() {
 
             @Override
-            public State onChange(State state) {
+            public State onChange(final State state) {
                 return state;
             }
         };
@@ -92,7 +96,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         private static final StateChangeStrategy COPY_ON_CHANGE = new StateChangeStrategy() {
 
             @Override
-            public State onChange(State state) {
+            public State onChange(final State state) {
                 return state.copy();
             }
         };
@@ -101,6 +105,8 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         private final Map<String, Object> immutablePropertiesView;
         private final Set<Class<?>> providerClasses;
         private final Set<Object> providerInstances;
+        private final BiMap<Class<? extends Feature>, Feature> features;
+        private final Set<Feature> featuresSetView;
 
         /**
          * Default configuration state constructor with {@link StateChangeStrategy "identity"}
@@ -111,8 +117,12 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
 
             this.properties = new HashMap<String, Object>();
             this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+
             this.providerClasses = new LinkedHashSet<Class<?>>();
             this.providerInstances = new LinkedHashSet<Object>();
+
+            this.features = HashBiMap.create();
+            this.featuresSetView = Collections.unmodifiableSet(features.values());
         }
 
         /**
@@ -126,15 +136,19 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
 
             this.properties = new HashMap<String, Object>(original.properties);
             this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+
             this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
             this.providerInstances = new LinkedHashSet<Object>(original.providerInstances);
+
+            this.features = HashBiMap.create(original.features);
+            this.featuresSetView = Collections.unmodifiableSet(this.features.values());
         }
 
         private State copy() {
             return new State(this);
         }
 
-        public void enableCopyOnChange() {
+        public void markAsShared() {
             strategy = COPY_ON_CHANGE;
         }
 
@@ -144,11 +158,11 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         }
 
         @Override
-        public Object getProperty(String name) {
+        public Object getProperty(final String name) {
             return properties.get(name);
         }
 
-        public boolean isProperty(String name) {
+        public boolean isProperty(final String name) {
             if (properties.containsKey(name)) {
                 Object value = properties.get(name);
                 if (value instanceof Boolean) {
@@ -163,12 +177,12 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
 
         @Override
         public Set<Feature> getFeatures() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return featuresSetView;
         }
 
         @Override
-        public boolean isEnabled(Class<? extends Feature> feature) {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public boolean isEnabled(final Class<? extends Feature> featureClass) {
+            return features.containsKey(featureClass);
         }
 
         @Override
@@ -182,40 +196,53 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         }
 
         @Override
-        public State update(javax.ws.rs.client.Configuration configuration) {
+        public State update(final javax.ws.rs.client.Configuration configuration) {
             return new State(((Configuration) configuration).state);
         }
 
         @Override
-        public State register(Class<?> providerClass) {
+        public State register(final Class<?> providerClass) {
             final State state = strategy.onChange(this);
             state.providerClasses.add(providerClass);
             return state;
         }
 
         @Override
-        public State register(Object provider) {
+        public State register(final Object provider) {
             final State state = strategy.onChange(this);
             state.providerInstances.add(provider);
             return state;
         }
 
         @Override
-        public State enable(Feature feature) {
+        public State enable(final Feature feature) {
+            final Class<? extends Feature> featureClass = feature.getClass();
+            if (features.containsKey(featureClass)) {
+                throw new IllegalStateException(String.format("Feature [%s] has already been enabled.", featureClass));
+            }
+
             final State state = strategy.onChange(this);
-            throw new UnsupportedOperationException("Not supported yet.");
-            // return state;
+            state.features.put(featureClass, feature);
+            feature.onEnable(state);
+
+            return state;
         }
 
         @Override
-        public State disable(Class<? extends Feature> feature) {
+        public State disable(final Class<? extends Feature> featureClass) {
+            if (!features.containsKey(featureClass)) {
+                throw new IllegalStateException(String.format("Feature [%s] not enabled.", featureClass));
+            }
+
             final State state = strategy.onChange(this);
-            throw new UnsupportedOperationException("Not supported yet.");
-            // return state;
+            final Feature feature = state.features.remove(featureClass);
+            feature.onDisable(state);
+
+            return state;
         }
 
         @Override
-        public State setProperties(Map<String, ? extends Object> properties) {
+        public State setProperties(final Map<String, ? extends Object> properties) {
             final State state = strategy.onChange(this);
             state.properties.clear();
             state.properties.putAll(properties);
@@ -223,14 +250,14 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         }
 
         @Override
-        public State setProperty(String name, Object value) {
+        public State setProperty(final String name, final Object value) {
             final State state = strategy.onChange(this);
             state.properties.put(name, value);
             return state;
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final Object obj) {
             if (!(obj instanceof State)) {
                 return false;
             }
@@ -273,7 +300,21 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      *
      */
     Configuration(javax.ws.rs.client.Configuration that) {
-        this();
+        this.state = new State();
+
+        state = state.setProperties(that.getProperties());
+
+        for (Object provider : that.getProviderInstances()) {
+            state = state.register(provider);
+        }
+        for (Class<?> providerClass : that.getProviderClasses()) {
+            state = state.register(providerClass);
+        }
+
+
+        for (Feature feature : that.getFeatures()) {
+            state = state.enable(feature);
+        }
     }
 
     /**
@@ -281,7 +322,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      *
      * @param state to be referenced from the new configuration instance.
      */
-    private Configuration(State state) {
+    private Configuration(final State state) {
         this.state = state;
     }
 
@@ -296,7 +337,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      * @return snapshot of the current configuration.
      */
     Configuration snapshot() {
-        state.enableCopyOnChange();
+        state.markAsShared();
         return new Configuration(state);
     }
 
@@ -306,12 +347,12 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
     }
 
     @Override
-    public Object getProperty(String name) {
+    public Object getProperty(final String name) {
         return state.getProperty(name);
     }
 
     @Override
-    public boolean isProperty(String name) {
+    public boolean isProperty(final String name) {
         return state.isProperty(name);
     }
 
@@ -321,7 +362,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
     }
 
     @Override
-    public boolean isEnabled(Class<? extends Feature> feature) {
+    public boolean isEnabled(final Class<? extends Feature> feature) {
         return state.isEnabled(feature);
     }
 
@@ -336,49 +377,49 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
     }
 
     @Override
-    public Configuration update(javax.ws.rs.client.Configuration configuration) {
+    public Configuration update(final javax.ws.rs.client.Configuration configuration) {
         state = state.update(configuration);
         return this;
     }
 
     @Override
-    public Configuration register(Class<?> providerClass) {
+    public Configuration register(final Class<?> providerClass) {
         state = state.register(providerClass);
         return this;
     }
 
     @Override
-    public Configuration register(Object provider) {
+    public Configuration register(final Object provider) {
         state = state.register(provider);
         return this;
     }
 
     @Override
-    public Configuration enable(Feature feature) {
+    public Configuration enable(final Feature feature) {
         state = state.enable(feature);
         return this;
     }
 
     @Override
-    public Configuration disable(Class<? extends Feature> feature) {
+    public Configuration disable(final Class<? extends Feature> feature) {
         state = state.disable(feature);
         return this;
     }
 
     @Override
-    public Configuration setProperties(Map<String, ? extends Object> properties) {
+    public Configuration setProperties(final Map<String, ? extends Object> properties) {
         state = state.setProperties(properties);
         return this;
     }
 
     @Override
-    public Configuration setProperty(String name, Object value) {
+    public Configuration setProperty(final String name, final Object value) {
         state = state.setProperty(name, value);
         return this;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }

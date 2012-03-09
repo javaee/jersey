@@ -61,7 +61,6 @@ import org.jvnet.hk2.annotations.Inject;
  */
 public class ServiceProvidersModule extends AbstractModule {
 
-    private final Class<? extends Scope> providersBuilderScope;
     private final Class<? extends Scope> providersRefScope;
 
     /**
@@ -69,19 +68,16 @@ public class ServiceProvidersModule extends AbstractModule {
      * {@link Singleton} scope.
      */
     public ServiceProvidersModule() {
-        this(Singleton.class, Singleton.class);
+        this(Singleton.class);
     }
 
     /**
      * Construct service providers module.
      *
-     * @param providersBuilderScope binding scope of the {@link ServiceProviders.Builder
-     *     service providers builder}.
      * @param providersRefScope binding scope of the {@link ServiceProviders service
      *     providers} {@link Ref reference}.
      */
-    public ServiceProvidersModule(Class<? extends Scope> providersBuilderScope, Class<? extends Scope> providersRefScope) {
-        this.providersBuilderScope = providersBuilderScope;
+    public ServiceProvidersModule(Class<? extends Scope> providersRefScope) {
         this.providersRefScope = providersRefScope;
     }
 
@@ -94,7 +90,7 @@ public class ServiceProvidersModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind().to(ServiceProviders.Builder.class).in(providersBuilderScope);
+        bind().to(ServiceProviders.Builder.class).in(Singleton.class);
 
         bind(ServiceProviders.class)
                 .toFactory(ServiceProvidersReferencingFactory.class)

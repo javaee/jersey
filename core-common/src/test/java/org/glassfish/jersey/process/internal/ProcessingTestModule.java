@@ -114,7 +114,7 @@ public class ProcessingTestModule extends AbstractModule {
         install(
                 new RequestScope.Module(),
                 new ProcessingModule(),
-                new ServiceProvidersModule(Singleton.class, Singleton.class),
+                new ServiceProvidersModule(Singleton.class),
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),

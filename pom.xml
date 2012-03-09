@@ -683,7 +683,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <jaxrs.api.version>2.0-SNAPSHOT</jaxrs.api.version>
+        <jaxrs.api.version>2.0-m02</jaxrs.api.version>
         <hk2.version>1.6.32</hk2.version>
         <grizzly2.version>2.2.1</grizzly2.version>
         <jackson.version>1.9.2</jackson.version>

@@ -71,7 +71,6 @@ import org.glassfish.jersey.process.internal.StagingContext;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -108,10 +107,10 @@ public class ClientModule extends AbstractModule {
                 new ProcessingModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
-                new ServiceProvidersModule(),
-                new MessageBodyFactory.Module(Singleton.class),
-                new ExceptionMapperFactory.Module(Singleton.class),
-                new ContextResolverFactory.Module(Singleton.class),
+                new ServiceProvidersModule(RequestScope.class),
+                new MessageBodyFactory.Module(RequestScope.class),
+                new ExceptionMapperFactory.Module(RequestScope.class),
+                new ContextResolverFactory.Module(RequestScope.class),
                 new JaxrsProviders.Module(),
                 new FilterModule());
 
