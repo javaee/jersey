@@ -201,13 +201,6 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         }
 
         @Override
-        public State enable(Class<? extends Feature> feature) {
-            final State state = strategy.onChange(this);
-            throw new UnsupportedOperationException("Not supported yet.");
-            // return state;
-        }
-
-        @Override
         public State enable(Feature feature) {
             final State state = strategy.onChange(this);
             throw new UnsupportedOperationException("Not supported yet.");
@@ -357,12 +350,6 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
     @Override
     public Configuration register(Object provider) {
         state = state.register(provider);
-        return this;
-    }
-
-    @Override
-    public Configuration enable(Class<? extends Feature> feature) {
-        state = state.enable(feature);
         return this;
     }
 

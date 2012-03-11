@@ -202,18 +202,6 @@ public class ConfigurationTest {
     @Test
     @Ignore("not ready yet")
     // TODO implement test
-    public void testEnable_Class() {
-        Class<? extends Feature> feature = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.enable(feature);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
     public void testEnable_Feature() {
         Feature feature = null;
         org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
