@@ -114,11 +114,11 @@ import javax.xml.stream.XMLStreamReader;
 public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvider<Object> {
 
     private static final Class<?>[] DEFAULT_IMPLS = new Class[]{
-        ArrayList.class,
-        LinkedList.class,
-        HashSet.class,
-        TreeSet.class,
-        Stack.class
+            ArrayList.class,
+            LinkedList.class,
+            HashSet.class,
+            TreeSet.class,
+            Stack.class
     };
 
     /**
@@ -288,8 +288,8 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
      * @throws IOException
      */
     public abstract void writeList(Class<?> elementType, Collection<?> t,
-            MediaType mediaType, Charset c,
-            Marshaller m, OutputStream entityStream)
+                                   MediaType mediaType, Charset c,
+                                   Marshaller m, OutputStream entityStream)
             throws JAXBException, IOException;
 
     @Override
@@ -372,7 +372,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
     }
 
-    private Object createArray(Collection<?> collection, Class componentType) {
+    private static Object createArray(Collection<?> collection, Class componentType) {
         Object array = Array.newInstance(componentType, collection.size());
         int i = 0;
         for (Object value : collection) {
@@ -392,10 +392,10 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
      * @throws javax.xml.stream.XMLStreamException
      */
     protected abstract XMLStreamReader getXMLStreamReader(Class<?> elementType, MediaType mediaType, Unmarshaller unmarshaller,
-            InputStream entityStream)
+                                                          InputStream entityStream)
             throws XMLStreamException;
 
-    protected Class getElementClass(Class<?> type, Type genericType) {
+    protected static Class getElementClass(Class<?> type, Type genericType) {
         Type ta;
         if (genericType instanceof ParameterizedType) {
             // List case
@@ -415,7 +415,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     }
     private final NounInflector inflector = NounInflector.getInstance();
 
-    private String convertToXmlName(final String name) {
+    private static String convertToXmlName(final String name) {
         return name.replace("$", "_");
     }
 
@@ -427,7 +427,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
     }
 
-    protected final String getElementName(Class<?> elementType) {
+    protected final static String getElementName(Class<?> elementType) {
         String name = elementType.getName();
         XmlRootElement xre = elementType.getAnnotation(XmlRootElement.class);
         if (xre != null && !xre.name().equals("##default")) {

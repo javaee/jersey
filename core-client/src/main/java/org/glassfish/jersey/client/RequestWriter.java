@@ -74,9 +74,9 @@ public class RequestWriter {
     }
 
     /**
-     * A lister for listening to events when writing a request entity.
+     * A listener for listening to events when writing a request entity.
      */
-    // TODO how to register/obtain the listenerin a generic way?
+    // TODO how to register/obtain the listener in a generic way?
     protected interface RequestEntityWriterListener {
 
         /**

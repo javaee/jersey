@@ -74,6 +74,7 @@
         <module>osgi-http-service</module>
         <module>server-async</module>
         <module>server-async-managed</module>
+        <module>server-sent-events</module>
     </modules>
 
     <dependencies>

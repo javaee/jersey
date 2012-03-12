@@ -595,6 +595,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
                 final MessageBodyWriter bWriter = workers.getMessageBodyWriter(
                         entity.getClass(), entityType, outputAnnotations, outputType);
+                // TODO: add check bWriter != null
                 bWriter.writeTo(
                         entity,
                         entity.getClass(),
