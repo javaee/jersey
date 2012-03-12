@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+package org.glassfish.jersey.client;
 
-import javax.ws.rs.core.GenericType;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.ext.ClientFactory;
 
 /**
- * Jersey message entity internal contract.
+ * Jersey provider of {@link ClientFactory JAX-RS client factory}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface Entity {
+public class JerseyClientFactory extends ClientFactory {
 
-    public interface Builder<B extends Builder> {
-
-        public B content(Object content);
-
-        public B content(Object content, Type type);
-
-        public <T> B content(Object content, GenericType<T> type);
-
-        public B writeAnnotations(Annotation[] annotations);
+    @Override
+    protected Client getClient() {
+        return clientBuilder().build();
     }
 
-    public boolean isEmpty();
+    @Override
+    protected Client getClient(Configuration configuration) {
+        return clientBuilder().build(configuration);
+    }
 
-    public Object content();
-
-    public <T> T content(Class<T> type);
-
-    public <T> T content(GenericType<T> type);
-
-    public <T> T content(Class<T> type, Annotation[] annotations);
-
-    public <T> T content(GenericType<T> type, Annotation[] annotations);
-
-    public Type type();
+    /**
+     * Get a new Jersey {@link JerseyClient.Builder client builder}.
+     *
+     * @return Jersey client builder.
+     */
+    public static JerseyClient.Builder clientBuilder() {
+        return new JerseyClient.Builder();
+    }
 }

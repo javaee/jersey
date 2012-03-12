@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
+
+import javax.ws.rs.client.Target;
+import javax.ws.rs.ext.ClientFactory;
+import javax.ws.rs.ext.FilterContext;
+import javax.ws.rs.ext.RequestFilter;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import javax.ws.rs.client.ClientFactory;
-import javax.ws.rs.client.Target;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -60,11 +60,11 @@ import static org.junit.Assert.fail;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientTest {
+public class JerseyClientTest {
 
-    private Client client;
+    private JerseyClient client;
 
-    public ClientTest() {
+    public JerseyClientTest() {
     }
 
     @BeforeClass
@@ -77,7 +77,7 @@ public class ClientTest {
 
     @Before
     public void setUp() {
-        this.client = (Client) ClientFactory.newClient();
+        this.client = (JerseyClient) ClientFactory.newClient();
     }
 
     @After

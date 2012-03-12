@@ -42,10 +42,13 @@ package org.glassfish.jersey.grizzly2;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request.RequestBuilder;
@@ -70,6 +73,24 @@ import org.glassfish.grizzly.utils.Charsets;
  */
 public final class GrizzlyHttpContainer extends HttpHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(GrizzlyHttpContainer.class.getName());
+    private static final Level DEBUG = Level.FINEST;
+
+    private static void debugLog(String messageTemplate, Object... args) {
+        if (LOGGER.isLoggable(DEBUG)) {
+            if (args == null || args.length == 0) {
+                args = new Object[1];
+            } else {
+                args = Arrays.copyOf(args, args.length + 1);
+            }
+            args[args.length - 1] = Thread.currentThread().getName();
+
+            final StringBuilder messageBuilder = new StringBuilder(messageTemplate.length() + 15);
+            messageBuilder.append(messageTemplate).append(" on thread {").append(args.length - 1).append('}');
+
+            LOGGER.log(DEBUG, messageBuilder.toString(), args);
+        }
+    }
     private static final CompletionHandler<Response> EMPTY_COMPLETION_HANDLER = new CompletionHandler<Response>() {
 
         @Override
@@ -95,67 +116,96 @@ public final class GrizzlyHttpContainer extends HttpHandler {
 
     private final static class ResponseWriter implements ContainerResponseWriter {
 
+        private final String name;
         private final Response grizzlyResponse;
-        private final AtomicBoolean suspended;
 
         ResponseWriter(final Response response) {
             this.grizzlyResponse = response;
-            this.suspended = new AtomicBoolean(false);
+
+            if (LOGGER.isLoggable(DEBUG)) {
+                this.name = "ResponseWriter {" + "id=" + UUID.randomUUID().toString() + ", grizzlyResponse=" + grizzlyResponse.hashCode() + '}';
+                debugLog("{0} - init", name);
+            } else {
+                this.name = "ResponseWriter";
+            }
         }
 
         @Override
-        public void close() {
-            if (grizzlyResponse.isSuspended()) {
-                grizzlyResponse.resume();
+        public String toString() {
+            return name;
+        }
+
+        @Override
+        public void commit() {
+            try {
+                if (grizzlyResponse.isSuspended()) {
+                    grizzlyResponse.resume();
+                }
+            } finally {
+                debugLog("{0} - commit() called", name);
             }
         }
 
         @Override
         public void cancel() {
-            grizzlyResponse.cancel();
+            try {
+                grizzlyResponse.cancel();
+            } finally {
+                debugLog("{0} - cancel() called", name);
+            }
         }
 
         @Override
         public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
-            suspended.set(true);
-            grizzlyResponse.suspend(timeOut, timeUnit, EMPTY_COMPLETION_HANDLER,
-                    new org.glassfish.grizzly.http.server.TimeoutHandler() {
+            try {
+                grizzlyResponse.suspend(timeOut, timeUnit, EMPTY_COMPLETION_HANDLER,
+                        new org.glassfish.grizzly.http.server.TimeoutHandler() {
 
-                        @Override
-                        public boolean onTimeout(Response response) {
-                            timeoutHandler.onTimeout(ResponseWriter.this);
+                            @Override
+                            public boolean onTimeout(Response response) {
+                                timeoutHandler.onTimeout(ResponseWriter.this);
 
-                            // TODO should we return true ins some cases instead?
-                            // Returning false relies on the fact that the timeoutHandler
-                            // will resume the response.
-                            return false;
-                        }
-                    });
+                                // TODO should we return true ins some cases instead?
+                                // Returning false relies on the fact that the timeoutHandler
+                                // will resume the response.
+                                return false;
+                            }
+                        });
+            } finally {
+                debugLog("{0} - suspend(...) called", name);
+            }
         }
 
         @Override
-        public boolean resume() {
-            return suspended.compareAndSet(true, false);
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            try {
+                grizzlyResponse.getSuspendContext().setTimeout(timeOut, timeUnit);
+            } finally {
+                debugLog("{0} - setSuspendTimeout(...) called", name);
+            }
         }
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(final long contentLength,
                 final javax.ws.rs.core.Response jaxrsResponse) throws ContainerException {
+            try {
+                grizzlyResponse.setStatus(jaxrsResponse.getStatus());
 
-            grizzlyResponse.setStatus(jaxrsResponse.getStatus());
-
-            for (final Map.Entry<String, List<String>> e : jaxrsResponse.getHeaders().asMap().entrySet()) {
-                for (final String value : e.getValue()) {
-                    grizzlyResponse.addHeader(e.getKey(), value);
+                for (final Map.Entry<String, List<String>> e : jaxrsResponse.getHeaders().asMap().entrySet()) {
+                    for (final String value : e.getValue()) {
+                        grizzlyResponse.addHeader(e.getKey(), value);
+                    }
                 }
-            }
 
-            final String contentType = jaxrsResponse.getHeaders().getHeader(HttpHeaders.CONTENT_TYPE);
-            if (contentLength > 0 && contentType != null) {
-                grizzlyResponse.setContentType(contentType);
-            }
+                final String contentType = jaxrsResponse.getHeaders().getHeader(HttpHeaders.CONTENT_TYPE);
+                if (contentLength > 0 && contentType != null) {
+                    grizzlyResponse.setContentType(contentType);
+                }
 
-            return grizzlyResponse.getOutputStream();
+                return grizzlyResponse.getOutputStream();
+            } finally {
+                debugLog("{0} - writeResponseStatusAndHeaders() called", name);
+            }
         }
     }
     //
@@ -173,7 +223,14 @@ public final class GrizzlyHttpContainer extends HttpHandler {
     // HttpRequestProcessor
     @Override
     public void service(final Request request, final Response response) {
-        application.apply(toJaxrsRequest(request), new ResponseWriter(response));
+        final ResponseWriter responseWriter = new ResponseWriter(response);
+        try {
+            debugLog("GrizzlyHttpContaner.service(...) started");
+            application.apply(toJaxrsRequest(request), responseWriter);
+        } finally {
+            // TODO if writer not closed or suspended yet, suspend.
+            debugLog("GrizzlyHttpContaner.service(...) finished");
+        }
     }
 
     private URI getBaseUri(final Request request) {

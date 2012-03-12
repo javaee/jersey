@@ -41,7 +41,6 @@ package org.glassfish.jersey.examples.server.async;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -214,13 +213,13 @@ public class LongRunningAsyncOperationResource {
             }
         });
 
-        final Future<?> handle = ctx.suspend(); // retrieving a handle to monitor the suspended request state
+        ctx.suspend(); // retrieving a handle to monitor the suspended request state
 
         TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
-                while (!handle.isDone()) {
+                while (!ctx.isDone()) {
                 }
                 LOGGER.log(Level.INFO, "Context resumed with a response!");
             }

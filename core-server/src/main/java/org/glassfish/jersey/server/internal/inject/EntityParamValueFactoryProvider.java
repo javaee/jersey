@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.TypeLiteral;
+import javax.ws.rs.core.GenericType;
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.server.model.Parameter;
@@ -73,7 +73,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
                 final Class<?> parameterClass = parameter.getParameterClass();
                 return (parameterClass.isInstance(request)) ?
                         request :
-                        request.readEntity(TypeLiteral.of(parameter.getParameterClass(), parameter.getParameterType())/*TODO: annotations*/);
+                        request.readEntity(GenericType.of(parameter.getParameterClass(), parameter.getParameterType())/*TODO: annotations*/);
         }
 
     }

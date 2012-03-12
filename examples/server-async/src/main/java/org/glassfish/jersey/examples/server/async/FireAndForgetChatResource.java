@@ -51,12 +51,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import javax.ws.rs.Suspend;
 
 /**
  * Example of a simple fire&forget point-to-point messaging resource.
@@ -69,28 +70,32 @@ import javax.ws.rs.Suspend;
 @Produces(MediaType.TEXT_PLAIN)
 @Consumes(MediaType.TEXT_PLAIN)
 public class FireAndForgetChatResource {
+
     public static final String POST_NOTIFICATION_RESPONSE = "Message sent";
     //
     private static final Logger LOGGER = Logger.getLogger(FireAndForgetChatResource.class.getName());
+    private static final Level DEBUG = Level.INFO;
+    //
     private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("fire&forget-chat-resource-executor-%d").build());
     private static final BlockingQueue<ExecutionContext> suspended = new ArrayBlockingQueue<ExecutionContext>(5);
+    //
     @Context
     ExecutionContext ctx;
 
     @GET
     @Suspend
-    public void pickUpMessage() throws InterruptedException {
-        System.out.println(String.format("Received GET with context %s on thread %s",
-                ctx.toString(), Thread.currentThread().getName()));
+    public void pickUpMessage(@QueryParam("id") final String messageId) throws InterruptedException {
+        LOGGER.log(DEBUG, "Received GET ({0}) with context {1} on thread {2}",
+                new Object[] {messageId, ctx.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
                 try {
                     suspended.put(ctx);
-                    System.out.println(String.format("GET context %s scheduled for resume.",
-                            ctx.toString()));
+                    LOGGER.log(DEBUG, "GET ({0}) context {1} scheduled for resume.",
+                            new Object[] {messageId, ctx.toString()});
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,
                             "Waiting for a message pick-up interrupted. Cancelling context" + ctx.toString(), ex);
@@ -110,8 +115,8 @@ public class FireAndForgetChatResource {
             public void run() {
                 try {
                     final ExecutionContext resumeCtx = suspended.take();
-                    System.out.println(String.format("Resuming GET context '%s' with a message '%s' on thread %s",
-                            resumeCtx.toString(), message, Thread.currentThread().getName()));
+                    LOGGER.log(DEBUG, "Resuming GET context {0}' with a message '{1}' on thread {2}",
+                            new Object[] {resumeCtx.toString(), message, Thread.currentThread().getName()});
                     resumeCtx.resume(message);
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,

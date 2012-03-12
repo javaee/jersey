@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.examples.helloworld;
 
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ClientFactory;
 
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

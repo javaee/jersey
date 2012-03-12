@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jsonjaxb;
 import java.util.List;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.TypeLiteral;
+import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.media.json.JsonJaxbModule;
 import org.glassfish.jersey.server.Application;
@@ -199,7 +199,8 @@ public class JsonJaxbTest extends JerseyTest {
      */
     @Test
     public void testGetOnAircraftsJSONFormat() {
-        TypeLiteral<List<AircraftType>> listOfAircrafts = new TypeLiteral<List<AircraftType>>() {};
+        GenericType<List<AircraftType>> listOfAircrafts = new GenericType<List<AircraftType>>() {
+        };
         // get the initial representation
         List<AircraftType> aircraftTypes = target().path("aircrafts").request("application/json").get(listOfAircrafts);
         // check that there are two aircraft type entries

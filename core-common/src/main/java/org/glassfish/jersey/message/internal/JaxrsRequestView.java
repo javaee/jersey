@@ -48,10 +48,10 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.TypeLiteral;
 import javax.ws.rs.core.Variant;
 
 /**
@@ -105,7 +105,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
     }
 
     @Override
-    public <T> T readEntity(TypeLiteral<T> entityType) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
         return wrapped.content(entityType);
     }
 
@@ -115,7 +115,7 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
     }
 
     @Override
-    public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(entityType, annotations);
     }
 

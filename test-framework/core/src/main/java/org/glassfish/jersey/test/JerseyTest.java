@@ -39,7 +39,18 @@
  */
 package org.glassfish.jersey.test;
 
-import com.google.common.collect.Maps;
+import java.net.URI;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Target;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ClientFactory;
+
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -47,20 +58,11 @@ import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+
 import org.junit.After;
 import org.junit.Before;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
-import javax.ws.rs.client.Target;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ClientBuilderFactory;
-import java.net.URI;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.collect.Maps;
 
 /**
  * Parent class for all tests written using Jersey test framework.
@@ -82,7 +84,6 @@ public abstract class JerseyTest {
      * on which the tests would be run.
      */
     private TestContainerFactory testContainerFactory;
-    private Client.Builder clientBuilder;
     /**
      * The test container on which the tests would be run.
      */
@@ -404,13 +405,7 @@ public abstract class JerseyTest {
         if (c != null) {
             return c;
         } else {
-            // TODO
-            final Client.Builder clientBuilder1 = getClientBuilder();
-            if (clientBuilder1 == null) {
-                c = ClientFactory.newClient(/* application.getClientConfig */);
-            } else {
-                c = clientBuilder1.build(/* application.getClientConfig */);
-            }
+            c = ClientFactory.newClient();
         }
 
         //check if logging is required
@@ -419,38 +414,6 @@ public abstract class JerseyTest {
         }
 
         return c;
-    }
-
-    /**
-     * Get the ClientBuilderFactory.
-     * <p>
-     * If the client factory has not been explicit set with
-     * {@link #setClientBuilder(javax.ws.rs.client.Client.Builder)} then
-     * the default client factory will be obtained.
-     *
-     * @return ClientFactory instance
-     */
-    protected Client.Builder getClientBuilder() {
-        if (clientBuilder == null) {
-            Set<ClientBuilderFactory> clientBuilderFactories =
-                    Providers.getProviders(application.getServices(), ClientBuilderFactory.class);
-
-            if (clientBuilderFactories.size() > 1) {
-                // TODO - log warning
-                clientBuilder = clientBuilderFactories.iterator().next().newBuilder();
-            } else if (clientBuilderFactories.size() == 1) {
-                clientBuilder = clientBuilderFactories.iterator().next().newBuilder();
-            } else {
-                // TODO - log error
-                clientBuilder = null;
-            }
-        }
-
-        return clientBuilder;
-    }
-
-    protected void setClientBuilder(Client.Builder clientBuilder) {
-        this.clientBuilder = clientBuilder;
     }
 
     /**
@@ -478,9 +441,9 @@ public abstract class JerseyTest {
                 return i;
             } catch (NumberFormatException e) {
                 LOGGER.log(Level.CONFIG,
-                        "Value of " + TestProperties.CONTAINER_PORT +
-                        " property is not a valid positive integer [" + value + "]." +
-                        " Reverting to default [" + TestProperties.DEFAULT_CONTAINER_PORT + "].",
+                        "Value of " + TestProperties.CONTAINER_PORT
+                        + " property is not a valid positive integer [" + value + "]."
+                        + " Reverting to default [" + TestProperties.DEFAULT_CONTAINER_PORT + "].",
                         e);
             }
         }

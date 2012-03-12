@@ -39,16 +39,17 @@
  */
 package org.glassfish.jersey.test.inmemory;
 
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+
+import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * In-memory test container factory.
@@ -58,9 +59,9 @@ import java.util.logging.Logger;
 public class InMemoryTestContainerFactory implements TestContainerFactory {
 
     private static class InMemoryContainer implements TestContainer {
+
         private final URI baseUri;
         private final Application application;
-
         private static final Logger LOGGER = Logger.getLogger(InMemoryContainer.class.getName());
 
         private InMemoryContainer(final URI baseUri, final Application application) {
@@ -70,9 +71,7 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
         @Override
         public Client getClient() {
-            return ClientFactory.
-                    newClientBy(org.glassfish.jersey.client.Client.Builder.Factory.class).
-                    transport(new InMemoryTransport(baseUri, application)).build();
+            return JerseyClientFactory.clientBuilder().transport(new InMemoryTransport(baseUri, application)).build();
         }
 
         @Override
@@ -82,14 +81,14 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
         @Override
         public void start() {
-            if(LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.log(Level.INFO, "Starting InMemoryContainer...");
             }
         }
 
         @Override
         public void stop() {
-            if(LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.log(Level.INFO, "Stopping InMemoryContainer...");
             }
         }

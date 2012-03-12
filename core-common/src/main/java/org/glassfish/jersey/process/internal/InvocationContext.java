@@ -113,20 +113,6 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
     public State state();
 
     /**
-     * Set the default time-out values to be used for {@link #suspend() suspending}
-     * the invocation.
-     *
-     * This method can be used to propagate the time-out data from the JAX-RS
-     * {@link javax.ws.rs.Suspend &#64;Suspend} annotation to the invocation context.
-     * <p />
-     * Note that the method is not thread safe.
-     *
-     * @param time suspension timeout value.
-     * @param unit suspension timeout time unit.
-     */
-    public void setSuspendTimeout(long time, TimeUnit unit);
-
-    /**
      * Try to {@link ExecutionContext#suspend() suspend} the request invocation.
      *
      * Unlike the {@code suspend()} method, this method does not throw an exception
@@ -138,22 +124,4 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
      * returns {@code false} otherwise.
      */
     public boolean trySuspend();
-
-    /**
-     * Suspend a request invocation.
-     *
-     * See {@link javax.ws.rs.core.ExecutionContext#suspend()} for more details
-     * on the expected behavior.
-     *
-     * @return {@link Future future} representing a handle of the suspended
-     *    request invocation that can be used for querying its current state
-     *    via one of the {@code Future.isXxx()} methods. The handle can also
-     *    be used to {@link Future#cancel(boolean) cancel} the invocation
-     *    altogether.
-     *
-     * @see javax.ws.rs.core.ExecutionContext#suspend()
-     * @see #setSuspendTimeout(long, java.util.concurrent.TimeUnit)
-     */
-    @Override
-    public Future<?> suspend();
 }

@@ -65,7 +65,7 @@ public class CustomTransportTest {
 
     @Test
     public void testNullTransport() {
-        Client client = new Client.Builder().transport(new NullTransport()).build();
+        JerseyClient client = new JerseyClient.Builder().transport(new NullTransport()).build();
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
         } catch (ClientException ce) {

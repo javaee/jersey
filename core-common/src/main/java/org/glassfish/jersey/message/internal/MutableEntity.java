@@ -54,7 +54,7 @@ import javax.ws.rs.WebApplicationException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.TypeLiteral;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
@@ -155,7 +155,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
-    public <T> T content(TypeLiteral<T> type) {
+    public <T> T content(GenericType<T> type) {
         return content(type.getRawType(), type.getType(), EMPTY_ANNOTATIONS);
     }
 
@@ -166,7 +166,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
-    public <T> T content(TypeLiteral<T> type, Annotation[] annotations) {
+    public <T> T content(GenericType<T> type, Annotation[] annotations) {
         return content(type.getRawType(), type.getType(), annotations);
     }
 
@@ -282,7 +282,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
-    public <T> MutableEntity content(Object content, TypeLiteral<T> type) {
+    public <T> MutableEntity content(Object content, GenericType<T> type) {
         invalidateContentStream();
         if (content != null) {
             this.instanceType = InstanceTypePair.of(content, type.getType());

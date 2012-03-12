@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.test.external;
 
-import org.glassfish.jersey.client.Client;
+import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -88,7 +88,7 @@ public class ExternalTestContainerFactory implements TestContainerFactory {
             this.baseUri = UriBuilder.fromUri(baseUri).build();
         }
 
-        public Client getClient() {
+        public JerseyClient getClient() {
             return null;
         }
 

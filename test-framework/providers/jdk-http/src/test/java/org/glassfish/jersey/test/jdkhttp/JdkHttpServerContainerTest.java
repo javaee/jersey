@@ -37,18 +37,18 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+package org.glassfish.jersey.test.jdkhttp;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
-import org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory;
 
+import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**

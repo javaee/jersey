@@ -39,9 +39,10 @@
  */
 package org.glassfish.jersey.client;
 
-import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.ext.ClientFactory;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -57,7 +58,7 @@ import static org.junit.Assert.*;
  */
 public class LinkTest {
 
-    private Client client;
+    private JerseyClient client;
 
     public LinkTest() {
     }
@@ -72,7 +73,7 @@ public class LinkTest {
 
     @Before
     public void setUp() {
-        this.client = (Client) ClientFactory.newClient();
+        this.client = (JerseyClient) ClientFactory.newClient();
     }
 
     @After

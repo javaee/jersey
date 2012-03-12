@@ -535,19 +535,23 @@ public final class Application implements Inflector<Request, Future<Response>> {
      */
     public void apply(final Request request, final ContainerResponseWriter responseWriter) {
         apply(request, new InvocationCallback() {
+            private final AtomicBoolean suspended = new AtomicBoolean(false);
 
             @Override
             public void result(Response response) {
+                suspended.set(false);
                 writeResponse(responseWriter, request, response);
             }
 
             @Override
             public void failure(Throwable exception) {
+                suspended.set(false);
                 writeResponse(responseWriter, request, handleFailure(exception));
             }
 
             @Override
             public void cancelled() {
+                suspended.set(false);
                 responseWriter.cancel();
             }
 
@@ -557,7 +561,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
                     @Override
                     public void onTimeout(ContainerResponseWriter responseWriter) {
-                        if (responseWriter.resume()) {
+                        if (suspended.getAndSet(false)) {
                             writeResponse(responseWriter, request, prepareTimeoutResponse(context));
                         }
                     }
@@ -566,7 +570,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
             @Override
             public void resumed() {
-                responseWriter.resume();
+                suspended.set(false);
             }
         });
     }
@@ -641,7 +645,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
             Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             throw new MappableException(ex);
         } finally {
-            writer.close();
+            writer.commit();
         }
     }
 

@@ -42,10 +42,10 @@ package org.glassfish.jersey.message.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.ResponseHeaders;
-import javax.ws.rs.core.TypeLiteral;
 
 import org.glassfish.jersey.internal.util.collection.ListMultimapAdapter;
 
@@ -104,7 +104,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public <T> T readEntity(TypeLiteral<T> entityType) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
         return wrapped.content(entityType);
     }
 
@@ -114,7 +114,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public <T> T readEntity(TypeLiteral<T> entityType, Annotation[] annotations) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(entityType, annotations);
     }
 

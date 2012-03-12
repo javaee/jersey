@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.TypeLiteral;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -145,7 +145,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> M content(Object content, TypeLiteral<T> type) {
+    public <T> M content(Object content, GenericType<T> type) {
         entity.content(content, type);
         return (M) this;
     }
@@ -166,7 +166,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return entity.content();
     }
 
-    public <T> T content(TypeLiteral<T> type) {
+    public <T> T content(GenericType<T> type) {
         return entity.content(type);
     }
 
@@ -174,7 +174,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return entity.content(type);
     }
 
-    public <T> T content(TypeLiteral<T> type, Annotation[] annotations) {
+    public <T> T content(GenericType<T> type, Annotation[] annotations) {
         return entity.content(type, annotations);
     }
 

@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -191,7 +192,7 @@ public class WebComponent {
             final ResponseWriter containerContext = new ResponseWriter(false, request, response);
             application.apply(jaxRsRequest, containerContext);
 
-            return containerContext.cResponse.getStatus();
+            return containerContext.jerseyResponse.getStatus();
         } catch (Exception e) {
             // TODO: proper error handling.
             throw new ServletException(e);
@@ -383,11 +384,10 @@ public class WebComponent {
 
         private final HttpServletRequest request;
         private final HttpServletResponse response;
-        private final AtomicBoolean isSuspended;
-        private volatile AsyncContext asyncContext;
+        private AtomicReference<AsyncContext> asyncContextRef;
         private final OutputStream out;
         private final boolean useSetStatusOn404;
-        private Response cResponse;
+        private Response jerseyResponse;
         private long contentLength;
         private final AtomicBoolean statusAndHeadersWritten;
 
@@ -408,21 +408,14 @@ public class WebComponent {
                 }
             };
 
-            this.isSuspended = new AtomicBoolean(false);
             this.statusAndHeadersWritten = new AtomicBoolean(false);
-            this.asyncContext = null;
-        }
-
-        @Override
-        public boolean resume() {
-            return isSuspended.compareAndSet(true, false);
+            this.asyncContextRef = new AtomicReference<AsyncContext>();
         }
 
         @Override
         public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler)
                 throws IllegalStateException {
-            asyncContext = request.startAsync(request, response);
-            isSuspended.set(true);
+            final AsyncContext asyncContext = request.startAsync(request, response);
             asyncContext.setTimeout(timeUnit.toMillis(timeOut));
             asyncContext.addListener(new AsyncListener() {
 
@@ -446,18 +439,29 @@ public class WebComponent {
                     // TODO ?
                 }
             });
+
+            asyncContextRef.set(asyncContext);
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, Response cResponse) throws ContainerException {
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            final AsyncContext asyncContext = asyncContextRef.get();
+            if (asyncContext == null) {
+                throw new IllegalStateException("Not suspended.");
+            }
+            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
+        }
+
+        @Override
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, Response jerseyResponse) throws ContainerException {
             this.contentLength = contentLength;
-            this.cResponse = cResponse;
+            this.jerseyResponse = jerseyResponse;
             this.statusAndHeadersWritten.set(false);
             return out;
         }
 
         @Override
-        public void close() {
+        public void commit() {
             if (!statusAndHeadersWritten.compareAndSet(false, true)) {
                 return;
             }
@@ -469,12 +473,12 @@ public class WebComponent {
                 // after the invocation of sendError.
                 writeHeaders();
 
-                final int status = cResponse.getStatus();
+                final int status = jerseyResponse.getStatus();
                 if (status >= 400) {
                     if (useSetStatusOn404 && status == 404) {
                         response.setStatus(status);
                     } else {
-                        final String reason = cResponse.getStatusEnum().getReasonPhrase();
+                        final String reason = jerseyResponse.getStatusEnum().getReasonPhrase();
                         try {
                             if (reason == null || reason.isEmpty()) {
                                 response.sendError(status);
@@ -490,6 +494,7 @@ public class WebComponent {
                     response.setStatus(status);
                 }
             } finally {
+                final AsyncContext asyncContext = asyncContextRef.getAndSet(null);
                 if (asyncContext != null) {
                     asyncContext.complete();
                 }
@@ -504,6 +509,11 @@ public class WebComponent {
                 } catch (IllegalStateException ex) {
                     // a race condition externally commiting the response can still occur...
                     LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
+                } finally {
+                    final AsyncContext asyncContext = asyncContextRef.getAndSet(null);
+                    if (asyncContext != null) {
+                        asyncContext.complete();
+                    }
                 }
             }
         }
@@ -514,7 +524,7 @@ public class WebComponent {
             }
 
             writeHeaders();
-            response.setStatus(cResponse.getStatus());
+            response.setStatus(jerseyResponse.getStatus());
         }
 
         private void writeHeaders() {
@@ -522,7 +532,7 @@ public class WebComponent {
                 response.setContentLength((int) contentLength);
             }
 
-            MultivaluedMap<String, String> headers = cResponse.getHeaders().asMap();
+            MultivaluedMap<String, String> headers = jerseyResponse.getHeaders().asMap();
             for (Map.Entry<String, List<String>> e : headers.entrySet()) {
                 for (String v : e.getValue()) {
                     response.addHeader(e.getKey(), v);

@@ -39,22 +39,23 @@
  */
 package org.glassfish.jersey.examples.helloworld;
 
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import javax.ws.rs.ext.ClientFactory;
 
+import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class HelloWorldTest extends JerseyTest {

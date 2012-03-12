@@ -81,12 +81,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS Client}
+ * Jersey implementation of {@link javax.ws.rs.client.JerseyClient JAX-RS JerseyClient}
  * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class Client implements javax.ws.rs.client.Client {
+public class JerseyClient implements javax.ws.rs.client.Client {
 
     private static final class References {
 
@@ -105,36 +105,36 @@ public class Client implements javax.ws.rs.client.Client {
     }
 
     /**
-     * Jersey {@link Client} instance builder.
+     * {@link JerseyClient Jersey client} instance builder.
      */
-    public static class Builder implements javax.ws.rs.client.Client.Builder<Client> {
+    public static class Builder {
 
-        /**
-         * Jersey client instance builder factory.
-         * <p/>
-         * Serves as the main bootstrapping point of the JAX-RS client API as well
-         * as a default fallback bootstrapping implementation for the API.
-         */
-        public static class Factory implements javax.ws.rs.ext.ClientBuilderFactory<Client.Builder> {
-
-            @Override
-            public Builder newBuilder() {
-                return new Client.Builder();
-            }
-        }
         private Inflector<Request, Response> transport;
         private final List<Module> customModules = new LinkedList<Module>();
 
-        @Override
-        public Client build() {
-            return new Client(new JerseyConfiguration(), transport, Collections.<Module>emptyList());
+        /**
+         * Package-private Jersey client builder constructor used by
+         * {@link JerseyClientFactory}.
+         */
+        Builder() {
         }
 
+        /**
+         * Set Jersey client transport.
+         *
+         * @param transport client transport.
+         * @return updated Jersey client builder.
+         */
         public Builder transport(Inflector<Request, Response> transport) {
             this.transport = transport;
             return this;
         }
 
+        /**
+         * Register custom HK2 modules for the Jersey client.
+         * @param modules custom HK2 modules to be registered with the Jersey client.
+         * @return updated Jersey client builder.
+         */
         public Builder modules(Module... modules) {
             if (modules != null && modules.length > 0) {
                 Collections.addAll(this.customModules, modules);
@@ -142,13 +142,28 @@ public class Client implements javax.ws.rs.client.Client {
             return this;
         }
 
-        @Override
-        public Client build(javax.ws.rs.client.Configuration configuration) {
-            return new Client(new JerseyConfiguration(configuration), transport, customModules);
+        /**
+         * Build a new Jersey client.
+         *
+         * @return new Jersey client.
+         */
+        public JerseyClient build() {
+            return new JerseyClient(new JerseyConfiguration(), transport, Collections.<Module>emptyList());
+        }
+
+        /**
+         * Build a new Jersey client using an additional custom configuration.
+         *
+         * @param configuration JAX-RS client configuration for the new Jersey
+         *     client.
+         * @return new Jersey client.
+         */
+        public JerseyClient build(javax.ws.rs.client.Configuration configuration) {
+            return new JerseyClient(new JerseyConfiguration(configuration), transport, customModules);
         }
     }
     /**
-     * Client configuration
+     * JerseyClient configuration
      */
     private final JerseyConfiguration jerseyConfiguration;
     private final AtomicBoolean closedFlag;
@@ -158,7 +173,7 @@ public class Client implements javax.ws.rs.client.Client {
     private RequestScope requestScope;
     private Services services;
 
-    protected Client(
+    protected JerseyClient(
             final JerseyConfiguration jerseyConfiguration,
             final Inflector<Request, Response> transport,
             final List<Module> customModules) {
@@ -263,7 +278,7 @@ public class Client implements javax.ws.rs.client.Client {
     /**
      * Check client state.
      *
-     * @return {@code true} if current {@link Client} instance is closed, otherwise {@code false}.
+     * @return {@code true} if current {@link JerseyClient} instance is closed, otherwise {@code false}.
      * @see #close()
      */
     public boolean isClosed() {

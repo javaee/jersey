@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jaxb;
 import java.util.Collection;
 
 import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.TypeLiteral;
+import javax.ws.rs.core.GenericType;
 import static javax.ws.rs.client.Entity.xml;
 
 import javax.xml.bind.JAXBElement;
@@ -102,7 +102,7 @@ public class JaxbTest extends JerseyTest {
 
     @Test
     public void testJAXBElement() {
-        TypeLiteral<JAXBElement<JaxbXmlType>> genericType = new TypeLiteral<JAXBElement<JaxbXmlType>>() {};
+        GenericType<JAXBElement<JaxbXmlType>> genericType = new GenericType<JAXBElement<JaxbXmlType>>() {};
 
         JAXBElement<JaxbXmlType> e1 = target().path("jaxb/JAXBElement").request().get(genericType);
 
@@ -128,8 +128,8 @@ public class JaxbTest extends JerseyTest {
 
     @Test
     public void testRootElementCollection() {
-        TypeLiteral<Collection<JaxbXmlRootElement>> genericType =
-                new TypeLiteral<Collection<JaxbXmlRootElement>>() {};
+        GenericType<Collection<JaxbXmlRootElement>> genericType =
+                new GenericType<Collection<JaxbXmlRootElement>>() {};
 
         Collection<JaxbXmlRootElement> ce1 = target().path("jaxb/collection/XmlRootElement").request().get(genericType);
         Collection<JaxbXmlRootElement> ce2 = target().path("jaxb/collection/XmlRootElement").request("application/xml")
@@ -140,10 +140,10 @@ public class JaxbTest extends JerseyTest {
 
     @Test
     public void testXmlTypeCollection() {
-        TypeLiteral<Collection<JaxbXmlRootElement>> genericRootElement =
-                new TypeLiteral<Collection<JaxbXmlRootElement>>() {};
-        TypeLiteral<Collection<JaxbXmlType>> genericXmlType =
-                new TypeLiteral<Collection<JaxbXmlType>>() {
+        GenericType<Collection<JaxbXmlRootElement>> genericRootElement =
+                new GenericType<Collection<JaxbXmlRootElement>>() {};
+        GenericType<Collection<JaxbXmlType>> genericXmlType =
+                new GenericType<Collection<JaxbXmlType>>() {
                 };
 
         Collection<JaxbXmlRootElement> ce1 = target().path("jaxb/collection/XmlRootElement").request()

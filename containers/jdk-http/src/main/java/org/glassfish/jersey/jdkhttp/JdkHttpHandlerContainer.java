@@ -220,17 +220,17 @@ public class JdkHttpHandlerContainer implements HttpHandler {
         }
 
         @Override
-        public boolean resume() {
-            throw new UnsupportedOperationException("Method resume is not support by the container.");
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            throw new UnsupportedOperationException("Method suspend is not support by the container.");
         }
 
         @Override
         public void cancel() {
-            close();
+            commit();
         }
 
         @Override
-        public void close() {
+        public void commit() {
             if (closed.compareAndSet(false, true)) {
                 try {
                     exchange.getResponseBody().flush();

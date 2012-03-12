@@ -60,40 +60,40 @@ import java.util.Map.Entry;
 public class Target implements javax.ws.rs.client.Target {
 
     // TODO base URI support
-    private final JerseyConfiguration jerseyConfiguration;
+    private final JerseyConfiguration configuration;
     private final UriBuilder targetUri;
     private final Map<String, Object> pathParams;
-    private final Client client;
+    private final JerseyClient client;
 
-    /*package*/ Target(String uri, Client parent) {
+    /*package*/ Target(String uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(URI uri, Client parent) {
+    /*package*/ Target(URI uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(UriBuilder uriBuilder, Client parent) {
+    /*package*/ Target(UriBuilder uriBuilder, JerseyClient parent) {
         this(uriBuilder.clone(), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(Link link, Client parent) {
+    /*package*/ Target(Link link, JerseyClient parent) {
         // TODO handle relative links
         this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot(), parent);
     }
 
     protected Target(UriBuilder targetUri, Target that) {
-        this(targetUri, that.pathParams, that.jerseyConfiguration.snapshot(), that.client);
+        this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
     }
 
-    protected Target(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, Client client) {
+    protected Target(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
         this.targetUri = targetUri;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);
         } else {
             this.pathParams = Maps.newHashMap();
         }
-        this.jerseyConfiguration = jerseyConfiguration;
+        this.configuration = jerseyConfiguration;
         this.client = client;
     }
 
@@ -131,7 +131,7 @@ public class Target implements javax.ws.rs.client.Target {
 
     @Override
     public JerseyConfiguration configuration() {
-        return jerseyConfiguration;
+        return configuration;
     }
 
     @Override
@@ -177,13 +177,13 @@ public class Target implements javax.ws.rs.client.Target {
     @Override
     public JerseyInvocation.Builder request() {
         // TODO values
-        return new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
+        return new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
     }
 
     @Override
     public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
         // TODO values
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
     }
@@ -191,7 +191,7 @@ public class Target implements javax.ws.rs.client.Target {
     @Override
     public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
         // TODO values
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
     }

@@ -51,7 +51,16 @@ import org.glassfish.jersey.server.ContainerException;
  *
  * Container sends a new instance of the response writer with every request as part
  * of the call to the Jersey application {@link Application#apply(javax.ws.rs.core.Request,
- * ContainerResponseWriter) apply(...)} method.
+ * ContainerResponseWriter) apply(...)} method. Each container response writer
+ * represents an open connection to the client (waiting for a response).
+ * <p />
+ * For each request the Jersey runtime will make sure to directly call either
+ * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}, {@link #cancel()}
+ * or {@code commit()} method on a response writer supplied to the
+ * {@code Application.apply(...)} method before the method has finished. Therefore
+ * the container implementations may assume that when the {@code Application.apply(...)}
+ * method is finished, the container response writer is either {@link #commit() commited},
+ * {@link #cancel() canceled} or {@link #suspend(long, TimeUnit, TimeoutHandler) suspended}.
  *
  * @author Marek Potociar
  */
@@ -69,17 +78,12 @@ public interface ContainerResponseWriter {
 
         /**
          * Method is called, when {@link ContainerResponseWriter#suspend(long, TimeUnit,
-         * ContainerResponseWriter.TimeoutHandler) ContainerResponseWriter.suspend(...)} operation
-         * times out.
+         * ContainerResponseWriter.TimeoutHandler) ContainerResponseWriter.suspend(...)}
+         * operation times out.
          *
          * The custom time-out handler implementation is responsible for making
          * sure a (time-out) response is written to the context and that the
          * container context is properly closed.
-         * <p />
-         * The result of the {@link ContainerResponseWriter#resume()} method
-         * may be used to resolve potential response writing race condition
-         * between an application layer resume event and the processed time-out
-         * event.
          *
          * @param responseWriter suspended container response writer that timed out.
          */
@@ -90,9 +94,9 @@ public interface ContainerResponseWriter {
      * Write the status and headers of the response and return an output stream
      * for the web application to write the entity of the response.
      *
-     * @param contentLength >=0 if the content length in bytes of the
-     *     entity to be written is known, otherwise -1. Containers
-     *     may use this value to determine whether the "Content-Length"
+     * @param contentLength greater or equal to 0 if the content length in bytes
+     *     of the entity to be written is known, otherwise -1. Containers
+     *     may use this value to determine whether the {@code "Content-Length"}
      *     header can be set or utilize chunked transfer encoding.
      * @param response the JAX-RS response to be written. The status and headers
      *     are obtained from the response.
@@ -105,65 +109,72 @@ public interface ContainerResponseWriter {
     /**
      * Suspend the request/response processing.
      *
-     * Container should close the associated thread(s) but keep the network
-     * connection open so that the response can be written later. This method must
-     * not be invoked more than once, otherwise an exception is thrown.
+     * Container must not automatically {@link #commit() commit} the response writer
+     * when the processing on the container thread is finished and the thread is
+     * released. Instead, the Jersey runtime will make sure to manually close
+     * the container response writer instance by either calling {@link #commit()}
+     * or {@link #cancel()} method.
+     * <p />
+     * Once suspended, the specified suspend timeout can be further updated using
+     * {@link #setSuspendTimeout(long, java.util.concurrent.TimeUnit) } method.
      *
-     * @param timeOut time-out value.
+     * @param timeOut time-out value. Value less or equal to 0, indicates that
+     *     the processing is suspended indefinitely.
      * @param timeUnit time-out time unit.
      * @param timeoutHandler time-out handler to process a time-out event if it
      *     occurs.
-     * @throws IllegalStateException in case the container has already been suspended.
+     * @throws IllegalStateException in case the container response writer has
+     *     already been suspended.
+     *
+     * @see #setSuspendTimeout(long, TimeUnit)
+     * @see #cancel()
+     * @see #commit()
      */
     public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException;
 
     /**
-     * Resume the container response writer.
+     * Set the suspend timeout.
      *
-     * By invoking this method, {@link org.glassfish.jersey.server.Application
-     * Jersey application} indicates to the container that the application
-     * is ready to send a response back to the client. The method must be
-     * implemented as thread-safe.
-     * <p />
-     * The writer will return {@code true} if it has been suspended previously
-     * and has not been resumed yet. If the writer has been resumed already, it
-     * will return {@code false}.
-     * <p />
-     * The result returned by this method allows to synchronize the the main
-     * request-response processing flow in the application with the code that
-     * implements the {@link TimeoutHandler#onTimeout(ContainerResponseWriter)
-     * suspend time-out event} reconciliation processing. E.g. it is possible that
-     * the time out event occurs together with the application-layer resume event.
-     * In such case, the boolean value returned from the {@code resume()} method
-     * will help to decide which code should proceed with writing the response
-     * and which code should back out.
+     * Once the container response writer is suspended, the suspend timeout value
+     * can be further updated by the method.
      *
-     * @return {@code true} if the suspended writer was successfully resumed and
-     *     the response can be written, otherwise returns {@code false}.
+     * @param timeOut time-out value. Value less or equal to 0, indicates that
+     *     the processing is suspended indefinitely.
+     * @param timeUnit time-out time unit.
+     * @throws IllegalStateException in case the container has not been suspended
+     *     yet.
+     *
+     * @see #setSuspendTimeout(long, TimeUnit)
      */
-    public boolean resume();
+    public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException;
 
     /**
-     * Cancel the request/response processing. This method automatically closes
-     * the writer.
+     * Cancel the request/response processing. This method automatically commits
+     * and closes the writer.
      *<p />
      * By invoking this method, {@link org.glassfish.jersey.server.Application
      * Jersey application} indicates to the container that the request processing
      * related to this container context has been canceled.
      * <p />
-     * Similarly to {@link #close()}, this enables the container context to release
+     * Similarly to {@link #commit()}, this enables the container context to release
      * any resources, clean up any state, etc. The main difference is that a call
      * to the {@code cancel()} method indicates that any unsent response data in
      * the container buffer should be discarded.
+     *
+     * @see #commit()
+     * @see #suspend(long, TimeUnit, TimeoutHandler)
      */
     public void cancel();
 
     /**
-     * Close the container response writer.
+     * Commit the response & close the container response writer.
      *
      * Indicates to the container that request has been fully processed and response
      * has been fully written. This signals the container to finish the request/response
      * processing, clean up any state, flush any streams, release resources etc.
+     *
+     * @see #cancel()
+     * @see #suspend(long, TimeUnit, TimeoutHandler)
      */
-    public void close();
+    public void commit();
 }

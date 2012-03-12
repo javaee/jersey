@@ -40,7 +40,6 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -172,6 +171,7 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
             } finally {
                 executionStateMonitor.leave();
             }
+            callback.resumed();
             set(toJaxrsResponse(response));
         } else {
             throw new IllegalStateException(LocalizationMessages.ILLEGAL_INVOCATION_CONTEXT_STATE(executionState, "resume"));
@@ -186,6 +186,7 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
             } finally {
                 executionStateMonitor.leave();
             }
+            callback.resumed();
             setException(response);
         } else {
             throw new IllegalStateException(LocalizationMessages.ILLEGAL_INVOCATION_CONTEXT_STATE(executionState, "resume"));
@@ -204,21 +205,18 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
     }
 
     @Override
-    public Future<?> suspend() {
+    public void suspend() {
         _suspend(defaultTimeout, defaultTimeoutUnit, true);
-        return this;
     }
 
     @Override
-    public Future<?> suspend(long millis) {
+    public void suspend(long millis) {
         _suspend(millis, TimeUnit.MILLISECONDS, true);
-        return this;
     }
 
     @Override
-    public Future<?> suspend(long time, TimeUnit unit) {
+    public void suspend(long time, TimeUnit unit) {
         _suspend(time, unit, true);
-        return this;
     }
 
     private boolean _suspend(long time, TimeUnit unit, boolean failOnError) throws IllegalStateException {
@@ -268,6 +266,17 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
         } else {
             // just log fine message & ignore the call
             LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_CANCEL_FAILED(executionState));
+        }
+    }
+
+    @Override
+    public boolean isSuspended() {
+        try {
+            executionStateMonitor.enter();
+
+            return executionState == State.SUSPENDED;
+        } finally {
+            executionStateMonitor.leave();
         }
     }
 

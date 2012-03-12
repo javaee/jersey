@@ -39,17 +39,18 @@
  */
 package org.glassfish.jersey.examples.jsonp;
 
+import java.util.List;
+
+import javax.ws.rs.client.Target;
+import javax.ws.rs.core.GenericType;
+
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.spi.TestContainer;
+
 import org.junit.Ignore;
 import org.junit.Test;
-
-import javax.ws.rs.client.Target;
-import javax.ws.rs.core.TypeLiteral;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -95,8 +96,8 @@ public class JsonpTest extends JerseyTest {
     // TODO un-igonre
     public void testGetOnChangesJSONFormat() {
         Target target = target();
-        TypeLiteral<List<ChangeRecordBean>> genericType =
-                new TypeLiteral<List<ChangeRecordBean>>() {
+        GenericType<List<ChangeRecordBean>> genericType =
+                new GenericType<List<ChangeRecordBean>>() {
                 };
         // get the initial representation
         List<ChangeRecordBean> changes = target.path("changes").request("application/json").get(genericType);
