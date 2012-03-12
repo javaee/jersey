@@ -266,13 +266,14 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
             for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
                 decodedTemplateValues.put(
                         UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
-                        Lists.transform(e.getValue(), new Function<String, String>() {
+                        // we need to keep the ability to add new entries
+                        new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
 
                     @Override
                     public String apply(String input) {
                         return UriComponent.decode(input, UriComponent.Type.PATH);
                     }
-                }));
+                })));
             }
 
             return decodedTemplateValues;

@@ -101,7 +101,6 @@ public class SubResourceLocatorAcceptor implements TreeAcceptor {
         final RuntimeModelFromSubResource rmBuilder = new RuntimeModelFromSubResource(workers);
         injector.inject(rmBuilder);
         routingCtx.pushMatchedResource(subResource);
-        routingCtx.pushLeftHandPath();
         final ResourceClass resourceClass = IntrospectionModeller.createResource(subResource.getClass());
         rmBuilder.process(resourceClass);
         return rmBuilder.getRuntimeModel().apply(data);

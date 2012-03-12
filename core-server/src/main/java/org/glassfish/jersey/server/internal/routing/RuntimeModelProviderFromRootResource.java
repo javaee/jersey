@@ -83,6 +83,11 @@ public class RuntimeModelProviderFromRootResource extends RuntimeModelProviderBa
     }
 
     @Override
+    TreeAcceptor adaptSubResourceAcceptor(ResourceClass resource, TreeAcceptor acceptor) {
+        return new PushUriAndDelegateTreeAcceptor(injector, acceptor);
+    }
+
+    @Override
     TreeAcceptor createFinalTreeAcceptor(RootRouteBuilder<PathPattern> rootRouteBuilder, RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
         return rootBuilder.root(lastRoutedBuilder.build());
     }

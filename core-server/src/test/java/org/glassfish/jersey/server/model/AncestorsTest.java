@@ -94,12 +94,11 @@ public class AncestorsTest {
                 assertEquals(n - i, node.n);
             }
 
-            //FIXME:
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
-//            for (int i = 0; i <= n; i++) {
-//                String p = ui.getMatchedURIs().get(i);
-//                assertEquals(getPath(n - i), p);
-//            }
+            assertEquals(n + 1, ui.getMatchedURIs().size());
+            for (int i = 0; i <= n; i++) {
+                String p = ui.getMatchedURIs().get(i);
+                assertEquals(getPath(n - i), p);
+            }
 
             return Integer.toString(n);
         }
@@ -114,14 +113,13 @@ public class AncestorsTest {
                 assertEquals(n - i, node.n);
             }
 
-//            FIXME:
-//            assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
-//            String p = ui.getMatchedURIs().get(0);
-//            assertEquals(getPathLeaf(n), p);
-//            for (int i = 0; i <= n; i++) {
-//                p = ui.getMatchedURIs().get(i + 1);
-//                assertEquals(getPath(n - i), p);
-//            }
+            assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
+            String p = ui.getMatchedURIs().get(0);
+            assertEquals(getPathLeaf(n), p);
+            for (int i = 0; i <= n; i++) {
+                p = ui.getMatchedURIs().get(i + 1);
+                assertEquals(getPath(n - i), p);
+            }
 
             return Integer.toString(n);
         }
@@ -184,12 +182,11 @@ public class AncestorsTest {
                 assertEquals(n - i, node.n);
             }
 
-            //FIXME
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
-//            for (int i = 0; i <= n; i++) {
-//                String p = ui.getMatchedURIs().get(i);
-//                assertEquals(getPath(n - i), p);
-//            }
+            assertEquals(n + 1, ui.getMatchedURIs().size());
+            for (int i = 0; i <= n; i++) {
+                String p = ui.getMatchedURIs().get(i);
+                assertEquals(getPath(n - i), p);
+            }
 
             return Integer.toString(n);
         }
@@ -198,15 +195,14 @@ public class AncestorsTest {
         @GET
         public String getSub(@Context UriInfo ui) {
             assertEquals(n + 1, ui.getMatchedResources().size());
-//
+
             for (int i = 0; i <= n; i++) {
                 NodeSlash node = (NodeSlash) ui.getMatchedResources().get(i);
                 assertEquals(n - i, node.n);
             }
 
-//            FIXME
-//            assertEquals(n + 1, ui.getMatchedURIs().size());
-//            String p = ui.getMatchedURIs().get(0);
+            assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
+            String p = ui.getMatchedURIs().get(0);
 //            assertEquals(getPathLeaf(n), p);
 //            for (int i = 0; i <= n; i++) {
 //                p = ui.getMatchedURIs().get(i + 1);
@@ -269,10 +265,9 @@ public class AncestorsTest {
         public BarResource getBarResource() {
             assertEquals(1, ui.getMatchedResources().size());
             assertEquals(this, ui.getMatchedResources().get(0));
-            // FIXME
-//            assertEquals(2, ui.getMatchedURIs().size());
-//            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
-            //assertEquals("foo", ui.getMatchedURIs().get(1));
+            assertEquals(2, ui.getMatchedURIs().size());
+            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
+            assertEquals("foo", ui.getMatchedURIs().get(1));
             return new BarResource(ui, this);
         }
     }
@@ -291,10 +286,9 @@ public class AncestorsTest {
             assertEquals(2, ui.getMatchedResources().size());
             assertEquals(this, ui.getMatchedResources().get(0));
             assertEquals(f, ui.getMatchedResources().get(1));
-            //FIXME
-//            assertEquals(2, ui.getMatchedURIs().size());
-//            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
-//            assertEquals("foo", ui.getMatchedURIs().get(1));
+            assertEquals(2, ui.getMatchedURIs().size());
+            assertEquals("foo/bar", ui.getMatchedURIs().get(0));
+            assertEquals("foo", ui.getMatchedURIs().get(1));
             return "bar";
         }
     }

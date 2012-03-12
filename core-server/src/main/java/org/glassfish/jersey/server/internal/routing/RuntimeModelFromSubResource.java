@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.uri.PathPattern;
-
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.model.InflectorBasedResourceMethod;
 import org.glassfish.jersey.server.model.ResourceClass;
@@ -94,6 +93,17 @@ public class RuntimeModelFromSubResource extends RuntimeModelProviderBase {
 
     @Override
     public void visitInflectorResourceMethod(InflectorBasedResourceMethod method) {
-        // should not happen
+        throw new IllegalStateException("Something strange happens here. "
+                +"It should not be possible to register an inflector based resource method to a sub-resource.");
+    }
+
+    @Override
+    TreeAcceptor adaptSubResourceMethodAcceptor(ResourceClass resource, TreeAcceptor acceptor) {
+        return new PushUriAndDelegateTreeAcceptor(injector, acceptor);
+    }
+
+    @Override
+    TreeAcceptor adaptSubResourceLocatorAcceptor(ResourceClass resource, TreeAcceptor acceptor) {
+        return new PushUriAndDelegateTreeAcceptor(injector, acceptor);
     }
 }

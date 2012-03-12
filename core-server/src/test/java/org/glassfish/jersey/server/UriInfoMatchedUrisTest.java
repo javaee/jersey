@@ -79,15 +79,13 @@ public class UriInfoMatchedUrisTest {
         @GET
         @Path("bar")
         public String getFooBar(@Context UriInfo uriInfo) {
-//            FIXME
-//            assertMatchedUris(uriInfo, "foo/bar", "foo");
+            assertMatchedUris(uriInfo, "foo/bar", "foo");
             return "foobar";
         }
 
         @Path("baz")
         public SubResource getFooBaz(@Context UriInfo uriInfo) {
-//            FIXME
-//            assertMatchedUris(uriInfo, "foo/baz", "foo");
+            assertMatchedUris(uriInfo, "foo/baz", "foo");
             return new SubResource();
         }
     }
@@ -96,16 +94,14 @@ public class UriInfoMatchedUrisTest {
 
         @GET
         public String getFooBaz(@Context UriInfo uriInfo) {
-            // FIXME
-//            assertMatchedUris(uriInfo, "foo/baz", "foo");
+            assertMatchedUris(uriInfo, "foo/baz", "foo");
             return "foobaz";
         }
 
         @GET
         @Path("bar")
         public String getFooBazBar(@Context UriInfo uriInfo) {
-            // FIXME
-//            assertMatchedUris(uriInfo, "foo/baz/bar", "foo/baz", "foo");
+            assertMatchedUris(uriInfo, "foo/baz/bar", "foo/baz", "foo");
             return "foobazbar";
         }
     }

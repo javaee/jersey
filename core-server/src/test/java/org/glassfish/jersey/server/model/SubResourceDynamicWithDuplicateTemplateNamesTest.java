@@ -130,8 +130,6 @@ public class SubResourceDynamicWithDuplicateTemplateNamesTest {
         }
     }
 
-    // FIXME
-    @Ignore
     @Test
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplicationBuilder(Parent.class).build();

@@ -44,9 +44,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.jvnet.hk2.annotations.Inject;
+
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -55,10 +60,6 @@ import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToPathBuilder;
-import org.glassfish.jersey.uri.PathPattern;
-
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.server.model.AbstractResourceMethod;
 import org.glassfish.jersey.server.model.InvocableResourceMethod;
 import org.glassfish.jersey.server.model.ResourceClass;
@@ -66,11 +67,12 @@ import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeModelProvider;
 import org.glassfish.jersey.server.model.SubResourceLocator;
 import org.glassfish.jersey.server.model.SubResourceMethod;
+import org.glassfish.jersey.uri.PathPattern;
 
-import org.jvnet.hk2.annotations.Inject;
 
 /**
- * This is a common base for root resource and sub-resource runtime model provider.
+ * This is a common base for root resource and sub-resource runtime model
+ * provider.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -84,15 +86,16 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
     Injector injector;
     @Inject
     Services services;
-
     MessageBodyWorkers workers;
     private RouteToPathBuilder<PathPattern> lastRoutedBuilder;
 
     abstract class SubResourceEntry {
+
         abstract String getSubResourcePathPattern();
     }
 
     class SubResourceMethodEntry extends SubResourceEntry {
+
         String supportedHttpMethod;
         SubResourceMethod srm;
         Inflector<Request, Response> inflector;
@@ -110,6 +113,7 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
     }
 
     class SubResourceLocatorEntry extends SubResourceEntry {
+
         SubResourceLocator srl;
         TreeAcceptor aceptor;
 
@@ -123,10 +127,8 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
             return srl.getPath().getValue();
         }
     }
-
     private Map<PathPattern, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>>> method2Inflector =
             new HashMap<PathPattern, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>>>();
-
     private Map<PathPattern, Map<PathPattern, List<SubResourceEntry>>> locators =
             new HashMap<PathPattern, Map<PathPattern, List<SubResourceEntry>>>();
 
@@ -149,8 +151,12 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
         return acceptor;
     }
 
+    TreeAcceptor adaptSubResourceAcceptor(ResourceClass resource, TreeAcceptor acceptor) {
+        return acceptor;
+    }
+
     abstract TreeAcceptor createFinalTreeAcceptor(RootRouteBuilder<PathPattern> rootRouteBuilder,
-                                                    RouteToPathBuilder<PathPattern> lastRoutedBuilder);
+            RouteToPathBuilder<PathPattern> lastRoutedBuilder);
 
     @Override
     public TreeAcceptor getRuntimeModel() {
@@ -159,9 +165,10 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
             pathPatterns.addAll(method2Inflector.keySet());
             for (PathPattern path : pathPatterns) {
                 List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> methodInflectors = method2Inflector.get(path);
+//                System.out.printf("1: routedBuilder().route(%s).to(adaptResourceMethodAcceptor(%s, new MultipleMethodAcceptor(injector, workers, methodInflectors)))\n", path, getDeclaringResource(methodInflectors));
                 lastRoutedBuilder = routedBuilder().route(path).to(adaptResourceMethodAcceptor(
-                                getDeclaringResource(methodInflectors),
-                                new MultipleMethodAcceptor(injector, workers, methodInflectors)));
+                        getDeclaringResource(methodInflectors),
+                        new MultipleMethodAcceptor(injector, workers, methodInflectors)));
             }
             method2Inflector.clear();
         }
@@ -172,6 +179,7 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
                 RouteToPathBuilder<PathPattern> srRoutedBuilder = null;
                 final TreeSet<PathPattern> srPathPatterns = new TreeSet<PathPattern>(PathPattern.COMPARATOR);
                 srPathPatterns.addAll(locators.get(path).keySet());
+                ResourceClass declaringResource = null;
                 for (PathPattern srPath : srPathPatterns) {
                     List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> methodInflectors =
                             new LinkedList<Pair<AbstractResourceMethod, Inflector<Request, Response>>>();
@@ -181,26 +189,36 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
                             final SubResourceMethodEntry srm = (SubResourceMethodEntry) entry;
                             methodInflectors.add(
                                     Tuples.<AbstractResourceMethod, Inflector<Request, Response>>of(srm.srm, srm.inflector));
+                            if (declaringResource == null) {
+                                declaringResource = srm.srm.getDeclaringResource();
+                            }
                         } else {
                             srl = (SubResourceLocatorEntry) entry;
+                            if (declaringResource == null) {
+                                declaringResource = srl.srl.getResource();
+                            }
                         }
                     }
                     if (!methodInflectors.isEmpty()) {
                         final PathPattern srPathEmptyRHP = new PathPattern(srPath.getTemplate().getTemplate(), PathPattern.RightHandPath.capturingZeroSegments);
+//                        System.out.printf("3: ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(%s).to(adaptSubResourceMethodAcceptor(%s, new MultipleMethodAcceptor(injector, workers, methodInflectors)))\n", srPathEmptyRHP, getDeclaringResource(methodInflectors));
                         srRoutedBuilder = ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(srPathEmptyRHP).to(
-                                    adaptSubResourceMethodAcceptor(getDeclaringResource(methodInflectors), new MultipleMethodAcceptor(injector, workers, methodInflectors)));
+                                adaptSubResourceMethodAcceptor(getDeclaringResource(methodInflectors), new MultipleMethodAcceptor(injector, workers, methodInflectors)));
                     }
                     if (srl != null) {
+//                        System.out.printf("4: ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(%s).to(adaptSubResourceLocatorAcceptor(%s, srl.aceptor))\n", srPath, srl.srl.getResource());
                         srRoutedBuilder = ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(srPath).to(
-                            adaptSubResourceLocatorAcceptor(srl.srl.getResource(), srl.aceptor));
+                                adaptSubResourceLocatorAcceptor(srl.srl.getResource(), srl.aceptor));
                     }
                 }
-                lastRoutedBuilder = routedBuilder().route(path).to(srRoutedBuilder.build());
+//                System.out.printf("2: routedBuilder().route(%s).to(adaptSubResourceAcceptor(%s, srRoutedBuilder.build()))\n", path, declaringResource);
+                lastRoutedBuilder = routedBuilder().route(path).to(adaptSubResourceAcceptor(declaringResource, srRoutedBuilder.build()));
             }
             locators.clear();
         }
         // TODO! check for null (lastRoutedBulder can be null when you try to build empty
         //       application - Application.builder().build(); NPE shouldn't be thrown!
+//        System.out.printf("%s creates final tree acceptor\n", this.getClass());
         return createFinalTreeAcceptor(rootBuilder, lastRoutedBuilder);//rootBuilder.root(lastRoutedBuilder.build());
     }
 
