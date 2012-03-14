@@ -60,6 +60,7 @@
         <module>default-client</module>
         <module>external</module>
         <module>grizzly2</module>
+        <module>jdk-http</module>
         <module>inmemory</module>
     </modules>
 </project>

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,29 +44,26 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.test-framework.providers</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.containers</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-containers</name>
+    <artifactId>jersey-test-framework-provider-jdk-http</artifactId>
+    <packaging>jar</packaging>
+    <name>jersey-test-framework-provider-jdk-http</name>
 
-    <description>Jersey container providers umbrella project module</description>
-
-    <modules>
-        <module>grizzly2-http</module>
-        <module>grizzly2-servlet</module>
-        <module>jdk-http</module>
-        <module>jersey-servlet</module>
-    </modules>
+    <description>Jersey Test Framework - JDK HTTP container</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
+            <artifactId>jersey-test-framework-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jdk-http</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -74,16 +71,11 @@
             <artifactId>jersey-server</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 </project>

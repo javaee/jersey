@@ -61,8 +61,8 @@ public class HelloWorldTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
+        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
+        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
         ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
