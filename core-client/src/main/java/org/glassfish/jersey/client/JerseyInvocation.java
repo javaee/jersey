@@ -64,32 +64,32 @@ import org.jvnet.tiger_types.Types;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
+ * Jersey implementation of {@link javax.ws.rs.client.JerseyInvocation JAX-RS client-side
  * request invocation} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class Invocation implements javax.ws.rs.client.Invocation {
+public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     private final Request request;
-    private final Configuration configuration;
+    private final JerseyConfiguration configuration;
     private final Client client;
 
-    private Invocation(Builder builder) {
+    private JerseyInvocation(Builder builder) {
         this.request = builder.request.build();
-        this.configuration = builder.configuration.snapshot();
+        this.configuration = builder.jerseyConfiguration.snapshot();
         this.client = builder.client;
     }
 
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
         private final Request.RequestBuilder request;
-        private Configuration configuration;
+        private JerseyConfiguration jerseyConfiguration;
         private Client client;
 
-        protected Builder(URI uri, Configuration configuration, Client client) {
+        protected Builder(URI uri, JerseyConfiguration jerseyConfiguration, Client client) {
             this.request = Requests.from(uri, uri, "");
-            this.configuration = configuration;
+            this.jerseyConfiguration = jerseyConfiguration;
             this.client = client;
         }
 
@@ -111,42 +111,42 @@ public class Invocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Invocation build(String method) {
+        public JerseyInvocation build(String method) {
             request.method(method);
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
-        public Invocation build(String method, Entity<?> entity) {
+        public JerseyInvocation build(String method, Entity<?> entity) {
             request.method(method);
             storeEntity(entity);
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
-        public Invocation buildGet() {
+        public JerseyInvocation buildGet() {
             request.method("GET");
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
-        public Invocation buildDelete() {
+        public JerseyInvocation buildDelete() {
             request.method("DELETE");
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
-        public Invocation buildPost(Entity<?> entity) {
+        public JerseyInvocation buildPost(Entity<?> entity) {
             request.method("POST");
             storeEntity(entity);
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
-        public Invocation buildPut(Entity<?> entity) {
+        public JerseyInvocation buildPut(Entity<?> entity) {
             request.method("PUT");
             storeEntity(entity);
-            return new Invocation(this);
+            return new JerseyInvocation(this);
         }
 
         @Override
@@ -203,8 +203,8 @@ public class Invocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Configuration configuration() {
-            return configuration;
+        public JerseyConfiguration configuration() {
+            return jerseyConfiguration;
         }
 
         @Override
@@ -305,48 +305,48 @@ public class Invocation implements javax.ws.rs.client.Invocation {
         @Override
         public Response method(String name) throws InvocationException {
             request.method(name);
-            return new Invocation(this).invoke();
+            return new JerseyInvocation(this).invoke();
         }
 
         @Override
         public <T> T method(String name, Class<T> responseType) throws InvocationException {
             request.method(name);
-            return new Invocation(this).invoke(responseType);
+            return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public <T> T method(String name, TypeLiteral<T> responseType) throws InvocationException {
             request.method(name);
-            return new Invocation(this).invoke(responseType);
+            return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public Response method(String name, Entity<?> entity) throws InvocationException {
             request.method(name);
             storeEntity(entity);
-            return new Invocation(this).invoke();
+            return new JerseyInvocation(this).invoke();
         }
 
         @Override
         public <T> T method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
             request.method(name);
             storeEntity(entity);
-            return new Invocation(this).invoke(responseType);
+            return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public <T> T method(String name, Entity<?> entity, TypeLiteral<T> responseType) throws InvocationException {
             request.method(name);
             storeEntity(entity);
-            return new Invocation(this).invoke(responseType);
+            return new JerseyInvocation(this).invoke(responseType);
         }
     }
 
     private static class AsyncInvoker implements javax.ws.rs.client.AsyncInvoker {
 
-        private final Invocation.Builder builder;
+        private final JerseyInvocation.Builder builder;
 
-        private AsyncInvoker(Invocation.Builder request) {
+        private AsyncInvoker(JerseyInvocation.Builder request) {
             this.builder = request;
         }
 
@@ -483,53 +483,53 @@ public class Invocation implements javax.ws.rs.client.Invocation {
         @Override
         public Future<Response> method(String name) throws InvocationException {
             builder.request.method(name);
-            return new Invocation(builder).submit();
+            return new JerseyInvocation(builder).submit();
         }
 
         @Override
         public <T> Future<T> method(String name, Class<T> responseType) throws InvocationException {
             builder.request.method(name);
-            return new Invocation(builder).submit(responseType);
+            return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, TypeLiteral<T> responseType) throws InvocationException {
             builder.request.method(name);
-            return new Invocation(builder).submit(responseType);
+            return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, InvocationCallback<T> callback) {
             builder.request.method(name);
-            return new Invocation(builder).submit(callback);
+            return new JerseyInvocation(builder).submit(callback);
         }
 
         @Override
         public Future<Response> method(String name, Entity<?> entity) throws InvocationException {
             builder.request.method(name);
             builder.storeEntity(entity);
-            return new Invocation(builder).submit();
+            return new JerseyInvocation(builder).submit();
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
             builder.request.method(name);
             builder.storeEntity(entity);
-            return new Invocation(builder).submit(responseType);
+            return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, TypeLiteral<T> responseType) throws InvocationException {
             builder.request.method(name);
             builder.storeEntity(entity);
-            return new Invocation(builder).submit(responseType);
+            return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, InvocationCallback<T> callback) {
             builder.request.method(name);
             builder.storeEntity(entity);
-            return new Invocation(builder).submit(callback);
+            return new JerseyInvocation(builder).submit(callback);
         }
     }
 
@@ -668,7 +668,7 @@ public class Invocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public Configuration configuration() {
+    public JerseyConfiguration configuration() {
         return configuration;
     }
 

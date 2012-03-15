@@ -93,7 +93,7 @@ public class Client implements javax.ws.rs.client.Client {
         @Inject
         private ServiceProviders.Builder serviceProvidersBuilder;
         @Inject
-        private Ref<Configuration> configuration;
+        private Ref<JerseyConfiguration> configuration;
         @Inject
         private Ref<ServiceProviders> serviceProviders;
         @Inject
@@ -127,7 +127,7 @@ public class Client implements javax.ws.rs.client.Client {
 
         @Override
         public Client build() {
-            return new Client(new Configuration(), transport, Collections.<Module>emptyList());
+            return new Client(new JerseyConfiguration(), transport, Collections.<Module>emptyList());
         }
 
         public Builder transport(Inflector<Request, Response> transport) {
@@ -144,13 +144,13 @@ public class Client implements javax.ws.rs.client.Client {
 
         @Override
         public Client build(javax.ws.rs.client.Configuration configuration) {
-            return new Client(new Configuration(configuration), transport, customModules);
+            return new Client(new JerseyConfiguration(configuration), transport, customModules);
         }
     }
     /**
      * Client configuration
      */
-    private final Configuration configuration;
+    private final JerseyConfiguration jerseyConfiguration;
     private final AtomicBoolean closedFlag;
     //
     private RequestInvoker invoker;
@@ -159,10 +159,10 @@ public class Client implements javax.ws.rs.client.Client {
     private Services services;
 
     protected Client(
-            final Configuration configuration,
+            final JerseyConfiguration jerseyConfiguration,
             final Inflector<Request, Response> transport,
             final List<Module> customModules) {
-        this.configuration = configuration;
+        this.jerseyConfiguration = jerseyConfiguration;
         this.closedFlag = new AtomicBoolean(false);
         this.transport = transport;
 
@@ -195,7 +195,7 @@ public class Client implements javax.ws.rs.client.Client {
         this.invoker = services.forContract(RequestInvoker.class).get();
     }
 
-    /*package*/ ListenableFuture<Response> submit(final Invocation invocation,
+    /*package*/ ListenableFuture<Response> submit(final JerseyInvocation invocation,
             final javax.ws.rs.client.InvocationCallback<? super javax.ws.rs.core.Response> callback) {
         try {
             requestScope.enter();
@@ -203,7 +203,7 @@ public class Client implements javax.ws.rs.client.Client {
             final Injector injector = services.forContract(Injector.class).get();
             References refs = injector.inject(References.class);
 
-            final Configuration cfg = invocation.configuration();
+            final JerseyConfiguration cfg = invocation.configuration();
             final ServiceProviders providers = refs.serviceProvidersBuilder.setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances()).build();
             final ExceptionMapperFactory mappers = new ExceptionMapperFactory(providers);
             final MessageBodyWorkers workers = new MessageBodyFactory(providers);
@@ -275,9 +275,9 @@ public class Client implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public Configuration configuration() {
+    public JerseyConfiguration configuration() {
         checkClosed();
-        return configuration;
+        return jerseyConfiguration;
     }
 
     @Override
@@ -316,7 +316,7 @@ public class Client implements javax.ws.rs.client.Client {
         }
         Target t = new Target(link, this);
         List<String> ps = link.getProduces();
-        Invocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
+        JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
         return ib.build(method);
     }
 
@@ -340,7 +340,7 @@ public class Client implements javax.ws.rs.client.Client {
         }
         Target t = new Target(link, this);
         List<String> ps = link.getProduces();
-        Invocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
+        JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
         return ib.build(method, entity);
     }
 }

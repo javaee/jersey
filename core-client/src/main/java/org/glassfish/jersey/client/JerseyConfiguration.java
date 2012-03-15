@@ -58,7 +58,7 @@ import com.google.common.collect.HashBiMap;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class Configuration implements javax.ws.rs.client.Configuration, FeaturesAndProperties {
+public class JerseyConfiguration implements javax.ws.rs.client.Configuration, FeaturesAndProperties {
 
     /**
      * Default encapsulation of the internal configuration state.
@@ -197,7 +197,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
 
         @Override
         public State update(final javax.ws.rs.client.Configuration configuration) {
-            return new State(((Configuration) configuration).state);
+            return new State(((JerseyConfiguration) configuration).state);
         }
 
         @Override
@@ -288,7 +288,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      * Construct a new Jersey configuration instance with the default features
      * and property values.
      */
-    Configuration() {
+    JerseyConfiguration() {
         this.state = new State();
     }
 
@@ -299,7 +299,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      * @param that original {@link javax.ws.rs.client.Configuration}.
      *
      */
-    Configuration(javax.ws.rs.client.Configuration that) {
+    JerseyConfiguration(javax.ws.rs.client.Configuration that) {
         this.state = new State();
 
         state = state.setProperties(that.getProperties());
@@ -322,7 +322,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      *
      * @param state to be referenced from the new configuration instance.
      */
-    private Configuration(final State state) {
+    private JerseyConfiguration(final State state) {
         this.state = state;
     }
 
@@ -336,9 +336,9 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
      *
      * @return snapshot of the current configuration.
      */
-    Configuration snapshot() {
+    JerseyConfiguration snapshot() {
         state.markAsShared();
-        return new Configuration(state);
+        return new JerseyConfiguration(state);
     }
 
     @Override
@@ -377,43 +377,43 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
     }
 
     @Override
-    public Configuration update(final javax.ws.rs.client.Configuration configuration) {
+    public JerseyConfiguration update(final javax.ws.rs.client.Configuration configuration) {
         state = state.update(configuration);
         return this;
     }
 
     @Override
-    public Configuration register(final Class<?> providerClass) {
+    public JerseyConfiguration register(final Class<?> providerClass) {
         state = state.register(providerClass);
         return this;
     }
 
     @Override
-    public Configuration register(final Object provider) {
+    public JerseyConfiguration register(final Object provider) {
         state = state.register(provider);
         return this;
     }
 
     @Override
-    public Configuration enable(final Feature feature) {
+    public JerseyConfiguration enable(final Feature feature) {
         state = state.enable(feature);
         return this;
     }
 
     @Override
-    public Configuration disable(final Class<? extends Feature> feature) {
+    public JerseyConfiguration disable(final Class<? extends Feature> feature) {
         state = state.disable(feature);
         return this;
     }
 
     @Override
-    public Configuration setProperties(final Map<String, ? extends Object> properties) {
+    public JerseyConfiguration setProperties(final Map<String, ? extends Object> properties) {
         state = state.setProperties(properties);
         return this;
     }
 
     @Override
-    public Configuration setProperty(final String name, final Object value) {
+    public JerseyConfiguration setProperty(final String name, final Object value) {
         state = state.setProperty(name, value);
         return this;
     }
@@ -426,7 +426,7 @@ public class Configuration implements javax.ws.rs.client.Configuration, Features
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Configuration other = (Configuration) obj;
+        final JerseyConfiguration other = (JerseyConfiguration) obj;
         if (this.state != other.state && (this.state == null || !this.state.equals(other.state))) {
             return false;
         }

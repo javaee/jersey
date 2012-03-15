@@ -111,7 +111,7 @@ public class ClientTest {
 
     @Test
     public void testConfiguration() {
-        final Configuration configuration = client.configuration();
+        final JerseyConfiguration configuration = client.configuration();
         assertNotNull(configuration);
 
         configuration.setProperty("hello", "world");

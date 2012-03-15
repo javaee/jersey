@@ -82,9 +82,9 @@ import org.jvnet.hk2.annotations.Inject;
  */
 public class ClientModule extends AbstractModule {
 
-    private static class ConfigurationInjectionFactory extends ReferencingFactory<Configuration> {
+    private static class ConfigurationInjectionFactory extends ReferencingFactory<JerseyConfiguration> {
 
-        public ConfigurationInjectionFactory(@Inject Factory<Ref<Configuration>> referenceFactory) {
+        public ConfigurationInjectionFactory(@Inject Factory<Ref<JerseyConfiguration>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -146,8 +146,8 @@ public class ClientModule extends AbstractModule {
         bind(FeaturesAndProperties.class)
                 .toFactory(ConfigurationInjectionFactory.class)
                 .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<Configuration>>() {})
-                .toFactory(ReferencingFactory.<Configuration>referenceFactory())
+        bind(new TypeLiteral<Ref<JerseyConfiguration>>() {})
+                .toFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory())
                 .in(RequestScope.class);
     }
 }

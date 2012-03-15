@@ -60,7 +60,7 @@ import java.util.Map.Entry;
 public class Target implements javax.ws.rs.client.Target {
 
     // TODO base URI support
-    private final Configuration configuration;
+    private final JerseyConfiguration jerseyConfiguration;
     private final UriBuilder targetUri;
     private final Map<String, Object> pathParams;
     private final Client client;
@@ -83,17 +83,17 @@ public class Target implements javax.ws.rs.client.Target {
     }
 
     protected Target(UriBuilder targetUri, Target that) {
-        this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
+        this(targetUri, that.pathParams, that.jerseyConfiguration.snapshot(), that.client);
     }
 
-    protected Target(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, Configuration configuration, Client client) {
+    protected Target(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, Client client) {
         this.targetUri = targetUri;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);
         } else {
             this.pathParams = Maps.newHashMap();
         }
-        this.configuration = configuration;
+        this.jerseyConfiguration = jerseyConfiguration;
         this.client = client;
     }
 
@@ -130,8 +130,8 @@ public class Target implements javax.ws.rs.client.Target {
     }
 
     @Override
-    public Configuration configuration() {
-        return configuration;
+    public JerseyConfiguration configuration() {
+        return jerseyConfiguration;
     }
 
     @Override
@@ -175,23 +175,23 @@ public class Target implements javax.ws.rs.client.Target {
     }
 
     @Override
-    public Invocation.Builder request() {
+    public JerseyInvocation.Builder request() {
         // TODO values
-        return new Invocation.Builder(getUri(), configuration.snapshot(), client);
+        return new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
     }
 
     @Override
-    public Invocation.Builder request(String... acceptedResponseTypes) {
+    public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
         // TODO values
-        Invocation.Builder b = new Invocation.Builder(getUri(), configuration.snapshot(), client);
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
     }
 
     @Override
-    public Invocation.Builder request(MediaType... acceptedResponseTypes) {
+    public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
         // TODO values
-        Invocation.Builder b = new Invocation.Builder(getUri(), configuration.snapshot(), client);
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), jerseyConfiguration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
     }

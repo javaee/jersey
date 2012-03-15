@@ -39,25 +39,35 @@
  */
 package org.glassfish.jersey.client;
 
-import org.junit.Ignore;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.ws.rs.client.Feature;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import javax.ws.rs.client.Feature;
+import javax.ws.rs.ext.Provider;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ConfigurationTest {
+public class JerseyConfigurationTest {
 
-    public ConfigurationTest() {
+    public JerseyConfigurationTest() {
     }
 
     @BeforeClass
@@ -78,9 +88,9 @@ public class ConfigurationTest {
 
     @Test
     public void testSnapshot() {
-        Configuration c_a = new Configuration().setProperty("common_name", "common_value");
+        JerseyConfiguration c_a = new JerseyConfiguration().setProperty("common_name", "common_value");
 
-        Configuration c_b = c_a.snapshot();
+        JerseyConfiguration c_b = c_a.snapshot();
         assertNotNull(c_b);
         assertNotSame(c_a, c_b);
         assertEquals(c_a, c_b);
@@ -96,7 +106,7 @@ public class ConfigurationTest {
 
     @Test
     public void testGetProperties() {
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         Map result = instance.getProperties();
         assertNotNull(result);
 
@@ -113,16 +123,29 @@ public class ConfigurationTest {
 
     @Test
     public void testGetProperty() {
-        Configuration instance = new Configuration().setProperty("name", "value");
+        JerseyConfiguration instance = new JerseyConfiguration().setProperty("name", "value");
         assertEquals("value", instance.getProperty("name"));
         assertNull(instance.getProperty("other"));
+    }
+
+    @Provider
+    public class MyProvider {
+
+    }
+
+    @Test
+    public void testCustomProvidersFeature() {
+        JerseyConfiguration instance = new JerseyConfiguration();
+        instance.enable(new CustomProvidersFeature(Arrays.asList(new Class<?>[]{MyProvider.class})));
+
+        assertTrue(instance.getProviderClasses().contains(MyProvider.class));
     }
 
     @Test
     @Ignore("not ready yet")
     // TODO implement test
     public void testGetFeatures() {
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         Set expResult = null;
         Set result = instance.getFeatures();
         assertEquals(expResult, result);
@@ -134,7 +157,7 @@ public class ConfigurationTest {
     // TODO implement test
     public void testIsEnabled() {
         Class<? extends Feature> feature = null;
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         boolean expResult = false;
         boolean result = instance.isEnabled(feature);
         assertEquals(expResult, result);
@@ -145,7 +168,7 @@ public class ConfigurationTest {
     @Ignore("not ready yet")
     // TODO implement test
     public void testGetProviderClasses() {
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         Set expResult = null;
         Set result = instance.getProviderClasses();
         assertEquals(expResult, result);
@@ -156,7 +179,7 @@ public class ConfigurationTest {
     @Ignore("not ready yet")
     // TODO implement test
     public void testGetProviderInstances() {
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         Set expResult = null;
         Set result = instance.getProviderInstances();
         assertEquals(expResult, result);
@@ -167,10 +190,10 @@ public class ConfigurationTest {
     @Ignore("not ready yet")
     // TODO implement test
     public void testUpdate() {
-        Configuration configuration = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.update(configuration);
+        JerseyConfiguration jerseyConfiguration = null;
+        JerseyConfiguration instance = new JerseyConfiguration();
+        JerseyConfiguration expResult = null;
+        JerseyConfiguration result = instance.update(jerseyConfiguration);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
@@ -180,9 +203,9 @@ public class ConfigurationTest {
     // TODO implement test
     public void testRegister_Class() {
         Class<?> providerClass = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.register(providerClass);
+        JerseyConfiguration instance = new JerseyConfiguration();
+        JerseyConfiguration expResult = null;
+        JerseyConfiguration result = instance.register(providerClass);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
@@ -192,9 +215,9 @@ public class ConfigurationTest {
     // TODO implement test
     public void testRegister_ObjectArr() {
         Object[] providers = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.register(providers);
+        JerseyConfiguration instance = new JerseyConfiguration();
+        JerseyConfiguration expResult = null;
+        JerseyConfiguration result = instance.register(providers);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
@@ -204,9 +227,9 @@ public class ConfigurationTest {
     // TODO implement test
     public void testEnable_Feature() {
         Feature feature = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.enable(feature);
+        JerseyConfiguration instance = new JerseyConfiguration();
+        JerseyConfiguration expResult = null;
+        JerseyConfiguration result = instance.enable(feature);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
@@ -216,9 +239,9 @@ public class ConfigurationTest {
     // TODO implement test
     public void testDisable() {
         Class<? extends Feature> feature = null;
-        org.glassfish.jersey.client.Configuration instance = new org.glassfish.jersey.client.Configuration();
-        Configuration expResult = null;
-        Configuration result = instance.disable(feature);
+        JerseyConfiguration instance = new JerseyConfiguration();
+        JerseyConfiguration expResult = null;
+        JerseyConfiguration result = instance.disable(feature);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
@@ -230,7 +253,7 @@ public class ConfigurationTest {
         props.put("name2", "value2");
         props.put("name3", "value3");
 
-        Configuration instance = new Configuration().setProperties(props);
+        JerseyConfiguration instance = new JerseyConfiguration().setProperties(props);
         assertEquals("value1", instance.getProperty("name1"));
         assertEquals("value2", instance.getProperty("name2"));
         assertEquals("value3", instance.getProperty("name3"));
@@ -239,7 +262,7 @@ public class ConfigurationTest {
 
     @Test
     public void testSetProperty() {
-        Configuration instance = new Configuration();
+        JerseyConfiguration instance = new JerseyConfiguration();
         assertTrue(instance.getProperties().isEmpty());
 
         instance.setProperty("name", "value");

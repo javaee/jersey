@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
+import org.glassfish.jersey.media.json.JsonFeature;
 import org.glassfish.jersey.media.json.JsonJacksonModule;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.Application;
@@ -69,9 +70,7 @@ public class JacksonTest extends JerseyTest {
     @Override
     protected javax.ws.rs.client.Client getClient(TestContainer tc, Application application) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, application);
-        for (Class<?> provider : JsonJacksonModule.getProviders()) {
-            origClient.configuration().register(provider);
-        }
+        origClient.configuration().enable(JsonFeature.getInstance());
 
         origClient.configuration().register(MyObjectMapperProvider.class);
         return origClient;
@@ -131,7 +130,7 @@ public class JacksonTest extends JerseyTest {
     /**
      * Test if a WADL document is available at the relative path
      * "application.wadl".
-     *
+     * <p/>
      * TODO: un-ignore once WADL is supported.
      */
     @Test
