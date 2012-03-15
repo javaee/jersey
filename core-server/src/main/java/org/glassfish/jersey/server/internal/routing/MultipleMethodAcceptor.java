@@ -65,13 +65,13 @@ import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.AbstractResourceMethod;
 import org.glassfish.jersey.server.model.InvocableResourceMethod;
 import org.glassfish.jersey.server.model.Parameter;
 
 import com.google.common.collect.Iterators;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * A single acceptor to be responsible to respond to all HTTP methods defined on a given resource.
@@ -269,7 +269,9 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
     public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
         List<ConsumesProducesInflector> inflectors = method2InflectorMap.get(request.getMethod());
         if (inflectors == null) {
-            throw new WebApplicationException(Response.Status.METHOD_NOT_ALLOWED);
+            throw new WebApplicationException(
+                    Response.status(Status.METHOD_NOT_ALLOWED)
+                                                .allow(method2InflectorMap.keySet()).build());
         }
         List<ConsumesProducesInflector> satisfyingInflectors = new LinkedList<ConsumesProducesInflector>();
         for (ConsumesProducesInflector cpi : inflectors) {
