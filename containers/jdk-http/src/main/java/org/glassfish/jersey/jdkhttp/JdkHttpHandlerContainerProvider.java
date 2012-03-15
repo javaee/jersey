@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,75 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory;
+package org.glassfish.jersey.jdkhttp;
 
+import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
+import com.sun.net.httpserver.HttpHandler;
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
-
-import static org.junit.Assert.assertTrue;
+import org.glassfish.jersey.server.spi.ContainerProvider;
 
 /**
- * Test class for {@link InMemoryTestContainerFactory.InMemoryContainer}.
+ * {@link ContainerProvider Container Service Provider} which provides {@link JdkHttpHandlerContainer JDK HttpServer Container}.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class InMemoryContainerTest extends JerseyTest {
-
-    /**
-     * Creates new instance.
-     */
-    public InMemoryContainerTest() {
-        super(new InMemoryTestContainerFactory());
-    }
+public final class JdkHttpHandlerContainerProvider implements ContainerProvider {
 
     @Override
-    protected Application configure() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class).build();
-        return Application.builder(resourceConfig).build();
-    }
-
-    /**
-     * Test resource class.
-     */
-    @Path("one")
-    public static class Resource {
-
-        /**
-         * Test resource method.
-         *
-         * @return Test simple string response.
-         */
-        @GET
-        public String getSomething() {
-            return "get";
+    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
+        if (type != HttpHandler.class) {
+            return null;
         }
-    }
-
-    /**
-     * Tests {@link InMemoryTransport In-Memory Client Transport}.
-     */
-    @Test
-    public void testInMemoryContainerClient() {
-        final Response response = client().target(UriBuilder.fromUri(getBaseURI()).path("one").build()).request().get();
-
-        assertTrue(response.getStatus() == 200);
-    }
-
-    /**
-     * Tests In-Memory Container.
-     */
-    @Test
-    public void testInMemoryContainerTarget() {
-        final Response response = target().path("one").request().get();
-
-        assertTrue(response.getStatus() == 200);
+        return type.cast(new JdkHttpHandlerContainer(application));
     }
 }

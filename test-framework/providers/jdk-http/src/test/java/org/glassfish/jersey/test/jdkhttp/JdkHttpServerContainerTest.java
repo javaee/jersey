@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory;
 
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -47,23 +46,23 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
+import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
+import org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory;
 
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test class for {@link InMemoryTestContainerFactory.InMemoryContainer}.
+ * Test class for {@link JdkHttpHandlerContainer}.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class InMemoryContainerTest extends JerseyTest {
+public class JdkHttpServerContainerTest extends JerseyTest {
 
     /**
      * Creates new instance.
      */
-    public InMemoryContainerTest() {
-        super(new InMemoryTestContainerFactory());
+    public JdkHttpServerContainerTest() {
+        super(new JdkHttpServerTestContainerFactory());
     }
 
     @Override
@@ -72,10 +71,10 @@ public class InMemoryContainerTest extends JerseyTest {
         return Application.builder(resourceConfig).build();
     }
 
+    @Path("one")
     /**
      * Test resource class.
      */
-    @Path("one")
     public static class Resource {
 
         /**
@@ -89,21 +88,11 @@ public class InMemoryContainerTest extends JerseyTest {
         }
     }
 
-    /**
-     * Tests {@link InMemoryTransport In-Memory Client Transport}.
-     */
     @Test
-    public void testInMemoryContainerClient() {
-        final Response response = client().target(UriBuilder.fromUri(getBaseURI()).path("one").build()).request().get();
-
-        assertTrue(response.getStatus() == 200);
-    }
-
     /**
-     * Tests In-Memory Container.
+     * Test {@link HttpServer JDK HttpServer} container.
      */
-    @Test
-    public void testInMemoryContainerTarget() {
+    public void testJdkHttpServerContainerTarget() {
         final Response response = target().path("one").request().get();
 
         assertTrue(response.getStatus() == 200);
