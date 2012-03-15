@@ -1,5 +1,5 @@
 /*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
@@ -37,54 +37,39 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.json;
+package org.glassfish.jersey.client;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
-
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.client.Feature;
 
 /**
- * Module with JAX-RS Jackson JSON providers.
+ * Feature to provide the single-line registration of custom providers.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Stepan Kopriva <stepan.kopriva@oracle.com>
  */
-public class JsonJacksonModule extends AbstractModule {
+public class CustomProvidersFeature implements Feature {
 
-    static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableList(Arrays.asList(new Class<?>[]{
-                JacksonJsonProvider.class,
-                JacksonJaxbJsonProvider.class,
-                JsonWithPaddingProvider.class
-            }));
+    private final Collection<Class<?>> providers;
 
     /**
-     * Returns providers used for serialization and deserialization of Json entities.
+     * Constructs Feature which is used to register providers as providers in Configuration.
      *
-     * @return {@link Collection} of providers.
+     * @param providers collection of providers which are going to be registered
      */
-    public static Collection<Class<?>> getProviders() {
-        return PROVIDERS;
+    public CustomProvidersFeature(Collection<Class<?>> providers) {
+        this.providers = providers;
     }
 
     @Override
-    protected void configure() {
-        bindSingletonReaderWriterProvider(JacksonJsonProvider.class);
-        bindSingletonReaderWriterProvider(JacksonJaxbJsonProvider.class);
-        bindSingletonReaderWriterProvider(JsonWithPaddingProvider.class);
+    public void onEnable(Configuration c) {
+        for (Class<?> provider : providers) {
+            c.register(provider);
+        }
     }
 
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+    @Override
+    public void onDisable(Configuration c) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
