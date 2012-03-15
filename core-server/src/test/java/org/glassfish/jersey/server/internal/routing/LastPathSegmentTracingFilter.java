@@ -72,7 +72,7 @@ class LastPathSegmentTracingFilter implements TreeAcceptor {
     public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
         final String wholePath = getWholeMatchedPath();
         final String lastMatch = getLastMatch();
-        final String lastSegment = wholePath.substring(0, wholePath.length() - lastMatch.length());
+        final String lastSegment = wholePath.isEmpty() ? wholePath : wholePath.substring(0, wholePath.length() - lastMatch.length());
 
         respondingContext.push(new Function<Response, Response>() {
 

@@ -51,7 +51,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
 
 /**
  * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.AncestorsTest
@@ -203,11 +202,11 @@ public class AncestorsTest {
 
             assertEquals(n + 1 + 1, ui.getMatchedURIs().size());
             String p = ui.getMatchedURIs().get(0);
-//            assertEquals(getPathLeaf(n), p);
-//            for (int i = 0; i <= n; i++) {
-//                p = ui.getMatchedURIs().get(i + 1);
-//                assertEquals(getPath(n - i), p);
-//            }
+            assertEquals(getPathLeaf(n), p);
+            for (int i = 0; i <= n; i++) {
+                p = ui.getMatchedURIs().get(i + 1);
+                assertEquals(getPath(n - i), p);
+            }
 
             return Integer.toString(n);
         }
@@ -217,16 +216,14 @@ public class AncestorsTest {
             for (int i = 1; i <= n; i++) {
                 p += "node/";
             }
-            return p;
+            return p.substring(0, p.length() - 1);
         }
 
         protected String getPathLeaf(int n) {
-            return getPath(n) + "leaf/";
+            return getPath(n) + "/leaf";
         }
     }
 
-    // FIXME
-    @Ignore
     @Test
     public void testNodeSlash() throws Exception {
         app = createApplicationBuilder(NodeSlash.class).build();
