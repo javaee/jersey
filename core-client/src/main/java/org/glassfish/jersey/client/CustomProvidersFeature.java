@@ -1,5 +1,5 @@
 /*
- DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
  * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
