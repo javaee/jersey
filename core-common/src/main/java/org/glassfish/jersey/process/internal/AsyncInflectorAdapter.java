@@ -39,8 +39,7 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -53,7 +52,6 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
 
 import com.google.common.base.Objects;
 import com.google.common.util.concurrent.AbstractFuture;
@@ -80,7 +78,6 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
      * e.g. as part of some low-level logging.
      */
     private final LazyUid id = new LazyUid();
-    private final BlockingDeque<Snapshot> requestScopeSnapshots = new LinkedBlockingDeque<Snapshot>();
     // state variable synced via monitor => doesn't have to be volatile
     private State executionState = State.RUNNING;
     private final Monitor executionStateMonitor = new Monitor();
@@ -140,20 +137,6 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
     }
 
     @Override
-    public void pushRequestScope(Snapshot snapshot) {
-        requestScopeSnapshots.push(snapshot);
-    }
-
-    @Override
-    public Snapshot popRequestScope() {
-        try {
-            return requestScopeSnapshots.take();
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
     public State state() {
         executionStateMonitor.enter();
         try {
@@ -161,6 +144,11 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
         } finally {
             executionStateMonitor.leave();
         }
+    }
+
+    @Override
+    public Future<Response> getInflectedResponse() {
+        return this;
     }
 
     @Override

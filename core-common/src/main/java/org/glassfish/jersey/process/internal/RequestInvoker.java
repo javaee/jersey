@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
@@ -59,7 +58,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.spi.ExceptionMappers;
+import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
 
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.TypeLiteral;
@@ -69,7 +68,6 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
 
 /**
  * Request invoker is the main request to response processing entry point. It invokes
@@ -103,15 +101,19 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     private static final InvocationCallback EMPTY_CALLBACK = new InvocationCallback() {
 
         @Override
-        public void result(Response response) {
+        public void result(final Response response) {
         }
 
         @Override
-        public void failure(Throwable exception) {
+        public void failure(final Throwable exception) {
         }
 
         @Override
-        public void suspended(long time, TimeUnit unit, InvocationContext context) {
+        public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
+        }
+
+        @Override
+        public void suspendTimeoutChanged(final long time, final TimeUnit unit) {
         }
 
         @Override
@@ -175,24 +177,25 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         //        into stages that are executed by the invoker
         //        (e.g. RequestExecutionInitStage).
         final Snapshot scopeSnapshot = requestScope.takeSnapshot();
-        final Callable<ListenableFuture<Response>> requester = new Callable<ListenableFuture<Response>>() {
+        final ResponseProcessor responseProcessor = responseProcessorBuilder.build(callback);
+        final Runnable requester = new Runnable() {
 
             @Override
-            public ListenableFuture<Response> call() {
+            public void run() {
                 if (requestScope.isActive()) {
                     // running inside a scope already (same-thread execution)
-                    return _call();
+                    runInScope();
                 } else {
                     try {
                         requestScope.enter(scopeSnapshot);
-                        return _call();
+                        runInScope();
                     } finally {
                         requestScope.exit();
                     }
                 }
             }
 
-            public ListenableFuture<Response> _call() {
+            public void runInScope() {
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
@@ -207,30 +210,17 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 icRef.set(asyncInflector);
 
                 ListenableFuture<Response> response = asyncInflector.apply(request);
-
-                final ExceptionMappers exceptionMappers = services.forContract(ExceptionMappers.class).get();
-                final ResponseProcessor responseProcessor =
-                        responseProcessorBuilder.build(callback, response, asyncInflector, exceptionMappers);
-
-                asyncInflector.pushRequestScope(requestScope.takeSnapshot());
+                responseProcessor.setRequestScopeSnapshot(requestScope.takeSnapshot());
                 response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
-
-                return responseProcessor;
             }
         };
 
         try {
             try {
-                return executorsFactory.getRequestingExecutor().submit(requester).get();
-            } catch (InterruptedException ex) {
-                throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_INTERRUPTED(), ex);
-            } catch (ExecutionException ex) {
-                final Throwable cause = ex.getCause();
-                if (cause instanceof ProcessingException) {
-                    throw (ProcessingException) cause;
-                } else {
-                    throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_FAILED(), cause);
-                }
+                executorsFactory.getRequestingExecutor().submit(requester);
+                return responseProcessor;
+            } catch (RejectedExecutionException ex) {
+                throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_FAILED(), ex);
             }
         } catch (ProcessingException ex) {
             try {

@@ -53,7 +53,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 
 /**
- * TODO javadoc.
+ * Example of a simple resource with a long-running operation executed in a
+ * custom application thread.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -63,7 +64,7 @@ public class SimpleLongRunningResource {
 
     public static final String NOTIFICATION_RESPONSE = "Hello async world!";
     //
-    private static final Logger LOGGER = Logger.getLogger(org.glassfish.jersey.examples.server.async.LongRunningAsyncOperationResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SimpleLongRunningResource.class.getName());
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
     private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());

@@ -42,7 +42,6 @@ package org.glassfish.jersey.grizzly2;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,6 +53,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ContainerException;
@@ -73,24 +73,8 @@ import org.glassfish.grizzly.utils.Charsets;
  */
 public final class GrizzlyHttpContainer extends HttpHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(GrizzlyHttpContainer.class.getName());
-    private static final Level DEBUG = Level.FINEST;
-
-    private static void debugLog(String messageTemplate, Object... args) {
-        if (LOGGER.isLoggable(DEBUG)) {
-            if (args == null || args.length == 0) {
-                args = new Object[1];
-            } else {
-                args = Arrays.copyOf(args, args.length + 1);
-            }
-            args[args.length - 1] = Thread.currentThread().getName();
-
-            final StringBuilder messageBuilder = new StringBuilder(messageTemplate.length() + 15);
-            messageBuilder.append(messageTemplate).append(" on thread {").append(args.length - 1).append('}');
-
-            LOGGER.log(DEBUG, messageBuilder.toString(), args);
-        }
-    }
+    private static final ExtendedLogger logger =
+            new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
     private static final CompletionHandler<Response> EMPTY_COMPLETION_HANDLER = new CompletionHandler<Response>() {
 
         @Override
@@ -122,9 +106,9 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         ResponseWriter(final Response response) {
             this.grizzlyResponse = response;
 
-            if (LOGGER.isLoggable(DEBUG)) {
+            if (logger.isDebugLoggable()) {
                 this.name = "ResponseWriter {" + "id=" + UUID.randomUUID().toString() + ", grizzlyResponse=" + grizzlyResponse.hashCode() + '}';
-                debugLog("{0} - init", name);
+                logger.debugLog("{0} - init", name);
             } else {
                 this.name = "ResponseWriter";
             }
@@ -142,7 +126,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
                     grizzlyResponse.resume();
                 }
             } finally {
-                debugLog("{0} - commit() called", name);
+                logger.debugLog("{0} - commit() called", name);
             }
         }
 
@@ -151,7 +135,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
             try {
                 grizzlyResponse.cancel();
             } finally {
-                debugLog("{0} - cancel() called", name);
+                logger.debugLog("{0} - cancel() called", name);
             }
         }
 
@@ -172,7 +156,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
                             }
                         });
             } finally {
-                debugLog("{0} - suspend(...) called", name);
+                logger.debugLog("{0} - suspend(...) called", name);
             }
         }
 
@@ -181,7 +165,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
             try {
                 grizzlyResponse.getSuspendContext().setTimeout(timeOut, timeUnit);
             } finally {
-                debugLog("{0} - setSuspendTimeout(...) called", name);
+                logger.debugLog("{0} - setSuspendTimeout(...) called", name);
             }
         }
 
@@ -204,7 +188,7 @@ public final class GrizzlyHttpContainer extends HttpHandler {
 
                 return grizzlyResponse.getOutputStream();
             } finally {
-                debugLog("{0} - writeResponseStatusAndHeaders() called", name);
+                logger.debugLog("{0} - writeResponseStatusAndHeaders() called", name);
             }
         }
     }
@@ -225,11 +209,11 @@ public final class GrizzlyHttpContainer extends HttpHandler {
     public void service(final Request request, final Response response) {
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
-            debugLog("GrizzlyHttpContaner.service(...) started");
+            logger.debugLog("GrizzlyHttpContaner.service(...) started");
             application.apply(toJaxrsRequest(request), responseWriter);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
-            debugLog("GrizzlyHttpContaner.service(...) finished");
+            logger.debugLog("GrizzlyHttpContaner.service(...) finished");
         }
     }
 

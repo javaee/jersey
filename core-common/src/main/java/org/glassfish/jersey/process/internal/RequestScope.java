@@ -54,6 +54,7 @@ import org.glassfish.hk2.ScopeInstance;
 
 import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkState;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
 
 /**
  * Scopes a single request/response processing execution.
@@ -94,7 +95,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class RequestScope implements Scope {
 
-    private static final Logger LOGGER = Logger.getLogger(RequestScope.class.getName());
+    private static final ExtendedLogger logger =
+            new ExtendedLogger(Logger.getLogger(RequestScope.class.getName()), Level.FINEST);
 
     public static class Module extends AbstractModule {
 
@@ -176,7 +178,11 @@ public class RequestScope implements Scope {
         @Override
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
-                store.clear();
+                try {
+                    store.clear();
+                } finally {
+                    logger.debugLog("Released scope instance {0}", this);
+                }
             }
         }
 
@@ -214,7 +220,12 @@ public class RequestScope implements Scope {
      *     scope block in the current thread.
      */
     public Snapshot takeSnapshot() throws IllegalStateException {
-        return new Snapshot(getCurrentScopeInstance());
+        final Instance scopeInstance = getCurrentScopeInstance();
+        try {
+            return new Snapshot(scopeInstance);
+        } finally {
+            logger.debugLog("Taken snapshot of the request scope instance {0}", scopeInstance);
+        }
     }
 
     /**
@@ -225,7 +236,17 @@ public class RequestScope implements Scope {
      *     request scope, {@code false} otherwise.
      */
     public boolean isActive() {
-        return currentScopeInstance.get() != null;
+        final Instance scopeInstance = currentScopeInstance.get();
+        try {
+            return scopeInstance != null;
+        } finally {
+            if (scopeInstance == null) {
+                logger.debugLog("Active request scope instance not found");
+            } else {
+                logger.debugLog("Active request scope instance {0} found", scopeInstance);
+            }
+        }
+
     }
 
     /**
@@ -238,14 +259,13 @@ public class RequestScope implements Scope {
      *     active {@code RequestScope} scope block in the same thread.
      */
     public void enter() throws IllegalStateException {
-        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress");
         final Instance scopeInstance = new Instance();
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER,
-                    "Entering scope %s on thread %s",
-                    new Object[]{scopeInstance.toString(), Thread.currentThread().getName()});
+        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress.");
+        try {
+            currentScopeInstance.set(scopeInstance);
+        } finally {
+            logger.debugLog("Entered request scope instance {0}", scopeInstance);
         }
-        currentScopeInstance.set(scopeInstance);
     }
 
     /**
@@ -262,13 +282,13 @@ public class RequestScope implements Scope {
      *     active {@code RequestScope} scope block in the same thread.
      */
     public void enter(Snapshot snapshot) throws IllegalStateException {
-        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress");
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER,
-                    "Resuming scope %s on thread %s",
-                    new Object[]{snapshot.scopeInstance.toString(), Thread.currentThread().getName()});
+        final Instance scopeInstance = snapshot.scopeInstance;
+        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress.");
+        try {
+            currentScopeInstance.set(scopeInstance);
+        } finally {
+            logger.debugLog("Resumed request scope instance {0}", scopeInstance);
         }
-        currentScopeInstance.set(snapshot.scopeInstance);
     }
 
     /**
@@ -282,13 +302,12 @@ public class RequestScope implements Scope {
      */
     public void exit() throws IllegalStateException {
         final Instance scopeInstance = currentScopeInstance.get();
-        checkState(scopeInstance != null, "No scoped block in progress");
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER,
-                    "Exiting scope %s on thread %s",
-                    new Object[]{scopeInstance.toString(), Thread.currentThread().getName()});
+        checkState(scopeInstance != null, "No scoped block in progress.");
+        try {
+            currentScopeInstance.remove();
+            scopeInstance.release();
+        } finally {
+            logger.debugLog("Exited request scope instance {0}", scopeInstance);
         }
-        currentScopeInstance.remove();
-        scopeInstance.release();
     }
 }

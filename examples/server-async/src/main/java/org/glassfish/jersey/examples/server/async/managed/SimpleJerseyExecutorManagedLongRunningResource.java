@@ -37,41 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.server.async.managed;
 
-package org.glassfish.jersey.process.internal;
-
-import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.Response;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.Suspend;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.ExecutionContext;
 
 /**
- * Helper abstract invocation callback class that provides empty implementations
- * for all invocation callback methods.
+ * Example of a simple resource with a long-running operation executed in a
+ * custom Jersey container request processing thread.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractInvocationCallback implements InvocationCallback {
+@Path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH)
+@Produces("text/plain")
+public class SimpleJerseyExecutorManagedLongRunningResource {
 
-    @Override
-    public void cancelled() {
-    }
+    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
+    //
+    private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
+    private static final int SLEEP_TIME_IN_MILLIS = 1000;
+    @Context
+    private ExecutionContext ctx;
 
-    @Override
-    public void failure(Throwable exception) {
-    }
-
-    @Override
-    public void result(Response response) {
-    }
-
-    @Override
-    public void resumed() {
-    }
-
-    @Override
-    public void suspended(long time, TimeUnit unit, InvocationContext context) {
-    }
-
-    @Override
-    public void suspendTimeoutChanged(long time, TimeUnit unit) {
+    @GET
+    @Suspend
+    public void longGet() {
+        try {
+            Thread.sleep(SLEEP_TIME_IN_MILLIS);
+        } catch (InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
+        }
+        ctx.resume(NOTIFICATION_RESPONSE);
     }
 }

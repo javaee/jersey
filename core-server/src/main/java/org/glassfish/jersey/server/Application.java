@@ -45,7 +45,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,11 +94,6 @@ import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Monitor;
-import com.google.common.util.concurrent.SettableFuture;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Jersey server-side application.
@@ -444,62 +438,22 @@ public final class Application implements Inflector<Request, Future<Response>> {
      */
     @Override
     public Future<Response> apply(Request request) {
-        final SettableFuture<Response> responseFuture = SettableFuture.create();
-        final AtomicReference<Timer> timerRef = new AtomicReference<Timer>(null);
-        apply(request, new InvocationCallback() {
-
-            private final AtomicBoolean done = new AtomicBoolean(false);
+        final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
 
             @Override
-            public void result(Response response) {
-                if (done.compareAndSet(false, true)) {
-                    responseFuture.set(response);
-                }
+            protected Response handleFailure(Throwable exception) {
+                return Application.handleFailure(exception);
             }
 
             @Override
-            public void failure(Throwable exception) {
-                if (done.compareAndSet(false, true)) {
-                    responseFuture.set(handleFailure(exception));
-                }
+            protected Response handleTimeout(InvocationContext context) {
+                return Application.prepareTimeoutResponse(context);
             }
+        };
 
-            @Override
-            public void cancelled() {
-                if (done.compareAndSet(false, true)) {
-                    responseFuture.cancel(true);
-                }
-            }
+        apply(request, callback);
 
-            @Override
-            public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
-                if (time <= 0) {
-                    return; // never time out
-                }
-                final Timer timer = new Timer("Application request timer");
-                if (timerRef.compareAndSet(null, timer)) {
-                    timer.schedule(new TimerTask() {
-
-                        @Override
-                        public void run() {
-                            if (done.compareAndSet(false, true)) {
-                                responseFuture.set(prepareTimeoutResponse(context));
-                            }
-                        }
-                    }, unit.toMillis(time));
-                }
-            }
-
-            @Override
-            public void resumed() {
-                final Timer timer = timerRef.getAndSet(null);
-                if (timer != null) {
-                    timer.cancel();
-                }
-            }
-        });
-
-        return responseFuture;
+        return callback;
     }
 
     /**
@@ -534,45 +488,27 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * @param responseWriter request-scoped container context.
      */
     public void apply(final Request request, final ContainerResponseWriter responseWriter) {
-        apply(request, new InvocationCallback() {
-            private final AtomicBoolean suspended = new AtomicBoolean(false);
+        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(request, responseWriter) {
 
             @Override
-            public void result(Response response) {
-                suspended.set(false);
-                writeResponse(responseWriter, request, response);
+            protected void writeResponse(Response response) {
+                Application.this.writeResponse(responseWriter, request, response);
             }
 
             @Override
-            public void failure(Throwable exception) {
-                suspended.set(false);
-                writeResponse(responseWriter, request, handleFailure(exception));
+            protected void writeResponse(Throwable exception) {
+                Application.this.writeResponse(
+                        responseWriter, request, Application.handleFailure(exception));
             }
 
             @Override
-            public void cancelled() {
-                suspended.set(false);
-                responseWriter.cancel();
+            protected void writeTimeoutResponse(InvocationContext context) {
+                Application.this.writeResponse(
+                        responseWriter, request, Application.prepareTimeoutResponse(context));
             }
-
-            @Override
-            public void suspended(long time, TimeUnit unit, final InvocationContext context) {
-                responseWriter.suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
-
-                    @Override
-                    public void onTimeout(ContainerResponseWriter responseWriter) {
-                        if (suspended.getAndSet(false)) {
-                            writeResponse(responseWriter, request, prepareTimeoutResponse(context));
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void resumed() {
-                suspended.set(false);
-            }
-        });
+        };
+        apply(request, callback);
+        callback.suspendWriterIfRunning();
     }
 
     private static Response prepareTimeoutResponse(final InvocationContext context) {

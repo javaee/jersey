@@ -37,19 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async;
+package org.glassfish.jersey.examples.server.async.managed;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.process.ProcessingExecutorsModule;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Jersey example application for custom executors managed async resources.
@@ -59,25 +65,19 @@ import org.glassfish.grizzly.http.server.HttpServer;
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ASYNC_MESSAGING_FIRE_N_FORGET_PATH = "async/messaging/fireAndForget";
-    public static final String ASYNC_MESSAGING_BLOCKING_PATH = "async/messaging/blocking";
-    public static final String ASYNC_LONG_RUNNING_OP_PATH = "async/longrunning";
+    public static final String ASYNC_LONG_RUNNING_MANAGED_OP_PATH = "managedasync/longrunning";
 
     public static void main(String[] args) {
         try {
-            System.out.println("\"Async resources\" Jersey Example App");
+            System.out.println("\"Custom Executor Managed Async Resources\" Jersey Example App");
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
 
             System.out.println(String.format(
                     "Application started.\n"
-                    + "To test simple, non-blocking asynchronous messaging resource, try %s%s\n"
-                    + "To test blocking version of asynchronous messaging resource, try %s%s\n"
                     + "To test long-running asynchronous operation resource, try %s%s\n"
                     + "Hit enter to stop it...",
-                    BASE_URI, ASYNC_MESSAGING_FIRE_N_FORGET_PATH,
-                    BASE_URI, ASYNC_MESSAGING_BLOCKING_PATH,
-                    BASE_URI, ASYNC_LONG_RUNNING_OP_PATH));
+                    BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -88,9 +88,21 @@ public class App {
 
     public static Application create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
+                .addClasses(SimpleJerseyExecutorManagedLongRunningResource.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
-                .build();
+                .addModules(new ProcessingExecutorsModule(new ProcessingExecutorsProvider() {
+
+                    @Override
+                    public ExecutorService getRequestingExecutor() {
+                        return Executors.newCachedThreadPool(
+                                new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
+                    }
+
+                    @Override
+                    public ExecutorService getRespondingExecutor() {
+                        return null; // execute on same thread
+                    }
+                })).build();
 
         return Application.builder(resourceConfig).build();
     }

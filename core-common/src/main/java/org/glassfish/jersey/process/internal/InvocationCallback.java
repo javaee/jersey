@@ -65,7 +65,21 @@ public interface InvocationCallback {
      * @param unit suspend time-out time unit.
      * @param context suspended invocation context.
      */
-    public void suspended(long time, TimeUnit unit, InvocationContext context);
+    public void suspended(final long time, final TimeUnit unit, final InvocationContext context);
+
+    /**
+     * Request processing suspend timeout change event notification.
+     *
+     * {@link RequestInvoker Request invoker} invokes the
+     * {@code suspendTimeoutChanged(...)} callback method when it receives an
+     * instruction to update the timeout value for the current (suspended)
+     * request.
+     *
+     * @param time new suspend time-out value.
+     * @param unit new suspend time-out time unit.
+     * @param context suspended invocation context.
+     */
+    public void suspendTimeoutChanged(final long time, final TimeUnit unit);
 
     /**
      * Request processing resume event notification.
@@ -96,12 +110,12 @@ public interface InvocationCallback {
      *
      * @param response transformation result.
      */
-    public void result(Response response);
+    public void result(final Response response);
 
     /**
      * A request-to-response transformation failure event notification.
      *
      * @param exception exception describing the failure.
      */
-    public void failure(Throwable exception);
+    public void failure(final Throwable exception);
 }

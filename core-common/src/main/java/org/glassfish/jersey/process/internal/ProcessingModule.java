@@ -67,6 +67,7 @@ public class ProcessingModule extends AbstractModule {
     @Override
     protected void configure() {
         // Invocation context
+        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(new TypeLiteral<Ref<InvocationContext>>() {})

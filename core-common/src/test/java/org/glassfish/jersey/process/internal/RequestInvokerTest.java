@@ -40,7 +40,6 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
@@ -100,7 +99,6 @@ public class RequestInvokerTest {
 
         try {
             requestScope.enter();
-
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
                     new AbstractInvocationCallback() {
@@ -115,11 +113,21 @@ public class RequestInvokerTest {
                             fail(exception.getMessage());
                         }
                     });
+        } finally {
+            requestScope.exit();
+        }
 
+        try {
+            requestScope.enter();
             Future<Response> result = invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
             assertEquals(123, result.get().readEntity(Integer.class).intValue());
+        } finally {
+            requestScope.exit();
+        }
 
+        try {
+            requestScope.enter();
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
                     new AbstractInvocationCallback() {
@@ -134,8 +142,13 @@ public class RequestInvokerTest {
                             fail(exception.getMessage());
                         }
                     });
+        } finally {
+            requestScope.exit();
+        }
 
-            result = invoker.apply(
+        try {
+            requestScope.enter();
+            Future<Response> result = invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
             assertEquals(-1, result.get().readEntity(Integer.class).intValue());
         } finally {
@@ -165,11 +178,21 @@ public class RequestInvokerTest {
                             fail(exception.getMessage());
                         }
                     });
+        } finally {
+            requestScope.exit();
+        }
 
+        try {
+            requestScope.enter();
             Future<Response> result = invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
             assertEquals(145, result.get().readEntity(Integer.class).intValue());
+        } finally {
+            requestScope.exit();
+        }
 
+        try {
+            requestScope.enter();
             invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
                     new AbstractInvocationCallback() {
@@ -184,11 +207,15 @@ public class RequestInvokerTest {
                             fail(exception.getMessage());
                         }
                     });
+        } finally {
+            requestScope.exit();
+        }
 
-            result = invoker.apply(
+        try {
+            requestScope.enter();
+            Future<Response> result = invoker.apply(
                     Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
             assertEquals(-1, result.get().readEntity(Integer.class).intValue());
-
         } finally {
             requestScope.exit();
         }

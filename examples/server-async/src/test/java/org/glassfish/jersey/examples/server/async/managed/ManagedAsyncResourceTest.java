@@ -37,9 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async;
+package org.glassfish.jersey.examples.server.async.managed;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -47,7 +46,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
 
@@ -60,11 +58,11 @@ import static org.junit.Assert.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.logging.Logger;
-import org.junit.Ignore;
+import org.glassfish.jersey.examples.server.async.SimpleLongRunningResource;
 
 //@Ignore
-public class AsyncResourceTest extends JerseyTest {
-    private static final Logger LOGGER = Logger.getLogger(AsyncResourceTest.class.getName());
+public class ManagedAsyncResourceTest extends JerseyTest {
+    private static final Logger LOGGER = Logger.getLogger(ManagedAsyncResourceTest.class.getName());
 
     @Override
     protected Application configure() {
@@ -76,124 +74,8 @@ public class AsyncResourceTest extends JerseyTest {
     }
 
     @Test
-    public void testFireAndForgetChatResource() throws InterruptedException {
-        executeChatTest(target().path(App.ASYNC_MESSAGING_FIRE_N_FORGET_PATH), FireAndForgetChatResource.POST_NOTIFICATION_RESPONSE);
-    }
-
-    @Test
-    public void testBlockingPostChatResource() throws InterruptedException {
-        executeChatTest(target().path(App.ASYNC_MESSAGING_BLOCKING_PATH), BlockingPostChatResource.POST_NOTIFICATION_RESPONSE);
-    }
-
-    private void executeChatTest(final Target resourceTarget, final String expectedPostResponse) throws InterruptedException {
-        final int MAX_MESSAGES = 10;
-        final int LATCH_WAIT_TIMEOUT = 10;
-        final boolean debugMode = false;
-        final boolean sequentialGet = false;
-        final boolean sequentialPost = false;
-        final Object sequentialGetLock = new Object();
-        final Object sequentialPostLock = new Object();
-
-        final ExecutorService executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
-
-        final Map<Integer, String> postResponses = new ConcurrentHashMap<Integer, String>();
-        final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
-
-        final CountDownLatch postRequestLatch = new CountDownLatch(MAX_MESSAGES);
-        final CountDownLatch getRequestLatch = new CountDownLatch(MAX_MESSAGES);
-
-        try {
-            for (int i = 0; i < MAX_MESSAGES; i++) {
-                final int requestId = i;
-                executor.submit(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (debugMode || sequentialPost) {
-                            synchronized (sequentialPostLock) {
-                                post();
-                            }
-                        } else {
-                            post();
-                        }
-                    }
-
-                    private void post() throws InvocationException {
-                        try {
-                            final String response = resourceTarget.request().post(Entity.text("" + requestId), String.class);
-                            postResponses.put(requestId, response);
-                        } finally {
-                            postRequestLatch.countDown();
-                        }
-                    }
-                });
-                executor.submit(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (debugMode || sequentialGet) {
-                            synchronized (sequentialGetLock) {
-                                get();
-                            }
-                        } else {
-                            get();
-                        }
-                    }
-
-                    private void get() throws InvocationException {
-                        try {
-                            final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
-                            getResponses.put(requestId, response);
-                        } finally {
-                            getRequestLatch.countDown();
-                        }
-                    }
-                });
-            }
-
-            if (debugMode) {
-                postRequestLatch.await();
-                getRequestLatch.await();
-            } else {
-                assertTrue("Waiting for all POST requests to complete has timed out.", postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
-            }
-        } finally {
-            executor.shutdownNow();
-        }
-
-        StringBuilder messageBuilder = new StringBuilder();
-        for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
-            messageBuilder.append("POST response for message ")
-                    .append(postResponseEntry.getKey()).append(": ")
-                    .append(postResponseEntry.getValue()).append('\n');
-        }
-        messageBuilder.append('\n');
-        for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ")
-                    .append(getResponseEntry.getKey()).append(": ")
-                    .append(getResponseEntry.getValue()).append('\n');
-        }
-        LOGGER.info(messageBuilder.toString());
-
-        assertEquals(MAX_MESSAGES, postResponses.size());
-        for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
-            assertEquals(
-                    "Unexpected POST notification response for message " + postResponseEntry.getKey(),
-                    expectedPostResponse, postResponseEntry.getValue());
-        }
-
-        assertEquals(MAX_MESSAGES, getResponses.size());
-        final Collection<String> getResponseValues = getResponses.values();
-        for (int i = 0; i < MAX_MESSAGES; i++) {
-            assertTrue("Detected a message loss: " + i, getResponseValues.contains("" + i));
-        }
-    }
-
-    @Test
     public void testLongRunningResource() throws InterruptedException {
-        final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_OP_PATH);
+        final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH);
         final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 50;

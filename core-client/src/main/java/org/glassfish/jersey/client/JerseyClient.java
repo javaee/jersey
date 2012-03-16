@@ -255,6 +255,11 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                 }
 
                 @Override
+                public void suspendTimeoutChanged(long time, TimeUnit unit) {
+                    // TODO implement client-side suspend timeout change event logic
+                }
+
+                @Override
                 public void resumed() {
                     // TODO implement client-side resume event logic
                 }

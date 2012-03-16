@@ -41,7 +41,6 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.Suspend;
 import javax.ws.rs.core.ExecutionContext;
 import javax.ws.rs.core.Response;
 
@@ -89,23 +88,6 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
     }
 
     /**
-     * Store a request scope snapshot in the internal stack.
-     *
-     * @param snapshot request scope snapshot to be stored.
-     */
-    public void pushRequestScope(RequestScope.Snapshot snapshot);
-
-    /**
-     * Retrieve a request scope snapshot stored in the internal stack.
-     * <p/>
-     * Note: the method blocks if no scope snapshot is stored and waits
-     * until a snapshot is available.
-     *
-     * @return the most recently stored request scope snapshot.
-     */
-    public RequestScope.Snapshot popRequestScope();
-
-    /**
      * Get the current state of the invocation context.
      *
      * @return current state of the invocation context
@@ -124,4 +106,15 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
      * returns {@code false} otherwise.
      */
     public boolean trySuspend();
+
+    /**
+     * Return the response future that provides a response returned by an inflector.
+     *
+     * This method is used by the {@link ResponseProcessor} to retrieve the
+     * application-layer response information before the response processing is
+     * executed.
+     *
+     * @return inflected response future.
+     */
+    public Future<Response> getInflectedResponse();
 }

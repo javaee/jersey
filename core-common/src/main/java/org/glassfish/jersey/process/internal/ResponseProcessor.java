@@ -40,6 +40,7 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,7 +60,6 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AbstractFuture;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Processes result of the request transformation (successful or not). The response
@@ -120,9 +120,13 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         @Inject
         private RequestScope requestScope;
         @Inject
+        private Factory<InvocationContext> invocationCtxProvider;
+        @Inject
         private Factory<RespondingContext> respondingCtxProvider;
         @Inject
         private Factory<StagingContext<Response>> responseStagingCtxProvider;
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
 
         /**
          *
@@ -148,61 +152,60 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
             // Injection constructor
         }
 
-        public ResponseProcessor build(
-                final InvocationCallback callback,
-                final ListenableFuture<Response> response,
-                final InvocationContext invocationContext,
-                final ExceptionMappers exceptionMappers) {
+        public ResponseProcessor build(final InvocationCallback callback) {
 
             return new ResponseProcessor(
-                    callback,
-                    response,
-                    invocationContext,
                     requestScope,
-                    exceptionMappers,
+                    callback,
+                    invocationCtxProvider,
                     respondingCtxProvider,
-                    responseStagingCtxProvider);
+                    responseStagingCtxProvider,
+                    exceptionMappersProvider);
         }
     }
     //
-    private final InvocationCallback callback;
-    private final ListenableFuture<Response> inflectedResponse;
-    private final InvocationContext invocationContext;
-    //
     private final RequestScope requestScope;
-    private final ExceptionMappers exceptionMappers;
+    private volatile RequestScope.Snapshot requestScopeSnapshot;
+    private final InvocationCallback callback;
+    private final Factory<InvocationContext> invocationCtxProvider;
     private final Factory<RespondingContext> respondingCtxProvider;
     private final Factory<StagingContext<Response>> responseStagingCtxProvider;
+    private final Factory<ExceptionMappers> exceptionMappersProvider;
 
-    private ResponseProcessor(
-            InvocationCallback callback,
-            ListenableFuture<Response> inflectedResponse,
-            InvocationContext invocationContext,
+    public ResponseProcessor(
             RequestScope requestScope,
-            ExceptionMappers exceptionMappers,
+            InvocationCallback callback,
+            Factory<InvocationContext> invocationCtxProvider,
             Factory<RespondingContext> respondingCtxProvider,
-            Factory<StagingContext<Response>> responseStagingCtxProvider) {
-        this.callback = callback;
-        this.inflectedResponse = inflectedResponse;
-        this.invocationContext = invocationContext;
+            Factory<StagingContext<Response>> responseStagingCtxProvider,
+            Factory<ExceptionMappers> exceptionMappersProvider) {
         this.requestScope = requestScope;
-        this.exceptionMappers = exceptionMappers;
+        this.requestScopeSnapshot = null;
+        this.callback = callback;
+
+        this.invocationCtxProvider = invocationCtxProvider;
         this.respondingCtxProvider = respondingCtxProvider;
         this.responseStagingCtxProvider = responseStagingCtxProvider;
+        this.exceptionMappersProvider = exceptionMappersProvider;
+    }
+
+    public void setRequestScopeSnapshot(RequestScope.Snapshot snapshot) {
+        this.requestScopeSnapshot = snapshot;
     }
 
     @Override
     public void run() {
-        if (inflectedResponse.isCancelled()) {
-            // the request processing has been cancelled; just cancel this future & return
-            super.cancel(true);
-            return;
-        }
-
         runInScope(new Runnable() {
 
             @Override
             public void run() {
+                final Future<Response> inflectedResponse = invocationCtxProvider.get().getInflectedResponse();
+                if (inflectedResponse.isCancelled()) {
+                    // the request processing has been cancelled; just cancel this future & return
+                    ResponseProcessor.super.cancel(true);
+                    return;
+                }
+
                 Response response;
                 try {
                     response = inflectedResponse.get();
@@ -259,7 +262,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
             task.run();
         } else {
             try {
-                requestScope.enter(invocationContext.popRequestScope());
+                requestScope.enter(requestScopeSnapshot);
                 task.run();
             } finally {
                 requestScope.exit();
@@ -298,7 +301,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         if (exception instanceof WebApplicationException) {
             response = ((WebApplicationException) exception).getResponse();
         }
-
+        final ExceptionMappers exceptionMappers = exceptionMappersProvider.get();
         if ((response == null || !response.hasEntity()) && exceptionMappers != null) {
             javax.ws.rs.ext.ExceptionMapper mapper = exceptionMappers.find(exception.getClass());
             if (mapper != null) {
