@@ -179,14 +179,15 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return rawType.cast(instanceType.instance());
         }
 
-        final MediaType mediaType = getMsgContentType();
-
         if (instanceType != null) {
             final Type myInstanceType = instanceType.type();
             final Object myInstance = instanceType.instance();
             if (myInstanceType == null || workers == null || myInstance == null) {
                 return null;
             }
+
+            final MediaType mediaType = getMsgContentType();
+
             final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, writeAnnotations, mediaType);
             if (writer == null) {
                 // TODO throw an exception?
@@ -209,6 +210,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         if (workers == null) {
             return null;
         }
+
+        final MediaType mediaType = getMsgContentType();
 
         final MessageBodyReader<T> br = workers.getMessageBodyReader(rawType, type, readAnnotations, mediaType);
         if (br == null) {

@@ -125,8 +125,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
 
     @Override
     public boolean isEntityRetrievable() {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        return hasEntity() && wrapped.type() != null;
     }
 
     @Override
