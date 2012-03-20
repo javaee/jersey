@@ -50,33 +50,39 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.routing.MultipleMethodAcceptor.ConsumesProducesInflector;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.AbstractResourceMethod;
 import org.glassfish.jersey.server.model.InvocableResourceMethod;
 import org.glassfish.jersey.server.model.Parameter;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
- * A single acceptor to be responsible to respond to all HTTP methods defined on a given resource.
- * Method selection algorithm is implemented here, which takes into account requested media type
- * and defined resource method media type capabilities.
+ * A single acceptor to be responsible to respond to all HTTP methods defined on
+ * a given resource. Method selection algorithm is implemented here, which takes
+ * into account requested media type and defined resource method media type
+ * capabilities.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -212,6 +218,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
     final Map<String, List<ConsumesProducesInflector>> method2InflectorMap;
     final MessageBodyWorkers workers;
     final Injector injector;
+    final TreeAcceptor acceptor;
 
     /* package */ MultipleMethodAcceptor(Injector injector, MessageBodyWorkers msgWorkers, List<Pair<AbstractResourceMethod, Inflector<Request, Response>>> method2InflectorList) {
         this.injector = injector;
@@ -223,6 +230,17 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
                 method2InflectorMap.put(httpMethod, new LinkedList<ConsumesProducesInflector>());
             }
             addAllCombinations(method2InflectorMap.get(httpMethod), methodInflector);
+        }
+        if (!method2InflectorMap.containsKey(HttpMethod.HEAD)) {
+            this.acceptor = createHeadEnrichedAcceptor();
+        } else {
+            this.acceptor = createInternalAcceptor();
+        }
+        if (!method2InflectorMap.containsKey(HttpMethod.OPTIONS)) {
+            final Set<String> allowedMethods = new HashSet<String>(method2InflectorMap.keySet());
+            allowedMethods.add(HttpMethod.HEAD);
+            allowedMethods.add(HttpMethod.OPTIONS);
+            method2InflectorMap.put(HttpMethod.OPTIONS, createPlainTextOptionsInflector(allowedMethods));
         }
     }
 
@@ -267,6 +285,10 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
 
     @Override
     public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+        return acceptor.apply(request);
+    }
+
+    private Inflector<Request, Response> getInflector(Request request) {
         List<ConsumesProducesInflector> inflectors = method2InflectorMap.get(request.getMethod());
         if (inflectors == null) {
             throw new WebApplicationException(
@@ -300,11 +322,10 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
                     final MediaType requestContentType = request.getHeaders().getMediaType();
                     final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE : requestContentType;
 
-                    final RequestSpecificConsumesProducesInflector candidate
-                                = new RequestSpecificConsumesProducesInflector(
-                                          CombinedClientServerMediaType.create(effectiveContentType, satisfiable.consumes),
-                                          CombinedClientServerMediaType.create(acceptableMediaType, satisfiable.produces),
-                                          satisfiable.inflector);
+                    final RequestSpecificConsumesProducesInflector candidate = new RequestSpecificConsumesProducesInflector(
+                            CombinedClientServerMediaType.create(effectiveContentType, satisfiable.consumes),
+                            CombinedClientServerMediaType.create(acceptableMediaType, satisfiable.produces),
+                            satisfiable.inflector);
                     methodSelector.consider(candidate);
                 }
             }
@@ -320,22 +341,26 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
             final MediaType effectiveResponseType = selected.produces.combinedMediaType;
             injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
             final Inflector<Request, Response> inflector = selected.inflector;
-            return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+            return new Inflector<Request, Response>() {
 
                 @Override
                 public Response apply(Request request) {
                     injector.inject(inflector);
-                    return typeNotSpecific(effectiveResponseType) ? inflector.apply(request) : responseWithContentTypeHeader(effectiveResponseType, inflector.apply(request));
+                    return typeNotSpecific(effectiveResponseType) ?
+                            inflector.apply(request)
+                            : responseWithContentTypeHeader(
+                                effectiveResponseType,
+                                request, inflector.apply(request));
                 }
-            })));
+            };
         }
 
         throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
     }
 
     private void reportMethodSelectionAmbiguity(List<MediaType> acceptableTypes,
-                                                    RequestSpecificConsumesProducesInflector selected,
-                                                        List<RequestSpecificConsumesProducesInflector> sameFitnessInflectors) {
+            RequestSpecificConsumesProducesInflector selected,
+            List<RequestSpecificConsumesProducesInflector> sameFitnessInflectors) {
         if (LOGGER.isLoggable(Level.WARNING)) {
             StringBuilder msgBuilder =
                     new StringBuilder(LocalizationMessages.AMBIGUOUS_RESOURCE_METHOD(acceptableTypes)).append('\n');
@@ -352,13 +377,77 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
         }
     }
 
-    private Response responseWithContentTypeHeader(final MediaType mt, final Response response) {
+    private Response responseWithContentTypeHeader(final MediaType mt, final Request request, final Response response) {
         final boolean contentTypeAlreadySet = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE);
-        return (!response.hasEntity() || contentTypeAlreadySet) ?
+        return (!request.getMethod().equals(HttpMethod.HEAD) && (!response.hasEntity() || contentTypeAlreadySet)) ?
                 response : Responses.toBuilder(response).header(HttpHeaders.CONTENT_TYPE, mt).build();
     }
 
     private boolean typeNotSpecific(final MediaType effectiveResponseType) {
         return effectiveResponseType.isWildcardType() || effectiveResponseType.isWildcardSubtype();
+    }
+
+    private Response stripEntity(final Response originalResponse) {
+        if (originalResponse.hasEntity()) {
+            ResponseBuilder result = Response.status(originalResponse.getStatus());
+            Responses.fillHeaders(result, originalResponse.getHeaders().asMap());
+            return result.build();
+        } else {
+            return originalResponse;
+        }
+    }
+
+    private TreeAcceptor createInternalAcceptor() {
+        return new TreeAcceptor() {
+
+            @Override
+            public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+                return wrapWithRequestToAcceptorIterator(request, getInflector(request));
+            }
+        };
+    }
+
+    private TreeAcceptor createHeadEnrichedAcceptor() {
+        return new TreeAcceptor() {
+
+            @Override
+            public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+                if (HttpMethod.HEAD.equals(request.getMethod())) {
+
+                    return wrapWithRequestToAcceptorIterator(request, new Inflector<Request, Response>() {
+
+                        @Override
+                        public Response apply(Request data) {
+                            final Request getRequest = Requests.from(data).method(HttpMethod.GET).build();
+                            return stripEntity(getInflector(getRequest).apply(getRequest));
+                        }
+                    });
+                } else {
+                    return wrapWithRequestToAcceptorIterator(request, getInflector(request));
+
+                }
+            }
+        };
+    }
+
+    private List<ConsumesProducesInflector> createPlainTextOptionsInflector(final Set<String> allowedMethods) {
+
+        final String allowedList = allowedMethods.toString();
+        final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
+
+        return Lists.newArrayList(
+                new ConsumesProducesInflector(
+                           MediaType.WILDCARD_TYPE,
+                           MediaType.TEXT_PLAIN_TYPE, new Inflector<Request, Response>() {
+
+           @Override
+           public Response apply(Request data) {
+               return Response.ok(optionsBody, MediaType.TEXT_PLAIN_TYPE).allow(allowedMethods).build();
+           }
+       }));
+    }
+
+    private Pair<Request, Iterator<TreeAcceptor>> wrapWithRequestToAcceptorIterator(final Request request, final Inflector<Request, Response> inflector) {
+        return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(inflector)));
     }
 }

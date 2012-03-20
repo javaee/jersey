@@ -94,6 +94,7 @@ import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Monitor;
+import javax.ws.rs.HttpMethod;
 
 /**
  * Jersey server-side application.
@@ -549,7 +550,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
         try {
             final boolean entityExists = response.hasEntity();
 
-            if (response.getStatus() == 200 && !entityExists) {
+            if (!HttpMethod.HEAD.equals(request.getMethod()) && response.getStatus() == 200 && !entityExists) {
                 response = Response.fromResponse(response).status(204).build();
             }
 

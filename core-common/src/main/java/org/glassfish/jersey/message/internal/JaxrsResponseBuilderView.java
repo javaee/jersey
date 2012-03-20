@@ -41,8 +41,10 @@ package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -63,6 +65,7 @@ import javax.ws.rs.core.Variant;
  * An implementation of {@link ResponseBuilder}.
  *
  * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
 
@@ -323,12 +326,16 @@ final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
 
     @Override
     public ResponseBuilder allow(String... methods) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return allow(new HashSet(Arrays.asList(methods)));
     }
 
     @Override
     public ResponseBuilder allow(Set<String> methods) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        StringBuilder allow = new StringBuilder();
+        for (String m : methods) {
+            append(allow, true, m);
+        }
+        return header("Allow", allow, true);
     }
 
     @Override
