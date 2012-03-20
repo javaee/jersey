@@ -53,7 +53,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 /**
- * Factory for testing {@link JdkHttpHandlerContainer}.
+ * Factory for testing {@link org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */

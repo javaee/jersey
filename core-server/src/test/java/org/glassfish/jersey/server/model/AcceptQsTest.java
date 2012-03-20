@@ -142,6 +142,10 @@ public class AcceptQsTest {
                 .get().readEntity(String.class);
         assertEquals("bar", s);
 
+        s = app.apply(Requests.from("/","GET").accept("application/foo", "application/bar", "application/baz;q=0.6").build())
+                .get().readEntity(String.class);
+        assertEquals("bar", s);
+
         s = app.apply(Requests.from("/","GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
                 .get().readEntity(String.class);
         assertEquals("bar", s);
@@ -376,6 +380,16 @@ public class AcceptQsTest {
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/gaga"), response.getHeaders().getMediaType());
+
+        response = app.apply(Requests.from("/","GET").accept("text/*").build()).get();
+        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
+        assertEquals("plain", response.readEntity(String.class));
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+
+        response = app.apply(Requests.from("/","GET").accept("text/*;q=0.5, text/html;q=0.1").build()).get();
+        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
+        assertEquals("plain", response.readEntity(String.class));
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
     }
 
     @Path("/")
