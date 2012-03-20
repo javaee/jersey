@@ -59,7 +59,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey 1: jersey-tests:com.sun.jersey.impl.resource.ConsumeProduceSimpleTest.java
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ConsumeProduceSimpleTest  {

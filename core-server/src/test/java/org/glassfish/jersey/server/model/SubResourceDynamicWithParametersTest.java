@@ -56,7 +56,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.SubResourceDynamicWithParametersTest
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
  */
 public class SubResourceDynamicWithParametersTest {
     

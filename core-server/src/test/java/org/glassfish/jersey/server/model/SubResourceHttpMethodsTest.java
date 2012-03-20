@@ -57,7 +57,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.SubResourceHttpMethodsTest
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class SubResourceHttpMethodsTest {
 

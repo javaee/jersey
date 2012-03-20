@@ -58,7 +58,7 @@ import org.junit.Test;
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.errors.PathAndResourceMethodErrorsTest
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
  */
 public class PathAndResourceMethodErrorsTest {
 

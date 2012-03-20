@@ -71,7 +71,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * Not sure whether this is relevant anymore.
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @SuppressWarnings("unchecked")
 public class StringReaderTest extends AbstractTest {

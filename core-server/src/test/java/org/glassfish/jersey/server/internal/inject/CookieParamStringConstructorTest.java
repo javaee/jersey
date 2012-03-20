@@ -59,7 +59,8 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class CookieParamStringConstructorTest extends AbstractTest {
 

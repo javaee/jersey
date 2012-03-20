@@ -108,7 +108,7 @@ import javax.xml.stream.XMLStreamReader;
  * {@link WebApplicationException} being thrown with a status of 500
  * (Internal Server error).
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
  * @author Martin Matula
  */
 public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvider<Object> {

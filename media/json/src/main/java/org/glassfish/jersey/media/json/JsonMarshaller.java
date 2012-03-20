@@ -52,7 +52,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * A JSON marshaller responsible for serializing Java content trees, defined
  * by JAXB, to JSON data.
  *
- * @author Jakub.Podlesak@Sun.COM, Paul.Sandoz@Sun.COM
+ * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public interface JsonMarshaller {
 

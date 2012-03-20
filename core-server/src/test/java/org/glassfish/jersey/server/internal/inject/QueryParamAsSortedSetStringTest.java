@@ -55,7 +55,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @SuppressWarnings("unchecked")
 public class QueryParamAsSortedSetStringTest extends AbstractTest {

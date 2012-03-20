@@ -51,7 +51,8 @@ import javax.xml.bind.annotation.XmlType;
  * A JSON unmarshaller responsible for deserializing JSON data to a Java
  * content tree, defined by JAXB.
  *
- * @author Jakub.Podlesak@Sun.COM, Paul.Sandoz@Sun.COM
+ * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public interface JsonUnmarshaller {
 
