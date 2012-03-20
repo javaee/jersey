@@ -54,6 +54,19 @@
     <name>jersey-container-jdk-http</name>
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>maven-istack-commons-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+        </plugins>
+
         <resources>
             <resource>
                 <directory>${basedir}/src/main/java</directory>

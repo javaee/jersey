@@ -48,6 +48,7 @@ import java.net.URI;
 import java.util.concurrent.Executors;
 
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ContainerFactory;
 
@@ -76,25 +77,21 @@ public class JdkHttpServerFactory {
         final HttpHandler handler = ContainerFactory.createContainer(HttpHandler.class, application);
 
         if (uri == null) {
-            throw new IllegalArgumentException("The URI must not be null");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
         }
 
         final String scheme = uri.getScheme();
         if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https")) {
-            throw new IllegalArgumentException("The URI scheme, of the URI " + uri
-                    + ", must be equal (ignoring case) to 'http' or 'https'");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_SCHEME_UNKNOWN(uri));
         }
 
         final String path = uri.getPath();
         if (path == null) {
-            throw new IllegalArgumentException("The URI path, of the URI " + uri
-                    + ", must be non-null");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_NULL(uri));
         } else if (path.length() == 0) {
-            throw new IllegalArgumentException("The URI path, of the URI " + uri
-                    + ", must be present");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_EMPTY(uri));
         } else if (path.charAt(0) != '/') {
-            throw new IllegalArgumentException("The URI path, of the URI " + uri
-                    + ". must start with a '/'");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_START(uri));
         }
 
         final int port = (uri.getPort() == -1) ? 80 : uri.getPort();
@@ -104,7 +101,7 @@ public class JdkHttpServerFactory {
                     ? HttpServer.create(new InetSocketAddress(port), 0)
                     : HttpsServer.create(new InetSocketAddress(port), 0);
         } catch (IOException ioe) {
-            throw new ProcessingException("IOException thrown when creating the JDK HttpServer.", ioe);
+            throw new ProcessingException(LocalizationMessages.ERROR_CONTAINER_EXCEPTION_IO(), ioe);
         }
 
         server.setExecutor(Executors.newCachedThreadPool());

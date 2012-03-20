@@ -55,6 +55,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.Application;
 import org.glassfish.jersey.server.ContainerException;
@@ -249,7 +250,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
          */
         private void closeAndLogWarning() {
             if (closed.compareAndSet(false, true)) {
-                Logger.getLogger(JdkHttpHandlerContainer.class.getName()).log(Level.WARNING, "ResponseWriter was not commited yet. Committing the Response now.");
+                Logger.getLogger(JdkHttpHandlerContainer.class.getName()).log(Level.WARNING, LocalizationMessages.ERROR_RESPONSEWRITER_RESPONSE_UNCOMMITED());
                 exchange.close();
             }
         }
