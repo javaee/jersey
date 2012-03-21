@@ -38,6 +38,6 @@
  * holder.
  */
 /**
- * Jersey server-side runtime delegate implementation classes.
+ * Default runtime delegate implementation classes.
  */
 package com.sun.ws.rs.ext;

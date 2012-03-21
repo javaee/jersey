@@ -37,20 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package com.sun.ws.rs.ext;
+package org.glassfish.jersey.server.internal;
 
 import javax.ws.rs.core.Application;
-
+import org.glassfish.hk2.HK2;
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
 import org.glassfish.jersey.message.internal.MessagingModules;
-
-import org.glassfish.hk2.HK2;
+import org.glassfish.jersey.server.ContainerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Server-side implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
+ * This overrides the default implementation of {@link javax.ws.rs.ext.RuntimeDelegate} from
+ * jersey-common which does not implement {@link #createEndpoint(javax.ws.rs.core.Application, java.lang.Class)}
+ * method.
  *
  * @author Jakub Podlesak
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
@@ -61,6 +65,7 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     @Override
     public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ResourceConfig rc = (application instanceof ResourceConfig) ? (ResourceConfig) application : ResourceConfig.from(application);
+        return ContainerFactory.createContainer(endpointType, org.glassfish.jersey.server.Application.builder(rc).build());
     }
 }
