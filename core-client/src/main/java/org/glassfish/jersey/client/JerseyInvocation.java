@@ -64,7 +64,7 @@ import org.jvnet.tiger_types.Types;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.JerseyInvocation JAX-RS client-side
+ * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
  * request invocation} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -589,12 +589,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(Response response) {
+                if (responseType == Response.class) {
+                    responseFuture.set(responseType.cast(response));
+                    return;
+                }
+
                 if (response.getStatus() < 300) {
-                    if (responseType == Response.class) {
-                        responseFuture.set(responseType.cast(response));
-                    } else {
-                        responseFuture.set(response.readEntity(responseType));
-                    }
+                    responseFuture.set(response.readEntity(responseType));
                 } else {
                     failed(new InvocationException(response, true));
                 }

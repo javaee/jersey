@@ -550,10 +550,6 @@ public final class Application implements Inflector<Request, Future<Response>> {
         try {
             final boolean entityExists = response.hasEntity();
 
-            if (!HttpMethod.HEAD.equals(request.getMethod()) && response.getStatus() == 200 && !entityExists) {
-                response = Response.fromResponse(response).status(204).build();
-            }
-
             final MessageBodyWorkers workers = Requests.getMessageWorkers(request);
             if (entityExists) {
                 final Object entity = response.getEntity();

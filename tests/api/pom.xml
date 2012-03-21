@@ -51,6 +51,7 @@
 
     <groupId>org.glassfish.jersey.tests.api</groupId>
     <artifactId>api</artifactId>
+    <packaging>jar</packaging>
     <name>jersey-tests-api</name>
 
     <build>
@@ -75,8 +76,9 @@
 
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <artifactId>jersey-test-framework-provider-bundle</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
             <scope>test</scope>
         </dependency>
     </dependencies>
