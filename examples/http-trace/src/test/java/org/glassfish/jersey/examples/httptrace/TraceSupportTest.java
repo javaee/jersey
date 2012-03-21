@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.httptrace;
 
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.test.JerseyTest;
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TraceSupportTest extends JerseyTest {
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         return App.create();
     }
 

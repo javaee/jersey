@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 import javax.ws.rs.client.Target;
 
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 public class JaxrsTypeInjectionTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         return App.create();
     }
     private String[] expectedFragmentsProgrammatic = new String[]{

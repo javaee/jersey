@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -59,13 +59,13 @@ import static org.junit.Assert.assertEquals;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class SubResourceNullTest {
-    
-    Application app;
 
-    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+    JerseyApplication app;
+
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig);
+        return JerseyApplication.builder(resourceConfig);
     }
 
     @Path("/parent")
@@ -93,5 +93,5 @@ public class SubResourceNullTest {
         assertEquals("child", app.apply(Requests.from("/parent/true","GET").build()).get().readEntity(String.class));
 
         assertEquals(404, app.apply(Requests.from("/parent/false","GET").build()).get().getStatus());
-    }  
+    }
 }

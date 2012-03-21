@@ -86,7 +86,7 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
                 .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters)).build();
 
-        Application.Builder appBuilder = Application.builder(resourceConfig);
+        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -94,7 +94,7 @@ public class ApplicationFilterTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -119,7 +119,7 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
                 .addModules(new RequestFilterModule(requestFilterList)).build();
 
-        Application.Builder appBuilder = Application.builder(resourceConfig);
+        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -127,7 +127,7 @@ public class ApplicationFilterTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -152,7 +152,7 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
                 .addModules(new ResponseFilterModule(responseFilterList)).build();
 
-        Application.Builder appBuilder = Application.builder(resourceConfig);
+        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -160,7 +160,7 @@ public class ApplicationFilterTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -254,7 +254,7 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
                 .addModules(new RequestFilterModule(requestFilterList)).build();
 
-        Application.Builder appBuilder = Application.builder(resourceConfig);
+        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -262,7 +262,7 @@ public class ApplicationFilterTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
     }

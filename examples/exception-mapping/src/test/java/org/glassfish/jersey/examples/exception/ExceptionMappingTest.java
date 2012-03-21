@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.exception;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
@@ -65,7 +65,7 @@ import static org.junit.Assert.assertTrue;
 public class ExceptionMappingTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(
@@ -76,7 +76,7 @@ public class ExceptionMappingTest extends JerseyTest {
                 MySubSubException.class,
                 WebApplicationExceptionMapper.class).build();
 
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     /**

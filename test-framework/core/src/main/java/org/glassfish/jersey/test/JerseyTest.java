@@ -54,7 +54,7 @@ import javax.ws.rs.ext.ClientFactory;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -89,7 +89,7 @@ public abstract class JerseyTest {
      */
     private final TestContainer tc;
     private final Client client;
-    private final Application application;
+    private final JerseyApplication application;
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
@@ -144,7 +144,7 @@ public abstract class JerseyTest {
      *         cannot be obtained, or the application descriptor is not
      *         supported by the test container factory.
      */
-    public JerseyTest(Application application) throws TestContainerException {
+    public JerseyTest(JerseyApplication application) throws TestContainerException {
         this.application = application;
         this.application.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
         this.tc = getContainer(application, getTestContainerFactory());
@@ -251,7 +251,7 @@ public abstract class JerseyTest {
      *
      * @return the application descriptor.
      */
-    protected Application configure() {
+    protected JerseyApplication configure() {
         throw new UnsupportedOperationException(
                 "The configure method must be implemented by the extending class");
     }
@@ -378,7 +378,7 @@ public abstract class JerseyTest {
         tc.stop();
     }
 
-    private TestContainer getContainer(Application application, TestContainerFactory tcf) {
+    private TestContainer getContainer(JerseyApplication application, TestContainerFactory tcf) {
         if (application == null) {
             throw new IllegalArgumentException("The application cannot be null");
         }
@@ -396,10 +396,10 @@ public abstract class JerseyTest {
      * This method is called exactly once when JerseyTest is created.
      *
      * @param tc instance of {@link TestContainer}
-     * @param application instance of {@link Application}
+     * @param application instance of {@link JerseyApplication}
      * @return A Client instance.
      */
-    protected Client getClient(TestContainer tc, Application application) {
+    protected Client getClient(TestContainer tc, JerseyApplication application) {
         Client c = tc.getClient();
 
         if (c != null) {

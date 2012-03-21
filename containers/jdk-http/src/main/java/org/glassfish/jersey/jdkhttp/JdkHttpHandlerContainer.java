@@ -57,27 +57,27 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 
 /**
- * Container adapter between {@link HttpServer JDK HttpServer} and Jersey {@link Application Jersey Application}.
+ * Container adapter between {@link HttpServer JDK HttpServer} and {@link JerseyApplication Jersey application}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler {
 
-    private final Application application;
+    private final JerseyApplication application;
 
     /**
-     * Creates a new Container connected to given {@link Application Jersey Application}.
+     * Creates a new Container connected to given {@link JerseyApplication Jersey application}.
      *
      * @param app Jersey application for which the container should be
      * initialized.
      */
-    JdkHttpHandlerContainer(Application app) {
+    JdkHttpHandlerContainer(JerseyApplication app) {
         this.application = app;
     }
 
@@ -157,7 +157,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
         try {
             application.apply(jaxRsRequest, responseWriter);
         } finally {
-            // if the response was not commited yet by the Application
+            // if the response was not commited yet by the JerseyApplication
             // then commit it and log warning
             responseWriter.closeAndLogWarning();
         }

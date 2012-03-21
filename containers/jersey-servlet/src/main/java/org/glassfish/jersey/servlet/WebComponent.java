@@ -72,7 +72,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -149,14 +149,14 @@ public class WebComponent {
         }
     }
     //
-    private Application application;
+    private JerseyApplication application;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {
-        this.application = Application.builder(createResourceConfig(webConfig, new WebComponentModule())).build();
+        this.application = JerseyApplication.builder(createResourceConfig(webConfig, new WebComponentModule())).build();
     }
 
     public WebComponent(final ResourceConfig resourceConfig) throws ServletException {
-        this.application = Application.builder(resourceConfig).build();
+        this.application = JerseyApplication.builder(resourceConfig).build();
         this.application.addModules(new WebComponentModule());
     }
 
@@ -344,7 +344,7 @@ public class WebComponent {
      *
      * @param props the properties to pass to the resource configuration.
      * @param wc the web configuration.
-     * @param modules modules to pass to the {@link Application} configuration.
+     * @param modules modules to pass to the {@link JerseyApplication} configuration.
      * @return the default resource configuration.
      * @throws javax.servlet.ServletException in case of any issues with providing
      *     the default resource configuration.

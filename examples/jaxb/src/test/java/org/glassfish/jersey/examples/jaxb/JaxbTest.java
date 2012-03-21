@@ -48,7 +48,7 @@ import static javax.ws.rs.client.Entity.xml;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -65,7 +65,7 @@ import static org.junit.Assert.*;
 public class JaxbTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         enable(TestProperties.LOG_TRAFFIC);
 
         return App.createApp();

@@ -40,7 +40,7 @@
 package org.glassfish.jersey.test.external;
 
 import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -61,7 +61,7 @@ import java.net.URI;
 public class ExternalTestContainerFactory implements TestContainerFactory {
 
     @Override
-    public TestContainer create(URI baseUri, Application application) throws IllegalArgumentException {
+    public TestContainer create(URI baseUri, JerseyApplication application) throws IllegalArgumentException {
         return new ExternalTestContainer(getBaseURI(baseUri));
     }
 

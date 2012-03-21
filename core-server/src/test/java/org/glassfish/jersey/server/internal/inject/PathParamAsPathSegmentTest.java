@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -59,11 +59,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class PathParamAsPathSegmentTest {
 
-    Application app;
+    JerseyApplication app;
 
     private void initiateWebApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
-        app = Application.builder(resourceConfig).build();
+        app = JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("/{arg1}/{arg2}/{arg3}")

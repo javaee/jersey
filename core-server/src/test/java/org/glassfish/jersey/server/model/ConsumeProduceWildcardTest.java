@@ -41,7 +41,7 @@
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -60,9 +60,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConsumeProduceWildcardTest {
 
-    private Application createApplication(Class<?>... classes) {
+    private JerseyApplication createApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("/{arg1}/{arg2}")
@@ -87,7 +87,7 @@ public class ConsumeProduceWildcardTest {
 
     @Test
     public void testConsumeWildCardBean() throws Exception {
-        Application app = createApplication(ConsumeWildCardBean.class);
+        JerseyApplication app = createApplication(ConsumeWildCardBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));

@@ -126,8 +126,8 @@ public class ApplicationBuilderTest {
         }
     }
 
-    public Application setupApplication1() {
-        final Application.Builder af = Application.builder();
+    public JerseyApplication setupApplication1() {
+        final JerseyApplication.Builder af = JerseyApplication.builder();
         af.bind("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
         af.bind("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
         return af.build();
@@ -163,7 +163,7 @@ public class ApplicationBuilderTest {
     @Test
     public void testappBuilderClasses() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(ResourceA.class).build();
-        final Application application = Application.builder(resourceConfig).build();
+        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -189,7 +189,7 @@ public class ApplicationBuilderTest {
         };
 
         final ResourceConfig resourceConfig = ResourceConfig.from(jaxRsApplication);
-        final Application application = Application.builder(resourceConfig).build();
+        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -232,7 +232,7 @@ public class ApplicationBuilderTest {
                 .addSingletons(new ResourceAReader())
                 .build();
 
-        final Application application = Application.builder(resourceConfig).build();
+        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -262,7 +262,7 @@ public class ApplicationBuilderTest {
                 .addClasses(ErrornousResource.class)
                 .build();
         try {
-            Application.builder(resourceConfig).build();
+            JerseyApplication.builder(resourceConfig).build();
             assertTrue("application builder should have failed", false);
         } catch (Exception e) {
         }

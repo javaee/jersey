@@ -74,7 +74,7 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
     @Test
     public void testPutGet() throws Exception {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(NameResource.class).build();
-        final Application.Builder appBuilder = Application.builder(resourceConfig);
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind("/name").method("PUT").to(new Inflector<Request, Response>() {
 
@@ -84,7 +84,7 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         final Response response = application.apply(Requests.from("", "name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
         assertEquals(200, response.getStatus());

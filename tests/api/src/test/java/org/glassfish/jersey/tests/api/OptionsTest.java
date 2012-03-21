@@ -39,17 +39,17 @@
  */
 package org.glassfish.jersey.tests.api;
 
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -59,8 +59,8 @@ import static org.junit.Assert.assertTrue;
 public class OptionsTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
-        return Application.builder(ResourceConfig.builder().addClasses(HttpOptionsTest.class).build()).build();
+    protected JerseyApplication configure() {
+        return JerseyApplication.builder(ResourceConfig.builder().addClasses(HttpOptionsTest.class).build()).build();
     }
 
     @Path("/OptionsTest")

@@ -47,7 +47,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -62,12 +62,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class SubResourceHttpMethodsTest {
 
-    Application app;
+    JerseyApplication app;
 
-    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig);
+        return JerseyApplication.builder(resourceConfig);
     }
 
     @Path("/")

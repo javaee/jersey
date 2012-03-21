@@ -43,22 +43,22 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
 
 /**
  * A suspendable, request-scoped container response writer.
  *
  * Container sends a new instance of the response writer with every request as part
- * of the call to the Jersey application {@link Application#apply(javax.ws.rs.core.Request,
+ * of the call to the Jersey application {@link JerseyApplication#apply(javax.ws.rs.core.Request,
  * ContainerResponseWriter) apply(...)} method. Each container response writer
  * represents an open connection to the client (waiting for a response).
  * <p />
  * For each request the Jersey runtime will make sure to directly call either
  * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}, {@link #cancel()}
  * or {@code commit()} method on a response writer supplied to the
- * {@code Application.apply(...)} method before the method has finished. Therefore
- * the container implementations may assume that when the {@code Application.apply(...)}
+ * {@code JerseyApplication.apply(...)} method before the method has finished. Therefore
+ * the container implementations may assume that when the {@code JerseyApplication.apply(...)}
  * method is finished, the container response writer is either {@link #commit() commited},
  * {@link #cancel() canceled} or {@link #suspend(long, TimeUnit, TimeoutHandler) suspended}.
  *
@@ -152,7 +152,7 @@ public interface ContainerResponseWriter {
      * Cancel the request/response processing. This method automatically commits
      * and closes the writer.
      *<p />
-     * By invoking this method, {@link org.glassfish.jersey.server.Application
+     * By invoking this method, {@link org.glassfish.jersey.server.JerseyApplication
      * Jersey application} indicates to the container that the request processing
      * related to this container context has been canceled.
      * <p />

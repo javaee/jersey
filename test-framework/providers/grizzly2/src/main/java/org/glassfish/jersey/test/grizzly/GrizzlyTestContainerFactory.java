@@ -42,7 +42,7 @@ package org.glassfish.jersey.test.grizzly;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -58,13 +58,13 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
     private static class GrizzlyTestContainer implements TestContainer {
 
         private final URI uri;
-        private final Application application;
+        private final JerseyApplication application;
 
         private HttpServer server;
 
         private static final Logger LOGGER = Logger.getLogger(GrizzlyTestContainer.class.getName());
 
-        private GrizzlyTestContainer(URI uri, Application application) {
+        private GrizzlyTestContainer(URI uri, JerseyApplication application) {
             this.application = application;
             this.uri = uri;
         }
@@ -102,7 +102,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(URI uri, Application application) throws IllegalArgumentException {
+    public TestContainer create(URI uri, JerseyApplication application) throws IllegalArgumentException {
         return new GrizzlyTestContainer(uri, application);
     }
 }

@@ -50,7 +50,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -85,7 +85,7 @@ public class App {
 
     }
 
-    public static Application createApp() {
+    public static JerseyApplication createApp() {
 
         MediaType[] jsonAndTextTypes = new MediaType[]{MediaType.APPLICATION_JSON_TYPE, MediaType.TEXT_PLAIN_TYPE};
 
@@ -95,7 +95,7 @@ public class App {
                 .addClasses(ClipboardDataProvider.TextPlain.class)
                 .build();
 
-        final Application.Builder appBuilder = Application.builder(resourceConfig);
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind("echo").method("POST").consumes(jsonAndTextTypes).produces(jsonAndTextTypes).to(new Inflector<Request, Response>() {
 

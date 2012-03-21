@@ -48,7 +48,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -62,12 +62,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class InnerClassWithGenericTypeTest {
 
-    Application app;
+    JerseyApplication app;
 
-    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig);
+        return JerseyApplication.builder(resourceConfig);
     }
 
     @Path("/")

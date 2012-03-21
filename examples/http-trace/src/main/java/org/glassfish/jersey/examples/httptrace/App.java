@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.httptrace;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.ws.rs.core.MediaType;
@@ -69,7 +69,7 @@ public class App {
         try {
             System.out.println("HTTP TRACE Support Jersey Example App");
 
-            final Application app = create();
+            final JerseyApplication app = create();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
             System.out.println(String.format(
@@ -86,10 +86,10 @@ public class App {
         }
     }
 
-    public static Application create() {
+    public static JerseyApplication create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(TracingResource.class).build();
 
-        final Application.Builder appBuilder = Application.builder(resourceConfig);
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind(ROOT_PATH_PROGRAMMATIC).method(TRACE.NAME).to(new Inflector<Request, Response>() {
 

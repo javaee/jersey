@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.spi;
 
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 
 /**
  * Service-provider interface for creating container instances.
@@ -50,8 +50,8 @@ import org.glassfish.jersey.server.Application;
  * <p />
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
- * {@link Application Jersey application} using the application's
- * {@link Application#apply(javax.ws.rs.core.Request, org.glassfish.jersey.server.spi.ContainerResponseWriter)
+ * {@link JerseyApplication Jersey application} using the application's
+ * {@link JerseyApplication#apply(javax.ws.rs.core.Request, org.glassfish.jersey.server.spi.ContainerResponseWriter)
  * apply(request, responseWriter)} method and sending the responses provided by the
  * application back to the client.
  * <p />
@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.Application;
  * <p />
  * An implementation (a service-provider) identifies itself by registering a proper
  * HK2 {@code ContainterProvider} contract binding in a custom HK2 module configured
- * in the {@link org.glassfish.jersey.server.Application Jersey application}.
+ * in the {@link org.glassfish.jersey.server.JerseyApplication Jersey application}.
  * Alternatively, the implementation can identify itself by placing a provider-configuration
  * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}
  * in the resource directory <tt>META-INF/services</tt>, and adding the fully
@@ -91,5 +91,5 @@ public interface ContainerProvider {
      *         the handling of HTTP requests.
      * @throws ProcessingException if there is an error creating the container.
      */
-    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException;
+    public <T> T createContainer(Class<T> type, JerseyApplication application) throws ProcessingException;
 }

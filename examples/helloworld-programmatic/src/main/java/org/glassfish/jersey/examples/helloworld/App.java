@@ -50,7 +50,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -67,7 +67,7 @@ public class App {
         try {
             System.out.println("\"Hello World\" Jersey Example App");
 
-            final Application app = create();
+            final JerseyApplication app = create();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
             System.out.println(
@@ -86,8 +86,8 @@ public class App {
     public static volatile boolean getMethodCalled = false;
     public static volatile boolean headMethodCalled = false;
 
-    public static Application create() {
-        final Application.Builder appBuilder = Application.builder();
+    public static JerseyApplication create() {
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind(ROOT_PATH)
 

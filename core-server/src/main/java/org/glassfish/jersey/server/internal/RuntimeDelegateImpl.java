@@ -66,6 +66,6 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
     @Override
     public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
         ResourceConfig rc = (application instanceof ResourceConfig) ? (ResourceConfig) application : ResourceConfig.from(application);
-        return ContainerFactory.createContainer(endpointType, org.glassfish.jersey.server.Application.builder(rc).build());
+        return ContainerFactory.createContainer(endpointType, org.glassfish.jersey.server.JerseyApplication.builder(rc).build());
     }
 }

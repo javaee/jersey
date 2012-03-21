@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 
 import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -61,10 +61,10 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
     private static class InMemoryContainer implements TestContainer {
 
         private final URI baseUri;
-        private final Application application;
+        private final JerseyApplication application;
         private static final Logger LOGGER = Logger.getLogger(InMemoryContainer.class.getName());
 
-        private InMemoryContainer(final URI baseUri, final Application application) {
+        private InMemoryContainer(final URI baseUri, final JerseyApplication application) {
             this.baseUri = baseUri;
             this.application = application;
         }
@@ -95,7 +95,7 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(final URI baseUri, final Application application) throws IllegalArgumentException {
+    public TestContainer create(final URI baseUri, final JerseyApplication application) throws IllegalArgumentException {
         return new InMemoryContainer(baseUri, application);
     }
 }

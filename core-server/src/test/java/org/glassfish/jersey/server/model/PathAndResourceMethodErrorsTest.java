@@ -47,7 +47,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import static junit.framework.Assert.assertEquals;
@@ -65,7 +65,7 @@ public class PathAndResourceMethodErrorsTest {
     private List<ResourceModelIssue> initiateWebApplication(Class<?>... resourceClasses) {
         try {
             final ResourceConfig rc = ResourceConfig.builder().addClasses(resourceClasses).build();
-            Application.builder(rc).build();
+            JerseyApplication.builder(rc).build();
             fail("Application build expected to fail");
         } catch (ResourceModelValidator.ModelException e) {
             return e.issues;

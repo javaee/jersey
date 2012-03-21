@@ -42,7 +42,7 @@ package org.glassfish.jersey.jdkhttp;
 import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
 import com.sun.net.httpserver.HttpHandler;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
 /**
@@ -53,7 +53,7 @@ import org.glassfish.jersey.server.spi.ContainerProvider;
 public final class JdkHttpHandlerContainerProvider implements ContainerProvider {
 
     @Override
-    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
+    public <T> T createContainer(Class<T> type, JerseyApplication application) throws ProcessingException {
         if (type != HttpHandler.class) {
             return null;
         }

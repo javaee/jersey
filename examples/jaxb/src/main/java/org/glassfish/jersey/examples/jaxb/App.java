@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -74,11 +74,11 @@ public class App {
         }
     }
 
-    public static Application createApp() {
+    public static JerseyApplication createApp() {
         final ResourceConfig.Builder rcb = ResourceConfig.builder();
 
         rcb.packages(JaxbResource.class.getPackage().getName());
 
-        return Application.builder(rcb.build()).build();
+        return JerseyApplication.builder(rcb.build()).build();
     }
 }

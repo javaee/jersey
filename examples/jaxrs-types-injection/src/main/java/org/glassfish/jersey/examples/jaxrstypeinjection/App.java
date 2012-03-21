@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Application that demonstrates injection of JAX-RS components into resources.
+ * Jersey application that demonstrates injection of JAX-RS components into resources.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -65,7 +65,7 @@ public class App {
         try {
             System.out.println("JAX-RS Type Injection Jersey Example App");
 
-            final Application app = create();
+            final JerseyApplication app = create();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
             System.out.println(String.format(
@@ -84,9 +84,9 @@ public class App {
         }
     }
 
-    public static Application create() {
+    public static JerseyApplication create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(JaxrsInjectionReportingResource.class).build();
-        final Application.Builder appBuilder = Application.builder(resourceConfig);
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind(ROOT_PATH_PROGRAMMATIC).method("GET").to(JaxrsInjectionReportingInflector.class);
 

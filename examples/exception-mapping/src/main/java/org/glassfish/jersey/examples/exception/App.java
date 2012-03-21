@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.exception;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class App {
 
             final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(ExceptionResource.class).build();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
-                    Application.builder(resourceConfig).build());
+                    JerseyApplication.builder(resourceConfig).build());
 
             System.out.println(String.format(
                     "Application started.%n"

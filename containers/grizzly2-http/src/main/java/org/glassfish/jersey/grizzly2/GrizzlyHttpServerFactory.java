@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerFactory;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -62,19 +62,19 @@ public class GrizzlyHttpServerFactory {
     /**
      * Creates HttpServer instance.
      *
-     * @param uri uri on which the {@link Application} will be deployed.
-     * @param application {@link Application} to be deployed.
+     * @param uri uri on which the {@link JerseyApplication} will be deployed.
+     * @param application {@link JerseyApplication} to be deployed.
      * @return newly created {@link HttpServer}.
      * @throws ProcessingException
      */
-    public static HttpServer createHttpServer(final URI uri, final Application application) throws ProcessingException {
+    public static HttpServer createHttpServer(final URI uri, final JerseyApplication application) throws ProcessingException {
         return _createHttpServer(uri, ContainerFactory.createContainer(HttpHandler.class, application));
     }
 
     /**
      * Creates HttpServer instance.
      *
-     * @param uri uri on which the {@link Application} will be deployed.
+     * @param uri uri on which the {@link JerseyApplication} will be deployed.
      * @return newly created {@link HttpServer}.
      * @throws ProcessingException
      */

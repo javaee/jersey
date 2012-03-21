@@ -55,7 +55,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
@@ -193,14 +193,14 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         }
     }
     //
-    private Application application;
+    private JerseyApplication application;
 
     /**
      * Creates a new Grizzly container.
      *
      * @param application Jersey application to be deployed on Grizzly container.
      */
-    GrizzlyHttpContainer(final Application application) {
+    GrizzlyHttpContainer(final JerseyApplication application) {
         this.application = application;
     }
 

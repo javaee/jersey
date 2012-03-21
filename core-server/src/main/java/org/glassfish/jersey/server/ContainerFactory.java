@@ -68,7 +68,7 @@ public final class ContainerFactory {
      * @throws IllegalArgumentException if no container provider supports the type.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T createContainer(Class<T> type, Application application) {
+    public static <T> T createContainer(Class<T> type, JerseyApplication application) {
 
         for (ContainerProvider cp : application.getServiceProviders().getCustom(ContainerProvider.class)) {
             T c = cp.createContainer(type, application);

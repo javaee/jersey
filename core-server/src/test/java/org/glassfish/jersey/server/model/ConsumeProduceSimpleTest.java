@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.model;
 
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -64,9 +64,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConsumeProduceSimpleTest  {
 
-    private Application createApplication(Class<?>... classes) {
+    private JerseyApplication createApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("/{arg1}/{arg2}")
@@ -151,7 +151,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testConsumeSimpleBean() throws Exception {
-        Application app = createApplication(ConsumeSimpleBean.class);
+        JerseyApplication app = createApplication(ConsumeSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
@@ -159,7 +159,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testProduceSimpleBean() throws Exception {
-        Application app = createApplication(ProduceSimpleBean.class);
+        JerseyApplication app = createApplication(ProduceSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","GET").accept("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","GET").accept("text/xhtml").build()).get().readEntity(String.class));
@@ -167,7 +167,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testConsumeProduceSimpleBean() throws Exception {
-        Application app = createApplication(ConsumeProduceSimpleBean.class);
+        JerseyApplication app = createApplication(ConsumeProduceSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").accept("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").accept("text/xhtml").build()).get().readEntity(String.class));
@@ -190,7 +190,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testProduceWithParameters() throws Exception {
-        Application app = createApplication(ConsumeProduceWithParameters.class);
+        JerseyApplication app = createApplication(ConsumeProduceWithParameters.class);
 
         assertEquals("{a=b, c=d}", app.apply(Requests.from("/","POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().readEntity(String.class));
     }

@@ -44,7 +44,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ClientFactory;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertTrue;
 public class HelloWorldTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         return App.create();
     }
 

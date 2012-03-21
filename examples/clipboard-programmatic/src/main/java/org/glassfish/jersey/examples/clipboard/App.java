@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -66,7 +66,7 @@ public class App {
         try {
             System.out.println("Clipboard Jersey Example App");
 
-            final Application app = createProgrammaticClipboardApp();
+            final JerseyApplication app = createProgrammaticClipboardApp();
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
 
             System.out.println(
@@ -82,8 +82,8 @@ public class App {
 
     }
 
-    public static Application createProgrammaticClipboardApp() {
-        final Application.Builder appFactory = Application.builder();
+    public static JerseyApplication createProgrammaticClipboardApp() {
+        final JerseyApplication.Builder appFactory = JerseyApplication.builder();
         final Clipboard clipboard = new Clipboard();
 
         appFactory.bind(ROOT_PATH)

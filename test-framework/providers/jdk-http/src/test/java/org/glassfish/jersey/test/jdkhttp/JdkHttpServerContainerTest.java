@@ -44,7 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -66,9 +66,9 @@ public class JdkHttpServerContainerTest extends JerseyTest {
     }
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class).build();
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("one")

@@ -39,20 +39,18 @@
  */
 package org.glassfish.jersey.tests.api;
 
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
 
+import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -61,9 +59,9 @@ import static org.junit.Assert.assertEquals;
 public class ResponseIntegrationTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         ResourceConfig rc = ResourceConfig.builder().addClasses(ResponseIntegrationTest.ResponseTest.class).build();
-        return Application.builder(rc).build();
+        return JerseyApplication.builder(rc).build();
     }
 
     @Path(value = "/ResponseTest")
@@ -105,8 +103,8 @@ public class ResponseIntegrationTest extends JerseyTest {
                     break;
                 default:
                     resp =
-                            Response.ok().entity("Unexpected parameter in request: " +
-                                    status);
+                            Response.ok().entity("Unexpected parameter in request: "
+                            + status);
                     break;
             }
 
@@ -115,13 +113,8 @@ public class ResponseIntegrationTest extends JerseyTest {
         }
     }
 
-
     private void testStatus(int status) {
-        final Response response = target()
-                .path("ResponseTest")
-                .queryParam("status", status)
-                .request(MediaType.TEXT_PLAIN)
-                .get(Response.class);
+        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN).get(Response.class);
 
         assertEquals(status, response.getStatus());
     }
@@ -132,28 +125,28 @@ public class ResponseIntegrationTest extends JerseyTest {
      */
     @Test
     public void testStatuses() {
-        final List<Integer> statuses = new ArrayList<Integer>(){{
-            add(200);
-            add(201);
-            add(202);
-            add(204);
-            add(303);
-            add(304);
-            add(307);
-            add(401);
-            add(403);
-            add(404);
-            add(406);
-            add(409);
-            add(410);
-            add(411);
-            add(412);
-            add(415);
-            add(500);
-            add(503);
-        }};
+        final int[] statuses = new int[] {
+                200,
+                201,
+                202,
+                204,
+                303,
+                304,
+                307,
+                401,
+                403,
+                404,
+                406,
+                409,
+                410,
+                411,
+                412,
+                415,
+                500,
+                503
+        };
 
-        for(Integer i : statuses) {
+        for (Integer i : statuses) {
             System.out.println("### Testing status: " + i);
             testStatus(i);
         }

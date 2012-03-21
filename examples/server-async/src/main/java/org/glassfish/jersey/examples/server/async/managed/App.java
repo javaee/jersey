@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.ProcessingExecutorsModule;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
@@ -86,7 +86,7 @@ public class App {
 
     }
 
-    public static Application create() {
+    public static JerseyApplication create() {
         final ResourceConfig resourceConfig = ResourceConfig.builder()
                 .addClasses(SimpleJerseyExecutorManagedLongRunningResource.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
@@ -104,6 +104,6 @@ public class App {
                     }
                 })).build();
 
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 }

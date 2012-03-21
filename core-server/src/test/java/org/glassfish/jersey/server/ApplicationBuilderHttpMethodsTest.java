@@ -59,7 +59,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
     @Test
     public void testGet() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -67,14 +67,14 @@ public class ApplicationBuilderHttpMethodsTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         checkReturnedStatus(Requests.from("", "test", "GET").build(), application);
     }
 
     @Test
     public void testHead() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("test").method("HEAD").to(new Inflector<Request, Response>() {
 
             @Override
@@ -82,14 +82,14 @@ public class ApplicationBuilderHttpMethodsTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         checkReturnedStatus(Requests.from("", "test", "HEAD").build(), application);
     }
 
     @Test
     public void testOptions() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("test").method("OPTIONS").to(new Inflector<Request, Response>() {
 
             @Override
@@ -97,14 +97,14 @@ public class ApplicationBuilderHttpMethodsTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         checkReturnedStatus(Requests.from("", "test", "OPTIONS").build(), application);
     }
 
     @Test
     public void testMultiple() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("test").method("GET", "OPTIONS", "HEAD").to(new Inflector<Request, Response>() {
 
             @Override
@@ -112,7 +112,7 @@ public class ApplicationBuilderHttpMethodsTest {
                 return Responses.empty().status(200).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         checkReturnedStatus(Requests.from("", "test", "GET").build(), application);
         checkReturnedStatus(Requests.from("", "test", "HEAD").build(), application);
@@ -121,7 +121,7 @@ public class ApplicationBuilderHttpMethodsTest {
 
     @Test
     public void testTwoBindersSamePath() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("test1").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
@@ -143,7 +143,7 @@ public class ApplicationBuilderHttpMethodsTest {
                 return Responses.empty().status(203).build();
             }
         });
-        Application application = appBuilder.build();
+        JerseyApplication application = appBuilder.build();
 
         checkReturnedStatusEquals(201, Requests.from("", "test1", "GET").build(), application);
 //        checkReturnedStatusEquals(203, Requests.from("", "test1", "HEAD").build(), application);
@@ -154,11 +154,11 @@ public class ApplicationBuilderHttpMethodsTest {
 //        checkReturnedStatusEquals(202, Requests.from("", "test2", "OPTIONS").build(), application);
     }
 
-    private void checkReturnedStatus(Request req, Application app) throws Exception {
+    private void checkReturnedStatus(Request req, JerseyApplication app) throws Exception {
         checkReturnedStatusEquals(200, req, app);
     }
 
-    private void checkReturnedStatusEquals(int expectedStatus, Request req, Application app) throws Exception {
+    private void checkReturnedStatusEquals(int expectedStatus, Request req, JerseyApplication app) throws Exception {
         final int responseStatus = app.apply(req).get().getStatus();
         assertEquals(responseStatus, expectedStatus);
     }

@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.model;
 
 import java.util.logging.Logger;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -63,12 +63,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class AcceptTest {
 
-    Application application;
+    JerseyApplication application;
 
-    private Application createApplication(Class<?>... rc) {
+    private JerseyApplication createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("/")
@@ -100,7 +100,7 @@ public class AcceptTest {
 
     @Test
     public void testAcceptGet() throws Exception {
-        Application app = createApplication(Resource.class);
+        JerseyApplication app = createApplication(Resource.class);
 
         String s = app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class);
         assertEquals("foo", s);
@@ -123,7 +123,7 @@ public class AcceptTest {
 
     @Test
     public void testAcceptGetWildCard() throws Exception {
-        Application app = createApplication(Resource.class);
+        JerseyApplication app = createApplication(Resource.class);
 
         Response response = app.apply(getRequest().accept("application/wildcard", "application/foo;q=0.6",
                          "application/bar;q=0.4", "application/baz;q=0.2").build()).get();
@@ -139,7 +139,7 @@ public class AcceptTest {
 
     @Test
     public void testQualityErrorGreaterThanOne() throws Exception {
-        Application app = createApplication(Resource.class);
+        JerseyApplication app = createApplication(Resource.class);
 
         Response response = app.apply(Requests.from("/","GET").accept("application/foo;q=1.1").build()).get();
         assertEquals(400, response.getStatus());
@@ -147,7 +147,7 @@ public class AcceptTest {
 
     @Test
     public void testQualityErrorMoreThanThreeDigits() throws Exception {
-        Application app = createApplication(Resource.class);
+        JerseyApplication app = createApplication(Resource.class);
 
         Response response = app.apply(Requests.from("/","GET").accept("application/foo;q=0.1234").build()).get();
         assertEquals(400, response.getStatus());
@@ -164,7 +164,7 @@ public class AcceptTest {
 
     @Test
     public void testAcceptMultiple() throws Exception {
-        Application app = createApplication(MultipleResource.class);
+        JerseyApplication app = createApplication(MultipleResource.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
         MediaType bar = MediaType.valueOf("application/bar");
@@ -211,7 +211,7 @@ public class AcceptTest {
 
     @Test
     public void testAcceptSubType() throws Exception {
-        Application app = createApplication(SubTypeResource.class);
+        JerseyApplication app = createApplication(SubTypeResource.class);
 
         Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -244,7 +244,7 @@ public class AcceptTest {
 
     @Test
     public void testAcceptNoProduces() throws Exception {
-        Application app = createApplication(NoProducesResource.class);
+        JerseyApplication app = createApplication(NoProducesResource.class);
 
         // media type order in the accept header does not impose output media type!
         Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.9").build()).get();
@@ -313,7 +313,7 @@ public class AcceptTest {
     }
 
     private void test(Class<?> c) throws Exception{
-        Application app = createApplication(c);
+        JerseyApplication app = createApplication(c);
 
         Response response = app.apply(Requests.from("/","GET").accept("application/foo").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);

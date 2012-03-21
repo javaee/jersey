@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Requests;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -75,12 +75,12 @@ public class OptionsSubResourceMethodTest {
     public @interface PATCH {
     }
 
-    private Application app;
+    private JerseyApplication app;
 
     private void initiateWebApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        app = Application.builder(resourceConfig).build();
+        app = JerseyApplication.builder(resourceConfig).build();
     }
 
 

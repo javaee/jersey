@@ -44,7 +44,7 @@ import javax.ws.rs.client.Target;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -55,13 +55,13 @@ import static org.junit.Assert.assertEquals;
 public class ClipboardTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         enable(TestProperties.LOG_TRAFFIC);
         return App.createApp();
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, Application application) {
+    protected javax.ws.rs.client.Client getClient(TestContainer tc, JerseyApplication application) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, application);
         origClient.configuration()
                 .register(ClipboardDataProvider.ApplicationJson.class)

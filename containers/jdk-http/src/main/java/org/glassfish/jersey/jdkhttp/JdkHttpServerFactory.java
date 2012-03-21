@@ -49,31 +49,31 @@ import java.util.concurrent.Executors;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerFactory;
 
 /**
  * Factory for creating {@link HttpServer JDK HttpServer} instances adapted to
- * the {@link Application Jersey Application}.
+ * the {@link JerseyApplication Jersey Application}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class JdkHttpServerFactory {
 
     /**
-     * Creates and starts the {@link HttpServer JDK HttpServer} with the {@link Application Jersey Application}
+     * Creates and starts the {@link HttpServer JDK HttpServer} with the {@link JerseyApplication Jersey application}
      * deployed on the given {@link URI}.
      *
      * <p>The returned {@link HttpServer JDK HttpServer} is started.</p>
      *
-     * @param uri The {@link URI uri} on which the {@link Application Jersey Application} will be deployed.
-     * @param application The {@link Application Jersey Application} to be
+     * @param uri The {@link URI uri} on which the {@link JerseyApplication Jersey application} will be deployed.
+     * @param application The {@link JerseyApplication Jersey Application} to be
      * deployed.
      * @return Newly created {@link HttpServer}.
      * @throws ProcessingException Thrown when problems during server creation
      * occurs.
      */
-    public static HttpServer createHttpServer(final URI uri, final Application application) throws ProcessingException {
+    public static HttpServer createHttpServer(final URI uri, final JerseyApplication application) throws ProcessingException {
         final HttpHandler handler = ContainerFactory.createContainer(HttpHandler.class, application);
 
         if (uri == null) {

@@ -54,7 +54,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 
 /**
  * In-memory client transport.
@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.Application;
  */
 public class InMemoryTransport implements Inflector<Request, Response> {
 
-    private final Application application;
+    private final JerseyApplication application;
     private final URI baseUri;
 
     /**
@@ -72,7 +72,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
      * @param baseUri application base URI.
      * @param application RequestInvoker instance which represents application.
      */
-    public InMemoryTransport(final URI baseUri, final Application application) {
+    public InMemoryTransport(final URI baseUri, final JerseyApplication application) {
         this.baseUri = baseUri;
         this.application = application;
     }

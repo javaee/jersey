@@ -46,7 +46,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -59,22 +59,22 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  */
 public class SubResourceDynamicWithParametersTest {
-    
-    Application app;
 
-    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+    JerseyApplication app;
+
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig);
+        return JerseyApplication.builder(resourceConfig);
     }
-    
+
     @Path("/{p}")
-    static public class ParentWithTemplates { 
+    static public class ParentWithTemplates {
         @GET
         public String getMe(@PathParam("p") String p) {
             return p;
         }
-        
+
         @Path("child/{c}")
         public ChildWithTemplates getChildWithTemplates(
                 @PathParam("p") String p, @PathParam("c") String c,
@@ -85,7 +85,7 @@ public class SubResourceDynamicWithParametersTest {
             assertEquals(2, b);
             return new ChildWithTemplates();
         }
-        
+
         @Path(value="unmatchedPath/{path: .*}")
         public UnmatchedPathResource getUnmatchedPath(
                 @PathParam("p") String p,
@@ -94,40 +94,40 @@ public class SubResourceDynamicWithParametersTest {
             return new UnmatchedPathResource(path);
         }
     }
-    
-    static public class ChildWithTemplates { 
+
+    static public class ChildWithTemplates {
         @GET
         public String getMe(@PathParam("c") String c) {
             return c;
         }
     }
-    
-    static public class UnmatchedPathResource { 
+
+    static public class UnmatchedPathResource {
         String path;
-        
+
         UnmatchedPathResource(String path) {
             this.path = path;
         }
-        
+
         @GET
         public String getMe() {
             if (path == null) path = "";
             return path;
         }
     }
-    
+
     @Test
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplicationBuilder(ParentWithTemplates.class).build();
-        
+
         assertEquals("parent", app.apply(Requests.from("/parent","GET").build()).get().readEntity(String.class));
         assertEquals("first", app.apply(Requests.from("/parent/child/first?a=1&b=2","GET").build()).get().readEntity(String.class));
     }
-    
+
     @Test
     public void testSubResourceDynamicWithUnmatchedPath() throws Exception {
         app = createApplicationBuilder(ParentWithTemplates.class).build();
-        
+
         assertEquals("", app.apply(Requests.from("/parent/unmatchedPath/","GET").build()).get().readEntity(String.class));
         assertEquals("a/b/c/d", app.apply(Requests.from("/parent/unmatchedPath/a/b/c/d","GET").build()).get().readEntity(String.class));
     }

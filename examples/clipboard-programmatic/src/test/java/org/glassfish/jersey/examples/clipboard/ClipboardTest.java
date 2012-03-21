@@ -44,7 +44,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 public class ClipboardTest extends JerseyTest {
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         return App.createProgrammaticClipboardApp();
     }
 

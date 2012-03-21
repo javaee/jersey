@@ -57,14 +57,14 @@ import static org.junit.Assert.assertEquals;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationTest {
+public class JerseyApplicationTest {
 
-    Application application;
+    JerseyApplication application;
 
-    private Application createApplication(Class<?>... rc) {
+    private JerseyApplication createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     @Path("/")
@@ -79,7 +79,7 @@ public class ApplicationTest {
 
     @Test
     public void testReturnBadRequestOnIllHeaderValue() throws Exception {
-        Application app = createApplication(Resource.class);
+        JerseyApplication app = createApplication(Resource.class);
 
         Response response = app.apply(Requests.from("/", "GET").header(HttpHeaders.CONTENT_LENGTH, "text").build()).get();
         assertEquals(400, response.getStatus());

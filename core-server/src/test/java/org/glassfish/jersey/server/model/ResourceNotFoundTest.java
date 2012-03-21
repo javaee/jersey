@@ -41,7 +41,7 @@
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -62,12 +62,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class ResourceNotFoundTest {
 
-    Application application;
+    JerseyApplication application;
 
-    private Application.Builder createApplicationBuilder(Class<?>... rc) {
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig);
+        return JerseyApplication.builder(resourceConfig);
     }
 
     public static class MyInflector implements Inflector<Request, Response> {
@@ -95,7 +95,7 @@ public class ResourceNotFoundTest {
 
     @Test
     public void testExistingDeclarativeResources() throws Exception {
-        Application app = createApplicationBuilder(FooResource.class).build();
+        JerseyApplication app = createApplicationBuilder(FooResource.class).build();
 
         Response response;
 
@@ -110,7 +110,7 @@ public class ResourceNotFoundTest {
 
     @Test
     public void testMissingDeclarativeResources() throws Exception {
-        Application app = createApplicationBuilder(FooResource.class).build();
+        JerseyApplication app = createApplicationBuilder(FooResource.class).build();
 
         Response response;
 
@@ -127,18 +127,18 @@ public class ResourceNotFoundTest {
         assertEquals(404, response.getStatus());
     }
 
-    private Application createMixedApp() {
-        Application.Builder appBuilder = createApplicationBuilder(FooResource.class);
+    private JerseyApplication createMixedApp() {
+        JerseyApplication.Builder appBuilder = createApplicationBuilder(FooResource.class);
         appBuilder.bind("/dynamic").method("GET").to(new MyInflector());
         appBuilder.bind("/foo/dynamic").method("GET").to(new MyInflector());
-        Application app = appBuilder.build();
+        JerseyApplication app = appBuilder.build();
         return app;
     }
 
     @Test
     public void testExistingMixedResources() throws Exception {
 
-        Application app = createMixedApp();
+        JerseyApplication app = createMixedApp();
 
         Response response;
 
@@ -163,7 +163,7 @@ public class ResourceNotFoundTest {
     @Test
     public void testMissingMixedResources() throws Exception {
 
-        Application app = createMixedApp();
+        JerseyApplication app = createMixedApp();
 
         Response response;
 

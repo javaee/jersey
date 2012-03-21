@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jackson;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.json.JsonJacksonModule;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -51,7 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Utility class which can create {@link Application} instance and provides support
+ * Utility class which can create {@link JerseyApplication} instance and provides support
  * for running this sample from command line.
  *
  * @author Jakub Podlesak
@@ -77,11 +77,11 @@ public class App {
 
     }
 
-    public static Application createApp() {
+    public static JerseyApplication createApp() {
         final ResourceConfig.Builder rcb = ResourceConfig.builder(new MyApplication());
 
         rcb.addModules(new JsonJacksonModule());
 
-        return Application.builder(rcb.build()).build();
+        return JerseyApplication.builder(rcb.build()).build();
     }
 }

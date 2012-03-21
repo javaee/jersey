@@ -70,13 +70,13 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Implementation of the {@link Application.Builder Jersey application builder}.
+ * Implementation of the {@link JerseyApplication.Builder Jersey application builder}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-/*package*/ class ApplicationBuilder implements Application.Builder {
+/*package*/ class ApplicationBuilder implements JerseyApplication.Builder {
 
     private class AppBoundBuilder implements BoundBuilder {
 
@@ -182,7 +182,7 @@ import java.util.logging.Logger;
         }
     }
     //
-    private Application application;
+    private JerseyApplication application;
     private ResourceConfig resourceConfig;
     private RuntimeModelProviderFromRootResource runtimeModelCreator;
     private Services services;
@@ -190,7 +190,7 @@ import java.util.logging.Logger;
 
     /*package*/ ApplicationBuilder(@Nullable ResourceConfig resourceConfig) {
         this.resourceConfig = (resourceConfig != null) ? resourceConfig : ResourceConfig.empty();
-        this.application = new Application();
+        this.application = new JerseyApplication();
 
         final Module[] jerseyModules = new Module[]{
             new ServerModule(),
@@ -250,7 +250,7 @@ import java.util.logging.Logger;
      * @return newly created application.
      */
     @Override
-    public Application build() {
+    public JerseyApplication build() {
 
         // FIXME: this will not work if workers change. Need to be replaced with injection
         final ServiceProviders sp = services.forContract(ServiceProviders.Builder.class).get()

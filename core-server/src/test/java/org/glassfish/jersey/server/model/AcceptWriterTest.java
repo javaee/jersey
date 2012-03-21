@@ -41,7 +41,7 @@
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -165,7 +165,7 @@ public class AcceptWriterTest {
 
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(
                     Resource.class, FooStringWriter.class, BarStringWriter.class).build();
-        final Application app = Application.builder(resourceConfig).build();
+        final JerseyApplication app = JerseyApplication.builder(resourceConfig).build();
 
         assertEquals("foo: content", app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class));
         assertEquals("foo: content", app.apply(Requests.from("/","GET").accept("applcation/baz, application/foo;q=0.8").build()).get().readEntity(String.class));

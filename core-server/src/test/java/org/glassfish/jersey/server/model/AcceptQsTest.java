@@ -51,8 +51,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.Application;
-import org.glassfish.jersey.server.Application.Builder;
+import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.JerseyApplication.Builder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -79,10 +79,10 @@ public class AcceptQsTest {
         }
     }
 
-    private Application createApplication(Class<?>... rc) {
+    private JerseyApplication createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
 
-        return Application.builder(resourceConfig).build();
+        return JerseyApplication.builder(resourceConfig).build();
     }
 
     private Inflector<Request, Response> stringResponse(String s) {
@@ -117,7 +117,7 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptGetProgrammatic() throws Exception {
-        final Application.Builder appBuilder = Application.builder();
+        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.4")).method("GET").to(stringResponse("foo"));
         appBuilder.bind("/").produces(MediaType.valueOf("application/bar;qs=0.5")).method("GET").to(stringResponse("bar"));
@@ -126,7 +126,7 @@ public class AcceptQsTest {
         _testAcceptGet(appBuilder.build());
     }
 
-    private void _testAcceptGet(Application app) throws Exception {
+    private void _testAcceptGet(JerseyApplication app) throws Exception {
 
         String s = app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class);
         assertEquals("foo", s);
@@ -179,14 +179,14 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptMultipleProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("/")
                 .produces(MediaType.valueOf("application/foo;qs=0.5"), MediaType.valueOf("application/bar"))
                 .method("GET").to(stringResponse("GET"));
         _testAcceptMultiple(appBuilder.build());
     }
 
-    private void _testAcceptMultiple(Application app) throws Exception {
+    private void _testAcceptMultiple(JerseyApplication app) throws Exception {
 
         MediaType foo = MediaType.valueOf("application/foo");
         MediaType bar = MediaType.valueOf("application/bar");
@@ -250,7 +250,7 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptSubTypeProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind("/").produces(MediaType.valueOf("text/*;qs=0.5")).method("GET").to(stringResponse("*"));
         appBuilder.bind("/").produces(MediaType.valueOf("text/plain;qs=0.6")).method("GET").to(stringResponse("plain"));
@@ -259,7 +259,7 @@ public class AcceptQsTest {
         _testAcceptSubType(appBuilder.build());
     }
 
-    private void _testAcceptSubType(Application app) throws Exception {
+    private void _testAcceptSubType(JerseyApplication app) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -330,7 +330,7 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptSubTypeNotIntuitiveProgramatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind("/").produces(MediaType.valueOf("text/*;qs=0.9")).method("GET").to(stringResponse("*"));
         appBuilder.bind("/").produces(MediaType.valueOf("text/plain;qs=0.7")).method("GET").to(stringResponse("plain"));
@@ -339,7 +339,7 @@ public class AcceptQsTest {
         _testAcceptSubTypeNotIntuitive(appBuilder.build());
     }
 
-    private void _testAcceptSubTypeNotIntuitive(Application app) throws Exception {
+    private void _testAcceptSubTypeNotIntuitive(JerseyApplication app) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -407,12 +407,12 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptNoProducesProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("/").method("GET").to(stringResponse("GET"));
         _testAcceptNoProduces(appBuilder.build());
     }
 
-    private void _testAcceptNoProduces(Application app) throws Exception {
+    private void _testAcceptNoProduces(JerseyApplication app) throws Exception {
 
         // media type order in the accept header does not impose output media type!
         Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.9").build()).get();
@@ -442,7 +442,7 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesOneMethodFooBarResourceProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
         appBuilder.bind("/").method("GET")
                     .produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
                     .to(stringResponse("FOOBAR"));
@@ -466,7 +466,7 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsFooBarResourceProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
         appBuilder.bind("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
@@ -496,7 +496,7 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsBarFooResourceProgrammatic() throws Exception {
-        final Builder appBuilder = Application.builder();
+        final Builder appBuilder = JerseyApplication.builder();
 
         appBuilder.bind("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
         appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
@@ -509,7 +509,7 @@ public class AcceptQsTest {
         _testFooBar(createApplication(ProducesTwoMethodsBarFooResource.class), "FOO", "BAR");
     }
 
-    private void _testFooBar(Application app, String fooContent, String barContent) throws Exception {
+    private void _testFooBar(JerseyApplication app, String fooContent, String barContent) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("application/foo").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);

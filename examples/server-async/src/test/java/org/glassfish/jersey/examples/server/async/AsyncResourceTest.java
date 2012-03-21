@@ -51,7 +51,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
 
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -67,7 +67,7 @@ public class AsyncResourceTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(AsyncResourceTest.class.getName());
 
     @Override
-    protected Application configure() {
+    protected JerseyApplication configure() {
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);

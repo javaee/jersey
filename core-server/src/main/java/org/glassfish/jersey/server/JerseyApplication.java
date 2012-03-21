@@ -110,7 +110,7 @@ import javax.ws.rs.HttpMethod;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class Application implements Inflector<Request, Future<Response>> {
+public final class JerseyApplication implements Inflector<Request, Future<Response>> {
 
     /**
      * Jersey application builder that provides programmatic API for creating
@@ -120,7 +120,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
      * A typical use case for the programmatic resource binding API is demonstrated
      * by the following example:
      *
-     * <pre>  Application.Builder appBuilder = Application.builder();
+     * <pre>  JerseyApplication.Builder appBuilder = JerseyApplication.builder();
      *
      *  appBuilder.bind("a")
      *     .method("GET").to(new Inflector&lt;Request, Response&gt;() {
@@ -205,10 +205,10 @@ public final class Application implements Inflector<Request, Future<Response>> {
          *
          * @return new application instance.
          */
-        org.glassfish.jersey.server.Application build();
+        org.glassfish.jersey.server.JerseyApplication build();
 
         /**
-         * Application builder used for binding a new resource method to an
+         * Jersey application builder used for binding a new resource method to an
          * {@link Inflector Inflector&lt;Request, Response&gt;} responsible for
          * processing requests targeted at the bound path and the particular
          * method(s).
@@ -366,12 +366,12 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
         @Override
         public TreeAcceptor get() {
-            return Application.this.rootAcceptor;
+            return JerseyApplication.this.rootAcceptor;
         }
 
         @Override
         public void configure() {
-            bind(Application.class).toInstance(Application.this);
+            bind(JerseyApplication.class).toInstance(JerseyApplication.this);
             bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(this);
             bind().to(PreMatchRequestFilterAcceptor.class);
         }
@@ -443,12 +443,12 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
             @Override
             protected Response handleFailure(Throwable exception) {
-                return Application.handleFailure(exception);
+                return JerseyApplication.handleFailure(exception);
             }
 
             @Override
             protected Response handleTimeout(InvocationContext context) {
-                return Application.prepareTimeoutResponse(context);
+                return JerseyApplication.prepareTimeoutResponse(context);
             }
         };
 
@@ -493,19 +493,19 @@ public final class Application implements Inflector<Request, Future<Response>> {
 
             @Override
             protected void writeResponse(Response response) {
-                Application.this.writeResponse(responseWriter, request, response);
+                JerseyApplication.this.writeResponse(responseWriter, request, response);
             }
 
             @Override
             protected void writeResponse(Throwable exception) {
-                Application.this.writeResponse(
-                        responseWriter, request, Application.handleFailure(exception));
+                JerseyApplication.this.writeResponse(
+                        responseWriter, request, JerseyApplication.handleFailure(exception));
             }
 
             @Override
             protected void writeTimeoutResponse(InvocationContext context) {
-                Application.this.writeResponse(
-                        responseWriter, request, Application.prepareTimeoutResponse(context));
+                JerseyApplication.this.writeResponse(
+                        responseWriter, request, JerseyApplication.prepareTimeoutResponse(context));
             }
         };
         apply(request, callback);
@@ -537,9 +537,9 @@ public final class Application implements Inflector<Request, Future<Response>> {
         }
 
         if (statusCode == Response.Status.INTERNAL_SERVER_ERROR) {
-            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, message, failure);
+            Logger.getLogger(JerseyApplication.class.getName()).log(Level.SEVERE, message, failure);
         } else {
-            Logger.getLogger(Application.class.getName()).log(Level.FINE, message, failure);
+            Logger.getLogger(JerseyApplication.class.getName()).log(Level.FINE, message, failure);
         }
 
         return Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build();
@@ -575,7 +575,7 @@ public final class Application implements Inflector<Request, Future<Response>> {
                 writer.writeResponseStatusAndHeaders(0, response);
             }
         } catch (IOException ex) {
-            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(JerseyApplication.class.getName()).log(Level.SEVERE, null, ex);
             throw new MappableException(ex);
         } finally {
             writer.commit();

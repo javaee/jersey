@@ -45,7 +45,7 @@ import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Unit test for creating an application with asynchronously handled request processing
- * via {@link Application.Builder}'s programmatic API.
+ * via {@link JerseyApplication.Builder}'s programmatic API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -133,11 +133,11 @@ public class ContextBasedInjectionTest {
             return null;
         }
     }
-    private Application app;
+    private JerseyApplication app;
 
     @Before
     public void setupApplication() {
-        final Application.Builder af = Application.builder();
+        final JerseyApplication.Builder af = JerseyApplication.builder();
         af.bind("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
         af.bind("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
         app = af.build();
