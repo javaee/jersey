@@ -9,7 +9,11 @@ core-server/src/test/java/org/glassfish/jersey/server/model/AncestorsTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/BasicValidatorTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/ConsumeProduceSimpleTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/ConsumeProduceWildcardTest.java
+core-server/src/test/java/org/glassfish/jersey/server/model/HeadSubResourceMethodTest.java
+core-server/src/test/java/org/glassfish/jersey/server/model/HeadTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/InnerClassWithGenericTypeTest.java
+core-server/src/test/java/org/glassfish/jersey/server/model/OptionsSubResourceMethodTest.java
+core-server/src/test/java/org/glassfish/jersey/server/model/OptionsTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/PathAndResourceMethodErrorsTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceClassDynamicTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceDynamicTest.java
@@ -461,8 +465,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/resource/ExplicitRootResourceTest
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/ExtendedUriInfoTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/GenericInheritanceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/GenericTypesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/resource/HeadSubResourceMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/resource/HeadTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/HttpMethodsTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/HttpResponseReturnTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/InheritanceTest.java
@@ -472,8 +474,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/resource/MethodIAnnotationnherite
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/NewCookieTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/NoContentResponseTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/NullEntityMediaTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/resource/OptionsSubResourceMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/resource/OptionsTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/PostTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/PreconditionGetAndPutTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/resource/PreconditionTest.java

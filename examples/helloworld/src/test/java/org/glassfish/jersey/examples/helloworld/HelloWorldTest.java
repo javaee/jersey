@@ -45,6 +45,7 @@ import java.net.URL;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.Target;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ClientFactory;
@@ -56,7 +57,9 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class HelloWorldTest extends JerseyTest {
 
@@ -98,6 +101,30 @@ public class HelloWorldTest extends JerseyTest {
     public void testClientStringResponse() {
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
+    }
+
+    @Test
+    public void testHead() {
+        Response response = target().path(App.ROOT_PATH).request().head();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+    }
+
+    @Test
+    public void testOptions() {
+        Response response = target().path(App.ROOT_PATH).request().options();
+        assertEquals(200, response.getStatus());
+        final String allowHeader = response.getHeaders().getHeader("Allow");
+        _checkAllowContent(allowHeader);
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        final String responseBody = response.readEntity(String.class);
+        _checkAllowContent(responseBody);
+    }
+
+    private void _checkAllowContent(final String content) {
+        assertTrue(content.contains("GET"));
+        assertTrue(content.contains("HEAD"));
+        assertTrue(content.contains("OPTIONS"));
     }
 
     @Test
