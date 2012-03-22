@@ -357,7 +357,7 @@ public final class ServiceFinder<T> implements Iterable<T> {
             return getResources(name);
         } else {
             final Enumeration<URL> resources = loader.getResources(name);
-            if (resources.hasMoreElements()) {
+            if ((resources != null) && resources.hasMoreElements()) {
                 return resources;
             } else {
                 return getResources(name);
