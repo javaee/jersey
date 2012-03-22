@@ -52,6 +52,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
@@ -115,9 +116,18 @@ public class OptionsTest {
         initiateWebApplication(ResourceNoOptions.class);
 
         Response response = app.apply(Requests.from("/", "OPTIONS").build()).get();
-
         assertEquals(200, response.getStatus());
-        String allow = response.getHeaders().getHeader("Allow").toString();
+        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+
+        final MediaType mediaType = MediaType.APPLICATION_XML_TYPE;
+        response = app.apply(Requests.from("/", "OPTIONS").accept(mediaType).build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals(mediaType, response.getHeaders().getMediaType());
+        assertEquals(0, response.getHeaders().getLength());
+        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+    }
+
+    private void _checkAllowContent(String allow) {
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));

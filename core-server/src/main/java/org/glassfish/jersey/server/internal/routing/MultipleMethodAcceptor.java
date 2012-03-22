@@ -76,7 +76,6 @@ import org.glassfish.jersey.server.model.InvocableResourceMethod;
 import org.glassfish.jersey.server.model.Parameter;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 /**
  * A single acceptor to be responsible to respond to all HTTP methods defined on
@@ -229,7 +228,7 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
             if (!method2InflectorMap.containsKey(httpMethod)) {
                 method2InflectorMap.put(httpMethod, new LinkedList<ConsumesProducesInflector>());
             }
-            addAllCombinations(method2InflectorMap.get(httpMethod), methodInflector);
+            addAllConsumesProducesCombinations(method2InflectorMap.get(httpMethod), methodInflector);
         }
         if (!method2InflectorMap.containsKey(HttpMethod.HEAD)) {
             this.acceptor = createHeadEnrichedAcceptor();
@@ -237,14 +236,16 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
             this.acceptor = createInternalAcceptor();
         }
         if (!method2InflectorMap.containsKey(HttpMethod.OPTIONS)) {
-            final Set<String> allowedMethods = new HashSet<String>(method2InflectorMap.keySet());
-            allowedMethods.add(HttpMethod.HEAD);
-            allowedMethods.add(HttpMethod.OPTIONS);
-            method2InflectorMap.put(HttpMethod.OPTIONS, createPlainTextOptionsInflector(allowedMethods));
+            addOptionsSupport();
         }
     }
 
-    void addAllCombinations(List<ConsumesProducesInflector> list, Pair<AbstractResourceMethod, Inflector<Request, Response>> methodInflector) {
+    @Override
+    public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+        return acceptor.apply(request);
+    }
+
+    private void addAllConsumesProducesCombinations(List<ConsumesProducesInflector> list, Pair<AbstractResourceMethod, Inflector<Request, Response>> methodInflector) {
         final List<MediaType> effectiveInputTypes = new LinkedList<MediaType>();
         final List<MediaType> effectiveOutputTypes = new LinkedList<MediaType>();
         AbstractResourceMethod resourceMethod = methodInflector.left();
@@ -283,9 +284,15 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
         }
     }
 
-    @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
-        return acceptor.apply(request);
+    private void addOptionsSupport() {
+        final Set<String> allowedMethods = new HashSet<String>(method2InflectorMap.keySet());
+        allowedMethods.add(HttpMethod.HEAD);
+        allowedMethods.add(HttpMethod.OPTIONS);
+
+        List<ConsumesProducesInflector> optionsInflectors = new LinkedList<ConsumesProducesInflector>();
+        optionsInflectors.add(createPlainTextOptionsInflector(allowedMethods));
+        optionsInflectors.add(createGenericOptionsInflector(allowedMethods));
+        method2InflectorMap.put(HttpMethod.OPTIONS, optionsInflectors);
     }
 
     private Inflector<Request, Response> getInflector(Request request) {
@@ -430,13 +437,12 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
         };
     }
 
-    private List<ConsumesProducesInflector> createPlainTextOptionsInflector(final Set<String> allowedMethods) {
+    private ConsumesProducesInflector createPlainTextOptionsInflector(final Set<String> allowedMethods) {
 
         final String allowedList = allowedMethods.toString();
         final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
 
-        return Lists.newArrayList(
-                new ConsumesProducesInflector(
+        return new ConsumesProducesInflector(
                            MediaType.WILDCARD_TYPE,
                            MediaType.TEXT_PLAIN_TYPE, new Inflector<Request, Response>() {
 
@@ -444,7 +450,23 @@ final class MultipleMethodAcceptor implements TreeAcceptor {
            public Response apply(Request data) {
                return Response.ok(optionsBody, MediaType.TEXT_PLAIN_TYPE).allow(allowedMethods).build();
            }
-       }));
+        });
+    }
+
+    private ConsumesProducesInflector createGenericOptionsInflector(final Set<String> allowedMethods) {
+
+        return new ConsumesProducesInflector(
+                           MediaType.WILDCARD_TYPE,
+                           MediaType.WILDCARD_TYPE, new Inflector<Request, Response>() {
+
+           @Override
+           public Response apply(Request data) {
+               return Response.ok()
+                       .header(HttpHeaders.CONTENT_LENGTH, "0")
+                       .type(data.getHeaders().getAcceptableMediaTypes().get(0))
+                       .allow(allowedMethods).build();
+           }
+        });
     }
 
     private Pair<Request, Iterator<TreeAcceptor>> wrapWithRequestToAcceptorIterator(final Request request, final Inflector<Request, Response> inflector) {

@@ -52,6 +52,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Requests;
 
@@ -122,14 +123,22 @@ public class OptionsSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
+        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
 
-        String allow = response.getHeaders().getHeader("Allow").toString();
+        response = app.apply(Requests.from("/sub", "OPTIONS").accept(MediaType.TEXT_HTML).build()).get();
+
+        assertEquals(200, response.getStatus());
+        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+    }
+
+    private void _checkAllowContent(final String allow) {
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));
         assertTrue(allow.contains("POST"));
         assertTrue(allow.contains("DELETE"));
         assertTrue(allow.contains("PATCH"));
+
     }
 
     @Path("/")

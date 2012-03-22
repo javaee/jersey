@@ -111,8 +111,18 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
-    public void testOptions() {
-        Response response = target().path(App.ROOT_PATH).request().options();
+    public void testFooBarOptions() {
+        Response response = target().path(App.ROOT_PATH).request().header("Accept", "foo/bar").options();
+        assertEquals(200, response.getStatus());
+        final String allowHeader = response.getHeaders().getHeader("Allow");
+        _checkAllowContent(allowHeader);
+        assertEquals("foo/bar", response.getHeaders().getMediaType().toString());
+        assertEquals(0, response.getHeaders().getLength());
+    }
+
+    @Test
+    public void testTextPlainOptions() {
+        Response response = target().path(App.ROOT_PATH).request().header("Accept", MediaType.TEXT_PLAIN).options();
         assertEquals(200, response.getStatus());
         final String allowHeader = response.getHeaders().getHeader("Allow");
         _checkAllowContent(allowHeader);
