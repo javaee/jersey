@@ -1,0 +1,10 @@
+<archetype>
+  <id>jersey-quickstart-grizzly2</id>
+  <sources>
+    <source>src/main/java/Main.java</source>
+    <source>src/main/java/MyResource.java</source>
+  </sources>
+  <testSources>
+    <source>src/test/java/MainTest.java</source>
+  </testSources>
+</archetype>
