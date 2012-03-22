@@ -37,28 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package com.sun.ws.rs.ext;
-
-import org.glassfish.hk2.HK2;
-import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
-import org.glassfish.jersey.message.internal.MessagingModules;
-
-import javax.ws.rs.core.Application;
-
 /**
- * Client-side implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
- *
- * @author Jakub Podlesak
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * Jersey server-side internal classes.
  */
-public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
-    public RuntimeDelegateImpl() {
-        // TODO add more modules as necessary
-        super(HK2.get().create(null, new MessagingModules.HeaderDelegateProviders()));
-    }
-
-    @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-}
+package org.glassfish.jersey.server.internal;

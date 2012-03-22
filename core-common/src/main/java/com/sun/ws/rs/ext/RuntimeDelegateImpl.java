@@ -37,7 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-/**
- * Jersey client-side runtime delegate implementation classes.
- */
 package com.sun.ws.rs.ext;
+
+import javax.ws.rs.core.Application;
+import org.glassfish.hk2.HK2;
+import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.message.internal.MessagingModules;
+
+/**
+ * Default implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
+ * The {@link javax.ws.rs.ext.RuntimeDelegate} class looks for the implementations registered
+ * in META-INF/services. If no such implementation is found, this one is picked
+ * as the default. Server module should override this (using META-INF/services)
+ * to provide an implementation that supports {@link #createEndpoint(javax.ws.rs.core.Application, java.lang.Class)}
+ * method.
+ *
+ * @author Jakub Podlesak
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
+ */
+public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
+    public RuntimeDelegateImpl() {
+        // TODO add more modules as necessary
+        super(HK2.get().create(null, new MessagingModules.HeaderDelegateProviders()));
+    }
+
+    @Override
+    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+        throw new UnsupportedOperationException(LocalizationMessages.NO_CONTAINER_AVAILABLE());
+    }
+}
