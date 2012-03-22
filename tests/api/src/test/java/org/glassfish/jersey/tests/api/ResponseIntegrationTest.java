@@ -150,7 +150,5 @@ public class ResponseIntegrationTest extends JerseyTest {
             System.out.println("### Testing status: " + i);
             testStatus(i);
         }
-
-        Response.status(123);
     }
 }
