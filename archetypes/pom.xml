@@ -58,6 +58,7 @@
     </description>
     <modules>
         <module>jersey-quickstart-grizzly2</module>
+        <module>jersey-quickstart-webapp</module>
     </modules>
     <build>
      </build>

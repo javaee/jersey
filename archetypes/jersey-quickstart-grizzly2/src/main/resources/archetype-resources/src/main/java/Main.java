@@ -2,7 +2,7 @@ package $package;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.Application;
+import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class Main {
         final ResourceConfig rc = ResourceConfig.builder().packages("$package").build();
 
         // create a new Jersey application from the resource config
-        Application app = Application.builder(rc).build();
+        JerseyApplication app = JerseyApplication.builder(rc).build();
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
