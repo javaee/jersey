@@ -72,7 +72,7 @@
   <xsl:template match='xslthl:value'>
     <span class="String"><xsl:value-of select='.'/></span>
   </xsl:template>
-  
+
   <xsl:template match='xslthl:string'>
     <span class="String"><xsl:value-of select='.'/></span>
   </xsl:template>

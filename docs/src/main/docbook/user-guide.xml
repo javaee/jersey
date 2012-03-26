@@ -64,7 +64,7 @@ contact us at <ulink
   url="mailto:users@jersey.java.net">users@jersey.java.net</ulink>.
         </para>
     </preface>
-  
+
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="getting-started.xml" />
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="dependencies.xml" />
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="how-to-build.xml" />

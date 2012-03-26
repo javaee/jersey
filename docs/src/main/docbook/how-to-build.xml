@@ -103,7 +103,7 @@
             integration and end-to-end tests are in jersey~code/tests directory.
             You can run tests related to a particular area using the following command:
             <programlisting>mvn -Dtest=&lt;pattern&gt; test</programlisting>
-            where 
+            where
             <literal>pattern</literal> may be a comma separated set of names matching
             tests.
         </para>

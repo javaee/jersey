@@ -46,7 +46,7 @@
 
     <xsl:import href="urn:docbkx:stylesheet"/>
     <xsl:import href="highlight.xsl"/>
-    
+
     <xsl:template name="user.header.content">
     <div style="float:right"><a href="http://jersey.java.net"><img src="http://jersey.java.net/images/Jersey_yellow.png"/></a></div>
     <small>Links: <a href="index.html">Table of Contents</a> | <a href="user-guide.html">Single HTML</a></small>

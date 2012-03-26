@@ -60,7 +60,7 @@
   the set of jars that Jersey depends on. Jersey has a pluggable component
   architecture so the set of jars required to be include in the class path can
   be different for each application.</para>
-  
+
   <para>
   All Jersey components are built using Java SE 6 compiler. It means, you will also need at least Java SE 6
   to be able to compile and run your application.
@@ -72,10 +72,10 @@
   developers how to depend on Jersey for their application. Ant developers are
   likely to find the <ulink url="http://maven.apache.org/ant-tasks/index.html">Ant
   Tasks for Maven</ulink> very useful.</para>
-  
+
   <para>The following table provides an overview of all Jersey modules
   and their dependencies with links to the respective binaries.</para>
-  
+
   <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
 <table frame='all' label="Jersey Modules and Dependencies">
 <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -121,10 +121,10 @@
 </tbody>
 </tgroup>
 </table>
-  
+
   <section id="examples">
   <title>Sample Scenarios</title>
-  
+
   <section id="examples_basicserver">
   <title>Basic Server-Side Application</title>
   <para>For a server side Jersey application you typically need to depend on jersey-server module

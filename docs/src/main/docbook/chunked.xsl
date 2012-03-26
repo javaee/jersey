@@ -46,7 +46,7 @@
 
     <xsl:import href="urn:docbkx:stylesheet"/>
     <xsl:import href="highlight.xsl"/>
-    
+
     <xsl:template name="user.header.content">
     <img src="/images/Jersey_yellow.png">
     </xsl:template>
