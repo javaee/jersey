@@ -45,24 +45,9 @@ import javax.ws.rs.client.Feature;
 /**
  * Feature used to register Json providers with Client.
  *
- * @author Stepan Kopriva <stepan.kopriva@oracle.com>
+ * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
 public class JsonFeature implements Feature {
-
-    private static JsonFeature instance = null;
-
-    /**
-     * Create signleton instance if it hasn't been created yet
-     *
-     * @return singleton instance
-     */
-    public static synchronized JsonFeature getInstance() {
-        if (instance == null) {
-            instance = new JsonFeature();
-        }
-
-        return instance;
-    }
 
     @Override
     public void onEnable(Configuration c) {

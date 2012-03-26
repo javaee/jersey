@@ -46,7 +46,7 @@ import javax.ws.rs.client.Feature;
 /**
  * Feature to provide the single-line registration of custom providers.
  *
- * @author Stepan Kopriva <stepan.kopriva@oracle.com>
+ * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
 public class CustomProvidersFeature implements Feature {
 
