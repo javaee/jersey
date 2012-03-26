@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+<chapter id="modules-and-dependencies">
+  <title>Jersey Modules and Dependencies</title>
+
+  <para>Jersey is built, assembled and installed using Maven. Jersey is
+  deployed to the Java.Net maven repository at the following location: <ulink
+  url="https://maven.java.net/index.html">http://maven.java.net/</ulink>.
+  The Jersey modules can be browsed at the following location: <ulink
+  url="https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey">https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey</ulink>.
+  Jars, Jar sources, Jar JavaDoc and samples are all available on the java.net
+  maven repository.</para>
+
+  <para>An application depending on Jersey requires that it in turn includes
+  the set of jars that Jersey depends on. Jersey has a pluggable component
+  architecture so the set of jars required to be include in the class path can
+  be different for each application.</para>
+  
+  <para>
+  All Jersey components are built using Java SE 6 compiler. It means, you will also need at least Java SE 6
+  to be able to compile and run your application.
+  </para>
+
+  <para>Developers using maven are likely to find it easier to include and
+  manage dependencies of their applications than developers using ant or other
+  build technologies. This document will explain to both maven and non-maven
+  developers how to depend on Jersey for their application. Ant developers are
+  likely to find the <ulink url="http://maven.apache.org/ant-tasks/index.html">Ant
+  Tasks for Maven</ulink> very useful.</para>
+  
+  <para>The following table provides an overview of all Jersey modules
+  and their dependencies with links to the respective binaries.</para>
+  
+  <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
+<table frame='all' label="Jersey Modules and Dependencies">
+<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+<colspec colname='c1'/>
+<colspec colname='c2'/>
+<colspec colname='c3'/>
+<thead>
+<row>
+  <entry>Module</entry>
+  <entry>Description</entry>
+  <entry>Dependencies</entry>
+</row>
+</thead>
+<tbody>
+<row>
+    <entry namest="c1" nameend="c3" align="center">Core</entry>
+</row>
+<row>
+  <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-server&amp;v=&version;&amp;e=pom">
+  jersey-server</ulink></entry>
+  <entry>Basic server functionality.</entry>
+  <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-commons&amp;v=&version;&amp;e=pom">
+  jersey-commons</ulink></entry>
+</row>
+<row>
+  <entry>jersey-client</entry>
+  <entry>Basic client functionality.</entry>
+  <entry>jersey-commons</entry>
+</row>
+<row>
+  <entry>jersey-commons</entry>
+  <entry>Common functionality shared by client and server.</entry>
+  <entry></entry>
+</row>
+<row>
+    <entry namest="c1" nameend="c3" align="center">Containers</entry>
+</row>
+<row>
+  <entry>...</entry>
+  <entry>...</entry>
+  <entry>...</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+  
+  <section id="examples">
+  <title>Sample Scenarios</title>
+  
+  <section id="examples_basicserver">
+  <title>Basic Server-Side Application</title>
+  <para>For a server side Jersey application you typically need to depend on jersey-server module
+  to provide the basic functionality, then you may want to support JSON mapping and a standard
+  JavaEE servlet container you would deploy your application to. So this would be the common set
+  of dependencies for your project for this kind of scenario:
+  <itemizedlist>
+  	<listitem>jersey-server</listitem>
+  	<listitem>jersey-commons</listitem>
+  	<listitem>...</listitem>
+  </itemizedlist>
+  </para>
+  </section> <!-- examples_basicserver -->
+  </section> <!-- examples -->
+</chapter>

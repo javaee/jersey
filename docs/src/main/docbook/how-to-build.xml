@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="how-to-build">
+    <title>Building and Testing Jersey</title>
+
+    <section id="checkout">
+        <title>Checking Out the Source</title>
+        <para>
+            Jersey source code is available in a Git repository you can browse at
+            <ulink url="http://java.net/projects/jersey/sources/code/show">http://java.net/projects/jersey/sources/code/show</ulink>.
+        </para>
+        <para>
+            In case you are not familiar with Git, we recommend reading on of the many "Getting Started with Git" articles
+            you can find on the web. For example this <ulink url="http://refcardz.dzone.com/refcardz/getting-started-git">DZone RefCard</ulink>.
+        </para>
+        <para>
+            Before you can clone Jersey repository you have to sign up for a <ulink url="http://java.net">java.net</ulink>
+            account. Once you are registered, you have to add an SSH key to your java.net profile - see this article on how
+            to do that: <ulink url="http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab">http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab</ulink>
+        </para>
+        <para>
+            To clone the Jersey repository you can execute the following command on the command-line
+            (provided you have a command-line Git client installed on your machine):
+            <programlisting>git clone ssh://&lt;your_java_net_id&gt;@java.net/jersey~code</programlisting>
+        </para>
+        <para>
+            Milestones and releases of Jersey are tagged. You can list the tags by executing the standard Git command in the repository directory:
+            <programlisting>git tag -l</programlisting>
+        </para>
+    </section>
+
+    <section id="building">
+        <title>Building the Source</title>
+        <para>
+            Jersey source code requires Java SE 6 or greater. The build is based on Maven.
+            Maven 3 or greater is recommended. Also it is recommended you use the following
+            Maven options when building the workspace (can be set in MAVENT_OPTS environment
+            variable):
+            <programlisting>-Xmx1048m -XX:PermSize=64M -XX:MaxPermSize=128M</programlisting>
+        </para>
+        <para>
+            It is recommended to build all of Jersey after you cloned the source code repository.
+            To do that execute the following commands in the directory where jersey source repository
+            was cloned (typically the directory named "jersey~code"):
+            <programlisting>mvn -Dmaven.test.skip=true clean install</programlisting>
+            This command will build Jersey, but skip the test execution.
+            If you don't want to skip the tests, execute the following instead:
+            <programlisting>mvn clean install</programlisting>
+            Building the whole Jersey project including tests could take significant amount of time.
+        </para>
+    </section>
+
+    <section id="testing">
+        <title>Testing</title>
+        <para>
+            Jersey contains many tests. Unit tests are in the individual Jersey modules,
+            integration and end-to-end tests are in jersey~code/tests directory.
+            You can run tests related to a particular area using the following command:
+            <programlisting>mvn -Dtest=&lt;pattern&gt; test</programlisting>
+            where 
+            <literal>pattern</literal> may be a comma separated set of names matching
+            tests.
+        </para>
+    </section>
+    <section id="netbeans-build">
+        <title>Using NetBeans</title>
+        <para>
+            <ulink href="http://netbeans.org">NetBeans IDE</ulink> has excellent maven support. The Jersey maven
+            modules can be loaded, built and tested in NetBeans without any additional
+            NetBeans-specific project files.
+        </para>
+    </section>
+
+</chapter>

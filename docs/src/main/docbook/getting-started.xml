@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="getting-started">
+    <title>Getting Started</title>
+
+    <para>
+        This chapter provides a quick introduction on how to get started building
+    RESTful services using Jersey. The example described here uses the lightweight
+    Grizzly HTTP server. At the end of this chapter you will see how to
+    implement equivalent functionality as a JavaEE web application you can deploy
+    on any servlet container supporting Servlet 2.5 and higher.
+    </para>
+    <section id="new-from-archetype">
+        <title>Creating a New Project from Maven Archetype</title>
+        <para>TODO - add a description on how to get started with archetypes</para>
+        <para>If you want to depend on Jersey snapshot versions the following repository needs to be added to the pom:
+            <programlisting language="xml">&lt;repository&gt;
+    &lt;id&gt;snapshot-repository.java.net&lt;/id&gt;
+    &lt;name&gt;Java.net Snapshot Repository for Maven&lt;/name&gt;
+    &lt;url&gt;https://maven.java.net/content/repositories/snapshots/&lt;/url&gt;
+    &lt;layout&gt;default&lt;/layout&gt;
+&lt;/repository&gt;</programlisting>
+        </para>
+    </section>
+    <section id="new-project-structure">
+        <title>Exploring the Newly Created Project</title>
+        <para>TODO</para>
+    </section>
+    <section id="new-project-customize">
+        <title>Customizing the JAX-RS Resource</title>
+        <para>TODO: instructions on how to make simple edits to the newly created resource</para>
+    </section>
+
+    <section id="running-project">
+        <title>Running the Project</title>
+        <para>TODO: instructions on how to run the project</para>
+    </section>
+    
+    <section id="new-webapp">
+        <title>Creating a JavaEE Web Application</title>
+        <para>TODO</para>
+    </section>
+
+    <section id="exploring-jersey-examples">
+        <title>Exploring Other Jersey Examples</title>
+        <para>Jersey codebase contains a number of useful samples on how to use various JAX-RS and Jersey features.
+        Please refer to the [TODO: Examples] section of this guide for more information on those.
+        </para>
+    </section>
+
+</chapter>
