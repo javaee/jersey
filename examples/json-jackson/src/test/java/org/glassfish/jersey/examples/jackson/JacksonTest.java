@@ -70,7 +70,7 @@ public class JacksonTest extends JerseyTest {
     @Override
     protected javax.ws.rs.client.Client getClient(TestContainer tc, JerseyApplication application) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, application);
-        origClient.configuration().enable(JsonFeature.getInstance());
+        origClient.configuration().enable(new JsonFeature());
 
         origClient.configuration().register(MyObjectMapperProvider.class);
         return origClient;
