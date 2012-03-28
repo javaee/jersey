@@ -47,6 +47,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -58,6 +59,7 @@ import com.google.common.collect.Multimap;
 /**
  * Abstract mutable message implementation.
  *
+ * @param <M> concrete message sub-type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
@@ -180,6 +182,10 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
 
     public <T> T content(Class<T> type, Annotation[] annotations) {
         return entity.content(type, annotations);
+    }
+
+    public void bufferEntity() throws MessageProcessingException {
+        entity.bufferEntity();
     }
 
     @SuppressWarnings("unchecked")

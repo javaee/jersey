@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MessageProcessingException;
 
 /**
  * Jersey message entity internal contract.
@@ -73,6 +74,8 @@ public interface Entity {
     public <T> T content(Class<T> type, Annotation[] annotations);
 
     public <T> T content(GenericType<T> type, Annotation[] annotations);
+
+    public void bufferEntity() throws MessageProcessingException;
 
     public Type type();
 }

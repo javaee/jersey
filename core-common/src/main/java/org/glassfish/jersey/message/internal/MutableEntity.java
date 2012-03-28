@@ -50,14 +50,16 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.WebApplicationException;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.InstanceTypePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -87,6 +89,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
     // stream representation of contentStream
     private InputStream contentStream;
+    private boolean isContentStreamBuffered;
     // java object representation of contentStream
     private InstanceTypePair<?> instanceType;
     // reference to enclosing message
@@ -295,6 +298,28 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return this;
     }
 
+    @Override
+    public void bufferEntity() throws MessageProcessingException {
+        try {
+            if (contentStream == null || isContentStreamBuffered || contentStream.available() <= 0) {
+                return;
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ReaderWriter.writeTo(contentStream, baos);
+            } finally {
+                contentStream.close();
+            }
+
+
+            contentStream = new ByteArrayInputStream(baos.toByteArray());
+            isContentStreamBuffered = true;
+        } catch (IOException ex) {
+            throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFERING_FAILED(), ex);
+        }
+    }
+
     public MutableEntity workers(MessageBodyWorkers workers) {
         this.workers = workers;
         return this;
@@ -309,7 +334,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             try {
                 contentStream.close();
             } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, "Error closing content input stream", ex);
+                LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
             }
             this.contentStream = null;
         }
