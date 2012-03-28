@@ -37,52 +37,72 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld.jaxrs;
+package org.glassfish.jersey.tests.e2e;
 
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import javax.ws.rs.ext.RuntimeDelegate;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.Target;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
- * Hello world application using only the standard JAX-RS API and lightweight HTTP server bundled in JDK.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class App {
+public class ClientTest extends JerseyTest {
 
-    /**
-     * Starts the lightweight HTTP server serving the JAX-RS application.
-     *
-     * @return new instance of the lightweight HTTP server
-     * @throws IOException
-     */
-    static HttpServer startServer() throws IOException {
-        // create a new server listening at port 8080
-        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+    @Path("helloworld")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.TEXT_PLAIN)
+    public static class HelloWorldResource {
+        private static final String MESSAGE = "Hello world!";
 
-        // create a handler wrapping the JAX-RS application
-        HttpHandler handler = RuntimeDelegate.getInstance().createEndpoint(new JaxRsApplication(), HttpHandler.class);
-
-        // map JAX-RS handler to the server root
-        server.createContext("/", handler);
-
-        // start the server
-        server.start();
-
-        return server;
+        @GET
+        public String getClichedMessage() {
+            return MESSAGE;
+        }
     }
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("\"Hello World\" Jersey Example Application");
+    @Override
+    protected JerseyApplication configure() {
+        ResourceConfig rc = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
+        return JerseyApplication.builder(rc).build();
+    }
 
-        HttpServer server = startServer();
+    @Test
+    public void testAccesingHelloworldResource() {
+        Target resource = target().path("helloworld");
+        Response r = resource.request().get();
+        assertEquals(200, r.getStatus());
 
-        System.out.println("Application started.\n"
-                + "Try accessing http://localhost:8080/helloworld in the browser.\n"
-                + "Hit enter to stop the application...");
-        System.in.read();
-        server.stop(0);
+        String responseMessage = resource.request().get(String.class);
+        assertEquals(HelloWorldResource.MESSAGE, responseMessage);
+    }
+
+    @Test
+    public void testAccesingMissingResource() {
+        Target missingResource = target().path("missing");
+        Response r = missingResource.request().get();
+        assertEquals(404, r.getStatus());
+
+
+        try {
+            missingResource.request().get(String.class);
+        } catch (InvocationException ex) {
+            assertEquals(404, ex.getResponse().getStatus());
+            return;
+        }
+
+        fail("Expected InvocationException has not been thrown.");
     }
 }

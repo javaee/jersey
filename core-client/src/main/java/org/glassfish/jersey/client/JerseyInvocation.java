@@ -57,6 +57,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
 
 import org.jvnet.tiger_types.Types;
@@ -597,7 +598,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 if (response.getStatus() < 300) {
                     responseFuture.set(response.readEntity(responseType));
                 } else {
-                    failed(new InvocationException(response, true));
+                    failed(convertToException(response));
                 }
             }
 
@@ -620,7 +621,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 if (response.getStatus() < 300) {
                     responseFuture.set(response.readEntity(responseType));
                 } else {
-                    failed(new InvocationException(response, true));
+                    failed(convertToException(response));
                 }
             }
 
@@ -654,7 +655,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.set(result);
                     callback.completed(result);
                 } else {
-                    failed(new InvocationException(response, true));
+                    failed(convertToException(response));
                 }
             }
 
@@ -666,6 +667,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         });
 
         return responseFuture;
+    }
+
+    private InvocationException convertToException(Response response) {
+        try {
+            return new InvocationException(response, true);
+        } catch (Throwable t) {
+            return new InvocationException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
+        }
     }
 
     @Override

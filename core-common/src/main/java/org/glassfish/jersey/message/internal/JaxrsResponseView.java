@@ -130,8 +130,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
 
     @Override
     public void bufferEntity() throws MessageProcessingException {
-        // TODO Where should this be implemented?
-        throw new UnsupportedOperationException("Not supported yet.");
+        wrapped.bufferEntity();
     }
 
     @Override
