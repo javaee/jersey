@@ -170,6 +170,16 @@ public class ApplicationBuilderTest {
         assertEquals("get!", application.apply(req).get().getEntity());
     }
 
+    @Test
+    public void testEmptyAppCreationPasses() throws InterruptedException, ExecutionException {
+        final ResourceConfig resourceConfig = ResourceConfig.builder().build();
+        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
+
+        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
+
+        assertEquals(404, application.apply(req).get().getStatus());
+    }
+
 //    @Test
     public void testappBuilderJaxRsApplication() throws InterruptedException, ExecutionException {
 

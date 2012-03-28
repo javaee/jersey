@@ -40,12 +40,7 @@
 package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -72,7 +67,42 @@ public class IntrospectionModeller {
 
     private static final Logger LOGGER = Logger.getLogger(IntrospectionModeller.class.getName());
 
-    public static ResourceClass createResource(Class<?> resourceClass) {
+    /**
+     * Create a resource model for the class.
+     *
+     * Method performs an {@link #isAcceptable(java.lang.Class) acceptability} check,
+     * on the resource class prior to the resource model creation.
+     *
+     * @param resourceClass resource class to be modeled.
+     * @return resource model of the class.
+     * @throws IllegalArgumentException in case the class is not
+     *     {@link #isAcceptable(java.lang.Class) acceptable} as a JAX-RS resource.
+     *
+     */
+    public static ResourceClass createResource(Class<?> resourceClass) throws IllegalArgumentException {
+        return createResource(resourceClass, true);
+    }
+
+    /**
+     * Create a resource model for the instance.
+     *
+     * Unlike {@link #createResource(java.lang.Class)}, this method does not perform
+     * {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
+     * assumed that the instance of the resource has already been created and is
+     * acceptable.
+     *
+     * @param resource resource instance to be modeled.
+     * @return resource model of the instance.
+     */
+    public static ResourceClass createResource(Object resource) {
+        return createResource(resource.getClass(), true);
+    }
+
+    private static ResourceClass createResource(Class<?> resourceClass, boolean skipAcceptableCheck) throws IllegalArgumentException {
+        if (!skipAcceptableCheck && !isAcceptable(resourceClass)) {
+            throw new IllegalArgumentException(LocalizationMessages.NON_INSTANTIATABLE_CLASS(resourceClass));
+        }
+
         final Class<?> annotatedResourceClass = getAnnotatedResourceClass(resourceClass);
         final Path rPathAnnotation = annotatedResourceClass.getAnnotation(Path.class);
         final boolean isRootResourceClass = (null != rPathAnnotation);
@@ -108,6 +138,32 @@ public class IntrospectionModeller {
         }
 
         return resource;
+    }
+
+    /**
+     * Check if the class is acceptable as a JAX-RS provider or resource.
+     *
+     * Method returns {@code false} if the class is either
+     * <ul>
+     *      <li>abstract</li>
+     *      <li>interface</li>
+     *      <li>annotation</li>
+     *      <li>primitive</li>
+     *      <li>local class</li>
+     *      <li>non-static member class</li>
+     * </ul>
+     *
+     * @param c class to be checked.
+     * @return {@code true} if the class is an acceptable JAX-RS provider or
+     *     resource, {@code false} otherwise.
+     */
+    public static boolean isAcceptable(Class<?> c) {
+        return !((c.getModifiers() & Modifier.ABSTRACT) != 0
+                || c.isPrimitive()
+                || c.isAnnotation()
+                || c.isInterface()
+                || c.isLocalClass()
+                || (c.isMemberClass() && (c.getModifiers() & Modifier.STATIC) == 0));
     }
 
     /**

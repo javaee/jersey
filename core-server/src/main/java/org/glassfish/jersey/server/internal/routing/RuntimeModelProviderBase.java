@@ -216,9 +216,6 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
             }
             locators.clear();
         }
-        // TODO! check for null (lastRoutedBulder can be null when you try to build empty
-        //       application - Application.builder().build(); NPE shouldn't be thrown!
-//        System.out.printf("%s creates final tree acceptor\n", this.getClass());
         return createFinalTreeAcceptor(rootBuilder, lastRoutedBuilder);//rootBuilder.root(lastRoutedBuilder.build());
     }
 

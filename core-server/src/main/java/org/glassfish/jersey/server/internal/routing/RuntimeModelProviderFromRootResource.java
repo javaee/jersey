@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import javax.ws.rs.core.Request;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToPathBuilder;
@@ -50,6 +52,8 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.SubResourceLocator;
 import org.glassfish.jersey.server.model.SubResourceMethod;
 import org.glassfish.jersey.uri.PathPattern;
+
+import com.google.common.base.Function;
 
 /**
  * Constructs runtime model for a root resource class.
@@ -89,7 +93,25 @@ public class RuntimeModelProviderFromRootResource extends RuntimeModelProviderBa
 
     @Override
     TreeAcceptor createFinalTreeAcceptor(RootRouteBuilder<PathPattern> rootRouteBuilder, RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
-        return rootBuilder.root(lastRoutedBuilder.build());
+        final TreeAcceptor routingRoot;
+        if (lastRoutedBuilder != null) {
+            routingRoot = lastRoutedBuilder.build();
+        } else {
+            /**
+             * Create an empty routing root that accepts any request, does not do
+             * anything and does not return any inflector. This will cause 404 being
+             * returned for every request.
+             */
+            routingRoot = Stages.acceptingTree(new Function<Request, Request>() {
+
+                @Override
+                public Request apply(Request input) {
+                    return input;
+                }
+
+            }).build();
+        }
+        return rootBuilder.root(routingRoot);
     }
 
 

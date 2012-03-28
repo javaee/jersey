@@ -39,16 +39,25 @@
  */
 package org.glassfish.jersey.server;
 
-import com.google.common.base.Preconditions;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import javax.annotation.Nullable;
+
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 import org.glassfish.jersey.server.model.BasicValidator;
 import org.glassfish.jersey.server.model.InflectorBasedResourceMethod;
 import org.glassfish.jersey.server.model.IntrospectionModeller;
@@ -56,18 +65,15 @@ import org.glassfish.jersey.server.model.PathValue;
 import org.glassfish.jersey.server.model.ResourceClass;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 
-import javax.annotation.Nullable;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
+import org.glassfish.hk2.HK2;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
 
 /**
  * Implementation of the {@link JerseyApplication.Builder Jersey application builder}.
@@ -77,6 +83,8 @@ import java.util.logging.Logger;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 /*package*/ class ApplicationBuilder implements JerseyApplication.Builder {
+
+    private static final Logger LOGGER = Logger.getLogger(ApplicationBuilder.class.getName());
 
     private class AppBoundBuilder implements BoundBuilder {
 
@@ -217,7 +225,11 @@ import java.util.logging.Logger;
 
         for (Class<?> c : this.resourceConfig.getClasses()) {
             if (IntrospectionModeller.isRootResource(c)) {
-                resources.add(IntrospectionModeller.createResource(c));
+                try {
+                    resources.add(IntrospectionModeller.createResource(c));
+                } catch (IllegalArgumentException ex) {
+                    LOGGER.warning(ex.getMessage());
+                }
             }
         }
     }
@@ -254,9 +266,18 @@ import java.util.logging.Logger;
 
         // FIXME: this will not work if workers change. Need to be replaced with injection
         final ServiceProviders sp = services.forContract(ServiceProviders.Builder.class).get()
-                .setProviderClasses(resourceConfig.getClasses())
-                .setProviderInstances(resourceConfig.getSingletons())
-                .build();
+                .setProviderClasses(Sets.filter(resourceConfig.getClasses(), new Predicate<Class<?>>() {
+
+                    @Override
+                    public boolean apply(Class<?> input) {
+                        final boolean acceptable = IntrospectionModeller.isAcceptable(input);
+                        if (!acceptable) {
+                            LOGGER.warning(LocalizationMessages.NON_INSTANTIATABLE_CLASS(input));
+                        }
+                        return acceptable;
+                    }
+                }))
+                .setProviderInstances(resourceConfig.getSingletons()).build();
         final MessageBodyFactory messageBodyWorkers = new MessageBodyFactory(sp);
         // END
 
@@ -310,7 +331,7 @@ import java.util.logging.Logger;
         StringBuilder errors = new StringBuilder("\n");
         StringBuilder warnings = new StringBuilder();
 
-        for (ResourceModelIssue issue: issueList) {
+        for (ResourceModelIssue issue : issueList) {
             if (issue.isFatal()) {
                 errors.append(LocalizationMessages.ERROR_MSG(issue.getMessage())).append('\n');
             } else {
