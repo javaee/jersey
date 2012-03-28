@@ -55,6 +55,7 @@
     <name>jersey-tests-integration</name>
 
     <modules>
+        <module>jersey-780</module>
         <module>servlet-2.5-init-1</module>
         <module>servlet-2.5-init-2</module>
         <module>servlet-2.5-init-3</module>

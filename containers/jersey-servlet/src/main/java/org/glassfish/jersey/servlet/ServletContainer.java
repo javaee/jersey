@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import javax.servlet.Filter;
@@ -95,7 +96,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * All initialization parameters are added as properties of the created
  * {@link ResourceConfig}.
  * <p />
- * A new {@link org.glassfish.jersey.server.Application} instance will be created and configured such
+ * A new {@link org.glassfish.jersey.server.JerseyApplication} instance will be created and configured such
  * that the following classes may be injected onto a root resource, provider
  * and {@link javax.ws.rs.core.Application} classes using {@link javax.ws.rs.core.Context
  * &#64;Context} annotation:
@@ -222,7 +223,7 @@ public class ServletContainer extends HttpServlet implements Filter {
             // and somebody would want to hit the root resource without the trailing slash
             int i = servletPath.lastIndexOf('/');
             if (servletPath.substring(i + 1).indexOf('.') < 0) {
-                // TODO
+                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder bellow)
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
 //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
 //                            path("/").
@@ -243,8 +244,14 @@ public class ServletContainer extends HttpServlet implements Filter {
          * The HttpServletRequest.getRequestURL() contains the complete URI
          * minus the query and fragment components.
          */
-        UriBuilder absoluteUriBuilder = UriBuilder.fromUri(
-                requestURL.toString());
+        UriBuilder absoluteUriBuilder = null;
+        try {
+            absoluteUriBuilder = UriBuilder.fromUri(requestURL.toString());
+        } catch (IllegalArgumentException iae) {
+            final Response.Status badRequest = Response.Status.BAD_REQUEST;
+            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            return;
+        }
 
         /**
          * The HttpServletRequest.getPathInfo() and
