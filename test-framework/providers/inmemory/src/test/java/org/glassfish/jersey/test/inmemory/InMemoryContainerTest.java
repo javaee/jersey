@@ -94,7 +94,7 @@ public class InMemoryContainerTest extends JerseyTest {
      */
     @Test
     public void testInMemoryContainerClient() {
-        final Response response = client().target(UriBuilder.fromUri(getBaseURI()).path("one").build()).request().get();
+        final Response response = client().target(UriBuilder.fromUri(getBaseUri()).path("one").build()).request().get();
 
         assertTrue(response.getStatus() == 200);
     }

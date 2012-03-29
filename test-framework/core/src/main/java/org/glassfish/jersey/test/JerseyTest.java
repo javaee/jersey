@@ -383,7 +383,7 @@ public abstract class JerseyTest {
             throw new IllegalArgumentException("The application cannot be null");
         }
 
-        return tcf.create(getBaseURI(), application);
+        return tcf.create(getBaseUri(), application);
     }
 
     /**
@@ -420,7 +420,7 @@ public abstract class JerseyTest {
      * Returns the base URI of the application.
      * @return The base URI of the application
      */
-    protected URI getBaseURI() {
+    protected URI getBaseUri() {
         return UriBuilder.fromUri("http://localhost/").port(getPort()).build();
     }
 

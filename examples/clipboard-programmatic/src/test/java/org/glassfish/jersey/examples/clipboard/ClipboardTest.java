@@ -60,7 +60,7 @@ public class ClipboardTest extends JerseyTest {
     @Test
     public void testClipboard() throws Exception {
         final Client client = client();
-        final Target clipboard = client.target(getBaseURI()).path(App.ROOT_PATH);
+        final Target clipboard = client.target(getBaseUri()).path(App.ROOT_PATH);
 
         Response response;
 

@@ -81,7 +81,7 @@ public class ClipboardTest extends JerseyTest {
     }
 
     public void testDeclarativeClipboard(MediaType mediaType) throws Exception {
-        final Target clipboard = client().target(getBaseURI()).path(App.ROOT_PATH);
+        final Target clipboard = client().target(getBaseUri()).path(App.ROOT_PATH);
 
         Response response;
 
@@ -117,7 +117,7 @@ public class ClipboardTest extends JerseyTest {
     }
 
     public void testProgrammaticEcho(MediaType mediaType) throws Exception {
-        final Target echo = client().target(getBaseURI()).path("echo");
+        final Target echo = client().target(getBaseUri()).path("echo");
 
         Response response = echo.request(mediaType).post(Entity.entity(new ClipboardData("Hello"), mediaType));
         assertEquals("Hello", response.readEntity(ClipboardData.class).toString());
