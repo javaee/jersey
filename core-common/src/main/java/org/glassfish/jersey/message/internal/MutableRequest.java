@@ -221,6 +221,11 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     }
 
     @Override
+    public boolean isEntityRetrievable() {
+        return this.isEmpty() || this.type() != null;
+    }
+
+    @Override
     public Builder workers(MessageBodyWorkers workers) {
         entityWorkers(workers);
         return this;

@@ -77,5 +77,7 @@ public interface Entity {
 
     public void bufferEntity() throws MessageProcessingException;
 
+    public boolean isEntityRetrievable();
+
     public Type type();
 }

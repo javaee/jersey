@@ -126,14 +126,12 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     @Override
     public boolean isEntityRetrievable() {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        return wrapped.isEntityRetrievable();
     }
 
     @Override
     public void bufferEntity() throws MessageProcessingException {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        wrapped.bufferEntity();
     }
 
     @Override
