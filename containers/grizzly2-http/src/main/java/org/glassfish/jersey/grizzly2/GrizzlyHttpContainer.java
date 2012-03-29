@@ -42,6 +42,7 @@ package org.glassfish.jersey.grizzly2;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,6 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.UriBuilder;
 
@@ -57,7 +59,9 @@ import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -210,11 +214,38 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
-            application.apply(toJaxrsRequest(request), responseWriter);
+            ContainerRequestContext conteinerContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
+                    getSecurityContext(request), null);
+            application.apply(conteinerContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
             logger.debugLog("GrizzlyHttpContaner.service(...) finished");
         }
+    }
+
+    private SecurityContext getSecurityContext(final Request request) {
+        return new SecurityContext() {
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return false;
+            }
+
+            @Override
+            public boolean isSecure() {
+                return request.isSecure();
+            }
+
+            @Override
+            public Principal getUserPrincipal() {
+                return request.getUserPrincipal();
+            }
+
+            @Override
+            public String getAuthenticationScheme() {
+                return request.getAuthType();
+            }
+        };
     }
 
     private URI getBaseUri(final Request request) {

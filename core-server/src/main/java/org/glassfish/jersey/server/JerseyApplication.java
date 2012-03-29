@@ -44,16 +44,17 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.security.Principal;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.MessageBodyWriter;
-
-import javax.annotation.Nullable;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -80,7 +81,9 @@ import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.RuntimeModelProvider;
+import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -94,7 +97,6 @@ import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Monitor;
-import javax.ws.rs.HttpMethod;
 
 /**
  * Jersey server-side application.
@@ -377,6 +379,32 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
         }
     }
 
+    /**
+     * Default dummy security context.
+     */
+    private static final SecurityContext DEFAULT_SECURITY_CONTEXT = new SecurityContext() {
+
+        @Override
+        public boolean isUserInRole(String role) {
+            return false;
+        }
+
+        @Override
+        public boolean isSecure() {
+            return false;
+        }
+
+        @Override
+        public Principal getUserPrincipal() {
+            return null;
+        }
+
+        @Override
+        public String getAuthenticationScheme() {
+            return null;
+        }
+    };
+
     private static final class References {
 
         @Inject
@@ -405,6 +433,8 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
     private Factory<RouterModule.RoutingContext> routingContextFactory;
     @Inject
     private References references;
+    @Inject
+    Factory<Ref<SecurityContext>> securityContextRefFactory;
     //
     private volatile TreeAcceptor rootAcceptor;
     private final ApplicationModule applicationModule = new ApplicationModule();
@@ -452,9 +482,61 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
             }
         };
 
-        apply(request, callback);
+        apply(request, callback, DEFAULT_SECURITY_CONTEXT, null);
 
         return callback;
+    }
+
+    /**
+     * The main request/response processing entry point for Jersey container implementations.
+     *
+     * The method invokes the request processing of the provided {@link Request jax-rs request} from the
+     * {@link ContainerRequestContext container request context} and uses the {@link ContainerResponseWriter container response
+     * writer} from the provided {@link ContainerRequestContext container request context} to suspend & resume the processing as
+     * well as write the response back to the container. If the {@link ContainerRequestContext container request context} contains
+     * {@link SecurityContext security context} it will be registered for further request processing.
+     * {@link RequestScopedInitializer Custom scope injections} will be initialized into the request scope.
+     *
+     * @param containerContext
+     *            container request context of the current request.
+     */
+    public void apply(final ContainerRequestContext containerContext) {
+        checkContainerRequestContext(containerContext);
+
+        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(containerContext.getRequest(),
+                containerContext.getResponseWriter()) {
+
+            @Override
+            protected void writeResponse(Response response) {
+                JerseyApplication.this.writeResponse(containerContext.getResponseWriter(), request, response);
+            }
+
+            @Override
+            protected void writeResponse(Throwable exception) {
+                JerseyApplication.this.writeResponse(containerContext.getResponseWriter(), request,
+                        JerseyApplication.handleFailure(exception));
+            }
+
+            @Override
+            protected void writeTimeoutResponse(InvocationContext context) {
+                JerseyApplication.this.writeResponse(containerContext.getResponseWriter(), request,
+                        JerseyApplication.prepareTimeoutResponse(context));
+            }
+        };
+        apply(containerContext.getRequest(), callback, containerContext.getSecurityContext(),
+                containerContext.getRequestScopedInitializer());
+
+        callback.suspendWriterIfRunning();
+    }
+
+    private void checkContainerRequestContext(final ContainerRequestContext containerContext) {
+        if (containerContext.getSecurityContext() == null) {
+            throw new IllegalArgumentException("SecurityContext from ContainerRequestContext must not be null.");
+        } else if (containerContext.getRequest() == null) {
+            throw new IllegalArgumentException("Request from ContainerRequestContext must not be null.");
+        } else if (containerContext.getResponseWriter() == null) {
+            throw new IllegalArgumentException("ResponseWriter from ContainerRequestContext must not be null.");
+        }
     }
 
     /**
@@ -464,10 +546,11 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
      * @param callback request invocation callback called when the request
      *     transformation is done, suspended, resumed etc. Must not be {@code null}.
      */
-    private void apply(Request request, InvocationCallback callback) {
+    private void apply(Request request, InvocationCallback callback, SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
         try {
             requestScope.enter();
             configureProviders();
+            initRequestScopeInjections(securityContext, requestScopeInitializer);
             // FIXME: This must be moved into the acceptor chain otherwise exception mapping & possibly
             //        other stuff may not work!
             final Pair<Request, Optional<LinearAcceptor>> pair = preMatchFilterAcceptor.apply(request);
@@ -477,39 +560,13 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
         }
     }
 
-    /**
-     * The main request/response processing entry point for Jersey container
-     * implementations.
-     *
-     * The method invokes the request processing and uses the provided
-     * {@link ContainerResponseWriter container context} to suspend & resume the
-     * processing as well as write the response back to the container.
-     *
-     * @param request request data.
-     * @param responseWriter request-scoped container context.
-     */
-    public void apply(final Request request, final ContainerResponseWriter responseWriter) {
-        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(request, responseWriter) {
+    private void initRequestScopeInjections(SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
+        Ref<SecurityContext> secReference = securityContextRefFactory.get();
+        secReference.set(securityContext);
 
-            @Override
-            protected void writeResponse(Response response) {
-                JerseyApplication.this.writeResponse(responseWriter, request, response);
-            }
-
-            @Override
-            protected void writeResponse(Throwable exception) {
-                JerseyApplication.this.writeResponse(
-                        responseWriter, request, JerseyApplication.handleFailure(exception));
-            }
-
-            @Override
-            protected void writeTimeoutResponse(InvocationContext context) {
-                JerseyApplication.this.writeResponse(
-                        responseWriter, request, JerseyApplication.prepareTimeoutResponse(context));
-            }
-        };
-        apply(request, callback);
-        callback.suspendWriterIfRunning();
+        if (requestScopeInitializer != null) {
+            requestScopeInitializer.initialize(services);
+        }
     }
 
     private static Response prepareTimeoutResponse(final InvocationContext context) {

@@ -42,6 +42,7 @@ package org.glassfish.jersey.servlet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -57,6 +58,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
@@ -76,7 +78,9 @@ import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 
 import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
@@ -178,26 +182,56 @@ public class WebComponent {
      * @throws javax.servlet.ServletException if the HTTP request cannot
      *                          be handled.
      */
-    public int service(URI baseUri, URI requestUri,
-            final HttpServletRequest request,
-            final HttpServletResponse response)
+    public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
 
         Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod());
         requestBuilder = addRequestHeaders(request, requestBuilder);
         requestBuilder = requestBuilder.entity(request.getInputStream());
-        Request jaxRsRequest = requestBuilder.build();
+        final Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final ResponseWriter containerContext = new ResponseWriter(false, request, response);
-            application.apply(jaxRsRequest, containerContext);
+            final ResponseWriter responseWriter = new ResponseWriter(false, request, response);
 
-            return containerContext.jerseyResponse.getStatus();
+            ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
+                    getSecurityContext(request), null);
+
+            application.apply(containerContext);
+
+            // jaxRsRequest, containerContext);
+
+            return responseWriter.jerseyResponse.getStatus();
         } catch (Exception e) {
             // TODO: proper error handling.
             throw new ServletException(e);
         }
 
+    }
+
+    private SecurityContext getSecurityContext(final HttpServletRequest request) {
+        return new SecurityContext() {
+
+            @Override
+            public Principal getUserPrincipal() {
+                return request.getUserPrincipal();
+
+            }
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return request.isUserInRole(role);
+            }
+
+            @Override
+            public boolean isSecure() {
+                return request.isSecure();
+            }
+
+            @Override
+            public String getAuthenticationScheme() {
+                return request.getAuthType();
+            }
+        };
     }
 
     private ResourceConfig createResourceConfig(WebConfig config, Module... modules) throws ServletException {

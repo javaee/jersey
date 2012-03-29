@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,28 +39,38 @@
  */
 package org.glassfish.jersey.jdkhttp;
 
-import com.sun.net.httpserver.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
+
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
+import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsExchange;
 
 /**
  * Container adapter between {@link HttpServer JDK HttpServer} and {@link JerseyApplication Jersey application}.
@@ -82,7 +92,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(final HttpExchange exchange) throws IOException {
         /**
          * This is a URI that contains the path, query and fragment components.
          */
@@ -118,7 +128,8 @@ public class JdkHttpHandlerContainer implements HttpHandler {
          * TODO this is missing the user information component, how can this be
          * obtained?
          */
-        String scheme = (exchange instanceof HttpsExchange) ? "https" : "http";
+        final boolean isSecure = exchange instanceof HttpsExchange;
+        String scheme = isSecure ? "https" : "http";
 
         URI baseUri = null;
         try {
@@ -153,14 +164,40 @@ public class JdkHttpHandlerContainer implements HttpHandler {
 
         Request jaxRsRequest = requestBuilder.build();
         final ResponseWriter responseWriter = new ResponseWriter(exchange);
-
+        ContainerRequestContext containerRequestCtx = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
+                getSecurityContext(exchange.getPrincipal(), isSecure), null);
         try {
-            application.apply(jaxRsRequest, responseWriter);
+            application.apply(containerRequestCtx);
         } finally {
             // if the response was not commited yet by the JerseyApplication
             // then commit it and log warning
             responseWriter.closeAndLogWarning();
         }
+    }
+
+    private SecurityContext getSecurityContext(final Principal principal, final boolean isSecure) {
+        return new SecurityContext() {
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return false;
+            }
+
+            @Override
+            public boolean isSecure() {
+                return isSecure;
+            }
+
+            @Override
+            public Principal getUserPrincipal() {
+                return principal;
+            }
+
+            @Override
+            public String getAuthenticationScheme() {
+                return null;
+            }
+        };
     }
 
     private final static class ResponseWriter implements ContainerResponseWriter {

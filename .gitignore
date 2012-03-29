@@ -12,3 +12,9 @@ profile
 *.releaseBackup
 nbactions.xml
 /nb-configuration.xml
+
+#eclipse noise
+.settings
+.settings/*
+.project
+.classpath

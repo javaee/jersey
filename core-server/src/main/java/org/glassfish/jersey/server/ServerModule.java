@@ -188,6 +188,7 @@ public class ServerModule extends AbstractModule {
                 new ContextResolverFactory.Module(Singleton.class),
                 new JaxrsProviders.Module(),
                 new FilterModule(),
+                new SecurityContextModule(),
                 new ParameterInjectionModule(),
                 new ResourceModelModule(),
                 new ResourceConfig.Module(),
