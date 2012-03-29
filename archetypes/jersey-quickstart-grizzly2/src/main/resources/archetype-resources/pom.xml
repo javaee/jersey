@@ -63,5 +63,6 @@
     </build>
     <properties>
         <jersey-version>2.0-SNAPSHOT</jersey-version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>

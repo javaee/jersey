@@ -40,18 +40,13 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <groupId>org.glassfish.jersey.archetypes</groupId>
-    <artifactId>project</artifactId>
-    <version>2.0-SNAPSHOT</version>
-  </parent>
-  <artifactId>jersey-quickstart-grizzly2</artifactId>
-  <modelVersion>4.0.0</modelVersion>
-  <description>
-    An archetype which contains a quick start Jersey project based on Grizzly container.
-  </description>
-  <name>Jersey Archetype: Application Using Grizzly Embedded Container</name>
-</project>
+<archetype>
+  <id>jersey-quickstart-webapp</id>
+  <sources>
+    <source>src/main/java/MyResource.java</source>
+  </sources>
+  <resources>
+    <resource>src/main/webapp/index.jsp</resource>
+    <resource>src/main/webapp/WEB-INF/web.xml</resource>
+  </resources>
+</archetype>
