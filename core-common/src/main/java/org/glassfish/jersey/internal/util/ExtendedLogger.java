@@ -52,13 +52,12 @@ import java.util.logging.Logger;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ExtendedLogger extends Logger {
+public final class ExtendedLogger {
     @SuppressWarnings("NonConstantLogger")
     private final Logger logger;
     private final Level debugLevel;
 
     public ExtendedLogger(final Logger logger, final Level debugLevel) {
-        super(logger.getName(), logger.getResourceBundleName());
         this.logger = logger;
         this.debugLevel = debugLevel;
     }
@@ -111,220 +110,196 @@ public final class ExtendedLogger extends Logger {
 
     @Override
     public String toString() {
-        return logger.toString();
+        return "ExtendedLogger{" + "logger=" + logger + ", debugLevel=" + debugLevel + '}';
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ExtendedLogger other = (ExtendedLogger) obj;
+        if (this.logger != other.logger && (this.logger == null || !this.logger.equals(other.logger))) {
+            return false;
+        }
+        if (this.debugLevel != other.debugLevel && (this.debugLevel == null || !this.debugLevel.equals(other.debugLevel))) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return logger.hashCode();
+        int hash = 3;
+        hash = 17 * hash + (this.logger != null ? this.logger.hashCode() : 0);
+        hash = 17 * hash + (this.debugLevel != null ? this.debugLevel.hashCode() : 0);
+        return hash;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return logger.equals(obj);
-    }
-
-    @Override
     public void warning(String msg) {
         logger.warning(msg);
     }
 
-    @Override
     public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {
         logger.throwing(sourceClass, sourceMethod, thrown);
     }
 
-    @Override
     public void severe(String msg) {
         logger.severe(msg);
     }
 
-    @Override
     public void setUseParentHandlers(boolean useParentHandlers) {
         logger.setUseParentHandlers(useParentHandlers);
     }
 
-    @Override
     public void setParent(Logger parent) {
         logger.setParent(parent);
     }
 
-    @Override
     public void setLevel(Level newLevel) throws SecurityException {
         logger.setLevel(newLevel);
     }
 
-    @Override
     public void setFilter(Filter newFilter) throws SecurityException {
         logger.setFilter(newFilter);
     }
 
-    @Override
     public void removeHandler(Handler handler) throws SecurityException {
         logger.removeHandler(handler);
     }
 
-    @Override
     public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Throwable thrown) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, thrown);
     }
 
-    @Override
     public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Object[] params) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, params);
     }
 
-    @Override
     public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Object param1) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, param1);
     }
 
-    @Override
     public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg);
     }
 
-    @Override
     public void logp(Level level, String sourceClass, String sourceMethod, String msg, Throwable thrown) {
         logger.logp(level, sourceClass, sourceMethod, msg, thrown);
     }
 
-    @Override
     public void logp(Level level, String sourceClass, String sourceMethod, String msg, Object[] params) {
         logger.logp(level, sourceClass, sourceMethod, msg, params);
     }
 
-    @Override
     public void logp(Level level, String sourceClass, String sourceMethod, String msg, Object param1) {
         logger.logp(level, sourceClass, sourceMethod, msg, param1);
     }
 
-    @Override
     public void logp(Level level, String sourceClass, String sourceMethod, String msg) {
         logger.logp(level, sourceClass, sourceMethod, msg);
     }
 
-    @Override
     public void log(Level level, String msg, Throwable thrown) {
         logger.log(level, msg, thrown);
     }
 
-    @Override
     public void log(Level level, String msg, Object[] params) {
         logger.log(level, msg, params);
     }
 
-    @Override
     public void log(Level level, String msg, Object param1) {
         logger.log(level, msg, param1);
     }
 
-    @Override
     public void log(Level level, String msg) {
         logger.log(level, msg);
     }
 
-    @Override
     public void log(LogRecord record) {
         logger.log(record);
     }
 
-    @Override
     public boolean isLoggable(Level level) {
         return logger.isLoggable(level);
     }
 
-    @Override
     public void info(String msg) {
         logger.info(msg);
     }
 
-    @Override
     public boolean getUseParentHandlers() {
         return logger.getUseParentHandlers();
     }
 
-    @Override
     public String getResourceBundleName() {
         return logger.getResourceBundleName();
     }
 
-    @Override
     public ResourceBundle getResourceBundle() {
         return logger.getResourceBundle();
     }
 
-    @Override
     public Logger getParent() {
         return logger.getParent();
     }
 
-    @Override
     public String getName() {
         return logger.getName();
     }
 
-    @Override
     public Level getLevel() {
         return logger.getLevel();
     }
 
-    @Override
     public Handler[] getHandlers() {
         return logger.getHandlers();
     }
 
-    @Override
     public Filter getFilter() {
         return logger.getFilter();
     }
 
-    @Override
     public void finest(String msg) {
         logger.finest(msg);
     }
 
-    @Override
     public void finer(String msg) {
         logger.finer(msg);
     }
 
-    @Override
     public void fine(String msg) {
         logger.fine(msg);
     }
 
-    @Override
     public void exiting(String sourceClass, String sourceMethod, Object result) {
         logger.exiting(sourceClass, sourceMethod, result);
     }
 
-    @Override
     public void exiting(String sourceClass, String sourceMethod) {
         logger.exiting(sourceClass, sourceMethod);
     }
 
-    @Override
     public void entering(String sourceClass, String sourceMethod, Object[] params) {
         logger.entering(sourceClass, sourceMethod, params);
     }
 
-    @Override
     public void entering(String sourceClass, String sourceMethod, Object param1) {
         logger.entering(sourceClass, sourceMethod, param1);
     }
 
-    @Override
     public void entering(String sourceClass, String sourceMethod) {
         logger.entering(sourceClass, sourceMethod);
     }
 
-    @Override
     public void config(String msg) {
         logger.config(msg);
     }
 
-    @Override
     public void addHandler(Handler handler) throws SecurityException {
         logger.addHandler(handler);
     }
