@@ -64,13 +64,13 @@ public class HelloWorldTest extends JerseyTest {
         Client client = ClientFactory.newClient();
 
         assertFalse(App.getMethodCalled);
-        Response response = client.target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).build().toString()).request("text/plain").get();
+        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").get();
         assertTrue(App.getMethodCalled);
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());
         assertTrue("Hello World!".equals(response.readEntity(String.class)));
 
-        String s = client.target(getBaseURI()).path("helloworld").request().get(String.class);
+        String s = client.target(getBaseUri()).path("helloworld").request().get(String.class);
         assertTrue(s.equals("Hello World!"));
     }
 
@@ -78,11 +78,11 @@ public class HelloWorldTest extends JerseyTest {
     public void testHelloWorldOtherMethods() throws Exception {
         Client client = ClientFactory.newClient();
         assertFalse(App.headMethodCalled);
-        Response response = client.target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).build().toString()).request("text/plain").head();
+        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").head();
         assertTrue(App.headMethodCalled);
         assertEquals(204, response.getStatus());
 
-        response = client.target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).build().toString()).request("text/plain").options();
+        response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").options();
         assertEquals(204, response.getStatus());
     }
 }

@@ -78,7 +78,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     @Ignore("not compatible with test framework (doesn't use client())")
     public void testHelloWorld() throws Exception {
-        URL getUrl = UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).build().toURL();
+        URL getUrl = UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toURL();
         HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
         try {
             connection.setDoOutput(true);

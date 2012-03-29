@@ -84,7 +84,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testPingAndFilter() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).build());
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build());
         Response r = t.request("text/plain").get();
         assertEquals(200, r.getStatus());
         assertTrue(r.readEntity(String.class).contains(MyResponseFilter.class.getSimpleName()));
@@ -96,7 +96,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionWithEntity() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("webapplication_entity").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());
@@ -110,7 +110,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionWithEntity400() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("webapplication_entity").build());
         Response r = t.request("text/plain").post(Entity.text("Code:400"));
         assertEquals(400, r.getStatus());
@@ -124,7 +124,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionUsingMapper() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("webapplication_noentity").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());
@@ -139,7 +139,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testMyException() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("my").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());
@@ -154,7 +154,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testMySubException() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("mysub").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());
@@ -171,7 +171,7 @@ public class ExceptionMappingTest extends JerseyTest {
      */
     @Test
     public void testMySubSubException() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH)
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH)
                 .path("mysub").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());

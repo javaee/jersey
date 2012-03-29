@@ -56,13 +56,13 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     }
     private String[] expectedFragmentsProgrammatic = new String[]{
         // UriInfo
-        "Absolute path : " + this.getBaseURI() + "programmatic/v1/v2",
-        "Base URI : " + this.getBaseURI(),
+        "Absolute path : " + this.getBaseUri() + "programmatic/v1/v2",
+        "Base URI : " + this.getBaseUri(),
         "Path : /programmatic/v1/v2",
         "Path segments : [programmatic, v1, v2]",
         "p1 : v1", "p2 : v2", // path params
         "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseURI() + "programmatic/v1/v2?q1=1&q2=v2&q2=v3",
+        "Request URI : " + this.getBaseUri() + "programmatic/v1/v2?q1=1&q2=v2&q2=v3",
         // RequestHeaders/HttpHeaders
         "Accept : text/plain",
         // Injected Parameters
@@ -73,13 +73,13 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     };
     private String[] expectedFragmentsAnnotatedInstance = new String[]{
         // UriInfo
-        "Absolute path : " + this.getBaseURI() + "annotated/instance/v1/v2",
-        "Base URI : " + this.getBaseURI(),
+        "Absolute path : " + this.getBaseUri() + "annotated/instance/v1/v2",
+        "Base URI : " + this.getBaseUri(),
         "Path : /annotated/instance/v1/v2",
         "Path segments : [annotated, instance, v1, v2]",
         "p1 : v1", "p2 : v2", // path params
         "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseURI() + "annotated/instance/v1/v2?q1=1&q2=v2&q2=v3",
+        "Request URI : " + this.getBaseUri() + "annotated/instance/v1/v2?q1=1&q2=v2&q2=v3",
         // RequestHeaders/HttpHeaders
         "Accept : text/plain",
         // Injected Parameters
@@ -90,13 +90,13 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     };
     private String[] expectedFragmentsAnnotatedMethod = new String[]{
         // UriInfo
-        "Absolute path : " + this.getBaseURI() + "annotated/method/v1/v2",
-        "Base URI : " + this.getBaseURI(),
+        "Absolute path : " + this.getBaseUri() + "annotated/method/v1/v2",
+        "Base URI : " + this.getBaseUri(),
         "Path : /annotated/method/v1/v2",
         "Path segments : [annotated, method, v1, v2]",
         "p1 : v1", "p2 : v2", // path params
         "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseURI() + "annotated/method/v1/v2?q1=1&q2=v2&q2=v3",
+        "Request URI : " + this.getBaseUri() + "annotated/method/v1/v2?q1=1&q2=v2&q2=v3",
         // RequestHeaders/HttpHeaders
         "Accept : text/plain",
         // Injected Parameters

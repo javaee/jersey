@@ -88,7 +88,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionInRequestFilter() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).path("request_exception").build());
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("request_exception").build());
         Response r = t.request("text/plain").post(Entity.text("Request Exception"));
         assertEquals(200, r.getStatus());
         final String entity = r.readEntity(String.class);
@@ -98,7 +98,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
 
     @Test
     public void testWebApplicationExceptionInResponseFilter() {
-        Target t = client().target(UriBuilder.fromUri(getBaseURI()).path(App.ROOT_PATH).path("response_exception").build());
+        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("response_exception").build());
         Response r = t.request("text/plain").get();
         assertEquals(200, r.getStatus());
         final String entity = r.readEntity(String.class);

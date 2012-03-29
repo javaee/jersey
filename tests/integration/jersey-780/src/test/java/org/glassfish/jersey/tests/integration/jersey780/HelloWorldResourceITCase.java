@@ -73,7 +73,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testInvalidUrl() throws Exception {
-        final URL url = new URL(getBaseURI().toString() + "^");
+        final URL url = new URL(getBaseUri().toString() + "^");
         final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
 
