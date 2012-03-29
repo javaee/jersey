@@ -695,5 +695,7 @@
         <findbugs.exclude>exclude-common.xml</findbugs.exclude>
 
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
+
+        <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
     </properties>
 </project>
