@@ -39,16 +39,6 @@
  */
 package org.glassfish.jersey.filter;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
-
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -57,10 +47,11 @@ import javax.ws.rs.ext.PreMatchRequestFilter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.RequestFilter;
 import javax.ws.rs.ext.ResponseFilter;
-
-import org.glassfish.jersey.message.internal.ReaderWriter;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 /**
  * Universal logging filter.
@@ -138,20 +129,8 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         // TODO define large entities logging threshold via configuration
         //      or add special handling for entity streams
         if (printEntity && request.hasEntity()) {
-            final Object entity = request.getEntity();
-            if (entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
-                InputStream in = (InputStream) entity;
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                if (in.available() > 0) {
-                    ReaderWriter.writeTo(in, out);
-                    byte[] requestEntity = out.toByteArray();
-                    // TODO figure out the right encoding.
-                    b.append(new String(requestEntity, Charset.defaultCharset())).append("\n");
-                    request = Requests.from(request).entity(new ByteArrayInputStream(requestEntity)).build();
-                }
-            } else {
-                b.append(request.readEntity(String.class)).append("\n");
-            }
+            request.bufferEntity();
+            b.append(request.readEntity(String.class)).append("\n");
         }
 
         log(b);
@@ -168,20 +147,8 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         // TODO define large entities logging threshold via configuration
         //      or add special handling for entity streams
         if (printEntity && response.hasEntity()) {
-            final Object entity = response.getEntity();
-            if (entity != null && entity.getClass().isAssignableFrom(InputStream.class)) {
-                InputStream in = (InputStream) entity;
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                if (in.available() > 0) {
-                    ReaderWriter.writeTo(in, out);
-                    byte[] requestEntity = out.toByteArray();
-                    // TODO figure out the right encoding.
-                    b.append(new String(requestEntity, Charset.defaultCharset())).append("\n");
-                    response = Responses.toBuilder(response).entity(new ByteArrayInputStream(requestEntity)).build();
-                }
-            } else {
-                b.append(response.readEntity(String.class)).append("\n");
-            }
+            response.bufferEntity();
+            b.append(response.readEntity(String.class)).append("\n");
         }
 
         log(b);

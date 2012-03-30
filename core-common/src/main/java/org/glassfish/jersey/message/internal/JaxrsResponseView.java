@@ -125,7 +125,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
 
     @Override
     public boolean isEntityRetrievable() {
-        return hasEntity() && wrapped.type() != null;
+        return wrapped.isEntityRetrievable();
     }
 
     @Override

@@ -63,6 +63,7 @@ public class JacksonTest extends JerseyTest {
     @Override
     protected JerseyApplication configure() {
         enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
 
         return App.createApp();
     }

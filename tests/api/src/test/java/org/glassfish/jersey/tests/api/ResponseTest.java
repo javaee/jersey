@@ -179,7 +179,7 @@ public class ResponseTest {
         MediaType mt2 = new MediaType("text", "html");
         List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt1, mt2).
                 languages(new Locale("en", "US"), new Locale("en", "GB"),
-                new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
+                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
                 add().build();
 
         String tmp;
@@ -251,7 +251,7 @@ public class ResponseTest {
         MediaType mt = new MediaType("text", "plain");
         List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt).
                 languages(new Locale("en", "US"), new Locale("en", "GB"),
-                new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
+                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
                 add().build();
 
         String tmp;
@@ -274,16 +274,16 @@ public class ResponseTest {
     private static final String newline = System.getProperty("line.separator");
 
     private String verifyResponse(Response resp, @Nullable String content, int status,
-            List<String> encoding, List<String> language, @Nullable List<String> type,
-            @Nullable List<String> var, @Nullable List<String> ccl, @Nullable List<String> cookies)
-             {
+                                  List<String> encoding, List<String> language, @Nullable List<String> type,
+                                  @Nullable List<String> var, @Nullable List<String> ccl, @Nullable List<String> cookies)
+    {
         boolean pass = true;
-                 StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-                 sb.append("========== Verifying a Response: ").append(newline);
+        sb.append("========== Verifying a Response: ").append(newline);
 
         String tmp = verifyResponse(resp, content, status, null);
-                 sb.append(indent).append(tmp).append(newline);
+        sb.append(indent).append(tmp).append(newline);
         if (tmp.endsWith("false")) {
             pass = false;
         }
@@ -378,13 +378,14 @@ public class ResponseTest {
                 }
             }
         }
-                 sb.append(indent).append(pass);
+
+        sb.append(indent).append(pass);
 
         return sb.toString();
     }
 
     private String verifyResponse(Response resp, String content, int status,
-            @Nullable HashMap<String, String> expected_map) {
+                                  @Nullable HashMap<String, String> expected_map) {
         boolean pass = true;
         StringBuilder sb = new StringBuilder();
 

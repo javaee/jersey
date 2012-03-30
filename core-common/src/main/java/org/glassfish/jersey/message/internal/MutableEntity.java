@@ -182,30 +182,12 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return rawType.cast(instanceType.instance());
         }
 
-        if (instanceType != null) {
-            final Type myInstanceType = instanceType.type();
-            final Object myInstance = instanceType.instance();
-            if (myInstanceType == null || workers == null || myInstance == null) {
-                return null;
-            }
-
-            final MediaType mediaType = getMsgContentType();
-
-            final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, writeAnnotations, mediaType);
-            if (writer == null) {
-                // TODO throw an exception?
+        if (instanceType != null && !isContentStreamBuffered) {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            if (bufferEntityInstance(baos)) {
                 return null;
             } else {
-                try {
-                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    writer.writeTo(instanceType.instance(), myInstanceType.getClass(), myInstanceType, writeAnnotations, mediaType, null, baos);
-                    baos.close();
-                    contentStream = new ByteArrayInputStream(baos.toByteArray());
-                } catch (IOException ex) {
-                    Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (WebApplicationException ex) {
-                    Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                contentStream = new ByteArrayInputStream(baos.toByteArray());
             }
         }
 
@@ -226,9 +208,13 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             if (br instanceof CompletableReader) {
                 t = ((CompletableReader<T>) br).complete(t);
             }
-            if (!(t instanceof Closeable)) {
+
+            if(isContentStreamBuffered) {
+                contentStream.reset();
+            } else if (!(t instanceof Closeable)) {
                 contentStream.close();
             }
+
             instanceType = InstanceTypePair.of(t);
             return t;
         } catch (IOException ex) {
@@ -301,23 +287,59 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     @Override
     public void bufferEntity() throws MessageProcessingException {
         try {
-            if (contentStream == null || isContentStreamBuffered || contentStream.available() <= 0) {
+            if (((contentStream == null || contentStream.available() <= 0) && instanceType == null) || isContentStreamBuffered) {
                 return;
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try {
-                ReaderWriter.writeTo(contentStream, baos);
-            } finally {
-                contentStream.close();
-            }
+            if(contentStream != null) {
+                try {
+                    ReaderWriter.writeTo(contentStream, baos);
+                } finally {
+                    contentStream.close();
+                }
+            } else {
+                // instanceType != null && contentStream == null
 
+                if (bufferEntityInstance(baos)) return;
+            }
 
             contentStream = new ByteArrayInputStream(baos.toByteArray());
             isContentStreamBuffered = true;
         } catch (IOException ex) {
             throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFERING_FAILED(), ex);
         }
+    }
+
+    private boolean bufferEntityInstance(ByteArrayOutputStream baos) {
+        final Type myInstanceType = instanceType.type();
+        final Object myInstance = instanceType.instance();
+        if (myInstanceType == null || workers == null || myInstance == null) {
+            return true;
+        }
+
+        final MediaType mediaType = getMsgContentType();
+
+        final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, writeAnnotations, mediaType);
+        if (writer == null) {
+            // TODO throw an exception?
+            return true;
+        } else {
+            try {
+                writer.writeTo(instanceType.instance(), myInstance.getClass(), myInstanceType, writeAnnotations, mediaType, null, baos);
+                baos.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (WebApplicationException ex) {
+                Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isEntityRetrievable() {
+        return !isEmpty() && type() != null;
     }
 
     public MutableEntity workers(MessageBodyWorkers workers) {
