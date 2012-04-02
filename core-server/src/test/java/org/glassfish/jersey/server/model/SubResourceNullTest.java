@@ -62,9 +62,8 @@ public class SubResourceNullTest {
 
     JerseyApplication app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
-
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);
         return JerseyApplication.builder(resourceConfig);
     }
 
@@ -72,10 +71,11 @@ public class SubResourceNullTest {
     static public class Parent {
         @Path("{child}")
         public Child getChild(@PathParam("child") boolean child) {
-            if (child)
+            if (child) {
                 return new Child();
-            else
+            } else {
                 return null;
+            }
         }
     }
 

@@ -85,7 +85,7 @@ public class App {
     }
 
     public static JerseyApplication create() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(JaxrsInjectionReportingResource.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(JaxrsInjectionReportingResource.class);
         final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind(ROOT_PATH_PROGRAMMATIC).method("GET").to(JaxrsInjectionReportingInflector.class);

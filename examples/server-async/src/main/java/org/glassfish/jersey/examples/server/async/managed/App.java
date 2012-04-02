@@ -87,7 +87,7 @@ public class App {
     }
 
     public static JerseyApplication create() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
+        final ResourceConfig resourceConfig = new ResourceConfig()
                 .addClasses(SimpleJerseyExecutorManagedLongRunningResource.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
                 .addModules(new ProcessingExecutorsModule(new ProcessingExecutorsProvider() {
@@ -102,7 +102,7 @@ public class App {
                     public ExecutorService getRespondingExecutor() {
                         return null; // execute on same thread
                     }
-                })).build();
+                }));
 
         return JerseyApplication.builder(resourceConfig).build();
     }

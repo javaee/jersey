@@ -67,8 +67,7 @@ public class JdkHttpServerContainerTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class).build();
-        return JerseyApplication.builder(resourceConfig).build();
+        return JerseyApplication.builder(new ResourceConfig(Resource.class)).build();
     }
 
     @Path("one")

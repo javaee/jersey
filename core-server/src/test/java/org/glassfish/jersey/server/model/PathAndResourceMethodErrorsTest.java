@@ -64,7 +64,7 @@ public class PathAndResourceMethodErrorsTest {
 
     private List<ResourceModelIssue> initiateWebApplication(Class<?>... resourceClasses) {
         try {
-            final ResourceConfig rc = ResourceConfig.builder().addClasses(resourceClasses).build();
+            final ResourceConfig rc = new ResourceConfig(resourceClasses);
             JerseyApplication.builder(rc).build();
             fail("Application build expected to fail");
         } catch (ResourceModelValidator.ModelException e) {

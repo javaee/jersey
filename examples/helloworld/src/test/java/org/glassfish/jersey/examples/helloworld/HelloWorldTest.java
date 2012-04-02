@@ -70,9 +70,7 @@ public class HelloWorldTest extends JerseyTest {
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
-        ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
-
-        return JerseyApplication.builder(resourceConfig).build();
+        return JerseyApplication.builder(new ResourceConfig(HelloWorldResource.class)).build();
     }
 
     @Test

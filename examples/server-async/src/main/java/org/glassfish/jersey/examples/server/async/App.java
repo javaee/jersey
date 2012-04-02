@@ -87,10 +87,9 @@ public class App {
     }
 
     public static JerseyApplication create() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
+        final ResourceConfig resourceConfig = new ResourceConfig()
                 .addClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
-                .build();
+                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
 
         return JerseyApplication.builder(resourceConfig).build();
     }

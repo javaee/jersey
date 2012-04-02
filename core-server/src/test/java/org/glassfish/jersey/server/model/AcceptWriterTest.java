@@ -163,8 +163,7 @@ public class AcceptWriterTest {
     @Test
     public void testAcceptGet() throws Exception {
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(
-                    Resource.class, FooStringWriter.class, BarStringWriter.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, FooStringWriter.class, BarStringWriter.class);
         final JerseyApplication app = JerseyApplication.builder(resourceConfig).build();
 
         assertEquals("foo: content", app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class));

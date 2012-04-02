@@ -75,10 +75,9 @@ public class App {
     }
 
     public static JerseyApplication createApp() {
-        final ResourceConfig.Builder rcb = ResourceConfig.builder();
+        final ResourceConfig rc = new ResourceConfig()
+                .packages(JaxbResource.class.getPackage().getName());
 
-        rcb.packages(JaxbResource.class.getPackage().getName());
-
-        return JerseyApplication.builder(rcb.build()).build();
+        return JerseyApplication.builder(rc).build();
     }
 }

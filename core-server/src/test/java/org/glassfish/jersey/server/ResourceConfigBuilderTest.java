@@ -56,36 +56,36 @@ import static org.junit.Assert.assertTrue;
 public class ResourceConfigBuilderTest {
     @Test
     public void testEmpty() {
-        ResourceConfig resourceConfig = ResourceConfig.empty();
+        ResourceConfig resourceConfig = new ResourceConfig();
 
         assertTrue(resourceConfig.getClasses() != null);
-        assertTrue(resourceConfig.getClasses().size() == 0);
+        assertTrue(resourceConfig.getClasses().isEmpty());
 
         assertTrue(resourceConfig.getSingletons() != null);
-        assertTrue(resourceConfig.getSingletons().size() == 0);
+        assertTrue(resourceConfig.getSingletons().isEmpty());
 
     }
 
     @Test
     public void testClasses() {
-        ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(ResourceConfigBuilderTest.class).build();
+        ResourceConfig resourceConfig = new ResourceConfig(ResourceConfigBuilderTest.class);
 
         assertTrue(resourceConfig.getClasses() != null);
         assertTrue(resourceConfig.getClasses().size() == 1);
         assertTrue(resourceConfig.getClasses().contains(ResourceConfigBuilderTest.class));
 
         assertTrue(resourceConfig.getSingletons() != null);
-        assertTrue(resourceConfig.getSingletons().size() == 0);
+        assertTrue(resourceConfig.getSingletons().isEmpty());
     }
 
     @Test
     public void testSingletons() {
         final ResourceConfigBuilderTest resourceConfigBuilderTest = new ResourceConfigBuilderTest();
 
-        ResourceConfig resourceConfig = ResourceConfig.builder().addSingletons(resourceConfigBuilderTest).build();
+        ResourceConfig resourceConfig = new ResourceConfig().addSingletons(resourceConfigBuilderTest);
 
         assertTrue(resourceConfig.getClasses() != null);
-        assertTrue(resourceConfig.getClasses().size() == 0);
+        assertTrue(resourceConfig.getClasses().isEmpty());
 
         assertTrue(resourceConfig.getSingletons() != null);
         assertTrue(resourceConfig.getSingletons().size() == 1);
@@ -106,14 +106,14 @@ public class ResourceConfigBuilderTest {
             }
         };
 
-        ResourceConfig resourceConfig = ResourceConfig.from(application);
+        ResourceConfig resourceConfig = new ResourceConfig(application);
 
         assertTrue(resourceConfig.getApplication().equals(application));
     }
 
     @Test
     public void testApplicationPropertiesProvider() {
-        ResourceConfig resourceConfig = ResourceConfig.from(new MyApplication());
+        ResourceConfig resourceConfig = new ResourceConfig(new MyApplication());
 
         assertTrue(resourceConfig.getProperties().containsKey("myProperty"));
         assertTrue(resourceConfig.getProperties().get("myProperty").equals("myValue"));
@@ -122,9 +122,9 @@ public class ResourceConfigBuilderTest {
     private static class MyApplication extends Application implements PropertiesProvider {
         @Override
         public Map<String, Object> getProperties() {
-            return new HashMap<String, Object>(){{
-                put("myProperty", "myValue");
-            }};
+            final HashMap<String, Object> props = new HashMap<String, Object>();
+            props.put("myProperty", "myValue");
+            return props;
         }
     }
 

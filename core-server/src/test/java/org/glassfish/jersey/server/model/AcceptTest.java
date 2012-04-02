@@ -65,9 +65,8 @@ public class AcceptTest {
 
     JerseyApplication application;
 
-    private JerseyApplication createApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
-
+    private JerseyApplication createApplication(Class<?>... classes) {
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);;
         return JerseyApplication.builder(resourceConfig).build();
     }
 

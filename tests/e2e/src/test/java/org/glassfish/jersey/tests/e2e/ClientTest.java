@@ -75,8 +75,7 @@ public class ClientTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        ResourceConfig rc = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
-        return JerseyApplication.builder(rc).build();
+        return JerseyApplication.builder(new ResourceConfig(HelloWorldResource.class)).build();
     }
 
     @Test

@@ -192,22 +192,24 @@ import com.google.common.collect.Sets;
     //
     private JerseyApplication application;
     private ResourceConfig resourceConfig;
-    private RuntimeModelProviderFromRootResource runtimeModelCreator;
     private Services services;
     private Set<ResourceClass> resources = new HashSet<ResourceClass>();
 
-    /*package*/ ApplicationBuilder(@Nullable ResourceConfig resourceConfig) {
-        this.resourceConfig = (resourceConfig != null) ? resourceConfig : ResourceConfig.empty();
+    /*package*/ ApplicationBuilder(@Nullable javax.ws.rs.core.Application jaxrsApplication) {
+        final ResourceConfig rc = (jaxrsApplication instanceof ResourceConfig) ?
+                (ResourceConfig) jaxrsApplication : new ResourceConfig(jaxrsApplication);
+
         this.application = new JerseyApplication();
 
         final Module[] jerseyModules = new Module[]{
             new ServerModule(),
-            application.module()
+            this.application.module()
         };
 
-        Module[] modules = new Module[jerseyModules.length + this.resourceConfig.getCustomModules().size()];
+        final Set<Module> customModules = rc.getCustomModules();
+        Module[] modules = new Module[jerseyModules.length + customModules.size()];
         System.arraycopy(jerseyModules, 0, modules, 0, jerseyModules.length);
-        System.arraycopy(this.resourceConfig.getCustomModules().toArray(), 0, modules, jerseyModules.length, this.resourceConfig.getCustomModules().size());
+        System.arraycopy(customModules.toArray(), 0, modules, jerseyModules.length, customModules.size());
 
         // TODO parent/child services - when HK2 bec ready:
         //  this.jerseyServices = HK2.get().build(null, jerseyModules);
@@ -215,15 +217,13 @@ import com.google.common.collect.Sets;
 
         this.services = HK2.get().create(null, modules);
 
-        this.runtimeModelCreator = services.byType(RuntimeModelProviderFromRootResource.class).get();
-
-        final Class<? extends javax.ws.rs.core.Application> applicationClass = this.resourceConfig.getApplicationClass();
-
+        final Class<? extends javax.ws.rs.core.Application> applicationClass = rc.getApplicationClass();
         if (applicationClass != null) {
-            this.resourceConfig = new ResourceConfig(this.resourceConfig, services.forContract(applicationClass).get());
+            rc.setApplication(services.forContract(applicationClass).get());
         }
 
-        for (Class<?> c : this.resourceConfig.getClasses()) {
+        this.resourceConfig = new ResourceConfig.ImmutableResourceConfig(rc);
+        for (Class<?> c : resourceConfig.getClasses()) {
             if (IntrospectionModeller.isRootResource(c)) {
                 try {
                     resources.add(IntrospectionModeller.createResource(c));
@@ -281,6 +281,8 @@ import com.google.common.collect.Sets;
         final MessageBodyFactory messageBodyWorkers = new MessageBodyFactory(sp);
         // END
 
+        final RuntimeModelProviderFromRootResource runtimeModelCreator =
+                services.byType(RuntimeModelProviderFromRootResource.class).get();
         runtimeModelCreator.setWorkers(messageBodyWorkers);
         validateResources(messageBodyWorkers);
 

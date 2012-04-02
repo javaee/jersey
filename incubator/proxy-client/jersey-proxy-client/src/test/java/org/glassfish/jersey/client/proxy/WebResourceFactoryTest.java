@@ -57,7 +57,7 @@ public class WebResourceFactoryTest extends JerseyTest {
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
-        ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(MyResource.class).build();
+        ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
 
         return JerseyApplication.builder(resourceConfig).build();
     }

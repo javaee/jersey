@@ -62,7 +62,7 @@ public class UriInfoMatchedUrisTest {
     JerseyApplication application;
 
     private JerseyApplication createApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(rc);
 
         return JerseyApplication.builder(resourceConfig).build();
     }

@@ -60,7 +60,7 @@ public class OptionsTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        return JerseyApplication.builder(ResourceConfig.builder().addClasses(HttpOptionsTest.class).build()).build();
+        return JerseyApplication.builder(new ResourceConfig(HttpOptionsTest.class)).build();
     }
 
     @Path("/OptionsTest")

@@ -62,7 +62,7 @@ public class App {
         try {
             System.out.println("\"Exception Mapping\" Jersey Example App");
 
-            final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(ExceptionResource.class).build();
+            final ResourceConfig resourceConfig = new ResourceConfig(ExceptionResource.class);
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
                     JerseyApplication.builder(resourceConfig).build());
 

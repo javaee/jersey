@@ -170,8 +170,7 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         ServletRegistration appReg = sc.getServletRegistration(Application.class.getName());
         if (appReg != null && appReg.getClassName() == null) {
             final Set<Class<?>> x = getRootResourceAndProviderClasses(classes);
-            final ServletContainer s = new ServletContainer(
-                    ResourceConfig.builder().addClasses(x).build());
+            final ServletContainer s = new ServletContainer(new ResourceConfig(x));
             appReg = sc.addServlet(appReg.getName(), s);
 
             if (appReg.getMappings().isEmpty()) {
@@ -187,14 +186,13 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         }
     }
 
-    private void addServletWithApplication(ServletContext sc,
-            Class<? extends Application> a, Set<Class<?>> classes) throws ServletException {
+    private void addServletWithApplication(final ServletContext sc,
+            final Class<? extends Application> a, final Set<Class<?>> classes) throws ServletException {
         final ApplicationPath ap = a.getAnnotation(ApplicationPath.class);
         if (ap != null) {
             // App is annotated with ApplicationPath
-
-            final ServletContainer s = new ServletContainer(
-                    ResourceConfig.builder(a).addClasses(classes).build());
+            final ResourceConfig rc = new ResourceConfig(a).addClasses(classes);
+            final ServletContainer s = new ServletContainer(rc);
 
             final String mapping = createMappingPath(ap);
             if (!mappingExists(sc, mapping)) {
@@ -215,17 +213,18 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         }
     }
 
-    private void addServletWithExistingRegistration(ServletContext sc, ServletRegistration sr,
-            Class<? extends Application> a, Set<Class<?>> classes) throws ServletException {
+    private void addServletWithExistingRegistration(final ServletContext sc, ServletRegistration sr,
+            final Class<? extends Application> a, final Set<Class<?>> classes) throws ServletException {
         if (sr.getClassName() == null) {
 
             final Map<String, Object> initParams = new HashMap<String, Object>();
             for (Map.Entry<String, String> entry : sr.getInitParameters().entrySet()) {
                 initParams.put(entry.getKey(), entry.getValue());
             }
-            final ResourceConfig rc = ResourceConfig.builder(a).addClasses(classes).addProperties(initParams).build();
-
+            final ResourceConfig rc = new ResourceConfig(a)
+                    .addClasses(classes).addProperties(initParams);
             final ServletContainer s = new ServletContainer(rc);
+
             sr = sc.addServlet(a.getName(), s);
             if (sr.getMappings().isEmpty()) {
                 final ApplicationPath ap = a.getAnnotation(ApplicationPath.class);

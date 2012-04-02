@@ -60,8 +60,7 @@ public class ResponseIntegrationTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        ResourceConfig rc = ResourceConfig.builder().addClasses(ResponseIntegrationTest.ResponseTest.class).build();
-        return JerseyApplication.builder(rc).build();
+        return JerseyApplication.builder(new ResourceConfig(ResponseIntegrationTest.ResponseTest.class)).build();
     }
 
     @Path(value = "/ResponseTest")

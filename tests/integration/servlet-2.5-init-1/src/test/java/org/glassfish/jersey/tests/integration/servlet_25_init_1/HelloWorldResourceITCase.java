@@ -40,13 +40,12 @@
 package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 
 import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
 
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -56,9 +55,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        final ResourceConfig resourceConfig = ResourceConfig.from(new Servlet25init1());
-
-        return JerseyApplication.builder(resourceConfig).build();
+        return JerseyApplication.builder(new Servlet25init1()).build();
     }
 
     @Override

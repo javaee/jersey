@@ -68,7 +68,7 @@ public class InMemoryContainerTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class);
         return JerseyApplication.builder(resourceConfig).build();
     }
 

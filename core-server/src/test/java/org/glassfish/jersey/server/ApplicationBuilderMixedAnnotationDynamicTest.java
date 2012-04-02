@@ -73,7 +73,7 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
 
     @Test
     public void testPutGet() throws Exception {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(NameResource.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(NameResource.class);
         final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 
         appBuilder.bind("/name").method("PUT").to(new Inflector<Request, Response>() {

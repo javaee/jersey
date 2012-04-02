@@ -87,7 +87,7 @@ public class App {
     }
 
     public static JerseyApplication create() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(TracingResource.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(TracingResource.class);
 
         final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 

@@ -75,7 +75,7 @@ public class SecurityContextFilterTest extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        return JerseyApplication.builder(ResourceConfig.builder().addClasses(SecurityContextFilter.class, Resource.class).build()).build();
+        return JerseyApplication.builder(new ResourceConfig(SecurityContextFilter.class, Resource.class)).build();
     }
 
     @Provider
@@ -171,6 +171,7 @@ public class SecurityContextFilterTest extends JerseyTest {
         /**
          * Test resource method.
          *
+         * @param securityCtx security context.
          * @return String response with principal name.
          */
         @GET

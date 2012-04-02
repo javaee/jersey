@@ -162,7 +162,7 @@ public class ApplicationBuilderTest {
 
     @Test
     public void testappBuilderClasses() throws InterruptedException, ExecutionException {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(ResourceA.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class);
         final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
@@ -172,7 +172,7 @@ public class ApplicationBuilderTest {
 
     @Test
     public void testEmptyAppCreationPasses() throws InterruptedException, ExecutionException {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().build();
+        final ResourceConfig resourceConfig = new ResourceConfig();
         final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
@@ -198,8 +198,7 @@ public class ApplicationBuilderTest {
             }
         };
 
-        final ResourceConfig resourceConfig = ResourceConfig.from(jaxRsApplication);
-        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
+        final JerseyApplication application = JerseyApplication.builder(jaxRsApplication).build();
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -237,10 +236,8 @@ public class ApplicationBuilderTest {
 
 //    @Test
     public void testJaxrsApplicationInjection() throws InterruptedException, ExecutionException {
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(ResourceB.class)
-                .addSingletons(new ResourceAReader())
-                .build();
+        final ResourceConfig resourceConfig = new ResourceConfig(ResourceB.class)
+                .addSingletons(new ResourceAReader());
 
         final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
 
@@ -268,9 +265,7 @@ public class ApplicationBuilderTest {
 
 //    @Test
     public void testDeploymentFailsForAmbiguousResource() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(ErrornousResource.class)
-                .build();
+        final ResourceConfig resourceConfig = new ResourceConfig(ErrornousResource.class);
         try {
             JerseyApplication.builder(resourceConfig).build();
             assertTrue("application builder should have failed", false);

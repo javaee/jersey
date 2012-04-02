@@ -89,11 +89,10 @@ public class App {
 
         MediaType[] jsonAndTextTypes = new MediaType[]{MediaType.APPLICATION_JSON_TYPE, MediaType.TEXT_PLAIN_TYPE};
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addClasses(ClipboardResource.class)
-                .addClasses(ClipboardDataProvider.ApplicationJson.class)
-                .addClasses(ClipboardDataProvider.TextPlain.class)
-                .build();
+        final ResourceConfig resourceConfig = new ResourceConfig(
+                ClipboardResource.class,
+                ClipboardDataProvider.ApplicationJson.class,
+                ClipboardDataProvider.TextPlain.class);
 
         final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
 

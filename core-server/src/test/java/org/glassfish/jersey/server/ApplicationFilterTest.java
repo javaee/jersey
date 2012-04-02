@@ -83,8 +83,8 @@ public class ApplicationFilterTest {
             }
         });
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters)).build();
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters));
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
@@ -116,8 +116,8 @@ public class ApplicationFilterTest {
             }
         });
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addModules(new RequestFilterModule(requestFilterList)).build();
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .addModules(new RequestFilterModule(requestFilterList));
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
@@ -149,8 +149,8 @@ public class ApplicationFilterTest {
             }
         });
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addModules(new ResponseFilterModule(responseFilterList)).build();
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .addModules(new ResponseFilterModule(responseFilterList));
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
@@ -251,8 +251,8 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder()
-                .addModules(new RequestFilterModule(requestFilterList)).build();
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .addModules(new RequestFilterModule(requestFilterList));
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {

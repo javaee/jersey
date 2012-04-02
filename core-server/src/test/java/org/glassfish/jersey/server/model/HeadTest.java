@@ -65,8 +65,8 @@ public class HeadTest {
 
     private JerseyApplication app;
 
-    private void initiateWebApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
+    private void initiateWebApplication(Class<?>... classes) {
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);
 
         app = JerseyApplication.builder(resourceConfig).build();
     }

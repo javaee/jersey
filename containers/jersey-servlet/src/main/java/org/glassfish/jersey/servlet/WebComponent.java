@@ -240,7 +240,7 @@ public class WebComponent {
         return createResourceConfig(config, initParams, modules);
     }
 
-    private ResourceConfig createResourceConfig(WebConfig config, Map<String, Object> initParams, Module... modules) throws ServletException {
+    private ResourceConfig createResourceConfig(final WebConfig config, final Map<String, Object> initParams, final Module... modules) throws ServletException {
         // check if the JAX-RS application config class property is present
         String JaxrsApplicationClassName = config.getInitParameter(ServerProperties.JAXRS_APPLICATION_CLASS);
 
@@ -278,7 +278,7 @@ public class WebComponent {
 //                return null;
 //            } else
             if (javax.ws.rs.core.Application.class.isAssignableFrom(JaxrsApplicationClass)) {
-                return ResourceConfig.builder(JaxrsApplicationClass).addProperties(initParams).build();
+                return new ResourceConfig(JaxrsApplicationClass).addProperties(initParams);
             }
             // TODO
 //                return new DeferredResourceConfig(JaxrsApplicationClass.asSubclass(javax.ws.rs.core.Application.class));
@@ -383,29 +383,25 @@ public class WebComponent {
      * @throws javax.servlet.ServletException in case of any issues with providing
      *     the default resource configuration.
      */
-    protected ResourceConfig getDefaultResourceConfig(Map<String, Object> props,
-            WebConfig wc,
-            Module... modules) throws ServletException {
+    protected ResourceConfig getDefaultResourceConfig(
+            final Map<String, Object> props,
+            final WebConfig wc,
+            final Module... modules) throws ServletException {
 
-        final ResourceConfig.Builder resourceConfigBuilder = ResourceConfig.builder();
-        resourceConfigBuilder.addProperties(props);
-        resourceConfigBuilder.addModules(modules);
+        final ResourceConfig rc = new ResourceConfig().addProperties(props).addModules(modules);
 
-        String packages = wc.getInitParameter(
-                ServerProperties.PROVIDER_PACKAGES);
+        final String packages = wc.getInitParameter(ServerProperties.PROVIDER_PACKAGES);
         if (packages != null) {
-            resourceConfigBuilder.packages(packages);
+            rc.packages(packages);
         }
 
-        String classpath = wc.getInitParameter(
-                ServerProperties.PROVIDER_CLASSPATH);
+        final String classpath = wc.getInitParameter(ServerProperties.PROVIDER_CLASSPATH);
         if (classpath != null) {
-            resourceConfigBuilder.files(classpath);
+            rc.files(classpath);
         } else {
-            resourceConfigBuilder.addFinder(new WebAppResourcesScanner(wc.getServletContext()));
+            rc.addFinder(new WebAppResourcesScanner(wc.getServletContext()));
         }
-
-        return resourceConfigBuilder.build();
+        return rc;
     }
 
 // TODO is this needed or can be removed?

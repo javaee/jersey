@@ -74,7 +74,7 @@ import static org.junit.Assert.assertEquals;
 public class AcceptAnnotatedReaderWriterTest {
 
     private JerseyApplication createApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);
         return JerseyApplication.builder(resourceConfig).build();
     }
 

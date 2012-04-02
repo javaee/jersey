@@ -78,10 +78,10 @@ public class App {
     }
 
     public static JerseyApplication createApp() {
-        final ResourceConfig.Builder rcb = ResourceConfig.builder(new MyApplication());
+        final ResourceConfig rc = new ResourceConfig(new MyApplication())
+                .addModules(new JsonJacksonModule());
 
-        rcb.addModules(new JsonJacksonModule());
 
-        return JerseyApplication.builder(rcb.build()).build();
+        return JerseyApplication.builder(rc).build();
     }
 }

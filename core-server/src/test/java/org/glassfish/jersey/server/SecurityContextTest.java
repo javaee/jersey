@@ -130,7 +130,7 @@ public class SecurityContextTest {
      */
     @Test
     public void testSecurityContextInjectionFilter() throws Exception {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class, SecurityContextFilter.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         JerseyApplication application = appBuilder.build();
@@ -148,7 +148,7 @@ public class SecurityContextTest {
      */
     @Test
     public void testDefaultSecurityContext() throws Exception {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(Resource.class, SecurityContextFilter.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
 
         JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
         JerseyApplication application = appBuilder.build();
@@ -171,6 +171,7 @@ public class SecurityContextTest {
         /**
          * Test resource method.
          *
+         * @param securityCtx security context.
          * @return String response with principal name.
          */
         @GET

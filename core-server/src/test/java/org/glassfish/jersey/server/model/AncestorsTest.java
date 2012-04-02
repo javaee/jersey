@@ -61,9 +61,8 @@ public class AncestorsTest {
 
     JerseyApplication app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
-
+    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);
         return JerseyApplication.builder(resourceConfig);
     }
 

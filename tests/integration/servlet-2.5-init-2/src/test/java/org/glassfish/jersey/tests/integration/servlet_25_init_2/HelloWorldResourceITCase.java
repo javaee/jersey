@@ -56,7 +56,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
     protected JerseyApplication configure() {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
 
         return JerseyApplication.builder(resourceConfig).build();
     }

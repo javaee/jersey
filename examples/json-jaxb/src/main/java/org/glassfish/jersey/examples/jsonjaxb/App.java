@@ -78,11 +78,10 @@ public class App {
     }
 
     public static JerseyApplication createApp() {
-        final ResourceConfig.Builder rcb = ResourceConfig.builder();
+        final ResourceConfig rc = new ResourceConfig()
+                .addModules(new JsonJaxbModule())
+                .packages("org.glassfish.jersey.examples.jsonjaxb");
 
-        rcb.addModules(new JsonJaxbModule());
-        rcb.packages("org.glassfish.jersey.examples.jsonjaxb");
-
-        return JerseyApplication.builder(rcb.build()).build();
+        return JerseyApplication.builder(rc).build();
     }
 }

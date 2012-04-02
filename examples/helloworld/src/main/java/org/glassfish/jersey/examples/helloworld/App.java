@@ -62,7 +62,7 @@ public class App {
         try {
             System.out.println("\"Hello World\" Jersey Example App");
 
-            final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(HelloWorldResource.class).build();
+            final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
                     JerseyApplication.builder(resourceConfig).build());

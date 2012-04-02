@@ -62,7 +62,7 @@ public class PathParamAsPathSegmentTest {
     JerseyApplication app;
 
     private void initiateWebApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(classes).build();
+        final ResourceConfig resourceConfig = new ResourceConfig(classes);
         app = JerseyApplication.builder(resourceConfig).build();
     }
 

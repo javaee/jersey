@@ -70,14 +70,14 @@ public class ExceptionMappingFilterTest extends JerseyTest {
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
 
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(
+        final ResourceConfig resourceConfig = new ResourceConfig(
                 ExceptionResource.class,
                 MyResponseFilter.class,
                 WebApplicationExceptionFilter.class,
                 MyExceptionMapper.class,
                 MySubExceptionMapper.class,
                 MySubSubException.class,
-                WebApplicationExceptionMapper.class).build();
+                WebApplicationExceptionMapper.class);
 
         return JerseyApplication.builder(resourceConfig).build();
     }

@@ -107,7 +107,7 @@ public class JerseyTestTest {
     private static class MyJerseyTest extends JerseyTest {
 
         private MyJerseyTest() throws TestContainerException {
-            super(JerseyApplication.builder(ResourceConfig.builder().addModules(new MyModule()).addClasses(MyResource.class).build()).build());
+            super(JerseyApplication.builder(new ResourceConfig(MyResource.class).addModules(new MyModule())).build());
         }
     }
 

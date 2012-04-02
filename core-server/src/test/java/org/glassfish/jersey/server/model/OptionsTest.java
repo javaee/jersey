@@ -79,8 +79,7 @@ public class OptionsTest {
     private JerseyApplication app;
 
     private void initiateWebApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = ResourceConfig.builder().addClasses(rc).build();
-
+        final ResourceConfig resourceConfig = new ResourceConfig(rc);
         app = JerseyApplication.builder(resourceConfig).build();
     }
 

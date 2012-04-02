@@ -40,11 +40,12 @@
 package org.glassfish.jersey.server.internal;
 
 import javax.ws.rs.core.Application;
-import org.glassfish.hk2.HK2;
+
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.server.ContainerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.hk2.HK2;
 
 /**
  * Server-side implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
@@ -65,7 +66,6 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     @Override
     public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        ResourceConfig rc = (application instanceof ResourceConfig) ? (ResourceConfig) application : ResourceConfig.from(application);
-        return ContainerFactory.createContainer(endpointType, org.glassfish.jersey.server.JerseyApplication.builder(rc).build());
+        return ContainerFactory.createContainer(endpointType, org.glassfish.jersey.server.JerseyApplication.builder(application).build());
     }
 }

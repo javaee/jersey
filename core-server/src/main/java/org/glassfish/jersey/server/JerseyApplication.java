@@ -49,7 +49,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Nullable;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -355,13 +355,27 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
     }
 
     /**
-     * Create new application builder configured with custom {@link ResourceConfig}.
+     * Create new application builder configured with custom {@link javax.ws.rs.core.Application
+     * JAX-RS Application sub-class instance}.
      *
-     * @param resourceConfig custom {@link ResourceConfig}
+     * @param application custom JAX-RS Application instance.
      * @return new application builder.
+     * @see ResourceConfig
      */
-    public static Builder builder(@Nullable ResourceConfig resourceConfig) {
-        return new ApplicationBuilder(resourceConfig);
+    public static Builder builder(Application application) {
+        return new ApplicationBuilder(application);
+    }
+
+    /**
+     * Create new application builder configured with custom {@link javax.ws.rs.core.Application
+     * JAX-RS Application sub-class}.
+     *
+     * @param applicationClass custom JAX-RS Application class.
+     * @return new application builder.
+     * @see ResourceConfig
+     */
+    public static Builder builder(Class<? extends Application> applicationClass) {
+        return new ApplicationBuilder(new ResourceConfig(applicationClass));
     }
 
     private class ApplicationModule extends AbstractModule implements Factory<TreeAcceptor> {
@@ -378,7 +392,6 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
             bind().to(PreMatchRequestFilterAcceptor.class);
         }
     }
-
     /**
      * Default dummy security context.
      */
@@ -545,6 +558,8 @@ public final class JerseyApplication implements Inflector<Request, Future<Respon
      * @param request request data.
      * @param callback request invocation callback called when the request
      *     transformation is done, suspended, resumed etc. Must not be {@code null}.
+     * @param securityContext custom security context.
+     * @param requestScopeInitializer custom request-scoped initializer.
      */
     private void apply(Request request, InvocationCallback callback, SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
         try {
