@@ -576,6 +576,7 @@
         <module>test-framework</module>
 
         <!--module>tools</module-->
+        <module>bundles/jersey-archive</module>
     </modules>
 
     <!--distributionManagement /-->
