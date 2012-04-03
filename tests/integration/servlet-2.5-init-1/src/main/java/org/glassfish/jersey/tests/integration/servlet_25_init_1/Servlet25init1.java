@@ -43,10 +43,12 @@ import com.google.common.collect.Sets;
 
 import javax.ws.rs.core.Application;
 import java.util.Set;
+import javax.ws.rs.ApplicationPath;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+@ApplicationPath("application_path")
 public class Servlet25init1 extends Application {
     @SuppressWarnings({"unchecked"})
     @Override

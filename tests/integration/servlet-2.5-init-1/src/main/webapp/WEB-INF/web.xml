@@ -53,6 +53,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>testServlet1</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/servlet_path/*</url-pattern>
     </servlet-mapping>
 </web-app>
