@@ -62,7 +62,6 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.InstanceTypePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -175,6 +174,10 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @SuppressWarnings("unchecked")
     private <T> T content(Class<T> rawType, Type type, Annotation[] readAnnotations) {
+        if (isEmpty()) {
+            return null;
+        }
+
         final boolean typeIsAssignableFromMyInstance =
                 (instanceType != null) && (rawType.isAssignableFrom(instanceType.instance().getClass()));
 
@@ -200,7 +203,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
         final MessageBodyReader<T> br = workers.getMessageBodyReader(rawType, type, readAnnotations, mediaType);
         if (br == null) {
-            return null; // TODO could not find MBR
+            throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(mediaType,
+                    rawType));
         }
 
         try {
@@ -209,10 +213,10 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
                 t = ((CompletableReader<T>) br).complete(t);
             }
 
-            if(isContentStreamBuffered) {
+            if (isContentStreamBuffered) {
                 contentStream.reset();
             } else if (!(t instanceof Closeable)) {
-                contentStream.close();
+                invalidateContentStream();
             }
 
             instanceType = InstanceTypePair.of(t);
@@ -292,16 +296,18 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            if(contentStream != null) {
+            if (contentStream != null) {
                 try {
                     ReaderWriter.writeTo(contentStream, baos);
                 } finally {
-                    contentStream.close();
+                    invalidateContentStream();
                 }
             } else {
                 // instanceType != null && contentStream == null
 
-                if (bufferEntityInstance(baos)) return;
+                if (bufferEntityInstance(baos)) {
+                    return;
+                }
             }
 
             contentStream = new ByteArrayInputStream(baos.toByteArray());
