@@ -387,9 +387,16 @@ public class ServletContainer extends HttpServlet implements Filter {
             }
         }
 
+        /**
+         * JERSEY-880 - WAS interprets HttpServletRequest#getServletPath() and HttpServletRequest#getPathInfo()
+         * differently when accessing a static resource.
+         */
+        final String servletPath = request.getServletPath()
+                + (request.getPathInfo() == null ? "" : request.getPathInfo());
+
         doFilter(request, response, chain,
                 request.getRequestURI(),
-                request.getServletPath(),
+                servletPath,
                 request.getQueryString());
     }
 
