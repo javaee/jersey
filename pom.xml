@@ -574,9 +574,8 @@
         <module>media</module>
         <module>security</module>
         <module>test-framework</module>
-
+        <module>bundles</module>
         <!--module>tools</module-->
-        <module>bundles/jax-rs-ri</module>
     </modules>
 
     <!--distributionManagement /-->
