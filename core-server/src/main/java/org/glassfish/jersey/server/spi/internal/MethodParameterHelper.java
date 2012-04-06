@@ -45,10 +45,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
+
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
+import org.glassfish.jersey.message.internal.MessagingModules.MessageBodyProviders;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
@@ -68,6 +72,8 @@ public class MethodParameterHelper {
             return params;
         } catch (WebApplicationException e) {
             throw e;
+        } catch (MessageBodyProviderNotFoundException e) {
+            throw new WebApplicationException(Status.UNSUPPORTED_MEDIA_TYPE);
         } catch (ProcessingException e) {
             throw e;
         } catch (RuntimeException e) {
