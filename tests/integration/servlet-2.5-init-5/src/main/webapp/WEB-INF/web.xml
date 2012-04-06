@@ -52,6 +52,6 @@
     </filter>
     <filter-mapping>
         <filter-name>testServlet5</filter-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/filter_path/*</url-pattern>
     </filter-mapping>
 </web-app>

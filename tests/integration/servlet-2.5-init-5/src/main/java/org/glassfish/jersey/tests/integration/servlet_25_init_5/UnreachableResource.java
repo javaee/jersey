@@ -39,20 +39,18 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_5;
 
-import com.google.common.collect.Sets;
-
-import javax.ws.rs.core.Application;
-import java.util.Set;
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ *
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-@ApplicationPath("application_path")
-public class Servlet25init5 extends Application{
-    @SuppressWarnings({"unchecked"})
-    @Override
-    public Set<Class<?>> getClasses() {
-        return Sets.<Class<?>>newHashSet(HelloWorldResource.class);
+@Path("filter_path/unreachable")
+public class UnreachableResource {
+    @GET
+    public Response get() {
+        return Response.ok().build();
     }
 }

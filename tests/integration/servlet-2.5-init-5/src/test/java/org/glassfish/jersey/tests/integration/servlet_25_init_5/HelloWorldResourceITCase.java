@@ -39,14 +39,19 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_5;
 
+
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
 
+import org.junit.Ignore;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -68,7 +73,26 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        String s = target().path("helloworld").request().get(String.class);
-        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
+        String s = target().path("filter_path/helloworld").request().get(String.class);
+        assertEquals("Hello World! " + this.getClass().getPackage().getName(), s);
+    }
+
+    @Test
+    public void testHelloWorldAtWrongPath() {
+        Response r = target().path("application_path/filter_path/helloworld").request().get();
+        assertTrue("Request to application_path/helloworld should have failed, but did not. That means two applications are registered.", r.getStatus() >= 400);
+    }
+
+    @Test
+    @Ignore
+    public void testUnreachableResource() {
+        Response r = target().path("filter_path/unreachable").request().get();
+        assertTrue("Managed to reach a resource that is not registered in the application.", r.getStatus() >= 400);
+    }
+
+    @Test
+    public void testUnreachableResourceAtWrongPath() {
+        Response r = target().path("application_path/filter_path/unreachable").request().get();
+        assertTrue("Managed to reach a resource that is not registered in the application.", r.getStatus() >= 400);
     }
 }

@@ -48,10 +48,12 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class HelloWorldResourceITCase extends JerseyTest {
 
@@ -68,7 +70,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
     @Test
     public void testHelloWorld() throws Exception {
         String s = target().path("servlet_path/helloworld").request().get(String.class);
-        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
+        assertEquals("Hello World! " + this.getClass().getPackage().getName(), s);
     }
 
     @Test

@@ -39,18 +39,6 @@
  */
 package org.glassfish.jersey.servlet;
 
-import org.glassfish.jersey.server.ResourceConfig;
-
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.annotation.HandlesTypes;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.ext.Provider;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -59,7 +47,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.Provider;
+
+import javax.servlet.Registration;
+import javax.servlet.ServletContainerInitializer;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration;
+import javax.servlet.annotation.HandlesTypes;
+
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+
+import com.google.common.collect.Lists;
 
 /*
  It is RECOMMENDED that implementations support the Servlet 3 framework
@@ -130,11 +134,13 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
                 addServletWithExistingRegistration(sc, appReg, a, classes);
             } else {
                 // Servlet is not registered with app name
-                final List<ServletRegistration> srs = getInitParamDeclaredRegistrations(sc, a);
+                final List<Registration> srs = getInitParamDeclaredRegistrations(sc, a);
                 if (!srs.isEmpty()) {
                     // List of servlets registered with app name in init param
-                    for (ServletRegistration sr : srs) {
-                        addServletWithExistingRegistration(sc, sr, a, classes);
+                    for (Registration sr : srs) {
+                        if (sr instanceof ServletRegistration) {
+                            addServletWithExistingRegistration(sc, (ServletRegistration) sr, a, classes);
+                        }
                     }
                 } else {
                     addServletWithApplication(sc, a, classes);
@@ -148,18 +154,23 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         }
     }
 
-    private List<ServletRegistration> getInitParamDeclaredRegistrations(ServletContext sc, Class<? extends Application> a) {
-        final List<ServletRegistration> srs = new ArrayList<ServletRegistration>(1);
-        for (ServletRegistration sr : sc.getServletRegistrations().values()) {
+    private List<Registration> getInitParamDeclaredRegistrations(ServletContext sc, Class<? extends Application> a) {
+        final List<Registration> srs = Lists.newArrayList();
+        collectJaxRsRegistrations(sc.getServletRegistrations(), srs, a);
+        collectJaxRsRegistrations(sc.getFilterRegistrations(), srs, a);
+        return srs;
+    }
+
+    private void collectJaxRsRegistrations(Map<String, ? extends Registration> registrations,
+            List<Registration> collected, Class<? extends Application> a) {
+        for (Registration sr : registrations.values()) {
             Map<String, String> ips = sr.getInitParameters();
             if (ips.containsKey(ServerProperties.JAXRS_APPLICATION_CLASS)) {
                 if (ips.get(ServerProperties.JAXRS_APPLICATION_CLASS).equals(a.getName())) {
-                    srs.add(sr);
+                    collected.add(sr);
                 }
             }
         }
-
-        return srs;
     }
 
     private void addServletWithDefaultConfiguration(ServletContext sc, Set<Class<?>> classes) throws ServletException {
