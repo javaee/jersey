@@ -108,6 +108,7 @@ import org.glassfish.jersey.server.ServerProperties;
  * {@link ServletContainerInitializer} implementation used for Servlet 3.x deployment.
  *
  * @author Paul Sandoz
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 @HandlesTypes({Path.class, Provider.class, Application.class, ApplicationPath.class})
 public class JerseyServletContainerInitializer implements ServletContainerInitializer {
@@ -121,19 +122,17 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             classes = Collections.emptySet();
         }
         final int nOfRegisterations = sc.getServletRegistrations().size();
+        // first see if there are any application classes in the web app
         for (Class<? extends Application> a : getApplicationClasses(classes)) {
             final ServletRegistration appReg = sc.getServletRegistration(a.getName());
             if (appReg != null) {
                 // Servlet is registered with app name
-
                 addServletWithExistingRegistration(sc, appReg, a, classes);
             } else {
                 // Servlet is not registered with app name
-
                 final List<ServletRegistration> srs = getInitParamDeclaredRegistrations(sc, a);
                 if (!srs.isEmpty()) {
                     // List of servlets registered with app name in init param
-
                     for (ServletRegistration sr : srs) {
                         addServletWithExistingRegistration(sc, sr, a, classes);
                     }
@@ -152,13 +151,10 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
     private List<ServletRegistration> getInitParamDeclaredRegistrations(ServletContext sc, Class<? extends Application> a) {
         final List<ServletRegistration> srs = new ArrayList<ServletRegistration>(1);
         for (ServletRegistration sr : sc.getServletRegistrations().values()) {
-
             Map<String, String> ips = sr.getInitParameters();
             if (ips.containsKey(ServerProperties.JAXRS_APPLICATION_CLASS)) {
                 if (ips.get(ServerProperties.JAXRS_APPLICATION_CLASS).equals(a.getName())) {
-                    if (sr.getClassName() == null) {
-                        srs.add(sr);
-                    }
+                    srs.add(sr);
                 }
             }
         }
