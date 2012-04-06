@@ -270,26 +270,26 @@ public class WebComponent {
 
     private ResourceConfig createResourceConfig(final WebConfig config, final Map<String, Object> initParams, final Module... modules) throws ServletException {
         // check if the JAX-RS application config class property is present
-        String JaxrsApplicationClassName = config.getInitParameter(ServerProperties.JAXRS_APPLICATION_CLASS);
+        String jaxrsApplicationClassName = config.getInitParameter(ServerProperties.JAXRS_APPLICATION_CLASS);
 
         // If no resource config class property is present
-        if (JaxrsApplicationClassName == null) {
+        if (jaxrsApplicationClassName == null) {
             return getDefaultResourceConfig(initParams, config, modules);
         }
 
         try {
-            Class<? extends javax.ws.rs.core.Application> JaxrsApplicationClass = ReflectionHelper.classForNameWithException(JaxrsApplicationClassName);
+            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException(jaxrsApplicationClassName);
 
 //            // TODO add support for WebAppResourceConfig
-//            if (JaxrsApplicationClass == ClassPathResourceConfig.class) {
+//            if (jaxrsApplicationClass == ClassPathResourceConfig.class) {
 //                String[] paths = getPaths(config.getInitParameter(
 //                        ClassPathResourceConfig.PROVIDER_CLASSPATH), config.getServletContext());
 //                initParams.put(ClassPathResourceConfig.PROVIDER_CLASSPATH, paths);
 //                return new ClassPathResourceConfig(initParams);
-//            } else if (ResourceConfig.class.isAssignableFrom(JaxrsApplicationClass)) {
+//            } else if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
 //                try {
-//                    Constructor constructor = JaxrsApplicationClass.getConstructor(Map.class);
-//                    if (ClassPathResourceConfig.class.isAssignableFrom(JaxrsApplicationClass)) {
+//                    Constructor constructor = jaxrsApplicationClass.getConstructor(Map.class);
+//                    if (ClassPathResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
 //                        String[] paths = getPaths(config.getInitParameter(
 //                                ClassPathResourceConfig.PROVIDER_CLASSPATH), config.getServletContext());
 //                        initParams.put(ClassPathResourceConfig.PROVIDER_CLASSPATH, paths);
@@ -302,24 +302,18 @@ public class WebComponent {
 //                }
 //
 //                // TODO
-////                return new DeferredResourceConfig(JaxrsApplicationClass.asSubclass(ResourceConfig.class));
+////                return new DeferredResourceConfig(jaxrsApplicationClass.asSubclass(ResourceConfig.class));
 //                return null;
 //            } else
-            if (javax.ws.rs.core.Application.class.isAssignableFrom(JaxrsApplicationClass)) {
-                return new ResourceConfig(JaxrsApplicationClass).addProperties(initParams);
+            if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
+                return new ResourceConfig(jaxrsApplicationClass).addProperties(initParams).addModules(modules);
+            } else {
+                String message = "Resource configuration class, " + jaxrsApplicationClassName +
+                        ", is not a super class of " + javax.ws.rs.core.Application.class;
+                throw new ServletException(message);
             }
-            // TODO
-//                return new DeferredResourceConfig(JaxrsApplicationClass.asSubclass(javax.ws.rs.core.Application.class));
-            return null;
-//            } else {
-//                String message = "Resource configuration class, " + resourceConfigClassName +
-//                        ", is not a super class of " + javax.ws.rs.core.Application.class;
-//                throw new ServletException(message);
-//            }
-
-//            return null;
         } catch (ClassNotFoundException e) {
-            String message = "Resource configuration class, " + JaxrsApplicationClassName
+            String message = "Resource configuration class, " + jaxrsApplicationClassName
                     + ", could not be loaded";
             throw new ServletException(message, e);
         }

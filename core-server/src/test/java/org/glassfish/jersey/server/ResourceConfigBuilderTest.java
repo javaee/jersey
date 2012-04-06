@@ -39,14 +39,17 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.server.spi.PropertiesProvider;
-import org.junit.Test;
-
-import javax.ws.rs.core.Application;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.server.spi.PropertiesProvider;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 
@@ -119,13 +122,54 @@ public class ResourceConfigBuilderTest {
         assertTrue(resourceConfig.getProperties().get("myProperty").equals("myValue"));
     }
 
-    private static class MyApplication extends Application implements PropertiesProvider {
+    /**
+     * test that I can initialize resource config with application class instead of an application instance
+     * and then read the app properties
+     */
+    @Test
+    public void testApplicationClassProperties() {
+        ResourceConfig resourceConfig = initApp(new ResourceConfig(MyApplication.class));
+
+        assertTrue(resourceConfig.getProperties().containsKey("myProperty"));
+        assertTrue(resourceConfig.getProperties().get("myProperty").equals("myValue"));
+    }
+
+    /**
+     * test that I can initialize resource config with application class instead of an application instance
+     * and then read the app classes
+     */
+    @Test
+    public void testApplicationClassClasses() {
+        ResourceConfig resourceConfig = initApp(new ResourceConfig(MyApplication2.class));
+
+        assertTrue(!resourceConfig.getClasses().isEmpty());
+    }
+
+    public static class MyApplication extends Application implements PropertiesProvider {
         @Override
         public Map<String, Object> getProperties() {
             final HashMap<String, Object> props = new HashMap<String, Object>();
             props.put("myProperty", "myValue");
             return props;
         }
+    }
+
+    public static class MyApplication2 extends ResourceConfig {
+        public MyApplication2() {
+            super(MyResource.class);
+        }
+    }
+
+    @Path("resource")
+    public static class MyResource {
+        @GET
+        public String getIt() {
+            return "get it";
+        }
+    }
+
+    private static ResourceConfig initApp(Application app) {
+        return new ApplicationHandler(app).getConfiguration();
     }
 
 }
