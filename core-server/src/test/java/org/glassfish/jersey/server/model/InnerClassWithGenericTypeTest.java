@@ -48,7 +48,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -62,37 +62,36 @@ import static org.junit.Assert.assertEquals;
  */
 public class InnerClassWithGenericTypeTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/")
     public static class RootResource {
 
-       @Path("sub")
-       public SubResource getSub() {
-          return new SubResource(new ArrayList<String>(), new HashSet<Integer>());
-       }
+        @Path("sub")
+        public SubResource getSub() {
+            return new SubResource(new ArrayList<String>(), new HashSet<Integer>());
+        }
 
-       public class SubResource extends RootResource {
+        public class SubResource extends RootResource {
 
-          public SubResource(List<String> list, Set<Integer> s) {
-          }
+            public SubResource(List<String> list, Set<Integer> s) {
+            }
 
-          @GET
-          public String get() {
-              return "sub";
-          }
-       }
+            @GET
+            public String get() {
+                return "sub";
+            }
+        }
     }
 
     @Test
     public void testInnerClass() throws Exception {
-        app = createApplicationBuilder(RootResource.class).build();
+        app = createApplication(RootResource.class);
 
-        assertEquals("sub", app.apply(Requests.from("/sub","GET").build()).get().readEntity(String.class));
+        assertEquals("sub", app.apply(Requests.from("/sub", "GET").build()).get().readEntity(String.class));
     }
 }

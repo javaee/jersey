@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.examples.jaxrstypeinjection;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.ResourceBuilder;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Jersey application that demonstrates injection of JAX-RS components into resources.
@@ -65,8 +66,7 @@ public class App {
         try {
             System.out.println("JAX-RS Type Injection Jersey Example App");
 
-            final JerseyApplication app = create();
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
 
             System.out.println(String.format(
                     "Application started.%n"
@@ -84,12 +84,12 @@ public class App {
         }
     }
 
-    public static JerseyApplication create() {
+    public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig(JaxrsInjectionReportingResource.class);
-        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
+        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind(ROOT_PATH_PROGRAMMATIC).method("GET").to(JaxrsInjectionReportingInflector.class);
+        resourceBuilder.path(ROOT_PATH_PROGRAMMATIC).method("GET").to(JaxrsInjectionReportingInflector.class);
 
-        return appBuilder.build();
+        return resourceConfig.addResources(resourceBuilder.build());
     }
 }

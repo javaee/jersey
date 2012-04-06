@@ -59,12 +59,11 @@ import static org.junit.Assert.*;
  */
 public class UriInfoMatchedUrisTest {
 
-    JerseyApplication application;
+    ApplicationHandler application;
 
-    private JerseyApplication createApplication(Class<?>... rc) {
+    private ApplicationHandler createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = new ResourceConfig(rc);
-
-        return JerseyApplication.builder(resourceConfig).build();
+        return new ApplicationHandler(resourceConfig);
     }
 
     @Path("foo")
@@ -108,7 +107,7 @@ public class UriInfoMatchedUrisTest {
 
     @Test
     public void testMatchedUris() throws Exception {
-        JerseyApplication app = createApplication(Resource.class);
+        ApplicationHandler app = createApplication(Resource.class);
 
         Response response;
         response = app.apply(Requests.from("/foo", "GET").build()).get();

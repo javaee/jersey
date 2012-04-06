@@ -39,19 +39,21 @@
  */
 package org.glassfish.jersey.examples.httptrace;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.ResourceBuilder;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * This is the example entry point, where Jersey application gets populated and published
@@ -69,8 +71,7 @@ public class App {
         try {
             System.out.println("HTTP TRACE Support Jersey Example App");
 
-            final JerseyApplication app = create();
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
 
             System.out.println(String.format(
                     "Application started.\n"
@@ -86,12 +87,12 @@ public class App {
         }
     }
 
-    public static JerseyApplication create() {
+    public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig(TracingResource.class);
 
-        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
+        final ResourceBuilder appBuilder = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind(ROOT_PATH_PROGRAMMATIC).method(TRACE.NAME).to(new Inflector<Request, Response>() {
+        appBuilder.path(ROOT_PATH_PROGRAMMATIC).method(TRACE.NAME).to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(Request request) {
@@ -103,6 +104,6 @@ public class App {
             }
         });
 
-        return appBuilder.build();
+        return resourceConfig.addResources(appBuilder.build());
     }
 }

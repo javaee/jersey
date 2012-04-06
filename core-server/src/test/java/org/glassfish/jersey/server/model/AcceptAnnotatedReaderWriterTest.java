@@ -61,7 +61,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -73,9 +73,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class AcceptAnnotatedReaderWriterTest {
 
-    private JerseyApplication createApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig).build();
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     public static class StringWrapper {
@@ -225,7 +224,7 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testAcceptGet() throws Exception {
 
-        JerseyApplication app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
         assertEquals("foo: 1st", app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class));
         assertEquals("foo: 1st", app.apply(Requests.from("/", "GET").accept("application/bar;q=0.8, application/foo").build()).get().readEntity(String.class));
@@ -248,7 +247,7 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodAcceptGet() throws Exception {
 
-        final JerseyApplication app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class, StringWrapperWorker.BarStringWorker.class);
+        final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class, StringWrapperWorker.BarStringWorker.class);
 
         assertEquals("foo: content", app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class));
         assertEquals("foo: content", app.apply(Requests.from("/", "GET").accept("application/bar;q=0.5, application/foo").build()).get().readEntity(String.class));
@@ -291,7 +290,7 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodConsumesProducesPost() throws Exception {
 
-        final JerseyApplication app = createApplication(MultiplePostMethodResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        final ApplicationHandler app = createApplication(MultiplePostMethodResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
         assertEquals("foo: foo", app.apply(Requests.from("/", "POST").entity(new StringWrapperFoo("foo")).type(APPLICATION_FOO).accept(APPLICATION_FOO).build()).get().readEntity(String.class));
         assertEquals("foo: bar", app.apply(Requests.from("/", "POST").entity(new StringWrapperBar("bar")).type(APPLICATION_BAR).accept(APPLICATION_FOO).build()).get().readEntity(String.class));

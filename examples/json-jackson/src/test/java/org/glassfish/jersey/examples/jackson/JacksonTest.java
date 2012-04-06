@@ -39,19 +39,19 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
-import org.glassfish.jersey.media.json.JsonFeature;
-import org.glassfish.jersey.media.json.JsonJacksonModule;
-import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.media.json.JsonFeature;
+import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.spi.TestContainer;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -61,7 +61,7 @@ import static org.junit.Assert.assertTrue;
 public class JacksonTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
 
@@ -69,7 +69,7 @@ public class JacksonTest extends JerseyTest {
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, JerseyApplication application) {
+    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler application) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, application);
         origClient.configuration().enable(new JsonFeature());
 

@@ -41,7 +41,7 @@
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -62,11 +62,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class ResourceNotFoundTest {
 
-    JerseyApplication application;
+    ApplicationHandler application;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
 
@@ -95,7 +94,7 @@ public class ResourceNotFoundTest {
 
     @Test
     public void testExistingDeclarativeResources() throws Exception {
-        JerseyApplication app = createApplicationBuilder(FooResource.class).build();
+        ApplicationHandler app = createApplication(FooResource.class);
 
         Response response;
 
@@ -110,7 +109,7 @@ public class ResourceNotFoundTest {
 
     @Test
     public void testMissingDeclarativeResources() throws Exception {
-        JerseyApplication app = createApplicationBuilder(FooResource.class).build();
+        ApplicationHandler app = createApplication(FooResource.class);
 
         Response response;
 
@@ -127,18 +126,21 @@ public class ResourceNotFoundTest {
         assertEquals(404, response.getStatus());
     }
 
-    private JerseyApplication createMixedApp() {
-        JerseyApplication.Builder appBuilder = createApplicationBuilder(FooResource.class);
-        appBuilder.bind("/dynamic").method("GET").to(new MyInflector());
-        appBuilder.bind("/foo/dynamic").method("GET").to(new MyInflector());
-        JerseyApplication app = appBuilder.build();
-        return app;
+    private ApplicationHandler createMixedApp() {
+        ResourceConfig rc = new ResourceConfig(FooResource.class);
+
+        ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("/dynamic").method("GET").to(new MyInflector());
+        rb.path("/foo/dynamic").method("GET").to(new MyInflector());
+        rc.addResources(rb.build());
+
+        return  new ApplicationHandler(rc);
     }
 
     @Test
     public void testExistingMixedResources() throws Exception {
 
-        JerseyApplication app = createMixedApp();
+        ApplicationHandler app = createMixedApp();
 
         Response response;
 
@@ -163,7 +165,7 @@ public class ResourceNotFoundTest {
     @Test
     public void testMissingMixedResources() throws Exception {
 
-        JerseyApplication app = createMixedApp();
+        ApplicationHandler app = createMixedApp();
 
         Response response;
 

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.server.model.ResourceBuilder;
 import junit.framework.Assert;
 import org.glassfish.jersey.filter.PreMatchRequestFilterModule;
 import org.glassfish.jersey.filter.RequestFilterModule;
@@ -86,15 +87,16 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters));
 
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
+        ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(200).build();
             }
         });
-        JerseyApplication application = appBuilder.build();
+        resourceConfig.addResources(rb.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -119,15 +121,16 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new RequestFilterModule(requestFilterList));
 
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
+        ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(200).build();
             }
         });
-        JerseyApplication application = appBuilder.build();
+        resourceConfig.addResources(rb.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -152,15 +155,16 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new ResponseFilterModule(responseFilterList));
 
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
+        ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(200).build();
             }
         });
-        JerseyApplication application = appBuilder.build();
+        resourceConfig.addResources(rb.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
 
@@ -254,15 +258,16 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new RequestFilterModule(requestFilterList));
 
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        appBuilder.bind("test").method("GET").to(new Inflector<Request, Response>() {
+        ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(200).build();
             }
         });
-        JerseyApplication application = appBuilder.build();
+        resourceConfig.addResources(rb.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
     }

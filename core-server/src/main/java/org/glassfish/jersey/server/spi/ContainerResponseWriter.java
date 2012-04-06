@@ -43,7 +43,7 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 
 /**

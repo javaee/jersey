@@ -52,12 +52,9 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.hk2.Module;
 import org.glassfish.jersey.FeaturesAndProperties;
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
@@ -65,14 +62,11 @@ import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.spi.PropertiesProvider;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.Singleton;
 
-import org.jvnet.hk2.annotations.Inject;
 
+import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.ResourceClass;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -85,60 +79,64 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     private static final Logger LOGGER = Logger.getLogger(ResourceConfig.class.getName());
 
-    /*package*/ static final class Module extends AbstractModule {
-
-        private static class ResourceConfigFactory extends ReferencingFactory<ResourceConfig> {
-
-            public ResourceConfigFactory(@Inject Factory<Ref<ResourceConfig>> referenceFactory) {
-                super(referenceFactory);
-            }
-        }
-
-        private static class JaxrsApplicationFactory implements Factory<Application> {
-
-            @Inject
-            private Factory<ResourceConfig> rcFactory;
+    /**
+     * Create an immutable copy of the given resource configuration.
+     *
+     * @param config original resource configuration.
+     * @return immutable copy of the original resource configuration.
+     */
+    static ResourceConfig unmodifiableCopy(final ResourceConfig config) {
+        return new ResourceConfig(config) {
 
             @Override
-            public Application get() throws ComponentException {
-                return rcFactory.get().getApplication();
+            public ResourceConfig addClasses(Set<Class<?>> classes) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
             }
-        }
 
-        @Override
-        protected void configure() {
-            bind(ResourceConfig.class).toFactory(ResourceConfigFactory.class).in(RequestScope.class);
-            bind(FeaturesAndProperties.class).toFactory(ResourceConfigFactory.class).in(RequestScope.class);
-            bind(new TypeLiteral<Ref<ResourceConfig>>() {
-            }).toFactory(ReferencingFactory.<ResourceConfig>referenceFactory()).in(Singleton.class);
+            @Override
+            public ResourceConfig addResources(Set<ResourceClass> resources) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
 
-            bind(Application.class).toFactory(JaxrsApplicationFactory.class).in(RequestScope.class);
-        }
+            @Override
+            public ResourceConfig addFinder(ResourceFinder resourceFinder) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            public ResourceConfig addModules(Set<Module> modules) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            public ResourceConfig addProperties(Map<String, Object> properties) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            public ResourceConfig addSingletons(Set<Object> singletons) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            ResourceConfig setApplication(Application application) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            public ResourceConfig setClassLoader(ClassLoader classLoader) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+
+            @Override
+            public ResourceConfig setProperty(String name, Object value) {
+                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+            }
+        };
     }
 
-    /*package*/ static final class ImmutableResourceConfig extends ResourceConfig {
-
-        ImmutableResourceConfig(ResourceConfig that) {
-            super(
-                    null,
-                    that.getApplication(),
-                    that.getApplicationClass(),
-                    Collections.unmodifiableSet(Sets.newHashSet(that.getClasses())),
-                    Collections.unmodifiableSet(Sets.newHashSet(that.getSingletons())),
-                    Collections.unmodifiableMap(Maps.newHashMap(that.properties)),
-                    null,
-                    Collections.unmodifiableSet(Sets.newHashSet(that.customModules)));
-        }
-
-        @Override
-        public Set<Class<?>> getClasses() {
-            return super.classes;
-        }
-
-        @Override
-        public Set<Object> getSingletons() {
-            return super.singletons;
-        }
+    public static ResourceBuilder resourceBuilder() {
+        return new DefaultResourceBuilder();
     }
     //
     private transient Set<Class<?>> cachedClasses = null;
@@ -146,13 +144,17 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     //
     private ClassLoader classLoader = null;
     //
-    private Application application;
+    private volatile Application application;
     private Class<? extends Application> applicationClass;
     //
     private final Set<Class<?>> classes;
     private final Set<Object> singletons;
+    private final Set<ResourceClass> resources;
+    private final Set<ResourceClass> resourcesView;
+    //
     private final Map<String, Object> properties;
     private final Map<String, Object> propertiesView;
+    //
     private final Set<ResourceFinder> resourceFinders;
     private final Set<org.glassfish.hk2.Module> customModules;
 
@@ -164,6 +166,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
         this.classes = Sets.newHashSet();
         this.singletons = Sets.newHashSet();
+        this.resources = Sets.newHashSet();
+        this.resourcesView = Collections.unmodifiableSet(resources);
 
         this.properties = Maps.newHashMap();
         this.propertiesView = Collections.unmodifiableMap(properties);
@@ -201,6 +205,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
             final Class<? extends Application> applicationClass,
             final Set<Class<?>> providerClasses,
             final Set<Object> providerInstances,
+            final Set<ResourceClass> resources,
             final Map<String, Object> properties,
             final Set<ResourceFinder> resourceFinders,
             final Set<org.glassfish.hk2.Module> customModules) {
@@ -211,6 +216,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
         this.classes = providerClasses;
         this.singletons = providerInstances;
+        this.resources = resources;
+        this.resourcesView = Collections.unmodifiableSet(resources);
 
         this.properties = properties;
         this.propertiesView = Collections.unmodifiableMap(properties);
@@ -227,9 +234,11 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
         this.classes = Sets.newHashSet(that.classes);
         this.singletons = Sets.newHashSet(that.singletons);
+        this.resources = Sets.newHashSet(that.resources);
+        this.resourcesView = Collections.unmodifiableSet(resources);
 
         this.properties = Maps.newHashMap(that.properties);
-        this.propertiesView = Collections.unmodifiableMap(properties);
+        this.propertiesView = Collections.unmodifiableMap(this.properties);
 
         this.resourceFinders = Sets.newHashSet(that.resourceFinders);
         this.customModules = Sets.newHashSet(that.customModules);
@@ -241,7 +250,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param classes list of classes to add.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addClasses(Set<Class<?>> classes) {
+    public ResourceConfig addClasses(Set<Class<?>> classes) {
         invalidateProviderCache();
         this.classes.addAll(classes);
         return this;
@@ -254,8 +263,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return updated resource configuration instance.
      */
     public final ResourceConfig addClasses(Class<?>... classes) {
-        addClasses(Sets.newHashSet(classes));
-        return this;
+        return addClasses(Sets.newHashSet(classes));
     }
 
     /**
@@ -264,7 +272,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param singletons {@link Set} of instances to add.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addSingletons(Set<Object> singletons) {
+    public ResourceConfig addSingletons(Set<Object> singletons) {
         invalidateProviderCache();
         this.singletons.addAll(singletons);
         return this;
@@ -277,7 +285,16 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return updated resource configuration instance.
      */
     public final ResourceConfig addSingletons(Object... singletons) {
-        addSingletons(Sets.newHashSet(singletons));
+        return addSingletons(Sets.newHashSet(singletons));
+    }
+
+    public final ResourceConfig addResources(ResourceClass... resources) {
+        return addResources(Sets.newHashSet(resources));
+    }
+
+
+    public ResourceConfig addResources(Set<ResourceClass> resources) {
+        this.resources.addAll(resources);
         return this;
     }
 
@@ -288,7 +305,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param value property value.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig setProperty(String name, Object value) {
+    public ResourceConfig setProperty(String name, Object value) {
         if (ServerProperties.PROVIDER_CLASSNAMES.equals(name)) {
             invalidateProviderCache();
         }
@@ -305,7 +322,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param properties properties to add.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addProperties(Map<String, Object> properties) {
+    public ResourceConfig addProperties(Map<String, Object> properties) {
         if (properties.containsKey(ServerProperties.PROVIDER_CLASSNAMES)) {
             invalidateProviderCache();
         }
@@ -319,7 +336,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param resourceFinder {@link ResourceFinder}
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addFinder(ResourceFinder resourceFinder) {
+    public ResourceConfig addFinder(ResourceFinder resourceFinder) {
         invalidateProviderCache();
         this.resourceFinders.add(resourceFinder);
         return this;
@@ -333,7 +350,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param modules custom modules.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addModules(Set<org.glassfish.hk2.Module> modules) {
+    public ResourceConfig addModules(Set<org.glassfish.hk2.Module> modules) {
         this.customModules.addAll(modules);
         return this;
     }
@@ -347,8 +364,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return updated resource configuration instance..
      */
     public final ResourceConfig addModules(org.glassfish.hk2.Module... modules) {
-        addModules(Sets.newHashSet(modules));
-        return this;
+        return addModules(Sets.newHashSet(modules));
     }
 
     /**
@@ -357,10 +373,31 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param classLoader provided {@link ClassLoader}.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig setClassLoader(ClassLoader classLoader) {
+    public ResourceConfig setClassLoader(ClassLoader classLoader) {
         invalidateProviderCache();
         this.classLoader = classLoader;
         return this;
+    }
+
+    /**
+     * Adds array of package names which will be used to scan for
+     * providers.
+     *
+     * @param packages array of package names
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig packages(String... packages) {
+        return addFinder(new PackageNamesScanner(packages));
+    }
+
+    /**
+     * Adds array of file names to scan for providers.
+     *
+     * @param files array of file names.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig files(String... files) {
+        return addFinder(new FilesScanner(files));
     }
 
     /**
@@ -374,35 +411,11 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param application JAX-RS Application instance.
      * @return updated resource configuration instance.
      */
-    /*package*/ final ResourceConfig setApplication(Application application) {
+    /*package*/ ResourceConfig setApplication(Application application) {
         invalidateProviderCache();
         this.application = application;
         this.applicationClass = null;
         mergeProperties(properties, application);
-        return this;
-    }
-
-
-    /**
-     * Adds array of package names which will be used to scan for
-     * providers.
-     *
-     * @param packages array of package names
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig packages(String... packages) {
-        addFinder(new PackageNamesScanner(packages));
-        return this;
-    }
-
-    /**
-     * Adds array of file names to scan for providers.
-     *
-     * @param files array of file names.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig files(String... files) {
-        addFinder(new FilesScanner(files));
         return this;
     }
 
@@ -487,7 +500,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
             }
         }
 
-        return cachedClasses;
+        return Sets.newHashSet(cachedClasses);
     }
 
     /**
@@ -500,7 +513,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      */
     @Override
     public Set<Object> getSingletons() {
-
         if (cachedSingletons == null) {
             cachedSingletons = new HashSet<Object>();
 
@@ -511,7 +523,11 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
             cachedSingletons.addAll(singletons);
         }
 
-        return cachedSingletons;
+        return Sets.newHashSet(cachedSingletons);
+    }
+
+    public Set<ResourceClass> getResources() {
+        return resourcesView;
     }
 
     @Override

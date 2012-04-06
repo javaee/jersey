@@ -163,41 +163,41 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
     public void testStringConstructorGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         header("arg1", "3.145").
                         header("arg2", "3145").
                         header("arg3", "http://test").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testStringConstructorListGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringList.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "3.145").
                         header("args", "2.718").
                         header("args", "1.618").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testStringConstructorListEmptyGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListEmpty.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "").
                         header("args", "").
                         header("args", "").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
@@ -218,11 +218,11 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
     public void testStringConstructorDefaultOverride() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringDefault.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         header("args", "2.718").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
@@ -243,11 +243,11 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
     public void testStringConstructorListDefaultOverride() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         header("args", "2.718").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test

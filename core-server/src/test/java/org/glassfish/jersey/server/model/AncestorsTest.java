@@ -45,7 +45,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -59,11 +59,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class AncestorsTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/node")
@@ -137,7 +136,7 @@ public class AncestorsTest {
 
     @Test
     public void testNode() throws Exception {
-        app = createApplicationBuilder(Node.class).build();
+        app = createApplication(Node.class);
 
         assertEquals("0", app.apply(Requests.from("/node", "GET").build()).get().readEntity(String.class));
         assertEquals("1", app.apply(Requests.from("/node/node", "GET").build()).get().readEntity(String.class));
@@ -147,7 +146,7 @@ public class AncestorsTest {
 
     @Test
     public void testNodeLeaf() throws Exception {
-        app = createApplicationBuilder(Node.class).build();
+        app = createApplication(Node.class);
 
         assertEquals("0", app.apply(Requests.from("/node/leaf", "GET").build()).get().readEntity(String.class));
         assertEquals("1", app.apply(Requests.from("/node/node/leaf", "GET").build()).get().readEntity(String.class));
@@ -225,7 +224,7 @@ public class AncestorsTest {
 
     @Test
     public void testNodeSlash() throws Exception {
-        app = createApplicationBuilder(NodeSlash.class).build();
+        app = createApplication(NodeSlash.class);
 
         assertEquals("0", app.apply(Requests.from("/node/", "GET").build()).get().readEntity(String.class));
         assertEquals("1", app.apply(Requests.from("/node/node/", "GET").build()).get().readEntity(String.class));
@@ -235,7 +234,7 @@ public class AncestorsTest {
 
     @Test
     public void testNodeLeafSlash() throws Exception {
-        app = createApplicationBuilder(NodeSlash.class).build();
+        app = createApplication(NodeSlash.class);
 
         assertEquals("0", app.apply(Requests.from("/node/leaf/", "GET").build()).get().readEntity(String.class));
         assertEquals("1", app.apply(Requests.from("/node/node/leaf/", "GET").build()).get().readEntity(String.class));
@@ -291,7 +290,7 @@ public class AncestorsTest {
 
     @Test
     public void testFooBar() throws Exception {
-        app = createApplicationBuilder(FooResource.class).build();
+        app = createApplication(FooResource.class);
 
         assertEquals("foo", app.apply(Requests.from("/foo", "GET").build()).get().readEntity(String.class));
         assertEquals("bar", app.apply(Requests.from("/foo/bar", "GET").build()).get().readEntity(String.class));

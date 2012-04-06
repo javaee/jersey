@@ -40,12 +40,6 @@
 
 package org.glassfish.jersey.server.model;
 
-
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -54,6 +48,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -64,9 +63,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConsumeProduceSimpleTest  {
 
-    private JerseyApplication createApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig).build();
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/{arg1}/{arg2}")
@@ -151,7 +149,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testConsumeSimpleBean() throws Exception {
-        JerseyApplication app = createApplication(ConsumeSimpleBean.class);
+        ApplicationHandler app = createApplication(ConsumeSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
@@ -159,7 +157,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testProduceSimpleBean() throws Exception {
-        JerseyApplication app = createApplication(ProduceSimpleBean.class);
+        ApplicationHandler app = createApplication(ProduceSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","GET").accept("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","GET").accept("text/xhtml").build()).get().readEntity(String.class));
@@ -167,7 +165,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testConsumeProduceSimpleBean() throws Exception {
-        JerseyApplication app = createApplication(ConsumeProduceSimpleBean.class);
+        ApplicationHandler app = createApplication(ConsumeProduceSimpleBean.class);
 
         assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").accept("text/html").build()).get().readEntity(String.class));
         assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").accept("text/xhtml").build()).get().readEntity(String.class));
@@ -190,7 +188,7 @@ public class ConsumeProduceSimpleTest  {
 
     @Test
     public void testProduceWithParameters() throws Exception {
-        JerseyApplication app = createApplication(ConsumeProduceWithParameters.class);
+        ApplicationHandler app = createApplication(ConsumeProduceWithParameters.class);
 
         assertEquals("{a=b, c=d}", app.apply(Requests.from("/","POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().readEntity(String.class));
     }

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.GET;
@@ -46,11 +45,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -60,15 +58,15 @@ import static org.junit.Assert.assertEquals;
  */
 public class SubResourceDynamicWithParametersTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/{p}")
     static public class ParentWithTemplates {
+
         @GET
         public String getMe(@PathParam("p") String p) {
             return p;
@@ -85,7 +83,7 @@ public class SubResourceDynamicWithParametersTest {
             return new ChildWithTemplates();
         }
 
-        @Path(value="unmatchedPath/{path: .*}")
+        @Path(value = "unmatchedPath/{path: .*}")
         public UnmatchedPathResource getUnmatchedPath(
                 @PathParam("p") String p,
                 @PathParam("path") String path) {
@@ -95,6 +93,7 @@ public class SubResourceDynamicWithParametersTest {
     }
 
     static public class ChildWithTemplates {
+
         @GET
         public String getMe(@PathParam("c") String c) {
             return c;
@@ -102,6 +101,7 @@ public class SubResourceDynamicWithParametersTest {
     }
 
     static public class UnmatchedPathResource {
+
         String path;
 
         UnmatchedPathResource(String path) {
@@ -110,24 +110,26 @@ public class SubResourceDynamicWithParametersTest {
 
         @GET
         public String getMe() {
-            if (path == null) path = "";
+            if (path == null) {
+                path = "";
+            }
             return path;
         }
     }
 
     @Test
     public void testSubResourceDynamicWithTemplates() throws Exception {
-        app = createApplicationBuilder(ParentWithTemplates.class).build();
+        app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("parent", app.apply(Requests.from("/parent","GET").build()).get().readEntity(String.class));
-        assertEquals("first", app.apply(Requests.from("/parent/child/first?a=1&b=2","GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(Requests.from("/parent", "GET").build()).get().readEntity(String.class));
+        assertEquals("first", app.apply(Requests.from("/parent/child/first?a=1&b=2", "GET").build()).get().readEntity(String.class));
     }
 
     @Test
     public void testSubResourceDynamicWithUnmatchedPath() throws Exception {
-        app = createApplicationBuilder(ParentWithTemplates.class).build();
+        app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("", app.apply(Requests.from("/parent/unmatchedPath/","GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(Requests.from("/parent/unmatchedPath/a/b/c/d","GET").build()).get().readEntity(String.class));
+        assertEquals("", app.apply(Requests.from("/parent/unmatchedPath/", "GET").build()).get().readEntity(String.class));
+        assertEquals("a/b/c/d", app.apply(Requests.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().readEntity(String.class));
     }
 }

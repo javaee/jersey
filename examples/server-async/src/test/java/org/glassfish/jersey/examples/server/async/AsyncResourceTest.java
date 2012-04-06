@@ -46,12 +46,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -59,15 +60,13 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.logging.Logger;
-import org.junit.Ignore;
 
 //@Ignore
 public class AsyncResourceTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(AsyncResourceTest.class.getName());
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);

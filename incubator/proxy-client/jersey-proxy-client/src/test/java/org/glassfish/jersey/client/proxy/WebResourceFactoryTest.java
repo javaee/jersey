@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.client.proxy;
 
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -51,15 +50,13 @@ public class WebResourceFactoryTest extends JerseyTest {
     private MyResourceIfc resource;
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
-        ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
-
-        return JerseyApplication.builder(resourceConfig).build();
+        return new ResourceConfig(MyResource.class);
     }
 
     @Override

@@ -37,35 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_25_init_2;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
+package org.glassfish.jersey.server.spi;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Classes implementing this contract receive container life-cycle notification
+ * events.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HelloWorldResourceITCase extends JerseyTest {
+public interface ContainerLifecycleListener {
 
-    @Override
-    protected ResourceConfig configure() {
-        return new ResourceConfig(HelloWorldResource.class);
-    }
+    /**
+     * Invoked at the {@link Container container} start-up.
+     *
+     * @param container container that has been started.
+     */
+    public void onStartup(Container container);
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
-    }
+    /**
+     * Invoked when the {@link Container container} has been reloaded.
+     *
+     * @param container container that has been reloaded.
+     */
+    public void onReload(Container container);
 
-    @Test
-    public void testHelloWorld() throws Exception {
-        String s = target().path("helloworld").request().get(String.class);
-        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
-    }
+    /**
+     * Invoke at the {@link Container container} shut-down.
+     *
+     * @param container container that has been shut down.
+     */
+    public void onShutdown(Container container);
 }

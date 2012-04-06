@@ -705,19 +705,19 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
 
     void _test(String type, String value) throws ExecutionException, InterruptedException {
-        apply(Requests.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
 
-        apply(Requests.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
 
-        apply(Requests.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        apply(Requests.from(base + "default/null", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from(base + "default/null", "GET").accept("application/" + type).build()).readEntity(String.class));
 
-        apply(Requests.from(base + "default", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from(base + "default", "GET").accept("application/" + type).build()).readEntity(String.class));
 
-        apply(Requests.from(base + "default/override", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build());
+        assertEquals("content", apply(Requests.from(base + "default/override", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {

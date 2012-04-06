@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.GET;
@@ -47,11 +46,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -62,15 +60,15 @@ import static org.junit.Assert.assertEquals;
  */
 public class SubResourceHttpMethodsTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/")
     static public class SubResourceMethods {
+
         @GET
         public String getMe() {
             return "/";
@@ -91,15 +89,16 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResourceMethods() throws Exception {
-        app = createApplicationBuilder(SubResourceMethods.class).build();
+        app = createApplication(SubResourceMethods.class);
 
-        assertEquals("/", app.apply(Requests.from("/","GET").build()).get().readEntity(String.class));
-        assertEquals("/sub", app.apply(Requests.from("/sub","GET").build()).get().readEntity(String.class));
-        assertEquals("/sub/sub", app.apply(Requests.from("/sub/sub","GET").build()).get().readEntity(String.class));
+        assertEquals("/", app.apply(Requests.from("/", "GET").build()).get().readEntity(String.class));
+        assertEquals("/sub", app.apply(Requests.from("/sub", "GET").build()).get().readEntity(String.class));
+        assertEquals("/sub/sub", app.apply(Requests.from("/sub/sub", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
     static public class SubResourceMethodsWithTemplates {
+
         @GET
         public String getMe() {
             return "/";
@@ -132,19 +131,20 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResourceMethodsWithTemplates() throws Exception {
-        app = createApplicationBuilder(SubResourceMethodsWithTemplates.class).build();
+        app = createApplication(SubResourceMethodsWithTemplates.class);
 
-        assertEquals("/", app.apply(Requests.from("/","GET").build()).get().readEntity(String.class));
+        assertEquals("/", app.apply(Requests.from("/", "GET").build()).get().readEntity(String.class));
 
-        assertEquals("value", app.apply(Requests.from("/subvalue","GET").build()).get().readEntity(String.class));
-        assertEquals("a", app.apply(Requests.from("/sub/a","GET").build()).get().readEntity(String.class));
+        assertEquals("value", app.apply(Requests.from("/subvalue", "GET").build()).get().readEntity(String.class));
+        assertEquals("a", app.apply(Requests.from("/sub/a", "GET").build()).get().readEntity(String.class));
 
-        assertEquals("value/a", app.apply(Requests.from("/subunlimitedvalue/a","GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(Requests.from("/subunlimited/a/b/c/d","GET").build()).get().readEntity(String.class));
+        assertEquals("value/a", app.apply(Requests.from("/subunlimitedvalue/a", "GET").build()).get().readEntity(String.class));
+        assertEquals("a/b/c/d", app.apply(Requests.from("/subunlimited/a/b/c/d", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
     static public class SubResourceMethodsWithDifferentTemplates {
+
         @Path("{foo}")
         @GET
         public String getFoo(@PathParam("foo") String foo) {
@@ -162,14 +162,15 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResourceMethodsWithDifferentTemplates() throws Exception {
-        app = createApplicationBuilder(SubResourceMethodsWithDifferentTemplates.class).build();
+        app = createApplication(SubResourceMethodsWithDifferentTemplates.class);
 
-        assertEquals("foo", app.apply(Requests.from("/foo","GET").build()).get().readEntity(String.class));
+        assertEquals("foo", app.apply(Requests.from("/foo", "GET").build()).get().readEntity(String.class));
         assertEquals("bar", app.apply(Requests.from("/bar", "POST").build()).get().readEntity(String.class));
     }
 
     @Path("/{p}/")
     static public class SubResourceMethodWithLimitedTemplate {
+
         @GET
         public String getMe(@PathParam("p") String p, @QueryParam("id") String id) {
             return p + id;
@@ -180,20 +181,21 @@ public class SubResourceHttpMethodsTest {
         public String getUnmatchedPath(
                 @PathParam("p") String p,
                 @PathParam("id") String path) {
-          return path;
+            return path;
         }
     }
 
     @Test
     public void testSubResourceMethodWithLimitedTemplate() throws Exception {
-        app = createApplicationBuilder(SubResourceMethodWithLimitedTemplate.class).build();
+        app = createApplication(SubResourceMethodWithLimitedTemplate.class);
 
-        assertEquals("topone", app.apply(Requests.from("/top/?id=one","GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(Requests.from("/top/a/b/c/d","GET").build()).get().readEntity(String.class));
+        assertEquals("topone", app.apply(Requests.from("/top/?id=one", "GET").build()).get().readEntity(String.class));
+        assertEquals("a/b/c/d", app.apply(Requests.from("/top/a/b/c/d", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{p}")
     static public class SubResourceNoSlashMethodWithLimitedTemplate {
+
         @GET
         public String getMe(@PathParam("p") String p, @QueryParam("id") String id) {
             System.out.println(id);
@@ -201,25 +203,27 @@ public class SubResourceHttpMethodsTest {
         }
 
         @GET
-        @Path(value="{id: .*}")
+        @Path(value = "{id: .*}")
         public String getUnmatchedPath(
                 @PathParam("p") String p,
                 @PathParam("id") String path) {
-          return path;
+            return path;
         }
     }
 
     @Test
     public void testSubResourceNoSlashMethodWithLimitedTemplate() throws Exception {
-        app = createApplicationBuilder(SubResourceNoSlashMethodWithLimitedTemplate.class).build();
+        app = createApplication(SubResourceNoSlashMethodWithLimitedTemplate.class);
 
-        assertEquals("topone", app.apply(Requests.from("/top?id=one","GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(Requests.from("/top/a/b/c/d","GET").build()).get().readEntity(String.class));
+        assertEquals("topone", app.apply(Requests.from("/top?id=one", "GET").build()).get().readEntity(String.class));
+        assertEquals("a/b/c/d", app.apply(Requests.from("/top/a/b/c/d", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
     static public class SubResourceWithSameTemplate {
+
         public static class SubResource {
+
             @GET
             @Path("bar")
             public String get() {
@@ -241,14 +245,15 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResourceMethodWithSameTemplate() throws Exception {
-        app = createApplicationBuilder(SubResourceWithSameTemplate.class).build();
+        app = createApplication(SubResourceWithSameTemplate.class);
 
-        assertEquals("FOO", app.apply(Requests.from("/foo","GET").build()).get().readEntity(String.class));
-        assertEquals("BAR", app.apply(Requests.from("/foo/bar","GET").build()).get().readEntity(String.class));
+        assertEquals("FOO", app.apply(Requests.from("/foo", "GET").build()).get().readEntity(String.class));
+        assertEquals("BAR", app.apply(Requests.from("/foo/bar", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
     static public class SubResourceExplicitRegex {
+
         @GET
         @Path("{id}")
         public String getSegment(@PathParam("id") String id) {
@@ -276,17 +281,18 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResource() throws Exception {
-        app = createApplicationBuilder(SubResourceExplicitRegex.class).build();
+        app = createApplication(SubResourceExplicitRegex.class);
 
-        assertEquals("segments: foo", app.apply(Requests.from("/foo","GET").build()).get().readEntity(String.class));
-        assertEquals("segments: foo/bar", app.apply(Requests.from("/foo/bar","GET").build()).get().readEntity(String.class));
+        assertEquals("segments: foo", app.apply(Requests.from("/foo", "GET").build()).get().readEntity(String.class));
+        assertEquals("segments: foo/bar", app.apply(Requests.from("/foo/bar", "GET").build()).get().readEntity(String.class));
 
-        assertEquals("digit: 123", app.apply(Requests.from("/digit/123","GET").build()).get().readEntity(String.class));
-        assertEquals("anything: foo", app.apply(Requests.from("/digit/foo","GET").build()).get().readEntity(String.class));
+        assertEquals("digit: 123", app.apply(Requests.from("/digit/123", "GET").build()).get().readEntity(String.class));
+        assertEquals("anything: foo", app.apply(Requests.from("/digit/foo", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
     static public class SubResourceExplicitRegexCapturingGroups {
+
         @GET
         @Path("{a: (\\d)(\\d*)}")
         public String getSingle(@PathParam("a") int a) {
@@ -305,15 +311,15 @@ public class SubResourceHttpMethodsTest {
 
     @Test
     public void testSubResourceCapturingGroups() throws Exception {
-        app = createApplicationBuilder(SubResourceExplicitRegexCapturingGroups.class).build();
+        app = createApplication(SubResourceExplicitRegexCapturingGroups.class);
 
-        assertEquals("123", app.apply(Requests.from("/123","GET").build()).get().readEntity(String.class));
-        assertEquals("123-456-789", app.apply(Requests.from("/123-456-789","GET").build()).get().readEntity(String.class));
+        assertEquals("123", app.apply(Requests.from("/123", "GET").build()).get().readEntity(String.class));
+        assertEquals("123-456-789", app.apply(Requests.from("/123-456-789", "GET").build()).get().readEntity(String.class));
     }
-
 
     @Path("/")
     static public class SubResourceXXX {
+
         @GET
         @Path("{id}/literal")
         public String getSegment(@PathParam("id") String id) {
@@ -325,17 +331,16 @@ public class SubResourceHttpMethodsTest {
         public String getSegments(
                 @PathParam("id1") String id1,
                 @PathParam("id2") String id2,
-                @PathParam("id3") String id3
-                ) {
+                @PathParam("id3") String id3) {
             return id1 + id2 + id3;
         }
     }
 
     @Test
     public void testSubResourceXXX() throws Exception {
-        app = createApplicationBuilder(SubResourceXXX.class).build();
+        app = createApplication(SubResourceXXX.class);
 
-        assertEquals("123", app.apply(Requests.from("/123/literal","GET").build()).get().readEntity(String.class));
-        assertEquals("123literal789", app.apply(Requests.from("/123/literal/789","GET").build()).get().readEntity(String.class));
+        assertEquals("123", app.apply(Requests.from("/123/literal", "GET").build()).get().readEntity(String.class));
+        assertEquals("123literal789", app.apply(Requests.from("/123/literal/789", "GET").build()).get().readEntity(String.class));
     }
 }

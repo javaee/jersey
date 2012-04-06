@@ -44,12 +44,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test class for {@link JdkHttpHandlerContainer}.
@@ -66,14 +65,14 @@ public class JdkHttpServerContainerTest extends JerseyTest {
     }
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig(Resource.class)).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(Resource.class);
     }
 
-    @Path("one")
     /**
      * Test resource class.
      */
+    @Path("one")
     public static class Resource {
 
         /**
@@ -94,6 +93,7 @@ public class JdkHttpServerContainerTest extends JerseyTest {
     public void testJdkHttpServerContainerTarget() {
         final Response response = target().path("one").request().get();
 
-        assertTrue(response.getStatus() == 200);
+        assertEquals("Response status unexpected.", 200, response.getStatus());
+        assertEquals("Response entity unexpected.", "get", response.readEntity(String.class));
     }
 }

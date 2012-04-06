@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.jdkhttp;
 
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpsServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -49,8 +46,13 @@ import java.util.concurrent.Executors;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsServer;
 
 /**
  * Factory for creating {@link HttpServer JDK HttpServer} instances adapted to
@@ -61,20 +63,39 @@ import org.glassfish.jersey.server.ContainerFactory;
 public class JdkHttpServerFactory {
 
     /**
-     * Creates and starts the {@link HttpServer JDK HttpServer} with the {@link JerseyApplication Jersey application}
-     * deployed on the given {@link URI}.
+     * Creates and starts the {@link HttpServer JDK HttpServer} with the Jersey
+     * application deployed on the given {@link URI}.
      *
      * <p>The returned {@link HttpServer JDK HttpServer} is started.</p>
      *
-     * @param uri The {@link URI uri} on which the {@link JerseyApplication Jersey application} will be deployed.
-     * @param application The {@link JerseyApplication Jersey Application} to be
-     * deployed.
+     * @param uri The {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration The Jersey server-side application configuration.
      * @return Newly created {@link HttpServer}.
      * @throws ProcessingException Thrown when problems during server creation
      * occurs.
      */
-    public static HttpServer createHttpServer(final URI uri, final JerseyApplication application) throws ProcessingException {
-        final HttpHandler handler = ContainerFactory.createContainer(HttpHandler.class, application);
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
+        final HttpHandler handler = ContainerFactory.createContainer(HttpHandler.class, configuration);
+        return createHttpServer(uri, handler);
+    }
+
+    /**
+     * Creates and starts the {@link HttpServer JDK HttpServer} with the
+     * Jersey application deployed on the given {@link URI}.
+     *
+     * <p>The returned {@link HttpServer JDK HttpServer} is started.</p>
+     *
+     * @param uri The {@link URI uri} on which the Jersey application will be deployed.
+     * @param appHandler The Jersey server-side application handler.
+     * @return Newly created {@link HttpServer}.
+     * @throws ProcessingException Thrown when problems during server creation
+     * occurs.
+     */
+    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
+        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler));
+    }
+
+    private static HttpServer createHttpServer(final URI uri, final HttpHandler handler) throws ProcessingException {
 
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());

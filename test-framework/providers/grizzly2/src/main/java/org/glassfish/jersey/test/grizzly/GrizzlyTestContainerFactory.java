@@ -37,35 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.test.grizzly;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.test.spi.TestContainer;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.glassfish.jersey.internal.ProcessingException;
-
-import javax.ws.rs.client.Client;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
     private static class GrizzlyTestContainer implements TestContainer {
 
         private final URI uri;
-        private final JerseyApplication application;
-
+        private final ApplicationHandler appHandler;
         private HttpServer server;
-
         private static final Logger LOGGER = Logger.getLogger(GrizzlyTestContainer.class.getName());
 
-        private GrizzlyTestContainer(URI uri, JerseyApplication application) {
-            this.application = application;
+        private GrizzlyTestContainer(URI uri, ApplicationHandler appHandler) {
+            this.appHandler = appHandler;
             this.uri = uri;
         }
 
@@ -81,12 +80,12 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
         @Override
         public void start() {
-            if(LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.log(Level.INFO, "Starting GrizzlyTestContainer...");
             }
 
             try {
-                this.server = GrizzlyHttpServerFactory.createHttpServer(uri, application);
+                this.server = GrizzlyHttpServerFactory.createHttpServer(uri, appHandler);
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }
@@ -94,7 +93,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
         @Override
         public void stop() {
-            if(LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.log(Level.INFO, "Stopping GrizzlyTestContainer...");
             }
             this.server.stop();
@@ -102,7 +101,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(URI uri, JerseyApplication application) throws IllegalArgumentException {
-        return new GrizzlyTestContainer(uri, application);
+    public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
+        return new GrizzlyTestContainer(uri, appHandler);
     }
 }

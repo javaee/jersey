@@ -45,7 +45,7 @@ import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +62,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.ResourceBuilder;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -133,14 +135,16 @@ public class ContextBasedInjectionTest {
             return null;
         }
     }
-    private JerseyApplication app;
+    private ApplicationHandler app;
 
     @Before
     public void setupApplication() {
-        final JerseyApplication.Builder af = JerseyApplication.builder();
-        af.bind("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
-        af.bind("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
-        app = af.build();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
+        rb.path("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        app = new ApplicationHandler(rc);
     }
 
     @Test

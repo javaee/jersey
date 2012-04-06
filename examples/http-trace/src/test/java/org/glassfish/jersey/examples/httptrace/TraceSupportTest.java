@@ -41,25 +41,24 @@ package org.glassfish.jersey.examples.httptrace;
 
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.server.JerseyApplication;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TraceSupportTest extends JerseyTest {
+
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         return App.create();
     }
-
     private String[] expectedFragmentsProgrammatic = new String[]{
         "TRACE http://localhost:9998/tracing/programmatic"
     };
-
     private String[] expectedFragmentsAnnotated = new String[]{
         "TRACE http://localhost:9998/tracing/annotated"
     };
@@ -72,9 +71,7 @@ public class TraceSupportTest extends JerseyTest {
 
     @Test
     public void testProgrammaticApp() throws Exception {
-        Response response = prepareTarget(App.ROOT_PATH_PROGRAMMATIC)
-                .request("text/plain")
-                .method(TRACE.NAME);
+        Response response = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").method(TRACE.NAME);
 
         assertEquals(Response.Status.OK, response.getStatusEnum());
 
@@ -88,9 +85,7 @@ public class TraceSupportTest extends JerseyTest {
 
     @Test
     public void testAnnotatedApp() throws Exception {
-        Response response = prepareTarget(App.ROOT_PATH_ANNOTATED)
-                .request("text/plain")
-                .method(TRACE.NAME);
+        Response response = prepareTarget(App.ROOT_PATH_ANNOTATED).request("text/plain").method(TRACE.NAME);
 
         assertEquals(Response.Status.OK, response.getStatusEnum());
 
@@ -101,5 +96,4 @@ public class TraceSupportTest extends JerseyTest {
                     responseEntity.contains(expectedFragment));
         }
     }
-
 }

@@ -37,9 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
-
 
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -49,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -63,17 +61,15 @@ import static org.junit.Assert.*;
  */
 public class HeadTest {
 
-    private JerseyApplication app;
+    private ApplicationHandler app;
 
     private void initiateWebApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-
-        app = JerseyApplication.builder(resourceConfig).build();
+        app = new ApplicationHandler(new ResourceConfig(classes));
     }
-
 
     @Path("/")
     static public class ResourceGetNoHead {
+
         @GET
         public String get() {
             return "GET";
@@ -94,6 +90,7 @@ public class HeadTest {
 
     @Path("/")
     static public class ResourceGetWithHead {
+
         @HEAD
         public Response head() {
             return Response.ok().header("X-TEST", "HEAD").build();
@@ -117,6 +114,7 @@ public class HeadTest {
 
     @Path("/")
     static public class ResourceGetWithProduceNoHead {
+
         @GET
         @Produces("application/foo")
         public String getFoo() {
@@ -159,7 +157,7 @@ public class HeadTest {
         @GET
         @Produces("application/foo")
         public Response getFoo() {
-            return Response.ok("GET","application/foo").header("X-TEST", "FOO-GET").build();
+            return Response.ok("GET", "application/foo").header("X-TEST", "FOO-GET").build();
         }
 
         @HEAD
@@ -196,6 +194,7 @@ public class HeadTest {
 
     @Path("/")
     static public class ResourceGetByteNoHead {
+
         @GET
         public byte[] get() {
             return "GET".getBytes();
@@ -216,20 +215,20 @@ public class HeadTest {
         assertFalse(response.hasEntity());
     }
 
-
     @Path("/")
     static public class ResourceGetWithNoProduces {
+
         @GET
         public Response getPlain() {
-           return Response.ok("text").header("x-value", "text").
-                   build();
+            return Response.ok("text").header("x-value", "text").
+                    build();
         }
 
         @GET
         @Produces("text/html")
         public Response getHtml() {
-           return Response.ok("html").header("x-value", "html").
-                   build();
+            return Response.ok("html").header("x-value", "html").
+                    build();
         }
     }
 

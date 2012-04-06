@@ -39,17 +39,16 @@
  */
 package org.glassfish.jersey.test.inmemory;
 
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
 
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -67,9 +66,8 @@ public class InMemoryContainerTest extends JerseyTest {
     }
 
     @Override
-    protected JerseyApplication configure() {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class);
-        return JerseyApplication.builder(resourceConfig).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(Resource.class);
     }
 
     /**

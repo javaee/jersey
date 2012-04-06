@@ -37,13 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
-
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -51,6 +45,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -60,16 +59,16 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConsumeProduceWildcardTest {
 
-    private JerseyApplication createApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig).build();
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/{arg1}/{arg2}")
     @Consumes("text/*")
     public static class ConsumeWildCardBean {
 
-        @Context HttpHeaders headers;
+        @Context
+        HttpHeaders headers;
 
         @POST
         public String doPostHtml() {
@@ -87,9 +86,9 @@ public class ConsumeProduceWildcardTest {
 
     @Test
     public void testConsumeWildCardBean() throws Exception {
-        JerseyApplication app = createApplication(ConsumeWildCardBean.class);
+        ApplicationHandler app = createApplication(ConsumeWildCardBean.class);
 
-        assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(Requests.from("/a/b", "POST").entity("").type("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(Requests.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
     }
 }

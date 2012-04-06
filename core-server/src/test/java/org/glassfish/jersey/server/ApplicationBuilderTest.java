@@ -67,11 +67,13 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.server.model.ResourceBuilder;
 
 import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -126,11 +128,13 @@ public class ApplicationBuilderTest {
         }
     }
 
-    public JerseyApplication setupApplication1() {
-        final JerseyApplication.Builder af = JerseyApplication.builder();
-        af.bind("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
-        af.bind("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
-        return af.build();
+    public ApplicationHandler setupApplication1() {
+        final ResourceConfig rc = new ResourceConfig();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
+        rb.path("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
+        rc.addResources(rb.build());
+        return new ApplicationHandler(rc);
     }
 
 //    @Test
@@ -163,7 +167,7 @@ public class ApplicationBuilderTest {
     @Test
     public void testappBuilderClasses() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class);
-        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -173,14 +177,15 @@ public class ApplicationBuilderTest {
     @Test
     public void testEmptyAppCreationPasses() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = new ResourceConfig();
-        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
         assertEquals(404, application.apply(req).get().getStatus());
     }
 
-//    @Test
+    @Test
+//    @Ignore
     public void testappBuilderJaxRsApplication() throws InterruptedException, ExecutionException {
 
         javax.ws.rs.core.Application jaxRsApplication = new javax.ws.rs.core.Application() {
@@ -198,7 +203,7 @@ public class ApplicationBuilderTest {
             }
         };
 
-        final JerseyApplication application = JerseyApplication.builder(jaxRsApplication).build();
+        final ApplicationHandler application = new ApplicationHandler(jaxRsApplication);
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -229,17 +234,20 @@ public class ApplicationBuilderTest {
         }
 
         @Override
-        public ResourceA readFrom(Class<ResourceA> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public ResourceA readFrom(Class<ResourceA> type, Type genericType, Annotation[] annotations,
+        MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
+                throws IOException, WebApplicationException {
             return null;
         }
     }
 
-//    @Test
+    @Test
+    @Ignore
     public void testJaxrsApplicationInjection() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceB.class)
                 .addSingletons(new ResourceAReader());
 
-        final JerseyApplication application = JerseyApplication.builder(resourceConfig).build();
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
 
@@ -263,12 +271,13 @@ public class ApplicationBuilderTest {
         }
     }
 
-//    @Test
+    @Test
+//    @Ignore
     public void testDeploymentFailsForAmbiguousResource() {
         final ResourceConfig resourceConfig = new ResourceConfig(ErrornousResource.class);
         try {
-            JerseyApplication.builder(resourceConfig).build();
-            assertTrue("application builder should have failed", false);
+            ApplicationHandler server = new ApplicationHandler(resourceConfig);
+            assertTrue("Jersey server initialization should have failed: "+ server, false);
         } catch (Exception e) {
         }
     }

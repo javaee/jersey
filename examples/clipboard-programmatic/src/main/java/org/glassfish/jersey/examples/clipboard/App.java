@@ -49,7 +49,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.ResourceBuilder;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -66,8 +67,8 @@ public class App {
         try {
             System.out.println("Clipboard Jersey Example App");
 
-            final JerseyApplication app = createProgrammaticClipboardApp();
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, app);
+            final ResourceConfig config = createProgrammaticClipboardApp();
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, config);
 
             System.out.println(
                     String.format("Application started.%n"
@@ -82,11 +83,11 @@ public class App {
 
     }
 
-    public static JerseyApplication createProgrammaticClipboardApp() {
-        final JerseyApplication.Builder appFactory = JerseyApplication.builder();
+    public static ResourceConfig createProgrammaticClipboardApp() {
+        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
         final Clipboard clipboard = new Clipboard();
 
-        appFactory.bind(ROOT_PATH)
+        resourceBuilder.path(ROOT_PATH)
 
                 .method("GET").to(new Inflector<Request, Response>() {
 
@@ -130,6 +131,6 @@ public class App {
                 });
 
 
-        return appFactory.build();
+        return new ResourceConfig().addResources(resourceBuilder.build());
     }
 }

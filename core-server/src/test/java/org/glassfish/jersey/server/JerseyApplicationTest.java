@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.server;
 
-import com.google.common.net.HttpHeaders;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 
@@ -59,12 +59,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class JerseyApplicationTest {
 
-    JerseyApplication application;
+    ApplicationHandler application;
 
-    private JerseyApplication createApplication(Class<?>... classes) {
+    private ApplicationHandler createApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = new ResourceConfig(classes);
 
-        return JerseyApplication.builder(resourceConfig).build();
+        return new ApplicationHandler(resourceConfig);
     }
 
     @Path("/")
@@ -79,7 +79,7 @@ public class JerseyApplicationTest {
 
     @Test
     public void testReturnBadRequestOnIllHeaderValue() throws Exception {
-        JerseyApplication app = createApplication(Resource.class);
+        ApplicationHandler app = createApplication(Resource.class);
 
         Response response = app.apply(Requests.from("/", "GET").header(HttpHeaders.CONTENT_LENGTH, "text").build()).get();
         assertEquals(400, response.getStatus());

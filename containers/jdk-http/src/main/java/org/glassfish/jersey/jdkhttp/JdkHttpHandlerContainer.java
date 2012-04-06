@@ -61,7 +61,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
@@ -79,16 +79,16 @@ import com.sun.net.httpserver.HttpsExchange;
  */
 public class JdkHttpHandlerContainer implements HttpHandler {
 
-    private final JerseyApplication application;
+    private final ApplicationHandler appHandler;
 
     /**
      * Creates a new Container connected to given {@link JerseyApplication Jersey application}.
      *
-     * @param app Jersey application for which the container should be
+     * @param appHandler Jersey application handler for which the container should be
      * initialized.
      */
-    JdkHttpHandlerContainer(JerseyApplication app) {
-        this.application = app;
+    JdkHttpHandlerContainer(ApplicationHandler appHandler) {
+        this.appHandler = appHandler;
     }
 
     @Override
@@ -167,7 +167,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
         ContainerRequestContext containerRequestCtx = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
                 getSecurityContext(exchange.getPrincipal(), isSecure), null);
         try {
-            application.apply(containerRequestCtx);
+            appHandler.apply(containerRequestCtx);
         } finally {
             // if the response was not commited yet by the JerseyApplication
             // then commit it and log warning

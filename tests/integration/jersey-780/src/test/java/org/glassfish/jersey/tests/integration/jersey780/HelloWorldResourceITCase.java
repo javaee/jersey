@@ -39,20 +39,19 @@
  */
 package org.glassfish.jersey.tests.integration.jersey780;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+
 import org.junit.Test;
-
-import javax.ws.rs.core.Response;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -60,8 +59,8 @@ import static org.junit.Assert.fail;
 public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig().addSingletons(new Jersey780())).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig().addSingletons(new Jersey780());
     }
 
     @Override

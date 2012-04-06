@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.ElementType;
@@ -56,7 +55,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -75,16 +74,15 @@ public class OptionsTest {
     @HttpMethod("patch")
     public @interface PATCH {
     }
+    private ApplicationHandler app;
 
-    private JerseyApplication app;
-
-    private void initiateWebApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = new ResourceConfig(rc);
-        app = JerseyApplication.builder(resourceConfig).build();
+    private void initiateWebApplication(Class<?>... classes) {
+        app = new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/")
     static public class ResourceNoOptions {
+
         @GET
         public String get() {
             return "GET";

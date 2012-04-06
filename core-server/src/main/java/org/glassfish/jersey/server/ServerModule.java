@@ -191,7 +191,6 @@ public class ServerModule extends AbstractModule {
                 new SecurityContextModule(),
                 new ParameterInjectionModule(),
                 new ResourceModelModule(),
-                new ResourceConfig.Module(),
                 new RouterModule(),
                 new ServiceFinderModule<ContainerProvider>(ContainerProvider.class));
 

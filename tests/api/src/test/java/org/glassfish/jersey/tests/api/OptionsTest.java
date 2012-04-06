@@ -45,7 +45,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -59,16 +58,16 @@ import static org.junit.Assert.assertTrue;
 public class OptionsTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig(HttpOptionsTest.class)).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(HttpOptionsTest.class);
     }
 
     @Path("/OptionsTest")
     public static class HttpOptionsTest {
 
         static String html_content =
-                "<html>" + "<head><title>get text/html</title></head>" +
-                        "<body>get text/html</body></html>";
+                "<html><head><title>get text/html</title></head>"
+                + "<body>get text/html</body></html>";
 
         @GET
         public Response getPlain() {

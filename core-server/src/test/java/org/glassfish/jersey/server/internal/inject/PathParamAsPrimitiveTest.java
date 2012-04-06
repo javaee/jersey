@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,12 +59,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class PathParamAsPrimitiveTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication createApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = new ResourceConfig(rc);
-
-        return JerseyApplication.builder(resourceConfig).build();
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     public PathParamAsPrimitiveTest() {

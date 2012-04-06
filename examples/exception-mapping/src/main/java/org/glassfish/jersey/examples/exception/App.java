@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.examples.exception;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Hello world!
@@ -63,8 +63,7 @@ public class App {
             System.out.println("\"Exception Mapping\" Jersey Example App");
 
             final ResourceConfig resourceConfig = new ResourceConfig(ExceptionResource.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
-                    JerseyApplication.builder(resourceConfig).build());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
 
             System.out.println(String.format(
                     "Application started.%n"

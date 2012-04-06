@@ -44,7 +44,6 @@ import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import static org.glassfish.jersey.examples.exception.ExceptionResource.MyResponseFilter;
@@ -66,7 +65,7 @@ import static org.junit.Assert.assertTrue;
 public class ExceptionMappingFilterTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
 
@@ -79,7 +78,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
                 MySubSubException.class,
                 WebApplicationExceptionMapper.class);
 
-        return JerseyApplication.builder(resourceConfig).build();
+        return resourceConfig;
     }
 
     /**

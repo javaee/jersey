@@ -51,8 +51,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.JerseyApplication.Builder;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -79,9 +78,8 @@ public class AcceptQsTest {
         }
     }
 
-    private JerseyApplication createApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig).build();
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     private Inflector<Request, Response> stringResponse(String s) {
@@ -111,21 +109,23 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptGetDeclarative() throws Exception {
-        _testAcceptGet(createApplication(Resource.class));
+        runTestAcceptGet(createApplication(Resource.class));
     }
 
     @Test
     public void testAcceptGetProgrammatic() throws Exception {
-        final JerseyApplication.Builder appBuilder = JerseyApplication.builder();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.4")).method("GET").to(stringResponse("foo"));
-        appBuilder.bind("/").produces(MediaType.valueOf("application/bar;qs=0.5")).method("GET").to(stringResponse("bar"));
-        appBuilder.bind("/").produces(MediaType.valueOf("application/baz")).method("GET").to(stringResponse("baz"));
+        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.4")).method("GET").to(stringResponse("foo"));
+        rb.path("/").produces(MediaType.valueOf("application/bar;qs=0.5")).method("GET").to(stringResponse("bar"));
+        rb.path("/").produces(MediaType.valueOf("application/baz")).method("GET").to(stringResponse("baz"));
 
-        _testAcceptGet(appBuilder.build());
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestAcceptGet(new ApplicationHandler(rc));
     }
 
-    private void _testAcceptGet(JerseyApplication app) throws Exception {
+    private void runTestAcceptGet(ApplicationHandler app) throws Exception {
 
         String s = app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class);
         assertEquals("foo", s);
@@ -173,19 +173,21 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptMultipleDeclarative() throws Exception {
-        _testAcceptMultiple(createApplication(MultipleResource.class));
+        runTestAcceptMultiple(createApplication(MultipleResource.class));
     }
 
     @Test
     public void testAcceptMultipleProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
-        appBuilder.bind("/")
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("/")
                 .produces(MediaType.valueOf("application/foo;qs=0.5"), MediaType.valueOf("application/bar"))
                 .method("GET").to(stringResponse("GET"));
-        _testAcceptMultiple(appBuilder.build());
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestAcceptMultiple(new ApplicationHandler(rc));
     }
 
-    private void _testAcceptMultiple(JerseyApplication app) throws Exception {
+    private void runTestAcceptMultiple(ApplicationHandler app) throws Exception {
 
         MediaType foo = MediaType.valueOf("application/foo");
         MediaType bar = MediaType.valueOf("application/bar");
@@ -244,21 +246,23 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptSubTypeDeclarative() throws Exception {
-        _testAcceptSubType(createApplication(SubTypeResource.class));
+        runTestAcceptSubType(createApplication(SubTypeResource.class));
     }
 
     @Test
     public void testAcceptSubTypeProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/").produces(MediaType.valueOf("text/*;qs=0.5")).method("GET").to(stringResponse("*"));
-        appBuilder.bind("/").produces(MediaType.valueOf("text/plain;qs=0.6")).method("GET").to(stringResponse("plain"));
-        appBuilder.bind("/").produces(MediaType.valueOf("text/html;qs=0.7")).method("GET").to(stringResponse("html"));
+        rb.path("/").produces(MediaType.valueOf("text/*;qs=0.5")).method("GET").to(stringResponse("*"));
+        rb.path("/").produces(MediaType.valueOf("text/plain;qs=0.6")).method("GET").to(stringResponse("plain"));
+        rb.path("/").produces(MediaType.valueOf("text/html;qs=0.7")).method("GET").to(stringResponse("html"));
 
-        _testAcceptSubType(appBuilder.build());
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestAcceptSubType(new ApplicationHandler(rc));
     }
 
-    private void _testAcceptSubType(JerseyApplication app) throws Exception {
+    private void runTestAcceptSubType(ApplicationHandler app) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -324,21 +328,23 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptSubTypeNotIntuitiveDeclarative() throws Exception {
-        _testAcceptSubTypeNotIntuitive(createApplication(SubTypeResourceNotIntuitive.class));
+        runTestAcceptSubTypeNotIntuitive(createApplication(SubTypeResourceNotIntuitive.class));
     }
 
     @Test
     public void testAcceptSubTypeNotIntuitiveProgramatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/").produces(MediaType.valueOf("text/*;qs=0.9")).method("GET").to(stringResponse("*"));
-        appBuilder.bind("/").produces(MediaType.valueOf("text/plain;qs=0.7")).method("GET").to(stringResponse("plain"));
-        appBuilder.bind("/").produces(MediaType.valueOf("text/html;qs=0.5")).method("GET").to(stringResponse("html"));
+        rb.path("/").produces(MediaType.valueOf("text/*;qs=0.9")).method("GET").to(stringResponse("*"));
+        rb.path("/").produces(MediaType.valueOf("text/plain;qs=0.7")).method("GET").to(stringResponse("plain"));
+        rb.path("/").produces(MediaType.valueOf("text/html;qs=0.5")).method("GET").to(stringResponse("html"));
 
-        _testAcceptSubTypeNotIntuitive(appBuilder.build());
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestAcceptSubTypeNotIntuitive(new ApplicationHandler(rc));
     }
 
-    private void _testAcceptSubTypeNotIntuitive(JerseyApplication app) throws Exception {
+    private void runTestAcceptSubTypeNotIntuitive(ApplicationHandler app) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -401,17 +407,20 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptNoProducesDeclarative() throws Exception {
-        _testAcceptNoProduces(createApplication(NoProducesResource.class));
+        runTestAcceptNoProduces(createApplication(NoProducesResource.class));
     }
 
     @Test
     public void testAcceptNoProducesProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
-        appBuilder.bind("/").method("GET").to(stringResponse("GET"));
-        _testAcceptNoProduces(appBuilder.build());
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("/").method("GET").to(stringResponse("GET"));
+
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestAcceptNoProduces(new ApplicationHandler(rc));
     }
 
-    private void _testAcceptNoProduces(JerseyApplication app) throws Exception {
+    private void runTestAcceptNoProduces(ApplicationHandler app) throws Exception {
 
         // media type order in the accept header does not impose output media type!
         Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.9").build()).get();
@@ -436,16 +445,18 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesOneMethodFooBarResourceDeclarative() throws Exception {
-        _testFooBar(createApplication(ProducesOneMethodFooBarResource.class), "FOOBAR", "FOOBAR");
+        runTestFooBar(createApplication(ProducesOneMethodFooBarResource.class), "FOOBAR", "FOOBAR");
     }
 
     @Test
     public void testProducesOneMethodFooBarResourceProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
-        appBuilder.bind("/").method("GET")
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        rb.path("/").method("GET")
                     .produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
                     .to(stringResponse("FOOBAR"));
-        _testFooBar(appBuilder.build(), "FOOBAR", "FOOBAR");
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestFooBar(new ApplicationHandler(rc), "FOOBAR", "FOOBAR");
     }
 
     @Path("/")
@@ -465,17 +476,19 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsFooBarResourceProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
-        appBuilder.bind("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
+        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
+        rb.path("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
 
-        _testFooBar(appBuilder.build(), "FOO", "BAR");
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestFooBar(new ApplicationHandler(rc), "FOO", "BAR");
     }
 
     @Test
     public void testProducesTwoMethodsFooBarResourceDeclarative() throws Exception {
-        _testFooBar(createApplication(ProducesTwoMethodsFooBarResource.class), "FOO", "BAR");
+        runTestFooBar(createApplication(ProducesTwoMethodsFooBarResource.class), "FOO", "BAR");
     }
 
     @Path("/")
@@ -495,20 +508,22 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsBarFooResourceProgrammatic() throws Exception {
-        final Builder appBuilder = JerseyApplication.builder();
+        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
-        appBuilder.bind("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
+        rb.path("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
+        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
 
-        _testFooBar(appBuilder.build(), "FOO", "BAR");
+        ResourceConfig rc = new ResourceConfig();
+        rc.addResources(rb.build());
+        runTestFooBar(new ApplicationHandler(rc), "FOO", "BAR");
     }
 
     @Test
     public void testProducesTwoMethodsBarFooResourceDeclarative() throws Exception {
-        _testFooBar(createApplication(ProducesTwoMethodsBarFooResource.class), "FOO", "BAR");
+        runTestFooBar(createApplication(ProducesTwoMethodsBarFooResource.class), "FOO", "BAR");
     }
 
-    private void _testFooBar(JerseyApplication app, String fooContent, String barContent) throws Exception {
+    private void runTestFooBar(ApplicationHandler app, String fooContent, String barContent) throws Exception {
 
         Response response = app.apply(Requests.from("/","GET").accept("application/foo").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);

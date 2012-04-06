@@ -44,7 +44,8 @@ import java.util.List;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -60,13 +61,13 @@ import static org.junit.Assert.assertTrue;
 public class JsonpTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
         return App.createApp();
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, JerseyApplication application) {
+    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler application) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, application);
         origClient.configuration().register(JAXBContextResolver.class);
 

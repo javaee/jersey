@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.spi;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
  * Request context passed by the container to the {@link JerseyApplication}

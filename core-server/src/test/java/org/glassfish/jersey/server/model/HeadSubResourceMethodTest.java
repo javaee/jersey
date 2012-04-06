@@ -37,9 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
-
 
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -49,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -62,17 +60,15 @@ import static org.junit.Assert.*;
  */
 public class HeadSubResourceMethodTest {
 
-    private JerseyApplication app;
+    private ApplicationHandler app;
 
-    private void initiateWebApplication(Class<?>... rc) {
-        final ResourceConfig resourceConfig = new ResourceConfig(rc);
-
-        app = JerseyApplication.builder(resourceConfig).build();
+    private void initiateWebApplication(Class<?>... classes) {
+        app = new ApplicationHandler(new ResourceConfig(classes));
     }
-
 
     @Path("/")
     static public class ResourceGetNoHead {
+
         @Path("sub")
         @GET
         public String get() {
@@ -93,6 +89,7 @@ public class HeadSubResourceMethodTest {
 
     @Path("/")
     static public class ResourceGetWithHead {
+
         @Path("sub")
         @HEAD
         public Response head() {
@@ -118,6 +115,7 @@ public class HeadSubResourceMethodTest {
 
     @Path("/")
     static public class ResourceGetWithProduceNoHead {
+
         @Path("sub")
         @GET
         @Produces("application/foo")
@@ -203,6 +201,7 @@ public class HeadSubResourceMethodTest {
 
     @Path("/")
     static public class ResourceGetWithProduceNoHeadDifferentSub {
+
         @Path("sub1")
         @GET
         @Produces("application/foo")

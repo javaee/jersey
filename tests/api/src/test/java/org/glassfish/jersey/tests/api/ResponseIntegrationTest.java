@@ -46,7 +46,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -59,8 +58,8 @@ import static org.junit.Assert.assertEquals;
 public class ResponseIntegrationTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig(ResponseIntegrationTest.ResponseTest.class)).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(ResponseIntegrationTest.ResponseTest.class);
     }
 
     @Path(value = "/ResponseTest")
@@ -124,25 +123,25 @@ public class ResponseIntegrationTest extends JerseyTest {
      */
     @Test
     public void testStatuses() {
-        final int[] statuses = new int[] {
-                200,
-                201,
-                202,
-                204,
-                303,
-                304,
-                307,
-                401,
-                403,
-                404,
-                406,
-                409,
-                410,
-                411,
-                412,
-                415,
-                500,
-                503
+        final int[] statuses = new int[]{
+            200,
+            201,
+            202,
+            204,
+            303,
+            304,
+            307,
+            401,
+            403,
+            404,
+            406,
+            409,
+            410,
+            411,
+            412,
+            415,
+            500,
+            503
         };
 
         for (Integer i : statuses) {

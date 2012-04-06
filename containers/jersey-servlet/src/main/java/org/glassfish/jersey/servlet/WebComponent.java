@@ -74,7 +74,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -153,15 +153,15 @@ public class WebComponent {
         }
     }
     //
-    private JerseyApplication application;
+    private ApplicationHandler appHandler;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {
-        this.application = JerseyApplication.builder(createResourceConfig(webConfig, new WebComponentModule())).build();
+        this.appHandler = new ApplicationHandler(createResourceConfig(webConfig, new WebComponentModule()));
     }
 
     public WebComponent(final ResourceConfig resourceConfig) throws ServletException {
-        this.application = JerseyApplication.builder(resourceConfig).build();
-        this.application.addModules(new WebComponentModule());
+        resourceConfig.addModules(new WebComponentModule());
+        this.appHandler = new ApplicationHandler(resourceConfig);
     }
 
     /**
@@ -196,7 +196,7 @@ public class WebComponent {
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
                     getSecurityContext(request), null);
 
-            application.apply(containerContext);
+            appHandler.apply(containerContext);
 
             // jaxRsRequest, containerContext);
 

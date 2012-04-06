@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_1;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -58,8 +58,8 @@ import static org.junit.Assert.assertTrue;
 public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new Servlet3init1()).build();
+    protected Application configure() {
+        return new Servlet3init1();
     }
 
     @Override

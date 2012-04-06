@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.server.model.ResourceBuilder;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -74,9 +75,9 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
     @Test
     public void testPutGet() throws Exception {
         final ResourceConfig resourceConfig = new ResourceConfig(NameResource.class);
-        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
+        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("/name").method("PUT").to(new Inflector<Request, Response>() {
+        resourceBuilder.path("/name").method("PUT").to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -84,7 +85,8 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
                 return Responses.empty().status(200).build();
             }
         });
-        JerseyApplication application = appBuilder.build();
+        resourceConfig.addResources(resourceBuilder.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         final Response response = application.apply(Requests.from("", "name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
         assertEquals(200, response.getStatus());

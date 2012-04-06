@@ -39,14 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.ExecutionException;
+
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Class used for {@link JerseyApplication} initialization and for executing {@link Request}s.
@@ -55,11 +56,10 @@ import java.util.concurrent.ExecutionException;
  */
 public abstract class AbstractTest {
 
-    private JerseyApplication app;
+    private ApplicationHandler app;
 
     protected void initiateWebApplication(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        app = JerseyApplication.builder(resourceConfig).build();
+        app = new ApplicationHandler(new ResourceConfig(classes));
     }
 
     protected Response apply(Request request) throws ExecutionException, InterruptedException {

@@ -719,45 +719,45 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
     void _test(String type, String value) throws ExecutionException, InterruptedException {
         String param = type + "=" + value;
 
-        apply(
-                Requests.from("/?", "GET").
-                        accept("application/" + type).
-                        build()
-        );
+        assertEquals("content", apply(
+                Requests.from("/?" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
+        ).readEntity(String.class));
 
-        apply(
-                Requests.from("/wrappers?", "GET").
-                        accept("application/" + type).
-                        build()
-        );
+        assertEquals("content", apply(
+                Requests.from("/wrappers?" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
+        ).readEntity(String.class));
 
-        apply(
-                Requests.from("/list?" + param + "&" + param + "&" + param, "GET").
-                        accept("application/" + type).
-                        build()
-        );
+        assertEquals("content", apply(
+                Requests.from("/list?" + param + "&" + param + "&" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
+        ).readEntity(String.class));
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        apply(
+        assertEquals("content", apply(
                 Requests.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
-        );
+        ).readEntity(String.class));
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
-        );
+        ).readEntity(String.class));
 
         String param = type + "=" + value;
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from(base + "default/override?" + param, "GET").
                         accept("application/" + type).
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {

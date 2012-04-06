@@ -48,13 +48,15 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Target;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ClientFactory;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -89,7 +91,7 @@ public abstract class JerseyTest {
      */
     private final TestContainer tc;
     private final Client client;
-    private final JerseyApplication application;
+    private final ApplicationHandler application;
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
@@ -110,8 +112,10 @@ public abstract class JerseyTest {
      *         supported by the test container factory.
      */
     public JerseyTest() throws TestContainerException {
-        this.application = configure();
-        this.application.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        ResourceConfig config =  getResourceConfig(configure());
+        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        this.application = new ApplicationHandler(config);
+
         this.tc = getContainer(application, getTestContainerFactory());
         this.client = getClient(tc, application);
     }
@@ -128,10 +132,17 @@ public abstract class JerseyTest {
      */
     public JerseyTest(TestContainerFactory testContainerFactory) {
         setTestContainerFactory(testContainerFactory);
-        this.application = configure();
-        this.application.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+
+        ResourceConfig config =  getResourceConfig(configure());
+        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        this.application = new ApplicationHandler(config);
+
         this.tc = getContainer(application, testContainerFactory);
         this.client = getClient(tc, application);
+    }
+
+    private ResourceConfig getResourceConfig(Application app) {
+        return (app instanceof ResourceConfig) ? (ResourceConfig) app : new ResourceConfig(app);
     }
 
     /**
@@ -144,9 +155,11 @@ public abstract class JerseyTest {
      *         cannot be obtained, or the application descriptor is not
      *         supported by the test container factory.
      */
-    public JerseyTest(JerseyApplication application) throws TestContainerException {
-        this.application = application;
-        this.application.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+    public JerseyTest(Application jaxrsApplication) throws TestContainerException {
+        ResourceConfig config = getResourceConfig(jaxrsApplication);
+        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        this.application = new ApplicationHandler(config);
+
         this.tc = getContainer(application, getTestContainerFactory());
         this.client = getClient(tc, application);
     }
@@ -158,6 +171,7 @@ public abstract class JerseyTest {
      * @param featureName name of the enabled feature.
      */
     protected final void enable(String featureName) {
+        // TODO: perhaps we could reuse the resouce config for the test properties?
         propertyMap.put(featureName, Boolean.TRUE.toString());
     }
 
@@ -237,8 +251,8 @@ public abstract class JerseyTest {
     }
 
     /**
-     * Return an application descriptor that defines how the test container
-     * is configured.
+     * Return an JAX-RS application that defines how the application in the
+     * test container is configured.
      * <p>
      * If a constructor is utilized that does not supply an application
      * descriptor then this method must be overridden to return an application
@@ -251,7 +265,7 @@ public abstract class JerseyTest {
      *
      * @return the application descriptor.
      */
-    protected JerseyApplication configure() {
+    protected Application configure() {
         throw new UnsupportedOperationException(
                 "The configure method must be implemented by the extending class");
     }
@@ -378,7 +392,7 @@ public abstract class JerseyTest {
         tc.stop();
     }
 
-    private TestContainer getContainer(JerseyApplication application, TestContainerFactory tcf) {
+    private TestContainer getContainer(ApplicationHandler application, TestContainerFactory tcf) {
         if (application == null) {
             throw new IllegalArgumentException("The application cannot be null");
         }
@@ -399,7 +413,7 @@ public abstract class JerseyTest {
      * @param application instance of {@link JerseyApplication}
      * @return A Client instance.
      */
-    protected Client getClient(TestContainer tc, JerseyApplication application) {
+    protected Client getClient(TestContainer tc, ApplicationHandler application) {
         Client c = tc.getClient();
 
         if (c != null) {

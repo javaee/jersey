@@ -37,9 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
-
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -47,11 +45,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.SubResourceDynamicTest
@@ -60,15 +58,15 @@ import org.junit.Test;
  */
 public class SubResourceDynamicTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/parent")
     static public class Parent {
+
         @GET
         public String getMe() {
             return "parent";
@@ -81,6 +79,7 @@ public class SubResourceDynamicTest {
     }
 
     static public class Child {
+
         @GET
         public String getMe() {
             return "child";
@@ -89,19 +88,20 @@ public class SubResourceDynamicTest {
 
     @Test
     public void testSubResourceDynamic() throws Exception {
-        app = createApplicationBuilder(Parent.class).build();
+        app = createApplication(Parent.class);
 
         Response response;
 
-        response = app.apply(Requests.from("/parent","GET").accept("text/plain").build()).get();
+        response = app.apply(Requests.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/parent/child","GET").accept("text/plain").build()).get();
+        response = app.apply(Requests.from("/parent/child", "GET").accept("text/plain").build()).get();
         assertEquals("child", response.readEntity(String.class));
     }
 
     @Path("/{p}")
     static public class ParentWithTemplates {
+
         @GET
         public String getMe(@PathParam("p") String p) {
             return p;
@@ -114,6 +114,7 @@ public class SubResourceDynamicTest {
     }
 
     static public class ChildWithTemplates {
+
         @GET
         public String getMe(@PathParam("c") String c) {
             return c;
@@ -122,19 +123,19 @@ public class SubResourceDynamicTest {
 
     @Test
     public void testSubResourceDynamicWithTemplates() throws Exception {
-        app = createApplicationBuilder(ParentWithTemplates.class).build();
+        app = createApplication(ParentWithTemplates.class);
 
         Response response;
 
-        response = app.apply(Requests.from("/parent","GET").accept("text/plain").build()).get();
+        response = app.apply(Requests.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.readEntity(String.class));
-        response = app.apply(Requests.from("/parent/child/first","GET").accept("text/plain").build()).get();
+        response = app.apply(Requests.from("/parent/child/first", "GET").accept("text/plain").build()).get();
         assertEquals("first", response.readEntity(String.class));
     }
 
-
     @Path("/")
     static public class SubResourceExplicitRegexCapturingGroups {
+
         @Path("{a: (\\d)(\\d*)}-{b: (\\d)(\\d*)}-{c: (\\d)(\\d*)}")
         public SubResourceExplicitRegexCapturingGroupsSub getMultiple() {
             return new SubResourceExplicitRegexCapturingGroupsSub();
@@ -142,6 +143,7 @@ public class SubResourceDynamicTest {
     }
 
     static public class SubResourceExplicitRegexCapturingGroupsSub {
+
         @GET
         @Path("{d}")
         public String getMe(@PathParam("d") String d) {
@@ -151,11 +153,11 @@ public class SubResourceDynamicTest {
 
     @Test
     public void testSubResourceCapturingGroups() throws Exception {
-        app = createApplicationBuilder(SubResourceExplicitRegexCapturingGroups.class).build();
+        app = createApplication(SubResourceExplicitRegexCapturingGroups.class);
 
         Response response;
 
-        response = app.apply(Requests.from("/123-456-789/d","GET").accept("text/plain").build()).get();
+        response = app.apply(Requests.from("/123-456-789/d", "GET").accept("text/plain").build()).get();
         assertEquals("d", response.readEntity(String.class));
     }
 }

@@ -39,10 +39,9 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.io.IOException;
 import java.security.Principal;
+import static junit.framework.Assert.assertEquals;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -54,12 +53,13 @@ import javax.ws.rs.ext.PreMatchRequestFilter;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
+import org.jvnet.hk2.annotations.Inject;
+
 import org.junit.Assert;
 import org.junit.Test;
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * End to end test class for testing security context in the Filter and
@@ -74,8 +74,8 @@ public class SecurityContextFilterTest extends JerseyTest {
     private static final String PRINCIPAL_IS_NULL = "principalIsNull";
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig(SecurityContextFilter.class, Resource.class)).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(SecurityContextFilter.class, Resource.class);
     }
 
     @Provider

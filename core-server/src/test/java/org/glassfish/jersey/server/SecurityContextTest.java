@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.io.IOException;
 import java.security.Principal;
 
@@ -54,9 +52,12 @@ import javax.ws.rs.ext.PreMatchRequestFilter;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
+
+import org.jvnet.hk2.annotations.Inject;
+
 import org.junit.Assert;
 import org.junit.Test;
-import org.jvnet.hk2.annotations.Inject;
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Test class for testing security context in the Filter and resource.
@@ -131,9 +132,7 @@ public class SecurityContextTest {
     @Test
     public void testSecurityContextInjectionFilter() throws Exception {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
-
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        JerseyApplication application = appBuilder.build();
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Response response = application.apply(Requests.from("", "test", "GET").build()).get();
         assertEquals(response.getStatus(), 200);
@@ -149,14 +148,9 @@ public class SecurityContextTest {
     @Test
     public void testDefaultSecurityContext() throws Exception {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
-
-        JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
-        JerseyApplication application = appBuilder.build();
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Response response = application.apply(Requests.from("", "test", "GET").header(SKIP_FILTER, "true").build()).get();
-
-
-
         assertEquals(200, response.getStatus());
         String entity = response.readEntity(String.class);
         Assert.assertTrue(!entity.equals(PRINCIPAL_NAME));

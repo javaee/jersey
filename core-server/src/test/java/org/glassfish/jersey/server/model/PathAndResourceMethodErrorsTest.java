@@ -40,6 +40,8 @@
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -47,11 +49,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -65,23 +65,27 @@ public class PathAndResourceMethodErrorsTest {
     private List<ResourceModelIssue> initiateWebApplication(Class<?>... resourceClasses) {
         try {
             final ResourceConfig rc = new ResourceConfig(resourceClasses);
-            JerseyApplication.builder(rc).build();
-            fail("Application build expected to fail");
+            ApplicationHandler server = new ApplicationHandler(rc);
+            fail("Application build expected to fail: " + server);
         } catch (ResourceModelValidator.ModelException e) {
             return e.issues;
         }
         return null;
     }
 
-
     @Path("/{")
     public static class PathErrorsResource {
+
         @Path("/{")
         @GET
-        public String get() { return null; }
+        public String get() {
+            return null;
+        }
 
         @Path("/{sub")
-        public Object sub() { return null; }
+        public Object sub() {
+            return null;
+        }
     }
 
     // FIXME
@@ -135,18 +139,23 @@ public class PathAndResourceMethodErrorsTest {
 //
 //        assertEquals(1, messages.size());
 //    }
-
     @Path("/")
     public static class AmbiguousResourceMethodsGET {
 
         @GET
-        public String get1() { return null; }
+        public String get1() {
+            return null;
+        }
 
         @GET
-        public String get2() { return null; }
+        public String get2() {
+            return null;
+        }
 
         @GET
-        public String get3() { return null; }
+        public String get3() {
+            return null;
+        }
     }
 
     @Test
@@ -160,19 +169,27 @@ public class PathAndResourceMethodErrorsTest {
 
         @GET
         @Produces("application/xml")
-        public String getXml() { return null; }
+        public String getXml() {
+            return null;
+        }
 
         @GET
         @Produces("text/plain")
-        public String getText1() { return null; }
+        public String getText1() {
+            return null;
+        }
 
         @GET
         @Produces("text/plain")
-        public String getText2() { return null; }
+        public String getText2() {
+            return null;
+        }
 
         @GET
         @Produces({"text/plain", "image/png"})
-        public String getText3() { return null; }
+        public String getText3() {
+            return null;
+        }
     }
 
     @Test
@@ -186,15 +203,18 @@ public class PathAndResourceMethodErrorsTest {
 
         @PUT
         @Consumes("application/xml")
-        public void put1(Object o) { }
+        public void put1(Object o) {
+        }
 
         @PUT
         @Consumes({"text/plain", "image/jpeg"})
-        public void put2(Object o) { }
+        public void put2(Object o) {
+        }
 
         @PUT
         @Consumes("text/plain")
-        public void put3(Object o) { }
+        public void put3(Object o) {
+        }
     }
 
     @Test
@@ -203,25 +223,32 @@ public class PathAndResourceMethodErrorsTest {
         assertEquals(1, issues.size());
     }
 
-
     @Path("/")
     public static class AmbiguousSubResourceMethodsGET {
 
         @Path("{one}")
         @GET
-        public String get1() { return null; }
+        public String get1() {
+            return null;
+        }
 
         @Path("{seven}")
         @GET
-        public String get2() { return null; }
+        public String get2() {
+            return null;
+        }
 
         @Path("{million}")
         @GET
-        public String get3() { return null; }
+        public String get3() {
+            return null;
+        }
 
         @Path("{million}/")
         @GET
-        public String get4() { return null; }
+        public String get4() {
+            return null;
+        }
     }
 
     @Test
@@ -237,22 +264,30 @@ public class PathAndResourceMethodErrorsTest {
         @Path("x")
         @GET
         @Produces("application/xml")
-        public String getXml() { return null; }
+        public String getXml() {
+            return null;
+        }
 
         @Path("x")
         @GET
         @Produces("text/plain")
-        public String getText1() { return null; }
+        public String getText1() {
+            return null;
+        }
 
         @Path("x")
         @GET
         @Produces("text/plain")
-        public String getText2() { return null; }
+        public String getText2() {
+            return null;
+        }
 
         @Path("x")
         @GET
         @Produces({"text/plain", "image/png"})
-        public String getText3() { return null; }
+        public String getText3() {
+            return null;
+        }
     }
 
     @Test
@@ -265,10 +300,14 @@ public class PathAndResourceMethodErrorsTest {
     public static class AmbiguousSubResourceLocatorsResource {
 
         @Path("{one}")
-        public Object l1() { return null; }
+        public Object l1() {
+            return null;
+        }
 
         @Path("{two}")
-        public Object l2() { return null; }
+        public Object l2() {
+            return null;
+        }
     }
 
     @Test
@@ -281,10 +320,14 @@ public class PathAndResourceMethodErrorsTest {
     public static class AmbiguousSubResourceLocatorsWithSlashResource {
 
         @Path("{one}")
-        public Object l1() { return null; }
+        public Object l1() {
+            return null;
+        }
 
         @Path("{two}/")
-        public Object l2() { return null; }
+        public Object l2() {
+            return null;
+        }
     }
 
     // FIXME: trailing slashes should not matter

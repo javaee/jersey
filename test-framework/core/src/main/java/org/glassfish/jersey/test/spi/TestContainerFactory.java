@@ -41,7 +41,7 @@ package org.glassfish.jersey.test.spi;
 
 import java.net.URI;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
  * A test container factory responsible for creating test containers.
@@ -55,11 +55,11 @@ public interface TestContainerFactory {
      *
      * @param baseUri the base URI of the application.
      *
-     * @param application Jersey application instance.
+     * @param application Jersey server-side application handler instance.
      * @return the test container.
      * @throws IllegalArgumentException if <code>ad</code> is not an
      *         appropriate instance of an application descriptor supported
      *         by this test container factory.
      */
-    TestContainer create(URI baseUri, JerseyApplication application) throws IllegalArgumentException;
+    TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException;
 }

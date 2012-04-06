@@ -48,7 +48,6 @@ import javax.ws.rs.client.Target;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -65,6 +64,7 @@ public class ClientTest extends JerseyTest {
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
     public static class HelloWorldResource {
+
         private static final String MESSAGE = "Hello world!";
 
         @GET
@@ -74,8 +74,8 @@ public class ClientTest extends JerseyTest {
     }
 
     @Override
-    protected JerseyApplication configure() {
-        return JerseyApplication.builder(new ResourceConfig(HelloWorldResource.class)).build();
+    protected ResourceConfig configure() {
+        return new ResourceConfig(HelloWorldResource.class);
     }
 
     @Test

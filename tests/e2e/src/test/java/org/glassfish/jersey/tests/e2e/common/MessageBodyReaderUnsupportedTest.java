@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -50,13 +46,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.media.json.JsonFeature;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for unsupported media type.
@@ -67,9 +67,9 @@ import org.junit.Test;
 public class MessageBodyReaderUnsupportedTest extends JerseyTest {
 
     @Override
-    protected JerseyApplication configure() {
+    protected ResourceConfig configure() {
         // JsonJaxbModule must not be registered in the application for this test case.
-        return JerseyApplication.builder(new ResourceConfig(Resource.class)).build();
+        return new ResourceConfig(Resource.class);
     }
 
     /**

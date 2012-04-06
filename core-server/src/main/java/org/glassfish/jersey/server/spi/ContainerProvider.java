@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.spi;
 
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
  * Service-provider interface for creating container instances.
@@ -78,18 +78,18 @@ public interface ContainerProvider {
 
     /**
      * Create an container of a given type.
-     * <p>
+     * <p />
      * The container provider SHOULD NOT initiate the web application. The container
      * provider MAY modify the resource configuration.
-     * <p>
+     *
      * @param <T> the type of the container.
      *
      * @return the container, otherwise null if the provider does not support
-     *         the requested <code>type</code>.
+     *     the requested <code>type</code>.
      * @param type the type of the container.
-     * @param application the Web application the container delegates to for
-     *         the handling of HTTP requests.
+     * @param appHandler the Web application handler the container delegates to
+     *     for the handling of HTTP requests.
      * @throws ProcessingException if there is an error creating the container.
      */
-    public <T> T createContainer(Class<T> type, JerseyApplication application) throws ProcessingException;
+    public <T> T createContainer(Class<T> type, ApplicationHandler appHandler) throws ProcessingException;
 }

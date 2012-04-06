@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 
 import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -61,17 +61,17 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
     private static class InMemoryContainer implements TestContainer {
 
         private final URI baseUri;
-        private final JerseyApplication application;
+        private final ApplicationHandler appHandler;
         private static final Logger LOGGER = Logger.getLogger(InMemoryContainer.class.getName());
 
-        private InMemoryContainer(final URI baseUri, final JerseyApplication application) {
+        private InMemoryContainer(final URI baseUri, final ApplicationHandler application) {
             this.baseUri = baseUri;
-            this.application = application;
+            this.appHandler = application;
         }
 
         @Override
         public Client getClient() {
-            return JerseyClientFactory.clientBuilder().transport(new InMemoryTransport(baseUri, application)).build();
+            return JerseyClientFactory.clientBuilder().transport(new InMemoryTransport(baseUri, appHandler)).build();
         }
 
         @Override
@@ -95,7 +95,7 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(final URI baseUri, final JerseyApplication application) throws IllegalArgumentException {
+    public TestContainer create(final URI baseUri, final ApplicationHandler application) throws IllegalArgumentException {
         return new InMemoryContainer(baseUri, application);
     }
 }

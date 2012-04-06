@@ -50,8 +50,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyApplication;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.ResourceBuilder;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -85,7 +85,7 @@ public class App {
 
     }
 
-    public static JerseyApplication createApp() {
+    public static ResourceConfig createApp() {
 
         MediaType[] jsonAndTextTypes = new MediaType[]{MediaType.APPLICATION_JSON_TYPE, MediaType.TEXT_PLAIN_TYPE};
 
@@ -94,9 +94,12 @@ public class App {
                 ClipboardDataProvider.ApplicationJson.class,
                 ClipboardDataProvider.TextPlain.class);
 
-        final JerseyApplication.Builder appBuilder = JerseyApplication.builder(resourceConfig);
+        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
 
-        appBuilder.bind("echo").method("POST").consumes(jsonAndTextTypes).produces(jsonAndTextTypes).to(new Inflector<Request, Response>() {
+        resourceBuilder
+                .path("echo")
+                .method("POST").consumes(jsonAndTextTypes).produces(jsonAndTextTypes)
+                .to(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(Request request) {
@@ -105,6 +108,7 @@ public class App {
             }
         });
 
-        return appBuilder.build();
+        resourceConfig.addResources(resourceBuilder.build());
+        return resourceConfig;
     }
 }

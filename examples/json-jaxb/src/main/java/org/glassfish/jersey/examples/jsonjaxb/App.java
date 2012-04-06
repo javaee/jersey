@@ -39,16 +39,16 @@
  */
 package org.glassfish.jersey.examples.jsonjaxb;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.media.json.JsonJaxbModule;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Utility class which can create {@link JerseyApplication} instance and provides support
@@ -77,11 +77,11 @@ public class App {
         }
     }
 
-    public static JerseyApplication createApp() {
+    public static ResourceConfig createApp() {
         final ResourceConfig rc = new ResourceConfig()
                 .addModules(new JsonJaxbModule())
                 .packages("org.glassfish.jersey.examples.jsonjaxb");
 
-        return JerseyApplication.builder(rc).build();
+        return rc;
     }
 }

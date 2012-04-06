@@ -37,35 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_25_init_2;
+package org.glassfish.jersey.server.spi;
 
+import java.net.URI;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Jersey container service contract.
+ *
+ * The purpose of the container is to configure and host a single Jersey
+ * application.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @see org.glassfish.jersey.server.ApplicationHandler
  */
-public class HelloWorldResourceITCase extends JerseyTest {
+public interface Container {
 
-    @Override
-    protected ResourceConfig configure() {
-        return new ResourceConfig(HelloWorldResource.class);
-    }
+    /**
+     * Return an immutable representation of the current {@link ResourceConfig
+     * configuration}.
+     *
+     * @return current configuration of the hosted Jersey application.
+     */
+    public ResourceConfig getConfiguration();
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
-    }
+    /**
+     * Reload the hosted Jersey application using the current {@link ResourceConfig
+     * configuration}.
+     */
+    public void reload();
 
-    @Test
-    public void testHelloWorld() throws Exception {
-        String s = target().path("helloworld").request().get(String.class);
-        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
-    }
+    /**
+     * Reload the hosted Jersey application using a new {@link ResourceConfig
+     * configuration}.
+     *
+     * @param configuration new configuration used for the reload.
+     */
+    public void reload(ResourceConfig configuration);
 }

@@ -51,14 +51,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Request.RequestBuilder;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
@@ -75,7 +77,7 @@ import org.glassfish.grizzly.utils.Charsets;
  *
  * @author Jakub Podlesak
  */
-public final class GrizzlyHttpContainer extends HttpHandler {
+public final class GrizzlyHttpContainer extends HttpHandler implements Container {
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
@@ -197,15 +199,15 @@ public final class GrizzlyHttpContainer extends HttpHandler {
         }
     }
     //
-    private JerseyApplication application;
+    private final ApplicationHandler appHandler;
 
     /**
      * Creates a new Grizzly container.
      *
      * @param application Jersey application to be deployed on Grizzly container.
      */
-    GrizzlyHttpContainer(final JerseyApplication application) {
-        this.application = application;
+    GrizzlyHttpContainer(final ApplicationHandler application) {
+        this.appHandler = application;
     }
 
     // HttpRequestProcessor
@@ -216,11 +218,26 @@ public final class GrizzlyHttpContainer extends HttpHandler {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
             ContainerRequestContext conteinerContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
                     getSecurityContext(request), null);
-            application.apply(conteinerContext);
+            appHandler.apply(conteinerContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
             logger.debugLog("GrizzlyHttpContaner.service(...) finished");
         }
+    }
+
+    @Override
+    public ResourceConfig getConfiguration() {
+        return appHandler.getConfiguration();
+    }
+
+    @Override
+    public void reload() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void reload(ResourceConfig configuration) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     private SecurityContext getSecurityContext(final Request request) {

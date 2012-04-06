@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.GET;
@@ -45,11 +44,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -60,15 +58,15 @@ import static org.junit.Assert.assertEquals;
  */
 public class SubResourceNullTest {
 
-    JerseyApplication app;
+    ApplicationHandler app;
 
-    private JerseyApplication.Builder createApplicationBuilder(Class<?>... classes) {
-        final ResourceConfig resourceConfig = new ResourceConfig(classes);
-        return JerseyApplication.builder(resourceConfig);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Path("/parent")
     static public class Parent {
+
         @Path("{child}")
         public Child getChild(@PathParam("child") boolean child) {
             if (child) {
@@ -80,6 +78,7 @@ public class SubResourceNullTest {
     }
 
     static public class Child {
+
         @GET
         public String getMe() {
             return "child";
@@ -88,10 +87,10 @@ public class SubResourceNullTest {
 
     @Test
     public void testSubResourceNull() throws Exception {
-        app = createApplicationBuilder(Parent.class).build();
+        app = createApplication(Parent.class);
 
-        assertEquals("child", app.apply(Requests.from("/parent/true","GET").build()).get().readEntity(String.class));
+        assertEquals("child", app.apply(Requests.from("/parent/true", "GET").build()).get().readEntity(String.class));
 
-        assertEquals(404, app.apply(Requests.from("/parent/false","GET").build()).get().getStatus());
+        assertEquals(404, app.apply(Requests.from("/parent/false", "GET").build()).get().getStatus());
     }
 }

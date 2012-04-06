@@ -39,18 +39,20 @@
  */
 package org.glassfish.jersey.test.jdkhttp;
 
-import com.sun.net.httpserver.HttpServer;
-import org.glassfish.jersey.server.JerseyApplication;
-import org.glassfish.jersey.test.spi.TestContainer;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.glassfish.jersey.internal.ProcessingException;
-
-import javax.ws.rs.client.Client;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import com.sun.net.httpserver.HttpServer;
 
 /**
  * Factory for testing {@link org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer}.
@@ -62,12 +64,12 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
     private static class JdkHttpServerTestContainer implements TestContainer {
 
         private final URI uri;
-        private final JerseyApplication application;
+        private final ApplicationHandler appHandler;
         private HttpServer server;
         private static final Logger LOGGER = Logger.getLogger(JdkHttpServerTestContainer.class.getName());
 
-        private JdkHttpServerTestContainer(URI uri, JerseyApplication application) {
-            this.application = application;
+        private JdkHttpServerTestContainer(URI uri, ApplicationHandler application) {
+            this.appHandler = application;
             this.uri = uri;
         }
 
@@ -88,7 +90,7 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
             }
 
             try {
-                this.server = JdkHttpServerFactory.createHttpServer(uri, application);
+                this.server = JdkHttpServerFactory.createHttpServer(uri, appHandler);
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }
@@ -104,7 +106,7 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(URI uri, JerseyApplication application) throws IllegalArgumentException {
+    public TestContainer create(URI uri, ApplicationHandler application) throws IllegalArgumentException {
         return new JdkHttpServerTestContainer(uri, application);
     }
 }

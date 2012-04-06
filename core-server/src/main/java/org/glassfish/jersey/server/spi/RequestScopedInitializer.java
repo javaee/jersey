@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.spi;
 
 import org.glassfish.hk2.Services;
 
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
  * Custom initialization provider that is guaranteed to be run from within an active

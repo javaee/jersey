@@ -65,7 +65,7 @@ public class CookieParamAsCookieTest extends AbstractTest {
     @Path("/")
     public static class CookieTypeResource {
         @POST
-        public void post(
+        public String post(
                 @Context HttpHeaders h,
                 @CookieParam("one") Cookie one,
                 @CookieParam("two") Cookie two,
@@ -82,6 +82,8 @@ public class CookieParamAsCookieTest extends AbstractTest {
             assertEquals(2, cs.size());
             assertEquals("value_one", cs.get("one").getValue());
             assertEquals("value_two", cs.get("two").getValue());
+
+            return "content";
         }
     }
 
@@ -92,6 +94,6 @@ public class CookieParamAsCookieTest extends AbstractTest {
         Cookie one = new Cookie("one", "value_one");
         Cookie two = new Cookie("two", "value_two");
 
-        apply(Requests.from("/", "POST").cookie(one).cookie(two).build());
+        assertEquals("content", apply(Requests.from("/", "POST").cookie(one).cookie(two).build()).readEntity(String.class));
     }
 }

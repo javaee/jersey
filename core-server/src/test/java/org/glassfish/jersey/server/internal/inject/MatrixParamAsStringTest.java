@@ -280,33 +280,33 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringListGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringList.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/;args=a;args=b;args=c", "GET").
                         entity("content").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testStringListEmptyGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListEmpty.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/;args;args;args", "GET").
                         accept("application/stringlist").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testListGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringList.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/;args=a;args=b;args=c", "GET").
                         accept("application/list").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
@@ -327,64 +327,64 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringDefaultOverride() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringDefaultOverride.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/;arg1=d;arg2=e;arg3=f", "GET").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testStringListEmptyDefault() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testListEmptyDefault() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/list").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testStringListDefault() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListDefault.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testListDefault() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListDefault.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/", "GET").
                         accept("application/list").
                         build()
-        );
+        ).readEntity(String.class));
     }
 
     @Test
     public void testListDefaultOverride() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
-        apply(
+        assertEquals("content", apply(
                 Requests.from("/;args=b", "GET").
                         accept("application/list").
                         build()
-        );
+        ).readEntity(String.class));
     }
 }

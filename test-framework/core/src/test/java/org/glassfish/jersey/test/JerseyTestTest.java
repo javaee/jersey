@@ -41,7 +41,7 @@ package org.glassfish.jersey.test;
 
 import org.glassfish.hk2.BinderFactory;
 import org.glassfish.hk2.Module;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -72,7 +72,7 @@ public class JerseyTestTest {
     public static class MyTestContainerFactory implements TestContainerFactory {
 
         @Override
-        public TestContainer create(URI baseUri, JerseyApplication application) throws IllegalArgumentException {
+        public TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException {
             return new TestContainer() {
 
                 @Override
@@ -107,7 +107,7 @@ public class JerseyTestTest {
     private static class MyJerseyTest extends JerseyTest {
 
         private MyJerseyTest() throws TestContainerException {
-            super(JerseyApplication.builder(new ResourceConfig(MyResource.class).addModules(new MyModule())).build());
+            super(new ResourceConfig(MyResource.class).addModules(new MyModule()));
         }
     }
 

@@ -43,10 +43,10 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
@@ -62,13 +62,25 @@ public class GrizzlyHttpServerFactory {
     /**
      * Creates HttpServer instance.
      *
-     * @param uri uri on which the {@link JerseyApplication} will be deployed.
-     * @param application {@link JerseyApplication} to be deployed.
+     * @param uri URI on which the Jersey web application will be deployed.
+     * @param configuration web application configuration.
      * @return newly created {@link HttpServer}.
      * @throws ProcessingException
      */
-    public static HttpServer createHttpServer(final URI uri, final JerseyApplication application) throws ProcessingException {
-        return _createHttpServer(uri, ContainerFactory.createContainer(HttpHandler.class, application));
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
+        return createHttpServer(uri, ContainerFactory.createContainer(GrizzlyHttpContainer.class, configuration));
+    }
+
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri URI on which the Jersey web application will be deployed.
+     * @param appHandler web application handler.
+     * @return newly created {@link HttpServer}.
+     * @throws ProcessingException
+     */
+    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
+        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler));
     }
 
     /**
@@ -79,10 +91,10 @@ public class GrizzlyHttpServerFactory {
      * @throws ProcessingException
      */
     public static HttpServer createHttpServer(final URI uri) throws ProcessingException {
-        return _createHttpServer(uri, null);
+        return createHttpServer(uri, (GrizzlyHttpContainer) null);
     }
 
-    private static HttpServer _createHttpServer(final URI u, final HttpHandler handler)
+    private static HttpServer createHttpServer(final URI u, final GrizzlyHttpContainer handler)
             throws ProcessingException {
         final String host = (u.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST
                 : u.getHost();
