@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.InstanceTypePair;
@@ -215,7 +216,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
             if (isContentStreamBuffered) {
                 contentStream.reset();
-            } else if (!(t instanceof Closeable)) {
+            } else if (!(t instanceof Closeable)  && !(t instanceof Source)) {
                 invalidateContentStream();
             }
 
