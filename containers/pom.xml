@@ -60,6 +60,7 @@
         <module>grizzly2-http</module>
         <module>grizzly2-servlet</module>
         <module>jdk-http</module>
+        <module>jersey-servlet-core</module>
         <module>jersey-servlet</module>
     </modules>
 
