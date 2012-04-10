@@ -54,7 +54,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -67,7 +66,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.glassfish.hk2.Factory;
-
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -90,7 +88,7 @@ public final class SourceProvider {
 
         @Override
         public boolean isReadable(Class<?> t, Type gt, Annotation[] as, MediaType mediaType) {
-            return StreamSource.class == t;
+            return StreamSource.class == t || Source.class == t;
         }
 
         @Override
@@ -185,19 +183,19 @@ public final class SourceProvider {
     }
 
     /**
-     * Provider for marshalling {@link Source} instances.
+     * Provider for marshaling {@link Source} instances.
      */
     @Produces({"application/xml", "text/xml", "*/*"})
     @Consumes({"application/xml", "text/xml", "*/*"})
     public static final class SourceWriter implements MessageBodyWriter<Source> {
 
-        private final Factory<SAXParserFactory> spf;
-        private final Factory<TransformerFactory> tf;
+        private final Factory<SAXParserFactory> saxParserFactory;
+        private final Factory<TransformerFactory> transformerFactory;
 
         public SourceWriter(@Context Factory<SAXParserFactory> spf,
                 @Context Factory<TransformerFactory> tf) {
-            this.spf = spf;
-            this.tf = tf;
+            this.saxParserFactory = spf;
+            this.transformerFactory = tf;
         }
 
         @Override
@@ -211,18 +209,22 @@ public final class SourceProvider {
         }
 
         @Override
-        public void writeTo(Source o, Class<?> t, Type gt, Annotation[] as,
-                MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                OutputStream entityStream) throws IOException {
+        public void writeTo(Source source, Class<?> t, Type gt, Annotation[] as, MediaType mediaType,
+                MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException {
 
             try {
-                if (o instanceof StreamSource) {
-                    StreamSource s = (StreamSource) o;
-                    InputSource is = new InputSource(s.getInputStream());
-                    o = new SAXSource(spf.get().newSAXParser().getXMLReader(), is);
+                if (source instanceof StreamSource) {
+                    StreamSource stream = (StreamSource) source;
+                    InputSource inputStream = new InputSource(stream.getInputStream());
+                    inputStream.setCharacterStream(inputStream.getCharacterStream());
+                    inputStream.setPublicId(stream.getPublicId());
+                    inputStream.setSystemId(source.getSystemId());
+                    source = new SAXSource(saxParserFactory.get().newSAXParser().getXMLReader(), inputStream);
                 }
+
                 StreamResult sr = new StreamResult(entityStream);
-                tf.get().newTransformer().transform(o, sr);
+                transformerFactory.get().newTransformer().transform(source, sr);
+
             } catch (SAXException ex) {
                 throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
             } catch (ParserConfigurationException ex) {
