@@ -235,7 +235,7 @@ public class ApplicationBuilderTest {
 
         @Override
         public ResourceA readFrom(Class<ResourceA> type, Type genericType, Annotation[] annotations,
-        MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
+                MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
                 throws IOException, WebApplicationException {
             return null;
         }
@@ -277,7 +277,7 @@ public class ApplicationBuilderTest {
         final ResourceConfig resourceConfig = new ResourceConfig(ErrornousResource.class);
         try {
             ApplicationHandler server = new ApplicationHandler(resourceConfig);
-            assertTrue("Jersey server initialization should have failed: "+ server, false);
+            assertTrue("Jersey server initialization should have failed: " + server, false);
         } catch (Exception e) {
         }
     }

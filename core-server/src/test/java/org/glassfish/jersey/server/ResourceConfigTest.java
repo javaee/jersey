@@ -39,14 +39,26 @@
  */
 package org.glassfish.jersey.server;
 
-import org.junit.Test;
+import java.util.concurrent.ExecutionException;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
-import static org.junit.Assert.assertEquals;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class ResourceConfigTest {
+
+    private static final String BASE_URI = "http://localhost:8080/base/";
 
     @Test
     public void testGetElementsDefault1() {
@@ -77,5 +89,57 @@ public class ResourceConfigTest {
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b,c");
         assertEquals(elements[2], "d\ne");
+    }
+
+    @Test
+    public void testResourceConfigClasses() {
+        ResourceConfig resourceConfig = new MyResourceConfig2();
+        ApplicationHandler ah = new ApplicationHandler(resourceConfig);
+
+        assertEquals(1, ah.getConfiguration().getClasses().size());
+    }
+
+    @Test
+    public void testResourceConfigInjection() throws InterruptedException, ExecutionException {
+        final int rcId = 12345;
+        ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
+        ApplicationHandler ah = new ApplicationHandler(resourceConfig);
+
+        assertSame(resourceConfig, ah.getConfiguration().getApplication());
+
+        Response r = ah.apply(Requests.from("/", "/resource?id=" + rcId, "GET").build()).get();
+        assertEquals(200, r.getStatus());
+        assertTrue("Injected application instance not same as used for building the Jersey handler.",
+                r.readEntity(Boolean.class));
+    }
+
+    public static class MyResourceConfig2 extends ResourceConfig {
+
+        private final int id;
+
+        public MyResourceConfig2() {
+            this(0);
+        }
+
+        public MyResourceConfig2(int id) {
+            this.id = id;
+            addClasses(MyResource.class);
+        }
+    }
+
+    @Path("resource")
+    public static class MyResource {
+
+        @Context
+        Application app;
+
+        @GET
+        public boolean test(@QueryParam("id") int rcId) {
+            if (app instanceof MyResourceConfig2) {
+                return ((MyResourceConfig2) app).id == rcId;
+            }
+
+            return false;
+        }
     }
 }

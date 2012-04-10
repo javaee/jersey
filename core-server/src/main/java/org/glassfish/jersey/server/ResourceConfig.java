@@ -52,21 +52,19 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.hk2.Module;
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
+import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.ResourceClass;
 import org.glassfish.jersey.server.spi.PropertiesProvider;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.Module;
 
-
-import org.glassfish.jersey.server.model.ResourceBuilder;
-import org.glassfish.jersey.server.model.ResourceClass;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -87,6 +85,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      */
     static ResourceConfig unmodifiableCopy(final ResourceConfig config) {
         return new ResourceConfig(config) {
+
+            {
+                super.application = config.getApplication();
+            }
 
             @Override
             public ResourceConfig addClasses(Set<Class<?>> classes) {
@@ -140,7 +142,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
     //
     private transient Set<Class<?>> cachedClasses = null;
+    private transient Set<Class<?>> cachedClassesView = null;
     private transient Set<Object> cachedSingletons = null;
+    private transient Set<Object> cachedSingletonsView = null;
     //
     private ClassLoader classLoader = null;
     //
@@ -292,7 +296,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return addResources(Sets.newHashSet(resources));
     }
 
-
     public ResourceConfig addResources(Set<ResourceClass> resources) {
         this.resources.addAll(resources);
         return this;
@@ -421,14 +424,33 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     private void invalidateProviderCache() {
         this.cachedClasses = null;
+        this.cachedClassesView = null;
         this.cachedSingletons = null;
+        this.cachedSingletonsView = null;
     }
 
-    javax.ws.rs.core.Application getApplication() {
+    /**
+     * Get the original underlying JAX-RS {@link Application} instance used to
+     * initialize the resource configuration instance, or {@code this}, if there
+     * is no underlying application instance.
+     *
+     * @return JAX-RS application instance.
+     */
+    final javax.ws.rs.core.Application getApplication() {
         return (application != null) ? application : this;
     }
 
-    Class<? extends javax.ws.rs.core.Application> getApplicationClass() {
+    /**
+     * Get the original uninstantiated JAX-RS {@link Application} class.
+     *
+     * This class will be used to initialize the resource configuration instance.
+     * If there is no JAX-RS application class set, or if the class has been
+     * instantiated already, the method will return {@code null}.
+     *
+     * @return original uninstantiated JAX-RS application class or {@code null}
+     *     if there is no such class or if the class has been already instantiated.
+     */
+    final Class<? extends javax.ws.rs.core.Application> getApplicationClass() {
         return applicationClass;
     }
 
@@ -437,7 +459,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      *
      * @return set of custom modules.
      */
-    Set<org.glassfish.hk2.Module> getCustomModules() {
+    final Set<org.glassfish.hk2.Module> getCustomModules() {
         return customModules;
     }
 
@@ -450,10 +472,11 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return {@link Set} of resource and provider classes.
      */
     @Override
-    public Set<Class<?>> getClasses() {
-        if (cachedClasses == null) {
+    public final Set<Class<?>> getClasses() {
+        if (cachedClassesView == null) {
             AnnotationAcceptingListener afl = AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(classLoader);
             cachedClasses = new HashSet<Class<?>>();
+            cachedClassesView = Collections.unmodifiableSet(cachedClasses);
 
             for (ResourceFinder resourceFinder : resourceFinders) {
                 while (resourceFinder.hasNext()) {
@@ -500,7 +523,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
             }
         }
 
-        return Sets.newHashSet(cachedClasses);
+        return cachedClassesView;
     }
 
     /**
@@ -512,9 +535,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return {@link Set} of singletons.
      */
     @Override
-    public Set<Object> getSingletons() {
-        if (cachedSingletons == null) {
+    public final Set<Object> getSingletons() {
+        if (cachedSingletonsView == null) {
             cachedSingletons = new HashSet<Object>();
+            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons);
 
             if (application != null) {
                 cachedSingletons.addAll(application.getSingletons());
@@ -523,25 +547,40 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
             cachedSingletons.addAll(singletons);
         }
 
-        return Sets.newHashSet(cachedSingletons);
+        return cachedSingletonsView;
     }
 
-    public Set<ResourceClass> getResources() {
+    /**
+     * Get programmatically modeled resources.
+     *
+     * @return programmatically modeled resources.
+     */
+    public final Set<ResourceClass> getResources() {
         return resourcesView;
     }
 
+    /**
+     * Get resource and provider class loader.
+     *
+     * @return class loader to be used when looking up the resource classes and
+     *     providers.
+     */
+    public final ClassLoader getClassLoader() {
+        return classLoader;
+    }
+
     @Override
-    public Map<String, Object> getProperties() {
+    public final Map<String, Object> getProperties() {
         return propertiesView;
     }
 
     @Override
-    public Object getProperty(String name) {
+    public final Object getProperty(String name) {
         return properties.get(name);
     }
 
     @Override
-    public boolean isProperty(String name) {
+    public final boolean isProperty(String name) {
         if (properties.containsKey(name)) {
             Object value = properties.get(name);
             if (value instanceof Boolean) {

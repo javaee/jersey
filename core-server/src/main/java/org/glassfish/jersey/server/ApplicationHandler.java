@@ -246,7 +246,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
     public ApplicationHandler(Application application) {
         if (application instanceof ResourceConfig) {
-            this.configuration = new ResourceConfig((ResourceConfig) application);
+            this.configuration = (ResourceConfig) application;
         } else {
             this.configuration = new ResourceConfig(application);
         }
