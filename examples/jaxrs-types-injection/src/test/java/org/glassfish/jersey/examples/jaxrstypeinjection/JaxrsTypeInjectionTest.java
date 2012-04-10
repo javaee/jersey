@@ -45,7 +45,6 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
@@ -114,7 +113,6 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testProgrammaticApp() throws Exception {
         String responseEntity = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").get(String.class);
 

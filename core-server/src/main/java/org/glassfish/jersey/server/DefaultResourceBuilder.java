@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.InflectorBasedResourceMethod;
 import org.glassfish.jersey.server.model.PathValue;
@@ -61,6 +62,7 @@ import org.glassfish.jersey.server.model.ResourceClass;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Implementation of the {@link JerseyApplication.Builder Jersey application builder}.
@@ -99,15 +101,13 @@ import com.google.common.collect.Sets;
             @Override
             public BoundResourceBuilder to(final Class<? extends Inflector<Request, Response>> transformationClass) {
                 return to(new Inflector<Request, Response>() {
+                    // gets injected in multiple method acceptor
+                    private @Inject Injector injector;
 
                     @Override
                     public Response apply(Request data) {
-//                        final Inflector<Request, Response> transformation =
-//                                DefaultResourceBuilder.this.services.forContract(Injector.class).get().inject(transformationClass);
-//                        return transformation.apply(data);
-
-                        // TODO implement lazy injector initialization support (perhaps set the injector via a model visitor)?_
-                        throw new UnsupportedOperationException("Inflector-based resource method for a transformation class is not supported yet.");
+                        final Inflector<Request, Response> transformation = injector.inject(transformationClass);
+                        return transformation.apply(data);
                     }
                 });
             }
