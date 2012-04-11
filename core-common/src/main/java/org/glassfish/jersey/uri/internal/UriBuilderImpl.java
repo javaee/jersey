@@ -39,13 +39,6 @@
  */
 package org.glassfish.jersey.uri.internal;
 
-import org.glassfish.jersey.uri.UriComponent;
-import org.glassfish.jersey.uri.UriTemplate;
-
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriBuilderException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -53,10 +46,20 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriBuilderException;
+
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
+import org.glassfish.jersey.uri.UriComponent;
+import org.glassfish.jersey.uri.UriTemplate;
+
 /**
  * An implementation of {@link UriBuilder}.
  *
  * @author Paul Sandoz
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class UriBuilderImpl extends UriBuilder {
 
@@ -81,11 +84,14 @@ public class UriBuilderImpl extends UriBuilder {
     private UriBuilderImpl(UriBuilderImpl that) {
         this.scheme = that.scheme;
         this.ssp = that.ssp;
+        this.authority = that.authority;
         this.userInfo = that.userInfo;
         this.host = that.host;
         this.port = that.port;
         this.path = new StringBuilder(that.path);
+        this.matrixParams = that.matrixParams == null ? null : new MultivaluedStringMap(that.matrixParams);
         this.query = new StringBuilder(that.query);
+        this.queryParams = that.queryParams == null ? null : new MultivaluedStringMap(that.queryParams);
         this.fragment = that.fragment;
     }
 

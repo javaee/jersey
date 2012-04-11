@@ -112,4 +112,18 @@ public class UriBuilderImplTest {
         }
         fail("Expected IllegalArgumentException but no exception was thrown.");
     }
+
+    // regression test for JERSEY-1081
+    @Test
+    public void testReplaceQueryParam() {
+        URI uri = new UriBuilderImpl().path("http://localhost/").replaceQueryParam("foo", "test").build();
+        assertEquals("http://localhost/?foo=test", uri.toString());
+    }
+
+    // regression test for JERSEY-1081
+    @Test
+    public void testReplaceQueryParamAndClone() {
+        URI uri = new UriBuilderImpl().path("http://localhost/").replaceQueryParam("foo", "test").clone().build();
+        assertEquals("http://localhost/?foo=test", uri.toString());
+    }
 }
