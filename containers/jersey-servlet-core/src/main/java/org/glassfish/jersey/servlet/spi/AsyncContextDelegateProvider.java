@@ -60,6 +60,5 @@ public interface AsyncContextDelegateProvider {
      * @param response
      * @return an instance to be used throughout a single response write processing
      */
-    public AsyncContextDelegate createExtension(final HttpServletRequest request, final HttpServletResponse response);
-
+    public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response);
 }

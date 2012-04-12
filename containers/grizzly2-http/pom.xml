@@ -61,6 +61,14 @@
     </dependencies>
 
     <build>
+	<plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+	</plugins>
+
         <resources>
             <resource>
                 <directory>${basedir}/src/main/java</directory>

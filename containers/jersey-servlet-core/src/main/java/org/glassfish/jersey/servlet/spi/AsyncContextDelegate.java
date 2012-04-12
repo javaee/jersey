@@ -45,9 +45,9 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
  * Utilized by the Servlet container response writer to deal with the container async features.
- * Individual instances are created by {@link ResponseWriterAsyncExtensionFactory}.
+ * Individual instances are created by {@link AsyncContextDelegateProvider}.
  *
- * @see ResponseWriterAsyncExtensionFactory
+ * @see AsyncContextDelegateProvider
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */

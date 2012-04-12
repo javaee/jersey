@@ -57,7 +57,7 @@
     <description>Jersey core common packages</description>
 
     <build>
-        <plugins>
+       <plugins>
             <plugin>
                 <groupId>com.sun.istack</groupId>
                 <artifactId>maven-istack-commons-plugin</artifactId>
@@ -68,7 +68,21 @@
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <inherited>true</inherited>
             </plugin>
-        </plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+		<inherited>true</inherited>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>javax.mail.*;resolution:=optional, *</Import-Package>
+                        <Export-Package>org.glassfish.jersey.*;version=${project.version}, com.sun.ws.rs.ext;version=${project.version}</Export-Package>
+                        <Private-Package>org.glassfish.jersey.osgi</Private-Package>
+                    </instructions>
+                    <unpackBundle>true</unpackBundle>
+                </configuration>
+             </plugin>
+         </plugins>
     </build>
 
     <dependencies>
@@ -76,6 +90,13 @@
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
+
+       <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>

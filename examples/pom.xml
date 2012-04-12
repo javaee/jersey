@@ -70,6 +70,8 @@
         <module>json-jackson</module>
         <module>json-jaxb</module>
         <module>json-with-padding</module>
+        <module>osgi-helloworld-webapp</module>
+        <module>osgi-http-service</module>
         <module>server-async</module>
     </modules>
 

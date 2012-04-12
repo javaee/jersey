@@ -71,7 +71,7 @@ public class PushResourceUriAndDelegateTreeAcceptor extends AbstractPushRoutingI
     void pushMatchedToRoutingContext() {
         final RoutingContext routingContext = injector.inject(RoutingContext.class);
         if (rc != null) {
-            routingContext.pushMatchedResource(this.injector.inject(rc.getResourceClass()));
+            routingContext.pushMatchedResource(injector.inject(rc.getResourceClass()));
         }
         routingContext.pushLeftHandPath();
     }

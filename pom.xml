@@ -494,6 +494,27 @@
                         <templateFile>etc/config/copyright.txt</templateFile>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.6</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+                            <_nodefaultversion>false</_nodefaultversion>
+                     </instructions>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>osgi-bundle</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>bundle</goal>
+                                </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <extensions>
@@ -689,6 +710,13 @@
                 <version>${jackson.version}</version>
             </dependency>
 
+           <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>osgi_R4_core</artifactId>
+                <version>1.0</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- Test scope -->
             <dependency>
                 <groupId>junit</groupId>
@@ -702,7 +730,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <jaxrs.api.version>2.0-m03</jaxrs.api.version>
+        <jaxrs.api.version>2.0-m04</jaxrs.api.version>
         <hk2.version>1.6.32</hk2.version>
         <grizzly2.version>2.2.4</grizzly2.version>
         <jackson.version>1.9.2</jackson.version>
@@ -713,6 +741,8 @@
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
         <findbugs.exclude>exclude-common.xml</findbugs.exclude>
+
+        <bnd.plugin.version>2.3.6</bnd.plugin.version>
 
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
 

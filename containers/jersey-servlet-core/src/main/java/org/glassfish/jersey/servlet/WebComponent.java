@@ -81,21 +81,21 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
  * An abstract Web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
- * @author Paul Sandoz
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class WebComponent {
 
-    private static final AsyncContextDelegate DefaultAsyncEXTENSION = new AsyncContextDelegate() {
+    private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
         @Override
-        public void suspend(ContainerResponseWriter writer, long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
+        public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) throws IllegalStateException {
             throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
         }
 
         @Override
-        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
             throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
         }
 
@@ -105,7 +105,7 @@ public class WebComponent {
 
     };
 
-    private AsyncContextDelegateProvider getAsyncExtensionFactory() {
+    private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
 
         for (AsyncContextDelegateProvider factory : appHandler.getServiceProviders().getAll(AsyncContextDelegateProvider.class)) {
             return factory;
@@ -114,8 +114,8 @@ public class WebComponent {
         return new AsyncContextDelegateProvider() {
 
             @Override
-            public AsyncContextDelegate createExtension(HttpServletRequest request, HttpServletResponse response) {
-                return DefaultAsyncEXTENSION;
+            public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
+                return DefaultAsyncDELEGATE;
             }
         };
     }
@@ -178,17 +178,17 @@ public class WebComponent {
     }
     //
     private final ApplicationHandler appHandler;
-    private final AsyncContextDelegateProvider asyncExtensionFactory;
+    private final AsyncContextDelegateProvider asyncExtensionDelegate;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {
         this.appHandler = new ApplicationHandler(createResourceConfig(webConfig, new WebComponentModule()));
-        this.asyncExtensionFactory = getAsyncExtensionFactory();
+        this.asyncExtensionDelegate = getAsyncExtensionDelegate();
     }
 
     public WebComponent(final ResourceConfig resourceConfig) throws ServletException {
         resourceConfig.addModules(new WebComponentModule());
         this.appHandler = new ApplicationHandler(resourceConfig);
-        this.asyncExtensionFactory = getAsyncExtensionFactory();
+        this.asyncExtensionDelegate = getAsyncExtensionDelegate();
     }
 
     /**
@@ -218,7 +218,7 @@ public class WebComponent {
         final Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(false, request, response, asyncExtensionFactory.createExtension(request, response));
+            final ResponseWriter responseWriter = new ResponseWriter(false, request, response, asyncExtensionDelegate.createDelegate(request, response));
 
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
                     getSecurityContext(request), null);

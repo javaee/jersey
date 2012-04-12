@@ -21,6 +21,14 @@ core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceDynamicWi
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceDynamicWithParametersTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceHttpMethodsTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceNullTest.java
+examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/AbstractWebAppTest.java
+examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/WebAppEquinoxTest.java
+examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/WebAppFelixTest.java
+examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/AbstractHttpServiceTest.java
+examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/GrizzlyHttpServiceEquinoxTest.java
+examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/GrizzlyHttpServiceFelixTest.java
+examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceEquinoxTest.java
+examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceFelixTest.java
 
 TODO:
 
@@ -602,9 +610,6 @@ samples/exceptions/src/test/java/com/sun/jersey/samples/exceptions/ExceptionsTes
 samples/extended-wadl-webapp/src/test/java/com/sun/jersey/samples/extendedwadl/ExtendedWadlWebappTest.java
 samples/freemarker/src/test/java/com/sun/jersey/samples/freemarker/FreemarkerTest.java
 samples/groovy/target/generated-sources/groovy-stubs/test/com/sun/jersey/samples/groovy/GroovyResourceTest.java
-samples/helloworld-osgi-webapp/functional-test/src/test/java/com/sun/jersey/samples/helloworld/test/AbstractWebAppTest.java
-samples/helloworld-osgi-webapp/functional-test/src/test/java/com/sun/jersey/samples/helloworld/test/WebAppEquinoxTest.java
-samples/helloworld-osgi-webapp/functional-test/src/test/java/com/sun/jersey/samples/helloworld/test/WebAppFelixTest.java
 samples/helloworld/src/test/java/com/sun/jersey/samples/helloworld/MainTest.java
 samples/helloworld-webapp/src/test/java/com/sun/jersey/samples/helloworld/HelloWorldWebAppTest.java
 samples/https-clientserver-grizzly/src/test/java/com/sun/jersey/samples/https_grizzly/MainTest.java

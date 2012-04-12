@@ -115,11 +115,11 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
     class SubResourceLocatorEntry extends SubResourceEntry {
 
         SubResourceLocator srl;
-        TreeAcceptor aceptor;
+        TreeAcceptor acceptor;
 
-        SubResourceLocatorEntry(SubResourceLocator srl, TreeAcceptor aceptor) {
+        SubResourceLocatorEntry(SubResourceLocator srl, TreeAcceptor acceptor) {
             this.srl = srl;
-            this.aceptor = aceptor;
+            this.acceptor = acceptor;
         }
 
         @Override
@@ -206,9 +206,9 @@ public abstract class RuntimeModelProviderBase extends RuntimeModelProvider {
                                 adaptSubResourceMethodAcceptor(getDeclaringResource(methodInflectors), new MultipleMethodAcceptor(injector, workers, methodInflectors)));
                     }
                     if (srl != null) {
-//                        System.out.printf("4: ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(%s).to(adaptSubResourceLocatorAcceptor(%s, srl.aceptor))\n", srPath, srl.srl.getResource());
+//                        System.out.printf("4: ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(%s).to(adaptSubResourceLocatorAcceptor(%s, srl.acceptor))\n", srPath, srl.srl.getResource());
                         srRoutedBuilder = ((srRoutedBuilder == null) ? rootBuilder : srRoutedBuilder).route(srPath).to(
-                                adaptSubResourceLocatorAcceptor(srl.srl.getResource(), srl.aceptor));
+                                adaptSubResourceLocatorAcceptor(srl.srl.getResource(), srl.acceptor));
                     }
                 }
 //                System.out.printf("2: routedBuilder().route(%s).to(adaptSubResourceAcceptor(%s, srRoutedBuilder.build()))\n", path, declaringResource);

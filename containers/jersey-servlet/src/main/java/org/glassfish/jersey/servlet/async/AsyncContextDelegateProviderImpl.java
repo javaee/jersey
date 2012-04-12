@@ -64,7 +64,7 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 public class AsyncContextDelegateProviderImpl implements AsyncContextDelegateProvider {
 
     @Override
-    public AsyncContextDelegate createExtension(final HttpServletRequest request, final HttpServletResponse response) {
+    public final AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
         return new ExtensionImpl(request, response);
     }
 
