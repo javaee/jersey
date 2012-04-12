@@ -62,7 +62,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, client(), getBaseUri());
+        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
     }
 
     @Test
