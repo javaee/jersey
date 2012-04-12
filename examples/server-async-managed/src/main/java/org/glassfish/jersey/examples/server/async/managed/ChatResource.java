@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,10 @@
  */
 package org.glassfish.jersey.examples.server.async.managed;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Suspend;
@@ -52,30 +50,30 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom Jersey container request processing thread.
+ * Example of a simple fire&forget point-to-point messaging resource.
+ *
+ * This version of the messaging resource does not block when POSTing a new message.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH)
-@Produces("text/plain")
-public class SimpleJerseyExecutorManagedLongRunningResource {
+@Path("chat")
+@Produces("application/json")
+public class ChatResource {
 
-    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
+    private static final BlockingQueue<ExecutionContext> suspended = new ArrayBlockingQueue<ExecutionContext>(5);
     //
-    private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    @Context
-    private ExecutionContext ctx;
+    @Context ExecutionContext ctx;
 
     @GET
     @Suspend
-    public void longGet() {
-        try {
-            Thread.sleep(SLEEP_TIME_IN_MILLIS);
-        } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-        }
-        ctx.resume(NOTIFICATION_RESPONSE);
+    public void getMessage() throws InterruptedException {
+        suspended.put(ctx);
+    }
+
+    @POST
+    public String postMessage(final Message message) throws InterruptedException {
+        final ExecutionContext resumeCtx = suspended.take();
+        resumeCtx.resume(message);
+        return "Sent!";
     }
 }

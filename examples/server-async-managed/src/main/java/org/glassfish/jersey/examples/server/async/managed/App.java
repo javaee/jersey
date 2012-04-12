@@ -54,6 +54,7 @@ import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
+import org.glassfish.jersey.media.json.JsonJacksonModule;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -75,8 +76,10 @@ public class App {
             System.out.println(String.format(
                     "Application started.\n"
                     + "To test long-running asynchronous operation resource, try %s%s\n"
+                    + "To test async chat resource, try %s%s\n"
                     + "Hit enter to stop it...",
-                    BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH));
+                    BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH,
+                    BASE_URI, "chat"));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -87,8 +90,9 @@ public class App {
 
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addClasses(SimpleJerseyExecutorManagedLongRunningResource.class)
+                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
+                .addModules(new JsonJacksonModule())
                 .addModules(new ProcessingExecutorsModule(new ProcessingExecutorsProvider() {
 
                     @Override
@@ -99,7 +103,8 @@ public class App {
 
                     @Override
                     public ExecutorService getRespondingExecutor() {
-                        return null; // execute on same thread
+                        return Executors.newCachedThreadPool(
+                                new ThreadFactoryBuilder().setNameFormat("custom-response-executor-%d").build());
                     }
                 }));
 

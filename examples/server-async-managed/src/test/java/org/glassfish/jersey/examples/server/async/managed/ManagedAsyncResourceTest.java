@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.examples.server.async.managed;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -47,36 +48,54 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
 
-import org.glassfish.jersey.examples.server.async.SimpleLongRunningResource;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.media.json.JsonFeature;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.glassfish.jersey.test.spi.TestContainer;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-//@Ignore
+/**
+ * Test for the asynchronous managed resources example.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
 public class ManagedAsyncResourceTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(ManagedAsyncResourceTest.class.getName());
 
     @Override
     protected ResourceConfig configure() {
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.containerFactory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
+
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
         return App.create();
     }
 
+    @Override
+    protected Client getClient(TestContainer tc, ApplicationHandler application) {
+        Client origClient = super.getClient(tc, application);
+        origClient.configuration().enable(new JsonFeature());
+        return origClient;
+    }
+
     @Test
     public void testLongRunningResource() throws InterruptedException {
         final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH);
-        final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
+        final String expectedResponse = SimpleJerseyExecutorManagedLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 50;
         final int LATCH_WAIT_TIMEOUT = 10;
@@ -129,9 +148,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
         StringBuilder messageBuilder = new StringBuilder();
         for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ")
-                    .append(getResponseEntry.getKey()).append(": ")
-                    .append(getResponseEntry.getValue()).append('\n');
+            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
@@ -143,4 +160,107 @@ public class ManagedAsyncResourceTest extends JerseyTest {
         }
     }
 
+    @Test
+    public void testChatResource() throws InterruptedException {
+        final Target resourceTarget = target().path("chat");
+        final int MAX_MESSAGES = 1;
+        final int LATCH_WAIT_TIMEOUT = 100000;
+        final boolean debugMode = false;
+        final boolean sequentialGet = false;
+        final boolean sequentialPost = false;
+        final Object sequentialGetLock = new Object();
+        final Object sequentialPostLock = new Object();
+
+        final ExecutorService executor = Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+
+        final Map<Integer, Integer> postResponses = new ConcurrentHashMap<Integer, Integer>();
+        final Map<Integer, Message> getResponses = new ConcurrentHashMap<Integer, Message>();
+
+        final CountDownLatch postRequestLatch = new CountDownLatch(MAX_MESSAGES);
+        final CountDownLatch getRequestLatch = new CountDownLatch(MAX_MESSAGES);
+
+        try {
+            for (int i = 0; i < MAX_MESSAGES; i++) {
+                final int requestId = i;
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (debugMode || sequentialPost) {
+                            synchronized (sequentialPostLock) {
+                                post();
+                            }
+                        } else {
+                            post();
+                        }
+                    }
+
+                    private void post() throws InvocationException {
+                        try {
+                            Response response = resourceTarget.request().post(Entity.json(new Message("" + requestId, "" + requestId)));
+                            postResponses.put(requestId, response.getStatus());
+                        } finally {
+                            postRequestLatch.countDown();
+                        }
+                    }
+                });
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (debugMode || sequentialGet) {
+                            synchronized (sequentialGetLock) {
+                                get();
+                            }
+                        } else {
+                            get();
+                        }
+                    }
+
+                    private void get() throws InvocationException {
+                        try {
+                            final Message response = resourceTarget.request("application/json").get(Message.class);
+                            getResponses.put(requestId, response);
+                        } finally {
+                            getRequestLatch.countDown();
+                        }
+                    }
+                });
+            }
+
+            if (debugMode) {
+                postRequestLatch.await();
+                getRequestLatch.await();
+            } else {
+                assertTrue("Waiting for all POST requests to complete has timed out.", postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        StringBuilder messageBuilder = new StringBuilder();
+        for (Map.Entry<Integer, Integer> postResponseEntry : postResponses.entrySet()) {
+            messageBuilder.append("POST response for message ").append(postResponseEntry.getKey()).append(": ").append(postResponseEntry.getValue()).append('\n');
+        }
+        messageBuilder.append('\n');
+        for (Map.Entry<Integer, Message> getResponseEntry : getResponses.entrySet()) {
+            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append(getResponseEntry.getValue()).append('\n');
+        }
+        LOGGER.info(messageBuilder.toString());
+
+        assertEquals(MAX_MESSAGES, postResponses.size());
+        for (Map.Entry<Integer, Integer> postResponseEntry : postResponses.entrySet()) {
+            assertEquals(
+                    "Unexpected POST notification response for message " + postResponseEntry.getKey(),
+                    200, postResponseEntry.getValue().intValue());
+        }
+
+        assertEquals(MAX_MESSAGES, getResponses.size());
+        final Collection<Message> getResponseValues = getResponses.values();
+        for (int i = 0; i < MAX_MESSAGES; i++) {
+            assertTrue("Detected a message loss: " + i, getResponseValues.contains(new Message("" + i, "" + i)));
+        }
+    }
 }

@@ -66,12 +66,14 @@ import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
@@ -521,7 +523,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     }
 
     @SuppressWarnings("unchecked")
-    private void writeResponse(ContainerResponseWriter writer, Request request, Response response) {
+    private void writeResponse(final ContainerResponseWriter writer, Request request, Response response) {
         try {
             final boolean entityExists = response.hasEntity();
 
@@ -533,19 +535,43 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 final MediaType outputType = routingContext.getEffectiveAcceptableType();
                 final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
                 Type entityType = routingContext.getResponseMethodType();
-                if (entityType == null) {
+
+                // TODO this is just a quick workaround for issue #JERSEY-1089
+                //      which needs to be fixed by a common solution
+                if (entityType == null || entityType == Void.class) {
                     final Type genericSuperclass = entity.getClass().getGenericSuperclass();
                     entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
                 }
 
-                final OutputStream os = writer.writeResponseStatusAndHeaders(-1, response);
+                // TODO this is just a quick workaround for issue #JERSEY-1088
+                //      which needs to be fixed by a common solution
+                if (response.getHeaders().getMediaType() == null) {
+                    response = Responses.toBuilder(response).type(outputType).build();
+                }
+
+                final Response outResponse = response;
+                CommittingOutputStream commitingOutput = new CommittingOutputStream() {
+
+                    private OutputStream output;
+
+
+                    @Override
+                    protected void commit() throws IOException {
+                        output = writer.writeResponseStatusAndHeaders(-1, outResponse);
+                    }
+
+                    @Override
+                    protected OutputStream getOutputStream() throws IOException {
+                        return output;
+                    }
+                };
 
                 final MessageBodyWriter bWriter = workers.getMessageBodyWriter(
                         entity.getClass(), entityType, outputAnnotations, outputType);
                 bWriter.writeTo(
                         entity,
                         entity.getClass(),
-                        entityType, outputAnnotations, outputType, response.getMetadata(), os);
+                        entityType, outputAnnotations, outputType, response.getMetadata(), commitingOutput);
             } else {
                 writer.writeResponseStatusAndHeaders(0, response);
             }
