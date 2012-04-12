@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.servlet;
 
+import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -50,19 +50,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -70,31 +61,64 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
+import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
+import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
 /**
  * An abstract Web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
  * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class WebComponent {
 
-    private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
+    private static final AsyncContextDelegate DefaultAsyncEXTENSION = new AsyncContextDelegate() {
+
+        @Override
+        public void suspend(ContainerResponseWriter writer, long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
+            throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
+        }
+
+        @Override
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
+        }
+
+        @Override
+        public void complete() {
+        }
+
+    };
+
+    private AsyncContextDelegateProvider getAsyncExtensionFactory() {
+
+        for (AsyncContextDelegateProvider factory : appHandler.getServiceProviders().getAll(AsyncContextDelegateProvider.class)) {
+            return factory;
+        }
+
+        return new AsyncContextDelegateProvider() {
+
+            @Override
+            public AsyncContextDelegate createExtension(HttpServletRequest request, HttpServletResponse response) {
+                return DefaultAsyncEXTENSION;
+            }
+        };
+    }
 
     private class WebComponentModule extends AbstractModule {
 
@@ -153,15 +177,18 @@ public class WebComponent {
         }
     }
     //
-    private ApplicationHandler appHandler;
+    private final ApplicationHandler appHandler;
+    private final AsyncContextDelegateProvider asyncExtensionFactory;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {
         this.appHandler = new ApplicationHandler(createResourceConfig(webConfig, new WebComponentModule()));
+        this.asyncExtensionFactory = getAsyncExtensionFactory();
     }
 
     public WebComponent(final ResourceConfig resourceConfig) throws ServletException {
         resourceConfig.addModules(new WebComponentModule());
         this.appHandler = new ApplicationHandler(resourceConfig);
+        this.asyncExtensionFactory = getAsyncExtensionFactory();
     }
 
     /**
@@ -191,7 +218,7 @@ public class WebComponent {
         final Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(false, request, response);
+            final ResponseWriter responseWriter = new ResponseWriter(false, request, response, asyncExtensionFactory.createExtension(request, response));
 
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
                     getSecurityContext(request), null);
@@ -200,7 +227,7 @@ public class WebComponent {
 
             // jaxRsRequest, containerContext);
 
-            return responseWriter.jerseyResponse.getStatus();
+            return responseWriter.getResponseStatus();
         } catch (Exception e) {
             // TODO: proper error handling.
             throw new ServletException(e);
@@ -402,172 +429,5 @@ public class WebComponent {
             rc.addFinder(new WebAppResourcesScanner(wc.getServletContext()));
         }
         return rc;
-    }
-
-// TODO is this needed or can be removed?
-//    private ResourceConfig getWebAppResourceConfig(Map<String, Object> props,
-//            WebConfig webConfig) throws ServletException {
-//
-//        return ResourceConfig.builder().addFinder(new WebAppResourcesScanner(webConfig.getServletContext())).build();
-//    }
-    private final static class ResponseWriter implements ContainerResponseWriter {
-
-        private final HttpServletRequest request;
-        private final HttpServletResponse response;
-        private AtomicReference<AsyncContext> asyncContextRef;
-        private final OutputStream out;
-        private final boolean useSetStatusOn404;
-        private Response jerseyResponse;
-        private long contentLength;
-        private final AtomicBoolean statusAndHeadersWritten;
-
-        ResponseWriter(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response) {
-            this.useSetStatusOn404 = useSetStatusOn404;
-            this.request = request;
-            this.response = response;
-            this.out = new CommittingOutputStream() {
-
-                @Override
-                protected void commit() throws IOException {
-                    ResponseWriter.this.writeStatusAndHeaders();
-                }
-
-                @Override
-                protected OutputStream getOutputStream() throws IOException {
-                    return ResponseWriter.this.response.getOutputStream();
-                }
-            };
-
-            this.statusAndHeadersWritten = new AtomicBoolean(false);
-            this.asyncContextRef = new AtomicReference<AsyncContext>();
-        }
-
-        @Override
-        public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler)
-                throws IllegalStateException {
-            final AsyncContext asyncContext = request.startAsync(request, response);
-            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
-            asyncContext.addListener(new AsyncListener() {
-
-                @Override
-                public void onComplete(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
-
-                @Override
-                public void onTimeout(AsyncEvent event) throws IOException {
-                    timeoutHandler.onTimeout(ResponseWriter.this);
-                }
-
-                @Override
-                public void onError(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
-
-                @Override
-                public void onStartAsync(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
-            });
-
-            asyncContextRef.set(asyncContext);
-        }
-
-        @Override
-        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
-            final AsyncContext asyncContext = asyncContextRef.get();
-            if (asyncContext == null) {
-                throw new IllegalStateException("Not suspended.");
-            }
-            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
-        }
-
-        @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, Response jerseyResponse) throws ContainerException {
-            this.contentLength = contentLength;
-            this.jerseyResponse = jerseyResponse;
-            this.statusAndHeadersWritten.set(false);
-            return out;
-        }
-
-        @Override
-        public void commit() {
-            if (!statusAndHeadersWritten.compareAndSet(false, true)) {
-                return;
-            }
-
-            try {
-                // Note that the writing of headers MUST be performed before
-                // the invocation of sendError as on some Servlet implementations
-                // modification of the response headers will have no effect
-                // after the invocation of sendError.
-                writeHeaders();
-
-                final int status = jerseyResponse.getStatus();
-                if (status >= 400) {
-                    if (useSetStatusOn404 && status == 404) {
-                        response.setStatus(status);
-                    } else {
-                        final String reason = jerseyResponse.getStatusEnum().getReasonPhrase();
-                        try {
-                            if (reason == null || reason.isEmpty()) {
-                                response.sendError(status);
-                            } else {
-                                response.sendError(status, reason);
-                            }
-                        } catch (IOException ex) {
-                            throw new ContainerException(
-                                    "I/O exception occured while sending [" + status + "] error response.", ex);
-                        }
-                    }
-                } else {
-                    response.setStatus(status);
-                }
-            } finally {
-                final AsyncContext asyncContext = asyncContextRef.getAndSet(null);
-                if (asyncContext != null) {
-                    asyncContext.complete();
-                }
-            }
-        }
-
-        @Override
-        public void cancel() {
-            if (!response.isCommitted()) {
-                try {
-                    response.reset();
-                } catch (IllegalStateException ex) {
-                    // a race condition externally commiting the response can still occur...
-                    LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
-                } finally {
-                    final AsyncContext asyncContext = asyncContextRef.getAndSet(null);
-                    if (asyncContext != null) {
-                        asyncContext.complete();
-                    }
-                }
-            }
-        }
-
-        private void writeStatusAndHeaders() {
-            if (!statusAndHeadersWritten.compareAndSet(false, true)) {
-                return;
-            }
-
-            writeHeaders();
-            response.setStatus(jerseyResponse.getStatus());
-        }
-
-        private void writeHeaders() {
-            if (contentLength != -1 && contentLength < Integer.MAX_VALUE) {
-                response.setContentLength((int) contentLength);
-            }
-
-            MultivaluedMap<String, String> headers = jerseyResponse.getHeaders().asMap();
-            for (Map.Entry<String, List<String>> e : headers.entrySet()) {
-                for (String v : e.getValue()) {
-                    response.addHeader(e.getKey(), v);
-                }
-            }
-        }
     }
 }

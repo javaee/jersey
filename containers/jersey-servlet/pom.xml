@@ -53,7 +53,7 @@
     <packaging>jar</packaging>
     <name>jersey-container-servlet</name>
 
-    <description>Jersey core servlet implementation</description>
+    <description>Jersey core Servlet 3.x implementation</description>
 
     <dependencies>
         <dependency>
@@ -64,9 +64,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+              </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

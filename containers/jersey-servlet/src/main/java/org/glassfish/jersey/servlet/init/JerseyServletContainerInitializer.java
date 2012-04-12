@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.servlet;
+package org.glassfish.jersey.servlet.init;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +62,7 @@ import javax.servlet.annotation.HandlesTypes;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.google.common.collect.Lists;
 
