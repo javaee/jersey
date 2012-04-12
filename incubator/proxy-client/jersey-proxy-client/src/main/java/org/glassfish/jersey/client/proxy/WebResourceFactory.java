@@ -44,9 +44,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.URI;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -55,12 +53,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
 
 import com.google.common.collect.Maps;
 
@@ -72,8 +68,23 @@ import com.google.common.collect.Maps;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public final class WebResourceFactory implements InvocationHandler {
-    private final Client client;
-    private final URI rootUri;
+    private final Target target;
+
+    /**
+     * Creates a new client-side representation of a resource described by
+     * the interface passed in the first argument.
+     *
+     * Calling this method has the same effect as calling {@code WebResourceFactory.newResource(resourceInterface, rootTarget, false)}.
+     *
+     * @param <C> Type of the resource to be created.
+     * @param resourceInterface Interface describing the resource to be created.
+     * @param target Target pointing to the resource or the parent of the resource.
+     * @return Instance of a class implementing the resource interface that can
+     * be used for making requests to the server.
+     */
+    public static <C> C newResource(Class<C> resourceInterface, Target target) {
+        return newResource(resourceInterface, target, false);
+    }
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -81,47 +92,24 @@ public final class WebResourceFactory implements InvocationHandler {
      *
      * @param <C> Type of the resource to be created.
      * @param resourceInterface Interface describing the resource to be created.
-     * @param client Client to be used for making requests to the server.
-     * @param rootUri Root URI the resource is available at.
+     * @param target Target pointing to the resource or the parent of the resource.
+     * @param ignoreResourcePath If set to true, ignores path annotation on the resource interface (this is used when creating sub-resources)
      * @return Instance of a class implementing the resource interface that can
      * be used for making requests to the server.
      */
-    public static <C> C newResource(Class<C> resourceInterface, Client client, URI rootUri) {
-        // TODO: which classloader should I use??
+    public static <C> C newResource(Class<C> resourceInterface, Target target, boolean ignoreResourcePath) {
         return (C) Proxy.newProxyInstance(resourceInterface.getClassLoader(),
-                new Class[] {resourceInterface}, new WebResourceFactory(client, rootUri));
+                new Class[] {resourceInterface}, new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target)));
     }
 
-    /**
-     * Creates a new client-side representation of a resource described by
-     * the interface passed in the first argument.
-     *
-     * @param <C> Type of the resource to be created.
-     * @param resourceInterface Interface describing the resource to be created.
-     * @param client Client to be used for making requests to the server.
-     * @param rootUri Root URI the resource is available at.
-     * @return Instance of a class implementing the resource interface that can
-     * be used for making requests to the server.
-     */
-    public static <C> C newResource(Class<C> resourceInterface, Client client, String rootUri) {
-        return newResource(resourceInterface, client, URI.create(rootUri));
-    }
-
-    private WebResourceFactory(Client client, URI rootUri) {
-        this.client = client;
-        this.rootUri = rootUri;
+    private WebResourceFactory(Target target) {
+        this.target = target;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // get the interface describing the resource
         Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
-
-        final StringBuilder logMessage = new StringBuilder();
-
-        // get the base uri (rootUri + uri in @Path annotation on the interface)
-        UriBuilder ub = UriBuilder.fromUri(rootUri);
-        addPathFromAnnotation(proxyIfc, ub);
 
         // response type
         Class<?> responseType = method.getReturnType();
@@ -138,10 +126,10 @@ public final class WebResourceFactory implements InvocationHandler {
         }
 
         // create a new UriBuilder appending the @Path attached to the method
-        boolean methodPath = addPathFromAnnotation(method, ub);
+        Target newTarget = addPathFromAnnotation(method, target);
 
         if (httpMethod == null) {
-            if (!methodPath) {
+            if (newTarget == target) {
                 // no path annotation on the method -> fail
                 throw new UnsupportedOperationException("Not a resource method.");
             } else if (!responseType.isInterface()) {
@@ -150,12 +138,9 @@ public final class WebResourceFactory implements InvocationHandler {
                 throw new UnsupportedOperationException("Return type not an interface");
             } else {
                 // the method is a subresource locator
-                return newResource(responseType, client, ub.build());
+                return WebResourceFactory.newResource(responseType, newTarget, true);
             }
         }
-
-        Target target = client.target(ub);
-        logMessage.append("Invoking: client.target(\"").append(ub.build().toString()).append("\")");
 
         // accepted media types
         Produces produces = method.getAnnotation(Produces.class);
@@ -182,13 +167,9 @@ public final class WebResourceFactory implements InvocationHandler {
                     value = ((DefaultValue) ann).value();
                 }
                 if ((ann = anns.get(PathParam.class)) != null) {
-                    target = target.pathParam(((PathParam) ann).value(), value);
-                    logMessage.append(".pathParam(").append(((PathParam) ann).value())
-                            .append(", ").append(value).append(")");
+                    newTarget = newTarget.pathParam(((PathParam) ann).value(), value);
                 } else if ((ann = anns.get((QueryParam.class))) != null) {
-                    target = target.queryParam(((QueryParam) ann).value(), value);
-                    logMessage.append(".queryParam(").append(((QueryParam) ann).value())
-                            .append(", ").append(value).append(")");
+                    newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
                 }
                 // TODO: add support for FormParam, MatrixParam, CookieParam and others
             }
@@ -208,46 +189,33 @@ public final class WebResourceFactory implements InvocationHandler {
         }
 
         Invocation.Builder b;
-        logMessage.append(".request(");
         if (accepts != null) {
-            b = target.request(accepts);
-            boolean first = true;
-            for (String accept : accepts) {
-                if (!first) logMessage.append(", ");
-                logMessage.append("\"").append(accept).append("\"");
-                first = false;
-            }
+            b = newTarget.request(accepts);
         } else {
-            b = target.request();
+            b = newTarget.request();
         }
-        logMessage.append(").method(\"").append(httpMethod).append("\", ");
 
         Object result;
         if (entity != null) {
             if (contentType == null) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM.toString();
             }
-            logMessage.append("Entity.entity(\"").append(entity).append("\", \"")
-                    .append(contentType).append("\"), ");
             result = b.method(httpMethod, Entity.entity(entity, contentType), responseType);
         } else {
             result = b.method(httpMethod, responseType);
         }
-        logMessage.append(responseType.getName()).append(".class)");
-        Logger.getLogger(WebResourceFactory.class.getName()).finer(logMessage.toString());
         return result;
     }
 
-    private boolean addPathFromAnnotation(AnnotatedElement ae, UriBuilder ub) {
+    private static Target addPathFromAnnotation(AnnotatedElement ae, Target target) {
         Path p = ae.getAnnotation(Path.class);
         if (p != null) {
-            ub.path(p.value());
-            return true;
+            target = target.path(p.value());
         }
-        return false;
+        return target;
     }
 
-    private String getHttpMethodName(AnnotatedElement ae) {
+    private static String getHttpMethodName(AnnotatedElement ae) {
         HttpMethod a = ae.getAnnotation(HttpMethod.class);
         return a == null ? null : a.value();
     }
