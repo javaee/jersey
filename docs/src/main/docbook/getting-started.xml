@@ -60,7 +60,7 @@
         <title>Creating a New Project from Maven Archetype</title>
         <para>TODO - add a description on how to get started with archetypes</para>
         <para>If you want to depend on Jersey snapshot versions the following repository needs to be added to the pom:
-            <programlisting language="xml">&lt;repository&gt;
+            <programlisting language="xml" linenumbering="unnumbered">&lt;repository&gt;
     &lt;id&gt;snapshot-repository.java.net&lt;/id&gt;
     &lt;name&gt;Java.net Snapshot Repository for Maven&lt;/name&gt;
     &lt;url&gt;https://maven.java.net/content/repositories/snapshots/&lt;/url&gt;
