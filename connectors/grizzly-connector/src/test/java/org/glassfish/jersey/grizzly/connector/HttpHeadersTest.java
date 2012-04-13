@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.grizzly.connector;
+
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import java.net.URI;
+import javax.ws.rs.*;
+import javax.ws.rs.client.Target;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import static org.junit.Assert.*;
+import org.junit.Test;
+
 /**
- * Jersey Grizzly 2.x container classes.
+ * Tests the headers.
+ *
+ * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-package org.glassfish.jersey.grizzly2;
+public class HttpHeadersTest extends JerseyTest{
+    @Path("/test")
+    public static class HttpMethodResource {
+        @POST
+        public String post(
+                @HeaderParam("Transfer-Encoding") String transferEncoding,
+                @HeaderParam("X-CLIENT") String xClient,
+                @HeaderParam("X-WRITER") String xWriter,
+                String entity) {
+            assertEquals("client", xClient);
+            return "POST";
+        }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(HttpHeadersTest.HttpMethodResource.class);
+    }
+
+    @Test
+    public void testPost() {
+        final URI u = target().getUri();
+        JerseyClient c = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
+        Target t = c.target(u);
+
+        Response response = t.path("test").request().header("X-CLIENT", "client").post(null);
+
+        assertEquals(200, response.getStatus());
+        assertTrue(response.hasEntity());
+    }
+}

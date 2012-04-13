@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jaxb;
+package org.glassfish.jersey.grizzly2.httpserver;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.spi.ContainerProvider;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.HttpHandler;
 
 /**
- * Jersey JAXB example application.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class App {
+public class GrizzlyHttpContainerProvider implements ContainerProvider {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jaxb/");
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("JAXB Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(
-                    String.format("Application started.%nTry out %s%nHit enter to stop it...", BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+    @Override
+    public <T> T createContainer(Class<T> type, ApplicationHandler application) throws ProcessingException {
+        if (HttpHandler.class == type || GrizzlyHttpContainer.class == type) {
+            return type.cast(new GrizzlyHttpContainer(application));
         }
-    }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages(JaxbResource.class.getPackage().getName());
-
-        return rc;
+        return null;
     }
 }

@@ -45,7 +45,7 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import org.glassfish.grizzly.http.server.HttpServer;

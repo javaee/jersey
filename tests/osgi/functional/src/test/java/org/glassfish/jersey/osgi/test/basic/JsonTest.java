@@ -47,33 +47,24 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ClientFactory;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.json.JsonJacksonModule;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-
-import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemPackage;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
-
 import static org.junit.Assert.assertTrue;
-
-
+import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 @RunWith(JUnit4TestRunner.class)
 public class JsonTest {
@@ -95,13 +86,13 @@ public class JsonTest {
                 systemPackage("sun.misc"),
                 // define maven repository
                 repositories(
-                "http://repo1.maven.org/maven2",
-                "http://repository.apache.org/content/groups/snapshots-group",
-                "http://repository.ops4j.org/maven2",
-                "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                "http://repository.springsource.com/maven/bundles/release",
-                "http://repository.springsource.com/maven/bundles/external",
-                "http://maven.java.net/content/repositories/snapshots"),
+                        "http://repo1.maven.org/maven2",
+                        "http://repository.apache.org/content/groups/snapshots-group",
+                        "http://repository.ops4j.org/maven2",
+                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
+                        "http://repository.springsource.com/maven/bundles/release",
+                        "http://repository.springsource.com/maven/bundles/external",
+                        "http://maven.java.net/content/repositories/snapshots"),
 
                 // log
 //                mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),

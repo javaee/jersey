@@ -47,7 +47,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.ProcessingExecutorsModule;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ProcessingExecutorsProvider;

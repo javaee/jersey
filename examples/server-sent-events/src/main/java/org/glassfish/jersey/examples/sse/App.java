@@ -40,7 +40,7 @@
 package org.glassfish.jersey.examples.sse;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.sse.EventChannelWriter;
 import org.glassfish.jersey.server.ResourceConfig;
 

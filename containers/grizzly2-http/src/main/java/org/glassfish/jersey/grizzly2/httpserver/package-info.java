@@ -37,26 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.grizzly2;
-
-import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.spi.ContainerProvider;
-
-import org.glassfish.grizzly.http.server.HttpHandler;
-
 /**
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * Jersey Grizzly 2.x container classes.
  */
-public class GrizzlyHttpContainerProvider implements ContainerProvider {
-
-    @Override
-    public <T> T createContainer(Class<T> type, ApplicationHandler application) throws ProcessingException {
-        if (HttpHandler.class == type || GrizzlyHttpContainer.class == type) {
-            return type.cast(new GrizzlyHttpContainer(application));
-        }
-
-        return null;
-    }
-}
+package org.glassfish.jersey.grizzly2.httpserver;

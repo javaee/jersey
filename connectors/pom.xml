@@ -57,7 +57,7 @@
     <description>Jersey client connection providers umbrella project module</description>
 
     <modules>
-        <!--module></module-->
+        <module>grizzly-connector</module>
     </modules>
 
     <dependencies>
