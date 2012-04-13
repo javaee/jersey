@@ -85,22 +85,23 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
 
     public Response _apply(final Request request) throws IOException {
         final HttpURLConnection uc;
-        // TODO introduce & leverage optional connection factory to support customized connections
+        // TODO introduce & leverage optional connection factory to support customized
+        // connections
         uc = (HttpURLConnection) request.getUri().toURL().openConnection();
         uc.setRequestMethod(request.getMethod());
         // TODO process properties
 
-        if(uc instanceof HttpsURLConnection) {
-            if(request.getProperties().containsKey(ClientProperties.HOSTNAME_VERIFIER)) {
+        if (uc instanceof HttpsURLConnection) {
+            if (request.getProperties().containsKey(ClientProperties.HOSTNAME_VERIFIER)) {
                 final Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);
-                if(o != null && (o instanceof HostnameVerifier)) {
-                    ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier)o);
+                if (o != null && (o instanceof HostnameVerifier)) {
+                    ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier) o);
                 }
             }
 
-            if(request.getProperties().containsKey(ClientProperties.SSL_CONTEXT)) {
+            if (request.getProperties().containsKey(ClientProperties.SSL_CONTEXT)) {
                 final Object o = request.getProperties().get(ClientProperties.SSL_CONTEXT);
-                if(o != null && (o instanceof SSLContext)) {
+                if (o != null && (o instanceof SSLContext)) {
                     ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
                 }
             }
@@ -145,13 +146,14 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
                         }
                     };
                 }
+
             });
         } else {
             writeOutBoundHeaders(request.getHeaders().asMap(), uc);
         }
 
         Response.ResponseBuilder rb =
-                Responses.from(uc.getResponseCode(), request).entity(getInputStream(uc));
+                Responses.from(uc.getResponseCode(), request, getInputStream(uc));
         Responses.fillHeaders(rb, Maps.filterKeys(uc.getHeaderFields(), Predicates.notNull()));
 
         return rb.build();

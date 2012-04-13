@@ -211,13 +211,14 @@ public class WebComponent {
      */
     public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod());
+
+        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
         requestBuilder = addRequestHeaders(request, requestBuilder);
-        requestBuilder = requestBuilder.entity(request.getInputStream());
         final Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(false, request, response, asyncExtensionDelegate.createDelegate(request, response));
+            final ResponseWriter responseWriter = new ResponseWriter(false, request, response,
+                    asyncExtensionDelegate.createDelegate(request, response));
 
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
                     getSecurityContext(request), null);

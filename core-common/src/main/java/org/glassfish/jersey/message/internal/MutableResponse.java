@@ -40,6 +40,9 @@
 package org.glassfish.jersey.message.internal;
 
 
+import java.io.InputStream;
+
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.core.ResponseHeaders;
 
@@ -56,27 +59,55 @@ class MutableResponse extends AbstractMutableMessage<MutableResponse> implements
     private transient javax.ws.rs.core.Response jaxrsView;
     private transient javax.ws.rs.core.Response.ResponseBuilder jaxrsBuilderView;
     private transient javax.ws.rs.core.ResponseHeaders jaxrsHeadersView;
-    //
     private StatusType status;
 
+    /**
+     * Creates new instance of response with status {@link Status#NO_CONTENT NO CONTENT}.
+     */
     public MutableResponse() {
         this.status = javax.ws.rs.core.Response.Status.NO_CONTENT;
     }
 
+    /**
+     * Creates new instance of response initialized from another instance.
+     * @param that Instance from which new instance should be initialized.
+     */
     public MutableResponse(MutableResponse that) {
         super(that);
 
         this.status = that.status;
     }
 
+    /**
+     * Creates new instance initialized with {@code status} and {@code workers}.
+     * @param status Response {@link Status status code}.
+     * @param workers {@link MessageBodyWorkers Message body workers} for this response.
+     */
     MutableResponse(StatusType status, MessageBodyWorkers workers) {
         this.status = status;
         entityWorkers(workers);
     }
 
+    /**
+     * Creates new instance initialized with integer status code and {@code workers}.
+     * @param statusCode Response status code number.
+     * @param workers {@link MessageBodyWorkers Message body workers} for this response.
+     */
     MutableResponse(int statusCode, MessageBodyWorkers workers) {
         this.status = Statuses.from(statusCode);
         entityWorkers(workers);
+    }
+
+    /**
+     * Creates new instance initialized with integer status code and {@code workers} and {@link InputStream external non-intercepted input stream}.
+     * @param statusCode Response status code number.
+     * @param workers {@link MessageBodyWorkers Message body workers} for this response.
+     * @param externalInputStream {@link InputStream external input stream} "from wire" which needs to be intercepted.
+     */
+    MutableResponse(int statusCode, MessageBodyWorkers workers, InputStream externalInputStream) {
+        this.status = Statuses.from(statusCode);
+        entityWorkers(workers);
+        entity().rawEntityStream(externalInputStream);
     }
 
     @Override
@@ -148,4 +179,5 @@ class MutableResponse extends AbstractMutableMessage<MutableResponse> implements
     public MessageBodyWorkers workers() {
         return entityWorkers();
     }
+
 }

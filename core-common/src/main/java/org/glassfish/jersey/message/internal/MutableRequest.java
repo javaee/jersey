@@ -70,6 +70,10 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     // Request method
     private String method;
 
+    /**
+     * Creates new instance initialized from {@link MutableRequest another instance}.
+     * @param that Instance from which new instance will be initialized.
+     */
     MutableRequest(MutableRequest that) {
         super(that);
 
@@ -78,18 +82,51 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
         this.method = that.method;
     }
 
+    /**
+     * Creates new instance initialized with {@code applicationRootUri}, {@code requestUri}, {@code http method}.
+
+     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param requestUri Absolute request URI.
+     * @param method Request HTTP method.
+     */
     MutableRequest(URI baseUri, URI requestUri, String method) {
         this.baseUri = (baseUri != null) ? normalizeBaseUri(baseUri) : DEFAULT_BASE_URI;
         this.requestUri = requestUri.normalize();
         this.method = method;
     }
 
+    /**
+     * Creates new instance initialized with {@code applicationRootUri}, {@code requestUri}, {@code http method}
+     * and {@code entity inputStream}.
+     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param requestUri Absolute request URI.
+     * @param method Request HTTP method.
+     * @param inputStream {@link InputStream Entity content stream}.
+     */
+    MutableRequest(URI baseUri, URI requestUri, String method, InputStream inputStream) {
+        this.baseUri = (baseUri != null) ? normalizeBaseUri(baseUri) : DEFAULT_BASE_URI;
+        this.requestUri = requestUri.normalize();
+        this.method = method;
+        entity().rawEntityStream(inputStream);
+    }
+
+    /**
+     * Creates new instance initialized with URIs created from strings ({@code applicationRootUri}, {@code requestUri})
+     *  and from {@code HTTP method}.
+     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param requestUri Absolute request URI.
+     * @param method Request HTTP method.
+     */
     MutableRequest(String baseUri, String requestUri, String method) {
         this.baseUri = baseUri != null ? normalizeBaseUri(URI.create(baseUri)) : DEFAULT_BASE_URI;
         this.requestUri = URI.create(requestUri).normalize();
         this.method = method;
     }
 
+    /**
+     * Creates new instance of request initialized from the given instance.
+     * @param request {@link MutableRequest} from which new instance should be initialized.
+     */
     MutableRequest(Request request) {
         super(request.headers(), request.content(InputStream.class), request.properties());
 
@@ -114,9 +151,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
                 return decodedRelativePath;
             }
 
-            return decodedRelativePath = UriComponent.decode(
-                    encodedRelativePath(),
-                    UriComponent.Type.PATH);
+            return decodedRelativePath = UriComponent.decode(encodedRelativePath(), UriComponent.Type.PATH);
         } else {
             return encodedRelativePath();
         }
@@ -241,4 +276,5 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     public MessageBodyWorkers workers() {
         return entityWorkers();
     }
+
 }

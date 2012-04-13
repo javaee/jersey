@@ -57,9 +57,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MessageProcessingException;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
+import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -87,43 +85,64 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         }
     };
 
-    public static MutableEntity empty(AbstractMutableMessage<?> message) {
-        return new MutableEntity(message, EMPTY);
-    }
-    // stream representation of contentStream
-    private InputStream contentStream;
-    private boolean isContentStreamBuffered;
-    // java object representation of contentStream
-    private InstanceTypePair<?> instanceType;
-    // reference to enclosing message
-    private AbstractMutableMessage<?> message;
-    // writer annotations
-    private Annotation[] writeAnnotations = EMPTY_ANNOTATIONS;
-    // message body workers to read and write entities
-    @Inject
-    protected MessageBodyWorkers workers;
+    /**
+     * Input stream and its state. State is represented by the {@link Type Type enum} and
+     * is used to control the execution of interceptors.
+     *
+     */
+    private static class ContentStream {
+        private InputStream contentStream;
+        private Type type;
 
-    public MutableEntity(AbstractMutableMessage<?> message, InputStream content) {
-        this.message = message;
-        this.contentStream = content;
-    }
+        public ContentStream(InputStream contentStream) {
+            super();
+            this.contentStream = contentStream;
+            this.type = Type.INTERNAL;
+        }
 
-    public MutableEntity(AbstractMutableMessage<?> message, final InstanceTypePair<?> instanceType) {
-        this.message = message;
-        this.instanceType = instanceType;
-    }
+        public void setBufferedContentStream(InputStream bufferedInputStream) {
+            this.contentStream = bufferedInputStream;
+            this.type = (this.type == Type.EXTERNAL ? Type.EXTERNAL_BUFFERED : Type.BUFFERED);
+        }
 
-    public MutableEntity(AbstractMutableMessage<?> message, final MutableEntity that) {
-        this.message = message;
-        this.instanceType = that.instanceType;
-        this.workers = that.workers; // TODO should we copy workers?
-    }
+        public void setBufferedTempContentStream(InputStream inputStream) {
+            this.contentStream = inputStream;
+            this.type = Type.TEMP_BUFFERED;
+        }
 
-    @Override
-    public boolean isEmpty() {
-        if (contentStream == null) {
-            return instanceType == null;
-        } else {
+        public void setNewContentStream(InputStream contentStream) {
+            this.contentStream = contentStream;
+            this.type = Type.INTERNAL;
+        }
+
+        public void setExternalContentStream(InputStream contentStream) {
+            this.contentStream = contentStream;
+            this.type = Type.EXTERNAL;
+        }
+
+        public InputStream getInputStream() {
+            return contentStream;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public void invalidateContentStream() {
+            if (contentStream != null) {
+                try {
+                    contentStream.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                }
+                this.contentStream = null;
+            }
+        }
+
+        public boolean isEmpty() {
+            if (contentStream == null) {
+                return true;
+            }
             try {
                 if (contentStream.available() > 0) {
                     return false;
@@ -138,14 +157,120 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
                         return true;
                     }
 
-                    PushbackInputStream pbis = new PushbackInputStream(contentStream, 1);
+                    PushbackInputStream pbis;
+                    if (contentStream instanceof PushbackInputStream) {
+                        pbis = (PushbackInputStream) contentStream;
+                    } else {
+                        pbis = new PushbackInputStream(contentStream, 1);
+                        contentStream = pbis;
+                    }
                     pbis.unread(b);
-                    contentStream = pbis;
+
                     return false;
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+        }
+
+        /**
+         * State of the input stream.
+         *
+         * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+         *
+         */
+        public enum Type {
+            /**
+             * External input stream "from wire" which MUST be intercepted before reading
+             * it by MBR.
+             */
+            EXTERNAL(true),
+            /**
+             * Internal input stream which MUST NOT be intercepted before reading by MBR.
+             */
+            INTERNAL(false),
+            /**
+             * Buffered input stream which MUST NOT be intercepted before reading by MBR.
+             */
+            BUFFERED(false),
+            /**
+             * Buffered input stream which MUST be intercepted before reading by MBR.
+             */
+            EXTERNAL_BUFFERED(true),
+            /**
+             * Temporary buffered input stream which MUST NOT be intercepted before
+             * reading by MBR. Temporary buffered input stream is created by buffering the
+             * already read entity in order to read it again as different type.
+             */
+            TEMP_BUFFERED(false);
+
+            private final boolean intercept;
+
+            Type(boolean intercept) {
+                this.intercept = intercept;
+            }
+
+            public boolean intercept() {
+                return intercept;
+            }
+
+        }
+
+    }
+
+    public static MutableEntity empty(AbstractMutableMessage<?> message) {
+        return new MutableEntity(message, EMPTY);
+    }
+
+    // TODO: add support for GenericEntity - see {@link RequestWriter}
+    private InstanceTypePair<?> instanceType;
+    // reference to enclosing message
+    private AbstractMutableMessage<?> message;
+    // writer annotations
+    private Annotation[] writeAnnotations = EMPTY_ANNOTATIONS;
+    // message body workers to read and write entities
+    @Inject
+    protected MessageBodyWorkers workers;
+
+    private ContentStream contentStream;
+
+    /**
+     * Creates new instance initialized with mutable message and input stream.
+     * @param message {@link AbstractMutableMessage} to which this entity belongs to.
+     * @param content {@link InputStream} from which the entity could be read.
+     */
+    public MutableEntity(AbstractMutableMessage<?> message, InputStream content) {
+        this.message = message;
+        this.contentStream = new ContentStream(content);
+    }
+
+    /**
+     * Creates new instance initialized with mutable message, instance and its type.
+     * @param message {@link AbstractMutableMessage} to which this entity belongs to.
+     * @param instanceType Pair which contains instance and its type.
+     */
+    public MutableEntity(AbstractMutableMessage<?> message, final InstanceTypePair<?> instanceType) {
+        this.message = message;
+        this.instanceType = instanceType;
+    }
+
+    /**
+     * Creates new instance created from {@link MutableEntity other MutableEntity instance} initialized with mutable message.
+     * @param message {@link AbstractMutableMessage} to which this entity belongs to.
+     * @param that {@link MutableEntity other MutableEntity instance} from which this instance will be initialized.
+     */
+    public MutableEntity(AbstractMutableMessage<?> message, final MutableEntity that) {
+        this.message = message;
+        this.instanceType = that.instanceType;
+        this.workers = that.workers; // TODO should we copy workers?
+    }
+
+    @Override
+    public boolean isEmpty() {
+        if (contentStream == null || contentStream.getInputStream() == null) {
+            return instanceType == null;
+        } else {
+            return contentStream.isEmpty();
         }
     }
 
@@ -159,7 +284,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public Object content() {
         return content(Object.class);
         // TODO the following might be more suitable:
-//        return (instanceType == null) ? contentStream : content(Object.class);
+        // return (instanceType == null) ? contentStream : content(Object.class);
     }
 
     @Override
@@ -190,19 +315,20 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return null;
         }
 
-        final boolean typeIsAssignableFromMyInstance =
-                (instanceType != null) && (rawType.isAssignableFrom(instanceType.instance().getClass()));
+        final boolean typeIsAssignableFromMyInstance = (instanceType != null)
+                && (rawType.isAssignableFrom(instanceType.instance().getClass()));
 
         if (typeIsAssignableFromMyInstance) {
             return rawType.cast(instanceType.instance());
         }
 
-        if (instanceType != null && !isContentStreamBuffered) {
+        if (instanceType != null && contentStream.getType() != ContentStream.Type.BUFFERED
+                && contentStream.getType() != ContentStream.Type.EXTERNAL_BUFFERED) {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             if (bufferEntityInstance(baos)) {
                 return null;
             } else {
-                contentStream = new ByteArrayInputStream(baos.toByteArray());
+                contentStream.setBufferedTempContentStream(new ByteArrayInputStream(baos.toByteArray()));
             }
         }
 
@@ -213,22 +339,15 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
         final MediaType mediaType = getMsgContentType();
 
-        final MessageBodyReader<T> br = workers.getMessageBodyReader(rawType, type, readAnnotations, mediaType);
-        if (br == null) {
-            throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(mediaType,
-                    rawType));
-        }
-
         try {
-            T t = br.readFrom(rawType, type, readAnnotations, mediaType, message.headers(), contentStream);
-            if (br instanceof CompletableReader) {
-                t = ((CompletableReader<T>) br).complete(t);
-            }
+            T t = (T) workers.readFrom(GenericType.<T> of(rawType, type), readAnnotations, mediaType, message.headers(),
+                    message.properties(), contentStream.getInputStream(), contentStream.getType().intercept());
 
-            if (isContentStreamBuffered) {
-                contentStream.reset();
-            } else if (!(t instanceof Closeable)  && !(t instanceof Source)) {
-                invalidateContentStream();
+            if (contentStream.getType() == ContentStream.Type.BUFFERED
+                    || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
+                contentStream.getInputStream().reset();
+            } else if (!(t instanceof Closeable) && !(t instanceof Source)) {
+                contentStream.invalidateContentStream();
             }
 
             instanceType = InstanceTypePair.of(t);
@@ -265,11 +384,11 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public MutableEntity content(Object content) {
         if (content instanceof InputStream) {
             this.instanceType = null;
-            this.contentStream = InputStream.class.cast(content);
+            contentStream.setNewContentStream(InputStream.class.cast(content));
             return this;
         }
 
-        invalidateContentStream();
+        contentStream.invalidateContentStream();
         if (content != null) {
             this.instanceType = InstanceTypePair.of(content);
         } else {
@@ -278,9 +397,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return this;
     }
 
+    public void rawEntityStream(InputStream inputStream) {
+        contentStream.setExternalContentStream(inputStream);
+
+    }
+
     @Override
     public MutableEntity content(Object content, Type type) {
-        invalidateContentStream();
+        contentStream.invalidateContentStream();
         if (content != null) {
             this.instanceType = InstanceTypePair.of(content, type);
         } else {
@@ -291,7 +415,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public <T> MutableEntity content(Object content, GenericType<T> type) {
-        invalidateContentStream();
+        contentStream.invalidateContentStream();
         if (content != null) {
             this.instanceType = InstanceTypePair.of(content, type.getType());
         } else {
@@ -303,32 +427,33 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     @Override
     public void bufferEntity() throws MessageProcessingException {
         try {
-            if (((contentStream == null || contentStream.available() <= 0) && instanceType == null) || isContentStreamBuffered) {
+            if (((contentStream.getInputStream() == null || contentStream.getInputStream().available() <= 0) && instanceType == null)
+                    || contentStream.getType() == ContentStream.Type.BUFFERED
+                    || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
                 return;
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            if (contentStream != null) {
+            if (contentStream.getInputStream() != null) {
                 try {
-                    ReaderWriter.writeTo(contentStream, baos);
+                    ReaderWriter.writeTo(contentStream.getInputStream(), baos);
                 } finally {
-                    invalidateContentStream();
+                    contentStream.invalidateContentStream();
                 }
             } else {
-                // instanceType != null && contentStream == null
 
                 if (bufferEntityInstance(baos)) {
                     return;
                 }
             }
 
-            contentStream = new ByteArrayInputStream(baos.toByteArray());
-            isContentStreamBuffered = true;
+            contentStream.setBufferedContentStream(new ByteArrayInputStream(baos.toByteArray()));
         } catch (IOException ex) {
             throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFERING_FAILED(), ex);
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private boolean bufferEntityInstance(ByteArrayOutputStream baos) {
         final Type myInstanceType = instanceType.type();
         final Object myInstance = instanceType.instance();
@@ -337,20 +462,20 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         }
 
         final MediaType mediaType = getMsgContentType();
-
-        final MessageBodyWriter writer = workers.getMessageBodyWriter(myInstance.getClass(), myInstanceType, writeAnnotations, mediaType);
-        if (writer == null) {
-            // TODO throw an exception?
+        try {
+            workers.writeTo(instanceType.instance(), GenericType.of(myInstance.getClass(), myInstanceType), writeAnnotations,
+                    mediaType, (MultivaluedMap) message.headers(), message.properties(), baos, null, false);
+            baos.close();
+        } catch (MessageBodyProviderNotFoundException nfe) {
+            // TODO: this should not return true but throw an exception (which will cause
+            // some tests to fail)
+            // this hotfix silently ignores when buffering entity fails.
+            Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, nfe);
             return true;
-        } else {
-            try {
-                writer.writeTo(instanceType.instance(), myInstance.getClass(), myInstanceType, writeAnnotations, mediaType, null, baos);
-                baos.close();
-            } catch (IOException ex) {
-                Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (WebApplicationException ex) {
-                Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        } catch (IOException ex) {
+            Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (WebApplicationException ex) {
+            Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
@@ -369,14 +494,4 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return workers;
     }
 
-    private void invalidateContentStream() {
-        if (contentStream != null) {
-            try {
-                contentStream.close();
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
-            }
-            this.contentStream = null;
-        }
-    }
 }

@@ -51,14 +51,16 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
+import org.glassfish.jersey.message.internal.Requests;
 
 /**
  * A request writer for writing header values and a request entity.
@@ -76,25 +78,11 @@ public class RequestWriter {
     /**
      * A listener for listening to events when writing a request entity.
      */
-    // TODO how to register/obtain the listener in a generic way?
-    protected interface RequestEntityWriterListener {
+    // TODO how to register/obtain the listenerin a generic way?
+    protected interface RequestEntityWriterListener extends MessageBodySizeCallback {
 
         /**
-         * Called when the size of the request entity is obtained.
-         * <p>
-         * Enables the appropriate setting of HTTP headers
-         * for the size of the request entity and/or configure an appropriate
-         * transport encoding.
-         *
-         * @param size the size, in bytes, of the request entity, otherwise -1
-         *        if the size cannot be determined before serialization.
-         * @throws java.io.IOException
-         */
-        void onRequestEntitySize(long size) throws IOException;
-
-        /**
-         * Called when the output stream is required to write the request
-         * entity.
+         * Called when the output stream is required to write the request entity.
          *
          * @return the output stream to write the request entity.
          * @throws java.io.IOException
@@ -138,7 +126,7 @@ public class RequestWriter {
         private final Request request;
         private final Object entity;
         private final Type entityType;
-        private MediaType mediaType;
+        private final MediaType mediaType;
         private final long size;
         private final MessageBodyWriter writer;
 
@@ -239,7 +227,7 @@ public class RequestWriter {
      * @throws java.io.IOException
      */
     @SuppressWarnings("unchecked")
-    protected void writeRequestEntity(Request request, RequestEntityWriterListener listener) throws IOException {
+    protected void writeRequestEntity(Request request, final RequestEntityWriterListener listener) throws IOException {
         Object entity = request.getEntity();
         if (entity == null) {
             return;
@@ -254,31 +242,26 @@ public class RequestWriter {
             final Type genericSuperclass = entity.getClass().getGenericSuperclass();
             entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
         }
-        final Class entityClass = entity.getClass();
+        final Class<?> entityClass = entity.getClass();
 
 
         request = ensureMediaType(entityClass, entityType, request);
         final MediaType mediaType = request.getHeaders().getMediaType();
+        final MultivaluedMap<String, String> headers = request.getHeaders().asMap();
 
-        final MessageBodyWriter writer = Requests.getMessageWorkers(request)
-                .getMessageBodyWriter(entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
-        if (writer == null) {
-            throw new ClientException(
-                    "A message body writer for Java type, " + entity.getClass()
-                    + ", and MIME media type, " + mediaType + ", was not found");
+        MessageBodyWorkers.MessageBodySizeCallback sizeCallback = null;
+        if (headers.containsKey(HttpHeaders.CONTENT_ENCODING)) {
+            listener.onRequestEntitySize(-1);
+        } else {
+            sizeCallback = listener;
         }
 
-        final MultivaluedMap<String, String> headers = request.getHeaders().asMap();
-        final long size = headers.containsKey(HttpHeaders.CONTENT_ENCODING)
-                ? -1
-                : writer.getSize(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
-        listener.onRequestEntitySize(size);
-
-        // TODO handlers?
+        MessageBodyWorkers workers = Requests.getMessageWorkers(request);
         final OutputStream out = listener.onGetOutputStream();
         try {
-            writer.writeTo(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType, headers, out);
-            out.flush();
+            workers.writeTo(entity, GenericType.of(entityClass, entityType), EMPTY_ANNOTATIONS, mediaType,
+                    (MultivaluedMap) headers, request.getProperties(), out, sizeCallback, true);
+
         } catch (IOException ex) {
             try {
                 out.close();

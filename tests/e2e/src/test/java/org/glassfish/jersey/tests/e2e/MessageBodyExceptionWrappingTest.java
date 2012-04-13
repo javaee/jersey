@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,69 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.tests.e2e;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertEquals;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import java.io.InputStream;
+
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Target;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.transform.stream.StreamSource;
+
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Test;
 
 /**
- * Hello world!
+ *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-public class App {
+public class MessageBodyExceptionWrappingTest extends JerseyTest {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "helloworld";
+    @Override
+    protected ResourceConfig configure() {
+        return new ResourceConfig(TestResource.class);
+    }
 
-    public static void main(String[] args) {
+    /**
+     * Tests whether fail of message body writer causes throwing exception. Previously the
+     * exception was not thrown and 500 status code was returned in the response.
+     *
+     */
+    @Test
+    public void testWrapping() {
+        Target resource = target().path("test");
+        StreamSource source = new StreamSource() {
+            @Override
+            public InputStream getInputStream() {
+                throw new WebApplicationException();
+            }
+        };
+        boolean exceptionThrown = false;
         try {
-            System.out.println("\"Hello World\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+            Response response = resource.request().post(Entity.entity(source, MediaType.TEXT_XML_TYPE));
+            System.out.println(response.getStatus());
+        } catch (Exception e) {
+            exceptionThrown = true;
         }
 
+        assertEquals(true, exceptionThrown);
     }
+
+    @Path("test")
+    public static class TestResource {
+
+        @POST
+        public StreamSource post(StreamSource streamSource) {
+            return streamSource;
+        }
+    }
+
 }

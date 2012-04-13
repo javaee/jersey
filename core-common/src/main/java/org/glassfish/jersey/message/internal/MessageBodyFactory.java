@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
@@ -53,10 +56,17 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -142,7 +152,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
             };
-    private ServiceProviders serviceProviders;
+
+    private final ServiceProviders serviceProviders;
     private Map<MediaType, List<MessageBodyReader>> readerProviders;
     private Map<MediaType, List<MessageBodyWriter>> writerProviders;
     private List<MessageBodyReaderPair> readerListProviders;
@@ -151,6 +162,18 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private Map<MediaType, List<MessageBodyWriter>> customWriterProviders;
     private List<MessageBodyReaderPair> customReaderListProviders;
     private List<MessageBodyWriterPair> customWriterListProviders;
+    private Set<ReaderInterceptor> readerInterceptors;
+    private Set<WriterInterceptor> writerInterceptors;
+
+    @Override
+    public Set<ReaderInterceptor> getReaderInterceptors() {
+        return readerInterceptors;
+    }
+
+    @Override
+    public Set<WriterInterceptor> getWriterInterceptors() {
+        return writerInterceptors;
+    }
 
     private static class MessageBodyWriterPair {
 
@@ -179,7 +202,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         initReaders();
         initWriters();
+        initInterceptors();
     }
+
+
 
     /**
      * Compares 2 instances implementing/inheriting the same super-type and returns
@@ -228,6 +254,11 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             distanceMap.put(t.getClass(), distance);
             return distance;
         }
+    }
+
+    private void initInterceptors() {
+        this.readerInterceptors = serviceProviders.getAll(ReaderInterceptor.class);
+        this.writerInterceptors = serviceProviders.getAll(WriterInterceptor.class);
     }
 
     private void initReaders() {
@@ -573,5 +604,25 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         }
         return null;
+    }
+
+    @Override
+    public <T> Object readFrom(GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+            MultivaluedMap<String, String> httpHeaders, Map<String, Object> properties, InputStream entityStream,
+            boolean intercept) throws WebApplicationException, IOException {
+
+        ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(genericType, annotations, mediaType,
+                httpHeaders, properties, entityStream, this, intercept);
+        return executor.proceed();
+    }
+
+    @Override
+    public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
+
+        WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, genericType, annotations, mediaType,
+                httpHeaders, properties, entityStream, this, sizeCallback, intercept);
+        executor.proceed();
     }
 }

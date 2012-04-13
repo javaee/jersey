@@ -49,25 +49,25 @@ import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.MessageBodyProcessingException;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
-
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+
 
 /**
  * Request invoker is the main request to response processing entry point. It invokes
@@ -138,6 +138,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
     //
     @Inject
     private ProcessingExecutorsFactory executorsFactory;
+
 
     /**
      * Default constructor meant to be used by the injection framework.
@@ -250,6 +251,9 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
             Pair<Request, Optional<Inflector<Request, Response>>> result;
             try {
                 result = requestProcessor.apply(requestWithWorkers);
+            } catch (final MessageBodyProcessingException mbpe) {
+                 // Handling of exception from Message Body Providers on client -> just throw it and do not return response
+                throw mbpe;
             } catch (final WebApplicationException wae) {
                 result = Tuples.<Request, Optional<Inflector<Request, Response>>>of(requestWithWorkers,
                         Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {

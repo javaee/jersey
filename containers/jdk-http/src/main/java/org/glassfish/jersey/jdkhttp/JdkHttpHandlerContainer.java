@@ -149,7 +149,8 @@ public class JdkHttpHandlerContainer implements HttpHandler {
 
         final URI requestUri = baseUri.resolve(exchangeUri);
 
-        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod()).entity(exchange.getRequestBody());
+        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
+                exchange.getRequestBody());
 
         /**
          * Define http headers
@@ -270,11 +271,6 @@ public class JdkHttpHandlerContainer implements HttpHandler {
         @Override
         public void commit() {
             if (closed.compareAndSet(false, true)) {
-                try {
-                    exchange.getResponseBody().flush();
-                } catch (IOException ex) {
-                    Logger.getLogger(JdkHttpHandlerContainer.class.getName()).log(Level.SEVERE, "Error during flushing of the response.", ex);
-                }
                 exchange.close();
             }
         }

@@ -289,8 +289,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final URI baseUri = getBaseUri(grizzlyRequest);
 
         // TODO: this is terrible, there must be a way to obtain the original request URI!
-        String originalURI = UriBuilder.fromPath(
-                grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC().toString(Charsets.DEFAULT_CHARSET)).build().toString();
+        String originalURI = UriBuilder
+                .fromPath(
+                        grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC()
+                                .toString(Charsets.DEFAULT_CHARSET)).build().toString();
 
         String queryString = grizzlyRequest.getQueryString();
         if (queryString != null) {
@@ -301,7 +303,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         final String method = grizzlyRequest.getMethod().getMethodString();
 
-        RequestBuilder rb = Requests.from(baseUri, requestUri, method).entity(grizzlyRequest.getInputStream());
+        RequestBuilder rb = Requests.from(baseUri, requestUri, method, grizzlyRequest.getInputStream());
 
         for (String name : grizzlyRequest.getHeaderNames()) {
             for (String value : grizzlyRequest.getHeaders(name)) {

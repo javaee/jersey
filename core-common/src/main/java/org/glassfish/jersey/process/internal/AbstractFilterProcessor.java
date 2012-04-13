@@ -39,17 +39,16 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.client.Configuration;
 
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.ServiceProviders;
-
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
-
+import org.glassfish.jersey.internal.ServiceProviders;
+import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -62,65 +61,43 @@ import org.jvnet.hk2.annotations.Inject;
  */
 abstract class AbstractFilterProcessor<T> {
 
-    /**
-     * Ordering of filters based on their {@link BindingPriority binding priority}
-     * values from lower to higher (ascending).
-     */
-    protected static final int FILTER_ORDER_ASCENDING = 1;
-    /**
-     * Ordering of filters based on their {@link BindingPriority binding priority}
-     * values from higher to lower (descending).
-     */
-    protected static final int FILTER_ORDER_DESCENDING = -1;
+    private PriorityComparator.Order order;
+
     @Inject
     private Services services;
     @Inject
     protected Factory<JerseyFilterContext> filterContextFactory;
-    //
-    private final int ordering;
 
     /**
      * Initialize filter ordering to a default value, i.e.
-     * {@link AbstractFilterProcessor#FILTER_ORDER_ASCENDING}
+     * {@link PriorityComparator.Order#ASCENDING}
      */
     protected AbstractFilterProcessor() {
-        this.ordering = FILTER_ORDER_ASCENDING;
+        this.order = Order.ASCENDING;
     }
 
     /**
      * Initialize filter ordering to a custom value. The value can be either
-     * {@link AbstractFilterProcessor#FILTER_ORDER_ASCENDING} or
-     * {@link AbstractFilterProcessor#FILTER_ORDER_DESCENDING}.
+     * {@link PriorityComparator.Order#ASCENDING} or
+     * {@link PriorityComparator.Order#DESCENDING}.
+     *
+     * @param order Order defining how filters should be sorted.
      */
-    protected AbstractFilterProcessor(int ordering) {
-        this.ordering = ordering;
+    protected AbstractFilterProcessor(Order order) {
+        this.order = order;
     }
 
     /**
      * Get the filter providers for the specific filter contract, sorted by their
      * {@link BindingPriority binding priority}. The filter ordering is determined
-     *
+     * by the order defined in this instance.
      *
      * @param filterContract filter contract.
      * @return sorted list of filter contract providers.
      */
     protected final List<T> getFilters(final Class<T> filterContract) {
         ServiceProviders serviceProviders = services.forContract(ServiceProviders.class).get();
-        return serviceProviders.getAll(filterContract, new Comparator<T>() {
-
-            @Override
-            public int compare(T t, T t1) {
-                return (getPriority(t) - getPriority(t1)) * ordering;
-            }
-
-            private int getPriority(T t) {
-                if (t.getClass().isAnnotationPresent(BindingPriority.class)) {
-                    return t.getClass().getAnnotation(BindingPriority.class).value();
-                } else {
-                    return BindingPriority.USER;
-                }
-            }
-        });
+        return serviceProviders.getAll(filterContract, new PriorityComparator<T>(order));
     }
 
     /**

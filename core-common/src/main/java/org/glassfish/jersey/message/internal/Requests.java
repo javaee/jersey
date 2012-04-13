@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.InputStream;
 import java.net.URI;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -66,6 +67,21 @@ public final class Requests {
      */
     public static RequestBuilder from(URI baseUri, URI requestUri, String method) {
         return new MutableRequest(baseUri, requestUri, method).toJaxrsRequestBuilder();
+    }
+
+    /**
+     * Create new request builder with a base URI.
+     *
+     * @param baseUri base request URI; on the server side represented by the application
+     *            root URI.
+     * @param requestUri absolute request URI.
+     * @param method request method.
+     * @param externalInputStream sets the external raw input stream. This input stream is the stream
+     *            "from wire" and is not intercepted yet.
+     * @return new request builder.
+     */
+    public static RequestBuilder from(URI baseUri, URI requestUri, String method, InputStream externalInputStream) {
+        return new MutableRequest(baseUri, requestUri, method, externalInputStream).toJaxrsRequestBuilder();
     }
 
     /**
@@ -182,8 +198,8 @@ public final class Requests {
     /**
      * Set the {@link MessageBodyWorkers} to the request builder.
      *
-     * @param requestBuilder JAX-RS request builder. It is assumed that the instance
-     *     is represented by an internal Jersey request builder type.
+     * @param requestBuilder JAX-RS request builder. It is assumed that the instance is
+     *            represented by an internal Jersey request builder type.
      * @param workers message body readers and writers lookup factory.
      */
     public static void setMessageWorkers(RequestBuilder requestBuilder, MessageBodyWorkers workers) {
@@ -193,8 +209,8 @@ public final class Requests {
     /**
      * Get the {@link MessageBodyWorkers} from the request.
      *
-     * @param request JAX-RS request. It is assumed that the instance
-     *     is represented by an internal Jersey request builder type.
+     * @param request JAX-RS request. It is assumed that the instance is represented by an
+     *            internal Jersey request builder type.
      * @return message body readers and writers lookup factory.
      */
     public static MessageBodyWorkers getMessageWorkers(Request request) {

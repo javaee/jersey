@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.message.internal;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.core.MessageProcessingException;
 
 /**
- * Hello world!
+ * Jersey exception signaling that error occurred during reading or writing message body (entity).
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class App {
+public class MessageBodyProcessingException extends MessageProcessingException {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "helloworld";
+    private static final long serialVersionUID = 2093175681702118380L;
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Hello World\" Jersey Example App");
+    /**
+     * Creates new instance initialized with exception cause.
+     * @param cause Exception cause.
+     */
+    public MessageBodyProcessingException(Throwable cause) {
+        super(cause);
+    }
 
-            final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
+    /**
+     * Creates new instance initialized with exception message and exception cause.
+     * @param message Message.
+     * @param cause Exception cause.
+     */
+    public MessageBodyProcessingException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    /**
+     * Creates new instance initialized with exception message.
+     * @param message Message.
+     */
+    public MessageBodyProcessingException(String message) {
+        super(message);
     }
 }

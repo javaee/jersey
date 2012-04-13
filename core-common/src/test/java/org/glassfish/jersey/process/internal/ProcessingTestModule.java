@@ -52,9 +52,11 @@ import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.ServiceProvidersModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -114,6 +116,8 @@ public class ProcessingTestModule extends AbstractModule {
         install(
                 new RequestScope.Module(),
                 new ProcessingModule(),
+                new ContextInjectionResolver.Module(),
+                new MessagingModules.MessageBodyProviders(),
                 new ServiceProvidersModule(Singleton.class),
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),

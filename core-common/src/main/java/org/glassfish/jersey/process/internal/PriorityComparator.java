@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.process.internal;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Comparator;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.BindingPriority;
 
 /**
- * Hello world!
+ * Comparator used to sort types by their priorities defined by {@link BindingPriority
+ * annotations BindingPriority}.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @param <T> Type of the elements to be sorted.
  */
-public class App {
+public class PriorityComparator<T> implements Comparator<T> {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "helloworld";
+    /**
+     * Defines which ordering should be used for sorting.
+     */
+    public enum Order {
+        /**
+         * Ascending order. The lowest priority first, the highest priority last.
+         */
+        ASCENDING(1),
+        /**
+         * Ascending order. The highest priority first, the lowest priority last.
+         */
+        DESCENDING(-1);
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Hello World\" Jersey Example App");
+        private int ordering;
 
-            final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        private Order(int ordering) {
+            this.ordering = ordering;
         }
+    }
 
+    private Order order;
+
+    public PriorityComparator(Order order) {
+        this.order = order;
+    }
+
+    @Override
+    public int compare(T o1, T o2) {
+        return (getPriority(o1) - getPriority(o2)) * order.ordering;
+    }
+
+    private int getPriority(T o) {
+        if (o.getClass().isAnnotationPresent(BindingPriority.class)) {
+            return o.getClass().getAnnotation(BindingPriority.class).value();
+        } else {
+            return BindingPriority.USER;
+        }
     }
 }

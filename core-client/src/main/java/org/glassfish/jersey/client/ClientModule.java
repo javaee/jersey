@@ -39,9 +39,12 @@
  */
 package org.glassfish.jersey.client;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -51,15 +54,16 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.process.internal.DefaultRespondingContext;
 import org.glassfish.jersey.process.internal.DefaultStagingContext;
 import org.glassfish.jersey.process.internal.FilterModule;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
 import org.glassfish.jersey.process.internal.LinearRequestProcessor;
+import org.glassfish.jersey.process.internal.ProcessingModule;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -68,10 +72,6 @@ import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.StagingContext;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -112,7 +112,8 @@ public class ClientModule extends AbstractModule {
                 new ExceptionMapperFactory.Module(RequestScope.class),
                 new ContextResolverFactory.Module(RequestScope.class),
                 new JaxrsProviders.Module(),
-                new FilterModule());
+                new FilterModule(),
+                new ExceptionWrapperInterceptor.Module());
 
         // Request/Response staging contexts
         bind(new TypeLiteral<StagingContext<Request>>() {}).to(new TypeLiteral<DefaultStagingContext<Request>>() {})
@@ -149,5 +150,6 @@ public class ClientModule extends AbstractModule {
         bind(new TypeLiteral<Ref<JerseyConfiguration>>() {})
                 .toFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory())
                 .in(RequestScope.class);
+
     }
 }

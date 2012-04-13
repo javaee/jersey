@@ -40,14 +40,14 @@
 
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Function;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ResponseFilter;
 
 import org.glassfish.jersey.internal.MappableException;
 
-import java.util.Map;
+import com.google.common.base.Function;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -56,7 +56,7 @@ import java.util.Map;
 public class ResponseFilterResponder extends AbstractFilterProcessor<ResponseFilter> implements Function<Response, Response> {
 
     public ResponseFilterResponder() {
-        super(FILTER_ORDER_DESCENDING);
+        super(PriorityComparator.Order.DESCENDING);
     }
 
     @Override

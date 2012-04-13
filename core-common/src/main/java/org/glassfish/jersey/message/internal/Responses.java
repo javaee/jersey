@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -88,12 +89,28 @@ public final class Responses {
      *
      * @param statusCode response status code.
      * @param request request for which the response is created.
+     * @param externalInputStream sets the external raw input stream. This input stream is
+     *            the stream "from wire" and is not intercepted yet.
+     * @return response builder instance.
+     */
+    public static ResponseBuilder from(int statusCode, Request request, InputStream externalInputStream) {
+        return new MutableResponse(statusCode, JaxrsRequestView.unwrap(request).workers(), externalInputStream)
+                .toJaxrsResponseBuilder();
+    }
+
+
+    /**
+     * Create a response builder for the request with a given status code.
+     *
+     * @param statusCode response status code.
+     * @param request request for which the response is created.
      *
      * @return response builder instance.
      */
     public static ResponseBuilder from(int statusCode, Request request) {
         return new MutableResponse(statusCode, JaxrsRequestView.unwrap(request).workers()).toJaxrsResponseBuilder();
     }
+
 
     /**
      * Transforms a response to a response builder.
@@ -269,4 +286,5 @@ public final class Responses {
      */
     private Responses() {
     }
+
 }

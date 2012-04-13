@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,77 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.process.internal;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertTrue;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.ws.rs.BindingPriority;
+
+import org.glassfish.jersey.process.internal.PriorityComparator.Order;
+import org.junit.Test;
 
 /**
- * Hello world!
+ * Tests {@link PriorityComparator}.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-public class App {
+public class PriorityComparatorTest {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "helloworld";
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Hello World\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+    @Test
+    public void testPriorityComparator() {
+        List<Object> list = new ArrayList<Object>();
+        list.add(new F1000());
+        list.add(new FF200());
+        list.add(new F0());
+        list.add(new F0());
+        list.add(new F300());
+        list.add(new F1000());
+        list.add(new F100());
+        list.add(new F200());
+        list.add(new F200());
+        Collections.sort(list, new PriorityComparator<Object>(Order.ASCENDING));
+        int max = Integer.MIN_VALUE;
+        for (Object o : list) {
+            int val = o.getClass().getAnnotation(BindingPriority.class).value();
+            assertTrue(val >= max);
+            max = val;
         }
 
+        Collections.sort(list, new PriorityComparator<Object>(Order.DESCENDING));
+        max = Integer.MAX_VALUE;
+        for (Object o : list) {
+            int val = o.getClass().getAnnotation(BindingPriority.class).value();
+            assertTrue(val <= max);
+            max = val;
+        }
     }
+
+    @BindingPriority(0)
+    private static class F0 {
+    }
+
+    @BindingPriority(100)
+    private static class F100 {
+    }
+
+    @BindingPriority(200)
+    private static class F200 {
+    }
+
+    @BindingPriority(200)
+    private static class FF200 {
+    }
+
+    @BindingPriority(300)
+    private static class F300 {
+    }
+
+    @BindingPriority(1000)
+    private static class F1000 {
+    }
+
 }

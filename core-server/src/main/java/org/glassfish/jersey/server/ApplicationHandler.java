@@ -53,6 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -552,7 +553,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         return Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build();
     }
 
-    @SuppressWarnings("unchecked")
     private void writeResponse(final ContainerResponseWriter writer, Request request, Response response) {
         CommittingOutputStream committingOutput = null;
 
@@ -564,13 +564,13 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 final Object entity = response.getEntity();
                 final RoutingContext routingContext = routingContextFactory.get();
 
-                final MediaType outputType = routingContext.getEffectiveAcceptableType();
+                final MediaType outputMediaType = routingContext.getEffectiveAcceptableType();
                 final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
                 Type entityType = routingContext.getResponseMethodType();
 
                 // TODO this is just a quick workaround for issue #JERSEY-1089
                 //      which needs to be fixed by a common solution
-                if (entityType == null || entityType == Void.class) {
+                if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
                     final Type genericSuperclass = entity.getClass().getGenericSuperclass();
                     entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
                 }
@@ -578,7 +578,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 // TODO this is just a quick workaround for issue #JERSEY-1088
                 //      which needs to be fixed by a common solution
                 if (response.getHeaders().getMediaType() == null) {
-                    response = Responses.toBuilder(response).type(outputType).build();
+                    response = Responses.toBuilder(response).type(outputMediaType).build();
                 }
 
                 final Response outResponse = response;
@@ -598,13 +598,9 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                     }
                 };
 
-                final MessageBodyWriter bWriter = workers.getMessageBodyWriter(
-                        entity.getClass(), entityType, outputAnnotations, outputType);
-                // TODO: add check bWriter != null
-                bWriter.writeTo(
-                        entity,
-                        entity.getClass(),
-                        entityType, outputAnnotations, outputType, response.getMetadata(), committingOutput);
+
+                workers.writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
+                        response.getMetadata(), response.getProperties(), committingOutput, null, true);
             } else {
                 writer.writeResponseStatusAndHeaders(0, response);
             }
