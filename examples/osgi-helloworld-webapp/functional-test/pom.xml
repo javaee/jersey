@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
       <groupId>net.java</groupId>
@@ -220,6 +221,31 @@
                   </execution>
                 </executions>
              </plugin>
+
+            <!-- TODO: the following is just a temporary workaround to fix copyright check until JERSEY-1112 gets resolved -->
+             <plugin>
+                 <groupId>org.glassfish.copyright</groupId>
+                 <artifactId>glassfish-copyright-maven-plugin</artifactId>
+                 <version>1.28</version>
+                 <configuration>
+                     <excludeFile>etc/config/copyright-exclude</excludeFile>
+                     <!--svn|mercurial|git - defaults to svn-->
+                     <scm>git</scm>
+                     <!-- turn on/off debugging -->
+                     <debug>false</debug>
+                     <!-- skip files not under SCM-->
+                     <scmOnly>true</scmOnly>
+                     <!-- turn off warnings -->
+                     <warn>true</warn>
+                     <!-- for use with repair -->
+                     <update>false</update>
+                     <!-- check that year is correct -->
+                     <ignoreYear>false</ignoreYear>
+                     <templateFile>etc/config/copyright.txt</templateFile>
+                 </configuration>
+             </plugin>
+             <!-- end of the temporary workaround -->
+
         </plugins>
     </build>
 
