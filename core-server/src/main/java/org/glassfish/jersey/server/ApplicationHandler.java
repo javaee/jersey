@@ -117,9 +117,9 @@ import com.google.common.collect.Sets;
 /**
  * Jersey server-side application handler.
  *
- * Container implementations use the {@code ApplicationHanlder} API to process requests
- * by invoking the {@link #apply(Request, ContainerResponseWriter) apply(request, responseWriter)}
- * method on a configured application handler instance.
+ * Container implementations use the {@code ApplicationHandler} API to process requests
+ * by invoking the {@link #apply(Request) apply(request)} method on a configured application
+ * handler instance.
  *
  * @see ResourceConfig
  * @see org.glassfish.jersey.server.spi.ContainerProvider
@@ -524,6 +524,8 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
     @SuppressWarnings("unchecked")
     private void writeResponse(final ContainerResponseWriter writer, Request request, Response response) {
+        CommittingOutputStream committingOutput = null;
+
         try {
             final boolean entityExists = response.hasEntity();
 
@@ -550,7 +552,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 }
 
                 final Response outResponse = response;
-                CommittingOutputStream commitingOutput = new CommittingOutputStream() {
+                committingOutput = new CommittingOutputStream() {
 
                     private OutputStream output;
 
@@ -571,7 +573,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 bWriter.writeTo(
                         entity,
                         entity.getClass(),
-                        entityType, outputAnnotations, outputType, response.getMetadata(), commitingOutput);
+                        entityType, outputAnnotations, outputType, response.getMetadata(), committingOutput);
             } else {
                 writer.writeResponseStatusAndHeaders(0, response);
             }
@@ -579,7 +581,28 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
             throw new MappableException(ex);
         } finally {
+            commitOutputStream(committingOutput);
             writer.commit();
+        }
+    }
+
+    /**
+     * Commits the {@link CommittingOutputStream} if it wasn't already committed.
+     *
+     * @param committingOutput the {@code CommittingOutputStream} to commit.
+     */
+    private void commitOutputStream(final CommittingOutputStream committingOutput) {
+        if (committingOutput == null) {
+            return;
+        }
+
+        if (!committingOutput.isCommitted()) {
+            try {
+                // Commit the OutputStream.
+                committingOutput.flush();
+            } catch (Exception ioe) {
+                // Do nothing - we are already handling an exception.
+            }
         }
     }
 

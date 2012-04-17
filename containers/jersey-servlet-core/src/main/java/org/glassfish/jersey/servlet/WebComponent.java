@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.servlet;
 
-import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
@@ -61,9 +60,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
@@ -74,8 +70,13 @@ import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
+
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
 
 /**
  * An abstract Web component that may be extended by a Servlet and/or
@@ -405,7 +406,7 @@ public class WebComponent {
      *
      * @param props the properties to pass to the resource configuration.
      * @param wc the web configuration.
-     * @param modules modules to pass to the {@link JerseyApplication} configuration.
+     * @param modules modules to pass to the {@link ApplicationHandler} configuration.
      * @return the default resource configuration.
      * @throws javax.servlet.ServletException in case of any issues with providing
      *     the default resource configuration.

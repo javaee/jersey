@@ -57,7 +57,7 @@ import static org.junit.Assert.assertEquals;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyApplicationTest {
+public class ApplicationHandlerTest {
 
     ApplicationHandler application;
 

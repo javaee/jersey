@@ -97,6 +97,15 @@ public abstract class CommittingOutputStream extends OutputStream {
         this.adaptedOutput = out;
     }
 
+    /**
+     * Determines whether the stream was already committed or not.
+     *
+     * @return {@code true} if this stream was already committed, {@code false} otherwise.
+     */
+    public boolean isCommitted() {
+        return isCommitted;
+    }
+
     @Override
     public void write(byte b[]) throws IOException {
         if (b.length > 0) {
