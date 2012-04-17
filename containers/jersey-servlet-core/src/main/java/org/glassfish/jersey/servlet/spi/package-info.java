@@ -37,28 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.servlet.spi;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
- * Factory to create {@link AsyncContextDelegate} to deal with asynchronous
- * features added in Servlet version 3.0.
- * If no such a factory is registered via the {@code META-INF/services} mechanism
- * a default factory for Servlet versions prior to 3.0 will be utilized with no async support.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * SPI for Jersey generic Servlet container support.
  */
-public interface AsyncContextDelegateProvider {
-
-    /**
-     * Factory method to create instances of Servlet container response writer extension,
-     * {@link AsyncContextDelegate}, for response processing.
-     *
-     * @param request original request.
-     * @param response original response.
-     * @return an instance to be used throughout a single response write processing.
-     */
-    public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response);
-}
+package org.glassfish.jersey.servlet.spi;
