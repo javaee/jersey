@@ -60,7 +60,6 @@
     </description>
 
     <modules>
-        <module>api</module>
         <module>e2e</module>
         <module>integration</module>
     </modules>
