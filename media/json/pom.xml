@@ -83,7 +83,19 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <inherited>true</inherited>
-            </plugin>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.glassfish.jersey.media.json.*</Export-Package>
+                        <Import-Package>
+                            com.sun.xml.bind.annotation;resolution:=optional,com.sun.xml.bind.v2.*;resolution:=optional,
+                            *
+                        </Import-Package>
+                    </instructions>
+                    <unpackBundle>true</unpackBundle>
+                </configuration>
+             </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

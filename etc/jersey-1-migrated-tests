@@ -29,6 +29,8 @@ examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/ex
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/GrizzlyHttpServiceFelixTest.java
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceEquinoxTest.java
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceFelixTest.java
+tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/BasicOsgiIntegrationTest.java
+tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/JsonTest.java
 
 TODO:
 
@@ -535,8 +537,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/xml/XmlHeaderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/xml/XmlListTest.java
 jersey-tests/src/test/java/com/sun/jersey/spi/monitoring/MonitoringProviderTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/impl/entity/EntityTypesTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgifunctionaltests/BasicOsgiIntegrationTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgifunctionaltests/JsonTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgifunctionaltests/PackageScanningTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ApplicationReloadResourceTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ApplicationTest.java

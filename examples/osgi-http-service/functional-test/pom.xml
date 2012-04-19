@@ -59,7 +59,6 @@
     <properties>
         <junit-version>4.5</junit-version>
         <pax-exam-version>1.2.3</pax-exam-version>
-        <osgi-version>4.2.0</osgi-version>
         <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
     </properties>
 
@@ -124,13 +123,11 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <scope>test</scope>
-            <version>${osgi-version}</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <scope>test</scope>
-            <version>${osgi-version}</version>
         </dependency>
        <dependency>
             <groupId>org.apache.felix</groupId>

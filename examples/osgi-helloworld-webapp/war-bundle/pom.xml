@@ -88,13 +88,17 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
+            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
+            <version>${osgi.version}</version>
+            <!-- end of the workaround -->
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
+            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
+            <version>${osgi.version}</version>
+            <!-- end of the workaround -->
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -184,5 +188,11 @@
 
         </plugins>
     </build>
+
+    <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
+    <properties>
+      <osgi.version>4.2.0</osgi.version>
+    </properties>
+    <!-- end of the workaround -->
 
 </project>

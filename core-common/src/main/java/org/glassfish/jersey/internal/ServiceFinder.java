@@ -172,13 +172,29 @@ public final class ServiceFinder<T> implements Iterable<T> {
     private final ClassLoader classLoader;
     private final boolean ignoreOnClassNotFound;
 
+    static {
+        try {
+            Class<?> bundleReferenceClass = Class.forName("org.osgi.framework.BundleReference");
+            final ClassLoader contextClassLoader = ReflectionHelper.getContextClassLoader();
+            if (bundleReferenceClass.isAssignableFrom(contextClassLoader.getClass())) {
+                LOGGER.log(Level.CONFIG, "Running in an OSGi environment");
+                OsgiRegistry registry = new OsgiRegistry(contextClassLoader);
+                registry.hookUp();
+            } else {
+                LOGGER.log(Level.CONFIG, "Running in a non-OSGi environment");
+            }
+        } catch (ClassNotFoundException ex) {
+            LOGGER.log(Level.CONFIG, "Running in a non-OSGi environment");
+        }
+    }
+
     private static String getBundleAttribute(String attributeName) {
         try {
             final String version = getManifest(ServiceFinder.class).
                     getMainAttributes().
                     getValue(attributeName);
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "ServiceFinder {0}: {1}", new Object[]{attributeName, version});
+                LOGGER.log(Level.FINE, String.format("ServiceFinder %s: %s", attributeName, version));
             }
             return version;
         } catch (IOException ex) {
@@ -943,15 +959,15 @@ public final class ServiceFinder<T> implements Iterable<T> {
         private static final Object sipLock = new Object();
 
         private static ServiceIteratorProvider getInstance() {
-            // Double-check idiom for lazy initialization of fields.
+            // TODO: check the following is a good practice: Double-check idiom for lazy initialization of fields.
             ServiceIteratorProvider result = sip;
             if (result == null) { // First check (no locking)
-                synchronized (sipLock) {
-                    result = sip;
-                    if (result == null) { // Second check (with locking)
-                        sip = result = new DefaultServiceIteratorProvider();
-                    }
+            synchronized (sipLock) {
+                result = sip;
+                if (result == null) { // Second check (with locking)
+                    sip = result = new DefaultServiceIteratorProvider();
                 }
+            }
             }
             return result;
         }

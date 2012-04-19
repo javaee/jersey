@@ -107,8 +107,8 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").versionAsInProject(),
 
-                // TODO: should core-common depend on guava-osgi directly?
-                wrappedBundle(mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject()),
+                // Google Guava
+                mavenBundle().groupId("com.googlecode.guava-osgi").artifactId("guava-osgi").versionAsInProject(),
 
                 wrappedBundle(mavenBundle().groupId("javax.mail").artifactId("mail").versionAsInProject()),
                 wrappedBundle(mavenBundle().groupId("javax.activation").artifactId("activation").versionAsInProject()),
@@ -117,7 +117,6 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("auto-depends").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("class-model").version("1.6.9"),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
 

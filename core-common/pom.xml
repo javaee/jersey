@@ -93,7 +93,7 @@
 
        <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>osgi_R4_core</artifactId>
+            <artifactId>org.osgi.core</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -111,8 +111,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>com.googlecode.guava-osgi</groupId>
+            <artifactId>guava-osgi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
