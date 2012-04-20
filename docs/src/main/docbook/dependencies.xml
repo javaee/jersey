@@ -77,7 +77,7 @@
   and their dependencies with links to the respective binaries.</para>
 
   <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
-<table frame='all' label="Jersey Modules and Dependencies">
+<table frame='all' label="Jersey Modules and Dependencies" id="dependencies-table">
 <tgroup cols='3' align='left' colsep='1' rowsep='1'>
 <colspec colname='c1'/>
 <colspec colname='c2'/>
@@ -96,7 +96,7 @@
 <row>
   <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-server&amp;v=&version;&amp;e=pom">
   jersey-server</ulink></entry>
-  <entry>Basic server functionality.</entry>
+  <entry>Base server functionality.</entry>
   <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-commons&amp;v=&version;&amp;e=pom">
   jersey-commons</ulink></entry>
 </row>

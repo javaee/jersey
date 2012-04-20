@@ -68,5 +68,6 @@ contact us at <ulink
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="getting-started.xml" />
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="dependencies.xml" />
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="how-to-build.xml" />
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="migration.xml" />
 
 </book>

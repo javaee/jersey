@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="migration">
+    <title>Migrating from Jersey 1.x</title>
+
+    <para>
+        This chapter is a migration guide for people switching from Jersey 1.x. Since many of the Jersey 1.x features became part of JAX-RS 2.0 standard which caused changes in the package names, we decided it is a good time to do a more significant incompatible refactoring, which will allow us to introduce some more interesting new features in the future. As the result, there are many incompatiblities between Jersey 1.x and Jersey 2.0. This chapter summarizes how to migrate the concepts found in Jersey 1.x to Jersey/JAX-RS 2.0 concepts.
+    </para>
+    <section id="mig-client-api">
+        <title>Client API</title>
+        <para>JAX-RS 2.0 provides functionality that is equivalent to the Jersey 1.x proprietary client API. Here is a rough mapping between the Jersey 1.x and JAX-RS 2.0 Client API classes:</para>
+        <table frame='all' label="Jersey 1.x to JAX-RS 2.0 Client API Mapping" id="mig-client-api-mapping-table">
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+        <colspec colname='c1'/>
+        <colspec colname='c2'/>
+        <colspec colname='c3'/>
+        <thead>
+        <row>
+          <entry>Jersey 1.x Class</entry>
+          <entry>JAX-RS 2.0 Class</entry>
+          <entry>Notes</entry>
+        </row>
+        </thead>
+        <tbody>
+        <row>
+          <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/Client.html">com.sun.jersey.api.client.Client</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/ext/ClientFactory.html">javax.ws.rs.ext.ClientFactory</ulink></entry>
+          <entry>For the static factory methods and constructors.</entry>
+        </row>
+        <row>
+          <entry></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Client.html">javax.ws.rs.client.Client</ulink></entry>
+          <entry>For the instance methods.</entry>
+        </row>
+        <row>
+          <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/WebResource.html">com.sun.jersey.api.client.WebResource</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Target.html">javax.ws.rs.client.Target</ulink></entry>
+          <entry></entry>
+        </row>
+        <row>
+          <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/AsyncWebResource.html">com.sun.jersey.api.client.AsyncWebResource</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Target.html">javax.ws.rs.client.Target</ulink></entry>
+          <entry>You can access async versions of the async methods by calling Target.request().async()</entry>
+        </row>
+        </tbody>
+        </tgroup>
+        </table>
+
+        <para>The following sub-sections show code examples.</para>
+
+        <section id="mig-client-simple-request">
+            <title>Making a simple client request</title>
+            <para>Jersey 1.x way:
+            <programlisting language="java" linenumbering="unnumbered">Client c = Client.create();
+WebResource r = c.resource("http://localhost:8080/").path("myresource/{param}");
+String result = r.pathParam("param", "value").get(String.class);</programlisting>
+            </para>
+            <para>JAX-RS 2.0 way:
+            <programlisting language="java" linenumbering="unnumbered">Client c = ClientFactory.newClient();
+Target t = c.target("http://localhost:8080/").path("myresource/{param}");
+String result = r.pathParam("param", "value").get(String.class);</programlisting>
+            </para>
+        </section>
+    </section>
+</chapter>

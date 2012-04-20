@@ -47,6 +47,7 @@
 
     <xsl:import href="urn:docbkx:stylesheet"/>
     <!--xsl:import href="urn:docbkx:stylesheet/highlight.xsl"/-->
+
     <xsl:template name="user.header.content">
         <xsl:element name="div">
             <xsl:attribute name="style">float:right</xsl:attribute>
