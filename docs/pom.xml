@@ -101,7 +101,6 @@
                     <sourceDirectory>${src.dir}</sourceDirectory>
                     <targetDirectory>${project.build.directory}/docbook</targetDirectory>
                     <htmlStylesheet>http://jersey.java.net/documentation.css</htmlStylesheet>
-                    <htmlCustomization>${src.dir}/customizations.xsl</htmlCustomization>
                     <partAutolabel>true</partAutolabel>
                     <sectionAutolabel>true</sectionAutolabel>
                     <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
@@ -123,6 +122,7 @@
                         </goals>
                         <configuration>
                             <includes>user-guide.xml</includes>
+                            <htmlCustomization>${src.dir}/cust-single.xsl</htmlCustomization>
                         </configuration>
                         <phase>package</phase>
                     </execution>
@@ -133,6 +133,7 @@
                         </goals>
                         <configuration>
                             <includes>index.xml</includes>
+                            <htmlCustomization>${src.dir}/cust-chunked.xsl</htmlCustomization>
                             <chunkedOutput>true</chunkedOutput>
                             <chunkSectionDepth>0</chunkSectionDepth>
                             <useIdAsFilename>true</useIdAsFilename>

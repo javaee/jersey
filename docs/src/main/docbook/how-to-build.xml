@@ -67,7 +67,7 @@
         <para>
             To clone the Jersey repository you can execute the following command on the command-line
             (provided you have a command-line Git client installed on your machine):
-            <programlisting>git clone ssh://&lt;your_java_net_id&gt;@java.net/jersey~code</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">git clone ssh://&lt;your_java_net_id&gt;@java.net/jersey~code</programlisting>
         </para>
         <para>
             Milestones and releases of Jersey are tagged. You can list the tags by executing the standard Git command in the repository directory:
@@ -82,16 +82,16 @@
             Maven 3 or greater is recommended. Also it is recommended you use the following
             Maven options when building the workspace (can be set in MAVENT_OPTS environment
             variable):
-            <programlisting>-Xmx1048m -XX:PermSize=64M -XX:MaxPermSize=128M</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">-Xmx1048m -XX:PermSize=64M -XX:MaxPermSize=128M</programlisting>
         </para>
         <para>
             It is recommended to build all of Jersey after you cloned the source code repository.
             To do that execute the following commands in the directory where jersey source repository
             was cloned (typically the directory named "jersey~code"):
-            <programlisting>mvn -Dmaven.test.skip=true clean install</programlisting>
+            <programlisting language="bash" linennumbering="unnumbered">mvn -Dmaven.test.skip=true clean install</programlisting>
             This command will build Jersey, but skip the test execution.
             If you don't want to skip the tests, execute the following instead:
-            <programlisting>mvn clean install</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">mvn clean install</programlisting>
             Building the whole Jersey project including tests could take significant amount of time.
         </para>
     </section>
@@ -102,7 +102,7 @@
             Jersey contains many tests. Unit tests are in the individual Jersey modules,
             integration and end-to-end tests are in jersey~code/tests directory.
             You can run tests related to a particular area using the following command:
-            <programlisting>mvn -Dtest=&lt;pattern&gt; test</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">mvn -Dtest=&lt;pattern&gt; test</programlisting>
             where
             <literal>pattern</literal> may be a comma separated set of names matching
             tests.
