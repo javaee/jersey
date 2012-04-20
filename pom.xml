@@ -579,8 +579,8 @@
     </profiles>
 
     <modules>
-        <!--module>archetypes</module>
-        <module>bundles</module-->
+        <module>archetypes</module>
+        <module>bundles</module>
         <module>connectors</module>
         <module>containers</module>
 
@@ -588,14 +588,11 @@
         <module>core-server</module>
         <module>core-client</module>
 
-        <!--module>docs</module-->
-
         <module>examples</module>
         <module>ext</module>
         <module>media</module>
         <module>security</module>
         <module>test-framework</module>
-        <module>bundles</module>
         <!--module>tools</module-->
     </modules>
 

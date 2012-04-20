@@ -35,3 +35,4 @@ jaxb.index
 nb-configuration.xml
 /bundles/jax-rs-ri/src/main/resources/Jersey-LICENSE.txt
 /bundles/jax-rs-ri/src/main/resources/third-party-license-readme.txt
+/archetype-resources/
