@@ -51,7 +51,7 @@ import javax.ws.rs.ext.RequestFilter;
 /**
  * Simple client-side filter that adds X-Requested-By headers to all state-changing
  * request (i.e. request for methods other than GET, HEAD and OPTIONS).
- * This is to satisfy the requirements of the {@link com.sun.jersey.api.container.filter.CsrfProtectionFilter}
+ * This is to satisfy the requirements of the {@link org.glassfish.jersey.server.filter.CsrfProtectionFilter}
  * on the server side.
  *
  * @see org.glassfish.jersey.server.filter.CsrfProtectionFilter
@@ -78,9 +78,6 @@ public class CsrfProtectionFilter implements RequestFilter {
 
     /**
      * Creates a new instance of the filter with X-Requested-By header value set to empty string.
-     *
-     * @param requestedBy Desired value of X-Requested-By header the filter
-     * will be adding for all potentially state changing requests.
      */
     public CsrfProtectionFilter() {
         this("");
@@ -92,12 +89,12 @@ public class CsrfProtectionFilter implements RequestFilter {
      * @param requestedBy Desired value of X-Requested-By header the filter
      * will be adding for all potentially state changing requests.
      */
-    public CsrfProtectionFilter(String requestedBy) {
+    public CsrfProtectionFilter(final String requestedBy) {
         this.requestedBy = requestedBy;
     }
 
     @Override
-    public void preFilter(FilterContext fc) throws IOException {
+    public final void preFilter(final FilterContext fc) throws IOException {
         final Request request = fc.getRequest();
         if (!METHODS_TO_IGNORE.contains(request.getMethod()) && (request.getHeaders().getHeader(HEADER_NAME) == null)) {
             fc.setRequest(fc.getRequestBuilder().header(HEADER_NAME, requestedBy).build());

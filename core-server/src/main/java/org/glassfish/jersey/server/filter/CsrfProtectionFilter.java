@@ -80,7 +80,7 @@ public class CsrfProtectionFilter implements PreMatchRequestFilter {
     }
 
     @Override
-    public void preMatchFilter(FilterContext fc) throws IOException {
+    public final void preMatchFilter(final FilterContext fc) throws IOException {
         Request request = fc.getRequest();
         if (!METHODS_TO_IGNORE.contains(request.getMethod()) && (request.getHeaders().getHeader(HEADER_NAME) == null)) {
             throw new WebApplicationException(Status.BAD_REQUEST);
