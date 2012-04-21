@@ -71,7 +71,7 @@
         </para>
         <para>
             Milestones and releases of Jersey are tagged. You can list the tags by executing the standard Git command in the repository directory:
-            <programlisting>git tag -l</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">git tag -l</programlisting>
         </para>
     </section>
 
@@ -88,7 +88,7 @@
             It is recommended to build all of Jersey after you cloned the source code repository.
             To do that execute the following commands in the directory where jersey source repository
             was cloned (typically the directory named "jersey~code"):
-            <programlisting language="bash" linennumbering="unnumbered">mvn -Dmaven.test.skip=true clean install</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">mvn -Dmaven.test.skip=true clean install</programlisting>
             This command will build Jersey, but skip the test execution.
             If you don't want to skip the tests, execute the following instead:
             <programlisting language="bash" linenumbering="unnumbered">mvn clean install</programlisting>
