@@ -1,0 +1,599 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="client">
+  <title>Client API</title>
+    <para>This section introduces the JAX-RS Client API, which is a high-level Java based API for interoperating with RESTful Web services.
+    It makes it very easy to interoperate with RESTful Web services and
+    enables a developer to concisely and efficiently implement a reusable client-side solution that leverages existing and well established client-side HTTP implementations.
+    </para>
+    <para>The client API can be utilized to interoperate with any RESTful Web service, implemented using one of many frameworks, and is not restricted to services implemented using JAX-RS. However, developers familiar with JAX-RS should find the client API complementary to their services, especially if the client API is utilized by those services themselves, or to test those services.
+    </para>
+    <para>The goals of the client API are threefold:</para>
+    <orderedlist>
+        <listitem>
+            <para>Encapsulate a key constraint of the REST architectural style, namely the Uniform Interface Constraint and associated data elements, as client-side Java artifacts;
+            </para>
+        </listitem>
+        <listitem>
+            <para>Make it as easy to interoperate with RESTful Web services as the JAX-RS server-side API makes it easy to build RESTful Web services; and
+            </para>
+        </listitem>
+        <listitem>
+            <para>Share common concepts of the JAX-RS API between the server and the client side.
+            </para>
+        </listitem>
+    </orderedlist>
+    <para>The Client API supports a pluggable architecture to enable the use of different underlying HTTP client implementations. Several such implementations are supported by Jersey. To name a few we have a client connectors for <literal>Http(s)URLConnection</literal> classes
+    supplied with the JDK; and the Grizzly client.
+    </para>
+
+    TODO: REWRITE THE FOLLOWING SECTIONS TO THE NEW JAX-RS 2.0 API
+    <!--__________________________________________________________________________-->
+    <section>
+        <title>Uniform Interface Constraint</title>
+        <para>The uniform interface constraint bounds the architecture of RESTful Web services so that a client, such
+        as a browser, can utilize the same interface to communicate with any service. This is a very powerful concept
+        in software engineering that makes Web-based search engines and service mash-ups possible. It induces properties
+        such as:
+        </para>
+        <orderedlist>
+            <listitem>
+                <para>simplicity, the architecture is easier to understand and maintain; and</para>
+            </listitem>
+            <listitem>
+                <para>modifiability or loose coupling, clients and services can evolve over time perhaps in new and
+                unexpected ways, while retaining backwards compatibility.
+                </para>
+            </listitem>
+        </orderedlist>
+        <para>Further constraints are required:</para>
+        <orderedlist>
+            <listitem>
+                <para>every resource is identified by a URI;</para>
+            </listitem>
+            <listitem>
+                <para>a client interacts with the resource via HTTP requests and responses using a fixed set of
+                HTTP methods;
+                </para>
+            </listitem>
+            <listitem>
+                <para>one or more representations can be retured and are identified by media types; and</para>
+            </listitem>
+            <listitem>
+                <para>the contents of which can link to further resources.</para>
+            </listitem>
+        </orderedlist>
+        <para>The above process repeated over and again should be familiar to anyone who has used a browser to fill
+        in HTML forms and follow links. That same process is applicable to non-browser based clients.
+        </para>
+        <para>Many existing Java-based client APIs, such as the Apache HTTP client API or
+            <literal>java.net.HttpURLConnection</literal>
+        supplied with the JDK place too much focus on the Client-Server constraint for the exchanges of request and
+        responses rather than a resource, identified by a URI, and the use of a fixed set of HTTP methods.
+        </para>
+        <para>A resource in the Jersey client API is an instance of the Java class
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</ulink>,
+            and encapsulates a URI. The fixed set of HTTP methods are methods on
+            <literal>WebResource</literal>
+            or if using the builder
+            pattern (more on this later) are the last methods to be called when invoking an HTTP method on a resource.
+            The representations are Java types, instances of which, may contain links that new instances of
+            <literal>WebResource</literal> may be created from.
+        </para>
+    </section>
+
+    <section>
+        <title>Ease of use and reusing JAX-RS artifacts</title>
+        <para>Since a resource is represented as a Java type it makes it easy to configure, pass around and inject in
+        ways that is not so intuitive or possible with other client-side APIs.
+        </para>
+        <para>The Jersey Client API reuses many aspects of the JAX-RS and the Jersey implementation such as:</para>
+        <orderedlist>
+            <listitem>
+                <para>URI building using
+                    <ulink url="&jsr311.javadoc.path;/core/UriBuilder.html">UriBuilder</ulink> and
+                    <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/uri/UriTemplate.html">UriTemplate</ulink>
+                    to safely build URIs;
+                </para>
+            </listitem>
+            <listitem>
+                <para>Support for Java types of representations such as
+                    <literal>byte[]</literal>,
+                    <literal>String</literal>,
+                    <literal>InputStream</literal>,
+                    <literal>File</literal>,
+                    <literal>DataSource</literal>
+                and JAXB beans in addition to Jersey specific features such as
+                    <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/json/package-summary.html">JSON</ulink> support and
+                    <ulink url="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-multipart/index.html">MIME Multipart</ulink> support.
+                </para>
+            </listitem>
+            <listitem>
+                <para>Using the builder pattern to make it easier to construct requests.</para>
+            </listitem>
+        </orderedlist>
+        <para>Some APIs, like the Apache HTTP client or
+            <ulink url="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/HttpURLConnection.html">java.net.HttpURLConnection</ulink>,
+            can be rather hard to use and/or require too much code to do something relatively simple.
+        </para>
+        <para>This is why the Jersey Client API provides support for wrapping HttpURLConnection and the Apache
+        HTTP client. Thus it is possible to get the benefits of the established implementations and features
+        while getting the ease of use benefit.
+        </para>
+        <para>It is not intuitive to send a POST request with form parameters and receive a response as a
+        JAXB object with such an API. For example with the Jersey API this is very easy:
+        <example>
+            <title>POST request with form parameters</title>
+            <programlisting language="java" linenumbering="numbered">Form f = new Form();
+f.add(&quot;x&quot;, &quot;foo&quot;);
+f.add(&quot;y&quot;, &quot;bar&quot;);
+
+Client c = Client.create();
+WebResource r = c.resource(&quot;http://localhost:8080/form&quot;);
+
+JAXBBean bean = r.
+    type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+    .accept(MediaType.APPLICATION_JSON_TYPE)
+    .post(JAXBBean.class, f);</programlisting>
+        </example>
+        In the above code a
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/representation/Form.html">Form</ulink> is created with two parameters, a new
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</ulink> instance is created from a
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/Client.html">Client</ulink> then the
+            <literal>Form</literal> instance is <literal>POST</literal>ed to
+            the resource, identified with the form media type, and the response is requested as an instance of a JAXB bean
+            with an acceptable media type identifying the Java Script Object
+            Notation (JSON) format. The Jersey client API manages the serialization of the <literal>Form</literal> instance to produce the
+            request and de-serialization of the response to consume as an instance of a JAXB bean.
+        </para>
+        <para>If the code above was written using
+            <literal>HttpURLConnection</literal> then the developer would have to write code to serialize the
+        form sent in the POST request and de-serialize the response to the JAXB bean. In addition further code would have to be written
+        to make it easy to reuse the same resource “http://localhost:8080/form” that is encapsulated in the
+            <literal>WebResource</literal> type.
+        </para>
+    </section>
+
+    <section>
+        <title>Getting started with the Jersey client</title>
+        <para>Refer to the
+         <ulink url="http://jersey.java.net/nonav/documentation/&version;/chapter_deps.html#chapter_deps">dependencies chapter</ulink>,
+            and specifically the <ulink url="http://jersey.java.net/nonav/documentation/&version;/chapter_deps.html#core_client">Core client</ulink> section,
+            for details on the dependencies when using the Jersey client with Maven and Ant.
+        </para>
+        <para>Refer to the
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/package-summary.html">Java API documentation</ulink> for details on the Jersey client API packages and classes.
+        </para>
+        <para>Refer to the
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/index.html">Java API Apache HTTP client documentation</ulink> for details on how to use the Jersey client API with the Apache HTTP client.
+        </para>
+    </section>
+
+    <section>
+        <title>Overview of the API</title>
+        <para>To utilize the client API it is first necessary to create an instance of a
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/Client.html">Client</ulink>, for example:
+            <programlisting language="java">    Client c = Client.create();</programlisting>
+        </para>
+        <section>
+            <title>Configuring a Client and WebResource</title>
+            <para>The client instance can then be configured by setting properties on the map returned from
+            the
+                <literal>getProperties</literal> methods or by calling the specific setter methods,
+            for example the following configures the client to perform automatic redirection for
+            appropriate responses:
+                <programlisting language="java">    c.getProperties().put(
+        ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);</programlisting>
+            which is equivalent to the following:
+                <programlisting language="java">    c.setFollowRedirects(true);</programlisting>
+            Alternatively it is possible to create a <literal>Client</literal> instance using a
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/config/ClientConfig.html">ClientConfig</ulink>
+            object for example:
+                <programlisting language="java">    ClientConfig cc = new DefaultClientConfig();
+    cc.getProperties().put(
+        ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
+    Client c = Client.create(cc);</programlisting>
+            </para>
+            <para>Once a client instance is created and configured it is then possible to obtain a
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</ulink>
+                instance, which will inherit the configuration declared on the client instance.
+                For example, the following creates a reference to a Web resource with the URI
+                “http://localhost:8080/xyz”:
+                <programlisting language="java">    WebResource r = c.resource(&quot;http://localhost:8080/xyz&quot;);</programlisting>
+            and redirection will be configured for responses to requests invoked on the Web resource.
+            </para>
+            <para>
+                <literal>Client</literal> instances are expensive resources. It is recommended a configured
+            instance is reused for the creation of Web resources. The creation of Web resources, the building
+            of requests and receiving of responses are guaranteed to be thread safe. Thus a
+                <literal>Client</literal>
+            instance and
+                <literal>WebResource</literal> instances may be shared between multiple threads.
+            </para>
+            <para>In the above cases a
+                <literal>WebResource</literal> instance will utilize
+                <literal>HttpUrlConnection</literal> or
+                <literal>HttpsUrlConnection</literal>,
+            if the URI scheme of the
+                <literal>WebResource</literal> is “http” or “https” respectively.
+            </para>
+        </section>
+        <section>
+            <title>Building a request</title>
+            <para>Requests to a Web resource are built using the builder pattern (see
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/RequestBuilder.html">RequestBuilder</ulink>)
+                where the terminating method corresponds to an HTTP method (see
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/UniformInterface.html">UniformInterface</ulink>).
+                For example,
+                <programlisting language="java">    String response = r.accept(
+        MediaType.APPLICATION_JSON_TYPE,
+        MediaType.APPLICATION_XML_TYPE).
+        header(&quot;X-FOO&quot;, &quot;BAR&quot;).
+        get(String.class);</programlisting>
+            </para>
+            <para>The above sends a GET request with an
+                <literal>Accept</literal> header of
+                <literal>application/json</literal>,
+                <literal>application/xml</literal> and a
+            non-standard header
+                <literal>X-FOO</literal> of
+                <literal>BAR</literal>.
+            </para>
+            <para>If the request has a request entity (or representation) then an instance
+            of a Java type can be declared in the terminating HTTP method, for
+                <literal>PUT</literal>,
+                <literal>POST</literal> and
+                <literal>DELETE</literal> requests.
+            For example, the following sends a POST request:
+                <programlisting language="java">    String request = &quot;content&quot;;
+    String response = r.accept(
+        MediaType.APPLICATION_JSON_TYPE,
+        MediaType.APPLICATION_XML_TYPE).
+        header(&quot;X-FOO&quot;, &quot;BAR&quot;).
+        post(String.class, request);</programlisting>
+            where the String &quot;content&quot; will be serialized as the request
+            entity (see the section &quot;Java instances and types for representations&quot;
+            section for further details on the supported Java types). The
+            <literal>Content-Type</literal> of the request entity may be declared
+            using the <literal>type</literal> builder method as follows:
+            <programlisting language="java">    String response = r.accept(
+         MediaType.APPLICATION_JSON_TYPE,
+         MediaType.APPLICATION_XML_TYPE).
+         header(&quot;X-FOO&quot;, &quot;BAR&quot;).
+         type(MediaType.TEXT_PLAIN_TYPE).
+         post(String.class, request);</programlisting>
+            or alternatively the request entity and type may be declared
+            using the entity method as follows:
+            <programlisting language="java">    String response = r.accept(
+         MediaType.APPLICATION_JSON_TYPE,
+         MediaType.APPLICATION_XML_TYPE).
+         header(&quot;X-FOO&quot;, &quot;BAR&quot;).
+         entity(request, MediaType.TEXT_PLAIN_TYPE).
+         post(String.class);</programlisting>
+            </para>
+            </section>
+
+            <section>
+                <title>Receiving a response</title>
+                <para>If the response has a entity (or representation) then the
+                Java type of the instance required is declared in the terminating HTTP method.
+                In the above examples a response entity is expected and an instance of <literal>String</literal>
+                is requested. The response entity will be de-serialized to a String
+                instance.</para>
+                <para>If response meta-data is required then the Java type
+                    <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/ClientResponse.html">ClientResponse</ulink>
+                    can be declared from which the response status, headers and entity may be obtained.
+                    For example, the following gets both the entity tag and response entity from the
+                    response:
+                <programlisting language="java">    ClientResponse response = r.get(ClientResponse.class);
+    EntityTag e = response.getEntityTag();
+    String entity = response.getEntity(String.class);</programlisting></para>
+                <para>If the <literal>ClientResponse</literal> type is not utilized and the response
+                status is greater than or equal to 300 then the runtime exception
+                 <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/UniformInterfaceException.html">UniformInterfaceException</ulink>
+                 is thrown. This exception may be caught and the <literal>ClientResponse</literal> obtained as follows:
+                <programlisting language="java">    try {
+        String entity = r.get(String.class);
+    } catch (UniformInterfaceException ue) {
+        ClientResponse response = ue.getResponse();
+    }</programlisting></para>
+            </section>
+
+            <section>
+                <title>Creating new WebResources from a WebResource</title>
+                <para>A new
+                    <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</ulink>
+                    can be created from an existing <literal>WebResource</literal> by building from the latter's URI.
+                    Thus it is possible to build the request URI before building the request. For example, the
+                    following appends a new path segment and adds some query parameters:
+                <programlisting language="java">    WebResource r = c.resource(&quot;http://localhost:8080/xyz&quot;);
+
+    MultivaluedMap&lt;String, String&gt; params = MultivaluedMapImpl();
+    params.add(&quot;foo&quot;, &quot;x&quot;);
+    params.add(&quot;bar&quot;, &quot;y&quot;);
+
+    String response = r.path(&quot;abc&quot;).
+        queryParams(params).
+        get(String.class);</programlisting>
+                that results in a GET request to the URI &quot;http://localhost:8080/xyz/abc?foo=x&amp;bar=y&quot;.</para>
+            </section>
+
+            <section>
+                <title>Java instances and types for representations</title>
+                <para>All the Java types for representations supported by the Jersey server side for
+                requests and responses are also supported on the client side. This includes the standard
+                Java types as specified by JAX-RS in
+                    <ulink url="http://jsr311.java.net/nonav/releases/1.0/spec/index.html">section 4.2.4</ulink>
+                    in addition to JSON, Atom and Multipart MIME as supported by Jersey.
+                </para>
+                <para>To process a response entity (or representation) as a stream of bytes use InputStream as follows:
+                <programlisting language="java">    InputStream in = r.get(InputStream.class);
+    // Read from the stream
+    in.close();</programlisting>
+                Note that it is important to close the stream after processing so that resources are freed up.</para>
+                <para>To <literal>POST</literal> a file use <literal>File</literal> as follows:
+                <programlisting language="java">    File f = ...
+    String response = r.post(String.class, f);</programlisting>
+                Refer to the
+                    <ulink url="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=jaxb&amp;v=&version;&amp;c=project&amp;e=zip">JAXB sample</ulink> to see how JAXB with XML and JSON can be utilized with the client API (more specifically, see the unit tests).
+                </para>
+            </section>
+        </section>
+
+        <section>
+            <title>Adding support for new representations</title>
+            <para>The support for new application-defined representations as Java types requires the
+            implementation of the same provider-based interfaces as for the server side JAX-RS API, namely
+                <ulink url="http://jsr311.java.net/nonav/javadoc/javax/ws/rs/ext/MessageBodyReader.html">MessageBodyReader</ulink> and
+                <ulink url="http://jsr311.java.net/nonav/javadoc/javax/ws/rs/ext/MessageBodyWriter.html">MessageBodyWriter</ulink>,
+                respectively, for request and response entities (or inbound and outbound representations). Refer to the
+                <ulink url="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=entity-provider&amp;v=&version;&amp;c=project&amp;e=zip">entity provider</ulink>
+                sample for such implementations utilized on the server side.
+            </para>
+            <para>Classes or implementations of the provider-based interfaces need to be registered with a
+            <literal>ClientConfig</literal> and passed to the <literal>Client</literal> for creation. The following
+            registers a provider class <literal>MyReader</literal> which will be instantiated by Jersey:
+            <programlisting language="java">    ClientConfig cc = new DefaultClientConfig();
+    cc.getClasses().add(MyReader.class);
+    Client c = Client.create(cc);</programlisting>
+            The following registers an instance or singleton of MyReader:
+            <programlisting language="java">    ClientConfig cc = new DefaultClientConfig();
+    MyReader reader = ...
+    cc.getSingletons().add(reader);
+    Client c = Client.create(cc);</programlisting></para>
+        </section>
+
+        <section>
+            <title>Using filters</title>
+            <para>Filtering requests and responses can provide useful functionality that is hidden from the
+            application layer of building and sending requests, and processing responses. Filters can
+            read/modify the request URI, headers and entity or read/modify the response status,
+            headers and entity.</para>
+            <para>
+            The <literal>Client</literal> and <literal>WebResource</literal> classes extend from
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/Filterable.html">Filterable</ulink>
+            and that enables the addition of
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/ClientFilter.html">ClientFilter</ulink>
+            instances. A <literal>WebResource</literal> will inherit filters from its creator, which
+            can be a <literal>Client</literal> or another <literal>WebResource</literal>.
+            Additional filters can be added to a <literal>WebResource</literal> after it has been
+            created. For requests, filters are applied
+            in reverse order, starting with the <literal>WebResource</literal> filters and then
+            moving to the inherited filters.
+            For responses, filters are applied in order, starting with inherited filters
+            and followed by the filters added to the <literal>WebResource</literal>. All filters
+            are applied in the order in which they were added.
+            For instance, in the following example the <literal>Client</literal> has two filters added,
+            <literal>filter1</literal> and <literal>filter2</literal>, in that order, and the
+            <literal>WebResource</literal> has one filter added, <literal>filter3</literal>:
+            <programlisting language="java">    ClientFilter filter1 = ...
+    ClientFilter filter2 = ...
+    Client c = Client.create();
+    c.addFilter(filter1);
+    c.addFilter(filter2);
+
+    ClientFilter filter3 = ...
+    WebResource r = c.resource(...);
+    r.addFilter(filter3);</programlisting>
+            After a request has been built the request is filtered by <literal>filter3</literal>,
+            <literal>filter2</literal> and <literal>filter1</literal> in that order. After the response
+            has been received the response is filtered by <literal>filter1</literal>,
+            <literal>filter2</literal> and <literal>filter3</literal> in that order, before the
+            response is returned.</para>
+            <para>Filters are implemented using the “russian doll” stack-based pattern where a
+            filter is responsible for calling the next filter in the ordered list of filters
+            (or the next filter in the “chain” of filters).
+            The basic template for a filter is as follows:
+            <programlisting language="java">    class AppClientFilter extends ClientFilter {
+        public ClientResponse handle(ClientRequest cr) {
+            // Modify the request
+            ClientRequest mcr = modifyRequest(cr);
+            // Call the next filter
+            ClientResponse resp = getNext().handle(mcr);
+            // Modify the response
+            return modifyResponse(resp);
+        }
+    }</programlisting></para>
+            <para>The filter modifies the request (if required) by creating a new
+            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/ClientRequest.html">ClientRequest</ulink>
+            or modifying the state of the passed <literal>ClientRequest</literal> before calling the
+            next filter. The call to the next request will return
+            the response, a <literal>ClientResponse</literal>. The filter
+            modifies the response (if required) by creating a new <literal>ClientResponse</literal>
+            or modifying the state of the returned <literal>ClientResponse</literal>.
+            Then the filter returns the modified response.
+            Filters are re-entrant and may be called by multiple threads performing requests
+            and processing responses.</para>
+            <section>
+                <title>Supported filters</title>
+                <para>The Jersey Client API currently supports two filters:</para>
+                <orderedlist>
+                    <listitem>
+                        <para>A GZIP content encoding filter,
+                            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/GZIPContentEncodingFilter.html">GZIPContentEncodingFilter</ulink>.
+                            If this filter is added then a request entity is compressed with the
+                            <literal>Content-Encoding</literal>
+                            of <literal>gzip</literal>, and a response entity if compressed with a
+                            <literal>Content-Encoding</literal> of <literal>gzip</literal> is
+                            decompressed. The filter declares an <literal>Accept-Encoding</literal>
+                            of <literal>gzip</literal>.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>A logging filter,
+                            <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/LoggingFilter.html">LoggingFilter</ulink>.
+                            If this filter is added then the request and response headers as well as the entities are logged
+                            to a declared output stream if present, or to <literal>System.out</literal> if not.
+                            Often this filter will be placed at the end of the ordered list of
+                            filters to log the request before it is sent
+                            and the response after it is received.
+                        </para>
+                    </listitem>
+                </orderedlist>
+                <para>The filters above are good examples that show how to modify or read
+                request and response entities. Refer to the
+                    <ulink url="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey&amp;a=jersey-client&amp;v=&version;&amp;e=jar">source code</ulink>
+                    of the Jersey client for more details.
+                </para>
+            </section>
+        </section>
+
+        <section>
+            <title>Testing services</title>
+            <para>The Jersey client API was originally developed to aid the testing of the Jersey server-side,
+            primarily to make it easier to write functional tests in conjunction with the JUnit framework
+            for execution and reporting. It is used extensively and there are currently over 1000 tests.</para>
+            <para>Embedded servers, Grizzly and a special in-memory server, are utilized to deploy the
+            test-based services. Many of the Jersey samples contain tests that utilize the client API to
+            server both for testing and examples of how to use the API. The samples utilize Grizzly or
+            embedded Glassfish to deploy the services.</para>
+            <para>The following code snippets are presented from the single unit test
+            <literal>HelloWorldWebAppTest</literal> of the
+                <ulink url="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=helloworld-webapp&amp;v=&version;&amp;c=project&amp;e=zip">helloworld-webapp</ulink>
+                sample.
+            The <literal>setUp</literal> method, called before a test is executed, creates an instance of
+            the Glassfish server, deploys the application, and a <literal>WebResource</literal> instance
+            that references the base resource:
+            <programlisting language="java">    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        // Start Glassfish
+        glassfish = new GlassFish(BASE_URI.getPort());
+
+        // Deploy Glassfish referencing the web.xml
+        ScatteredWar war = new ScatteredWar(
+            BASE_URI.getRawPath(), new File("src/main/webapp"),
+            new File("src/main/webapp/WEB-INF/web.xml"),
+            Collections.singleton(
+                new File("target/classes").
+                    toURI().toURL()));
+        glassfish.deploy(war);
+
+        Client c = Client.create();
+        r = c.resource(BASE_URI);
+    }</programlisting>
+            The <literal>tearDown</literal> method, called after a test is executed,
+            stops the Glassfish server.
+            <programlisting language="java">    @Override
+   protected void tearDown() throws Exception {
+        super.tearDown();
+        glassfish.stop();
+   }</programlisting></para>
+            <para>The <literal>testHelloWorld</literal> method tests that the response
+            to a <literal>GET</literal> request to the Web resource returns “Hello World”:
+            <programlisting language="java">    public void testHelloWorld() throws Exception {
+       String responseMsg = r.path("helloworld").
+           get(String.class);
+       assertEquals("Hello World", responseMsg);
+   }</programlisting>
+            Note the use of the <literal>path</literal> method on the <literal>WebResource</literal> to
+            build from the base <literal>WebResource</literal>.</para>
+        </section>
+
+        <section>
+            <title>Security with Http(s)URLConnection</title>
+            <section>
+            <title>With Http(s)URLConnection</title>
+            <para>The support for security, specifically HTTP authentication and/or cookie management
+            with <literal>Http(s)URLConnection</literal> is limited due to constraints in the API.
+            There are currently no specific features or properties on the <literal>Client</literal> class that
+            can be set to support HTTP authentication. However, since the client API, by default, utilizes
+            <literal>HttpURLConnection</literal> or <literal>HttpsURLConnection</literal>,
+            it is possible to configure system-wide
+            security settings (which is obviously not sufficient for multiple client configurations).</para>
+            <para>For HTTP authentication the <literal>java.net.Authenticator</literal> can
+            be extended and statically registered. Refer to the
+                <ulink url="http://docs.oracle.com/javase/6/docs/technotes/guides/net/http-auth.html">Http authentication</ulink>
+                document for more details.
+            For cookie management the <literal>java.net.CookieHandler</literal> can be extended
+            and statically registered. Refer to the
+                <ulink url="http://docs.oracle.com/javase/6/docs/technotes/guides/net/http-cookie.html">Cookie Management</ulink>
+                document for more details.
+            </para>
+            <para>To utilize HTTP with SSL it is necessary to utilize the “https” scheme.
+            For certificate-based authentication see the class
+                <ulink url="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/client/urlconnection/HTTPSProperties.html">HTTPSProperties</ulink>
+                for how to set <literal>javax.net.ssl.HostnameVerifier</literal> and
+                <literal>javax.net.ssl.SSLContext</literal>.
+            </para>
+            </section>
+            <section>
+            <title>With Apache HTTP client</title>
+            <para>The support for HTTP authentication and cookies is much better with the Apache HTTP
+            client than with <literal>HttpURLConnection</literal>.
+            See the Java documentation for the package
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/package-summary.html">com.sun.jersey.client.apache</ulink>,
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/config/ApacheHttpClientState.html">ApacheHttpClientState</ulink> and
+                <ulink url="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/config/ApacheHttpClientConfig.html">ApacheHttpClientConfig</ulink> for more details.
+            </para>
+            </section>
+        </section>
+
+</chapter>

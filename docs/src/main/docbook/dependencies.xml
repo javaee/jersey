@@ -77,16 +77,17 @@
   and their dependencies with links to the respective binaries.</para>
 
   <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
-<table frame='all' label="Jersey Modules and Dependencies" id="dependencies-table">
+<table frame='all' id="dependencies-table">
+<title>Jersey modules and dependencies</title>
 <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-<colspec colname='c1'/>
-<colspec colname='c2'/>
-<colspec colname='c3'/>
+<colspec colname='c1' colwidth="2*"/>
+<colspec colname='c2' colwidth="5*"/>
+<colspec colname='c3' colwidth="7*"/>
 <thead>
 <row>
   <entry>Module</entry>
-  <entry>Description</entry>
   <entry>Dependencies</entry>
+  <entry>Description</entry>
 </row>
 </thead>
 <tbody>
@@ -96,19 +97,19 @@
 <row>
   <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-server&amp;v=&version;&amp;e=pom">
   jersey-server</ulink></entry>
-  <entry>Base server functionality.</entry>
   <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-commons&amp;v=&version;&amp;e=pom">
   jersey-commons</ulink></entry>
+  <entry>Base server functionality.</entry>
 </row>
 <row>
   <entry>jersey-client</entry>
-  <entry>Basic client functionality.</entry>
   <entry>jersey-commons</entry>
+  <entry>Basic client functionality.</entry>
 </row>
 <row>
   <entry>jersey-commons</entry>
-  <entry>Common functionality shared by client and server.</entry>
   <entry></entry>
+  <entry>Common functionality shared by client and server.</entry>
 </row>
 <row>
     <entry namest="c1" nameend="c3" align="center">Containers</entry>

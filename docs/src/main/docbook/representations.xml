@@ -1,0 +1,270 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="representations">
+  <title>Representations and Responses</title>
+
+  <section id="reps-and-types">
+  <title>Representations and Java Types</title>
+    <para>Previous sections on &jaxrs.Produces; and &jaxrs.Consumes;
+    referred to MIME media types of representations and showed resource
+    methods that consume and produce the Java type String for a number of
+    different media types. However, <literal>String</literal> is just one of
+    many Java types that are required to be supported by JAX-RS
+    implementations.</para>
+
+    <para>Java types such as <literal>byte[]</literal>,
+    <literal>java.io.InputStream</literal>, <literal>java.io.Reader</literal>
+    and <literal>java.io.File</literal> are supported. In addition JAXB beans
+    are supported. Such beans are <literal>JAXBElement</literal> or classes
+    annotated with <ulink url="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlRootElement.html">@XmlRootElement</ulink>
+    or <ulink url="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlType.html">@XmlType</ulink>.
+    The samples jaxb and json-from-jaxb show the use of JAXB beans. </para>
+
+    <para>Unlike method parameters that are associated with the extraction of
+    request parameters, the method parameter associated with the
+    representation being consumed does not require annotating. A maximum of
+    one such unannotated method parameter may exist since there may only be a
+    maximum of one such representation sent in a request.</para>
+
+    <para>The representation being produced corresponds to what is returned by
+    the resource method. For example JAX-RS makes it simple to produce images
+    that are instance of <literal>File</literal> as follows:</para>
+
+    <para><example>
+<title>Using <code>File</code> with a specific MIME type to produce a response</title><programlisting language="java" linenumbering="numbered">@GET
+@Path("/images/{image}")
+@Produces("image/*")
+public Response getImage(@PathParam("image") String image) {
+    File f = new File(image);
+
+    if (!f.exists()) {
+        throw new WebApplicationException(404);
+    }
+
+    String mt = new MimetypesFileTypeMap().getContentType(f);
+    return Response.ok(f, mt).build();
+}</programlisting></example></para>
+
+    <para>A <literal>File</literal> type can also be used when consuming, a
+    temporary file will be created where the request entity is stored.</para>
+
+    <para>The <literal>Content-Type</literal> (if not set, see next section)
+    can be automatically set from the MIME media types declared by &jaxrs.Produces;
+    if the most acceptable media type is not a wild card (one that contains a
+    *, for example "application/" or "/*"). Given the following method, the most acceptable MIME type is used when multiple output MIME types allowed:</para>
+    <para><programlisting language="java" linenumbering="numbered">@GET
+@Produces({"application/xml", "application/json"})
+public String doGetAsXmlOrJson() {
+    ...
+}</programlisting>
+
+    If "application/xml" is the most acceptable then the
+    <literal>Content-Type</literal> of the response will be set to
+    "application/xml".</para>
+  </section>
+
+  <section>
+    <title>Building Responses</title>
+
+    <para>Sometimes it is necessary to return additional
+    information in response to a HTTP request. Such information may be built
+    and returned using &jaxrs.core.Response; and &jaxrs.core.Response.ResponseBuilder;.
+    For example, a common RESTful pattern for the creation of a new resource
+    is to support a POST request that returns a 201 (Created) status code and
+    a <literal>Location</literal> header whose value is the URI to the newly
+    created resource. This may be achieved as follows:</para>
+
+    <para><example>
+<title>Returning 201 status code and adding <literal>Location</literal> header in response to POST request</title><programlisting language="java" linenumbering="numbered">@POST
+@Consumes("application/xml")
+public Response post(String content) {
+    URI createdUri = ...
+    create(content);
+    return Response.created(createdUri).build();
+}</programlisting></example></para>
+
+    <para>In the above no representation produced is returned, this can be
+    achieved by building an entity as part of the response as follows:</para>
+
+    <para><example>
+<title>Adding an entity body to a custom response</title><programlisting language="java" linenumbering="numbered">@POST
+@Consumes("application/xml")
+public Response post(String content) {
+    URI createdUri = ...
+    String createdContent = create(content);
+    return Response.created(createdUri).entity(createdContent).build();
+}</programlisting></example></para>
+
+    <para>Response building provides other functionality such as setting the
+    entity tag and last modified date of the representation.</para>
+  </section>
+
+  <section>
+    <title>WebApplicationException and Mapping Exceptions to Responses</title>
+
+    <para>Previous sections have shown how to return HTTP responses and it is
+    possible to return HTTP errors using the same mechanism. However,
+    sometimes when programming in Java it is more natural to use exceptions
+    for HTTP errors.</para>
+
+    <para>The following example shows the throwing of a
+    <literal>NotFoundException</literal> from the bookmark sample:</para>
+
+    <para><example>
+<title>Throwing Jersey specific exceptions to control response</title><programlisting language="java" linenumbering="numbered">@Path("items/{itemid}/")
+public Item getItem(@PathParam("itemid") String itemid) {
+    Item i = getItems().get(itemid);
+    if (i == null)
+        throw new NotFoundException("Item, " + itemid + ", is not found");
+
+    return i;
+}</programlisting></example></para>
+
+    <para>This exception is a Jersey specific exception that extends &jaxrs.WebApplicationException;
+    and builds a HTTP response with the 404 status code and an optional
+    message as the body of the response:</para>
+
+    <para><example>
+<title>Jersey specific exception implementation</title><programlisting language="java" linenumbering="numbered">public class NotFoundException extends WebApplicationException {
+
+    /**
+     * Create a HTTP 404 (Not Found) exception.
+     */
+    public NotFoundException() {
+        super(Responses.notFound().build());
+    }
+
+    /**
+     * Create a HTTP 404 (Not Found) exception.
+     * @param message the String that is the entity of the 404 response.
+     */
+    public NotFoundException(String message) {
+        super(Response.status(Responses.NOT_FOUND).
+                entity(message).type("text/plain").build());
+    }
+
+}</programlisting></example></para>
+
+    <para>In other cases it may not be appropriate to throw instances of &jaxrs.WebApplicationException;,
+    or classes that extend &jaxrs.WebApplicationException;, and instead it may be preferable to map an existing exception to a
+    response. For such cases it is possible to use the &jaxrs.ext.ExceptionMapper; interface. For example, the following
+    maps the <ulink url="http://docs.oracle.com/javaee/5/api/javax/persistence/EntityNotFoundException.html">EntityNotFoundException</ulink>
+    to a HTTP 404 (Not Found) response:</para>
+
+    <para><example>
+<title>Mapping generic exceptions to responses</title><programlisting language="java" linenumbering="numbered">@Provider
+public class EntityNotFoundMapper implements
+        ExceptionMapper&lt;javax.persistence.EntityNotFoundException&gt; {
+    public Response toResponse(javax.persistence.EntityNotFoundException ex) {
+        return Response.status(404).
+            entity(ex.getMessage()).
+            type("text/plain").
+            build();
+    }
+}</programlisting></example></para>
+
+    <para>The above class is annotated with &jaxrs.ext.Provider;, this declares that the class is of interest to the JAX-RS runtime. Such a
+    class may be added to the set of classes of the &jaxrs.core.Application; instance that is configured. When an application throws an
+    <ulink url="http://docs.oracle.com/javaee/5/api/javax/persistence/EntityNotFoundException.html">EntityNotFoundException</ulink>
+    the <literal>toResponse</literal> method of the <literal>EntityNotFoundMapper</literal> instance will be invoked.</para>
+  </section>
+
+  <section>
+    <title>Conditional GETs and Returning 304 (Not Modified) Responses</title>
+
+    <para>Conditional GETs are a great way to reduce bandwidth, and
+    potentially server-side performance, depending on how the information used
+    to determine conditions is calculated. A well-designed web site may return
+    304 (Not Modified) responses for the many of the static images it
+    serves.</para>
+
+    <para>JAX-RS provides support for conditional GETs using the contextual interface &jaxrs.core.Request;.</para>
+
+    <para>The following example shows conditional GET support from the sparklines sample:</para>
+
+    <para><example>
+        <title>Conditional GET support</title><programlisting language="java" linenumbering="numbered">public SparklinesResource(
+        @QueryParam("d") IntegerList data,
+        @DefaultValue("0,100") @QueryParam("limits") Interval limits,
+        @Context Request request,
+        @Context UriInfo ui) {
+    if (data == null)
+        throw new WebApplicationException(400);
+
+    this.data = data;
+
+    this.limits = limits;
+
+    if (!limits.contains(data))
+        throw new WebApplicationException(400);
+
+    this.tag = computeEntityTag(ui.getRequestUri());
+    if (request.getMethod().equals("GET")) {
+        Response.ResponseBuilder rb = request.evaluatePreconditions(tag);
+        if (rb != null)
+            throw new WebApplicationException(rb.build());
+    }
+}</programlisting></example></para>
+
+    <para>The constructor of the <literal>SparklinesResouce</literal> root
+    resource class computes an entity tag from the request URI and then calls
+    the <ulink url="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">request.evaluatePreconditions</ulink>
+    with that entity tag. If a client request contains an
+    <literal>If-None-Match</literal> header with a value that contains the
+    same entity tag that was calculated then the <ulink url="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</ulink>
+    returns a pre-filled out response, with the 304 status code and entity tag
+    set, that may be built and returned. Otherwise, <ulink url="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</ulink>
+    returns <literal>null</literal> and the normal response can be
+    returned.</para>
+
+    <para>Notice that in this example the constructor of a resource class can
+    be used perform actions that may otherwise have to be duplicated to
+    invoked for each resource method.</para>
+    </section>
+</chapter>

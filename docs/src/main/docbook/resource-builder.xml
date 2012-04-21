@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -46,43 +46,7 @@
 %ents;
 ]>
 
-<book xmlns:xi="http://www.w3.org/2001/XInclude">
-    <bookinfo>
-        <title>Jersey &version; User Guide</title>
-    </bookinfo>
-    <preface id="preface">
-        <title>Preface</title>
-        <para>
-This is user guide for Jersey &version;. We are trying to keep it up to date
-as we add new feature. Please use also our API documentation linked
-from the <ulink url="http://jersey.java.net">Jersey home page</ulink>
-as an additional source of information about Jersey features and API.
-
-If you would like to contribute to the guide or have questions
-on things not covered in our docs, please
-contact us at <ulink
-  url="mailto:users@jersey.java.net">users@jersey.java.net</ulink>.
-        </para>
-    </preface>
-
-  <xi:include href="getting-started.xml" />
-  <xi:include href="dependencies.xml" />
-  <xi:include href="jaxrs-resources.xml" />
-  <xi:include href="representations.xml" />
-  <xi:include href="uris-and-links.xml" />
-  <xi:include href="deployment.xml" />
-  <xi:include href="client.xml" />
-  <xi:include href="filters.xml" />
-  <xi:include href="mbw.xml" />
-  <xi:include href="async.xml"/>
-  <xi:include href="resource-builder.xml"/>
-  <xi:include href="json.xml"/>
-  <xi:include href="xml.xml"/>
-  <xi:include href="sse.xml"/>
-  <xi:include href="security.xml" />
-  <xi:include href="wadl.xml" />
-  <xi:include href="test-framework.xml"/>
-  <xi:include href="how-to-build.xml" />
-  <xi:include href="migration.xml" />
-
-</book>
+<chapter id="resource-builder">
+  <title>Programmatic API for Building Resources</title>
+    TODO: Describe the resource builder API
+</chapter>

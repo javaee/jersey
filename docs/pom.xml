@@ -73,6 +73,8 @@
                                 </copy>
                                 <replace file="${src.dir}/jersey.ent" token="$version" value="${project.version}"/>
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}"/>
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="2.0-SNAPSHOT"/>
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="$jaxrs.api.version"/>
                             </tasks>
                         </configuration>
                         <id>process-entities</id>
@@ -100,11 +102,13 @@
                     <xincludeSupported>true</xincludeSupported>
                     <sourceDirectory>${src.dir}</sourceDirectory>
                     <targetDirectory>${project.build.directory}/docbook</targetDirectory>
-                    <htmlStylesheet>http://jersey.java.net/documentation.css</htmlStylesheet>
+                    <htmlStylesheet>/documentation.css</htmlStylesheet>
+                    <!--htmlStylesheet>http://jersey.java.net/documentation.css</htmlStylesheet-->
                     <partAutolabel>true</partAutolabel>
                     <sectionAutolabel>true</sectionAutolabel>
                     <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
                     <useExtensions>true</useExtensions>
+                    <tablecolumnsExtension>true</tablecolumnsExtension>
                     <linenumberingExtension>true</linenumberingExtension>
                     <linenumberingEveryNth>1</linenumberingEveryNth>
                     <calloutsExtension>true</calloutsExtension>

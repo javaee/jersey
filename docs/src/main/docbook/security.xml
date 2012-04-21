@@ -46,43 +46,23 @@
 %ents;
 ]>
 
-<book xmlns:xi="http://www.w3.org/2001/XInclude">
-    <bookinfo>
-        <title>Jersey &version; User Guide</title>
-    </bookinfo>
-    <preface id="preface">
-        <title>Preface</title>
-        <para>
-This is user guide for Jersey &version;. We are trying to keep it up to date
-as we add new feature. Please use also our API documentation linked
-from the <ulink url="http://jersey.java.net">Jersey home page</ulink>
-as an additional source of information about Jersey features and API.
+<chapter id="security">
+    <title>Security</title>
 
-If you would like to contribute to the guide or have questions
-on things not covered in our docs, please
-contact us at <ulink
-  url="mailto:users@jersey.java.net">users@jersey.java.net</ulink>.
-        </para>
-    </preface>
+    <para>Security information is available by obtaining the &jaxrs.core.SecurityContext; using &jaxrs.core.Context;,
+    which is essentially the equivalent functionality available on the <ulink url="http://docs.oracle.com/javaee/5/api/javax/servlet/http/HttpServletRequest.html">HttpServletRequest</ulink>.</para>
 
-  <xi:include href="getting-started.xml" />
-  <xi:include href="dependencies.xml" />
-  <xi:include href="jaxrs-resources.xml" />
-  <xi:include href="representations.xml" />
-  <xi:include href="uris-and-links.xml" />
-  <xi:include href="deployment.xml" />
-  <xi:include href="client.xml" />
-  <xi:include href="filters.xml" />
-  <xi:include href="mbw.xml" />
-  <xi:include href="async.xml"/>
-  <xi:include href="resource-builder.xml"/>
-  <xi:include href="json.xml"/>
-  <xi:include href="xml.xml"/>
-  <xi:include href="sse.xml"/>
-  <xi:include href="security.xml" />
-  <xi:include href="wadl.xml" />
-  <xi:include href="test-framework.xml"/>
-  <xi:include href="how-to-build.xml" />
-  <xi:include href="migration.xml" />
+    <para>&jaxrs.core.SecurityContext; can be used in conjunction with sub-resource locators to return different
+    resources if the user principle is included in a certain role. For example, a sub-resource locator could return
+    a different resource if a user is a preferred customer:</para>
 
-</book>
+    <para><example>
+<title>Accessing <code>SecurityContext</code></title><programlisting language="java" linenumbering="numbered">@Path("basket")
+public ShoppingBasketResource get(@Context SecurityContext sc) {
+    if (sc.isUserInRole("PreferredCustomer") {
+       return new PreferredCustomerShoppingBaskestResource();
+    } else {
+       return new ShoppingBasketResource();
+    }
+}</programlisting></example></para>
+</chapter>

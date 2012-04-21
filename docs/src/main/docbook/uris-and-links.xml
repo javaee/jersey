@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+
+<chapter id="uris-and-links">
+  <title>URIs and Links</title>
+
+  <section>
+    <title>Building URIs</title>
+
+    <para>A very important aspects of REST is hyperlinks, URIs, in
+    representations that clients can use to transition the Web service to new
+    application states (this is otherwise known as "hypermedia as the engine
+    of application state"). HTML forms present a good example of this in
+    practice.</para>
+
+    <para>Building URIs and building them safely is not easy with <ulink
+    url="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/URI.html">java.net.URI</ulink>,
+    which is why JAX-RS has the &jaxrs.core.UriBuilder; class that makes it simple and easy to build URIs safely.</para>
+
+    <para>&jaxrs.core.UriBuilder; can be used to build new URIs or build from existing URIs. For resource
+    classes it is more than likely that URIs will be built from the base URI the web service is deployed at
+    or from the request URI. The class &jaxrs.core.UriInfo; provides such information (in addition to further
+    information, see next section).</para>
+
+    <para>The following example shows URI building with &jaxrs.core.UriInfo; and &jaxrs.core.UriBuilder;
+    from the bookmark sample:</para>
+
+    <para><example>
+<title>URI building</title><programlisting language="java" linenumbering="numbered">@Path("/users/")
+public class UsersResource {
+
+    @Context UriInfo uriInfo;
+
+    ...
+
+    @GET
+    @Produces("application/json")
+    public JSONArray getUsersAsJsonArray() {
+        JSONArray uriArray = new JSONArray();
+        for (UserEntity userEntity : getUsers()) {
+            UriBuilder ub = uriInfo.getAbsolutePathBuilder();
+            URI userUri = ub.
+                    path(userEntity.getUserid()).
+                    build();
+            uriArray.put(userUri.toASCIIString());
+        }
+        return uriArray;
+    }
+}</programlisting></example></para>
+
+    <para>&jaxrs.core.UriInfo; is obtained using the @Context annotation, and in this particular example injection onto
+    the field of the root resource class is performed, previous examples showed the use of @Context on resource method parameters.</para>
+
+    <para>&jaxrs.core.UriInfo; can be used to obtain URIs and associated &jaxrs.core.UriBuilder; instances for
+    the following URIs: the base URI the application is deployed at; the request URI; and the absolute path URI, which
+    is the request URI minus any query components.</para>
+
+    <para>The <literal>getUsersAsJsonArray</literal> method constructs a
+    JSONArrray where each element is a URI identifying a specific user
+    resource. The URI is built from the absolute path of the request URI by
+    calling <ulink url="&jax-rs.javadoc.path;/core/UriInfo.html#getAbsolutePathBuilder()">UriInfo.getAbsolutePathBuilder()</ulink>.
+    A new path segment is added, which is the user ID, and then the URI is
+    built. Notice that it is not necessary to worry about the inclusion of '/'
+    characters or that the user ID may contain characters that need to be
+    percent encoded. UriBuilder takes care of such details.</para>
+
+    <para>&jaxrs.core.UriBuilder; can be used to build/replace query or matrix parameters. URI templates can also be declared,
+    for example the following will build the URI "http://localhost/segment?name=value":</para>
+
+    <para><example>
+<title>Building URIs using query parameters</title><programlisting language="java" linenumbering="numbered">UriBuilder.fromUri("http://localhost/").
+    path("{a}").
+    queryParam("name", "{value}").
+    build("segment", "value");</programlisting></example></para>
+  </section>
+
+</chapter>
