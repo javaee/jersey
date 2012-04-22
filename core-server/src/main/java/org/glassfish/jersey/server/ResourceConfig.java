@@ -184,7 +184,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         this();
 
         this.application = application;
-        mergeProperties(this.properties, application);
+        mergeApplications(application);
     }
 
     public ResourceConfig(Class<? extends Application> applicationClass) {
@@ -348,7 +348,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     /**
      * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link Services} instance.
+     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
      *
      * @param modules custom modules.
      * @return updated resource configuration instance.
@@ -361,7 +361,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     /**
      * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link Services} instance.
+     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
      *
      * @param modules custom modules.
      * @return updated resource configuration instance..
@@ -407,7 +407,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * Set the {@link javax.ws.rs.core.Application JAX-RS Application instance}
      * in the {@code ResourceConfig}.
      *
-     * This method is used by the {@link ApplicationBuilder} in case this resource
+     * This method is used by the {@link ApplicationHandler} in case this resource
      * configuration instance was created using the {@link #ResourceConfig(java.lang.Class)
      * JAX-RS Application class constructor}.
      *
@@ -418,8 +418,29 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         invalidateProviderCache();
         this.application = application;
         this.applicationClass = null;
-        mergeProperties(properties, application);
+        mergeApplications(application);
         return this;
+    }
+
+    /**
+     * Merges fields (e.g. custom modules, properties) of the given application with this application.
+     * <p/>
+     * The merging should be done because of the possibility of reloading this {@code ResourceConfig} in a container
+     * so this resource config should know about custom modules and properties of the underlying application to ensure
+     * the reload process will complete successfully.
+     *
+     * @param application the application which fields should be merged with this application.
+     *
+     * @see org.glassfish.jersey.server.spi.Container#reload()
+     * @see org.glassfish.jersey.server.spi.Container#reload(ResourceConfig)
+     */
+    private void mergeApplications(final Application application) {
+        // Merge custom modules.
+        if (application instanceof ResourceConfig) {
+            customModules.addAll(((ResourceConfig)application).getCustomModules());
+        }
+
+        mergeProperties(properties, application);
     }
 
     private void invalidateProviderCache() {
