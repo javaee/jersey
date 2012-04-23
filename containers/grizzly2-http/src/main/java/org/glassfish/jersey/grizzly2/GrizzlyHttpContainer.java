@@ -72,10 +72,9 @@ import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.utils.Charsets;
 
 /**
+ * Grizzly 2 Jersey HTTP Container.
  *
- * Grizzly 2 Jersey HTTP Container Prototype
- *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class GrizzlyHttpContainer extends HttpHandler implements Container {
 
@@ -210,7 +209,6 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         this.appHandler = application;
     }
 
-    // HttpRequestProcessor
     @Override
     public void service(final Request request, final Response response) {
         final ResponseWriter responseWriter = new ResponseWriter(response);

@@ -42,6 +42,8 @@ package org.glassfish.jersey.grizzly2;
 import java.io.IOException;
 import java.net.URI;
 
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
@@ -52,10 +54,13 @@ import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 
 /**
- * TODO javadoc.
+ * Factory for creating Grizzly Http Server.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ *
+ * @see HttpServer
+ * @see GrizzlyHttpContainer
  */
 public class GrizzlyHttpServerFactory {
 
@@ -68,7 +73,7 @@ public class GrizzlyHttpServerFactory {
      * @throws ProcessingException
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
-        return createHttpServer(uri, ContainerFactory.createContainer(GrizzlyHttpContainer.class, configuration));
+        return createHttpServer(uri, ContainerFactory.createContainer(GrizzlyHttpContainer.class, configuration), false, null);
     }
 
     /**
@@ -80,34 +85,87 @@ public class GrizzlyHttpServerFactory {
      * @throws ProcessingException
      */
     public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler));
+        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), false, null);
     }
 
     /**
      * Creates HttpServer instance.
      *
-     * @param uri uri on which the {@link JerseyApplication} will be deployed.
+     * @param uri uri on which the {@link ApplicationHandler} will be deployed.
      * @return newly created {@link HttpServer}.
      * @throws ProcessingException
      */
     public static HttpServer createHttpServer(final URI uri) throws ProcessingException {
-        return createHttpServer(uri, (GrizzlyHttpContainer) null);
+        return createHttpServer(uri, (GrizzlyHttpContainer) null, false, null);
     }
 
-    private static HttpServer createHttpServer(final URI u, final GrizzlyHttpContainer handler)
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri URI on which the Jersey web application will be deployed.
+     * @param configuration web application configuration.
+     * @param secure used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
+     * @return newly created {@link HttpServer}.
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final ResourceConfig configuration,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator) {
+        return createHttpServer(uri, ContainerFactory.createContainer(GrizzlyHttpContainer.class, configuration), secure, sslEngineConfigurator);
+    }
+
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri URI on which the Jersey web application will be deployed.
+     * @param appHandler web application handler.
+     * @param secure used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
+     * @return newly created {@link HttpServer}.
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final ApplicationHandler appHandler,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator) {
+        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), secure, sslEngineConfigurator);
+    }
+
+
+
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri uri on which the {@link ApplicationHandler} will be deployed.
+     * @param handler {@link HttpHandler} instance.
+     * @param secure used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
+     * @return newly created {@link HttpServer}.
+     * @throws ProcessingException
+     *
+     * @see GrizzlyHttpContainer
+     */
+    private static HttpServer createHttpServer(final URI uri,
+                                               final HttpHandler handler,
+                                               final boolean secure,
+                                               final SSLEngineConfigurator sslEngineConfigurator)
             throws ProcessingException {
-        final String host = (u.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST
-                : u.getHost();
-        final int port = (u.getPort() == -1) ? 80 : u.getPort();
+        final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST
+                : uri.getHost();
+        final int port = (uri.getPort() == -1) ? 80 : uri.getPort();
         final HttpServer server = new HttpServer();
         final NetworkListener listener = new NetworkListener("grizzly", host, port);
+        listener.setSecure(secure);
+        if(sslEngineConfigurator != null) {
+            listener.setSSLEngineConfig(sslEngineConfigurator);
+        }
 
         server.addListener(listener);
 
         // Map the path to the processor.
         final ServerConfiguration config = server.getServerConfiguration();
         if (handler != null) {
-            config.addHttpHandler(handler, u.getPath());
+            config.addHttpHandler(handler, uri.getPath());
         }
         try {
             // Start the server.
