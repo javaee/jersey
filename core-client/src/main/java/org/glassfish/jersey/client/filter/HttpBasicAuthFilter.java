@@ -50,7 +50,7 @@ import org.glassfish.jersey.internal.util.Base64;
 
 /**
  * Client filter adding HTTP Basic Authentication header to the HTTP request,
- * if no such header is already present
+ * if no such header is already present.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Craig McClanahan
@@ -61,17 +61,17 @@ public final class HttpBasicAuthFilter implements RequestFilter {
 
     /**
      * Creates a new HTTP Basic Authentication filter using provided username
-     * and password credentials
+     * and password credentials.
      *
-     * @param username
-     * @param password
+     * @param username user name
+     * @param password password
      */
     public HttpBasicAuthFilter(final String username, final String password) {
         authentication = "Basic " + Base64.encodeAsString(username + ":" + password);
     }
 
     @Override
-    public void preFilter(FilterContext fc) throws IOException {
+    public final void preFilter(final FilterContext fc) throws IOException {
         Request cr = fc.getRequest();
         if (cr.getHeaders().getHeader(HttpHeaders.AUTHORIZATION) == null) {
             fc.setRequest(fc.getRequestBuilder().header(HttpHeaders.AUTHORIZATION, authentication).build());
