@@ -48,6 +48,8 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 
 import org.junit.Test;
@@ -113,6 +115,49 @@ public class ResourceConfigTest {
                 r.readEntity(Boolean.class));
     }
 
+    @Test
+    public void testResourceConfigMergeApplications() throws Exception {
+        //
+        ResourceConfig resourceConfig = new ResourceConfig();
+        final MyModule myModule = new MyModule();
+
+        // No custom module.
+        final ResourceConfig resourceConfig1 = new ResourceConfig();
+        resourceConfig1.setApplication(resourceConfig);
+        assertEquals(0, resourceConfig1.getCustomModules().size());
+
+        final ResourceConfig resourceConfig2 = new ResourceConfig(resourceConfig);
+        assertEquals(0, resourceConfig2.getCustomModules().size());
+
+        // Add myModule.
+        resourceConfig.addModules(myModule);
+
+        final ResourceConfig resourceConfig3 = new ResourceConfig();
+        resourceConfig3.setApplication(resourceConfig);
+        assertEquals(1, resourceConfig3.getCustomModules().size());
+        assertTrue(resourceConfig3.getCustomModules().contains(myModule));
+
+        final ResourceConfig resourceConfig4 = new ResourceConfig(resourceConfig);
+        assertEquals(1, resourceConfig4.getCustomModules().size());
+        assertTrue(resourceConfig4.getCustomModules().contains(myModule));
+
+        // Add myModule + one default.
+        final MyModule defaultModule = new MyModule();
+
+        final ResourceConfig resourceConfig5 = new ResourceConfig();
+        resourceConfig5.addModules(defaultModule);
+        resourceConfig5.setApplication(resourceConfig);
+        assertEquals(2, resourceConfig5.getCustomModules().size());
+        assertTrue(resourceConfig5.getCustomModules().contains(myModule));
+        assertTrue(resourceConfig5.getCustomModules().contains(defaultModule));
+
+        final ResourceConfig resourceConfig6 = new ResourceConfig(resourceConfig);
+        resourceConfig6.addModules(defaultModule);
+        assertEquals(2, resourceConfig5.getCustomModules().size());
+        assertTrue(resourceConfig6.getCustomModules().contains(myModule));
+        assertTrue(resourceConfig6.getCustomModules().contains(defaultModule));
+    }
+
     public static class MyResourceConfig2 extends ResourceConfig {
 
         private final int id;
@@ -142,4 +187,14 @@ public class ResourceConfigTest {
             return false;
         }
     }
+
+    public static class MyModule extends AbstractModule {
+
+        @Override
+        protected void configure() {
+            // do nothing
+        }
+
+    }
+
 }

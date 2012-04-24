@@ -100,6 +100,7 @@ import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.DynamicBinderFactory;
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
@@ -267,7 +268,15 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
         final Class<? extends Application> applicationClass = configuration.getApplicationClass();
         if (applicationClass != null) {
-            configuration.setApplication(services.forContract(applicationClass).get());
+            final Application application = services.forContract(applicationClass).get();
+
+            // (JERSEY-1094) If the application is an instance of ResourceConfig then register it's
+            // custom modules into the HK2 service registry so they can be used right away.
+            if (application instanceof ResourceConfig) {
+                registerCustomResourceConfigModules((ResourceConfig) application);
+            }
+
+            configuration.setApplication(application);
         }
         immutableConfigurationView = ResourceConfig.unmodifiableCopy(configuration);
 
@@ -334,6 +343,22 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         this.rootAcceptor = runtimeModelCreator.getRuntimeModel();
 
         injector.inject(this);
+    }
+
+    /**
+     * Registers custom modules of a given {@code ResourceConfig} into the HK2 service register.
+     *
+     * @param resourceConfig the resource config whose custom modules should be registered into the HK2 service
+     *                       register.
+     */
+    private void registerCustomResourceConfigModules(final ResourceConfig resourceConfig) {
+        final Set<Module> modules = resourceConfig.getCustomModules();
+        final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
+
+        for (Module module : modules) {
+            module.configure(dynamicBinderFactory);
+        }
+        dynamicBinderFactory.commit();
     }
 
     private void validateResources(MessageBodyWorkers workers, Set<ResourceClass> resources) {
