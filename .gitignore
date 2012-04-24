@@ -6,10 +6,13 @@ target/
 profile
 
 #IntelliJ Idea noise
+.idea
 *.iws
 *.ipr
 *.iml
 *.releaseBackup
+
+#NB noise
 nbactions.xml
 /nb-configuration.xml
 
