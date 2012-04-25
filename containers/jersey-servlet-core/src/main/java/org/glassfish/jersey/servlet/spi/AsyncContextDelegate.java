@@ -56,22 +56,28 @@ public interface AsyncContextDelegate {
     /**
      * Invoked by the superior {@link ContainerResponseWriter} responsible
      * for writing the response when processing is to be suspended.
+     * An implementation can throw an {@link UnsupportedOperationException} if suspend is not supported (the default behavior).
      *
-     * @param writer
-     * @param timeOut
-     * @param timeUnit
-     * @param timeoutHandler
+     * @param writer response writer.
+     * @param timeOut time-out value.
+     * @param timeUnit time-out time unit.
+     * @param timeoutHandler response writer time-out handler.
      * @throws IllegalStateException
+     *
+     * @see ContainerResponseWriter#suspend(long, java.util.concurrent.TimeUnit, org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler)
      */
     public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit, final ContainerResponseWriter.TimeoutHandler timeoutHandler) throws IllegalStateException;
 
     /**
      * Invoked by the superior {@link ContainerResponseWriter} responsible
      * for writing the response when new timeout values are to be set.
-
-     * @param timeOut
-     * @param timeUnit
-     * @throws IllegalStateException
+     * An implementation can throw an {@link UnsupportedOperationException} if suspend is not supported (the default behavior).
+     *
+     * @param timeOut new time-out value.
+     * @param timeUnit new time-out time unit.
+     * @throws IllegalStateException.
+     *
+     * @see ContainerResponseWriter#setSuspendTimeout(long, java.util.concurrent.TimeUnit)
      */
     public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException;
 

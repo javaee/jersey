@@ -200,6 +200,12 @@ public class ResponseWriter implements ContainerResponseWriter {
         }
     }
 
+    /**
+     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, javax.ws.rs.core.Response)} has been invoked.
+     * The method will block if the write method has not been called yet.
+     *
+     * @return response status
+     */
     public int getResponseStatus() {
         return getActualJerseyResponse().getStatus();
     }
