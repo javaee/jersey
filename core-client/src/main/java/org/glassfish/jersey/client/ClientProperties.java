@@ -143,6 +143,30 @@ public final class ClientProperties {
     public static final String ASYNC_THREADPOOL_SIZE =
             "jersey.config.client.async.threadPoolSize";
 
+    /**
+     * Support for specifying custom {@link javax.net.ssl.HostnameVerifier}. Used only when making Https requests.
+     *
+     * <p>The value MUST be an instance of {@link javax.net.ssl.HostnameVerifier}.</p>
+     *
+     * <p>A default value is not set.</p>
+     *
+     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     */
+    public static final String HOSTNAME_VERIFIER =
+            "jersey.config.client.ssl.hostnameVerifier";
+
+    /**
+     * Support for specifying custom {@link javax.net.ssl.SSLContext}. Used only when making Https requests.
+     *
+     * <p>The value MUST be an instance of {@link javax.net.ssl.SSLContext}.</p>
+     *
+     * <p>A default value is not set.</p>
+     *
+     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     */
+    public static final String SSL_CONTEXT =
+            "jersey.config.client.ssl.sslContext";
+
     private ClientProperties() {
         // prevents instantiation
     }

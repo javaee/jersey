@@ -41,8 +41,10 @@ package org.glassfish.jersey.client;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -81,7 +83,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.JerseyClient JAX-RS JerseyClient}
+ * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS JerseyClient}
  * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -230,7 +232,12 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             refs.messageBodyWorkers.set(workers);
             refs.contextRespolvers.set(resolvers);
 
-            return invoker.apply(injector.inject(invocation.request()), new InvocationCallback() {
+            final Request request = injector.inject(invocation.request());
+            Map<String,Object> properties = new HashMap<String, Object>(configuration().getProperties());
+            properties.putAll(request.getProperties());
+            request.getProperties().putAll(properties);
+
+            return invoker.apply(request, new InvocationCallback() {
 
                 @Override
                 public void result(Response response) {

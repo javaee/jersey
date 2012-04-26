@@ -45,6 +45,9 @@ import com.google.common.collect.Maps;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -87,6 +90,21 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
         uc.setRequestMethod(request.getMethod());
         // TODO process properties
 
+        if(uc instanceof HttpsURLConnection) {
+            if(request.getProperties().containsKey(ClientProperties.HOSTNAME_VERIFIER)) {
+                final Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);
+                if(o != null && (o instanceof HostnameVerifier)) {
+                    ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier)o);
+                }
+            }
+
+            if(request.getProperties().containsKey(ClientProperties.SSL_CONTEXT)) {
+                final Object o = request.getProperties().get(ClientProperties.SSL_CONTEXT);
+                if(o != null && (o instanceof SSLContext)) {
+                    ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
+                }
+            }
+        }
 
         // TODO write entity
         final Object entity = request.getEntity();

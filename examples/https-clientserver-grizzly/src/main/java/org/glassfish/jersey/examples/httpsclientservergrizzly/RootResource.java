@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+package org.glassfish.jersey.examples.httpsclientservergrizzly;
+
+import org.glassfish.jersey.internal.util.Base64;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
+ * Simple resource demonstrating low level approach of getting user credentials.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * Better way would be injecting {@link javax.ws.rs.core.SecurityContext}.
+ *
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class Base64Test {
+@Path("/")
+public class RootResource {
 
-    private static String[] decoded = new String[] {
-        "any carnal pleasure.",
-        "any carnal pleasure",
-        "any carnal pleasur",
-        "any carnal pleasu",
-        "any carnal pleas"
-    };
+    @GET
+    public String get1(@Context HttpHeaders headers) {
+        // you can get username form HttpHeaders
+        System.out.println("Service: GET / User: " + getUser(headers));
 
-    private static String[] encoded = new String[] {
-        "YW55IGNhcm5hbCBwbGVhc3VyZS4=",
-        "YW55IGNhcm5hbCBwbGVhc3VyZQ==",
-        "YW55IGNhcm5hbCBwbGVhc3Vy",
-        "YW55IGNhcm5hbCBwbGVhc3U=",
-        "YW55IGNhcm5hbCBwbGVhcw=="
-    };
-
-    @Test
-    public void testEncodeString() throws Exception {
-        for (int i = 0; i < decoded.length; i++) {
-            assertEquals(encoded[i], new String(Base64.encode(decoded[i].getBytes("ASCII")), "ASCII"));
-        }
+        return Server.CONTENT;
     }
 
-    @Test
-    public void testDecodeString() throws Exception {
-        for (int i = 0; i < encoded.length; i++) {
-            assertEquals(decoded[i], new String(Base64.decode(encoded[i].getBytes("ASCII")), "ASCII"));
-        }
-    }
+    private String getUser(HttpHeaders headers) {
 
+        // this is a very minimalistic and "naive" code; if you plan to use it
+        // add necessary checks (see org.glassfish.jersey.examples.httpsclientservergrizzly.authservergrizzly.SecurityFilter)
+
+        String auth = headers.getRequestHeader("authorization").get(0);
+
+        auth = auth.substring("Basic ".length());
+        String[] values = new String(Base64.decodeAsString(auth)).split(":");
+
+        // String username = values[0];
+        // String password = values[1];
+
+        return values[0];
+    }
 }

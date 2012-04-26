@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+package org.glassfish.jersey.examples.httpsclientservergrizzly;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
 /**
+ * Map an authentication exception to an HTTP 401 response, optionally including the realm for a credentials challenge at the client.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class Base64Test {
+@Provider
+public class AuthenticationExceptionMapper implements ExceptionMapper<AuthenticationException> {
 
-    private static String[] decoded = new String[] {
-        "any carnal pleasure.",
-        "any carnal pleasure",
-        "any carnal pleasur",
-        "any carnal pleasu",
-        "any carnal pleas"
-    };
-
-    private static String[] encoded = new String[] {
-        "YW55IGNhcm5hbCBwbGVhc3VyZS4=",
-        "YW55IGNhcm5hbCBwbGVhc3VyZQ==",
-        "YW55IGNhcm5hbCBwbGVhc3Vy",
-        "YW55IGNhcm5hbCBwbGVhc3U=",
-        "YW55IGNhcm5hbCBwbGVhcw=="
-    };
-
-    @Test
-    public void testEncodeString() throws Exception {
-        for (int i = 0; i < decoded.length; i++) {
-            assertEquals(encoded[i], new String(Base64.encode(decoded[i].getBytes("ASCII")), "ASCII"));
-        }
-    }
-
-    @Test
-    public void testDecodeString() throws Exception {
-        for (int i = 0; i < encoded.length; i++) {
-            assertEquals(decoded[i], new String(Base64.decode(encoded[i].getBytes("ASCII")), "ASCII"));
+    public Response toResponse(AuthenticationException e) {
+        if (e.getRealm() != null) {
+            return Response.
+                    status(Status.UNAUTHORIZED).
+                    header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"").
+                    type("text/plain").
+                    entity(e.getMessage()).
+                    build();
+        } else {
+            return Response.
+                    status(Status.UNAUTHORIZED).
+                    type("text/plain").
+                    entity(e.getMessage()).
+                    build();
         }
     }
 
