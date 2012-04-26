@@ -80,7 +80,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for creating an application with asynchronously handled request processing
- * via {@link ApplicationBuilder}'s programmatic API.
+ * via {@link ResourceBuilder}'s programmatic API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

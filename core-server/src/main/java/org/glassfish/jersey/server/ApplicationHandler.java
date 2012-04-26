@@ -209,10 +209,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootAcceptorProvider()).in(Singleton.class);
 
             bind().to(PreMatchRequestFilterAcceptor.class).in(Singleton.class);
-
-            for (Module m : ApplicationHandler.this.configuration.getCustomModules()) {
-                install(m);
-            }
         }
     }
     // FIXME move filter acceptor away from here! It must be part of the root acceptor chain!
@@ -234,50 +230,55 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private References refs;
 
     public ApplicationHandler() {
+        initServices();
         this.configuration = new ResourceConfig();
         initialize();
     }
 
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
+        initServices();
         if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
-            // TODO should we do some special processing in this case?
+            this.configuration = services.forContract(jaxrsApplicationClass.asSubclass(ResourceConfig.class)).get();
+        } else {
+            this.configuration = new ResourceConfig(jaxrsApplicationClass);
         }
-
-        this.configuration = new ResourceConfig(jaxrsApplicationClass);
         initialize();
     }
 
     public ApplicationHandler(Application application) {
+        initServices();
         if (application instanceof ResourceConfig) {
             this.configuration = (ResourceConfig) application;
         } else {
             this.configuration = new ResourceConfig(application);
         }
-
         initialize();
+    }
+
+    private void initServices() {
+        // TODO parent/child services - when HK2 bec ready:
+        //  this.jerseyServices = HK2.get().build(null, jerseyModules);
+        //  this.services = HK2.get().build(jerseyServices, customModules);
+        services = HK2.get().create(null, new ServerModule(), new ApplicationModule());
     }
 
     /**
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
     private void initialize() {
-        // TODO parent/child services - when HK2 bec ready:
-        //  this.jerseyServices = HK2.get().build(null, jerseyModules);
-        //  this.services = HK2.get().build(jerseyServices, customModules);
-        this.services = HK2.get().create(null, new ServerModule(), new ApplicationModule());
+        registerAdditionalModules(configuration.getCustomModules());
 
         final Class<? extends Application> applicationClass = configuration.getApplicationClass();
         if (applicationClass != null) {
             final Application application = services.forContract(applicationClass).get();
-
-            // (JERSEY-1094) If the application is an instance of ResourceConfig then register it's
-            // custom modules into the HK2 service registry so they can be used right away.
             if (application instanceof ResourceConfig) {
-                registerCustomResourceConfigModules((ResourceConfig) application);
+                // (JERSEY-1094) If the application is an instance of ResourceConfig then register it's
+                // custom modules into the HK2 service registry so they can be used right away.
+                registerAdditionalModules(((ResourceConfig) application).getCustomModules());
             }
-
             configuration.setApplication(application);
         }
+
         immutableConfigurationView = ResourceConfig.unmodifiableCopy(configuration);
 
         final Map<String, ResourceClass> pathToResourceMap = Maps.newHashMap();
@@ -346,13 +347,11 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     }
 
     /**
-     * Registers custom modules of a given {@code ResourceConfig} into the HK2 service register.
+     * Registers modules into the HK2 service register.
      *
-     * @param resourceConfig the resource config whose custom modules should be registered into the HK2 service
-     *                       register.
+     * @param modules
      */
-    private void registerCustomResourceConfigModules(final ResourceConfig resourceConfig) {
-        final Set<Module> modules = resourceConfig.getCustomModules();
+    private void registerAdditionalModules(final Set<Module> modules) {
         final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
 
         for (Module module : modules) {

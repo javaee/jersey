@@ -87,7 +87,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return new ResourceConfig(config) {
 
             {
-                super.application = config.getApplication();
+                if (super.applicationClass == null && super.application == null) {
+                    super.application = config;
+                }
             }
 
             @Override
@@ -201,33 +203,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     public ResourceConfig(Class<?>... classes) {
         this(Sets.newHashSet(classes));
-    }
-
-    private ResourceConfig(
-            final ClassLoader classLoader,
-            final Application application,
-            final Class<? extends Application> applicationClass,
-            final Set<Class<?>> providerClasses,
-            final Set<Object> providerInstances,
-            final Set<ResourceClass> resources,
-            final Map<String, Object> properties,
-            final Set<ResourceFinder> resourceFinders,
-            final Set<org.glassfish.hk2.Module> customModules) {
-        this.classLoader = classLoader;
-
-        this.application = application;
-        this.applicationClass = applicationClass;
-
-        this.classes = providerClasses;
-        this.singletons = providerInstances;
-        this.resources = resources;
-        this.resourcesView = Collections.unmodifiableSet(resources);
-
-        this.properties = properties;
-        this.propertiesView = Collections.unmodifiableMap(properties);
-
-        this.resourceFinders = resourceFinders;
-        this.customModules = customModules;
     }
 
     public ResourceConfig(ResourceConfig that) {
@@ -485,12 +460,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * {@link Set} of current resource and provider classes.
+     * Unmodifiable {@link Set} of current resource and provider classes.
      *
-     * Any modification to this list won't be reflected anywhere.
-     * set.
-     *
-     * @return {@link Set} of resource and provider classes.
+     * @return Unmodifiable {@link Set} of resource and provider classes.
      */
     @Override
     public final Set<Class<?>> getClasses() {
@@ -548,12 +520,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * {@link Set} of singletons.
+     * Unmodifiable {@link Set} of singletons.
      *
-     * Any modification to this list won't be reflected anywhere.
-     * set.
-     *
-     * @return {@link Set} of singletons.
+     * @return Unmodifiable {@link Set} of singletons.
      */
     @Override
     public final Set<Object> getSingletons() {
