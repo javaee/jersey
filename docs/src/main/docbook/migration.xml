@@ -95,17 +95,76 @@
 
         <para>The following sub-sections show code examples.</para>
 
+        <!-- TODO: s/Target/WebTarget (when JAX-RS API is ready) -->
+
         <section id="mig-client-simple-request">
             <title>Making a simple client request</title>
             <para>Jersey 1.x way:
-            <programlisting language="java" linenumbering="unnumbered">Client c = Client.create();
-WebResource r = c.resource("http://localhost:8080/").path("myresource/{param}");
-String result = r.pathParam("param", "value").get(String.class);</programlisting>
+            <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
+WebResource webResource = client.resource(restURL).path("myresource/{param}");
+String result = webResource.pathParam("param", "value").get(String.class);</programlisting>
             </para>
             <para>JAX-RS 2.0 way:
-            <programlisting language="java" linenumbering="unnumbered">Client c = ClientFactory.newClient();
-Target t = c.target("http://localhost:8080/").path("myresource/{param}");
-String result = r.pathParam("param", "value").get(String.class);</programlisting>
+            <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+Target target = client.target(restURL).path("myresource/{param}");
+String result = target.pathParam("param", "value").get(String.class);</programlisting>
+            </para>
+        </section>
+
+        <section id="mig-client-filter-register">
+            <title>Registering filters</title>
+            <para>Jersey 1.x way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
+WebResource webResource = client.resource(restURL);
+webResource.addFilter(new HTTPBasicAuthFilter(username, password));</programlisting>
+            </para>
+            <para>JAX-RS 2.0 way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+Target target = client.target(restURL);
+target.configuration().register(new HttpBasicAuthFilter(username, password));</programlisting>
+            </para>
+        </section>
+
+        <section id="mig-client-accept-header">
+            <title>Setting "Accept" header</title>
+            <para>Jersey 1.x way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
+WebResource webResource = client.resource(restURL).accept("text/plain");
+ClientResponse response = webResource.get(ClientResponse.class);</programlisting>
+            </para>
+            <para>JAX-RS 2.0 way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+Target target = client.target(restURL);
+Response response = target.request("text/plain").get(Response.class);</programlisting>
+            </para>
+        </section>
+
+        <section id="mig-client-add-entity">
+            <title>Attaching entity to request</title>
+            <para>Jersey 1.x way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
+WebResource webResource = client.resource(restURL);
+ClientResponse response = webResource.post(ClientResponse.class, "payload");</programlisting>
+            </para>
+            <para>JAX-RS 2.0 way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+Target target = client.target(restURL);
+Response response = target.request().post(Entity.text("payload"), Response.class);</programlisting>
+            </para>
+        </section>
+
+        <section id="mig-client-ssl">
+            <title>Setting SSLContext and/or HostnameVerifier</title>
+            <para>Jersey 1.x way:
+            <programlisting language="java" linenumbering="unnumbered">HTTPSProperties prop = new HTTPSProperties(hostnameVerifier, sslContext);
+DefaultClientConfig dcc = new DefaultClientConfig();
+dcc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, prop);
+Client client = Client.create(dcc);</programlisting>
+            </para>
+            <para>Jersey 2.0 way:
+            <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+client.configuration().setProperty(ClientProperties.SSL_CONTEXT, sslContext);
+client.configuration().setProperty(ClientProperties.HOSTNAME_VERIFIER, hostnameVerifier);</programlisting>
             </para>
         </section>
     </section>
