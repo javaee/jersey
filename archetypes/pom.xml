@@ -52,7 +52,7 @@
     <version>2.0-SNAPSHOT</version>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <name>All Jersey Archetypes</name>
+    <name>jersey-archetypes</name>
     <description>
         A module containing archetypes for generating Jersey-based applications.
     </description>
