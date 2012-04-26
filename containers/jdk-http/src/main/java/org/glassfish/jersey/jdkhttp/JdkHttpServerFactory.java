@@ -49,8 +49,9 @@ import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsServer;
 
@@ -75,8 +76,8 @@ public class JdkHttpServerFactory {
      * occurs.
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
-        final HttpHandler handler = ContainerFactory.createContainer(HttpHandler.class, configuration);
-        return createHttpServer(uri, handler);
+        final JdkHttpHandlerContainer handler = ContainerFactory.createContainer(JdkHttpHandlerContainer.class, configuration);
+        return createHttpServer(uri, handler, ConfigHelper.getContainerLifecycleListener(new ApplicationHandler(configuration)));
     }
 
     /**
@@ -92,10 +93,10 @@ public class JdkHttpServerFactory {
      * occurs.
      */
     public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler));
+        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), ConfigHelper.getContainerLifecycleListener(appHandler));
     }
 
-    private static HttpServer createHttpServer(final URI uri, final HttpHandler handler) throws ProcessingException {
+    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, final ContainerLifecycleListener containerListener) throws ProcessingException {
 
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
@@ -128,6 +129,8 @@ public class JdkHttpServerFactory {
         server.setExecutor(Executors.newCachedThreadPool());
         server.createContext(path, handler);
         server.start();
+
+        containerListener.onStartup(handler);
 
         return server;
     }

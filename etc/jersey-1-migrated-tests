@@ -45,6 +45,7 @@ media/multipart/src/test/java/org/glassfish/jersey/media/multipart/Parameterized
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageMediaTypeTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegMediaTypeTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/ReloadTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/BasicOsgiIntegrationTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/JsonTest.java
 
@@ -320,7 +321,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/MatrixParamTest
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/OutputStreamTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/PackagesResourceConfigReloadTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/QueryParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ReloadTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ResourcesContextPathTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ResponseWriterMetadataTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ApplicationReloadResourceTest.java

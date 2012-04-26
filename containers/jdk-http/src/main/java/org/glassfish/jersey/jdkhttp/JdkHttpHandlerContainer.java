@@ -60,8 +60,10 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
@@ -71,24 +73,28 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsExchange;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 /**
- * Container adapter between {@link HttpServer JDK HttpServer} and {@link ApplicationHandler}.
+ * Container adapter between {@link HttpServer JDK HttpServer} and {@link ApplicationHandler Jersey application}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class JdkHttpHandlerContainer implements HttpHandler {
+public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
-    private final ApplicationHandler appHandler;
+    transient private ApplicationHandler appHandler;
+    private final ContainerLifecycleListener containerListener;
 
     /**
-     * Creates a new Container connected to given {@link ApplicationHandler}.
+     * Creates a new Container connected to given {@link ApplicationHandler Jersey application}.
      *
      * @param appHandler Jersey application handler for which the container should be
      * initialized.
      */
     JdkHttpHandlerContainer(ApplicationHandler appHandler) {
         this.appHandler = appHandler;
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 
     @Override
@@ -131,7 +137,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
         final boolean isSecure = exchange instanceof HttpsExchange;
         String scheme = isSecure ? "https" : "http";
 
-        URI baseUri = null;
+        URI baseUri;
         try {
             List<String> hostHeader = exchange.getRequestHeaders().get("Host");
             if (hostHeader != null) {
@@ -199,6 +205,22 @@ public class JdkHttpHandlerContainer implements HttpHandler {
                 return null;
             }
         };
+    }
+
+    @Override
+    public ResourceConfig getConfiguration() {
+        return appHandler.getConfiguration();
+    }
+
+    @Override
+    public void reload() {
+        reload(getConfiguration());
+    }
+
+    @Override
+    public void reload(ResourceConfig configuration) {
+        appHandler = new ApplicationHandler(configuration);
+        containerListener.onReload(this);
     }
 
     private final static class ResponseWriter implements ContainerResponseWriter {

@@ -37,41 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.Container;
 
 /**
- * Jersey container service contract.
- *
- * The purpose of the container is to configure and host a single Jersey
- * application.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see org.glassfish.jersey.server.ApplicationHandler
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface Container {
+@Path("reload")
+public class ReloadResource extends AbstractContainerLifecycleListener {
 
-    /**
-     * Return an immutable representation of the current {@link ResourceConfig
-     * configuration}.
-     *
-     * @return current configuration of the hosted Jersey application.
-     */
-    public ResourceConfig getConfiguration();
+    static Container container;
 
-    /**
-     * Reload the hosted Jersey application using the current {@link ResourceConfig
-     * configuration}.
-     */
-    public void reload();
+    @GET
+    @Produces("text/plain")
+    public String get() {
+        container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class));
+        return "Reload resource";
+    }
 
-    /**
-     * Reload the hosted Jersey application using a new {@link ResourceConfig
-     * configuration}.
-     *
-     * @param configuration new configuration used for the reload.
-     */
-    public void reload(ResourceConfig configuration);
+    @Override
+    public void onStartup(Container container) {
+        ReloadResource.container = container;
+    }
 }

@@ -55,21 +55,22 @@ import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.internal.util.ExtendedLogger;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerRequestContext;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
-
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.utils.Charsets;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.ContainerRequestContext;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 
 /**
  * Grizzly 2 Jersey HTTP Container.
@@ -80,6 +81,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
+
     private static final CompletionHandler<Response> EMPTY_COMPLETION_HANDLER = new CompletionHandler<Response>() {
 
         @Override
@@ -198,8 +200,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             }
         }
     }
-    //
-    private final ApplicationHandler appHandler;
+
+    private transient ApplicationHandler appHandler;
+    private final ContainerLifecycleListener containerListener;
 
     /**
      * Creates a new Grizzly container.
@@ -208,6 +211,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      */
     GrizzlyHttpContainer(final ApplicationHandler application) {
         this.appHandler = application;
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(application);
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        containerListener.onStartup(this);
     }
 
     @Override
@@ -231,12 +241,19 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        reload(appHandler.getConfiguration());
     }
 
     @Override
     public void reload(ResourceConfig configuration) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        appHandler = new ApplicationHandler(configuration);
+        containerListener.onReload(this);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        containerListener.onShutdown(this);
     }
 
     private SecurityContext getSecurityContext(final Request request) {

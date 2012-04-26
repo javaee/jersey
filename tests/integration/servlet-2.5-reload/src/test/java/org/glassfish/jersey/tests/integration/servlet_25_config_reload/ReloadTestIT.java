@@ -37,41 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
+
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Jersey container service contract.
- *
- * The purpose of the container is to configure and host a single Jersey
- * application.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see org.glassfish.jersey.server.ApplicationHandler
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface Container {
+public class ReloadTestIT extends JerseyTest {
 
-    /**
-     * Return an immutable representation of the current {@link ResourceConfig
-     * configuration}.
-     *
-     * @return current configuration of the hosted Jersey application.
-     */
-    public ResourceConfig getConfiguration();
+    @Override
+    protected ResourceConfig configure() {
+        return new ResourceConfig(HelloWorldResource.class);
+    }
 
-    /**
-     * Reload the hosted Jersey application using the current {@link ResourceConfig
-     * configuration}.
-     */
-    public void reload();
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
 
-    /**
-     * Reload the hosted Jersey application using a new {@link ResourceConfig
-     * configuration}.
-     *
-     * @param configuration new configuration used for the reload.
-     */
-    public void reload(ResourceConfig configuration);
+    @Test
+    public void testReload() throws Exception {
+        Response response = target().path("helloworld").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("Hello World! " + this.getClass().getPackage().getName(), response.readEntity(String.class));
+
+        response = target().path("another").request().get();
+        assertEquals(404, response.getStatus());
+
+        response = target().path("reload").request().get();
+        assertEquals(200, response.getStatus());
+
+        response = target().path("another").request().get();
+        assertEquals(200, response.getStatus());
+    }
 }

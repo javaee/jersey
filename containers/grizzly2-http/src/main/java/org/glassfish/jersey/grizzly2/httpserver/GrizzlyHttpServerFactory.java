@@ -43,15 +43,14 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
-import org.glassfish.grizzly.http.server.ServerConfiguration;
 
 /**
  * Factory for creating Grizzly Http Server.
@@ -146,7 +145,7 @@ public class GrizzlyHttpServerFactory {
      * @see GrizzlyHttpContainer
      */
     private static HttpServer createHttpServer(final URI uri,
-                                               final HttpHandler handler,
+                                               final GrizzlyHttpContainer handler,
                                                final boolean secure,
                                                final SSLEngineConfigurator sslEngineConfigurator)
             throws ProcessingException {

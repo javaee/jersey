@@ -60,6 +60,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
@@ -72,10 +76,6 @@ import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
 
 /**
  * An abstract Web component that may be extended by a Servlet and/or
@@ -177,7 +177,7 @@ public class WebComponent {
         }
     }
     //
-    private final ApplicationHandler appHandler;
+    /* package */ final ApplicationHandler appHandler;
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
 
     public WebComponent(final WebConfig webConfig) throws ServletException {

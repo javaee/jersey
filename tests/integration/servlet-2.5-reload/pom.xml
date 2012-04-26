@@ -40,72 +40,51 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.tests.integration</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.examples</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-examples</name>
+    <artifactId>servlet-2.5-reload</artifactId>
+    <packaging>war</packaging>
+    <name>jersey-tests-integration-servlet-2.5-reload</name>
 
-    <description>Jersey examples</description>
-
-    <modules>
-        <module>clipboard</module>
-        <module>clipboard-programmatic</module>
-        <module>exception-mapping</module>
-        <module>helloworld</module>
-        <module>helloworld-programmatic</module>
-        <module>helloworld-pure-jax-rs</module>
-        <module>helloworld-webapp</module>
-        <module>http-trace</module>
-        <module>https-clientserver-grizzly</module>
-        <module>jaxb</module>
-        <module>jaxrs-types-injection</module>
-        <module>json-jackson</module>
-        <module>json-jaxb</module>
-        <module>json-with-padding</module>
-        <module>multipart-webapp</module>
-        <module>osgi-helloworld-webapp</module>
-        <module>osgi-http-service</module>
-        <module>reload</module>
-        <module>server-async</module>
-        <module>server-async-managed</module>
-        <module>server-sent-events</module>
-    </modules>
+    <description>Servlet integration test - servlet-2.5-reload - reload resource triggers application reload</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <groupId>org.mortbay.jetty</groupId>
+              <artifactId>jetty-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

@@ -37,41 +37,67 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.tests.e2e.server;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Jersey container service contract.
  *
- * The purpose of the container is to configure and host a single Jersey
- * application.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see org.glassfish.jersey.server.ApplicationHandler
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface Container {
+public class ContainerListenerRegistrationAsProvidersTest extends JerseyTest {
 
-    /**
-     * Return an immutable representation of the current {@link ResourceConfig
-     * configuration}.
-     *
-     * @return current configuration of the hosted Jersey application.
-     */
-    public ResourceConfig getConfiguration();
+    MyListener listener;
 
-    /**
-     * Reload the hosted Jersey application using the current {@link ResourceConfig
-     * configuration}.
-     */
-    public void reload();
+    @Override
+    public ResourceConfig configure() {
+        listener = new MyListener();
+        final ResourceConfig result = new ResourceConfig(One.class, YetAnotherListener.class).addSingletons(listener);
+        return result;
+    }
 
-    /**
-     * Reload the hosted Jersey application using a new {@link ResourceConfig
-     * configuration}.
-     *
-     * @param configuration new configuration used for the reload.
-     */
-    public void reload(ResourceConfig configuration);
+    static class YetAnotherListener extends AbstractContainerLifecycleListener {
+
+        static boolean started;
+
+        @Override
+        public void onStartup(Container container) {
+            started = true;
+        }
+    }
+
+    static class MyListener extends AbstractContainerLifecycleListener {
+
+        boolean startupInvoked;
+
+        @Override
+        public void onStartup(Container container) {
+            startupInvoked = true;
+        }
+    }
+
+    @Test
+    public void testListener() {
+        assertEquals("whatever", target().path("doesNotMatter").request().get().readEntity(String.class));
+        assertTrue(listener.startupInvoked);
+        assertTrue(YetAnotherListener.started);
+    }
+
+    @Path("doesNotMatter")
+    public static class One {
+        @GET
+        public String get() {
+            return "whatever";
+        }
+    }
 }

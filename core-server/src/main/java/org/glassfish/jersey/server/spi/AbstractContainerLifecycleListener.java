@@ -39,39 +39,27 @@
  */
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.jersey.server.ResourceConfig;
-
 /**
- * Jersey container service contract.
+ * Convenience class to allow implementing only a subset of {@link ContainerLifecycleListener container liefecycle listener}
+ * callback method(s).
  *
- * The purpose of the container is to configure and host a single Jersey
- * application.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see org.glassfish.jersey.server.ApplicationHandler
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface Container {
+public abstract class AbstractContainerLifecycleListener implements ContainerLifecycleListener {
 
-    /**
-     * Return an immutable representation of the current {@link ResourceConfig
-     * configuration}.
-     *
-     * @return current configuration of the hosted Jersey application.
-     */
-    public ResourceConfig getConfiguration();
+    @Override
+    public void onStartup(Container container) {
+        // no-op
+    }
 
-    /**
-     * Reload the hosted Jersey application using the current {@link ResourceConfig
-     * configuration}.
-     */
-    public void reload();
+    @Override
+    public void onReload(Container container) {
+        // no-op
+    }
 
-    /**
-     * Reload the hosted Jersey application using a new {@link ResourceConfig
-     * configuration}.
-     *
-     * @param configuration new configuration used for the reload.
-     */
-    public void reload(ResourceConfig configuration);
+    @Override
+    public void onShutdown(Container container) {
+        // no-op
+    }
+
 }

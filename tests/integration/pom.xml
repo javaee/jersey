@@ -57,6 +57,7 @@
     <modules>
         <module>jersey-780</module>
         <module>jersey-1107</module>
+        <module>servlet-2.5-reload</module>
         <module>servlet-2.5-init-1</module>
         <module>servlet-2.5-init-2</module>
         <module>servlet-2.5-init-3</module>

@@ -37,41 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.examples.reload;
 
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 /**
- * Jersey container service contract.
  *
- * The purpose of the container is to configure and host a single Jersey
- * application.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see org.glassfish.jersey.server.ApplicationHandler
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public interface Container {
+@Path("stats")
+@Produces("text/plain")
+public class StatsResource {
 
-    /**
-     * Return an immutable representation of the current {@link ResourceConfig
-     * configuration}.
-     *
-     * @return current configuration of the hosted Jersey application.
-     */
-    public ResourceConfig getConfiguration();
-
-    /**
-     * Reload the hosted Jersey application using the current {@link ResourceConfig
-     * configuration}.
-     */
-    public void reload();
-
-    /**
-     * Reload the hosted Jersey application using a new {@link ResourceConfig
-     * configuration}.
-     *
-     * @param configuration new configuration used for the reload.
-     */
-    public void reload(ResourceConfig configuration);
+    @GET
+    public String getStats() {
+        return String.format("Arrivals resource hits: %d\nDepartures resource hits: %d",
+                FlightsDB.arrivalsReqCount.get(), FlightsDB.departuresReqCount.get());
+    }
 }

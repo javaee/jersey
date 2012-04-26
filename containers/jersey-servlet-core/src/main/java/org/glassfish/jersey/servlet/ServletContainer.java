@@ -41,6 +41,8 @@ package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Response;
@@ -58,8 +60,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -110,7 +116,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ServletContainer extends HttpServlet implements Filter {
+public class ServletContainer extends HttpServlet implements Filter, Container {
 
     private static final long serialVersionUID = 3932047066686065219L;
     private transient FilterConfig filterConfig;
@@ -118,6 +124,10 @@ public class ServletContainer extends HttpServlet implements Filter {
     // TODO
     private transient Pattern staticContentPattern;
     private String filterContextPath = null;
+    private ContainerLifecycleListener containerListener;
+
+    private static final ExtendedLogger logger =
+            new ExtendedLogger(Logger.getLogger(ServletContainer.class.getName()), Level.FINEST);
 
     /**
      * Initiate the Web component.
@@ -130,6 +140,9 @@ public class ServletContainer extends HttpServlet implements Filter {
         // create a new web component only if null
         // if not null it means it was initialized by the JerseyServletContainerInitializer
         webComponent = webComponent == null ? new WebComponent(webConfig) : webComponent;
+
+        containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
+        containerListener.onStartup(this);
     }
 
     // HttpServlet
@@ -295,6 +308,7 @@ public class ServletContainer extends HttpServlet implements Filter {
     @Override
     public void destroy() {
         super.destroy();
+        containerListener.onShutdown(this);
     }
 
     @Override
@@ -480,5 +494,25 @@ public class ServletContainer extends HttpServlet implements Filter {
      */
     protected Pattern getStaticContentPattern() {
         return staticContentPattern;
+    }
+
+    @Override
+    public ResourceConfig getConfiguration() {
+        return webComponent.appHandler.getConfiguration();
+    }
+
+    @Override
+    public void reload() {
+        reload(getConfiguration());
+    }
+
+    @Override
+    public void reload(ResourceConfig configuration) {
+        try {
+            webComponent = new WebComponent(configuration);
+            containerListener.onReload(this);
+        } catch (ServletException ex) {
+            logger.log(Level.SEVERE, "Reload failed", ex);
+        }
     }
 }
