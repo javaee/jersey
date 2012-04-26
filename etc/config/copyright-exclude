@@ -36,3 +36,9 @@ nb-configuration.xml
 /bundles/jax-rs-ri/src/main/resources/Jersey-LICENSE.txt
 /bundles/jax-rs-ri/src/main/resources/third-party-license-readme.txt
 /archetype-resources/
+/examples/https-clientserver-grizzly/client.cert
+/examples/https-clientserver-grizzly/keystore_client
+/examples/https-clientserver-grizzly/keystore_server
+/examples/https-clientserver-grizzly/server.cert
+/examples/https-clientserver-grizzly/truststore_client
+/examples/https-clientserver-grizzly/truststore_server
