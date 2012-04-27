@@ -86,8 +86,8 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        Client origClient = super.getClient(tc, application);
+    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
+        Client origClient = super.getClient(tc, applicationHandler);
         origClient.configuration().enable(new JsonFeature());
         return origClient;
     }

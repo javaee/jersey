@@ -46,7 +46,7 @@
         <servlet-name>testServlet4</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
-            <param-name>org.glassfish.jersey.config.property.classnames</param-name>
+            <param-name>jersey.config.server.provider.classnames</param-name>
             <param-value>org.glassfish.jersey.tests.integration.servlet_25_init_4.HelloWorldResource;org.glassfish.jersey.tests.integration.servlet_25_init_4.HelloWriter</param-value>
         </init-param>
 

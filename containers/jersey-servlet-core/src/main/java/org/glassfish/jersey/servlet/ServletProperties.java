@@ -50,7 +50,7 @@ public final class ServletProperties {
      * If set the regular expression is used to match an incoming servlet path URI
      * to some web page content such as static resources or JSPs to be handled
      * by the underlying servlet engine.
-     * <p />
+     * <p></p>
      * The property is only applicable when {@link ServletContainer Jersey servlet
      * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
      * this property will be ignored. If a servlet path matches this regular
@@ -60,16 +60,17 @@ public final class ServletProperties {
      * to {@code /(image|css)/.*} then you can serve up images and CSS files
      * for your Implicit or Explicit Views while still processing your JAX-RS
      * resources.
-     * <p />
+     * <p></p>
      * The type of this property must be a String and the value must be a valid
      * regular expression.
-     * <p />
+     * <p></p>
      * A default value is not set.
-     * <p />
+     * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO: implement support.
     public static final String FILTER_STATIC_CONTENT_REGEXP = "jersey.config.servlet.filter.staticContentPath";
+
     /**
      * If set to {@code true} and a 404 response with no entity body is returned
      * from either the runtime or the application then the runtime forwards the
@@ -81,16 +82,16 @@ public final class ServletProperties {
      * static content regular expression} and requires less configuration. However,
      * application code, such as methods corresponding to sub-resource locators,
      * may be invoked when this feature is enabled.
-     * <p />
+     * <p></p>
      * The property is only applicable when {@link ServletContainer Jersey servlet
      * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
      * this property will be ignored.
-     * <p />
+     * <p></p>
      * Application code, such as methods corresponding to sub-resource locators
      * may be invoked when this feature is enabled.
      * <p>
      * The default value is {@code false}.
-     * <p />
+     * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO: implement support.
@@ -111,13 +112,37 @@ public final class ServletProperties {
      * <p>
      * The value of the property may consist of one or more path segments separate by
      * {@code '/'}.
-     * <p />
+     * <p></p>
      * A default value is not set.
-     * <p />
+     * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO: implement support.
     public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
+    /**
+     * Application configuration initialization property whose value is a fully
+     * qualified class name of a class that implements {@link javax.ws.rs.core.Application}.
+     * <p></p>
+     * A default value is not set.
+     * <p></p>
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    // TODO implement generic support
+    public static final String JAXRS_APPLICATION_CLASS = "javax.ws.rs.Application";
+
+    /**
+     * Indicates that Jersey should scan the whole web app for application-specific resources and
+     * providers. If the property is present and the value is not <code>false</code>, the whole web app will be scanned
+     * for JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path})
+     * and providers (annotated with {@link javax.ws.rs.ext.Provider @Provider}).
+     * <p></p>
+     * The property value MUST be an instance of {@link String}. The allowed values are <code>true</code> and <code>false</code>.
+     * <p></p>
+     * A default value is not set.
+     * <p></p>
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
 
     private ServletProperties() {
         // prevents instantiation

@@ -142,14 +142,14 @@ public abstract class JerseyTest {
     }
 
     private ResourceConfig getResourceConfig(Application app) {
-        return (app instanceof ResourceConfig) ? (ResourceConfig) app : new ResourceConfig(app);
+        return ResourceConfig.forApplication(app);
     }
 
     /**
      * Construct a new instance with an application descriptor that defines
      * how the test container is configured.
      *
-     * @param application an application describing how to configure the
+     * @param jaxrsApplication an application describing how to configure the
      *        test container.
      * @throws TestContainerException if the default test container factory
      *         cannot be obtained, or the application descriptor is not
@@ -410,10 +410,10 @@ public abstract class JerseyTest {
      * This method is called exactly once when JerseyTest is created.
      *
      * @param tc instance of {@link TestContainer}
-     * @param application instance of {@link JerseyApplication}
+     * @param applicationHandler instance of {@link ApplicationHandler}
      * @return A Client instance.
      */
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
+    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         Client c = tc.getClient();
 
         if (c != null) {

@@ -40,7 +40,6 @@
 package org.glassfish.jersey.servlet.init;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,10 +60,11 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.annotation.HandlesTypes;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.servlet.ServletProperties;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /*
  It is RECOMMENDED that implementations support the Servlet 3 framework
@@ -126,33 +126,33 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         if (classes == null) {
             classes = Collections.emptySet();
         }
-        final int nOfRegisterations = sc.getServletRegistrations().size();
         // first see if there are any application classes in the web app
         for (Class<? extends Application> a : getApplicationClasses(classes)) {
             final ServletRegistration appReg = sc.getServletRegistration(a.getName());
+
             if (appReg != null) {
-                // Servlet is registered with app name
                 addServletWithExistingRegistration(sc, appReg, a, classes);
             } else {
-                // Servlet is not registered with app name
-                final List<Registration> srs = getInitParamDeclaredRegistrations(sc, a);
+                // Servlet is not registered with app name or the app name is used to register a different servlet
+                // check if some servlet defines the app in init params
+                List<Registration> srs = getInitParamDeclaredRegistrations(sc, a);
                 if (!srs.isEmpty()) {
-                    // List of servlets registered with app name in init param
+                    // app handled by at least one servlet or filter
+                    // fix the registrations if needed (i.e. add servlet class)
                     for (Registration sr : srs) {
                         if (sr instanceof ServletRegistration) {
                             addServletWithExistingRegistration(sc, (ServletRegistration) sr, a, classes);
                         }
                     }
                 } else {
+                    // app not handled by any servlet/filter -> add it
                     addServletWithApplication(sc, a, classes);
                 }
             }
         }
 
-        if (nOfRegisterations == sc.getServletRegistrations().size()) {
-            // No app was registered
-            addServletWithDefaultConfiguration(sc, classes);
-        }
+        // check for javax.ws.rs.core.Application registration
+        addServletWithDefaultConfiguration(sc, classes);
     }
 
     private List<Registration> getInitParamDeclaredRegistrations(ServletContext sc, Class<? extends Application> a) {
@@ -166,8 +166,8 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             List<Registration> collected, Class<? extends Application> a) {
         for (Registration sr : registrations.values()) {
             Map<String, String> ips = sr.getInitParameters();
-            if (ips.containsKey(ServerProperties.JAXRS_APPLICATION_CLASS)) {
-                if (ips.get(ServerProperties.JAXRS_APPLICATION_CLASS).equals(a.getName())) {
+            if (ips.containsKey(ServletProperties.JAXRS_APPLICATION_CLASS)) {
+                if (ips.get(ServletProperties.JAXRS_APPLICATION_CLASS).equals(a.getName())) {
                     collected.add(sr);
                 }
             }
@@ -178,7 +178,9 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         ServletRegistration appReg = sc.getServletRegistration(Application.class.getName());
         if (appReg != null && appReg.getClassName() == null) {
             final Set<Class<?>> x = getRootResourceAndProviderClasses(classes);
-            final ServletContainer s = new ServletContainer(new ResourceConfig(x));
+            final ServletContainer s = new ServletContainer(
+                    ResourceConfig.forApplicationClass(ResourceConfig.class, x).addProperties(getInitParams(appReg))
+            );
             appReg = sc.addServlet(appReg.getName(), s);
 
             if (appReg.getMappings().isEmpty()) {
@@ -199,7 +201,7 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
         final ApplicationPath ap = a.getAnnotation(ApplicationPath.class);
         if (ap != null) {
             // App is annotated with ApplicationPath
-            final ResourceConfig rc = new ResourceConfig(a).addClasses(classes);
+            final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes);
             final ServletContainer s = new ServletContainer(rc);
 
             final String mapping = createMappingPath(ap);
@@ -224,13 +226,8 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
     private void addServletWithExistingRegistration(final ServletContext sc, ServletRegistration sr,
             final Class<? extends Application> a, final Set<Class<?>> classes) throws ServletException {
         if (sr.getClassName() == null) {
-
-            final Map<String, Object> initParams = new HashMap<String, Object>();
-            for (Map.Entry<String, String> entry : sr.getInitParameters().entrySet()) {
-                initParams.put(entry.getKey(), entry.getValue());
-            }
-            final ResourceConfig rc = new ResourceConfig(a)
-                    .addClasses(classes).addProperties(initParams);
+            // create a new servlet container for a given app.
+            final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes).addProperties(getInitParams(sr));
             final ServletContainer s = new ServletContainer(rc);
 
             sr = sc.addServlet(a.getName(), s);
@@ -264,6 +261,14 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
                         a.getName());
             }
         }
+    }
+
+    private static Map<String, Object> getInitParams(ServletRegistration sr) {
+        final Map<String, Object> initParams = Maps.newHashMap();
+        for (Map.Entry<String, String> entry : sr.getInitParameters().entrySet()) {
+            initParams.put(entry.getKey(), entry.getValue());
+        }
+        return initParams;
     }
 
     private boolean mappingExists(ServletContext sc, String mapping) {

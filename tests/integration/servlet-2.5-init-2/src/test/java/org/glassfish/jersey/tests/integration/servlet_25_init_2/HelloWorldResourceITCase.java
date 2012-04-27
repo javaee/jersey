@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_2;
 
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
@@ -46,6 +48,7 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -65,7 +68,8 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        String s = target().path("helloworld").request().get(String.class);
-        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
+        Response r = target().path("helloworld").request().get();
+        assertEquals(200, r.getStatus());
+        assertEquals("Hello World! " + this.getClass().getPackage().getName(), r.readEntity(String.class));
     }
 }

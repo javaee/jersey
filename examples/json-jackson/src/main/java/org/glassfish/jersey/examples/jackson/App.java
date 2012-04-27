@@ -45,13 +45,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJacksonModule;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Utility class which can create {@link JerseyApplication} instance and provides support
+ * Utility class which creates {@link MyApplication} instances and provides support
  * for running this sample from command line.
  *
  * @author Jakub Podlesak
@@ -78,9 +77,6 @@ public class App {
     }
 
     public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig(new MyApplication()).addModules(new JsonJacksonModule());
-
-
-        return rc;
+        return new MyApplication();
     }
 }

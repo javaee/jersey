@@ -41,7 +41,6 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,6 @@ import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 import org.glassfish.jersey.server.model.ResourceClass;
-import org.glassfish.jersey.server.spi.PropertiesProvider;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
 import org.glassfish.hk2.Module;
@@ -72,133 +70,50 @@ import com.google.common.collect.Sets;
  * The resource configuration for configuring a web application.
  *
  * @author Paul Sandoz
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class ResourceConfig extends Application implements FeaturesAndProperties {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceConfig.class.getName());
-
-    /**
-     * Create an immutable copy of the given resource configuration.
-     *
-     * @param config original resource configuration.
-     * @return immutable copy of the original resource configuration.
-     */
-    static ResourceConfig unmodifiableCopy(final ResourceConfig config) {
-        return new ResourceConfig(config) {
-
-            {
-                if (super.applicationClass == null && super.application == null) {
-                    super.application = config;
-                }
-            }
-
-            @Override
-            public ResourceConfig addClasses(Set<Class<?>> classes) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig addResources(Set<ResourceClass> resources) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig addFinder(ResourceFinder resourceFinder) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig addModules(Set<Module> modules) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig addProperties(Map<String, Object> properties) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig addSingletons(Set<Object> singletons) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            ResourceConfig setApplication(Application application) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig setClassLoader(ClassLoader classLoader) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-
-            @Override
-            public ResourceConfig setProperty(String name, Object value) {
-                throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-            }
-        };
-    }
-
-    public static ResourceBuilder resourceBuilder() {
-        return new DefaultResourceBuilder();
-    }
     //
     private transient Set<Class<?>> cachedClasses = null;
     private transient Set<Class<?>> cachedClassesView = null;
     private transient Set<Object> cachedSingletons = null;
     private transient Set<Object> cachedSingletonsView = null;
     //
-    private ClassLoader classLoader = null;
-    //
-    private volatile Application application;
-    private Class<? extends Application> applicationClass;
-    //
     private final Set<Class<?>> classes;
     private final Set<Object> singletons;
+    private final Set<ResourceFinder> resourceFinders;
+    //
     private final Set<ResourceClass> resources;
     private final Set<ResourceClass> resourcesView;
-    //
     private final Map<String, Object> properties;
     private final Map<String, Object> propertiesView;
     //
-    private final Set<ResourceFinder> resourceFinders;
-    private final Set<org.glassfish.hk2.Module> customModules;
+    private final Set<Module> customModules;
+    //
+    private ClassLoader classLoader = null;
+    //
+    private InternalState internalState = new Mutable();
 
     public ResourceConfig() {
         this.classLoader = ReflectionHelper.getContextClassLoader();
 
-        this.application = null;
-        this.applicationClass = null;
-
         this.classes = Sets.newHashSet();
         this.singletons = Sets.newHashSet();
         this.resources = Sets.newHashSet();
-        this.resourcesView = Collections.unmodifiableSet(resources);
+        this.resourcesView = Collections.unmodifiableSet(this.resources);
 
         this.properties = Maps.newHashMap();
-        this.propertiesView = Collections.unmodifiableMap(properties);
+        this.propertiesView = Collections.unmodifiableMap(this.properties);
 
         this.resourceFinders = Sets.newHashSet();
         this.customModules = Sets.newHashSet();
     }
 
-    public ResourceConfig(final Application application) {
-        this();
-
-        this.application = application;
-        mergeApplications(application);
-    }
-
-    public ResourceConfig(Class<? extends Application> applicationClass) {
-        this();
-
-        this.applicationClass = applicationClass;
-    }
-
     public ResourceConfig(Set<Class<?>> classes) {
         this();
-
-        this.classes.addAll(classes);
+        this.addClasses(classes);
     }
 
     public ResourceConfig(Class<?>... classes) {
@@ -208,13 +123,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     public ResourceConfig(ResourceConfig that) {
         this.classLoader = that.classLoader;
 
-        this.application = that.application;
-        this.applicationClass = that.applicationClass;
-
         this.classes = Sets.newHashSet(that.classes);
         this.singletons = Sets.newHashSet(that.singletons);
         this.resources = Sets.newHashSet(that.resources);
-        this.resourcesView = Collections.unmodifiableSet(resources);
+        this.resourcesView = Collections.unmodifiableSet(this.resources);
 
         this.properties = Maps.newHashMap(that.properties);
         this.propertiesView = Collections.unmodifiableMap(this.properties);
@@ -224,15 +136,56 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
+     * Returns a {@link ResourceConfig} instance for the supplied application.
+     *
+     * If the application is an instance of {@link ResourceConfig} the method simply returns the application.
+     * Otherwise it creates a new {@link ResourceConfig} wrapping the application.
+     *
+     * @param application Application to provide the {@link ResourceConfig} instance for.
+     * @return ResourceConfig instance for the supplied application.
+     */
+    public static ResourceConfig forApplication(Application application) {
+        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig(application, null, null);
+    }
+
+    /**
+     * Returns a {@link ResourceConfig} instance wrapping the application of the supplied class.
+     *
+     * @param applicationClass Class representing a JAX-RS application.
+     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
+     */
+    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass) {
+        return new WrappingResourceConfig(null, applicationClass, null);
+    }
+
+    /**
+     * Returns a {@link ResourceConfig} instance wrapping the application of the supplied class.
+     *
+     * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
+     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core.Application#getClasses()}
+     * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
+     *
+     * @param applicationClass Class representing a JAX-RS application.
+     * @param defaultClasses Default set of classes that should be returned from {@link #getClasses()} if the underlying
+     *                       application does not provide any classes and singletons.
+     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
+     */
+    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass, Set<Class<?>> defaultClasses) {
+        return new WrappingResourceConfig(null, applicationClass, defaultClasses);
+    }
+
+    public static ResourceBuilder resourceBuilder() {
+        return new DefaultResourceBuilder();
+    }
+
+    /**
      * Add classes to {@code ResourceConfig}.
      *
      * @param classes list of classes to add.
      * @return updated resource configuration instance.
      */
-    public ResourceConfig addClasses(Set<Class<?>> classes) {
-        invalidateProviderCache();
-        this.classes.addAll(classes);
-        return this;
+    public final ResourceConfig addClasses(Set<Class<?>> classes) {
+        return internalState.addClasses(classes);
     }
 
     /**
@@ -251,10 +204,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param singletons {@link Set} of instances to add.
      * @return updated resource configuration instance.
      */
-    public ResourceConfig addSingletons(Set<Object> singletons) {
-        invalidateProviderCache();
-        this.singletons.addAll(singletons);
-        return this;
+    public final ResourceConfig addSingletons(Set<Object> singletons) {
+        return internalState.addSingletons(singletons);
     }
 
     /**
@@ -271,9 +222,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return addResources(Sets.newHashSet(resources));
     }
 
-    public ResourceConfig addResources(Set<ResourceClass> resources) {
-        this.resources.addAll(resources);
-        return this;
+    public final ResourceConfig addResources(Set<ResourceClass> resources) {
+        return internalState.addResources(resources);
     }
 
     /**
@@ -284,11 +234,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @return updated resource configuration instance.
      */
     public ResourceConfig setProperty(String name, Object value) {
-        if (ServerProperties.PROVIDER_CLASSNAMES.equals(name)) {
-            invalidateProviderCache();
-        }
-        this.properties.put(name, value);
-        return this;
+        return internalState.setProperty(name, value);
     }
 
     /**
@@ -300,12 +246,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param properties properties to add.
      * @return updated resource configuration instance.
      */
-    public ResourceConfig addProperties(Map<String, Object> properties) {
-        if (properties.containsKey(ServerProperties.PROVIDER_CLASSNAMES)) {
-            invalidateProviderCache();
-        }
-        this.properties.putAll(properties);
-        return this;
+    public final ResourceConfig addProperties(Map<String, Object> properties) {
+        return internalState.addProperties(properties);
     }
 
     /**
@@ -314,10 +256,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param resourceFinder {@link ResourceFinder}
      * @return updated resource configuration instance.
      */
-    public ResourceConfig addFinder(ResourceFinder resourceFinder) {
-        invalidateProviderCache();
-        this.resourceFinders.add(resourceFinder);
-        return this;
+    public final ResourceConfig addFinder(ResourceFinder resourceFinder) {
+        return internalState.addFinder(resourceFinder);
     }
 
     /**
@@ -328,9 +268,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param modules custom modules.
      * @return updated resource configuration instance.
      */
-    public ResourceConfig addModules(Set<org.glassfish.hk2.Module> modules) {
-        this.customModules.addAll(modules);
-        return this;
+    public final ResourceConfig addModules(Set<Module> modules) {
+        return internalState.addModules(modules);
     }
 
     /**
@@ -341,7 +280,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param modules custom modules.
      * @return updated resource configuration instance..
      */
-    public final ResourceConfig addModules(org.glassfish.hk2.Module... modules) {
+    public final ResourceConfig addModules(Module... modules) {
         return addModules(Sets.newHashSet(modules));
     }
 
@@ -351,10 +290,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * @param classLoader provided {@link ClassLoader}.
      * @return updated resource configuration instance.
      */
-    public ResourceConfig setClassLoader(ClassLoader classLoader) {
-        invalidateProviderCache();
-        this.classLoader = classLoader;
-        return this;
+    public final ResourceConfig setClassLoader(ClassLoader classLoader) {
+        return internalState.setClassLoader(classLoader);
     }
 
     /**
@@ -378,47 +315,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return addFinder(new FilesScanner(files));
     }
 
-    /**
-     * Set the {@link javax.ws.rs.core.Application JAX-RS Application instance}
-     * in the {@code ResourceConfig}.
-     *
-     * This method is used by the {@link ApplicationHandler} in case this resource
-     * configuration instance was created using the {@link #ResourceConfig(java.lang.Class)
-     * JAX-RS Application class constructor}.
-     *
-     * @param application JAX-RS Application instance.
-     * @return updated resource configuration instance.
-     */
-    /*package*/ ResourceConfig setApplication(Application application) {
-        invalidateProviderCache();
-        this.application = application;
-        this.applicationClass = null;
-        mergeApplications(application);
-        return this;
-    }
 
-    /**
-     * Merges fields (e.g. custom modules, properties) of the given application with this application.
-     * <p/>
-     * The merging should be done because of the possibility of reloading this {@code ResourceConfig} in a container
-     * so this resource config should know about custom modules and properties of the underlying application to ensure
-     * the reload process will complete successfully.
-     *
-     * @param application the application which fields should be merged with this application.
-     *
-     * @see org.glassfish.jersey.server.spi.Container#reload()
-     * @see org.glassfish.jersey.server.spi.Container#reload(ResourceConfig)
-     */
-    private void mergeApplications(final Application application) {
-        // Merge custom modules.
-        if (application instanceof ResourceConfig) {
-            customModules.addAll(((ResourceConfig)application).getCustomModules());
-        }
-
-        mergeProperties(properties, application);
-    }
-
-    private void invalidateProviderCache() {
+    private void invalidateCache() {
         this.cachedClasses = null;
         this.cachedClassesView = null;
         this.cachedSingletons = null;
@@ -426,37 +324,24 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Get the original underlying JAX-RS {@link Application} instance used to
-     * initialize the resource configuration instance, or {@code this}, if there
-     * is no underlying application instance.
-     *
-     * @return JAX-RS application instance.
-     */
-    final javax.ws.rs.core.Application getApplication() {
-        return (application != null) ? application : this;
-    }
-
-    /**
-     * Get the original uninstantiated JAX-RS {@link Application} class.
-     *
-     * This class will be used to initialize the resource configuration instance.
-     * If there is no JAX-RS application class set, or if the class has been
-     * instantiated already, the method will return {@code null}.
-     *
-     * @return original uninstantiated JAX-RS application class or {@code null}
-     *     if there is no such class or if the class has been already instantiated.
-     */
-    final Class<? extends javax.ws.rs.core.Application> getApplicationClass() {
-        return applicationClass;
-    }
-
-    /**
      * Returns modules declared during {@code ResourceConfig} creation.
      *
      * @return set of custom modules.
      */
-    final Set<org.glassfish.hk2.Module> getCustomModules() {
+    final Set<Module> getCustomModules() {
         return customModules;
+    }
+
+    /**
+     * Switches the ResourceConfig to read-only state.
+     *
+     * Called by the WrappingResourceConfig if this ResourceConfig is set as the application.
+     * Also called by ApplicationHandler on WrappingResourceConfig at the point when it is going to build the resource model.
+     */
+    void lock() {
+        if (!(internalState instanceof Immutable)) {
+            internalState = new Immutable();
+        }
     }
 
     /**
@@ -467,56 +352,71 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     @Override
     public final Set<Class<?>> getClasses() {
         if (cachedClassesView == null) {
-            AnnotationAcceptingListener afl = AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(classLoader);
-            cachedClasses = new HashSet<Class<?>>();
+            cachedClasses = _getClasses();
             cachedClassesView = Collections.unmodifiableSet(cachedClasses);
+        }
+        return cachedClassesView;
+    }
 
-            for (ResourceFinder resourceFinder : resourceFinders) {
-                while (resourceFinder.hasNext()) {
-                    final String next = resourceFinder.next();
+    Set<Class<?>> _getClasses() {
+        Set<Class<?>> result = Sets.newHashSet();
 
-                    if (afl.accept(next)) {
-                        try {
-                            afl.process(next, resourceFinder.open());
-                        } catch (IOException e) {
-                            // TODO L10N
-                            LOGGER.log(Level.WARNING, "Unable to process {0}", next);
-                        }
-                    }
+        Set<ResourceFinder> rfs = Sets.newHashSet(resourceFinders);
+
+        // classes registered via configuration property
+        String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);
+        if (classNames != null) {
+            for (String className : classNames) {
+                try {
+                    result.add(classLoader.loadClass(className));
+                } catch (ClassNotFoundException e) {
+                    LOGGER.log(Level.CONFIG, LocalizationMessages.UNABLE_TO_LOAD_CLASS(className));
                 }
             }
+        }
 
-            if (application != null) {
-                cachedClasses.addAll(application.getClasses());
-            }
+        String[] packageNames = parsePropertyValue(ServerProperties.PROVIDER_PACKAGES);
+        if (packageNames != null) {
+            rfs.add(new PackageNamesScanner(packageNames));
+        }
 
-            cachedClasses.addAll(afl.getAnnotatedClasses());
-            cachedClasses.addAll(classes);
+        String[] classPathElements = parsePropertyValue(ServerProperties.PROVIDER_CLASSPATH);
+        if (classPathElements != null) {
+            rfs.add(new FilesScanner(classPathElements));
+        }
 
-            // classes registered via configuration property
-            final Object o = properties.get(ServerProperties.PROVIDER_CLASSNAMES);
-            if (o != null) {
-                String[] classNames = null;
+        AnnotationAcceptingListener afl = AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(classLoader);
+        for (ResourceFinder resourceFinder : rfs) {
+            while (resourceFinder.hasNext()) {
+                final String next = resourceFinder.next();
 
-                if (o instanceof String) {
-                    classNames = ResourceConfig.getElements((String) o, COMMON_DELIMITERS);
-                } else if (o instanceof String[]) {
-                    classNames = ResourceConfig.getElements((String[]) o, COMMON_DELIMITERS);
-                }
-
-                if (classNames != null) {
-                    for (String className : classNames) {
-                        try {
-                            cachedClasses.add(classLoader.loadClass(className));
-                        } catch (ClassNotFoundException e) {
-                            LOGGER.log(Level.CONFIG, LocalizationMessages.UNABLE_TO_LOAD_CLASS(className));
-                        }
+                if (afl.accept(next)) {
+                    try {
+                        afl.process(next, resourceFinder.open());
+                    } catch (IOException e) {
+                        // TODO L10N
+                        LOGGER.log(Level.WARNING, "Unable to process {0}", next);
                     }
                 }
             }
         }
 
-        return cachedClassesView;
+        result.addAll(afl.getAnnotatedClasses());
+        result.addAll(classes);
+        return result;
+    }
+
+    private String[] parsePropertyValue(String propertyName) {
+        String[] classNames = null;
+        final Object o = properties.get(propertyName);
+        if (o != null) {
+            if (o instanceof String) {
+                classNames = ResourceConfig.getElements((String) o, COMMON_DELIMITERS);
+            } else if (o instanceof String[]) {
+                classNames = ResourceConfig.getElements((String[]) o, COMMON_DELIMITERS);
+            }
+        }
+        return classNames;
     }
 
     /**
@@ -527,17 +427,17 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     @Override
     public final Set<Object> getSingletons() {
         if (cachedSingletonsView == null) {
-            cachedSingletons = new HashSet<Object>();
+            cachedSingletons = _getSingletons();
             cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons);
-
-            if (application != null) {
-                cachedSingletons.addAll(application.getSingletons());
-            }
-
-            cachedSingletons.addAll(singletons);
         }
 
         return cachedSingletonsView;
+    }
+
+    Set<Object> _getSingletons() {
+        Set<Object> result = Sets.newHashSet();
+        result.addAll(singletons);
+        return result;
     }
 
     /**
@@ -581,6 +481,52 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         return false;
+    }
+
+    /**
+     * Returns JAX-RS application corresponding with this ResourceConfig.
+     *
+     * @return JAX-RS application corresponding with this ResourceConfig.
+     */
+    public final Application getApplication() {
+        return _getApplication();
+    }
+
+    /**
+     * Allows overriding the {@link #getApplication()} method functionality in {@link WrappingResourceConfig}.
+     * @return JAX-RS application corresponding with this ResourceConfig.
+     */
+    Application _getApplication() {
+        return this;
+    }
+
+    /**
+     * Method used by ApplicationHandler to retrieve application class (this method is overriden by WrappingResourceConfig.
+     * @return application class
+     */
+    Class<? extends Application> getApplicationClass() {
+        return null;
+    }
+
+    /**
+     * This method is used by ApplicationHandler to set application instance to the resource config (should
+     * always be called on WrappingResourceConfig instance, never on plain instances of ResourceConfig
+     * unless we have a bug in the code).
+     * @param app JAX-RS application
+     * @return this ResourceConfig instance (for convenience)
+     */
+    final ResourceConfig setApplication(Application app) {
+        internalState.setApplication(app);
+        return this;
+    }
+
+    /**
+     * Allows overriding the setApplication() method functionality in WrappingResourceConfig.
+     * @param app application to be set for this ResourceConfig
+     * @return this resource config instance
+     */
+    ResourceConfig _setApplication(Application app) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -653,9 +599,236 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return es;
     }
 
-    private static void mergeProperties(Map<String, Object> properties, final Application application) {
-        if (application instanceof PropertiesProvider) {
-            properties.putAll(((PropertiesProvider) application).getProperties());
+    private interface InternalState {
+        ResourceConfig addClasses(Set<Class<?>> classes);
+        ResourceConfig addResources(Set<ResourceClass> resources);
+        ResourceConfig addFinder(ResourceFinder resourceFinder);
+        ResourceConfig addModules(Set<Module> modules);
+        ResourceConfig addProperties(Map<String, Object> properties);
+        ResourceConfig addSingletons(Set<Object> singletons);
+        ResourceConfig setClassLoader(ClassLoader classLoader);
+        ResourceConfig setProperty(String name, Object value);
+        ResourceConfig setApplication(Application application);
+    }
+
+    private class Immutable implements InternalState {
+        @Override
+        public ResourceConfig addClasses(Set<Class<?>> classes) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig addResources(Set<ResourceClass> resources) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig addFinder(ResourceFinder resourceFinder) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig addModules(Set<Module> modules) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig addProperties(Map<String, Object> properties) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig addSingletons(Set<Object> singletons) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig setClassLoader(ClassLoader classLoader) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig setProperty(String name, Object value) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public ResourceConfig setApplication(Application application) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+    }
+
+    private class Mutable implements InternalState {
+        @Override
+        public ResourceConfig addClasses(Set<Class<?>> classes) {
+            invalidateCache();
+            ResourceConfig.this.classes.addAll(classes);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig addResources(Set<ResourceClass> resources) {
+            ResourceConfig.this.resources.addAll(resources);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig addFinder(ResourceFinder resourceFinder) {
+            invalidateCache();
+            ResourceConfig.this.resourceFinders.add(resourceFinder);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig addModules(Set<Module> modules) {
+            ResourceConfig.this.customModules.addAll(modules);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig addProperties(Map<String, Object> properties) {
+            invalidateCache();
+            ResourceConfig.this.properties.putAll(properties);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig addSingletons(Set<Object> singletons) {
+            invalidateCache();
+            ResourceConfig.this.singletons.addAll(singletons);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig setClassLoader(ClassLoader classLoader) {
+            invalidateCache();
+            ResourceConfig.this.classLoader = classLoader;
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig setProperty(String name, Object value) {
+            invalidateCache();
+            ResourceConfig.this.properties.put(name, value);
+            return ResourceConfig.this;
+        }
+
+        @Override
+        public ResourceConfig setApplication(Application application) {
+            invalidateCache();
+            return ResourceConfig.this._setApplication(application);
+        }
+    }
+
+    private static class WrappingResourceConfig extends ResourceConfig {
+        private Application application;
+        private Class<? extends Application> applicationClass;
+        private final Set<Class<?>> defaultClasses = Sets.newHashSet();
+
+        public WrappingResourceConfig(Application application, Class<? extends Application> applicationClass,
+                                      Set<Class<?>> defaultClasses) {
+            if (application == null && applicationClass == null) {
+                throw new IllegalArgumentException("Both application and applicationClass can't be null.");
+            }
+            this.application = application;
+            this.applicationClass = applicationClass;
+            if (defaultClasses != null) {
+                this.defaultClasses.addAll(defaultClasses);
+            }
+            mergeApplications(application);
+        }
+
+        /**
+         * Set the {@link javax.ws.rs.core.Application JAX-RS Application instance}
+         * in the {@code ResourceConfig}.
+         *
+         * This method is used by the {@link org.glassfish.jersey.server.ApplicationHandler} in case this resource
+         * configuration instance was created with application class rather than application instance.
+         *
+         * @param application JAX-RS Application instance.
+         * @return updated resource configuration instance.
+         */
+        @Override
+        ResourceConfig _setApplication(Application application) {
+            this.application = application;
+            this.applicationClass = null;
+            mergeApplications(application);
+            return this;
+        }
+
+        /**
+         * Get the original underlying JAX-RS {@link Application} instance used to
+         * initialize the resource configuration instance.
+         *
+         * @return JAX-RS application instance.
+         */
+        @Override
+        Application _getApplication() {
+            return application;
+        }
+
+        /**
+         * Get the original uninstantiated JAX-RS {@link Application} class.
+         *
+         * This class will be used to initialize the resource configuration instance.
+         * If there is no JAX-RS application class set, or if the class has been
+         * instantiated already, the method will return {@code null}.
+         *
+         * @return original uninstantiated JAX-RS application class or {@code null}
+         *     if there is no such class or if the class has been already instantiated.
+         */
+        Class<? extends Application> getApplicationClass() {
+            return applicationClass;
+        }
+
+        /**
+         * Merges fields (e.g. custom modules, properties) of the given application with this application.
+         * <p/>
+         * The merging should be done because of the possibility of reloading this {@code ResourceConfig} in a container
+         * so this resource config should know about custom modules and properties of the underlying application to ensure
+         * the reload process will complete successfully.
+         *
+         * @param application the application which fields should be merged with this application.
+         *
+         * @see org.glassfish.jersey.server.spi.Container#reload()
+         * @see org.glassfish.jersey.server.spi.Container#reload(ResourceConfig)
+         */
+        private void mergeApplications(final Application application) {
+            if (application instanceof ResourceConfig) {
+                // Merge custom modules.
+                ResourceConfig rc = (ResourceConfig) application;
+                super.customModules.addAll(rc.customModules);
+
+                // Merge resources
+                super.resources.addAll(rc.resources);
+
+                // properties set on the wrapping resource config take precedence (as those are retrieved from the web.xml for example)
+                rc.invalidateCache();
+                rc.properties.putAll(super.properties);
+                super.properties.putAll(rc.properties);
+
+                rc.lock();
+            }
+        }
+
+        @Override
+        Set<Class<?>> _getClasses() {
+            Set<Class<?>> result = Sets.newHashSet();
+            result.addAll(application.getClasses());
+            if (result.isEmpty() && getSingletons().isEmpty()) {
+                result.addAll(defaultClasses);
+            }
+
+            // if the application is not an instance of ResourceConfig, handle scanning triggered by the way of properties
+            if (!(application instanceof ResourceConfig)) {
+                result.addAll(super._getClasses());
+            }
+            return result;
+        }
+
+        @Override
+        Set<Object> _getSingletons() {
+            return application.getSingletons();
         }
     }
 }

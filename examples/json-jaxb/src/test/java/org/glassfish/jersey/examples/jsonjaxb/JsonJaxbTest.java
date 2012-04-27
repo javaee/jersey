@@ -72,8 +72,8 @@ public class JsonJaxbTest extends JerseyTest {
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler application) {
-        javax.ws.rs.client.Client origClient = super.getClient(tc, application);
+    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
+        javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
         for (Class<?> provider : JsonJaxbModule.getProviders()) {
             origClient.configuration().register(provider);
         }

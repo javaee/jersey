@@ -181,8 +181,7 @@ public class Jackson2StaxReader implements XMLStreamReader {
                             if (valueTokens.contains(parser.getCurrentToken())) {
                                 eventQueue.peek().addAttribute(getQNameForLocName(currentName, qNamesOfExpAttrs), parser.getText());
                             } else {
-                                System.out.println(String.format("CurrentName=%s", currentName));
-                                throw new IOException("Not an attribute, expected primitive value!");
+                                throw new IOException("Not an attribute, expected primitive value! CurrentNme=" + currentName);
                             }
                         } else { // non attribute
                             lookingForAttributes = false; // stop seeking attributes

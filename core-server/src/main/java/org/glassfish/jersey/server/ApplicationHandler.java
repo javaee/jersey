@@ -192,7 +192,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
             @Override
             public ResourceConfig get() throws ComponentException {
-                return ApplicationHandler.this.immutableConfigurationView;
+                return ApplicationHandler.this.configuration;
             }
         }
 
@@ -226,7 +226,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private Services services;
     private TreeAcceptor rootAcceptor;
     private final ResourceConfig configuration;
-    private ResourceConfig immutableConfigurationView;
     private References refs;
 
     public ApplicationHandler() {
@@ -238,20 +237,16 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
         initServices();
         if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
-            this.configuration = services.forContract(jaxrsApplicationClass.asSubclass(ResourceConfig.class)).get();
+            this.configuration = (ResourceConfig) createApplication(jaxrsApplicationClass);
         } else {
-            this.configuration = new ResourceConfig(jaxrsApplicationClass);
+            this.configuration = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
         }
         initialize();
     }
 
     public ApplicationHandler(Application application) {
         initServices();
-        if (application instanceof ResourceConfig) {
-            this.configuration = (ResourceConfig) application;
-        } else {
-            this.configuration = new ResourceConfig(application);
-        }
+        this.configuration = ResourceConfig.forApplication(application);
         initialize();
     }
 
@@ -270,7 +265,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
         final Class<? extends Application> applicationClass = configuration.getApplicationClass();
         if (applicationClass != null) {
-            final Application application = services.forContract(applicationClass).get();
+            final Application application = createApplication(applicationClass);
             if (application instanceof ResourceConfig) {
                 // (JERSEY-1094) If the application is an instance of ResourceConfig then register it's
                 // custom modules into the HK2 service registry so they can be used right away.
@@ -279,7 +274,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             configuration.setApplication(application);
         }
 
-        immutableConfigurationView = ResourceConfig.unmodifiableCopy(configuration);
+        configuration.lock();
 
         final Map<String, ResourceClass> pathToResourceMap = Maps.newHashMap();
         final Set<ResourceClass> resources = Sets.newHashSet();
@@ -332,8 +327,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
         validateResources(workers, resources);
 
-        // FIXME: why do we need to inject this? We seem to have all the information
-        // available.
+        // TODO: why do we need to inject this? We seem to have all the information available.
         final RuntimeModelProviderFromRootResource runtimeModelCreator =
                 services.byType(RuntimeModelProviderFromRootResource.class).get();
         runtimeModelCreator.setWorkers(workers);
@@ -346,10 +340,22 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         injector.inject(this);
     }
 
+    private Application createApplication(Class<? extends Application> applicationClass) {
+        // need to handle ResourceConfig and Application separately as invoking forContract() on these
+        // will trigger the factories which we don't want at this point
+        if (applicationClass == ResourceConfig.class) {
+            return new ResourceConfig();
+        } else if (applicationClass == Application.class) {
+            return new Application();
+        } else {
+            return services.forContract(applicationClass).get();
+        }
+    }
+
     /**
      * Registers modules into the HK2 service register.
      *
-     * @param modules
+     * @param modules Modules to be registered.
      */
     private void registerAdditionalModules(final Set<Module> modules) {
         final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
@@ -645,6 +651,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     }
 
     public ResourceConfig getConfiguration() {
-        return immutableConfigurationView;
+        return configuration;
     }
 }

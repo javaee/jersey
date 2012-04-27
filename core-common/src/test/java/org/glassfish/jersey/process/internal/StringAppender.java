@@ -60,7 +60,6 @@ class StringAppender implements Function<Request, Request> {
 
     @Override
     public Request apply(Request data) {
-        System.out.println("Appending " + suffix);
         return Requests.from(data).entity(data.readEntity(String.class) + suffix).build();
     }
 

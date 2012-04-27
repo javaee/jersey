@@ -46,7 +46,7 @@
         <filter-name>testServlet6</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
         <init-param>
-            <param-name>org.glassfish.jersey.config.property.packages</param-name>
+            <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>org.glassfish.jersey.tests.integration.servlet_25_init_6</param-value>
         </init-param>
     </filter>

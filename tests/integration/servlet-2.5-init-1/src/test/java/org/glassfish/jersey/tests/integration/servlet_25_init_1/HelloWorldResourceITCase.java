@@ -47,7 +47,6 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -81,7 +80,6 @@ public class HelloWorldResourceITCase extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testUnreachableResource() {
         Response r = target().path("servlet_path/unreachable").request().get();
         assertTrue("Managed to reach a resource that is not registered in the application.", r.getStatus() >= 400);

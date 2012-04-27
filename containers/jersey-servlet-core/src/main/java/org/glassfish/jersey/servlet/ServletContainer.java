@@ -70,15 +70,15 @@ import org.glassfish.jersey.uri.UriComponent;
  * and filter initialization parameters.
  * <p />
  * The servlet or filter may be configured to have an initialization
- * parameter {@value org.glassfish.jersey.server.ServerProperties#JAXRS_APPLICATION_CLASS}
- * (see {@link ServerProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
+ * parameter {@value ServletProperties#JAXRS_APPLICATION_CLASS}
+ * (see {@link ServletProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
  * fully qualified name of a class that implements {@link javax.ws.rs.core.Application}.
  * The class is instantiated as a singleton component
  * managed by the runtime, and injection may be performed (the artifacts that
  * may be injected are limited to injectable providers registered when
  * the servlet or filter is configured).
  * <p />
- * If the initialization parameter {@value org.glassfish.jersey.server.ServerProperties#JAXRS_APPLICATION_CLASS}
+ * If the initialization parameter {@value ServletProperties#JAXRS_APPLICATION_CLASS}
  * is not present and a initialization parameter {@value org.glassfish.jersey.server.ServerProperties#PROVIDER_PACKAGES}
  * is present (see {@link ServerProperties#PROVIDER_PACKAGES}) a new instance of
  * {@link ResourceConfig} with this configuration is created. The initialization parameter
@@ -96,7 +96,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * All initialization parameters are added as properties of the created
  * {@link ResourceConfig}.
  * <p />
- * A new {@link org.glassfish.jersey.server.JerseyApplication} instance will be created and configured such
+ * A new {@link org.glassfish.jersey.server.ApplicationHandler} instance will be created and configured such
  * that the following classes may be injected onto a root resource, provider
  * and {@link javax.ws.rs.core.Application} classes using {@link javax.ws.rs.core.Context
  * &#64;Context} annotation:
@@ -127,7 +127,9 @@ public class ServletContainer extends HttpServlet implements Filter {
      * @throws javax.servlet.ServletException in case of an initialization failure
      */
     protected void init(WebConfig webConfig) throws ServletException {
-        webComponent = new WebComponent(webConfig);
+        // create a new web component only if null
+        // if not null it means it was initialized by the JerseyServletContainerInitializer
+        webComponent = webComponent == null ? new WebComponent(webConfig) : webComponent;
     }
 
     // HttpServlet

@@ -44,7 +44,6 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.server.ContainerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.hk2.HK2;
 
@@ -67,7 +66,6 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     @Override
     public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        ResourceConfig rc = (application instanceof ResourceConfig) ? (ResourceConfig) application : new ResourceConfig(application);
-        return ContainerFactory.createContainer(endpointType, rc);
+        return ContainerFactory.createContainer(endpointType, application);
     }
 }

@@ -65,7 +65,6 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
@@ -212,7 +211,6 @@ public class WebComponent {
      */
     public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-
         Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod());
         requestBuilder = addRequestHeaders(request, requestBuilder);
         requestBuilder = requestBuilder.entity(request.getInputStream());
@@ -265,48 +263,25 @@ public class WebComponent {
     private ResourceConfig createResourceConfig(WebConfig config, Module... modules) throws ServletException {
         final Map<String, Object> initParams = getInitParams(config);
 
-        return createResourceConfig(config, initParams, modules);
-    }
-
-    private ResourceConfig createResourceConfig(final WebConfig config, final Map<String, Object> initParams, final Module... modules) throws ServletException {
         // check if the JAX-RS application config class property is present
-        String jaxrsApplicationClassName = config.getInitParameter(ServerProperties.JAXRS_APPLICATION_CLASS);
+        String jaxrsApplicationClassName = config.getInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS);
 
-        // If no resource config class property is present
         if (jaxrsApplicationClassName == null) {
-            return getDefaultResourceConfig(initParams, config, modules);
+            // If no resource config class property is present, create default config
+            final ResourceConfig rc = new ResourceConfig().addProperties(initParams).addModules(modules);
+
+            final String webapp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
+            if (webapp != null && !"false".equals(webapp)) {
+                rc.addFinder(new WebAppResourcesScanner(config.getServletContext()));
+            }
+            return rc;
         }
 
         try {
             Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException(jaxrsApplicationClassName);
-
-//            // TODO add support for WebAppResourceConfig
-//            if (jaxrsApplicationClass == ClassPathResourceConfig.class) {
-//                String[] paths = getPaths(config.getInitParameter(
-//                        ClassPathResourceConfig.PROVIDER_CLASSPATH), config.getServletContext());
-//                initParams.put(ClassPathResourceConfig.PROVIDER_CLASSPATH, paths);
-//                return new ClassPathResourceConfig(initParams);
-//            } else if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
-//                try {
-//                    Constructor constructor = jaxrsApplicationClass.getConstructor(Map.class);
-//                    if (ClassPathResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
-//                        String[] paths = getPaths(config.getInitParameter(
-//                                ClassPathResourceConfig.PROVIDER_CLASSPATH), config.getServletContext());
-//                        initParams.put(ClassPathResourceConfig.PROVIDER_CLASSPATH, paths);
-//                    }
-//                    return (ResourceConfig) constructor.newInstance(initParams);
-//                } catch (NoSuchMethodException ex) {
-//                    // Pass through and try the default constructor
-//                } catch (Exception e) {
-//                    throw new ServletException(e);
-//                }
-//
-//                // TODO
-////                return new DeferredResourceConfig(jaxrsApplicationClass.asSubclass(ResourceConfig.class));
-//                return null;
-//            } else
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
-                return new ResourceConfig(jaxrsApplicationClass).addProperties(initParams).addModules(modules);
+                return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
+                        .addProperties(initParams).addModules(modules);
             } else {
                 String message = "Resource configuration class, " + jaxrsApplicationClassName +
                         ", is not a super class of " + javax.ws.rs.core.Application.class;
@@ -385,44 +360,4 @@ public class WebComponent {
         }
     }
 
-    /**
-     * Get the default resource configuration if one is not declared in the
-     * {@code web.xml}.
-     * <p />
-     * This implementation returns an instance of {@link ResourceConfig}
-     * that scans in files and directories as declared by the
-     * {@link ServerProperties#PROVIDER_CLASSPATH} property value if present,
-     * otherwise in the {@code "WEB-INF/lib"} and {@code "WEB-INF/classes"}
-     * directories.
-     * <p />
-     * An inheriting class may override this method to supply a different
-     * default resource configuration implementation.
-     *
-     * @param props the properties to pass to the resource configuration.
-     * @param wc the web configuration.
-     * @param modules modules to pass to the {@link ApplicationHandler} configuration.
-     * @return the default resource configuration.
-     * @throws javax.servlet.ServletException in case of any issues with providing
-     *     the default resource configuration.
-     */
-    protected ResourceConfig getDefaultResourceConfig(
-            final Map<String, Object> props,
-            final WebConfig wc,
-            final Module... modules) throws ServletException {
-
-        final ResourceConfig rc = new ResourceConfig().addProperties(props).addModules(modules);
-
-        final String packages = wc.getInitParameter(ServerProperties.PROVIDER_PACKAGES);
-        if (packages != null) {
-            rc.packages(packages);
-        }
-
-        final String classpath = wc.getInitParameter(ServerProperties.PROVIDER_CLASSPATH);
-        if (classpath != null) {
-            rc.files(classpath);
-        } else {
-            rc.addFinder(new WebAppResourcesScanner(wc.getServletContext()));
-        }
-        return rc;
-    }
 }

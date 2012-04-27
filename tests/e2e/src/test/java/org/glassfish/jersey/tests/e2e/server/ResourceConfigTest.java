@@ -117,8 +117,7 @@ public class ResourceConfigTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         // Simulate the creation of the ResourceConfig as if it was created during servlet initialization
-        // (using ResourceConfig(Class<?>) constructor).
-        return new ResourceConfig(Jersey1094.class);
+        return ResourceConfig.forApplicationClass(Jersey1094.class);
     }
 
     @Override

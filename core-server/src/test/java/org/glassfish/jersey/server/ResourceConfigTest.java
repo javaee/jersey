@@ -60,8 +60,6 @@ import static org.junit.Assert.*;
  */
 public class ResourceConfigTest {
 
-    private static final String BASE_URI = "http://localhost:8080/base/";
-
     @Test
     public void testGetElementsDefault1() {
         final String[] elements = ResourceConfig.getElements(new String[]{"a b,c;d\ne"});
@@ -107,7 +105,7 @@ public class ResourceConfigTest {
         ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
         ApplicationHandler ah = new ApplicationHandler(resourceConfig);
 
-        assertSame(resourceConfig, ah.getConfiguration().getApplication());
+        assertSame(resourceConfig, ah.getServices().forContract(Application.class).get());
 
         Response r = ah.apply(Requests.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
@@ -117,45 +115,27 @@ public class ResourceConfigTest {
 
     @Test
     public void testResourceConfigMergeApplications() throws Exception {
-        //
-        ResourceConfig resourceConfig = new ResourceConfig();
-        final MyModule myModule = new MyModule();
-
         // No custom module.
-        final ResourceConfig resourceConfig1 = new ResourceConfig();
-        resourceConfig1.setApplication(resourceConfig);
-        assertEquals(0, resourceConfig1.getCustomModules().size());
+        ApplicationHandler ah = new ApplicationHandler(ResourceConfig.class);
+        assertEquals(0, ah.getConfiguration().getCustomModules().size());
 
-        final ResourceConfig resourceConfig2 = new ResourceConfig(resourceConfig);
-        assertEquals(0, resourceConfig2.getCustomModules().size());
-
-        // Add myModule.
-        resourceConfig.addModules(myModule);
-
-        final ResourceConfig resourceConfig3 = new ResourceConfig();
-        resourceConfig3.setApplication(resourceConfig);
-        assertEquals(1, resourceConfig3.getCustomModules().size());
-        assertTrue(resourceConfig3.getCustomModules().contains(myModule));
-
-        final ResourceConfig resourceConfig4 = new ResourceConfig(resourceConfig);
-        assertEquals(1, resourceConfig4.getCustomModules().size());
-        assertTrue(resourceConfig4.getCustomModules().contains(myModule));
+        // with MyModule
+        ah = new ApplicationHandler(MyResourceConfig1.class);
+        assertEquals(1, ah.getConfiguration().getCustomModules().size());
 
         // Add myModule + one default.
         final MyModule defaultModule = new MyModule();
+        ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
+        rc.addModules(defaultModule);
+        ah = new ApplicationHandler(rc);
+        assertEquals(2, ah.getConfiguration().getCustomModules().size());
+        assertTrue(ah.getConfiguration().getCustomModules().contains(defaultModule));
+    }
 
-        final ResourceConfig resourceConfig5 = new ResourceConfig();
-        resourceConfig5.addModules(defaultModule);
-        resourceConfig5.setApplication(resourceConfig);
-        assertEquals(2, resourceConfig5.getCustomModules().size());
-        assertTrue(resourceConfig5.getCustomModules().contains(myModule));
-        assertTrue(resourceConfig5.getCustomModules().contains(defaultModule));
-
-        final ResourceConfig resourceConfig6 = new ResourceConfig(resourceConfig);
-        resourceConfig6.addModules(defaultModule);
-        assertEquals(2, resourceConfig5.getCustomModules().size());
-        assertTrue(resourceConfig6.getCustomModules().contains(myModule));
-        assertTrue(resourceConfig6.getCustomModules().contains(defaultModule));
+    public static class MyResourceConfig1 extends ResourceConfig {
+        public MyResourceConfig1() {
+            addModules(new MyModule());
+        }
     }
 
     public static class MyResourceConfig2 extends ResourceConfig {
@@ -180,11 +160,7 @@ public class ResourceConfigTest {
 
         @GET
         public boolean test(@QueryParam("id") int rcId) {
-            if (app instanceof MyResourceConfig2) {
-                return ((MyResourceConfig2) app).id == rcId;
-            }
-
-            return false;
+            return (app instanceof MyResourceConfig2) && ((MyResourceConfig2) app).id == rcId;
         }
     }
 

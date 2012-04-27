@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
-import javax.ws.rs.core.Application;
-import java.util.HashSet;
-import java.util.Set;
+import org.glassfish.jersey.media.json.JsonJacksonModule;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * {@link javax.ws.rs.core.Application} descendant.
@@ -50,21 +49,15 @@ import java.util.Set;
  *
  * @author Jakub Podlesak
  */
-public class MyApplication extends Application {
-
-    @Override
-    public Set<Class<?>> getClasses() {
-
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-
-        // register root resources
-        classes.add(EmptyArrayResource.class);
-        classes.add(NonJaxbBeanResource.class);
-        classes.add(CombinedAnnotationResource.class);
-
-        // register Jackson ObjectMapper resolver
-        classes.add(MyObjectMapperProvider.class);
-
-        return classes;
+public class MyApplication extends ResourceConfig {
+    public MyApplication() {
+        super(
+                EmptyArrayResource.class,
+                NonJaxbBeanResource.class,
+                CombinedAnnotationResource.class,
+                // register Jackson ObjectMapper resolver
+                MyObjectMapperProvider.class
+        );
+        addModules(new JsonJacksonModule());
     }
 }

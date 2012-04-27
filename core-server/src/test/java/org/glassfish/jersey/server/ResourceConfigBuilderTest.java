@@ -39,15 +39,11 @@
  */
 package org.glassfish.jersey.server;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
-
-import org.glassfish.jersey.server.spi.PropertiesProvider;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -109,17 +105,8 @@ public class ResourceConfigBuilderTest {
             }
         };
 
-        ResourceConfig resourceConfig = new ResourceConfig(application);
-
-        assertTrue(resourceConfig.getApplication().equals(application));
-    }
-
-    @Test
-    public void testApplicationPropertiesProvider() {
-        ResourceConfig resourceConfig = new ResourceConfig(new MyApplication());
-
-        assertTrue(resourceConfig.getProperties().containsKey("myProperty"));
-        assertTrue(resourceConfig.getProperties().get("myProperty").equals("myValue"));
+        ApplicationHandler ah = new ApplicationHandler(application);
+        assertTrue(ah.getServices().forContract(Application.class).get().equals(application));
     }
 
     /**
@@ -128,7 +115,7 @@ public class ResourceConfigBuilderTest {
      */
     @Test
     public void testApplicationClassProperties() {
-        ResourceConfig resourceConfig = initApp(new ResourceConfig(MyApplication.class));
+        ResourceConfig resourceConfig = initApp(MyApplication.class);
 
         assertTrue(resourceConfig.getProperties().containsKey("myProperty"));
         assertTrue(resourceConfig.getProperties().get("myProperty").equals("myValue"));
@@ -140,17 +127,14 @@ public class ResourceConfigBuilderTest {
      */
     @Test
     public void testApplicationClassClasses() {
-        ResourceConfig resourceConfig = initApp(new ResourceConfig(MyApplication2.class));
+        ResourceConfig resourceConfig = initApp(MyApplication2.class);
 
         assertTrue(!resourceConfig.getClasses().isEmpty());
     }
 
-    public static class MyApplication extends Application implements PropertiesProvider {
-        @Override
-        public Map<String, Object> getProperties() {
-            final HashMap<String, Object> props = new HashMap<String, Object>();
-            props.put("myProperty", "myValue");
-            return props;
+    private static class MyApplication extends ResourceConfig {
+        public MyApplication() {
+            setProperty("myProperty", "myValue");
         }
     }
 
@@ -168,8 +152,8 @@ public class ResourceConfigBuilderTest {
         }
     }
 
-    private static ResourceConfig initApp(Application app) {
-        return new ApplicationHandler(app).getConfiguration();
+    private static ResourceConfig initApp(Class<? extends Application> appClass) {
+        return new ApplicationHandler(appClass).getConfiguration();
     }
 
 }

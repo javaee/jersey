@@ -67,8 +67,8 @@ public class JsonpTest extends JerseyTest {
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler application) {
-        javax.ws.rs.client.Client origClient = super.getClient(tc, application);
+    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
+        javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
         origClient.configuration().register(JAXBContextResolver.class);
 
         return origClient;

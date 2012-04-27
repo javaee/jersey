@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_1;
 
+import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -59,7 +62,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new Servlet3init1();
+        return new Application();
     }
 
     @Override
@@ -69,14 +72,18 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        String s = target().path("helloworld").request().get(String.class);
-        assertEquals("Hello World!", s);
+        Target t = target();
+        t.configuration().register(new LoggingFilter());
+        Response r = t.path("helloworld").request().get();
+        System.out.println("Status: " + r.getStatus());
+        System.out.println(r.readEntity(String.class));
+        assertEquals(200, r.getStatus());
+        assertEquals("Hello World!", r.readEntity(String.class));
     }
 
     @Test
-    @Ignore // unignore once issue JERSEY-1072 is fixed
     public void testUnreachableResource() {
         Response r = target().path("unreachable").request().get();
-        assertTrue("Managed to reach a resource that is not registered in the application.", r.getStatus() >= 400);
+        assertEquals("Managed to reach a resource that is not registered in the application.", 404, r.getStatus());
     }
 }
