@@ -44,21 +44,19 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.Target;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.collect.Maps;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 /**
  * Factory for client-side representation of a resource.
@@ -149,12 +147,15 @@ public final class WebResourceFactory implements InvocationHandler {
         }
         String[] accepts = produces == null ? null : produces.value();
 
-        // process method params (build maps of (Path|Form|Cookie|Matrix|..)Params
+        // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
         // and extract entity type
+        MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>();
+        LinkedList<Cookie> cookies = new LinkedList<Cookie>();
+        Form form = new Form();
         Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
         for (int i = 0; i < paramAnns.length; i++) {
-            Map<Class, Annotation> anns = Maps.newHashMap();
+            Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
             for (Annotation ann : paramAnns[i]) {
                 anns.put(ann.annotationType(), ann);
             }
@@ -166,12 +167,32 @@ public final class WebResourceFactory implements InvocationHandler {
                 if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
                     value = ((DefaultValue) ann).value();
                 }
-                if ((ann = anns.get(PathParam.class)) != null) {
-                    newTarget = newTarget.pathParam(((PathParam) ann).value(), value);
-                } else if ((ann = anns.get((QueryParam.class))) != null) {
-                    newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
+                if (value != null) {
+                    if ((ann = anns.get(PathParam.class)) != null) {
+                        newTarget = newTarget.pathParam(((PathParam) ann).value(), value);
+                    } else if ((ann = anns.get((QueryParam.class))) != null) {
+                        newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
+                    } else if ((ann = anns.get((HeaderParam.class))) != null) {
+                        headers.addAll(((HeaderParam) ann).value(), value);
+                    } else if ((ann = anns.get((CookieParam.class))) != null) {
+                        String name = ((CookieParam) ann).value();
+                        Cookie c;
+                        if (!(value instanceof Cookie)) {
+                            c = new Cookie(name, value.toString());
+                        } else {
+                            c = (Cookie) value;
+                            if (!name.equals(((Cookie) value).getName())) {
+                                // is this the right thing to do? or should I fail? or ignore the difference?
+                                c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
+                            }
+                        }
+                        cookies.add(c);
+                    } else if ((ann = anns.get((MatrixParam.class))) != null) {
+                        newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
+                    } else if ((ann = anns.get((FormParam.class))) != null) {
+                        form.param(((FormParam) ann).value(), value.toString());
+                    }
                 }
-                // TODO: add support for FormParam, MatrixParam, CookieParam and others
             }
         }
 
@@ -195,15 +216,41 @@ public final class WebResourceFactory implements InvocationHandler {
             b = newTarget.request();
         }
 
-        Object result;
-        if (entity != null) {
-            if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM.toString();
+        // apply header params and cookies
+        for (Cookie c : cookies) {
+            b = b.cookie(c);
+        }
+        // TODO: change this to b.headers(headers) once we switch to the latest JAX-RS API
+        for (Map.Entry<String, List<Object>> header : headers.entrySet()) {
+            for (Object value : header.getValue()) {
+                b = b.header(header.getKey(), value);
             }
+        }
+
+        Object result;
+
+        if (entity == null && !form.asMap().isEmpty()) {
+            entity = form;
+            contentType = MediaType.APPLICATION_FORM_URLENCODED;
+        } else {
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+            if (!form.asMap().isEmpty()) {
+                if (entity instanceof Form) {
+                    ((Form) entity).asMap().putAll(form.asMap());
+                } else {
+                    // TODO: should at least log some warning here
+                }
+            }
+        }
+
+        if (entity != null) {
             result = b.method(httpMethod, Entity.entity(entity, contentType), responseType);
         } else {
             result = b.method(httpMethod, responseType);
         }
+
         return result;
     }
 

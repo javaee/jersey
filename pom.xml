@@ -533,6 +533,16 @@
 
     <profiles>
         <profile>
+            <id>all-incl-incubator</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>incubator</module>
+                <module>tests</module>
+            </modules>
+        </profile>
+        <profile>
             <id>attach-src-and-docs</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
