@@ -39,47 +39,37 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 
+import javax.ws.rs.core.AbstractMultivaluedMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate;
 
+import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
+import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
+
 import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimaps;
-import java.util.Map;
-import org.glassfish.jersey.internal.util.collection.LinkedListSupplier;
+import com.google.common.collect.Maps;
 
 /**
  * Utility class supporting the processing of message headers.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 final class HeadersFactory {
-
-    /**
-     * Supplier of linked list of strings.
-     */
-    private static Supplier<? extends List<String>> LINKED_STRING_LIST_SUPPLIER = new LinkedListSupplier<String>();
-    /**
-     * Supplier of new linked list of objects.
-     */
-    private static Supplier<? extends List<Object>> LINKED_OBJECT_LIST_SUPPLIER = new LinkedListSupplier<Object>();
 
     /**
      * Create an empty inbound message headers container. Created container is mutable.
      *
      * @return a new empty mutable container for storing inbound message headers.
      */
-    public static ListMultimap<String, String> createInbound() {
-        return Multimaps.newListMultimap(
-                new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_STRING_LIST_SUPPLIER);
+    public static AbstractMultivaluedMap<String, String> createInbound() {
+        return new StringKeyIgnoreCaseMultivaluedMap<String>();
     }
 
     /**
@@ -91,10 +81,8 @@ final class HeadersFactory {
      * @return a new mutable container for storing inbound message headers
      *     initialized with the supplied initial collection of headers.
      */
-    public static ListMultimap<String, String> createInbound(ListMultimap<String, String> initial) {
-        ListMultimap<String, String> headers = Multimaps.newListMultimap(
-                new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_STRING_LIST_SUPPLIER);
+    public static AbstractMultivaluedMap<String, String> createInbound(MultivaluedMap<String, String> initial) {
+        AbstractMultivaluedMap<String, String> headers = createInbound();
         headers.putAll(initial);
         return headers;
     }
@@ -109,15 +97,9 @@ final class HeadersFactory {
      * @return a new mutable container for storing inbound message headers
      *     initialized with the supplied initial collection of headers.
      */
-    public static ListMultimap<String, String> createInbound(Map<String, List<String>> initial) {
-        ListMultimap<String, String> headers = Multimaps.newListMultimap(
-                new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_STRING_LIST_SUPPLIER);
-
-        for (Map.Entry<String, List<String>> e : initial.entrySet()) {
-            headers.putAll(e.getKey(), e.getValue());
-        }
-
+    public static AbstractMultivaluedMap<String, String> createInbound(Map<String, List<String>> initial) {
+        AbstractMultivaluedMap<String, String> headers = createInbound();
+        headers.putAll(initial);
         return headers;
     }
 
@@ -130,8 +112,8 @@ final class HeadersFactory {
      *     headers and {@link String} in case of the inbound headers.
      * @return an immutable empty message headers container.
      */
-    public static <V> ListMultimap<String, V> empty() {
-        return ImmutableListMultimap.of();
+    public static <V> MultivaluedMap<String, V> empty() {
+        return ImmutableMultivaluedMap.empty();
     }
 
     /**
@@ -139,27 +121,8 @@ final class HeadersFactory {
      *
      * @return a new empty mutable container for storing outbound message headers.
      */
-    public static ListMultimap<String, Object> createOutbound() {
-        return Multimaps.newListMultimap(
-                new TreeMap<String, Collection<Object>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_OBJECT_LIST_SUPPLIER);
-    }
-
-    /**
-     * Create an outbound message headers container. Created container is mutable
-     * and is initialized with the supplied initial collection of headers.
-     *
-     * @param initial initial collection of headers to be used to initialize the
-     *     created message headers container.
-     * @return a new mutable container for storing outbound message headers
-     *     initialized with the supplied initial collection of headers.
-     */
-    public static ListMultimap<String, Object> createOutbound(ListMultimap<String, Object> initial) {
-        ListMultimap<String, Object> headers = Multimaps.newListMultimap(
-                new TreeMap<String, Collection<Object>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_OBJECT_LIST_SUPPLIER);
-        headers.putAll(initial);
-        return headers;
+    public static AbstractMultivaluedMap<String, Object> createOutbound() {
+        return new StringKeyIgnoreCaseMultivaluedMap<Object>();
     }
 
     /**
@@ -172,15 +135,9 @@ final class HeadersFactory {
      * @return a new mutable container for storing outbound message headers
      *     initialized with the supplied initial collection of headers.
      */
-    public static ListMultimap<String, Object> createOutbound(Map<String, List<Object>> initial) {
-        ListMultimap<String, Object> headers = Multimaps.newListMultimap(
-                new TreeMap<String, Collection<Object>>(String.CASE_INSENSITIVE_ORDER),
-                LINKED_OBJECT_LIST_SUPPLIER);
-
-        for (Map.Entry<String, List<Object>> e : initial.entrySet()) {
-            headers.putAll(e.getKey(), e.getValue());
-        }
-
+    public static AbstractMultivaluedMap<String, Object> createOutbound(Map<String, List<Object>> initial) {
+        AbstractMultivaluedMap<String, Object> headers = createOutbound();
+        headers.putAll(initial);
         return headers;
     }
 
@@ -220,17 +177,19 @@ final class HeadersFactory {
             public String apply(Object input) {
                 return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
             }
+
         });
     }
 
-    public static ListMultimap<String, String> toString(final ListMultimap<String, Object> headers, final RuntimeDelegate rd) {
-        return Multimaps.transformValues(headers, new Function<Object, String>() {
+    public static MultivaluedMap<String, String> toString(final MultivaluedMap<String, Object> headers, final RuntimeDelegate rd) {
+        return createInbound(Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
 
             @Override
-            public String apply(Object input) {
-                return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
+            public List<String> apply(List<Object> input) {
+                return (input == null) ? Collections.singletonList("[null]") : HeadersFactory.toString(input, rd);
             }
-        });
+
+        }));
     }
 
     /**

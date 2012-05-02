@@ -53,8 +53,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.RequestHeaders;
 
-import org.glassfish.jersey.internal.util.collection.ListMultimapAdapter;
-
 /**
  * Adapter for {@link Headers Jersey Headers} to JAX-RS {@link javax.ws.rs.core.RequestHeaders}
  * and {@link javax.ws.rs.core.HttpHeaders}.
@@ -109,7 +107,7 @@ class JaxrsRequestHeadersView implements RequestHeaders, HttpHeaders {
 
     @Override
     public MultivaluedMap<String, String> asMap() {
-        return new ListMultimapAdapter<String, String>(wrapped.headers());
+        return wrapped.headers();
     }
 
     @Override

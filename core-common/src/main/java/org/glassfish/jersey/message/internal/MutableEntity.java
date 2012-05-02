@@ -58,11 +58,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.InstanceTypePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -209,7 +211,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         }
 
         try {
-            T t = br.readFrom(rawType, type, readAnnotations, mediaType, message.toJaxrsHeaderMap(), contentStream);
+            T t = br.readFrom(rawType, type, readAnnotations, mediaType, message.headers(), contentStream);
             if (br instanceof CompletableReader) {
                 t = ((CompletableReader<T>) br).complete(t);
             }
