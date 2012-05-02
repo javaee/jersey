@@ -137,7 +137,7 @@
         <orderedlist>
             <listitem>
                 <para>URI building using
-                    <ulink url="&jsr311.javadoc.path;/core/UriBuilder.html">UriBuilder</ulink> and
+                    <ulink url="&jax-rs.javadoc.path;/core/UriBuilder.html">UriBuilder</ulink> and
                     <ulink url="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/uri/UriTemplate.html">UriTemplate</ulink>
                     to safely build URIs;
                 </para>
