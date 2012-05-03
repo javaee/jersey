@@ -53,18 +53,18 @@ public class Helper {
      * not be used.
      *
      * @param varName name of the system variable.
-     * @param defaultValue the dafault value to return if the system variable is missing or can not be parsed as an integer.
-     * @return an integrer value taken either from the system property or the default value as defined by the defaultValue parameter.
+     * @param defaultValue the default value to return if the system variable is missing or can not be parsed as an integer.
+     * @return an integer value taken either from the system property or the default value as defined by the defaultValue parameter.
      */
     public static int getEnvVariable(final String varName, int defaultValue) {
         if (null == varName) {
             return defaultValue;
         }
-        String varValue = System.getenv(varName);
+        String varValue = System.getProperty(varName);
         if (null != varValue) {
             try {
                 return Integer.parseInt(varValue);
-            }catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 // will return default value bellow
             }
         }

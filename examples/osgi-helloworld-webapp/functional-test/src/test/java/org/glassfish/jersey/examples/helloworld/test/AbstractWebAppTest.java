@@ -88,6 +88,7 @@ public abstract class AbstractWebAppTest {
 
         return Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
+                systemProperty("jersey.test.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
 
                 // do not remove the following line

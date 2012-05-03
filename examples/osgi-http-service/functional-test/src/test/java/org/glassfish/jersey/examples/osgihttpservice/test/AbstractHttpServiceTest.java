@@ -89,6 +89,7 @@ public abstract class AbstractHttpServiceTest {
         return Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
+                systemProperty("jersey.test.port").value(String.valueOf(port)),
 
                 // do not remove the following line
 //                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
