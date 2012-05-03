@@ -78,9 +78,9 @@ import static org.junit.Assert.assertEquals;
 public class BasicOsgiIntegrationTest {
 
     private static final Logger LOGGER = Logger.getLogger(BasicOsgiIntegrationTest.class.getName());
-    private static final int port = Helper.getEnvVariable("JERSEY_HTTP_PORT", 8080);
+    private static final int port = Helper.getEnvVariable("jersey.test.port", 8080);
     private static final String CONTEXT = "/jersey";
-    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(Helper.getEnvVariable("jersey.test.port", 8080)).path(CONTEXT).build();
 
     @Inject
     protected BundleContext bundleContext;
@@ -90,7 +90,7 @@ public class BasicOsgiIntegrationTest {
 
         Option[] options = options(
 //                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-                systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
+                systemProperty("jersey.test.port").value(String.valueOf(port)),
                 systemPackage("sun.misc"),
                 // define maven repository
                 repositories(
@@ -161,7 +161,6 @@ public class BasicOsgiIntegrationTest {
 
     @Test
     public void testSimpleResource() throws Exception {
-
         final ResourceConfig resourceConfig = new ResourceConfig(SuperSimpleResource.class);
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 

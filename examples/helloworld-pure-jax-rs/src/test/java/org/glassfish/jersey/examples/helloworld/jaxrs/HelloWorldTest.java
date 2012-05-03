@@ -56,7 +56,7 @@ public class HelloWorldTest {
     public void testHelloWorld() throws Exception {
         HttpServer server = App.startServer();
 
-        Target target = ClientFactory.newClient().target("http://localhost:8080/helloworld");
+        Target target = ClientFactory.newClient().target(App.getBaseURI() + "helloworld");
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, target.request(MediaType.TEXT_PLAIN).get(String.class));
 
         server.stop(0);
