@@ -39,7 +39,8 @@
     only if the new code is made subject to such option by the copyright
     holder.
 
---><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
@@ -47,7 +48,8 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
     <artifactId>https-clientserver-grizzly</artifactId>
-    <name>HTTPS Client/Server - Jersey sample - Grizzly</name>
+    <name>jersey-examples-https-clientserver-grizzly</name>
+    <description>HTTPS Client/Server - Jersey sample - Grizzly</description>
     <packaging>jar</packaging>
 
     <dependencies>
