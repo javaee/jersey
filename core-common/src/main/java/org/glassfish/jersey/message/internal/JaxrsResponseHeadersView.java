@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
@@ -102,7 +103,7 @@ class JaxrsResponseHeadersView implements ResponseHeaders {
 
     @Override
     public MultivaluedMap<String, String> asMap() {
-        return wrapped.toJaxrsHeaderMap();
+        return wrapped.headers();
     }
 
     @Override

@@ -39,30 +39,25 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.RuntimeDelegate;
-
-import org.glassfish.jersey.internal.util.collection.ListMultimapAdapter;
-
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 /**
  * Mutable message headers implementation class.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 class MutableHeaders implements Headers, Headers.Builder<MutableHeaders> {
 
-    private final ListMultimap<String, String> stringHeaders;
-    private transient ListMultimap<String, String> immutableHeadersView;
-    private final ListMultimap<String, Object> objectHeaders;
+    private final AbstractMultivaluedMap<String, String> stringHeaders;
+    private final AbstractMultivaluedMap<String, Object> objectHeaders;
 
     public MutableHeaders() {
         this.stringHeaders = HeadersFactory.createInbound();
@@ -78,6 +73,11 @@ class MutableHeaders implements Headers, Headers.Builder<MutableHeaders> {
 
     @Override
     public String header(String name) {
+        final List<String> headers = headerValues(name);
+        if (headers == null) {
+            return null;
+        }
+
         final Iterator<String> values = headerValues(name).iterator();
         if (!values.hasNext()) {
             return null;
@@ -92,86 +92,75 @@ class MutableHeaders implements Headers, Headers.Builder<MutableHeaders> {
     }
 
     @Override
-    public ListMultimap<String, String> headers() {
+    public MultivaluedMap<String, String> headers() {
         fetchAll();
-        if (immutableHeadersView == null) {
-            immutableHeadersView = Multimaps.unmodifiableListMultimap(stringHeaders);
-        }
-        return immutableHeadersView;
+        return stringHeaders;
     }
 
     @Override
     public List<String> headerValues(String name) {
         fetch(name);
-        if (immutableHeadersView == null) {
-            immutableHeadersView = Multimaps.unmodifiableListMultimap(stringHeaders);
-        }
-        return immutableHeadersView.get(name);
-    }
-
-    @Override
-    public MultivaluedMap<String, String> toJaxrsHeaderMap() {
-        return new ListMultimapAdapter<String, String>(headers());
+        return stringHeaders.get(name);
     }
 
     @Override
     public MutableHeaders header(String name, Object value) {
-        objectHeaders.put(name, value);
+        objectHeaders.add(name, value);
         return this;
     }
 
     @Override
     public MutableHeaders header(String name, String value) {
-        stringHeaders.put(name, value);
+        stringHeaders.add(name, value);
         return this;
     }
 
     @Override
     public MutableHeaders headers(String name, Object... values) {
-        objectHeaders.putAll(name, Arrays.asList(values));
+        objectHeaders.addAll(name, values);
         return this;
     }
 
     @Override
     public MutableHeaders headers(String name, String... values) {
-        stringHeaders.putAll(name, Arrays.asList(values));
+        stringHeaders.addAll(name, values);
         return this;
     }
 
     @Override
     public MutableHeaders headers(String name, Iterable<? extends Object> values) {
-        objectHeaders.putAll(name, values);
+        objectHeaders.addAll(name, iterableToList(values));
         return this;
     }
 
     @Override
-    public MutableHeaders headers(Multimap<String, ? extends Object> headers) {
-        objectHeaders.putAll(headers);
+    public MutableHeaders headers(MultivaluedMap<String, ? extends Object> headers) {
+        objectHeaders.putAll((Map<String, List<Object>>) headers);
         return this;
     }
 
     @Override
     public MutableHeaders headers(Map<String, List<String>> headers) {
-        objectHeaders.putAll(HeadersFactory.createInbound(headers));
+        stringHeaders.putAll(HeadersFactory.createInbound(headers));
         return this;
     }
 
     @Override
     public MutableHeaders remove(String name) {
-        objectHeaders.removeAll(name);
-        stringHeaders.removeAll(name);
+        objectHeaders.remove(name);
+        stringHeaders.remove(name);
         return this;
     }
 
     @Override
     public MutableHeaders replace(String name, Iterable<? extends Object> values) {
-        stringHeaders.removeAll(name);
-        objectHeaders.replaceValues(name, values);
+        stringHeaders.remove(name);
+        objectHeaders.put(name, iterableToList(values));
         return this;
     }
 
     @Override
-    public MutableHeaders replaceAll(ListMultimap<String, String> headers) {
+    public MutableHeaders replaceAll(MultivaluedMap<String, String> headers) {
         objectHeaders.clear();
         stringHeaders.clear();
 
@@ -185,12 +174,12 @@ class MutableHeaders implements Headers, Headers.Builder<MutableHeaders> {
             return;
         }
 
-        final List<Object> values = objectHeaders.removeAll(headerName);
-        if (values.isEmpty()) {
+        final List<Object> values = objectHeaders.remove(headerName);
+        if (values == null || values.isEmpty()) {
             return;
         }
 
-        stringHeaders.putAll(headerName, HeadersFactory.toString(values, RuntimeDelegate.getInstance()));
+        stringHeaders.addAll(headerName, HeadersFactory.toString(values, RuntimeDelegate.getInstance()));
     }
 
     private void fetchAll() {
@@ -199,4 +188,15 @@ class MutableHeaders implements Headers, Headers.Builder<MutableHeaders> {
             objectHeaders.clear();
         }
     }
+
+    private List<Object> iterableToList(final Iterable<? extends Object> values) {
+        final LinkedList<Object> linkedList = new LinkedList<Object>();
+
+        for (Object element : values) {
+            linkedList.add(element);
+        }
+
+        return linkedList;
+    }
+
 }

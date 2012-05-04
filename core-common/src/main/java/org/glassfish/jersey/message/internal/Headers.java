@@ -39,16 +39,16 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Jersey message headers internal contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public interface Headers {
 
@@ -81,7 +81,7 @@ public interface Headers {
 
         public B headers(String name, Iterable<? extends Object> values);
 
-        public B headers(Multimap<String, ? extends Object> headers);
+        public B headers(MultivaluedMap<String, ? extends Object> headers);
 
         public B headers(Map<String, List<String>> headers);
 
@@ -96,7 +96,7 @@ public interface Headers {
          *     headers will be removed.
          * @return the updated headers builder.
          */
-        public B replaceAll(ListMultimap<String, String> headers);
+        public B replaceAll(MultivaluedMap<String, String> headers);
     }
 
     /**
@@ -116,13 +116,12 @@ public interface Headers {
      *     character.
      * @see #headerValues(String)
      * @see #headers()
-     * @see #toJaxrsHeaderMap()
      */
     public String header(String name);
 
     /**
      * Get the map of HTTP message header names to their respective values.
-     * The returned map is case-insensitive wrt. keys and is read-only.
+     * The returned map is case-insensitive wrt. keys and is mutable.
      * <p/>
      * Each single header value is converted to String using a
      * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
@@ -130,17 +129,16 @@ public interface Headers {
      * for the header value class or using its {@code toString} method  if a header
      * delegate is not available.
      *
-     * @return a read-only map of header names and values.
-     * @throws java.lang.IllegalStateException if called outside of the message
-     *     processing scope.
+     * @return a mutable map of header names and values.
+     * @throws java.lang.IllegalStateException
+     *          if called outside of the message processing scope.
      * @see #header(String)
      * @see #headerValues(String)
      */
-    // TODO move from Guaua Multimap to JAX-RS MultivaluedMap
-    public ListMultimap<String, String> headers();
+    public MultivaluedMap<String, String> headers();
 
     /**
-     * Get the values of a single HTTP message header. The returned List is read-only.
+     * Get the values of a single HTTP message header. The returned List is mutable.
      * This is a convenience shortcut for {@code headers().get(name)}.
      * <p/>
      * Each single header value is converted to String using a
@@ -150,29 +148,13 @@ public interface Headers {
      * delegate is not available.
      *
      * @param name the header name, case insensitive.
-     * @return a read-only list of header values.
-     * @throws java.lang.IllegalStateException if called outside of the message
-     *     processing scope.
+     * @return a mutable list of header values or {@code null} if no header value exists
+     *         for the header name.
+     * @throws java.lang.IllegalStateException
+     *          if called outside of the message processing scope.
      * @see #headers()
      * @see #header(java.lang.String)
      */
     public List<String> headerValues(String name);
 
-    /**
-     * Get the map of HTTP message header names to their respective values.
-     * The returned map is case-insensitive wrt. keys and is read-only.
-     * <p/>
-     * Each single header value is converted to String using a
-     * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
-     * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
-     * for the header value class or using its {@code toString} method  if a header
-     * delegate is not available.
-     *
-     * @return a read-only map of header names and values.
-     * @throws java.lang.IllegalStateException if called outside of the message
-     *     processing scope.
-     * @see #header(java.lang.String)
-     * @see #headerValues(java.lang.String)
-     */
-    public MultivaluedMap<String, String> toJaxrsHeaderMap();
 }

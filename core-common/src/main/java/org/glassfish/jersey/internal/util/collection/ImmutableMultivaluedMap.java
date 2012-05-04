@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,137 +39,103 @@
  */
 package org.glassfish.jersey.internal.util.collection;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
- * Adapter from Guava {@code ListMultimap} to JAX-RS {@link MultivaluedMap}.
+ * An immutable view of a {@link MultivaluedMap}.
  *
- * @param <K>
- * @param <V>
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @param <K> the key
+ * @param <V> the value
+ * @author Gili Tzabari
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ListMultimapAdapter<K, V> implements MultivaluedMap<K, V> {
+public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
 
-    private final ListMultimap<K, V> multimap;
-    private transient Map<K, List<V>> mapView;
-
-    public ListMultimapAdapter(ListMultimap<K, V> multimap) {
-        this.multimap = multimap;
+    /**
+     * Returns an empty immutable map.
+     *
+     * @return an empty immutable map.
+     */
+    public static <K, V> ImmutableMultivaluedMap<K, V> empty() {
+        return new ImmutableMultivaluedMap<K, V>(new MultivaluedHashMap<K, V>());
     }
 
-    @Override
+    private final MultivaluedMap<K, V> delegate;
+
+    /**
+     * Creates a new ImmutableMultivaluedMap.
+     *
+     * @param delegate the underlying MultivaluedMap
+     */
+    public ImmutableMultivaluedMap(MultivaluedMap<K, V> delegate) {
+        this.delegate = delegate;
+    }
+
     public void putSingle(K key, V value) {
-        multimap.replaceValues(key, Collections.singleton(value));
+        throw new UnsupportedOperationException();
     }
 
-    @Override
     public void add(K key, V value) {
-        multimap.put(key, value);
+        throw new UnsupportedOperationException();
     }
 
-    @Override
     public V getFirst(K key) {
-        final Iterator<V> values = multimap.get(key).iterator();
-        if (values.hasNext()) {
-            return values.next();
-        }
-
-        return null;
+        return delegate.getFirst(key);
     }
 
-    @Override
     public int size() {
-        return multimap.size();
+        return delegate.size();
     }
 
-    @Override
     public boolean isEmpty() {
-        return multimap.isEmpty();
+        return delegate.isEmpty();
     }
 
-    @Override
     public boolean containsKey(Object key) {
-        return multimap.containsKey(key);
+        return delegate.containsKey(key);
     }
 
-    @Override
     public boolean containsValue(Object value) {
-        return multimap.containsValue(value);
+        return delegate.containsValue(value);
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
     public List<V> get(Object key) {
-        if (multimap.containsKey(key)) { // making sure we can cast
-            return multimap.get((K) key);
-        }
-        return null;
+        return delegate.get(key);
     }
 
-    @Override
-    public List<V> put(K key, List<V> values) {
-        List<V> oldValues = null;
-        if (multimap.containsKey(key)) {
-            oldValues = multimap.removeAll(key);
-        }
-        multimap.putAll(key, values);
-        return oldValues;
+    public List<V> put(K key, List<V> value) {
+        throw new UnsupportedOperationException();
     }
 
-    @Override
     public List<V> remove(Object key) {
-        if (multimap.containsKey(key)) {
-            return multimap.removeAll(key);
-        }
-        return null;
+        throw new UnsupportedOperationException();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void putAll(Map<? extends K, ? extends List<V>> map) {
-        for (Entry<? extends K, ? extends List<V>> e : map.entrySet()) {
-            multimap.putAll(e.getKey(), e.getValue());
-        }
+    public void putAll(Map<? extends K, ? extends List<V>> m) {
+        throw new UnsupportedOperationException();
     }
 
-    @Override
     public void clear() {
-        multimap.clear();
+        throw new UnsupportedOperationException();
     }
 
-    @Override
     public Set<K> keySet() {
-        return multimap.keySet();
+        return Collections.unmodifiableSet(delegate.keySet());
     }
 
-    @Override
     public Collection<List<V>> values() {
-        return mapView().values();
+        return Collections.unmodifiableCollection(delegate.values());
     }
 
-    @Override
     public Set<Entry<K, List<V>>> entrySet() {
-        return mapView().entrySet();
+        return Collections.unmodifiableSet(delegate.entrySet());
     }
 
-    private Map<K, List<V>> mapView() {
-        Map<K, List<V>> result = mapView;
-        return (result == null) ? mapView = Maps.transformValues(multimap.asMap(), new Function<Collection<V>, List<V>>() {
-
-            @Override
-            public List<V> apply(Collection<V> input) {
-                return (List<V>) input;
-            }
-        }) : result;
-    }
 }

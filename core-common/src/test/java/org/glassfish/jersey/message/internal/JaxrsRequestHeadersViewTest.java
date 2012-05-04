@@ -53,7 +53,9 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * JaxrsRequestViewTest class.

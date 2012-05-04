@@ -52,9 +52,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 
 /**
  * Abstract mutable message implementation.
@@ -80,7 +78,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         this.properties = Maps.newHashMap(that.properties);
     }
 
-    public AbstractMutableMessage(ListMultimap<String, String> headers, InputStream entity,
+    public AbstractMutableMessage(MultivaluedMap<String, String> headers, InputStream entity,
             Map<String, Object> properties) {
         this();
 
@@ -200,13 +198,8 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return (M) this;
     }
 
-    // MutableHeaders delegates
-    public MultivaluedMap<String, String> toJaxrsHeaderMap() {
-        return headers.toJaxrsHeaderMap();
-    }
-
     @SuppressWarnings("unchecked")
-    public M replaceAll(ListMultimap<String, String> headers) {
+    public M replaceAll(MultivaluedMap<String, String> headers) {
         this.headers.replaceAll(headers);
         return (M) this;
     }
@@ -230,7 +223,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
     }
 
     @SuppressWarnings("unchecked")
-    public M headers(Multimap<String, ? extends Object> headers) {
+    public M headers(MultivaluedMap<String, ? extends Object> headers) {
         this.headers.headers(headers);
         return (M) this;
     }
@@ -253,7 +246,7 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return (M) this;
     }
 
-    public ListMultimap<String, String> headers() {
+    public MultivaluedMap<String, String> headers() {
         return headers.headers();
     }
 

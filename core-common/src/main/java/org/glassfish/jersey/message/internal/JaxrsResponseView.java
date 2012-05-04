@@ -47,8 +47,6 @@ import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.ResponseHeaders;
 
-import org.glassfish.jersey.internal.util.collection.ListMultimapAdapter;
-
 /**
  * Adapter for {@link Response Jersey Response} to {@link javax.ws.rs.core.Response
  * JAX-RS Response}.
@@ -141,6 +139,7 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     @Override
     @SuppressWarnings("unchecked")
     public MultivaluedMap<String, Object> getMetadata() {
-        return new ListMultimapAdapter(wrapped.headers());
+        final MultivaluedMap<String, ?> headers = wrapped.headers();
+        return (MultivaluedMap<String, Object>) headers;
     }
 }
