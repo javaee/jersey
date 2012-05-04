@@ -167,6 +167,9 @@ public class GrizzlyHttpServerFactory {
         if (handler != null) {
             config.addHttpHandler(handler, uri.getPath());
         }
+
+        config.setPassTraceRequest(true);
+
         try {
             // Start the server.
             server.start();
