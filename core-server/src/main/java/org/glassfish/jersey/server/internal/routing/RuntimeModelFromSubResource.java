@@ -74,9 +74,7 @@ public class RuntimeModelFromSubResource extends RuntimeModelProviderBase {
 
     @Override
     public void visitResourceMethod(final ResourceMethod method) {
-        // TODO: find a way to map: /? -> inflector in one shot
         addMethodInflector(new PathPattern("/", PathPattern.RightHandPath.capturingZeroSegments), method, createInflector(method));
-        addMethodInflector(PathPattern.EMPTY_PATH, method, createInflector(method));
     }
 
     @Override

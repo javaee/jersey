@@ -149,7 +149,16 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
     @Override
     public String getFinalMatchingGroup() {
         final MatchResult mr = matchResults.peek();
-        return (mr == null) ? null : mr.group(mr.groupCount());
+        if (mr == null) {
+            return null;
+        }
+
+        String finalGroup = mr.group(mr.groupCount());
+        // We have found a match but the right hand path pattern did not match anything
+        // so just returning an empty string as a final matching group result.
+        // Otherwise a non-empty patterns would fail to match the right-hand-path properly.
+        // See also PatternWithGroups.match(CharSequence) implementation.
+        return finalGroup == null ? "" : finalGroup;
     }
 
     @Override

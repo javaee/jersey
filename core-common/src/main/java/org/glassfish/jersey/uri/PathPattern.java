@@ -69,7 +69,7 @@ public final class PathPattern extends PatternWithGroups {
     };
 
     /**
-     * The set of right hand path patterns that may be postfixed to a path
+     * The set of right hand path patterns that may be appended to a path
      * pattern.
      */
     public static enum RightHandPath {

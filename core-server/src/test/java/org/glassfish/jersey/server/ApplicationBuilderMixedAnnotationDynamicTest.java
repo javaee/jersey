@@ -88,10 +88,10 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
         resourceConfig.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        final Response response = application.apply(Requests.from("", "name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
+        final Response response = application.apply(Requests.from("/name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
         assertEquals(200, response.getStatus());
 
         assertEquals("Gaga", application.apply(
-                Requests.from("", "name", "GET").accept(MediaType.TEXT_PLAIN).build()).get().readEntity(String.class));
+                Requests.from("/name", "GET").accept(MediaType.TEXT_PLAIN).build()).get().readEntity(String.class));
     }
 }

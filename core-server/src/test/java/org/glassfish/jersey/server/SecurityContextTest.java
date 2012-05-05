@@ -134,7 +134,7 @@ public class SecurityContextTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Response response = application.apply(Requests.from("", "test", "GET").build()).get();
+        Response response = application.apply(Requests.from("/test", "GET").build()).get();
         assertEquals(response.getStatus(), 200);
         assertEquals(response.getEntity(), PRINCIPAL_NAME);
     }
@@ -150,7 +150,7 @@ public class SecurityContextTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Response response = application.apply(Requests.from("", "test", "GET").header(SKIP_FILTER, "true").build()).get();
+        Response response = application.apply(Requests.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();
         assertEquals(200, response.getStatus());
         String entity = response.readEntity(String.class);
         Assert.assertTrue(!entity.equals(PRINCIPAL_NAME));

@@ -55,11 +55,13 @@ import org.glassfish.jersey.uri.UriComponent;
  */
 class MutableRequest extends AbstractMutableMessage<MutableRequest> implements Request, Request.Builder {
 
+    private static URI DEFAULT_BASE_URI = URI.create("/");
+
     private transient javax.ws.rs.core.Request jaxrsView;
     private transient javax.ws.rs.core.Request.RequestBuilder jaxrsBuilderView;
     private transient javax.ws.rs.core.RequestHeaders jaxrsHeadersView;
     // Absolute application root URI (base URI)
-    private URI applicationRootUri;
+    private URI baseUri;
     // Absolute request URI
     private URI requestUri;
     // Lazily computed relative (to application root URI) request paths
@@ -71,34 +73,38 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     MutableRequest(MutableRequest that) {
         super(that);
 
-        this.applicationRootUri = that.applicationRootUri;
+        this.baseUri = that.baseUri;
         this.requestUri = that.requestUri;
         this.method = that.method;
     }
 
-    MutableRequest(URI applicationRootUri, URI requestUri, String method) {
-        this.applicationRootUri = applicationRootUri;
-        this.requestUri = requestUri;
+    MutableRequest(URI baseUri, URI requestUri, String method) {
+        this.baseUri = (baseUri != null) ? normalizeBaseUri(baseUri) : DEFAULT_BASE_URI;
+        this.requestUri = requestUri.normalize();
         this.method = method;
     }
 
-    MutableRequest(String applicationRootUri, String requestUri, String method) {
-        this.applicationRootUri = URI.create(applicationRootUri != null ? applicationRootUri : "/");
-        this.requestUri = URI.create(requestUri);
+    MutableRequest(String baseUri, String requestUri, String method) {
+        this.baseUri = baseUri != null ? normalizeBaseUri(URI.create(baseUri)) : DEFAULT_BASE_URI;
+        this.requestUri = URI.create(requestUri).normalize();
         this.method = method;
     }
 
     MutableRequest(Request request) {
         super(request.headers(), request.content(InputStream.class), request.properties());
 
-        this.applicationRootUri = request.baseUri();
+        this.baseUri = request.baseUri();
         this.requestUri = request.uri();
         this.method = request.method();
     }
 
+    private URI normalizeBaseUri(URI baseUri) {
+        return baseUri.normalize();
+    }
+
     @Override
     public URI baseUri() {
-        return applicationRootUri;
+        return baseUri;
     }
 
     @Override
@@ -123,10 +129,10 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
 
         String result;
         final String requestUriRawPath = requestUri.getRawPath();
-        if (applicationRootUri == null) {
+        if (baseUri == null) {
             result = requestUriRawPath;
         } else {
-            final String applicationRootUriRawPath = applicationRootUri.getRawPath();
+            final String applicationRootUriRawPath = baseUri.getRawPath();
             if (applicationRootUriRawPath.length() > requestUriRawPath.length()) {
                 result = "";
             } else {
@@ -153,26 +159,26 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
 
     @Override
     public MutableRequest uri(String uri) {
-        this.applicationRootUri = this.requestUri = URI.create(uri);
+        this.baseUri = this.requestUri = URI.create(uri);
         return this;
     }
 
     @Override
     public MutableRequest uri(URI uri) {
-        this.applicationRootUri = this.requestUri = uri;
+        this.baseUri = this.requestUri = uri;
         return this;
     }
 
     @Override
-    public Builder uris(String applicationRootUri, String requestUri) {
-        this.applicationRootUri = URI.create(applicationRootUri);
+    public Builder uris(String baseUri, String requestUri) {
+        this.baseUri = URI.create(baseUri);
         this.requestUri = URI.create(requestUri);
         return this;
     }
 
     @Override
-    public Builder uris(URI applicationRootUri, URI requestUri) {
-        this.applicationRootUri = applicationRootUri;
+    public Builder uris(URI baseUri, URI requestUri) {
+        this.baseUri = baseUri;
         this.requestUri = requestUri;
         return this;
     }

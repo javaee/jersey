@@ -72,7 +72,7 @@ public class ApplicationBuilderHttpMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("", "test", "GET").build(), application);
+        checkReturnedStatus(Requests.from("/test", "GET").build(), application);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class ApplicationBuilderHttpMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("", "test", "HEAD").build(), application);
+        checkReturnedStatus(Requests.from("/test", "HEAD").build(), application);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class ApplicationBuilderHttpMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("", "test", "OPTIONS").build(), application);
+        checkReturnedStatus(Requests.from("/test", "OPTIONS").build(), application);
     }
 
     @Test
@@ -123,9 +123,9 @@ public class ApplicationBuilderHttpMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("", "test", "GET").build(), application);
-        checkReturnedStatus(Requests.from("", "test", "HEAD").build(), application);
-        checkReturnedStatus(Requests.from("", "test", "OPTIONS").build(), application);
+        checkReturnedStatus(Requests.from("/test", "GET").build(), application);
+        checkReturnedStatus(Requests.from("/test", "HEAD").build(), application);
+        checkReturnedStatus(Requests.from("/test", "OPTIONS").build(), application);
     }
 
     @Test
@@ -156,13 +156,13 @@ public class ApplicationBuilderHttpMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatusEquals(201, Requests.from("", "test1", "GET").build(), application);
-//        checkReturnedStatusEquals(203, Requests.from("", "test1", "HEAD").build(), application);
-//        checkReturnedStatusEquals(203, Requests.from("", "test1", "OPTIONS").build(), application);
+        checkReturnedStatusEquals(201, Requests.from("/test1", "GET").build(), application);
+//        checkReturnedStatusEquals(203, Requests.from("/test1", "HEAD").build(), application);
+//        checkReturnedStatusEquals(203, Requests.from("/test1", "OPTIONS").build(), application);
 
-//        checkReturnedStatusEquals(202, Requests.from("", "test2", "GET").build(), application);
-//        checkReturnedStatusEquals(202, Requests.from("", "test2", "HEAD").build(), application);
-//        checkReturnedStatusEquals(202, Requests.from("", "test2", "OPTIONS").build(), application);
+//        checkReturnedStatusEquals(202, Requests.from("/test2", "GET").build(), application);
+//        checkReturnedStatusEquals(202, Requests.from("/test2", "HEAD").build(), application);
+//        checkReturnedStatusEquals(202, Requests.from("/test2", "OPTIONS").build(), application);
     }
 
     private void checkReturnedStatus(Request req, ApplicationHandler app) throws Exception {
@@ -171,6 +171,6 @@ public class ApplicationBuilderHttpMethodsTest {
 
     private void checkReturnedStatusEquals(int expectedStatus, Request req, ApplicationHandler app) throws Exception {
         final int responseStatus = app.apply(req).get().getStatus();
-        assertEquals(responseStatus, expectedStatus);
+        assertEquals(expectedStatus, responseStatus);
     }
 }

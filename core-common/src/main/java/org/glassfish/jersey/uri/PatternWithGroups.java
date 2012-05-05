@@ -272,7 +272,7 @@ public class PatternWithGroups {
      */
     public final MatchResult match(final CharSequence cs) {
         // Check for match against the empty pattern
-        if (cs == null || cs.length() == 0) {
+        if (cs == null) {
             return (regexPattern == null) ? EMPTY_STRING_MATCH_RESULT : null;
         } else if (regexPattern == null) {
             return null;
@@ -282,6 +282,10 @@ public class PatternWithGroups {
         Matcher m = regexPattern.matcher(cs);
         if (!m.matches()) {
             return null;
+        }
+
+        if (cs.length() == 0) {
+            return EMPTY_STRING_MATCH_RESULT;
         }
 
         return (groupIndexes.length > 0) ? new GroupIndexMatchResult(m) : m;

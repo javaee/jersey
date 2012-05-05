@@ -98,7 +98,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
+        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -132,7 +132,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
+        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -166,7 +166,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
+        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -269,6 +269,6 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("", "test", "GET").build()).get().getStatus(), 200);
+        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
     }
 }
