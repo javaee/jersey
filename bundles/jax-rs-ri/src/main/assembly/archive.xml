@@ -73,4 +73,15 @@
             <outputDirectory>ext</outputDirectory>
         </fileSet>
     </fileSets>
+    <files>
+        <file>
+        <source>../../LICENSE.txt</source>
+        <destName>Jersey-LICENSE.txt</destName>
+        <outputDirectory></outputDirectory>
+      </file>
+       <file>
+        <source>../../third-party-license-readme.txt</source>
+        <outputDirectory></outputDirectory>
+      </file>
+    </files>
 </assembly>

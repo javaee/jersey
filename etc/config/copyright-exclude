@@ -30,11 +30,10 @@ jaxb.index
 /etc/jersey-1-migrated-tests
 /etc/config/copyright-exclude
 /etc/config/copyright.txt
-/license.html
-/license.txt
+/LICENSE.html
+/LICENSE.txt
+/bundles/glassfish/v4.0/core/src/main/resources/jersey-core_proto.py
 nb-configuration.xml
-/bundles/jax-rs-ri/src/main/resources/Jersey-LICENSE.txt
-/bundles/jax-rs-ri/src/main/resources/third-party-license-readme.txt
 /archetype-resources/
 /examples/https-clientserver-grizzly/client.cert
 /examples/https-clientserver-grizzly/keystore_client

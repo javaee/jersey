@@ -44,20 +44,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.bundles</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.bundles</groupId>
+    <groupId>org.glassfish.jersey.bundles.glassfish</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <name>jersey-bundles</name>
+    <name>jersey-bundles-glassfish</name>
 
-    <description>Jersey bundles providers umbrella project module</description>
+    <description>Jersey GlassFish bundles</description>
 
     <modules>
-        <module>jax-rs-ri</module>
-        <module>glassfish</module>
+        <module>v4.0</module>
     </modules>
 </project>

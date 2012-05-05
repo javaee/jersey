@@ -49,7 +49,7 @@
     </parent>
 
     <artifactId>jax-rs-ri</artifactId>
-    <name>jax-rs-ri</name>
+    <name>jersey-bundles-jax-rs-ri</name>
     <packaging>pom</packaging>
 
     <dependencies>
