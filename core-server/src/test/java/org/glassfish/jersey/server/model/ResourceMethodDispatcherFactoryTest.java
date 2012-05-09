@@ -47,7 +47,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ServerModule;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.testutil.AcceptorRootModule;
 
 import org.glassfish.hk2.HK2;
@@ -55,7 +54,7 @@ import org.glassfish.hk2.Services;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Jakub Podlesak
@@ -76,13 +75,26 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Test
     public void testBasicDispatchers() throws InterruptedException, ExecutionException {
+        final Resource.Builder rb = Resource.builder();
+
         final Method[] methods = this.getClass().getDeclaredMethods();
         for (Method method : methods) {
             if (Modifier.isPrivate(method.getModifiers())) {
-                ResourceMethod rm = new ResourceMethod(null, method, null, null, "GET", null);
-                assertNotNull("No dispatcher found for method " + method.toString(), rmdf.create(rm, rmihf.create(rm)));
+                // class-based
+                rb.addMethod("GET").handledBy(this.getClass(), method);
+                // instance-based
+                rb.addMethod("GET").handledBy(this, method);
             }
         }
+
+        for (ResourceModelComponent component : rb.build().getComponents()) {
+            if (component instanceof ResourceMethod) {
+                Invocable invocable = ((ResourceMethod) component).getInvocable();
+                assertNotNull("No dispatcher found for invocable " + invocable.toString(),
+                        rmdf.create(invocable, rmihf.create(invocable)));
+            }
+        }
+
     }
 
     private void voidVoid() {

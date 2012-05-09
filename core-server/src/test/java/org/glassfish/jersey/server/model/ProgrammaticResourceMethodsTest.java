@@ -37,8 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.model;
 
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 import static junit.framework.Assert.assertEquals;
 
@@ -54,18 +57,21 @@ import org.glassfish.jersey.process.Inflector;
 import org.junit.Test;
 
 /**
+ * Test of programmatic resource method additions.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationBuilderHttpMethodsTest {
+public class ProgrammaticResourceMethodsTest {
 
     @Test
     public void testGet() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-        resourceBuilder.path("test").method("GET").to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder("test");
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(200).build();
             }
         });
@@ -78,8 +84,8 @@ public class ApplicationBuilderHttpMethodsTest {
     @Test
     public void testHead() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-        resourceBuilder.path("test").method("HEAD").to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder("test");
+        resourceBuilder.addMethod("HEAD").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -95,8 +101,8 @@ public class ApplicationBuilderHttpMethodsTest {
     @Test
     public void testOptions() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-        resourceBuilder.path("test").method("OPTIONS").to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder("test");
+        resourceBuilder.addMethod("OPTIONS").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -111,15 +117,21 @@ public class ApplicationBuilderHttpMethodsTest {
 
     @Test
     public void testMultiple() throws Exception {
-        final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-        resourceBuilder.path("test").method("GET", "OPTIONS", "HEAD").to(new Inflector<Request, Response>() {
+        Inflector<Request, Response> inflector = new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(200).build();
             }
-        });
+        };
+
+        final ResourceConfig rc = new ResourceConfig();
+        final Resource.Builder resourceBuilder = Resource.builder("test");
+
+        resourceBuilder.addMethod("GET").handledBy(inflector);
+        resourceBuilder.addMethod("OPTIONS").handledBy(inflector);
+        resourceBuilder.addMethod("HEAD").handledBy(inflector);
+
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
@@ -131,28 +143,32 @@ public class ApplicationBuilderHttpMethodsTest {
     @Test
     public void testTwoBindersSamePath() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-        resourceBuilder.path("test1").method("GET").to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder("/");
+        resourceBuilder.addMethod("GET").path("test1").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(201).build();
             }
         });
-        resourceBuilder.path("test2").method("GET", "HEAD").to(new Inflector<Request, Response>() {
+        Inflector<Request, Response> inflector1 = new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(202).build();
             }
-        });
-        resourceBuilder.path("test1").method("OPTIONS", "HEAD").to(new Inflector<Request, Response>() {
+        };
+        resourceBuilder.addMethod("GET").path("test2").handledBy(inflector1);
+        resourceBuilder.addMethod("HEAD").path("test2").handledBy(inflector1);
+        Inflector<Request, Response> inflector2 = new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
                 return Responses.empty().status(203).build();
             }
-        });
+        };
+        resourceBuilder.addMethod("OPTIONS").path("test1").handledBy(inflector2);
+        resourceBuilder.addMethod("HEAD").path("test1").handledBy(inflector2);
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 

@@ -58,7 +58,8 @@ public interface ExtendedUriInfo extends UriInfo {
      * @return the matched resource method, otherwise null if no resource
      *         method was invoked.
      */
-    // AbstractResourceMethod getMatchedMethod();
+    // todo: add support
+    // ResourceMethod getMatchedMethod();
 
     /**
      * Get the throwable that was mapped to a response.

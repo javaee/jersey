@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
- * Abstraction for a resource class constructor
- */
-public class ResourceConstructor implements Parameterized, ResourceModelComponent {
-
-    private Constructor ctor;
-    private List<Parameter> parameters;
+* A pair of resource method model and a corresponding resource method acceptor.
+*
+* @author Marek Potociar (marek.potociar at oracle.com)
+*/
+final class MethodAcceptorPair {
+    final ResourceMethod model;
+    final TreeAcceptor acceptor;
 
     /**
-     * Creates a new instance of ResourceConstructor
+     * Create a new [resource method model, resource method acceptor] pair.
+     *
+     * @param model resource method model.
+     * @param acceptor resource method acceptor.
      */
-    public ResourceConstructor(Constructor constructor) {
-        this.ctor = constructor;
-        parameters = new ArrayList<Parameter>();
-    }
-
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Constructor getCtor() {
-        return ctor;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceConstructor(this);
-    }
-
-    @Override
-    public List<ResourceModelComponent> getComponents() {
-        return null;
+    MethodAcceptorPair(ResourceMethod model, TreeAcceptor acceptor) {
+        this.model = model;
+        this.acceptor = acceptor;
     }
 }

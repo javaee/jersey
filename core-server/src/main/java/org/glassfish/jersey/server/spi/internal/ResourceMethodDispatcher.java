@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 
-import org.glassfish.jersey.server.model.InvocableResourceMethod;
+import org.glassfish.jersey.server.model.Invocable;
 
 /**
  * A resource method dispatcher responsible for consuming a JAX-RS {@link Request request}
@@ -93,7 +93,7 @@ public interface ResourceMethodDispatcher {
          * @return the resource method dispatcher, or {@code null} if it could not be
          *     created for the given resource method.
          */
-        public ResourceMethodDispatcher create(final InvocableResourceMethod method, final InvocationHandler handler);
+        public ResourceMethodDispatcher create(final Invocable method, final InvocationHandler handler);
     }
 
     /**

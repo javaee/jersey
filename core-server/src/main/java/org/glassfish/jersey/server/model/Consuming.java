@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,83 +39,27 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
+import javax.ws.rs.core.MediaType;
 
 /**
- * Abstraction for a sub-resource locator
+ * Model component that is able to consume media types.
  *
- * @author Marc Hadley (marc.hadley at sun.com)
+ * A component implementing this interface provides additional information about
+ * the supported consumed {@link MediaType media types}.
+ *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @see javax.ws.rs.Consumes
+ * @see Producing
  */
-public class SubResourceLocator
-        implements PathAnnotated, Parameterized, ResourceModelComponent {
-
-    private ResourceClass resource;
-    private Method method;
-
-    private Annotation[] annotations;
-    private PathValue uriPath;
-    private List<Parameter> parameters;
+public interface Consuming {
 
     /**
-     * Creates a new instance of SubResourceLocator
+     * Get the consumed media types supported by the component.
+     *
+     * @return immutable collection of supported consumed media types.
      */
-    public SubResourceLocator(ResourceClass resource, Method method, PathValue uriPath, Annotation[] annotations) {
-        this.resource = resource;
-        this.method = method;
-        this.annotations = annotations;
-        this.uriPath =  uriPath;
-        this.parameters = new ArrayList<Parameter>();
-    }
-
-    public Annotation[] getAnnotations() {
-        return annotations.clone();
-    }
-
-    public Method getMethod() {
-        return method;
-    }
-
-    public ResourceClass getResource() {
-        return resource;
-    }
-
-    @Override
-    public PathValue getPath() {
-        return uriPath;
-    }
-
-    @Override
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public boolean hasEntity() {
-        for (Parameter p : getParameters()) {
-            if (Parameter.Source.ENTITY == p.getSource()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitSubResourceLocator(this);
-    }
-
-    @Override
-    public List<ResourceModelComponent> getComponents() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractSubResourceLocator("
-                + getMethod().getDeclaringClass().getSimpleName() + "#" + getMethod().getName() + ")";
-    }
+    public List<MediaType> getConsumedTypes();
 }

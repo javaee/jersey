@@ -92,6 +92,7 @@ public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<
 
     // TODO:
     //  something like prequel/sequel - usable for EventChannelWriter and XML related writers
+    @SuppressWarnings("unchecked")
     @Override
     public void writeTo(ChunkedResponse<?> chunkedResponse, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
         final References references = services.forContract(Injector.class).get().inject(References.class);

@@ -46,15 +46,15 @@ import java.util.Set;
  * Abstraction for abstract resources enclosed within a specific context
  * (such as an application).
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+// TODO either implement or remove
 public interface ResourceModelContext {
 
-    /*
-     * Returns a set of all resource classes known
-     * within this context.
-     * 
-     * @see ResourceClass
+    /**
+     * Get a set of all resource models known within this context.
+     *
+     * @return a set of all known resource models.
      */
-    public Set<ResourceClass> getAbstractRootResources();
+    public Set<Resource> getResourceModels();
 }

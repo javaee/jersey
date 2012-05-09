@@ -57,7 +57,7 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDispatcher {
+abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDispatcher {
 
     private final Method method;
     private final InvocationHandler methodHandler;
@@ -68,8 +68,8 @@ public abstract class AbstractJavaResourceMethodDispatcher implements ResourceMe
      * @param resourceMethod invocable resource class Java method.
      * @param methodHandler method invocation handler.
      */
-    protected AbstractJavaResourceMethodDispatcher(InvocableResourceMethod resourceMethod, InvocationHandler methodHandler) {
-        this.method = resourceMethod.getMethod();
+    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
+        this.method = resourceMethod.getHandlingMethod();
         this.methodHandler = methodHandler;
     }
 
@@ -91,7 +91,7 @@ public abstract class AbstractJavaResourceMethodDispatcher implements ResourceMe
      * @param resource resource class instance.
      * @param request request to be dispatched.
      * @return response for the dispatched request.
-     * @throws ProcessingException
+     * @throws ProcessingException in case of a processing error.
      *
      * @see ResourceMethodDispatcher#dispatch(java.lang.Object, javax.ws.rs.core.Request)
      */
@@ -107,7 +107,7 @@ public abstract class AbstractJavaResourceMethodDispatcher implements ResourceMe
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *     container exception in case the invocation failed.
      */
-    protected final Object invoke(Object resource, Object... args) throws ProcessingException {
+    final Object invoke(Object resource, Object... args) throws ProcessingException {
         try {
             return methodHandler.invoke(resource, method, args);
         } catch (IllegalAccessException ex) {

@@ -43,7 +43,7 @@ import java.util.List;
 
 /**
  * Marker interface for all abstract resource model components,
- * so that they are traversable using the visitor pattern.
+ * so that they can be traversed using a visitor pattern.
  *
  * @see ResourceModelVisitor
  *
@@ -64,5 +64,5 @@ public interface ResourceModelComponent {
      *
      * @return list of all sub-components
      */
-    public List<ResourceModelComponent> getComponents();
+    public List<? extends ResourceModelComponent> getComponents();
 }

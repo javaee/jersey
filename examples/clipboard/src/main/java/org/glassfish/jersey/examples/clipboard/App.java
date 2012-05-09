@@ -51,21 +51,31 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * This is the example entry point, where Jersey application gets populated and published
- * using the Grizzly 2 HTTP container.
+ * This is the example entry point, where Jersey application for the example
+ * gets populated and published using the Grizzly 2 HTTP container.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
+    /**
+     * Clipboard root resource path.
+     */
     public static final String ROOT_PATH = "clipboard";
 
+    /**
+     * Main application entry point.
+     *
+     * @param args application arguments.
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Clipboard Jersey Example App");
@@ -74,9 +84,9 @@ public class App {
 
             System.out.println(
                     String.format("Application started.%n"
-                    + "Try out %s%s%n"
-                    + "Hit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
+                            + "Try out %s%s%n"
+                            + "Hit enter to stop it...",
+                            BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -85,6 +95,11 @@ public class App {
 
     }
 
+    /**
+     * Create example application resource configuration.
+     *
+     * @return initialized resource configuration of the example application.
+     */
     public static ResourceConfig createApp() {
 
         MediaType[] jsonAndTextTypes = new MediaType[]{MediaType.APPLICATION_JSON_TYPE, MediaType.TEXT_PLAIN_TYPE};
@@ -94,19 +109,17 @@ public class App {
                 ClipboardDataProvider.ApplicationJson.class,
                 ClipboardDataProvider.TextPlain.class);
 
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
+        final Resource.Builder resourceBuilder = Resource.builder("echo");
+        ResourceMethod.Builder rmBuilder = resourceBuilder.addMethod("POST");
+        rmBuilder.consumes(jsonAndTextTypes).produces(jsonAndTextTypes)
+                .handledBy(new Inflector<Request, Response>() {
 
-        resourceBuilder
-                .path("echo")
-                .method("POST").consumes(jsonAndTextTypes).produces(jsonAndTextTypes)
-                .to(new Inflector<Request, Response>() {
-
-            @Override
-            public Response apply(Request request) {
-                ClipboardData data = (request != null) ? request.readEntity(ClipboardData.class) : null;
-                return Response.ok(data).build();
-            }
-        });
+                    @Override
+                    public Response apply(Request request) {
+                        ClipboardData data = (request != null) ? request.readEntity(ClipboardData.class) : null;
+                        return Response.ok(data).build();
+                    }
+                });
 
         resourceConfig.addResources(resourceBuilder.build());
         return resourceConfig;

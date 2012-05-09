@@ -50,19 +50,29 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.Resource;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Hello world!
+ * This is the example entry point, where Jersey application for the example
+ * gets populated and published using the Grizzly 2 HTTP container.
  *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
+    /**
+     * Clipboard root resource path.
+     */
     public static final String ROOT_PATH = "clipboard";
 
+    /**
+     * Main application entry point.
+     *
+     * @param args application arguments.
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Clipboard Jersey Example App");
@@ -72,9 +82,9 @@ public class App {
 
             System.out.println(
                     String.format("Application started.%n"
-                    + "Try out %s%s%n"
-                    + "Hit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
+                            + "Try out %s%s%n"
+                            + "Hit enter to stop it...",
+                            BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -83,52 +93,55 @@ public class App {
 
     }
 
+    /**
+     * Create example application resource configuration.
+     *
+     * @return initialized resource configuration of the example application.
+     */
     public static ResourceConfig createProgrammaticClipboardApp() {
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
+        final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH);
         final Clipboard clipboard = new Clipboard();
 
-        resourceBuilder.path(ROOT_PATH)
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
-                .method("GET").to(new Inflector<Request, Response>() {
+            @Override
+            public Response apply(Request data) {
+                final String content = clipboard.content();
+                if (content.isEmpty()) {
+                    return Response.noContent().build();
+                }
+                return Response.ok(content).build();
+            }
+        });
 
-                    @Override
-                    public Response apply(Request data) {
-                        final String content = clipboard.content();
-                        if (content.isEmpty()) {
-                            return Response.noContent().build();
-                        }
-                        return Response.ok(content).build();
-                    }
-                })
+        resourceBuilder.addMethod("PUT").handledBy(new Inflector<Request, Response>() {
 
-                .method("PUT").to(new Inflector<Request, Response>() {
+            @Override
+            public Response apply(Request data) {
+                if (data != null) {
+                    clipboard.setContent(data.readEntity(String.class));
+                }
+                return Response.noContent().build();
+            }
+        });
 
-                    @Override
-                    public Response apply(Request data) {
-                        if (data != null) {
-                            clipboard.setContent(data.readEntity(String.class));
-                        }
-                        return Response.noContent().build();
-                    }
-                })
+        resourceBuilder.addMethod("POST").handledBy(new Inflector<Request, Response>() {
 
-                .method("POST").to(new Inflector<Request, Response>() {
+            @Override
+            public Response apply(Request data) {
+                String newContent = (data != null) ? clipboard.append(data.readEntity(String.class)) : "";
+                return Response.ok(newContent).build();
+            }
+        });
 
-                    @Override
-                    public Response apply(Request data) {
-                        String newContent = (data != null) ? clipboard.append(data.readEntity(String.class)) : "";
-                        return Response.ok(newContent).build();
-                    }
-                })
+        resourceBuilder.addMethod("DELETE").handledBy(new Inflector<Request, Response>() {
 
-                .method("DELETE").to(new Inflector<Request, Response>() {
-
-                    @Override
-                    public Response apply(Request data) {
-                        clipboard.clear();
-                        return Response.noContent().build();
-                    }
-                });
+            @Override
+            public Response apply(Request data) {
+                clipboard.clear();
+                return Response.noContent().build();
+            }
+        });
 
 
         return new ResourceConfig().addResources(resourceBuilder.build());

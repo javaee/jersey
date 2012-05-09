@@ -78,13 +78,24 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
         @Inject
         private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
 
-        public ResourceMethodInvoker build(InvocableResourceMethod method) {
-            return new ResourceMethodInvoker(routingContextFactory, invocationContextFactory, dispatcherProviderFactory, invocationHandlerProviderFactory, method);
+        /**
+         * Build a new resource method invoker instance.
+         *
+         * @param method resource method model.
+         * @return new resource method invoker instance.
+         */
+        public ResourceMethodInvoker build(ResourceMethod method) {
+            return new ResourceMethodInvoker(
+                    routingContextFactory,
+                    invocationContextFactory,
+                    dispatcherProviderFactory,
+                    invocationHandlerProviderFactory,
+                    method);
         }
     }
-    private Factory<RouterModule.RoutingContext> routingContextFactory;
-    private Factory<InvocationContext> invocationContextFactory;
-    private final InvocableResourceMethod method;
+    private final Factory<RouterModule.RoutingContext> routingContextFactory;
+    private final Factory<InvocationContext> invocationContextFactory;
+    private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
 
     private ResourceMethodInvoker(
@@ -92,12 +103,13 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
             Factory<InvocationContext> invocationContextFactory,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
-            InvocableResourceMethod method) {
+            ResourceMethod method) {
         this.routingContextFactory = routingContextFactory;
         this.invocationContextFactory = invocationContextFactory;
 
         this.method = method;
-        this.dispatcher = dispatcherProvider.create(method, invocationHandlerProvider.create(method));
+        final Invocable invocable = method.getInvocable();
+        this.dispatcher = dispatcherProvider.create(invocable, invocationHandlerProvider.create(invocable));
     }
 
     @Override
@@ -111,9 +123,10 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
 
         final Response response = dispatcher.dispatch(resource, request);
 
+        final Invocable invocable = method.getInvocable();
         final RoutingContext routingCtx = routingContextFactory.get();
-        routingCtx.setResponseMethodType(method.getGenericReturnType());
-        routingCtx.setResponseMethodAnnotations(method.getMethod().getDeclaredAnnotations());
+        routingCtx.setResponseMethodType(invocable.getResponseType().getType());
+        routingCtx.setResponseMethodAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
 
         if (method.isSuspendDeclared()) {
             invocationCtx.setResponse(resource);
@@ -125,6 +138,6 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
 
     @Override
     public String toString() {
-        return method.getMethod().toString();
+        return method.getInvocable().getHandlingMethod().toString();
     }
 }

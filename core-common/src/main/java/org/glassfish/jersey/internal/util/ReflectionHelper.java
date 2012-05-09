@@ -625,13 +625,85 @@ public class ReflectionHelper {
     }
 
     /**
+     * Resolve generic type parameter(s) of a raw class and it's generic type
+     * based on the class that declares the generic type parameter(s) to be resolved
+     * and a concrete implementation of the declaring class.
+     *
+     * @param concreteClass concrete implementation of the declaring class.
+     * @param declaringClass class declaring the generic type parameter(s) to be
+     *     resolved.
+     * @param rawResolvedType raw class of the generic type to be resolved.
+     * @param genericResolvedType generic type information of th type to be resolved.
+     * @return a pair of class and the generic type values with the the resolved
+     *     generic parameter types.
+     */
+    public static ClassTypePair resolveGenericType(final Class concreteClass, final Class declaringClass,
+            final Class rawResolvedType, final Type genericResolvedType) {
+        if (genericResolvedType instanceof TypeVariable) {
+            ClassTypePair ct = resolveTypeVariable(
+                    concreteClass,
+                    declaringClass,
+                    (TypeVariable) genericResolvedType);
+
+            if (ct != null) {
+                return ct;
+            }
+        } else if (genericResolvedType instanceof ParameterizedType) {
+            final ParameterizedType pt = (ParameterizedType) genericResolvedType;
+            final Type[] ptts = pt.getActualTypeArguments();
+            boolean modified = false;
+            for (int i = 0; i < ptts.length; i++) {
+                ClassTypePair ct =
+                        resolveGenericType(concreteClass, declaringClass, (Class) pt.getRawType(), ptts[i]);
+                if (ct.type() != ptts[i]) {
+                    ptts[i] = ct.type();
+                    modified = true;
+                }
+            }
+            if (modified) {
+                ParameterizedType rpt = new ParameterizedType() {
+
+                    @Override
+                    public Type[] getActualTypeArguments() {
+                        return ptts.clone();
+                    }
+
+                    @Override
+                    public Type getRawType() {
+                        return pt.getRawType();
+                    }
+
+                    @Override
+                    public Type getOwnerType() {
+                        return pt.getOwnerType();
+                    }
+                };
+                return ClassTypePair.of((Class<?>) pt.getRawType(), rpt);
+            }
+        } else if (genericResolvedType instanceof GenericArrayType) {
+            GenericArrayType gat = (GenericArrayType) genericResolvedType;
+            final ClassTypePair ct =
+                    resolveGenericType(concreteClass, declaringClass, null, gat.getGenericComponentType());
+            if (gat.getGenericComponentType() != ct.type()) {
+                try {
+                    Class ac = ReflectionHelper.getArrayClass(ct.rawClass());
+                    return ClassTypePair.of(ac);
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        return ClassTypePair.of(rawResolvedType, genericResolvedType);
+    }
+
+    /**
      * Given a type variable resolve the Java class of that variable.
      *
-     * @param c the concrete class from which all type variables are resolved
-     * @param dc the declaring class where the type variable was defined
-     * @param tv the type variable
+     * @param c the concrete class from which all type variables are resolved.
+     * @param dc the declaring class where the type variable was defined.
+     * @param tv the type variable.
      * @return the resolved Java class and type, otherwise null if the type variable
-     *         could not be resolved
+     *     could not be resolved.
      */
     public static ClassTypePair resolveTypeVariable(Class<?> c, Class<?> dc, TypeVariable tv) {
         return resolveTypeVariable(c, dc, tv, new HashMap<TypeVariable, Type>());

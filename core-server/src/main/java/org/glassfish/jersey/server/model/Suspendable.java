@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,28 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- * Abstraction for a Path value
+ * Jersey model component that is suspendable and may hold suspend-related
+ * information.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class PathValue {
+public interface Suspendable {
 
-    private String value;
+    /**
+     * Check if the component is marked for suspending.
+     *
+     * @return {@code true} if the component is marked for suspending,
+     *     {@code false} otherwise.
+     */
+    public boolean isSuspendDeclared();
 
-    public PathValue(String path) {
-        this.value = path;
-    }
+    /**
+     * Get the suspend timeout value in the given {@link #getSuspendTimeoutUnit()
+     * time unit}.
+     *
+     * @return suspend timeout value.
+     *
+     * @see javax.ws.rs.Suspend#timeOut() &#64;Suspend.timeOut()
+     */
+    public long getSuspendTimeout();
 
-    public String getValue() {
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName()
-                + "("
-                + ((null == getValue())? "null" : ("\"" + getValue() + "\""))
-                + ")";
-    }
+    /**
+     * Get the suspend {@link #getSuspendTimeout() timeout value} time unit.
+     *
+     * @return time unit of the suspend timeout value.
+     *
+     * @see javax.ws.rs.Suspend#timeUnit() &#64;Suspend.timeUnit()
+     */
+    public TimeUnit getSuspendTimeoutUnit();
 }

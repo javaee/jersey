@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
-import org.glassfish.jersey.server.spi.internal.MethodParameterHelper;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
 import org.glassfish.hk2.Factory;
 
@@ -54,7 +54,7 @@ import org.glassfish.hk2.Factory;
 class MethodParamDispatcherProvider extends AbstractJavaResourceMethodDispatcherProvider {
 
     @Override
-    protected List<Factory<?>> createValueProviders(final InvocableResourceMethod resourceMethod) {
-        return MethodParameterHelper.createValueProviders(getServices(), resourceMethod);
+    protected List<Factory<?>> createValueProviders(final Invocable invocableResourceMethod) {
+        return ParameterValueHelper.createValueProviders(getServices(), invocableResourceMethod);
     }
 }

@@ -40,39 +40,110 @@
 package org.glassfish.jersey.server.model;
 
 /**
- * Abstraction for various issues of a resource model validity like:
- * no resources, duplicated uri templates, etc.
+ * Resource model validity issue.
+ *
+ * Covers various model issues, such as duplicate URI templates, duplicate
+ * HTTP method annotations, etc.
+ * <p />
+ * The model issues can be either fatal or non-fatal (see {@link #isFatal()}).
+ * While the non-fatal issues are merely reported as warnings in the log, the
+ * fatal issues prevent the successful application deployment.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceModelIssue {
+public final class ResourceModelIssue {
 
-    Object source;
-    String message;
-    boolean fatal;
+    private final Object source;
+    private final String message;
+    private final boolean fatal;
 
+    /**
+     * Create a new {@link #isFatal() non-fatal} resource model issue.
+     *
+     * @param source issue source.
+     * @param message human-readable issue description.
+     */
     public ResourceModelIssue(Object source, String message) {
         this(source, message, false);
     }
 
-    public ResourceModelIssue(Object source, String message, boolean fatal) {
+    /**
+     * Create a new resource model issue.
+     *
+     * @param source issue source.
+     * @param message human-readable issue description.
+     * @param isFatal {@code true} if the issue is {@link #isFatal() fatal},
+     *     {@code false} otherwise.
+     */
+    public ResourceModelIssue(Object source, String message, boolean isFatal) {
         this.source = source;
         this.message = message;
-        this.fatal = fatal;
+        this.fatal = isFatal;
     }
 
-    /** Human readable description of the issue */
+    /**
+     * Human-readable description of the issue.
+     *
+     * @return message describing the issue.
+     */
     public String getMessage() {
-        return this.message;
+        return message;
     }
 
-    /** If this returns true, appropriate abstract resource has a fatal issue */
+    /**
+     * Check if the issue is fatal.
+     *
+     * Fatal issues typically prevent the deployment of the application to succeed.
+     *
+     * @return {@code true} if the issue is fatal, {@code false} otherwise.
+     */
     public boolean isFatal() {
-        return this.fatal;
+        return fatal;
     }
 
-    /** Corresponding object (having the issue) */
+    /**
+     * The issue source.
+     *
+     * Identifies the object where the issue was found.
+     *
+     * @return source of the issue.
+     */
     public Object getSource() {
-        return this.source;
+        return source;
+    }
+
+    @Override
+    public String toString() {
+        return (fatal) ? "[FATAL] " : "[NON-FATAL] " +
+                message +
+                "; source=" + source + '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ResourceModelIssue other = (ResourceModelIssue) obj;
+        if (this.source != other.source && (this.source == null || !this.source.equals(other.source))) {
+            return false;
+        }
+        if ((this.message == null) ? (other.message != null) : !this.message.equals(other.message)) {
+            return false;
+        }
+        return this.fatal == other.fatal;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 79 * hash + (this.source != null ? this.source.hashCode() : 0);
+        hash = 79 * hash + (this.message != null ? this.message.hashCode() : 0);
+        hash = 79 * hash + (this.fatal ? 1 : 0);
+        return hash;
     }
 }

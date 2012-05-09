@@ -40,7 +40,7 @@
 /**
  * Jersey server-side application & resource modeling classes.
  * <p/>
- * The classes from this pacakage provide means to model and build Jersey applications
+ * The classes from this package provide means to model and build Jersey applications
  * based on both declarative and programmatic approach. An application could be
  * built based on a set of JAX-RS annotated classes (standard, declarative way)
  * or using Jersey specific programmatic API, where you are not constrained

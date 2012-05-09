@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.spi.internal;
 
 import java.lang.reflect.InvocationHandler;
-import org.glassfish.jersey.server.model.InvocableResourceMethod;
+import org.glassfish.jersey.server.model.Invocable;
 
 /**
  * Provides the {@link InvocationHandler invocation handler} instances designated
@@ -59,5 +59,5 @@ public interface ResourceMethodInvocationHandlerProvider {
      * @param method invocable resource method.
      * @return invocation handler for the invocable resource method.
      */
-    public InvocationHandler create(InvocableResourceMethod method);
+    public InvocationHandler create(Invocable method);
 }

@@ -67,6 +67,7 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 
 import org.glassfish.hk2.Services;
@@ -84,7 +85,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationBuilderTest {
+public class AsyncApplicationBuildingTest {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
 
@@ -130,10 +131,17 @@ public class ApplicationBuilderTest {
 
     public ApplicationHandler setupApplication1() {
         final ResourceConfig rc = new ResourceConfig();
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
-        rb.path("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
+
+        Resource.Builder rb;
+
+        rb = Resource.builder("a/b/c");
+        rb.addMethod("GET").handledBy(new AsyncInflector("A-B-C"));
         rc.addResources(rb.build());
+
+        rb = Resource.builder("a/b/d");
+        rb.addMethod("GET").handledBy(new AsyncInflector("A-B-D"));
+        rc.addResources(rb.build());
+
         return new ApplicationHandler(rc);
     }
 

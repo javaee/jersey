@@ -62,8 +62,8 @@ import org.jvnet.hk2.annotations.Scoped;
  * <p />
  * When invoked, the factory iterates over the registered custom {@link ResourceMethodInvocationHandlerProvider
  * resource method invocation handler providers} invoking their
- * {@link ResourceMethodInvocationHandlerProvider#create(org.glassfish.jersey.server.model.InvocableResourceMethod)
- * create(...)} methods and returns the first non-null {@link InvocationHandler
+ * {@link ResourceMethodInvocationHandlerProvider#create(Invocable) createPatternFor(...)}
+ * methods and returns the first non-null {@link InvocationHandler
  * invocation handler} instance retrieved from the providers. If no custom providers
  * are available, or if none of the providers returns a non-null invocation handler,
  * in such case a default invocation handler provided by the factory is returned.
@@ -76,9 +76,9 @@ final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvo
     private static final InvocationHandler DEFAULT_HANDLER = new InvocationHandler() {
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args)
+        public Object invoke(Object target, Method method, Object[] args)
                 throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            return method.invoke(proxy, args);
+            return method.invoke(target, args);
         }
     };
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
@@ -90,7 +90,7 @@ final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvo
 
     // ResourceMethodInvocationHandlerProvider
     @Override
-    public InvocationHandler create(InvocableResourceMethod resourceMethod) {
+    public InvocationHandler create(Invocable resourceMethod) {
         for (ResourceMethodInvocationHandlerProvider provider : providers) {
             try {
                 InvocationHandler handler = provider.create(resourceMethod);

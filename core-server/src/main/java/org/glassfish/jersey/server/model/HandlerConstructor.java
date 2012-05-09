@@ -39,68 +39,38 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
 import java.util.List;
 
 /**
- * Abstraction for a sub-resource method
+ * Abstraction for a resource handler class constructor.
  *
- * @author Marc Hadley (marc.hadley at sun.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class SubResourceMethod extends AbstractSubResourceMethod
-                               implements PathAnnotated, Parameterized, InvocableResourceMethod {
+public final class HandlerConstructor implements Parameterized, ResourceModelComponent {
 
-    private Method method;
-    private Class<?> returnType;
-    private Type genericReturnType;
-    private Annotation[] annotations;
-    private List<Parameter> parameters;
+    private final Constructor<?> constructor;
+    private final List<Parameter> parameters;
 
-    public SubResourceMethod(
-            ResourceClass resource,
-            Method method,
-            Class returnType,
-            Type genericReturnType,
-            PathValue uriPath,
-            String httpMethod,
-            Annotation[] markers) {
-        super(resource, uriPath, httpMethod);
-        this.method = method;
-        this.returnType = returnType;
-        this.genericReturnType = genericReturnType;
-        this.annotations = markers;
-        this.parameters = new ArrayList<Parameter>();
+    /**
+     * Creates a new instance of ResourceConstructor.
+     *
+     * @param constructor underlying Java constructor.
+     * @param parameters constructor parameters.
+     */
+    HandlerConstructor(Constructor<?> constructor, List<Parameter> parameters) {
+        this.constructor = constructor;
+        this.parameters = parameters;
     }
 
-    // ResourceModelComponent
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitSubResourceMethod(this);
-    }
-
-    @Override
-    public Method getMethod() {
-        return method;
-    }
-
-    @Override
-    public Class<?> getReturnType() {
-        return returnType;
-    }
-
-    @Override
-    public Type getGenericReturnType() {
-        return genericReturnType;
-    }
-
-    @Override
-    public String toString() {
-        return "AbstractSubResourceMethod("
-                + method.getDeclaringClass().getSimpleName() + "#" + method.getName() + ")";
+    /**
+     * Get the underlying java constructor.
+     *
+     * @return underlying java constructor.
+     */
+    public Constructor<?> getConstructor() {
+        return constructor;
     }
 
     @Override
@@ -109,12 +79,22 @@ public class SubResourceMethod extends AbstractSubResourceMethod
     }
 
     @Override
-    public boolean hasEntity() {
+    public boolean requiresEntity() {
         for (Parameter p : getParameters()) {
             if (Parameter.Source.ENTITY == p.getSource()) {
                 return true;
             }
         }
         return false;
+    }
+
+    @Override
+    public void accept(ResourceModelVisitor visitor) {
+        visitor.visitResourceHandlerConstructor(this);
+    }
+
+    @Override
+    public List<ResourceModelComponent> getComponents() {
+        return null;
     }
 }

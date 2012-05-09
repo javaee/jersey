@@ -101,11 +101,11 @@ public class MediaTypes {
      * The general acceptable media type corresponding to *\\/*.
      *
      */
-    public static final AcceptableMediaType GENERAL_ACCEPT_MEDIA_TYPE = new AcceptableMediaType("*", "*");
+    static final AcceptableMediaType GENERAL_ACCEPT_MEDIA_TYPE = new AcceptableMediaType("*", "*");
     /**
      * A singleton list containing the general acceptable media type.
      */
-    public static final List<AcceptableMediaType> GENERAL_ACCEPT_MEDIA_TYPE_LIST = createAcceptMediaTypeList();
+    static final List<AcceptableMediaType> GENERAL_ACCEPT_MEDIA_TYPE_LIST = createAcceptMediaTypeList();
     /**
      * A singleton list containing the general media type.
      */
@@ -365,14 +365,14 @@ public class MediaTypes {
     /**
      * Strips any quality parameters, i.e. q and qs from given media type.
      *
-     * @param media type to strip quality parameters from
+     * @param mediaType type to strip quality parameters from
      * @return media type instance corresponding to the given one with quality parameters stripped off
      *          or the original instance if no such parameters are present
      */
-    public static MediaType stripQualityParams(MediaType mt) {
-        final Map<String, String> oldParameters = mt.getParameters();
+    public static MediaType stripQualityParams(MediaType mediaType) {
+        final Map<String, String> oldParameters = mediaType.getParameters();
         if (oldParameters.isEmpty()) {
-            return mt;
+            return mediaType;
         }
         Map<String, String> newParameters = new HashMap<String, String>();
         for (Map.Entry<String, String> e : oldParameters.entrySet()) {
@@ -382,7 +382,7 @@ public class MediaTypes {
                 newParameters.put(e.getKey(), e.getValue());
             }
         }
-        return new MediaType(mt.getType(), mt.getSubtype(), null);
+        return new MediaType(mediaType.getType(), mediaType.getSubtype(), null);
     }
 
 

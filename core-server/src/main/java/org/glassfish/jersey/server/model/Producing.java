@@ -37,34 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.model;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import java.util.List;
 
+import javax.ws.rs.core.MediaType;
 
 /**
- * A wrapper, which will push the actual URI path to the routing context
- * before delegating to the encapsulated acceptor.
+ * Model component that is able to produce media types.
+ *
+ * A component implementing this interface provides additional information about
+ * the supported produced {@link MediaType media types}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @see javax.ws.rs.Produces
+ * @see Consuming
  */
-class PushUriAndDelegateTreeAcceptor extends AbstractPushRoutingInfoAndDelegateTreeAcceptor {
+public interface Producing {
 
     /**
-     * Constructs a new wrapper.
+     * Get the produced media types supported by the component.
      *
-     * @param injector to be used to obtain the actual resource instance and routing context
-     * @param wrappedAcceptor this will be used to delegate the apply method invocation
+     * @return immutable collection of supported produced media types.
      */
-    public PushUriAndDelegateTreeAcceptor(final Injector injector, final TreeAcceptor wrappedAcceptor) {
-        super(injector, wrappedAcceptor);
-    }
-
-    @Override
-    void pushMatchedToRoutingContext() {
-        final RoutingContext ctx = injector.inject(RoutingContext.class);
-        ctx.pushLeftHandPath();
-    }
+    public List<MediaType> getProducedTypes();
 }

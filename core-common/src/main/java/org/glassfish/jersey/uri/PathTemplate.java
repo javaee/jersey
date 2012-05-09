@@ -62,9 +62,6 @@ public final class PathTemplate extends UriTemplate {
             super(path);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected String encodeLiteralCharacters(final String literalCharacters) {
             return UriComponent.contextualEncode(
@@ -92,6 +89,6 @@ public final class PathTemplate extends UriTemplate {
      * @see #PathTemplate(String)
      */
     private static String prefixWithSlash(final String path) {
-        return path.charAt(0) == '/' ? path : "/" + path;
+        return !path.isEmpty() && path.charAt(0) == '/' ? path : "/" + path;
     }
 }

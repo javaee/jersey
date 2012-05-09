@@ -44,8 +44,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.Set;
 
+import javax.ws.rs.core.GenericType;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.model.IntrospectionModeller;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
@@ -76,8 +76,10 @@ public abstract class ParamInjectionResolver<A extends Annotation> extends Injec
     final Predicate<ValueFactoryProvider> concreteValueFactoryClassFilter;
 
     /**
+     * Initialize the base parameter injection resolver.
      *
-     * @param parameterInjectionProvider
+     * @param injectionAnnotationClass parameter injection annotation class.
+     * @param valueFactoryProviderClass parameter value factory provider class.
      */
     public ParamInjectionResolver(final Class<A> injectionAnnotationClass, final Class<? extends AbstractValueFactoryProvider<A>> valueFactoryProviderClass) {
         super(injectionAnnotationClass);
@@ -112,12 +114,11 @@ public abstract class ParamInjectionResolver<A extends Annotation> extends Injec
 
         Set<ValueFactoryProvider> providers = Sets.filter(Providers.getProviders(services, ValueFactoryProvider.class), concreteValueFactoryClassFilter);
         final ValueFactoryProvider valueFactoryProvider = providers.iterator().next(); // get first provider in the set
-        final Parameter parameter = IntrospectionModeller.createParameter(
+        final Parameter parameter = Parameter.create(
                 component.getClass(),
                 component.getClass(),
                 false,
-                targetType,
-                targetGenericType,
+                GenericType.of(targetType, targetGenericType),
                 annotated.getDeclaredAnnotations());
 
         final Factory<?> valueFactory = valueFactoryProvider.getValueFactory(parameter);

@@ -200,8 +200,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             MessageBodyWorkers messageBodyWorkers = Requests.getMessageWorkers(context.getRequest());
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
-                    parameter.getParameterClass(),
-                    parameter.getParameterType(),
+                    parameter.getParameterType().getRawType(),
+                    parameter.getParameterType().getType(),
                     parameter.getAnnotations(),
                     mediaType);
 
@@ -221,8 +221,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
                 try {
                     return reader.readFrom(
-                            parameter.getParameterClass(),
-                            parameter.getParameterType(),
+                            parameter.getParameterType().getRawType(),
+                            parameter.getParameterType().getType(),
                             parameter.getAnnotations(),
                             mediaType,
                             context.getRequest().getHeaders().asMap(),
@@ -281,8 +281,9 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     @Override
     protected Factory<?> createValueFactory(Parameter parameter) {
+        Class<?> parameterRawType = parameter.getParameterType().getRawType();
         if (Parameter.Source.ENTITY == parameter.getSource()) {
-            if (FormDataMultiPart.class.isAssignableFrom(parameter.getParameterClass())) {
+            if (FormDataMultiPart.class.isAssignableFrom(parameterRawType)) {
                 return new FormDataMultiPartValueFactory();
             } else {
                 return null;
@@ -296,16 +297,16 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
             final MultivaluedParameterExtractor<?> extractor = get(parameter);
 
-            if (Collection.class == parameter.getParameterClass() || List.class == parameter.getParameterClass()) {
-                Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getParameterType()).get(0);
+            if (Collection.class == parameterRawType || List.class == parameterRawType) {
+                Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getParameterType().getType()).get(0);
                 if (FormDataBodyPart.class == c) {
                     return new ListFormDataBodyPartValueFactory(parameter.getSourceName());
                 } else if (FormDataContentDisposition.class == c) {
                     return new ListFormDataContentDispositionValueFactory(parameter.getSourceName());
                 }
-            } else if (FormDataBodyPart.class == parameter.getParameterClass()) {
+            } else if (FormDataBodyPart.class == parameterRawType) {
                 return new FormDataBodyPartValueFactory(parameter.getSourceName());
-            } else if (FormDataContentDisposition.class == parameter.getParameterClass()) {
+            } else if (FormDataContentDisposition.class == parameterRawType) {
                 return new FormDataContentDispositionMultiPartInjectable(parameter.getSourceName());
             } else {
                 return new FormDataParamValueFactory(parameter, extractor);

@@ -41,17 +41,18 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.ws.rs.core.GenericType;
+
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-import org.glassfish.jersey.spi.StringValueReader;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.StringValueReader;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -77,7 +78,6 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
         return process(
                 stringReaderFactory,
                 null,
-                p.getParameterClass(),
                 p.getParameterType(),
                 p.getAnnotations(),
                 p.getSourceName());
@@ -88,7 +88,6 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
         return process(
                 stringReaderFactory,
                 p.getDefaultValue(),
-                p.getParameterClass(),
                 p.getParameterType(),
                 p.getAnnotations(),
                 p.getSourceName());
@@ -98,20 +97,20 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
     private MultivaluedParameterExtractor<?> process(
             StringReaderFactory stringReaderFactory,
             String defaultValue,
-            Class<?> parameter,
-            Type parameterType,
+            GenericType<?> parameterType,
             Annotation[] annotations,
             String parameterName) {
 
-        if (parameter == List.class || parameter == Set.class || parameter == SortedSet.class) {
+        Class<?> rawParameterType = parameterType.getRawType();
+        if (rawParameterType == List.class || rawParameterType == Set.class || rawParameterType == SortedSet.class) {
             // Get the generic type of the list
             // If none default to String
-            final List<ClassTypePair> ctps = ReflectionHelper.getTypeArgumentAndClass(parameterType);
+            final List<ClassTypePair> ctps = ReflectionHelper.getTypeArgumentAndClass(parameterType.getType());
             ClassTypePair ctp = (ctps.size() == 1) ? ctps.get(0) : null;
 
             if (ctp == null || ctp.rawClass() == String.class) {
                 return StringCollectionExtractor.getInstance(
-                        parameter, parameterName, defaultValue);
+                        rawParameterType, parameterName, defaultValue);
             } else {
                 final StringValueReader<?> sr = stringReaderFactory.getStringReader(ctp.rawClass(), ctp.type(), annotations);
                 if (sr == null) {
@@ -120,26 +119,26 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
 
                 try {
                     return CollectionExtractor.getInstance(
-                            parameter, sr, parameterName, defaultValue);
+                            rawParameterType, sr, parameterName, defaultValue);
                 } catch (Exception e) {
-                    throw new ProcessingException("Could not process parameter type " + parameter, e);
+                    throw new ProcessingException("Could not process parameter type " + rawParameterType, e);
                 }
             }
-        } else if (parameter == String.class) {
+        } else if (rawParameterType == String.class) {
             return new SingleStringValueExtractor(parameterName, defaultValue);
-        } else if (parameter.isPrimitive()) {
+        } else if (rawParameterType.isPrimitive()) {
             // Convert primitive to wrapper class
-            parameter = PrimitiveMapper.primitiveToClassMap.get(parameter);
-            if (parameter == null) {
+            rawParameterType = PrimitiveMapper.primitiveToClassMap.get(rawParameterType);
+            if (rawParameterType == null) {
                 // Primitive type not supported
                 return null;
             }
 
             // Check for static valueOf(String )
-            Method valueOf = ReflectionHelper.getValueOfStringMethod(parameter);
+            Method valueOf = ReflectionHelper.getValueOfStringMethod(rawParameterType);
             if (valueOf != null) {
                 try {
-                    Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(parameter);
+                    Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawParameterType);
                     return new PrimitiveValueOfExtractor(valueOf, parameterName,
                             defaultValue, defaultDefaultValue);
                 } catch (Exception e) {
@@ -148,7 +147,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
             }
 
         } else {
-            final StringValueReader<?> sr = stringReaderFactory.getStringReader(parameter, parameterType, annotations);
+            final StringValueReader<?> sr = stringReaderFactory.getStringReader(rawParameterType, parameterType.getType(), annotations);
             if (sr == null) {
                 return null;
             }
@@ -156,7 +155,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
             try {
                 return new SingleValueExtractor(sr, parameterName, defaultValue);
             } catch (Exception e) {
-                throw new ProcessingException("Could not process parameter type " + parameter, e);
+                throw new ProcessingException("Could not process parameter type " + rawParameterType, e);
             }
         }
 

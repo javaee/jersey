@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.Resource;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -60,13 +60,25 @@ import org.glassfish.grizzly.http.server.HttpServer;
  * using the Grizzly 2 HTTP container.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class App {
 
-    public static final URI BASE_URI = URI.create("http://localhost:9998/base/");
+    private static final URI BASE_URI = URI.create("http://localhost:9998/base/");
+    /**
+     * Programmatic tracing root resource path.
+     */
     public static final String ROOT_PATH_PROGRAMMATIC = "tracing/programmatic";
+    /**
+     * Annotated class-based tracing root resource path.
+     */
     public static final String ROOT_PATH_ANNOTATED = "tracing/annotated";
 
+    /**
+     * Main application entry point.
+     *
+     * @param args application arguments.
+     */
     public static void main(String[] args) {
         try {
             System.out.println("HTTP TRACE Support Jersey Example App");
@@ -75,9 +87,9 @@ public class App {
 
             System.out.println(String.format(
                     "Application started.\n"
-                    + "To test TRACE with a programmatic resource, send HTTP TRACE request to:%n  %s%s%n"
-                    + "To test TRACE with an annotated resource, send HTTP TRACE request to:%n  %s%s%n"
-                    + "Hit enter to stop it...",
+                            + "To test TRACE with a programmatic resource, send HTTP TRACE request to:%n  %s%s%n"
+                            + "To test TRACE with an annotated resource, send HTTP TRACE request to:%n  %s%s%n"
+                            + "Hit enter to stop it...",
                     BASE_URI, ROOT_PATH_PROGRAMMATIC,
                     BASE_URI, ROOT_PATH_ANNOTATED));
             System.in.read();
@@ -87,12 +99,16 @@ public class App {
         }
     }
 
+    /**
+     * Create example application resource configuration.
+     *
+     * @return initialized resource configuration of the example application.
+     */
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig(TracingResource.class);
 
-        final ResourceBuilder appBuilder = ResourceConfig.resourceBuilder();
-
-        appBuilder.path(ROOT_PATH_PROGRAMMATIC).method(TRACE.NAME).to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH_PROGRAMMATIC);
+        resourceBuilder.addMethod(TRACE.NAME).handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(Request request) {
@@ -104,6 +120,6 @@ public class App {
             }
         });
 
-        return resourceConfig.addResources(appBuilder.build());
+        return resourceConfig.addResources(resourceBuilder.build());
     }
 }

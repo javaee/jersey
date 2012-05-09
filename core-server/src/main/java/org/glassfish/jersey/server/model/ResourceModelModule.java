@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
@@ -53,7 +53,7 @@ public class ResourceModelModule extends AbstractModule {
     @Override
     protected void configure() {
         // Model bindings
-        bind(RuntimeModelProvider.class).to(RuntimeModelProviderFromRootResource.class);
+        bind().to(RuntimeModelBuilder.class);
 
         // Resource method invocation bindings
         bind().to(ResourceMethodInvoker.Builder.class);

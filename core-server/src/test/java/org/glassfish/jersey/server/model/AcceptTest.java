@@ -197,6 +197,20 @@ public class AcceptTest {
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(foo, response.getHeaders().getMediaType());
     }
+    @Test
+    public void testAcceptMultiple2() throws Exception {
+        ApplicationHandler app = createApplication(MultipleResource.class);
+
+        MediaType foo = MediaType.valueOf("application/foo");
+        MediaType bar = MediaType.valueOf("application/bar");
+
+        Response response;
+
+        response = app.apply(Requests.from("/","GET").accept("*/*").build()).get();
+        assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
+        assertEquals("GET", response.readEntity(String.class));
+        assertEquals(foo, response.getHeaders().getMediaType());
+    }
 
     @Path("/")
     public static class SubTypeResource {

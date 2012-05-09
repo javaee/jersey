@@ -39,14 +39,15 @@
  */
 package org.glassfish.jersey.server.modelapi.annotation;
 
-import org.glassfish.jersey.server.model.IntrospectionModeller;
-import org.glassfish.jersey.server.model.ResourceClass;
+import java.util.LinkedList;
+import org.glassfish.jersey.server.model.Resource;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.glassfish.jersey.server.model.ResourceModelIssue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -77,7 +78,7 @@ public class IntrospectionModellerTest {
     @Test
     public void testCreateResource() {
         Class<?> resourceClass = HelloWorldResource.class;
-        ResourceClass result = IntrospectionModeller.createResource(resourceClass);
+        Resource result = Resource.builder(resourceClass, new LinkedList<ResourceModelIssue>()).build();
         assertEquals(result.getResourceMethods().size(), 1);
         System.out.println("Resource = " + result.toString());
     }

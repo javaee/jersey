@@ -129,9 +129,14 @@ public class ResourceNotFoundTest {
     private ApplicationHandler createMixedApp() {
         ResourceConfig rc = new ResourceConfig(FooResource.class);
 
-        ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("/dynamic").method("GET").to(new MyInflector());
-        rb.path("/foo/dynamic").method("GET").to(new MyInflector());
+        Resource.Builder rb;
+
+        rb = Resource.builder("/dynamic");
+        rb.addMethod("GET").handledBy(new MyInflector());
+        rc.addResources(rb.build());
+
+        rb = Resource.builder("/foo/dynamic");
+        rb.addMethod("GET").handledBy(new MyInflector());
         rc.addResources(rb.build());
 
         return  new ApplicationHandler(rc);

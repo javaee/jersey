@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,65 +37,73 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
-import java.util.List;
+import java.util.LinkedList;
 
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Models a dynamically created resource method. Such a method is defined with
- * a provided {@link Inflector} instance. The Inflector should consume the incoming
- * request and provide a response back.
+ * Test of resource path overriding via programmatic API.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InflectorBasedResourceMethod extends AbstractResourceMethod {
+public class ResourcePathOverrideTest {
 
-    private Inflector<Request, Response> inflector;
-
-    /**
-     * Constructs a new instance bound to the given resource class.
-     * You need to manually add the new instance to the list of existing resource methods.
-     *
-     * @see Inflector
-     *
-     * @param resource where this new method should be bound
-     * @param httpMethod (e.g. "GET", "PUT", ...)
-     * @param inputMediaTypes non-null list of supported input media types, should be empty if media types are not specified explicitly
-     * @param outputMediaTypes non-null list of supported output media types, should be empty if media types are not specified explicitly
-     * @param inflector
-     */
-    public InflectorBasedResourceMethod(ResourceClass resource, String httpMethod,
-            List<MediaType> inputMediaTypes, List<MediaType> outputMediaTypes, Inflector<Request, Response> inflector) {
-
-        super(resource, httpMethod);
-        this.inflector = inflector;
-
-        setAreInputTypesDeclared(!inputMediaTypes.isEmpty());
-        getSupportedInputTypes().addAll(inputMediaTypes);
-
-        setAreOutputTypesDeclared(!outputMediaTypes.isEmpty());
-        getSupportedOutputTypes().addAll(outputMediaTypes);
+    private ApplicationHandler createApplication(ResourceConfig resourceConfig) {
+        return new ApplicationHandler(resourceConfig);
     }
 
-
     /**
-     * Getter for inflector.
-     *
-     * @return encapsulated inflector
+     * Test resource.
      */
-    public Inflector<Request, Response> getInflector() {
-        return inflector;
+    @Path("hello")
+    @Produces("text/plain")
+    public static class HelloResource {
+
+        @GET
+        public String sayHello() {
+            return "Hello!";
+        }
     }
 
-    // ResourceModelComponent
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitInflectorResourceMethod(this);
+    @Test
+    public void testOverride() throws Exception {
+        ResourceConfig resourceConfig = new ResourceConfig(HelloResource.class);
+
+        Resource.Builder resourceBuilder = Resource.builder(HelloResource.class, new LinkedList<ResourceModelIssue>())
+                .path("hello2");
+        resourceBuilder.addMethod("GET").path("world").produces("text/plain").handledBy(new Inflector<Request, String>() {
+            @Override
+            public String apply(Request request) {
+                return "Hello World!";
+            }
+        });
+
+        resourceConfig.addResources(resourceBuilder.build());
+
+        ApplicationHandler app = createApplication(resourceConfig);
+
+        Request request;
+        request = Requests.from("/hello", "GET").build();
+        assertEquals("Hello!", app.apply(request).get().readEntity(String.class));
+
+        request = Requests.from("/hello2", "GET").build();
+        assertEquals("Hello!", app.apply(request).get().readEntity(String.class));
+
+        request = Requests.from("/hello2/world", "GET").build();
+        assertEquals("Hello World!", app.apply(request).get().readEntity(String.class));
     }
 }

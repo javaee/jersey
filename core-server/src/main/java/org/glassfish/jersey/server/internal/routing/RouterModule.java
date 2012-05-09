@@ -76,7 +76,7 @@ import com.google.common.base.Function;
 public class RouterModule extends AbstractModule {
 
     /**
-     * Transformation function that converts acceptor provider into provider value
+     * Transformation function that converts methodAcceptorPair provider into provider value
      */
     static final Function<Factory<TreeAcceptor>, TreeAcceptor> FACTORY_TO_ACCEPTOR_TRANSFORMATION =
             new Function<Factory<TreeAcceptor>, TreeAcceptor>() {
@@ -129,6 +129,9 @@ public class RouterModule extends AbstractModule {
         /**
          * Get the final matching group of the last successful request URI routing
          * pattern {@link MatchResult match result}. Also known as right-hand path.
+         * <p>
+         * May be empty but is never {@code null}.
+         * </p>
          *
          * @return final matching group of the last successful request URI routing
          *     pattern match result.

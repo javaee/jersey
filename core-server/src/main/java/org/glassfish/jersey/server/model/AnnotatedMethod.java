@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
+package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -63,13 +63,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 /**
  * Annotated method representation.
  *
  * @author Paul Sandoz
  */
-public final class AnnotatedMethod implements AnnotatedElement {
+final class AnnotatedMethod implements AnnotatedElement {
 
     @SuppressWarnings("unchecked")
     private static final Set<Class<? extends Annotation>> METHOD_META_ANNOTATIONS = getSet(
@@ -236,39 +237,40 @@ public final class AnnotatedMethod implements AnnotatedElement {
             }
         }
 
-        return al.toArray(new Annotation[0]);
+        return al.toArray(new Annotation[al.size()]);
     }
 
     private static Annotation[][] mergeParameterAnnotations(Method m, Method am) {
-        Annotation[][] mp = m.getParameterAnnotations();
-        Annotation[][] amp = am.getParameterAnnotations();
+        Annotation[][] methodParamAnnotations = m.getParameterAnnotations();
+        Annotation[][] annotatedMethodParamAnnotations = am.getParameterAnnotations();
 
-        List<List<Annotation>> ala = new ArrayList<List<Annotation>>();
-        for (int i = 0; i < mp.length; i++) {
-            List<Annotation> al = asList(mp[i]);
-            for (Annotation a : amp[i]) {
-                if (!isAnnotatonPresent(a.getClass(), al)) {
+        List<List<Annotation>> methodParamAnnotationsList = new ArrayList<List<Annotation>>();
+        for (int i = 0; i < methodParamAnnotations.length; i++) {
+            List<Annotation> al = asList(methodParamAnnotations[i]);
+            for (Annotation a : annotatedMethodParamAnnotations[i]) {
+                if (annotationNotInList(a.getClass(), al)) {
                     al.add(a);
                 }
             }
-            ala.add(al);
+            methodParamAnnotationsList.add(al);
         }
 
-        Annotation[][] paa = new Annotation[mp.length][];
-        for (int i = 0; i < mp.length; i++) {
-            paa[i] = ala.get(i).toArray(new Annotation[0]);
+        Annotation[][] mergedAnnotations = new Annotation[methodParamAnnotations.length][];
+        for (int i = 0; i < methodParamAnnotations.length; i++) {
+            List<Annotation> paramAnnotations = methodParamAnnotationsList.get(i);
+            mergedAnnotations[i] = paramAnnotations.toArray(new Annotation[paramAnnotations.size()]);
         }
 
-        return paa;
+        return mergedAnnotations;
     }
 
-    private static boolean isAnnotatonPresent(Class<? extends Annotation> ca, List<Annotation> la) {
+    private static boolean annotationNotInList(Class<? extends Annotation> ca, List<Annotation> la) {
         for (Annotation a : la) {
             if (ca == a.getClass()) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private static Method findAnnotatedMethod(Method m) {
@@ -290,7 +292,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
             return m;
         }
 
-        // Super classes take precendence over interfaces
+        // Super classes take precedence over interfaces
         Class<?> sc = c.getSuperclass();
         if (sc != null && sc != Object.class) {
             Method sm = findAnnotatedMethod(sc, m);

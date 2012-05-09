@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 import junit.framework.Assert;
 import org.glassfish.jersey.filter.PreMatchRequestFilterModule;
@@ -66,7 +67,10 @@ import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Test for JAX-RS filters.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ApplicationFilterTest {
 
@@ -87,8 +91,8 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters));
 
-        ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
+        Resource.Builder rb = Resource.builder("test");
+        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -121,8 +125,8 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new RequestFilterModule(requestFilterList));
 
-        ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
+        Resource.Builder rb = Resource.builder("test");
+        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -155,8 +159,8 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new ResponseFilterModule(responseFilterList));
 
-        ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
+        Resource.Builder rb = Resource.builder("test");
+        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {
@@ -258,8 +262,8 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addModules(new RequestFilterModule(requestFilterList));
 
-        ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("test").method("GET").to(new Inflector<Request, Response>() {
+        Resource.Builder rb = Resource.builder("test");
+        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {

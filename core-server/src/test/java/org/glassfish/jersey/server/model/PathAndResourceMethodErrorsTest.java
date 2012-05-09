@@ -55,6 +55,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.errors.PathAndResourceMethodErrorsTest
  *
@@ -63,12 +65,15 @@ import org.junit.Test;
 public class PathAndResourceMethodErrorsTest {
 
     private List<ResourceModelIssue> initiateWebApplication(Class<?>... resourceClasses) {
+        return initiateWebApplication(new ResourceConfig(resourceClasses));
+    }
+
+    private List<ResourceModelIssue> initiateWebApplication(final ResourceConfig resourceConfig) {
         try {
-            final ResourceConfig rc = new ResourceConfig(resourceClasses);
-            ApplicationHandler server = new ApplicationHandler(rc);
+            ApplicationHandler server = new ApplicationHandler(resourceConfig);
             fail("Application build expected to fail: " + server);
-        } catch (ResourceModelValidator.ModelException e) {
-            return e.issues;
+        } catch (ModelValidationException e) {
+            return e.getIssues();
         }
         return null;
     }
@@ -97,48 +102,45 @@ public class PathAndResourceMethodErrorsTest {
     }
 
 //   TODO: testing not yet available feature (registering explicit resources).
-//    @Path("/{one}")
-//    public static class PathErrorsOneResource {
-//    }
-//
-//    @Path("/{two}")
-//    public static class PathErrorsTwoResource {
-//    }
-//
-//    @Path("/{three}")
-//    public static class PathErrorsThreeResource {
-//    }
-//
-//    public void testConflictingRootResourceErrors() {
-//        List<Errors.ErrorMessage> messages = catches(new Closure() {
-//            @Override
-//            public void f() {
-//                ResourceConfig rc = new DefaultResourceConfig(PathErrorsOneResource.class, PathErrorsTwoResource.class);
-//                rc.getSingletons().add(new PathErrorsThreeResource());
-//                rc.getExplicitRootResources().put("/{four}", PathErrorsOneResource.class);
-//                rc.getExplicitRootResources().put("/{five}", new PathErrorsThreeResource());
-//
-//                initiateWebApplication(rc);
-//            }
-//        }).messages;
-//
-//        assertEquals(4, messages.size());
-//    }
-//
-//    public void testConflictingRootResourceErrors2() {
-//        List<Errors.ErrorMessage> messages = catches(new Closure() {
-//            @Override
-//            public void f() {
-//                ResourceConfig rc = new DefaultResourceConfig();
-//                rc.getExplicitRootResources().put("/{one}", PathErrorsOneResource.class);
-//                rc.getExplicitRootResources().put("/{one}/", new PathErrorsThreeResource());
-//
-//                initiateWebApplication(rc);
-//            }
-//        }).messages;
-//
-//        assertEquals(1, messages.size());
-//    }
+    @Path("/{one}")
+    public static class PathErrorsOneResource {
+    }
+
+    @Path("/{two}")
+    public static class PathErrorsTwoResource {
+    }
+
+    @Path("/{three}")
+    public static class PathErrorsThreeResource {
+    }
+
+    @Test
+    @Ignore
+    // TODO add cross-resource validation & un-ignore the test
+    public void testConflictingRootResourceErrors() {
+        ResourceConfig resourceConfig = new ResourceConfig(
+                PathErrorsOneResource.class, PathErrorsTwoResource.class, PathErrorsThreeResource.class);
+
+        final List<ResourceModelIssue> ignoredIssueList = Lists.newLinkedList();
+        resourceConfig.addResources(Resource.builder(PathErrorsOneResource.class, ignoredIssueList).path("/{four}").build());
+        resourceConfig.addResources(Resource.builder(PathErrorsThreeResource.class, ignoredIssueList).path("/{five}").build());
+
+        assertEquals(4, initiateWebApplication(resourceConfig));
+    }
+
+    @Test
+    @Ignore
+    // TODO add cross-resource validation & un-ignore the test
+    public void testConflictingRootResourceErrors2() {
+        ResourceConfig resourceConfig = new ResourceConfig();
+
+        List<ResourceModelIssue> ignoredIssueList = Lists.newLinkedList();
+        resourceConfig.addResources(Resource.builder(PathErrorsOneResource.class, ignoredIssueList).path("/{one}").build());
+        resourceConfig.addResources(Resource.builder(PathErrorsThreeResource.class, ignoredIssueList).path("/{one}/").build());
+
+        assertEquals(1, initiateWebApplication(resourceConfig));
+    }
+
     @Path("/")
     public static class AmbiguousResourceMethodsGET {
 

@@ -72,7 +72,7 @@ final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.
 
     // ResourceMethodDispatchProvider
     @Override
-    public ResourceMethodDispatcher create(InvocableResourceMethod resourceMethod, InvocationHandler handler) {
+    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
         for (ResourceMethodDispatcher.Provider provider : providers) {
             try {
                 ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler);
@@ -80,9 +80,9 @@ final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.
                     return dispatcher;
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_PROCESSING_METHOD(
-                        resourceMethod,
-                        provider.getClass().getName()), e);
+                LOGGER.log(Level.SEVERE,
+                        LocalizationMessages.ERROR_PROCESSING_METHOD(resourceMethod, provider.getClass().getName()),
+                        e);
             }
         }
 

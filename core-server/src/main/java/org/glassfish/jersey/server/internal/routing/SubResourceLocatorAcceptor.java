@@ -40,76 +40,91 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.glassfish.jersey.server.model.IntrospectionModeller;
-import org.glassfish.jersey.server.model.ResourceClass;
-import org.glassfish.jersey.server.model.SubResourceLocator;
-import org.glassfish.jersey.server.spi.internal.MethodParameterHelper;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.ResourceModelIssue;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
 
 /**
- * An acceptor to accept sub-resource requests.
- * It first retrieves the sub-resource instance by invoking the given locator method.
- * Then the {@link RuntimeModelFromSubResource} is used to generate corresponding acceptor.
- * Finally the generated acceptor is invoked to return the request acceptor chain.
- *
- * TODO: implement generated sub-resource acceptor caching
+ * An methodAcceptorPair to accept sub-resource requests.
+ * It first retrieves the sub-resource instance by invoking the given model method.
+ * Then the {@link RuntimeModelBuilder} is used to generate corresponding methodAcceptorPair.
+ * Finally the generated methodAcceptorPair is invoked to return the request methodAcceptorPair chain.
+ * <p/>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class SubResourceLocatorAcceptor implements TreeAcceptor {
+class SubResourceLocatorAcceptor implements TreeAcceptor {
 
-    Services services;
-    SubResourceLocator locator;
-    final List<Factory<?>> valueProviders;
-    Injector injector;
-    MessageBodyWorkers workers;
+    private final Services services;
+    private final Injector injector;
+    private final ResourceMethod locatorModel;
+    private final List<Factory<?>> valueProviders;
+    private final RuntimeModelBuilder runtimeModelBuilder;
 
-    public SubResourceLocatorAcceptor(Injector injector, Services services, MessageBodyWorkers workers, SubResourceLocator locator) {
+    public SubResourceLocatorAcceptor(
+            final Injector injector,
+            final Services services,
+            final MessageBodyWorkers workers,
+            final ResourceMethod locatorModel) {
         this.injector = injector;
-        this.locator = locator;
-        this.workers = workers;
         this.services = services;
-        valueProviders = MethodParameterHelper.createValueProviders(services, locator);
+
+        this.locatorModel = locatorModel;
+        this.valueProviders = ParameterValueHelper.createValueProviders(services, locatorModel.getInvocable());
+
+        this.runtimeModelBuilder = new RuntimeModelBuilder(workers, true);
+        this.injector.inject(runtimeModelBuilder);
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request data) {
+    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
         final RoutingContext routingCtx = injector.inject(RoutingContext.class);
+
         Object subResource = getResource(routingCtx);
         if (subResource == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         if (subResource.getClass().isAssignableFrom(Class.class)) {
-            subResource = services.forContract((Class)subResource).get();
+            subResource = services.forContract((Class<?>) subResource).get();
         }
-        final RuntimeModelFromSubResource rmBuilder = new RuntimeModelFromSubResource(workers);
-        injector.inject(rmBuilder);
+
+        // TODO: what to do with the issues?
+        final Resource subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
+        runtimeModelBuilder.process(subResourceModel);
+
+        // TODO: implement generated sub-resource methodAcceptorPair caching
         routingCtx.pushMatchedResource(subResource);
-        final ResourceClass resourceClass = IntrospectionModeller.createResource(subResource);
-        rmBuilder.process(resourceClass);
-        return rmBuilder.getRuntimeModel().apply(data);
+        TreeAcceptor subResourceAcceptor = runtimeModelBuilder.buildModel();
+        return Stages.singletonTreeContinuation(request, subResourceAcceptor);
     }
 
     private Object getResource(RoutingContext routingCtx) {
         final Object resource = routingCtx.peekMatchedResource();
         try {
-            return locator.getMethod().invoke(resource, MethodParameterHelper.getParameterValues(valueProviders));
+            Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
+            return handlingMethod.invoke(resource, ParameterValueHelper.getParameterValues(valueProviders));
         } catch (IllegalAccessException ex) {
             throw new ProcessingException("Resource Java method invocation error.", ex);
         } catch (InvocationTargetException ex) {

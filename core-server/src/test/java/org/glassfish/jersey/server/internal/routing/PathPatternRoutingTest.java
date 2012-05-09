@@ -148,7 +148,7 @@ public class PathPatternRoutingTest {
                     .to(routeBuilder.route("d").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route(new PathPattern("{p3 : [^/]+}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection))
                         // this is how resource methods on sub-resources get mapped:
-                        .to(routeBuilder.route(PathPattern.EMPTY_PATH).to(LastPathSegmentTracingFilter.class).to(inflection))
+                        .to(routeBuilder.route(PathPattern.EMPTY_PATTERN).to(LastPathSegmentTracingFilter.class).to(inflection))
                         .to(routeBuilder.route(new PathPattern("/", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
                 .build()));
 

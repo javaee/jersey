@@ -116,6 +116,7 @@ import org.glassfish.jersey.process.Inflector;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// TODO remove the interface
 public interface ResourceBuilder {
 
     /**
@@ -141,7 +142,7 @@ public interface ResourceBuilder {
      *
      * @return new set of programmatically defined resource class models.
      */
-    public Set<ResourceClass> build();
+    public Set<Resource> build();
 
     /**
      * Represents a supported resource path to which new resource methods and

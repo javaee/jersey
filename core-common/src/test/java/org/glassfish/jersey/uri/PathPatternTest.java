@@ -37,54 +37,71 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.uri;
 
-package org.glassfish.jersey.server.model;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.regex.MatchResult;
 
-import java.util.concurrent.TimeUnit;
+import javax.ws.rs.core.Request;
+
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Assert;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
- * Jersey model component that is suspendable and may hold suspend-related
- * information.
+ * TODO: javadoc.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface SuspendableComponent {
+public class PathPatternTest {
 
-    /**
-     * Check if the component is marked for suspending.
-     *
-     * @return {@code true} if the component is marked for suspending,
-     *     {@code false} otherwise.
-     */
-    public boolean isSuspendDeclared();
+    @Test
+    public void testTerminalPathPatterMatching() {
+        final String[] rootPaths = new String[] {
+                "/a/b/c",
+                "/a/b/c/"
+        };
 
-    /**
-     * Get the suspend timeout value in the given {@link #getSuspendTimeoutUnit()
-     * time unit}.
-     *
-     * @return suspend timeout value.
-     *
-     * @see javax.ws.rs.Suspend#timeOut() &#64;Suspend.timeOut()
-     */
-    public long getSuspendTimeout();
+        final String[] subPaths = new String[] {
+                "d/e",
+                "d/e/",
+                "/d/e",
+                "/d/e/",
+        };
 
-    /**
-     * Get the suspend {@link #getSuspendTimeout() timeout value} time unit.
-     *
-     * @return time unit of the suspend timeout value.
-     *
-     * @see javax.ws.rs.Suspend#timeUnit() &#64;Suspend.timeUnit()
-     */
-    public TimeUnit getSuspendTimeoutUnit();
+        final String path1 = "/a/b/c";
+        final String path2 = "/a/b/c/";
 
-    /**
-     * Mark the component for suspending.
-     *
-     * An invocation of a component (resource or sub-resource method) marked
-     * for suspending will be automatically suspended.
-     *
-     * @param timeout suspend timeout value.
-     * @param unit suspend timeout time unit.
-     */
-    public void declareSuspend(long timeout, TimeUnit unit);
+        final PathPattern[] patterns = new PathPattern[] {
+                new PathPattern("a"),
+                new PathPattern("b"),
+                new PathPattern("c"),
+                new PathPattern("", PathPattern.RightHandPath.capturingZeroSegments)
+        };
+
+        String rhp = path1;
+        MatchResult matchResult;
+
+        for (PathPattern pattern : patterns) {
+            matchResult = pattern.match(rhp);
+            assertNotNull("No match of " + rhp + " for pattern " + pattern, matchResult);
+            rhp = matchResult.group(matchResult.groupCount());
+            rhp = (rhp == null) ? "" : rhp;
+        }
+
+        Assert.assertEquals("", rhp);
+
+        rhp = path2;
+
+        for (PathPattern pattern : patterns) {
+            matchResult = pattern.match(rhp);
+            rhp = matchResult.group(matchResult.groupCount());
+        }
+
+        assertEquals("/", rhp);
+    }
 }

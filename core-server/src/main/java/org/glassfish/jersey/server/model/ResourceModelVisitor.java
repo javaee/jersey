@@ -42,50 +42,48 @@ package org.glassfish.jersey.server.model;
 /**
  * Following the visitor pattern, this interface allows implementing processors
  * traversing all abstract model components present in a given model.
- * 
+ *
  * @see ResourceModelComponent
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface ResourceModelVisitor {
 
     /**
-     * Start visiting a resource class
-     * 
-     * @param resource 
+     * Start visiting a single resource model.
+     *
+     * @param resource resource model.
      */
-    void visitResourceClass(ResourceClass resource);
+    void visitResourceClass(Resource resource);
 
     /**
-     * Process a resource class constructor.
-     * 
-     * @param constructor 
-     */
-    void visitResourceConstructor(ResourceConstructor constructor);
-
-    /**
-     * Process a resource method based on a real annotated Java method.
-     * 
-     * @param method 
+     * Visit a single resource method model.
+     *
+     * @param method resource method model.
      */
     void visitResourceMethod(ResourceMethod method);
-    
-    /**
-     * Process a programmatically created resource method.  
-     * 
-     * @param method 
-     */
-    void visitInflectorResourceMethod(InflectorBasedResourceMethod method);
 
     /**
-     * Process a sub-resource method based on a real annotated Java method.
+     * Visit a single resource method invocable model.
+     *
+     * @param invocable resource method invocable model.
      */
-    void visitSubResourceMethod(SubResourceMethod method);
+    void visitInvocable(Invocable invocable);
 
     /**
-     * Process a sub-resource locator.
-     * 
-     * @param locator 
+     * Visit a single resource method handler model.
+     *
+     * @param methodHandler resource method handler model.
      */
-    void visitSubResourceLocator(SubResourceLocator locator);
+    void visitMethodHandler(MethodHandler methodHandler);
+
+    /**
+     * Process a resource method handler constructor.
+     *
+     * Typically a constructor of a JAX-RS annotated resource class.
+     *
+     * @param constructor resource method handler constructor.
+     */
+    void visitResourceHandlerConstructor(HandlerConstructor constructor);
 }

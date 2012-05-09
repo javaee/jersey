@@ -60,11 +60,11 @@ import org.jvnet.hk2.annotations.Inject;
 import com.google.common.collect.Iterators;
 
 /**
- * TODO
+ * TODO javadoc.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class RedirectingAcceptor implements TreeAcceptor {
+class RedirectingAcceptor implements TreeAcceptor {
 
     public class Builder {
 
@@ -136,7 +136,6 @@ public class RedirectingAcceptor implements TreeAcceptor {
      * Get the right hand path from the match result. The right hand path is
      * the last group (if present).
      *
-     * @param mr the match result.
      * @return the right hand path, or the empty string if there is no last
      *         group.
      */

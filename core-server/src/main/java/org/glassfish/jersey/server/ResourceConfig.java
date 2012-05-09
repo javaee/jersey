@@ -57,8 +57,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
-import org.glassfish.jersey.server.model.ResourceClass;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
 import org.glassfish.hk2.Module;
@@ -85,8 +85,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     private final Set<Object> singletons;
     private final Set<ResourceFinder> resourceFinders;
     //
-    private final Set<ResourceClass> resources;
-    private final Set<ResourceClass> resourcesView;
+    private final Set<Resource> resources;
+    private final Set<Resource> resourcesView;
     private final Map<String, Object> properties;
     private final Map<String, Object> propertiesView;
     //
@@ -174,10 +174,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return new WrappingResourceConfig(null, applicationClass, defaultClasses);
     }
 
-    public static ResourceBuilder resourceBuilder() {
-        return new DefaultResourceBuilder();
-    }
-
     /**
      * Add classes to {@code ResourceConfig}.
      *
@@ -218,11 +214,11 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return addSingletons(Sets.newHashSet(singletons));
     }
 
-    public final ResourceConfig addResources(ResourceClass... resources) {
+    public final ResourceConfig addResources(Resource... resources) {
         return addResources(Sets.newHashSet(resources));
     }
 
-    public final ResourceConfig addResources(Set<ResourceClass> resources) {
+    public final ResourceConfig addResources(Set<Resource> resources) {
         return internalState.addResources(resources);
     }
 
@@ -445,7 +441,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      *
      * @return programmatically modeled resources.
      */
-    public final Set<ResourceClass> getResources() {
+    public final Set<Resource> getResources() {
         return resourcesView;
     }
 
@@ -601,7 +597,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     private interface InternalState {
         ResourceConfig addClasses(Set<Class<?>> classes);
-        ResourceConfig addResources(Set<ResourceClass> resources);
+        ResourceConfig addResources(Set<Resource> resources);
         ResourceConfig addFinder(ResourceFinder resourceFinder);
         ResourceConfig addModules(Set<Module> modules);
         ResourceConfig addProperties(Map<String, Object> properties);
@@ -618,7 +614,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         @Override
-        public ResourceConfig addResources(Set<ResourceClass> resources) {
+        public ResourceConfig addResources(Set<Resource> resources) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -667,7 +663,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         @Override
-        public ResourceConfig addResources(Set<ResourceClass> resources) {
+        public ResourceConfig addResources(Set<Resource> resources) {
             ResourceConfig.this.resources.addAll(resources);
             return ResourceConfig.this;
         }

@@ -45,6 +45,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,6 +54,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -88,10 +91,10 @@ import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.BasicValidator;
-import org.glassfish.jersey.server.model.IntrospectionModeller;
-import org.glassfish.jersey.server.model.ResourceClass;
+import org.glassfish.jersey.server.model.ModelValidationException;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
@@ -114,22 +117,22 @@ import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
  * Jersey server-side application handler.
- *
+ * <p/>
  * Container implementations use the {@code ApplicationHandler} API to process requests
  * by invoking the {@link #apply(Request) apply(request)} method on a configured application
  * handler instance.
  *
- * @see ResourceConfig
- * @see org.glassfish.jersey.server.spi.ContainerProvider
- *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see ResourceConfig
+ * @see org.glassfish.jersey.server.spi.ContainerProvider
  */
 public final class ApplicationHandler implements Inflector<Request, Future<Response>> {
 
@@ -213,6 +216,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             bind().to(PreMatchRequestFilterAcceptor.class).in(Singleton.class);
         }
     }
+
     // FIXME move filter acceptor away from here! It must be part of the root acceptor chain!
     @Inject
     private PreMatchRequestFilterAcceptor preMatchFilterAcceptor;
@@ -280,29 +284,29 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
         configuration.lock();
 
-        final Map<String, ResourceClass> pathToResourceMap = Maps.newHashMap();
-        final Set<ResourceClass> resources = Sets.newHashSet();
+        final List<ResourceModelIssue> resourceModelIssues = Lists.newLinkedList();
+
+        final Map<String, Resource.Builder> pathToResourceBuilderMap = Maps.newHashMap();
+        final List<Resource.Builder> resourcesBuilders = new LinkedList<Resource.Builder>();
         for (Class<?> c : configuration.getClasses()) {
-            if (IntrospectionModeller.isRootResource(c)) {
+            Path path = Resource.getPath(c);
+            if (path != null) { // root resource
                 try {
-                    final ResourceClass resource = IntrospectionModeller.createResource(c);
-                    resources.add(resource);
-                    pathToResourceMap.put(resource.getPath().getValue(), resource);
+                    final Resource.Builder builder = Resource.builder(c, resourceModelIssues);
+                    resourcesBuilders.add(builder);
+                    pathToResourceBuilderMap.put(path.value(), builder);
                 } catch (IllegalArgumentException ex) {
                     LOGGER.warning(ex.getMessage());
                 }
             }
         }
 
-        for (ResourceClass programmaticResource : configuration.getResources()) {
-            ResourceClass r = pathToResourceMap.get(programmaticResource.getPath().getValue());
-            if (r != null) {
-                // Merge programmatic resource with an existing resource
-                r.getResourceMethods().addAll(programmaticResource.getResourceMethods());
-                r.getSubResourceMethods().addAll(programmaticResource.getSubResourceMethods());
-                r.getSubResourceLocators().addAll(programmaticResource.getSubResourceLocators());
+        for (Resource programmaticResource : configuration.getResources()) {
+            Resource.Builder builder = pathToResourceBuilderMap.get(programmaticResource.getPath());
+            if (builder != null) {
+                builder.mergeWith(programmaticResource);
             } else {
-                resources.add(programmaticResource);
+                resourcesBuilders.add(Resource.builder(programmaticResource));
             }
         }
 
@@ -314,7 +318,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
                     @Override
                     public boolean apply(Class<?> input) {
-                        final boolean acceptable = IntrospectionModeller.isAcceptable(input);
+                        final boolean acceptable = Resource.isAcceptable(input);
                         if (!acceptable) {
                             LOGGER.warning(LocalizationMessages.NON_INSTANTIATABLE_CLASS(input));
                         }
@@ -329,17 +333,16 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         this.refs.mappers.set(new ExceptionMapperFactory(providers));
         this.refs.resolvers.set(new ContextResolverFactory(providers));
 
-        validateResources(workers, resources);
+        List<Resource> resources = buildAndValidate(resourcesBuilders, resourceModelIssues, workers);
 
-        // TODO: why do we need to inject this? We seem to have all the information available.
-        final RuntimeModelProviderFromRootResource runtimeModelCreator =
-                services.byType(RuntimeModelProviderFromRootResource.class).get();
-        runtimeModelCreator.setWorkers(workers);
-        for (ResourceClass r : resources) {
-            runtimeModelCreator.process(r);
+        final RuntimeModelBuilder runtimeModelBuilder =
+                services.byType(RuntimeModelBuilder.class).get();
+        runtimeModelBuilder.setWorkers(workers);
+        for (Resource r : resources) {
+            runtimeModelBuilder.process(r);
         }
 
-        this.rootAcceptor = runtimeModelCreator.getRuntimeModel();
+        this.rootAcceptor = runtimeModelBuilder.buildModel();
 
         injector.inject(this);
     }
@@ -370,14 +373,19 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         dynamicBinderFactory.commit();
     }
 
-    private void validateResources(MessageBodyWorkers workers, Set<ResourceClass> resources) {
+    private List<Resource> buildAndValidate(List<Resource.Builder> resources, List<ResourceModelIssue> modelIssues, MessageBodyWorkers workers) {
+        final List<Resource> result = new ArrayList<Resource>(resources.size());
 
-        ResourceModelValidator validator = new BasicValidator(workers);
+        ResourceModelValidator validator = new BasicValidator(modelIssues, workers);
 
-        for (ResourceClass r : resources) {
+        for (Resource.Builder rb : resources) {
+            final Resource r = rb.build();
+            result.add(r);
             validator.validate(r);
         }
         processIssues(validator);
+
+        return result;
     }
 
     private void processIssues(ResourceModelValidator validator) {
@@ -395,7 +403,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         }
 
         if (validator.fatalIssuesFound()) {
-            throw new ResourceModelValidator.ModelException(issueList);
+            throw new ModelValidationException(issueList);
         }
     }
 
@@ -442,7 +450,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
     /**
      * The main request/response processing entry point for Jersey container implementations.
-     *
+     * <p/>
      * The method invokes the request processing of the provided {@link Request jax-rs request} from the
      * {@link ContainerRequestContext container request context} and uses the {@link ContainerResponseWriter container response
      * writer} from the provided {@link ContainerRequestContext container request context} to suspend & resume the processing as
@@ -450,8 +458,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
      * {@link SecurityContext security context} it will be registered for further request processing.
      * {@link RequestScopedInitializer Custom scope injections} will be initialized into the request scope.
      *
-     * @param containerContext
-     *            container request context of the current request.
+     * @param containerContext container request context of the current request.
      */
     public void apply(final ContainerRequestContext containerContext) {
         checkContainerRequestContext(containerContext);
@@ -495,10 +502,10 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     /**
      * Invokes a request. Supplied callback is notified about the invocation result.
      *
-     * @param request request data.
-     * @param callback request invocation callback called when the request
-     *     transformation is done, suspended, resumed etc. Must not be {@code null}.
-     * @param securityContext custom security context.
+     * @param request                 request data.
+     * @param callback                request invocation callback called when the request
+     *                                transformation is done, suspended, resumed etc. Must not be {@code null}.
+     * @param securityContext         custom security context.
      * @param requestScopeInitializer custom request-scoped initializer.
      */
     private void apply(Request request, InvocationCallback callback, SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {

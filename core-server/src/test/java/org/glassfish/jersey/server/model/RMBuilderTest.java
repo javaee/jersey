@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.internal.routing.RuntimeModelProviderFromRootResource;
 import java.net.URI;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -60,6 +60,7 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ServerModule;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.testutil.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -121,9 +122,9 @@ public class RMBuilderTest {
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        final RuntimeModelProviderFromRootResource rmCreator = services.byType(RuntimeModelProviderFromRootResource.class).get();
-        rmCreator.process(IntrospectionModeller.createResource(HelloWorldResource.class));
-        appRootModule.setRoot(rmCreator.getRuntimeModel());
+        final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
+        runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build());
+        appRootModule.setRoot(runtimeModelBuilder.buildModel());
 
         invoker = injector.inject(RequestInvoker.class);
         requestScope = injector.inject(RequestScope.class);

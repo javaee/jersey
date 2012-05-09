@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,40 +43,29 @@ import java.util.Iterator;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
+
 /**
- * A common base for an acceptor wrapper. Before delegating the apply method
- * to an encapsulated acceptor, it pushes current routing information to the routing context.
+ * Terminal acceptor that pushes the URI matched so far to the stack returned
+ * by {@link javax.ws.rs.core.UriInfo#getMatchedURIs()} method.
  *
- * @see {@link PushResourceUriAndDelegateTreeAcceptor}
- * @see {@link PushUriAndDelegateTreeAcceptor}
- *
- * @author Jakub Podlesak
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractPushRoutingInfoAndDelegateTreeAcceptor implements TreeAcceptor {
-    final TreeAcceptor acceptor;
-    final Injector injector;
+class PushMatchedUriAcceptor implements TreeAcceptor {
 
-    AbstractPushRoutingInfoAndDelegateTreeAcceptor(final Injector injector, final TreeAcceptor wrappedAcceptor) {
-        this.injector = injector;
-        this.acceptor = wrappedAcceptor;
-    }
+    @Inject
+    private Factory<RouterModule.RoutingContext> routingContextFactory;
 
-    abstract void pushMatchedToRoutingContext();
-
-    /**
-     * Before delegating to the encapsulated acceptor, the actual routing context will be pushed
-     * according to the current {@code pushMatchedToRoutingContext} method implementation.
-     *
-     * @param data current request
-     * @return acceptor chain to respond the request
-     */
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request data) {
-        pushMatchedToRoutingContext();
-        return acceptor.apply(data);
+    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request data) {
+        routingContextFactory.get().pushLeftHandPath();
+
+        return Stages.terminalTreeContinuation(data);
     }
 }

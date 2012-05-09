@@ -48,19 +48,19 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
-import org.glassfish.jersey.server.spi.internal.MethodParameterHelper;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
  * An abstract implementation of {@link ResourceMethodDispatcher.Provider} that
  * creates instances of {@link ResourceMethodDispatcher}.
  * <p>
- * Implementing classes are required to override the
- * {@link #createValueProviders(org.glassfish.jersey.server.model.InvocableResourceMethod)}
+ * Implementing classes are required to override the {@link #createValueProviders(Invocable)}
  * method to return {@link Factory injection providers} associated with the parameters
  * of the abstract resource method.
  *
@@ -73,7 +73,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
     private Services services;
 
     @Override
-    public ResourceMethodDispatcher create(InvocableResourceMethod resourceMethod, InvocationHandler invocationHandler) {
+    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler invocationHandler) {
 
         final List<Factory<?>> valueProviders = createValueProviders(resourceMethod);
         if (valueProviders == null) {
@@ -93,7 +93,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
             return null;
         }
 
-        final Class<?> returnType = resourceMethod.getMethod().getReturnType();
+        final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
         if (Response.class.isAssignableFrom(returnType)) {
             return new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders);
 // TODO should we support JResponse?
@@ -115,41 +115,41 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
      *
      * @return application-configured HK2 services.
      */
-    protected final Services getServices() {
+    final Services getServices() {
         return services;
     }
 
     /**
      * Get the injectable values provider for an abstract resource method.
      *
-     * @param abstractResourceMethod the abstract resource method.
+     * @param invocableResourceMethod the invocable resource method.
      * @return the injectable values provider, or null if no injectable values
      *         can be created for the parameters of the abstract
      *         resource method.
      */
-    protected abstract List<Factory<?>> createValueProviders(InvocableResourceMethod abstractResourceMethod);
+    protected abstract List<Factory<?>> createValueProviders(Invocable invocableResourceMethod);
 
     private static abstract class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {
 
         private final List<Factory<?>> valueProviders;
 
         public AbstractMethodParamInvoker(
-                InvocableResourceMethod resourceMethod,
+                Invocable resourceMethod,
                 InvocationHandler handler,
                 List<Factory<?>> valueProviders) {
             super(resourceMethod, handler);
             this.valueProviders = valueProviders;
         }
 
-        protected final Object[] getParamValues() {
-                return MethodParameterHelper.getParameterValues(valueProviders);
+        final Object[] getParamValues() {
+                return ParameterValueHelper.getParameterValues(valueProviders);
         }
     }
 
     private static final class VoidOutInvoker extends AbstractMethodParamInvoker {
 
         public VoidOutInvoker(
-                InvocableResourceMethod resourceMethod,
+                Invocable resourceMethod,
                 InvocationHandler handler,
                 List<Factory<?>> valueProviders) {
             super(resourceMethod, handler, valueProviders);
@@ -165,7 +165,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
     private static final class ResponseOutInvoker extends AbstractMethodParamInvoker {
 
         public ResponseOutInvoker(
-                InvocableResourceMethod resourceMethod,
+                Invocable resourceMethod,
                 InvocationHandler handler,
                 List<Factory<?>> valueProviders) {
             super(resourceMethod, handler, valueProviders);
@@ -180,7 +180,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
     private static final class ObjectOutInvoker extends AbstractMethodParamInvoker {
 
         public ObjectOutInvoker(
-                InvocableResourceMethod resourceMethod,
+                Invocable resourceMethod,
                 InvocationHandler handler,
                 List<Factory<?>> valueProviders) {
             super(resourceMethod, handler, valueProviders);
@@ -207,11 +207,11 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
         private final Type t;
 
         public TypeOutInvoker(
-                InvocableResourceMethod resourceMethod,
+                Invocable resourceMethod,
                 InvocationHandler handler,
                 List<Factory<?>> valueProviders) {
             super(resourceMethod, handler, valueProviders);
-            this.t = resourceMethod.getMethod().getGenericReturnType();
+            this.t = resourceMethod.getHandlingMethod().getGenericReturnType();
         }
 
         @Override

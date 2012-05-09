@@ -37,15 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.model.ResourceBuilder;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-import org.junit.Test;
-
-import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -53,12 +46,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import javax.annotation.Nullable;
+
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Test of mixed (programmatic and annotation-based) resource configuration.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ApplicationBuilderMixedAnnotationDynamicTest {
+public class MixedResourceConfigurationTest {
 
     static volatile String name = "Lady";
 
@@ -75,9 +79,8 @@ public class ApplicationBuilderMixedAnnotationDynamicTest {
     @Test
     public void testPutGet() throws Exception {
         final ResourceConfig resourceConfig = new ResourceConfig(NameResource.class);
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
-
-        resourceBuilder.path("/name").method("PUT").to(new Inflector<Request, Response>() {
+        final Resource.Builder resourceBuilder = Resource.builder("/name");
+        resourceBuilder.addMethod("PUT").handledBy(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(@Nullable Request request) {

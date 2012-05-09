@@ -50,34 +50,31 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Resource model validator allows to check validity
- * of a resource model. A validator maintains a list
- * of model issues found. User can call validate method to validate
- * several resources by a single validator to collect issues from various resource models
- * belonging to a single application.
+ * An abstract resource model validator.
+ *
+ * This base resource model validator class implements the visitor pattern to
+ * traverse through all the {@link ResourceModelComponent resource model components}
+ * to check validity of a resource model.
+ * <p />
+ * This validator maintains a list of all the {@link ResourceModelIssue issues}
+ * found in the model. That way all the resource model components can be validated
+ * in a single call to the {@link #validate(ResourceModelComponent) validate(...)}
+ * method and collect all the validation issues from the model.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class ResourceModelValidator implements ResourceModelVisitor {
 
-    /**
-     * Resource model exception.
-     */
-    public static class ModelException extends RuntimeException {
+    private final List<ResourceModelIssue> issueList;
 
-        private static final long serialVersionUID = 1505691540024785160L;
-        public final List<ResourceModelIssue> issues;
-
-        public ModelException(List<ResourceModelIssue> issues) {
-            this.issues = new ArrayList<ResourceModelIssue>(issues);
-        }
+    public ResourceModelValidator(final List<ResourceModelIssue> issueList) {
+        this.issueList = issueList;
     }
-    final List<ResourceModelIssue> issueList = new LinkedList<ResourceModelIssue>();
 
     /**
      * Returns a list of issues found after
@@ -88,6 +85,14 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
      */
     public List<ResourceModelIssue> getIssueList() {
         return issueList;
+    }
+
+    protected final void addFatalIssue(Object source, String message) {
+        issueList.add(new ResourceModelIssue(source, message, true));
+    }
+
+    protected final void addMinorIssue(Object source, String message) {
+        issueList.add(new ResourceModelIssue(source, message, false));
     }
 
     /**
@@ -122,10 +127,10 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
      */
     public void validate(final ResourceModelComponent component) {
         component.accept(this);
-        List<ResourceModelComponent> componentList = component.getComponents();
+        List<? extends ResourceModelComponent> componentList = component.getComponents();
         if (null != componentList) {
-            for (ResourceModelComponent subcomponent : componentList) {
-                validate(subcomponent);
+            for (ResourceModelComponent subComponent : componentList) {
+                validate(subComponent);
             }
         }
     }

@@ -46,8 +46,9 @@ package org.glassfish.jersey.server.model;
  * with the corresponding application.
  *
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+// TODO either implement or remove
 public interface ResourceModelListener {
 
     /*

@@ -87,7 +87,7 @@ public class AcceptQsTest {
     }
 
     @Path("/")
-    public static class Resource {
+    public static class TestResource {
         @Produces("application/foo;qs=0.4")
         @GET
         public String doGetFoo() {
@@ -109,16 +109,16 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptGetDeclarative() throws Exception {
-        runTestAcceptGet(createApplication(Resource.class));
+        runTestAcceptGet(createApplication(TestResource.class));
     }
 
     @Test
     public void testAcceptGetProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        final Resource.Builder rb = Resource.builder("/");
 
-        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.4")).method("GET").to(stringResponse("foo"));
-        rb.path("/").produces(MediaType.valueOf("application/bar;qs=0.5")).method("GET").to(stringResponse("bar"));
-        rb.path("/").produces(MediaType.valueOf("application/baz")).method("GET").to(stringResponse("baz"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.4")).handledBy(stringResponse("foo"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/bar;qs=0.5")).handledBy(stringResponse("bar"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/baz")).handledBy(stringResponse("baz"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
@@ -178,10 +178,9 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptMultipleProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("/")
-                .produces(MediaType.valueOf("application/foo;qs=0.5"), MediaType.valueOf("application/bar"))
-                .method("GET").to(stringResponse("GET"));
+        final Resource.Builder rb = Resource.builder("/");
+        rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.5"), MediaType.valueOf("application/bar"))
+                .handledBy(stringResponse("GET"));
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
         runTestAcceptMultiple(new ApplicationHandler(rc));
@@ -251,11 +250,11 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptSubTypeProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        final Resource.Builder rb = Resource.builder("/");
 
-        rb.path("/").produces(MediaType.valueOf("text/*;qs=0.5")).method("GET").to(stringResponse("*"));
-        rb.path("/").produces(MediaType.valueOf("text/plain;qs=0.6")).method("GET").to(stringResponse("plain"));
-        rb.path("/").produces(MediaType.valueOf("text/html;qs=0.7")).method("GET").to(stringResponse("html"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/*;qs=0.5")).handledBy(stringResponse("*"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/plain;qs=0.6")).handledBy(stringResponse("plain"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/html;qs=0.7")).handledBy(stringResponse("html"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
@@ -332,12 +331,12 @@ public class AcceptQsTest {
     }
 
     @Test
-    public void testAcceptSubTypeNotIntuitiveProgramatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+    public void testAcceptSubTypeNotIntuitiveProgrammatic() throws Exception {
+        final Resource.Builder rb = Resource.builder("/");
 
-        rb.path("/").produces(MediaType.valueOf("text/*;qs=0.9")).method("GET").to(stringResponse("*"));
-        rb.path("/").produces(MediaType.valueOf("text/plain;qs=0.7")).method("GET").to(stringResponse("plain"));
-        rb.path("/").produces(MediaType.valueOf("text/html;qs=0.5")).method("GET").to(stringResponse("html"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/*;qs=0.9")).handledBy(stringResponse("*"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/plain;qs=0.7")).handledBy(stringResponse("plain"));
+        rb.addMethod("GET").produces(MediaType.valueOf("text/html;qs=0.5")).handledBy(stringResponse("html"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
@@ -412,8 +411,8 @@ public class AcceptQsTest {
 
     @Test
     public void testAcceptNoProducesProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("/").method("GET").to(stringResponse("GET"));
+        final Resource.Builder rb = Resource.builder("/");
+        rb.addMethod("GET").handledBy(stringResponse("GET"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
@@ -450,10 +449,9 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesOneMethodFooBarResourceProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("/").method("GET")
-                    .produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
-                    .to(stringResponse("FOOBAR"));
+        final Resource.Builder rb = Resource.builder("/");
+        rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
+                    .handledBy(stringResponse("FOOBAR"));
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
         runTestFooBar(new ApplicationHandler(rc), "FOOBAR", "FOOBAR");
@@ -476,10 +474,10 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsFooBarResourceProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        final Resource.Builder rb = Resource.builder("/");
 
-        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
-        rb.path("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1")).handledBy(stringResponse("FOO"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/bar")).handledBy(stringResponse("BAR"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
@@ -508,10 +506,10 @@ public class AcceptQsTest {
 
     @Test
     public void testProducesTwoMethodsBarFooResourceProgrammatic() throws Exception {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
+        final Resource.Builder rb = Resource.builder("/");
 
-        rb.path("/").produces(MediaType.valueOf("application/bar")).method("GET").to(stringResponse("BAR"));
-        rb.path("/").produces(MediaType.valueOf("application/foo;qs=0.1")).method("GET").to(stringResponse("FOO"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/bar")).handledBy(stringResponse("BAR"));
+        rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1")).handledBy(stringResponse("FOO"));
 
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());

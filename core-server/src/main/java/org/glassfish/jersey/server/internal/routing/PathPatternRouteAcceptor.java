@@ -87,7 +87,7 @@ public class PathPatternRouteAcceptor implements TreeAcceptor {
     private final List<Pair<PathPattern, List<Factory<TreeAcceptor>>>> acceptedRoutes;
 
     /**
-     * Constructs route acceptor that uses {@link PathPattern} instances for
+     * Constructs route methodAcceptorPair that uses {@link PathPattern} instances for
      * patch matching.
      *
      * @param provider {@link RoutingContext} injection provider

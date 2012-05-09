@@ -51,19 +51,29 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.model.Resource;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Hello world!
+ * This is the example entry point, where Jersey application for the example
+ * gets populated and published using the Grizzly 2 HTTP container.
  *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
+    /**
+     * "Hello World" root resource path.
+     */
     public static final String ROOT_PATH = "helloworld";
 
+    /**
+     * Main application entry point.
+     *
+     * @param args application arguments.
+     */
     public static void main(String[] args) {
         try {
             System.out.println("\"Hello World\" Jersey Example App");
@@ -83,31 +93,42 @@ public class App {
 
     }
 
+    /**
+     * Test assertion indicator that a GET method handler has been called.
+     */
     public static volatile boolean getMethodCalled = false;
+    /**
+     * Test assertion indicator that a HEAD method handler has been called.
+     */
     public static volatile boolean headMethodCalled = false;
 
+    /**
+     * Create example application resource configuration.
+     *
+     * @return initialized resource configuration of the example application.
+     */
     public static ResourceConfig create() {
-        final ResourceBuilder resourceBuilder = ResourceConfig.resourceBuilder();
+        final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH);
 
-        resourceBuilder.path(ROOT_PATH)
-
-                .method("GET").to(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
 
                     @Override
                     public Response apply(Request data) {
                         getMethodCalled = true;
                         return Responses.from(200, data).entity("Hello World!").build();
                     }
-                })
+                });
 
-                .method("HEAD", "OPTIONS").to(new Inflector<Request, Response>() {
+        Inflector<Request, Response> noContentResponder = new Inflector<Request, Response>() {
 
-                    @Override
-                    public Response apply(Request data) {
-                        headMethodCalled = true;
-                        return Responses.from(204, data).build();
-                    }
-        });
+            @Override
+            public Response apply(Request data) {
+                headMethodCalled = true;
+                return Responses.from(204, data).build();
+            }
+        };
+        resourceBuilder.addMethod("HEAD").handledBy(noContentResponder);
+        resourceBuilder.addMethod("OPTIONS").handledBy(noContentResponder);
 
         return new ResourceConfig().addResources(resourceBuilder.build());
     }

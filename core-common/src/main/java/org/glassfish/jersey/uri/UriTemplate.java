@@ -56,13 +56,14 @@ import java.util.regex.PatternSyntaxException;
 public class UriTemplate {
 
     /**
-     * Order the templates according according to JAX-RS.
+     * Order the templates according to JAX-RS specification.
      * <p>
      * Sort the set of matching resource classes using the number of
      * characters in the regular expression not resulting from template
      * variables as the primary key, the number of matching groups
      * as a secondary key, and the number of explicit regular expression
      * declarations as the tertiary key.
+     * </p>
      */
     public static final Comparator<UriTemplate> COMPARATOR = new Comparator<UriTemplate>() {
 

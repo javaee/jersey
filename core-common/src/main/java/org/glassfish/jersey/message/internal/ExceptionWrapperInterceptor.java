@@ -51,7 +51,6 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import org.glassfish.hk2.scopes.Singleton;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.jvnet.hk2.annotations.Priority;
 
 /**
  * Interceptor that transforms {@link WebApplicationException} to
@@ -59,8 +58,6 @@ import org.jvnet.hk2.annotations.Priority;
  * the lowest priority in order to wrap all other interceptors.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
- * @param <T> Type of entity.
  */
 @BindingPriority(10)
 public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInterceptor {

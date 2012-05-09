@@ -63,5 +63,5 @@ public interface Parameterized {
      *
      * @return true if entity parameter is present, false otherwise
      */
-    public boolean hasEntity();
+    public boolean requiresEntity();
 }

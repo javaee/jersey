@@ -53,8 +53,8 @@ import org.jvnet.hk2.annotations.Scoped;
 
 /**
  * Specific resource method dispatcher for dispatching requests to a void
- * {@link Method Java method} with no input arguments using supplied {@link InvocationHandler
- * Java method invocation handler}.
+ * {@link java.lang.reflect.Method Java method} with no input arguments
+ * using a supplied {@link InvocationHandler Java method invocation handler}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -64,20 +64,20 @@ final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provi
 
     private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {
 
-        private VoidToVoidDispatcher(InvocableResourceMethod resourceMethod, InvocationHandler handler) {
+        private VoidToVoidDispatcher(Invocable resourceMethod, InvocationHandler handler) {
             super(resourceMethod, handler);
         }
 
         @Override
         public Response doDispatch(Object resource, Request request) throws ProcessingException {
-            invoke(resource, new Object[]{});
+            invoke(resource);
             return Response.noContent().build();
         }
     }
 
     @Override
-    public ResourceMethodDispatcher create(InvocableResourceMethod resourceMethod, InvocationHandler handler) {
-        if (resourceMethod.getMethod().getReturnType() != void.class || !resourceMethod.getParameters().isEmpty()) {
+    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
+        if (resourceMethod.getHandlingMethod().getReturnType() != void.class || !resourceMethod.getParameters().isEmpty()) {
             return null;
         }
 

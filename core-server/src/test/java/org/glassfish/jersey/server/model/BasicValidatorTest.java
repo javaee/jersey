@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.model;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,11 +72,14 @@ public class BasicValidatorTest {
     public static class TestRootResourceNonAmbigCtors {
 
         // TODO: hmmm, even if this is not ambiguous, it is strange; shall we warn, the 1st and the 2nd ctor won't be used?
-        public TestRootResourceNonAmbigCtors(@QueryParam("s") String s) {}
+        public TestRootResourceNonAmbigCtors(@QueryParam("s") String s) {
+        }
 
-        public TestRootResourceNonAmbigCtors(@QueryParam("n") int n) {}
+        public TestRootResourceNonAmbigCtors(@QueryParam("n") int n) {
+        }
 
-        public TestRootResourceNonAmbigCtors(@QueryParam("s") String s, @QueryParam("n") int n) {}
+        public TestRootResourceNonAmbigCtors(@QueryParam("s") String s, @QueryParam("n") int n) {
+        }
 
         @GET
         public String getIt() {
@@ -87,15 +91,16 @@ public class BasicValidatorTest {
     public void testRootResourceNonAmbigConstructors() throws Exception {
         System.out.println(
                 "---\nNo issue should be reported if more public ctors exists with the same number of params, " +
-                "but another just one is presented with more params at a root resource:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestRootResourceNonAmbigCtors.class);
-        BasicValidator validator = new BasicValidator();
+                        "but another just one is presented with more params at a root resource:");
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.getIssueList().isEmpty());
     }
 
-//    @Singleton
+    //    @Singleton
     @Path("rootSingleton/{p}")
     public static class TestCantInjectFieldsForSingleton {
 
@@ -121,8 +126,9 @@ public class BasicValidatorTest {
     @Test
     public void TestSingletonFieldsInjection() throws Exception {
         System.out.println("---\nAn issue should be reported if injection is required for a singleton life-cycle:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestCantInjectFieldsForSingleton.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestCantInjectFieldsForSingleton.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -140,19 +146,20 @@ public class BasicValidatorTest {
     @Test
     public void testNonPublicRM() throws Exception {
         System.out.println("---\nAn issue should be reported if a resource method is not public:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestNonPublicRM.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestNonPublicRM.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
-    // TODO: there might still be an implicit viewable associated with it
-    // assertTrue(validator.getIssueList().get(0).isFatal());
+        // TODO: there might still be an implicit viewable associated with it
+        // assertTrue(validator.getIssueList().get(0).isFatal());
     }
 
     public static class TestNonPublicRM1 {
 
         @GET
-        private  String getThis() {
+        private String getThis() {
             return "this";
         }
 
@@ -164,8 +171,9 @@ public class BasicValidatorTest {
     @Test
     public void testNonPublicRM1() throws Exception {
         System.out.println("---\nAn issue should be reported if a resource method is not public:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestNonPublicRM1.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestNonPublicRM1.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -179,11 +187,13 @@ public class BasicValidatorTest {
     }
 
     // should be probably validated at runtime rather then at the validation phase
-    @Ignore @Test
+    @Ignore
+    @Test
     public void suspendedTestMoreThanOneEntity() throws Exception {
         System.out.println("---\nAn issue should be reported if a resource method takes more than one entity params:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestMoreThanOneEntity.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestMoreThanOneEntity.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -196,11 +206,13 @@ public class BasicValidatorTest {
         }
     }
 
-    @Ignore @Test
+    @Ignore
+    @Test
     public void testGetRMReturningVoid() throws Exception {
         System.out.println("---\nAn issue should be reported if a get method returns void:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetRMReturningVoid.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetRMReturningVoid.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -218,8 +230,9 @@ public class BasicValidatorTest {
     @Test
     public void testGetRMConsumingEntity() throws Exception {
         System.out.println("---\nAn issue should be reported if a get method consumes an entity:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetRMConsumingEntity.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetRMConsumingEntity.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -237,8 +250,9 @@ public class BasicValidatorTest {
     @Test
     public void testGetRMConsumingFormParam() throws Exception {
         System.out.println("---\nAn issue should be reported if a get method consumes a form param:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetRMConsumingFormParam.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetRMConsumingFormParam.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.getIssueList().size() == 1);
@@ -255,8 +269,9 @@ public class BasicValidatorTest {
     @Test
     public void testSRLReturningVoid() throws Exception {
         System.out.println("---\nAn issue should be reported if a sub-resource locator returns void:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestSRLReturningVoid.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestSRLReturningVoid.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -273,8 +288,9 @@ public class BasicValidatorTest {
     @Test
     public void testGetSRMReturningVoid() throws Exception {
         System.out.println("---\nAn issue should be reported if a get sub-resource method returns void:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetSRMReturningVoid.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetSRMReturningVoid.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -293,8 +309,9 @@ public class BasicValidatorTest {
     @Test
     public void testGetSRMConsumingEntity() throws Exception {
         System.out.println("---\nAn issue should be reported if a get method consumes an entity:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetSRMConsumingEntity.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetSRMConsumingEntity.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -303,7 +320,8 @@ public class BasicValidatorTest {
 
     public static class TestGetSRMConsumingFormParam {
 
-        @GET @Path("p")
+        @GET
+        @Path("p")
         public String getMethod(@FormParam("f") Object o) {
             return "it";
         }
@@ -312,8 +330,9 @@ public class BasicValidatorTest {
     @Test
     public void testGetSRMConsumingFormParam() throws Exception {
         System.out.println("---\nAn issue should be reported if a get method consumes a form param:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestGetSRMConsumingFormParam.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestGetSRMConsumingFormParam.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.getIssueList().isEmpty());
@@ -333,8 +352,9 @@ public class BasicValidatorTest {
     @Test
     public void testMultipleHttpMethodDesignatorsRM() throws Exception {
         System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a resource method:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestMultipleHttpMethodDesignatorsRM.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -354,8 +374,9 @@ public class BasicValidatorTest {
     @Test
     public void testMultipleHttpMethodDesignatorsSRM() throws Exception {
         System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a sub-resource method:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestMultipleHttpMethodDesignatorsSRM.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -373,8 +394,9 @@ public class BasicValidatorTest {
     @Test
     public void testEntityParamOnSRL() throws Exception {
         System.out.println("---\nAn issue should be reported if an entity parameter exists on a sub-resource locator:");
-        ResourceClass resource = IntrospectionModeller.createResource(TestEntityParamOnSRL.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestEntityParamOnSRL.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -385,7 +407,7 @@ public class BasicValidatorTest {
 
         static String html_content =
                 "<html>" + "<head><title>Delete text/html</title></head>" +
-                "<body>Delete text/html</body></html>";
+                        "<body>Delete text/html</body></html>";
 
         @DELETE
         @Produces(value = "text/plain")
@@ -410,8 +432,9 @@ public class BasicValidatorTest {
     @Test
     public void testNonConflictingHttpMethodDelete() throws Exception {
         System.out.println("---\nNo issue should be reported if produced mime types differ");
-        ResourceClass resource = IntrospectionModeller.createResource(TestNonConflictingHttpMethodDelete.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestNonConflictingHttpMethodDelete.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.getIssueList().isEmpty());
@@ -430,12 +453,14 @@ public class BasicValidatorTest {
         public void setB(String b) {
         }
 
-        @GET @Path("a")
+        @GET
+        @Path("a")
         public String get(@PathParam("a") @QueryParam("a") String a) {
             return "hi";
         }
 
-        @GET @Path("b")
+        @GET
+        @Path("b")
         public String getSub(@PathParam("a") @QueryParam("b") @MatrixParam("c") String a, @MatrixParam("m") @QueryParam("m") int i) {
             return "hi";
         }
@@ -449,8 +474,9 @@ public class BasicValidatorTest {
     @Test
     public void testAmbiguousParams() throws Exception {
         System.out.println("---\nA warning should be reported if ambiguous source of a parameter is seen");
-        ResourceClass resource = IntrospectionModeller.createResource(TestAmbiguousParams.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestAmbiguousParams.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -460,7 +486,8 @@ public class BasicValidatorTest {
     @Path(value = "/EmptyPathSegmentTest")
     public static class TestEmptyPathSegment {
 
-        @GET @Path("/")
+        @GET
+        @Path("/")
         public String get() {
             return "hi";
         }
@@ -469,8 +496,9 @@ public class BasicValidatorTest {
     @Test
     public void testEmptyPathSegment() throws Exception {
         System.out.println("---\nA warning should be reported if @Path with \"/\" or empty string value is seen");
-        ResourceClass resource = IntrospectionModeller.createResource(TestEmptyPathSegment.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TestEmptyPathSegment.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -478,9 +506,9 @@ public class BasicValidatorTest {
     }
 
 
-
     public static class TypeVariableResource<T, V> {
-        @QueryParam("v") V fieldV;
+        @QueryParam("v")
+        V fieldV;
 
         V methodV;
 
@@ -509,8 +537,9 @@ public class BasicValidatorTest {
     @Test
     public void testTypeVariableResource() throws Exception {
         System.out.println("---\n");
-        ResourceClass resource = IntrospectionModeller.createResource(TypeVariableResource.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(TypeVariableResource.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -518,7 +547,8 @@ public class BasicValidatorTest {
     }
 
     public static class ParameterizedTypeResource<T, V> {
-        @QueryParam("v") Collection<V> fieldV;
+        @QueryParam("v")
+        Collection<V> fieldV;
 
         List<List<V>> methodV;
 
@@ -550,8 +580,9 @@ public class BasicValidatorTest {
     @Test
     public void testParameterizedTypeResource() throws Exception {
         System.out.println("---\n");
-        ResourceClass resource = IntrospectionModeller.createResource(ConcreteParameterizedTypeResource.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -559,7 +590,8 @@ public class BasicValidatorTest {
     }
 
     public static class GenericArrayResource<T, V> {
-        @QueryParam("v") V[] fieldV;
+        @QueryParam("v")
+        V[] fieldV;
 
         V[] methodV;
 
@@ -591,15 +623,16 @@ public class BasicValidatorTest {
     @Test
     public void testGenericArrayResource() throws Exception {
         System.out.println("---\n");
-        ResourceClass resource = IntrospectionModeller.createResource(ConcreteGenericArrayResource.class);
-        BasicValidator validator = new BasicValidator();
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(ConcreteGenericArrayResource.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues);
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
         assertEquals(0, validator.getIssueList().size());
     }
 
-    // TODO: test multiple root resources with the same uriTempl (in WebApplicationImpl.processRootResources ?)
+    // TODO: test multiple root resources with the same uriTemplate (in WebApplicationImpl.processRootResources ?)
 
     private static void printIssueList(BasicValidator validator) {
         for (ResourceModelIssue issue : validator.getIssueList()) {

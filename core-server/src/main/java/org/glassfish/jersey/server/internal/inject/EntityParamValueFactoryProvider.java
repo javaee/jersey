@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -61,6 +60,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
     }
 
     private static class EntityValueFactory extends AbstractHttpContextValueFactory<Object> {
+
         private final Parameter parameter;
 
         public EntityValueFactory(Parameter parameter) {
@@ -69,18 +69,17 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
 
         @Override
         protected Object get(HttpContext context) {
-                Request request = context.getRequest();
-                final Class<?> parameterClass = parameter.getParameterClass();
-                return (parameterClass.isInstance(request)) ?
-                        request :
-                        request.readEntity(GenericType.of(parameter.getParameterClass(), parameter.getParameterType())/*TODO: annotations*/);
-        }
+            final Request request = context.getRequest();
 
+            final GenericType<?> parameterType = parameter.getParameterType();
+            return (parameterType.getRawType().isInstance(request))
+                    ? request
+                    : request.readEntity(parameterType, parameter.getAnnotations());
+        }
     }
 
     @Override
     protected Factory<?> createValueFactory(Parameter parameter) {
         return new EntityValueFactory(parameter);
     }
-
 }

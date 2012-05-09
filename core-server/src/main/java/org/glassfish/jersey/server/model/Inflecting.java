@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.model;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.glassfish.jersey.server.model.ResourceClass;
+import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey.process.Inflector;
 
 /**
- * A wrapper, which will push both the current resource and the actual URI path to the routing context
- * before delegating to the encapsulated acceptor.
+ * Inflector provider resource model component.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class PushResourceUriAndDelegateTreeAcceptor extends AbstractPushRoutingInfoAndDelegateTreeAcceptor {
-
-    final ResourceClass rc;
+public class Inflecting<T> {
 
     /**
-     * Constructs a new wrapper.
+     * Get the inflector.
      *
-     * @param injector to be used to obtain the actual resource instance and routing context
-     * @param resource resource class model
-     * @param wrappedAcceptor this will be used to delegate the apply method invocation
+     * @return inflector.
      */
-    public PushResourceUriAndDelegateTreeAcceptor(final Injector injector, final ResourceClass resource, final TreeAcceptor wrappedAcceptor) {
-        super(injector, wrappedAcceptor);
-        this.rc = resource;
-    }
-
-    @Override
-    void pushMatchedToRoutingContext() {
-        final RoutingContext routingContext = injector.inject(RoutingContext.class);
-        if (rc != null) {
-            routingContext.pushMatchedResource(injector.inject(rc.getResourceClass()));
-        }
-        routingContext.pushLeftHandPath();
+    public Inflector<Request, T> getInflector() {
+        return null;
     }
 }

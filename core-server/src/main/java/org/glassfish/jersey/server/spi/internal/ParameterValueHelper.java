@@ -59,11 +59,19 @@ import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
 
 /**
+ * Utility methods for retrieving values or value providers for the
+ * {@link Parameterized parameterized} resource model components.
  *
- * @author Marek Potociar
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MethodParameterHelper {
+public final class ParameterValueHelper {
 
+    /**
+     * Get the array of parameter values.
+     *
+     * @param valueProviders a list of value providers.
+     * @return array of parameter values provided by the value providers.
+     */
     public static Object[] getParameterValues(List<Factory<?>> valueProviders) {
         final Object[] params = new Object[valueProviders.size()];
         try {
@@ -83,8 +91,16 @@ public class MethodParameterHelper {
         }
     }
 
-    public static List<Factory<?>> createValueProviders(final Services services, final Parameterized resourceMethod) {
-        if ((null == resourceMethod.getParameters()) || (0 == resourceMethod.getParameters().size())) {
+    /**
+     * Create list of parameter value providers for the given {@link Parameterized
+     * parameterized} resource model component.
+     *
+     * @param services HK2 services.
+     * @param parameterized parameterized resource model component.
+     * @return list of parameter value providers for the parameterized component.
+     */
+    public static List<Factory<?>> createValueProviders(final Services services, final Parameterized parameterized) {
+        if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
@@ -101,8 +117,8 @@ public class MethodParameterHelper {
         });
 
         boolean entityParamFound = false;
-        final List<Factory<?>> providers = new ArrayList<Factory<?>>(resourceMethod.getParameters().size());
-        for (final Parameter parameter : resourceMethod.getParameters()) {
+        final List<Factory<?>> providers = new ArrayList<Factory<?>>(parameterized.getParameters().size());
+        for (final Parameter parameter : parameterized.getParameters()) {
             entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameter.getSource();
             providers.add(getValueFactory(valueFactoryProviders, parameter));
         }
@@ -110,11 +126,11 @@ public class MethodParameterHelper {
         if (!entityParamFound && Collections.frequency(providers, null) == 1) {
             // Try to find entity if there is one unresolved parameter and the annotations are unknown
             final int entityParamIndex = providers.lastIndexOf(null);
-            final Parameter parameter = resourceMethod.getParameters().get(entityParamIndex);
+            final Parameter parameter = parameterized.getParameters().get(entityParamIndex);
             if (Parameter.Source.UNKNOWN == parameter.getSource() && !parameter.isQualified()) {
                 providers.set(entityParamIndex, getValueFactory(
                         valueFactoryProviders,
-                        new SourceOverrideParameter(parameter, Parameter.Source.ENTITY)));
+                        Parameter.overrideSource(parameter, Parameter.Source.ENTITY)));
             }
         }
 
@@ -130,24 +146,9 @@ public class MethodParameterHelper {
         return valueFactory;
     }
 
-    public static class SourceOverrideParameter extends Parameter {
-
-        public SourceOverrideParameter(final Parameter p, final Parameter.Source overrideSource) {
-            super(
-                    p.getAnnotations(),
-                    p.getAnnotation(),
-                    overrideSource,
-                    p.getSourceName(),
-                    p.getParameterType(),
-                    p.getParameterClass(),
-                    p.isEncoded(),
-                    p.getDefaultValue());
-        }
-    }
-
     /**
      * Prevents instantiation.
      */
-    private MethodParameterHelper() {
+    private ParameterValueHelper() {
     }
 }

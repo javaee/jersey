@@ -82,6 +82,21 @@ public final class Stages {
     }
 
     /**
+     * Create a hierarchical continuation with the supplied request on the left
+     * side of the continuation and a singleton iterator containing the single
+     * next stage on the right side of the continuation.
+     *
+     * @param request transformed request to be returned as part of the terminal
+     *     continuation.
+     * @param nextAcceptor next tree acceptor stage.
+     * @return singleton hierarchical continuation.
+     */
+    public static Pair<Request, Iterator<TreeAcceptor>> singletonTreeContinuation(
+            final Request request, TreeAcceptor nextAcceptor) {
+        return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.<TreeAcceptor>singletonIterator(nextAcceptor));
+    }
+
+    /**
      * Create a terminal linear continuation with the supplied request on
      * the left side of the continuation.
      *
@@ -413,7 +428,7 @@ public final class Stages {
          * This implementation invokes the underlying transformation function on the
          * supplied Response and returns the transformed result on the left side of the
          * returned continuation.
-         * The {@link #LinkedLinearAcceptor(com.google.common.base.Function, LinearAcceptor)
+         * The {@link #LinkedResponder(com.google.common.base.Function, Responder)
          * registered next stage} is returned on the right side of the returned continuation.
          */
         @Override

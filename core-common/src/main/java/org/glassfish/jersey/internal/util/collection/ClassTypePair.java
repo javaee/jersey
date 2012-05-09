@@ -46,7 +46,7 @@ import java.lang.reflect.Type;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ClassTypePair implements Pair<Class<?>, Type> {
+public final class ClassTypePair {
 
     private final Type type;
     private final Class<?> rawClass;
@@ -54,16 +54,6 @@ public final class ClassTypePair implements Pair<Class<?>, Type> {
     private ClassTypePair(Class<?> c, Type t) {
         this.type = t;
         this.rawClass = c;
-    }
-
-    @Override
-    public Class<?> left() {
-        return rawClass;
-    }
-
-    @Override
-    public Type right() {
-        return type;
     }
 
     /**

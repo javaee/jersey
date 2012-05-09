@@ -39,22 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -62,13 +46,31 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.ResourceBuilder;
+import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.server.model.Resource;
+
+import org.glassfish.hk2.Services;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 
 /**
  * Unit test for creating an application with asynchronously handled request processing
- * via {@link JerseyApplication.Builder}'s programmatic API.
+ * via {@link Resource}'s programmatic API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -84,6 +86,7 @@ public class ContextBasedInjectionTest {
                 {"a/b/d/", "A-B-D"}
         });
     }
+
     private final String uriSuffix;
     private final String expectedResponse;
 
@@ -135,15 +138,22 @@ public class ContextBasedInjectionTest {
             return null;
         }
     }
+
     private ApplicationHandler app;
 
     @Before
     public void setupApplication() {
-        final ResourceBuilder rb = ResourceConfig.resourceBuilder();
-        rb.path("a/b/c").method("GET").to(new AsyncInflector("A-B-C"));
-        rb.path("a/b/d").method("GET").to(new AsyncInflector("A-B-D"));
         ResourceConfig rc = new ResourceConfig();
+
+        Resource.Builder rb;
+        rb = Resource.builder("a/b/c");
+        rb.addMethod("GET").handledBy(new AsyncInflector("A-B-C"));
         rc.addResources(rb.build());
+
+        rb = Resource.builder("a/b/d");
+        rb.addMethod("GET").handledBy(new AsyncInflector("A-B-D"));
+        rc.addResources(rb.build());
+
         app = new ApplicationHandler(rc);
     }
 

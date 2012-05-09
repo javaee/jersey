@@ -39,12 +39,29 @@
  */
 package org.glassfish.jersey.server.model;
 
+import org.glassfish.jersey.uri.PathPattern;
+
 /**
+ * Marker interface for all resource model components that contain path information
+ * usable for routing.
  *
- * Marker interface for all path annotated resource model components.
- * 
  * @author Marc Hadley
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface PathAnnotated {
-    public PathValue getPath();
+public interface Routed {
+
+    /**
+     * Get the path direct assigned to the component.
+     *
+     * @return component path.
+     */
+    public String getPath();
+
+    /**
+     * Get the path pattern that can be used for matching the remaining
+     * request URI against this component represented by this model.
+     *
+     * @return component path pattern.
+     */
+    public PathPattern getPathPattern();
 }
