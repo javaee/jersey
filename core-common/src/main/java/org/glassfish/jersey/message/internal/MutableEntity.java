@@ -44,6 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -132,7 +133,15 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
                     contentStream.reset();
                     return i == -1;
                 } else {
-                    return true;
+                    int b = contentStream.read();
+                    if (b == -1) {
+                        return true;
+                    }
+
+                    PushbackInputStream pbis = new PushbackInputStream(contentStream, 1);
+                    pbis.unread(b);
+                    contentStream = pbis;
+                    return false;
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
