@@ -21,6 +21,7 @@ core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceDynamicWi
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceDynamicWithParametersTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceHttpMethodsTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/SubResourceNullTest.java
+examples/multipart-webapp/src/test/java/org/glassfish/jersey/examples/multipart/webapp/MultiPartWebAppTest.java
 examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/AbstractWebAppTest.java
 examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/WebAppEquinoxTest.java
 examples/osgi-helloworld-webapp/functional-test/src/test/java/org/glassfish/jersey/examples/helloworld/test/WebAppFelixTest.java
@@ -29,6 +30,18 @@ examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/ex
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/GrizzlyHttpServiceFelixTest.java
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceEquinoxTest.java
 examples/osgi-http-service/functional-test/src/test/java/org/glassfish/jersey/examples/osgihttpservice/test/JettyHttpServiceFelixTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/BodyPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/file/FileDataBodyPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/file/StreamDataBodyPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/FormDataBodyPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/FormDataMultiPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/internal/FormDataMultiPartBufferTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/internal/FormDataMultiPartReaderWriterTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/internal/MultiPartReaderWriterTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultipartMediaTypesTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultiPartTest.java
+media/multipart/src/test/java/org/glassfish/jersey/media/multipart/ParameterizedHeadersMapTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/BasicOsgiIntegrationTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/JsonTest.java
 
@@ -76,19 +89,7 @@ contribs/jersey-guice/src/test/java/com/sun/jersey/guice/GuiceChildParentNoScope
 contribs/jersey-guice/src/test/java/com/sun/jersey/guice/GuiceInjectedTest.java
 contribs/jersey-guice/src/test/java/com/sun/jersey/guice/GuiceUnBoundTest.java
 contribs/jersey-guice/src/test/java/com/sun/jersey/guice/ProvidesTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/BodyPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/file/FileDataBodyPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/file/StreamDataBodyPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/FormDataBodyPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/FormDataMultiPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/HeadersMapTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/impl/FormDataMultiPartBufferTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/impl/FormDataMultiPartReaderWriterTest.java
 contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/impl/MultipartMixedWithApacheClientTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/impl/MultiPartReaderWriterTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/MultipartMediaTypesTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/MultiPartTest.java
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/ParameterizedHeadersMapTest.java
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/AsyncHttpMethodTest.java
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/AuthTest.java
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/CookieTest.java
@@ -625,7 +626,6 @@ samples/jsonp/src/test/java/com/sun/jersey/samples/jsonp/MainTest.java
 samples/managed-beans-webapp/src/test/java/com/sun/jersey/samples/managedbeans/ManagedBeanWebAppTest.java
 samples/moxy-oxm-mapping/webapp/src/test/java/com/sun/jersey/samples/moxy/MoxyWebAppTest.java
 samples/moxy/src/test/java/com/sun/jersey/samples/moxy/MoxyWebAppTest.java
-samples/multipart-webapp/src/test/java/com/sun/jersey/samples/multipart/MultipartWebAppTest.java
 samples/optimistic-concurrency/src/test/java/com/sun/jersey/samples/optimisticconcurrency/MainTest.java
 samples/osgi-http-service/functional-test/src/test/java/com/sun/jersey/samples/osgihttpservice/test/AbstractHttpServiceTest.java
 samples/osgi-http-service/functional-test/src/test/java/com/sun/jersey/samples/osgihttpservice/test/GrizzlyHttpServiceEquinoxTest.java

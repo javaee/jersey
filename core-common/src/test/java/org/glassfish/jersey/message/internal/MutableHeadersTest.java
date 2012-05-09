@@ -283,4 +283,13 @@ public class MutableHeadersTest {
         assertEquals(0, mutableHeaders.headers().size());
     }
 
+    @Test
+    public void testObjectHeadersToStringHeaders() throws Exception {
+        mutableHeaders.header("key", 1);
+        mutableHeaders.headers().putSingle("key", "2");
+
+        final String multipleHeader = mutableHeaders.header("key");
+        assertEquals("2", multipleHeader);
+    }
+
 }

@@ -229,7 +229,7 @@ public abstract class JerseyTest {
         forcedPropertyMap.put(propertyName, value);
     }
 
-    private boolean isEnabled(String featureName) {
+    protected boolean isEnabled(String featureName) {
         return Boolean.valueOf(getProperty(featureName));
     }
 

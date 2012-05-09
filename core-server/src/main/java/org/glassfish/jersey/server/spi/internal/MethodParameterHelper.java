@@ -40,21 +40,23 @@
 package org.glassfish.jersey.server.spi.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
-import org.glassfish.jersey.message.internal.MessagingModules.MessageBodyProviders;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
 
 /**
  *
@@ -86,7 +88,17 @@ public class MethodParameterHelper {
             return Collections.emptyList();
         }
 
-        Set<ValueFactoryProvider> valueFactoryProviders = Providers.getProviders(services, ValueFactoryProvider.class);
+        List<ValueFactoryProvider> valueFactoryProviders = new ArrayList<ValueFactoryProvider>(
+                Providers.getProviders(services, ValueFactoryProvider.class));
+
+        Collections.sort(valueFactoryProviders, new Comparator<ValueFactoryProvider>() {
+
+            @Override
+            public int compare(ValueFactoryProvider o1, ValueFactoryProvider o2) {
+                return o2.getPriority().getWeight() - o1.getPriority().getWeight();
+            }
+
+        });
 
         boolean entityParamFound = false;
         final List<Factory<?>> providers = new ArrayList<Factory<?>>(resourceMethod.getParameters().size());
@@ -109,7 +121,7 @@ public class MethodParameterHelper {
         return providers;
     }
 
-    private static Factory<?> getValueFactory(Set<ValueFactoryProvider> valueFactoryProviders, final Parameter parameter) {
+    private static Factory<?> getValueFactory(Collection<ValueFactoryProvider> valueFactoryProviders, final Parameter parameter) {
         Factory<?> valueFactory = null;
         final Iterator<ValueFactoryProvider> vfpIterator = valueFactoryProviders.iterator();
         while (valueFactory == null && vfpIterator.hasNext()) {
@@ -118,7 +130,7 @@ public class MethodParameterHelper {
         return valueFactory;
     }
 
-    private static class SourceOverrideParameter extends Parameter {
+    public static class SourceOverrideParameter extends Parameter {
 
         public SourceOverrideParameter(final Parameter p, final Parameter.Source overrideSource) {
             super(

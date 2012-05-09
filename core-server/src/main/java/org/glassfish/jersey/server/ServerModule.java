@@ -70,6 +70,7 @@ import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.StagingContext;
+import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.model.ResourceModelModule;
@@ -192,7 +193,8 @@ public class ServerModule extends AbstractModule {
                 new ParameterInjectionModule(),
                 new ResourceModelModule(),
                 new RouterModule(),
-                new ServiceFinderModule<ContainerProvider>(ContainerProvider.class));
+                new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
+                new CloseableServiceModule());
 
         // exception mapper
         bind(new TypeLiteral<ExceptionMapper<Throwable>>() {}).toInstance(new ServerExceptionMapper());

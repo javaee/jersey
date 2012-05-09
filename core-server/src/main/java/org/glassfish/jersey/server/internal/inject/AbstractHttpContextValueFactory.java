@@ -87,7 +87,8 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
 
             @Override
             public Map<String, Object> getProperties() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                final Request request = getRequest();
+                return request == null ? null : request.getProperties();
             }
         });
     }

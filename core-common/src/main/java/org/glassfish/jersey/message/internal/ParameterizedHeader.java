@@ -101,4 +101,5 @@ public class ParameterizedHeader {
     public Map<String, String> getParameters() {
         return parameters;
     }
+
 }

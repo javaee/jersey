@@ -177,4 +177,4 @@ public abstract class CommittingOutputStream extends OutputStream {
      * @throws java.io.IOException
      */
     protected abstract void commit() throws IOException;
-};
+}
