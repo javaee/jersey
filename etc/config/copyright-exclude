@@ -32,6 +32,7 @@ jaxb.index
 /etc/config/copyright.txt
 /LICENSE.html
 /LICENSE.txt
+/third-party-license-readme.txt
 /bundles/glassfish/v4.0/core/src/main/resources/jersey-core_proto.py
 nb-configuration.xml
 /archetype-resources/
