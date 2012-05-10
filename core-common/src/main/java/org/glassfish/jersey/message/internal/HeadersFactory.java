@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ import com.google.common.collect.Maps;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-final class HeadersFactory {
+public final class HeadersFactory {
 
     /**
      * Create an empty inbound message headers container. Created container is mutable.
@@ -171,14 +172,16 @@ final class HeadersFactory {
     }
 
     public static List<String> toString(final List<Object> headerValues, final RuntimeDelegate rd) {
-        return Lists.transform(headerValues, new Function<Object, String>() {
+        // Lists#transform returns a list that do not support #add or #set operations so we need to wrap that list to one which
+        // supports these operations.
+        return new LinkedList<String>(Lists.transform(headerValues, new Function<Object, String>() {
 
             @Override
             public String apply(Object input) {
                 return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
             }
 
-        });
+        }));
     }
 
     public static MultivaluedMap<String, String> toString(final MultivaluedMap<String, Object> headers, final RuntimeDelegate rd) {

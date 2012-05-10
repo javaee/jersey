@@ -47,7 +47,7 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-interface MultivaluedParameterExtractorProvider {
+public interface MultivaluedParameterExtractorProvider {
 
     /**
      * Get the extractor configured to extract value of given {@link Parameter parameter}.

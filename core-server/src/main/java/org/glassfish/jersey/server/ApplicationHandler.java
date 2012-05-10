@@ -97,6 +97,7 @@ import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+import org.glassfish.jersey.spi.CloseableService;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -223,6 +224,8 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private Factory<RouterModule.RoutingContext> routingContextFactory;
     @Inject
     Factory<Ref<SecurityContext>> securityContextRefFactory;
+    @Inject
+    private Factory<CloseableService> closeableServiceFactory;
     //
     private Services services;
     private TreeAcceptor rootAcceptor;
@@ -507,6 +510,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             final Pair<Request, Optional<LinearAcceptor>> pair = preMatchFilterAcceptor.apply(request);
             invoker.apply(pair.left(), callback);
         } finally {
+            closeableServiceFactory.get().close();
             requestScope.exit();
         }
     }

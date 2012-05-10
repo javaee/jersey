@@ -49,7 +49,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-interface MultivaluedParameterExtractor<T> {
+public interface MultivaluedParameterExtractor<T> {
 
     /**
      * Name of the parameter (map key) to be extracted from the supplied

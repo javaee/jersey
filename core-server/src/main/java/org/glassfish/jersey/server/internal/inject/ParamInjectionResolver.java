@@ -69,7 +69,7 @@ import com.sun.hk2.component.InjectionResolver;
  * @param <A> supported parameter injection annotation.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class ParamInjectionResolver<A extends Annotation> extends InjectionResolver<A> {
+public abstract class ParamInjectionResolver<A extends Annotation> extends InjectionResolver<A> {
 
     @Inject
     private Services services;

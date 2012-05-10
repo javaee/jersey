@@ -39,41 +39,45 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.inject.Injector;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
-import java.lang.annotation.Annotation;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.inject.Injector;
 
 /**
  * A parameter value factory provider that provides parameter value factories
  * which are using {@link MultivaluedParameterExtractorProvider} to extract parameter
- * values from the supplied {@link javax.ws.rs.core.MultivaluedMap mutilvalued
+ * values from the supplied {@link javax.ws.rs.core.MultivaluedMap multivalued
  * parameter map}.
  *
  * @param <A> injection annotation type that is supported by the provider.
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractValueFactoryProvider<A extends Annotation> implements ValueFactoryProvider {
+public abstract class AbstractValueFactoryProvider<A extends Annotation> implements ValueFactoryProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
     private final Injector injector;
-    private final Parameter.Source compatibleSource;
+    private final Set<Parameter.Source> compatibleSources;
 
     /**
      * Initialize the provider.
      *
      * @param mpep {@link MultivaluedParameterExtractorProvider} to be used for
      *     retrieving extractors that can parameter values from the supplied
-     *     {@link javax.ws.rs.core.MultivaluedMap mutilvalued parameter map}.
+     *     {@link javax.ws.rs.core.MultivaluedMap multivalued parameter map}.
      */
-    AbstractValueFactoryProvider(
-            MultivaluedParameterExtractorProvider mpep, Injector injector, Parameter.Source compatibleSource) {
+    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, Injector injector,
+                                           Parameter.Source... compatibleSources) {
         this.mpep = mpep;
         this.injector = injector;
-        this.compatibleSource = compatibleSource;
+        this.compatibleSources = new HashSet<Parameter.Source>(Arrays.asList(compatibleSources));
     }
 
     /**
@@ -93,7 +97,7 @@ abstract class AbstractValueFactoryProvider<A extends Annotation> implements Val
      * {@link #getWithoutDefaultValue(org.glassfish.jersey.server.model.Parameter)}
      * method, the extractor returned from this method will use the default value
      * set on the parameter, in case the parameter is not found in the supplied
-     * {@link javax.ws.rs.core.MultivaluedMap mutilvalued parameter map}.
+     * {@link javax.ws.rs.core.MultivaluedMap multivalued parameter map}.
      *
      * @param parameter parameter supported by the returned extractor.
      * @return extractor supporting the parameter. The returned instance ignores
@@ -123,7 +127,7 @@ abstract class AbstractValueFactoryProvider<A extends Annotation> implements Val
      */
     @Override
     public final Factory<?> getValueFactory(Parameter parameter) {
-        if (compatibleSource != parameter.getSource()) {
+        if (!compatibleSources.contains(parameter.getSource())) {
             // not compatible
             return null;
         }
@@ -134,4 +138,10 @@ abstract class AbstractValueFactoryProvider<A extends Annotation> implements Val
         }
         return valueFactory;
     }
+
+    @Override
+    public PriorityType getPriority() {
+        return Priority.NORMAL;
+    }
+
 }

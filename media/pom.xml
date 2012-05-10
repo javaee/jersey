@@ -60,6 +60,7 @@
 
     <modules>
         <module>json</module>
+        <module>multipart</module>
         <module>sse</module>
     </modules>
 </project>

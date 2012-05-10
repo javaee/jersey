@@ -95,4 +95,9 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
 
         return null;
     }
+
+    @Override
+    public PriorityType getPriority() {
+        return Priority.LOW;
+    }
 }

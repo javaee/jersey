@@ -103,7 +103,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         @Inject
         private Ref<MessageBodyWorkers> messageBodyWorkers;
         @Inject
-        private Ref<ContextResolvers> contextRespolvers;
+        private Ref<ContextResolvers> contextResolvers;
     }
 
     /**
@@ -150,7 +150,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
          * @return new Jersey client.
          */
         public JerseyClient build() {
-            return new JerseyClient(new JerseyConfiguration(), transport, Collections.<Module>emptyList());
+            return new JerseyClient(new JerseyConfiguration(), transport, customModules);
         }
 
         /**
@@ -230,7 +230,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             refs.serviceProviders.set(providers);
             refs.exceptionMappers.set(mappers);
             refs.messageBodyWorkers.set(workers);
-            refs.contextRespolvers.set(resolvers);
+            refs.contextResolvers.set(resolvers);
 
             final Request request = injector.inject(invocation.request());
             Map<String,Object> properties = new HashMap<String, Object>(configuration().getProperties());
