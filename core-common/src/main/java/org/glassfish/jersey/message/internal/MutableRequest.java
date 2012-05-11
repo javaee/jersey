@@ -194,13 +194,13 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
 
     @Override
     public MutableRequest uri(String uri) {
-        this.baseUri = this.requestUri = URI.create(uri);
+        this.requestUri = URI.create(uri);
         return this;
     }
 
     @Override
     public MutableRequest uri(URI uri) {
-        this.baseUri = this.requestUri = uri;
+        this.requestUri = uri;
         return this;
     }
 
