@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jackson;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.json.JsonFeature;
+import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -71,7 +71,7 @@ public class JacksonTest extends JerseyTest {
     @Override
     protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
-        origClient.configuration().enable(new JsonFeature());
+        origClient.configuration().enable(new JsonJacksonFeature());
 
         origClient.configuration().register(MyObjectMapperProvider.class);
         return origClient;

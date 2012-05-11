@@ -162,7 +162,7 @@ public class JsonTest {
         Client c = ClientFactory.newClient();
 
         // TODO: enable JSON on the client side once JERSEY-1083 gets resolved
-//        c.configuration().enable(new JsonFeature());
+//        c.configuration().enable(new JsonJacksonFeature());
 
         final Response response = c.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).buildGet().invoke();
         String result = response.readEntity(String.class);
