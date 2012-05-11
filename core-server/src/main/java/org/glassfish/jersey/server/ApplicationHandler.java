@@ -56,6 +56,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -591,6 +592,14 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
                     final Type genericSuperclass = entity.getClass().getGenericSuperclass();
                     entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
+                }
+
+                if (entityType instanceof ParameterizedType) {
+                    ParameterizedType paramEntityType = (ParameterizedType) entityType;
+                    Type rawEntityType = paramEntityType.getRawType();
+                    if (rawEntityType == GenericEntity.class) {
+                        entityType = paramEntityType.getActualTypeArguments()[0];
+                    }
                 }
 
                 // TODO this is just a quick workaround for issue #JERSEY-1088

@@ -39,16 +39,26 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.ByteArrayInputStream;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
+import static org.junit.Assert.assertEquals;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class MutableEntityTest {
     @Test
@@ -60,5 +70,52 @@ public class MutableEntityTest {
 
         assertFalse(mutableEntity.isEmpty());
         assertNotNull(mutableEntity.content());
+    }
+
+    @Test
+    public void genericEntityTest() {
+        List<String> list = new ArrayList<String>();
+        list.add("str");
+        GenericEntity<List<String>> ent = new GenericEntity<List<String>>(list) {
+        };
+        MutableEntity mutableEntity = MutableEntity.empty(null).content(ent);
+
+        final Type genericSuperclass = list.getClass().getGenericSuperclass();
+        Object object = mutableEntity.content(GenericType.of(List.class, genericSuperclass));
+        assertEquals(list, object);
+    }
+
+    @Test
+    public void internalGenericEntityTest() {
+        List<String> list = new ArrayList<String>();
+        list.add("str");
+        GenericEntity<List<String>> gent = new GenericEntity<List<String>>(list) {
+        };
+
+        final Class<? extends Object> rawType = list.getClass();
+        final Type genericSuperclass = rawType.getGenericSuperclass();
+        Type superType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType;
+
+        MutableEntity mutableEntity = MutableEntity.empty(null);
+
+        mutableEntity.content(list);
+        Type t = mutableEntity.type();
+        assertEquals(superType, t);
+
+        mutableEntity.content(gent);
+        t = mutableEntity.type();
+        assertEquals(gent.getType(), t);
+
+        mutableEntity.content(list, gent.getType());
+        t = mutableEntity.type();
+        assertEquals(gent.getType(), t);
+
+        mutableEntity.content(list, GenericType.of(rawType, gent.getType()));
+        t = mutableEntity.type();
+        assertEquals(gent.getType(), t);
+
+        mutableEntity.content(list, GenericType.of(rawType, superType));
+        t = mutableEntity.type();
+        assertEquals(superType, t);
     }
 }

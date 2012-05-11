@@ -43,6 +43,7 @@ import java.util.Collection;
 
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+
 import static javax.ws.rs.client.Entity.xml;
 
 import javax.xml.bind.JAXBElement;
@@ -54,7 +55,9 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Jersey JAXB example test.
@@ -127,8 +130,7 @@ public class JaxbTest extends JerseyTest {
         assertEquals(t1, t2);
     }
 
-    // TODO: test is ignored as MutableEntity does not support GenericEntity yet
-    @Ignore
+
     @Test
     public void testRootElementCollection() {
         GenericType<Collection<JaxbXmlRootElement>> genericType =
@@ -141,9 +143,7 @@ public class JaxbTest extends JerseyTest {
         assertEquals(ce1, ce2);
     }
 
-    // TODO: test is ignored as MutableEntity does not support GenericEntity yet
     @Test
-    @Ignore
     public void testXmlTypeCollection() {
         GenericType<Collection<JaxbXmlRootElement>> genericRootElement =
                 new GenericType<Collection<JaxbXmlRootElement>>() {};
@@ -155,6 +155,26 @@ public class JaxbTest extends JerseyTest {
                 .get(genericRootElement);
 
         Collection<JaxbXmlType> ct1 = target().path("jaxb/collection/XmlType").request("application/xml")
+                .post(xml(new GenericEntity<Collection<JaxbXmlRootElement>>(ce1) {}), genericXmlType);
+
+        Collection<JaxbXmlType> ct2 = target().path("jaxb/collection/XmlRootElement").request()
+                .get(genericXmlType);
+
+        assertEquals(ct1, ct2);
+    }
+
+    @Test
+    public void testXmlTypeCollectionWithGenericEntity() {
+        GenericType<Collection<JaxbXmlRootElement>> genericRootElement =
+                new GenericType<Collection<JaxbXmlRootElement>>() {};
+        GenericType<Collection<JaxbXmlType>> genericXmlType =
+                new GenericType<Collection<JaxbXmlType>>() {
+                };
+
+        Collection<JaxbXmlRootElement> ce1 = target().path("jaxb/collection/XmlRootElement").request()
+                .get(genericRootElement);
+
+        Collection<JaxbXmlType> ct1 = target().path("jaxb/collection/XmlTypeGenericEntity").request("application/xml")
                 .post(xml(new GenericEntity<Collection<JaxbXmlRootElement>>(ce1) {}), genericXmlType);
 
         Collection<JaxbXmlType> ct2 = target().path("jaxb/collection/XmlRootElement").request()
