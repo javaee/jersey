@@ -39,52 +39,25 @@
  */
 package org.glassfish.jersey.media.json;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
-
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.client.Feature;
 
 /**
- * Module with JAX-RS Jackson JSON providers.
+ * Feature used to register JAXB JSON providers with Client.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public class JsonJacksonModule extends AbstractModule {
+public class JsonJaxbFeature implements Feature {
 
-    private static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableList(Arrays.asList(new Class<?>[]{
-                JacksonJsonProvider.class,
-                JacksonJaxbJsonProvider.class,
-                JsonWithPaddingProvider.class
-            }));
-
-    /**
-     * Returns providers used for serialization and deserialization of Json entities.
-     *
-     * @return {@link Collection} of providers.
-     */
-    public static Collection<Class<?>> getProviders() {
-        return PROVIDERS;
+    @Override
+    public void onEnable(Configuration c) {
+        for (Class<?> provider : JsonJaxbModule.getProviders()) {
+            c.register(provider);
+        }
     }
 
     @Override
-    protected void configure() {
-        bindSingletonReaderWriterProvider(JacksonJsonProvider.class);
-        bindSingletonReaderWriterProvider(JacksonJaxbJsonProvider.class);
-        bindSingletonReaderWriterProvider(JsonWithPaddingProvider.class);
-    }
-
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+    public void onDisable(Configuration c) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

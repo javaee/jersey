@@ -44,6 +44,7 @@ import java.util.List;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 
+import org.glassfish.jersey.media.json.JsonJaxbFeature;
 import org.glassfish.jersey.media.json.JsonJaxbModule;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -74,10 +75,7 @@ public class JsonJaxbTest extends JerseyTest {
     @Override
     protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
-        for (Class<?> provider : JsonJaxbModule.getProviders()) {
-            origClient.configuration().register(provider);
-        }
-
+        origClient.configuration().enable(new JsonJaxbFeature());
         origClient.configuration().register(JaxbContextResolver.class);
         return origClient;
     }

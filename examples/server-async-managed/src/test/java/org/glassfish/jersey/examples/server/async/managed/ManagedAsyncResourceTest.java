@@ -54,7 +54,7 @@ import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
 
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.media.json.JsonFeature;
+import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -88,7 +88,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         Client origClient = super.getClient(tc, applicationHandler);
-        origClient.configuration().enable(new JsonFeature());
+        origClient.configuration().enable(new JsonJacksonFeature());
         return origClient;
     }
 

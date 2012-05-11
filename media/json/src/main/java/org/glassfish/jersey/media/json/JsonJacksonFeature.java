@@ -43,15 +43,15 @@ import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 
 /**
- * Feature used to register Json providers with Client.
+ * Feature used to register Jackson JSON providers with Client.
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-public class JsonFeature implements Feature {
+public class JsonJacksonFeature implements Feature {
 
     @Override
     public void onEnable(Configuration c) {
-        for (Class<?> provider : JsonJacksonModule.PROVIDERS) {
+        for (Class<?> provider : JsonJacksonModule.getProviders()) {
             c.register(provider);
         }
     }

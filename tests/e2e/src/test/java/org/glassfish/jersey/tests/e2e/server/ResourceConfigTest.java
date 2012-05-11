@@ -11,7 +11,7 @@ import javax.ws.rs.client.Entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.glassfish.jersey.media.json.JsonFeature;
+import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.media.json.JsonJaxbModule;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -123,7 +123,7 @@ public class ResourceConfigTest extends JerseyTest {
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler application) {
         final Client client = super.getClient(tc, application);
-        client.configuration().enable(new JsonFeature());
+        client.configuration().enable(new JsonJacksonFeature());
         return client;
     }
 
