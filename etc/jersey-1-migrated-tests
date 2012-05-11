@@ -42,6 +42,9 @@ media/multipart/src/test/java/org/glassfish/jersey/media/multipart/internal/Mult
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultipartMediaTypesTest.java
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultiPartTest.java
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/ParameterizedHeadersMapTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageMediaTypeTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegMediaTypeTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/BasicOsgiIntegrationTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/JsonTest.java
 
@@ -520,9 +523,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/template/TemplateProcessorTest.ja
 jersey-tests/src/test/java/com/sun/jersey/impl/template/ViewAndTemplateProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/template/ViewProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/trace/TraceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/uri/conneg/UriConnegLanguageMediaTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/uri/conneg/UriConnegLanguageTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/uri/conneg/UriConnegMediaTypeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/AutomataMatchingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/LinearMatchingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriBuilderTest.java
