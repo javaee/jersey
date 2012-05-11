@@ -53,15 +53,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
+
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.util.collection.InstanceTypePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -222,8 +223,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return new MutableEntity(message, EMPTY);
     }
 
-    // TODO: add support for GenericEntity - see {@link RequestWriter}
-    private InstanceTypePair<?> instanceType;
+    // contains entity and its type
+    private GenericEntity<?> genericEntity;
     // reference to enclosing message
     private AbstractMutableMessage<?> message;
     // writer annotations
@@ -249,9 +250,9 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
      * @param message {@link AbstractMutableMessage} to which this entity belongs to.
      * @param instanceType Pair which contains instance and its type.
      */
-    public MutableEntity(AbstractMutableMessage<?> message, final InstanceTypePair<?> instanceType) {
+    public MutableEntity(AbstractMutableMessage<?> message, final GenericEntity<?> genericEntity) {
         this.message = message;
-        this.instanceType = instanceType;
+        this.genericEntity = genericEntity;
     }
 
     /**
@@ -261,14 +262,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
      */
     public MutableEntity(AbstractMutableMessage<?> message, final MutableEntity that) {
         this.message = message;
-        this.instanceType = that.instanceType;
+        this.genericEntity = that.genericEntity;
         this.workers = that.workers; // TODO should we copy workers?
     }
 
     @Override
     public boolean isEmpty() {
         if (contentStream == null || contentStream.getInputStream() == null) {
-            return instanceType == null;
+            return genericEntity == null;
         } else {
             return contentStream.isEmpty();
         }
@@ -289,8 +290,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public <T> T content(Class<T> rawType) {
-        final Type genericSuperclass = rawType.getGenericSuperclass();
-        return content(rawType, (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType, EMPTY_ANNOTATIONS);
+        return content(rawType, extractType(rawType), EMPTY_ANNOTATIONS);
     }
 
     @Override
@@ -300,8 +300,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public <T> T content(Class<T> rawType, Annotation[] annotations) {
-        final Type genericSuperclass = rawType.getGenericSuperclass();
-        return content(rawType, (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType, annotations);
+        return content(rawType, extractType(rawType), annotations);
     }
 
     @Override
@@ -315,14 +314,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             return null;
         }
 
-        final boolean typeIsAssignableFromMyInstance = (instanceType != null)
-                && (rawType.isAssignableFrom(instanceType.instance().getClass()));
+        final boolean typeIsAssignableFromMyInstance = (genericEntity != null)
+                && (rawType.isAssignableFrom(genericEntity.getRawType()));
 
         if (typeIsAssignableFromMyInstance) {
-            return rawType.cast(instanceType.instance());
+            return rawType.cast(genericEntity.getEntity());
         }
 
-        if (instanceType != null && contentStream.getType() != ContentStream.Type.BUFFERED
+        if (genericEntity != null && contentStream.getType() != ContentStream.Type.BUFFERED
                 && contentStream.getType() != ContentStream.Type.EXTERNAL_BUFFERED) {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             if (bufferEntityInstance(baos)) {
@@ -350,7 +349,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
                 contentStream.invalidateContentStream();
             }
 
-            instanceType = InstanceTypePair.of(t);
+            genericEntity = new GenericEntity<T>(t) {
+            };
             return t;
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Error reading entity from input stream", ex);
@@ -372,8 +372,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public Type type() {
-        if (instanceType != null) {
-            return instanceType.type();
+        if (genericEntity != null) {
+            return genericEntity.getType();
         }
 
         // TODO try to read the stream
@@ -383,16 +383,20 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     @Override
     public MutableEntity content(Object content) {
         if (content instanceof InputStream) {
-            this.instanceType = null;
+            this.genericEntity = null;
             contentStream.setNewContentStream(InputStream.class.cast(content));
             return this;
         }
 
         contentStream.invalidateContentStream();
         if (content != null) {
-            this.instanceType = InstanceTypePair.of(content);
+            if (content instanceof GenericEntity) {
+                this.genericEntity = (GenericEntity<?>) content;
+            } else {
+                this.genericEntity = new GenericEntity(content, extractType(content));
+            }
         } else {
-            instanceType = null;
+            genericEntity = null;
         }
         return this;
     }
@@ -406,9 +410,9 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public MutableEntity content(Object content, Type type) {
         contentStream.invalidateContentStream();
         if (content != null) {
-            this.instanceType = InstanceTypePair.of(content, type);
+            this.genericEntity = new GenericEntity(content, type);
         } else {
-            instanceType = null;
+            this.genericEntity = null;
         }
         return this;
     }
@@ -417,9 +421,9 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public <T> MutableEntity content(Object content, GenericType<T> type) {
         contentStream.invalidateContentStream();
         if (content != null) {
-            this.instanceType = InstanceTypePair.of(content, type.getType());
+            this.genericEntity = new GenericEntity(content, type.getType());
         } else {
-            instanceType = null;
+            this.genericEntity = null;
         }
         return this;
     }
@@ -454,23 +458,17 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private boolean bufferEntityInstance(ByteArrayOutputStream baos) {
-        final Type myInstanceType = instanceType.type();
-        final Object myInstance = instanceType.instance();
+        final Type myInstanceType = genericEntity.getType();
+        final Object myInstance = genericEntity.getEntity();
         if (myInstanceType == null || workers == null || myInstance == null) {
             return true;
         }
 
         final MediaType mediaType = getMsgContentType();
         try {
-            workers.writeTo(instanceType.instance(), GenericType.of(myInstance.getClass(), myInstanceType), writeAnnotations,
+            workers.writeTo(myInstance, GenericType.of(genericEntity.getRawType(), genericEntity.getType()), writeAnnotations,
                     mediaType, (MultivaluedMap) message.headers(), message.properties(), baos, null, false);
             baos.close();
-        } catch (MessageBodyProviderNotFoundException nfe) {
-            // TODO: this should not return true but throw an exception (which will cause
-            // some tests to fail)
-            // this hotfix silently ignores when buffering entity fails.
-            Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, nfe);
-            return true;
         } catch (IOException ex) {
             Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);
         } catch (WebApplicationException ex) {
@@ -493,4 +491,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return workers;
     }
 
+    private Type extractType(Object fromObject) {
+        final Class<? extends Object> rawType = fromObject.getClass();
+        return extractType(rawType);
+    }
+
+    private Type extractType(final Class<? extends Object> fromRawType) {
+        final Type genericSuperclass = fromRawType.getGenericSuperclass();
+        Type type = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : fromRawType;
+        return type;
+    }
 }
