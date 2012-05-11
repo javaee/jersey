@@ -163,8 +163,6 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
     }
 
     @Test
-    @Ignore
-    // TODO un-ignore once the MutableEntity#bufferEntity() works properly
     public void testConsumesFormDataResource() {
         MultiPartBean bean = new MultiPartBean("myname", "myvalue");
         FormDataMultiPart entity = new FormDataMultiPart().

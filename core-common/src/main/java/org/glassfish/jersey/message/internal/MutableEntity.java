@@ -427,8 +427,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     @Override
     public void bufferEntity() throws MessageProcessingException {
         try {
-            if (((contentStream.getInputStream() == null || contentStream.getInputStream().available() <= 0) && instanceType == null)
-                    || contentStream.getType() == ContentStream.Type.BUFFERED
+            if (isEmpty() || contentStream.getType() == ContentStream.Type.BUFFERED
                     || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
                 return;
             }
