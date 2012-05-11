@@ -61,7 +61,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -87,6 +86,7 @@ import org.glassfish.jersey.process.internal.PreMatchRequestFilterAcceptor;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.StagingContext;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -220,6 +220,9 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     // FIXME move filter acceptor away from here! It must be part of the root acceptor chain!
     @Inject
     private PreMatchRequestFilterAcceptor preMatchFilterAcceptor;
+    @Inject
+    private Factory<StagingContext<Request>> requestStagingContext;
+    // FIXME END
     @Inject
     private RequestScope requestScope;
     @Inject
@@ -514,7 +517,11 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             initRequestScopeInjections(securityContext, requestScopeInitializer);
             // FIXME: This must be moved into the acceptor chain otherwise exception mapping & possibly
             //        other stuff may not work!
+            requestStagingContext.get().beforeStage(preMatchFilterAcceptor, request);
             final Pair<Request, Optional<LinearAcceptor>> pair = preMatchFilterAcceptor.apply(request);
+            requestStagingContext.get().afterStage(preMatchFilterAcceptor, pair.left());
+            // FIXME END
+
             invoker.apply(pair.left(), callback);
         } finally {
             closeableServiceFactory.get().close();
