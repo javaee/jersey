@@ -52,6 +52,85 @@
     <para>
         This chapter is a migration guide for people switching from Jersey 1.x. Since many of the Jersey 1.x features became part of JAX-RS 2.0 standard which caused changes in the package names, we decided it is a good time to do a more significant incompatible refactoring, which will allow us to introduce some more interesting new features in the future. As the result, there are many incompatiblities between Jersey 1.x and Jersey 2.0. This chapter summarizes how to migrate the concepts found in Jersey 1.x to Jersey/JAX-RS 2.0 concepts.
     </para>
+
+    <section id="mig-server-api">
+        <title>Server API</title>
+        <section id="mig-server-inject-custom-objects">
+            <title>Injecting custom objects</title>
+            <para>Jersey 1.x have its own internal dependency injection framework which handles injecting various parameters
+                into field or methods. It also provides a way how to register custom injection provider in Singleton or PerRequest
+                scopes. Jersey 2.x uses HK2 as dependency injection framework and users are also able to register custom classes
+                or instances to be injected in various scopes.</para>
+
+            <para>Main difference in Jersey 2.x is that you don't need to create special classes or providers for this task;
+                everything should be achievable using HK2 API. Custom injectables can be registered at ResourceConfig level by adding
+                new HK2 Module or by dynamically adding binding almost anywhere using injected HK2 Services instance.</para>
+
+            <para>Jersey 1.x Singleton:
+            <programlisting language="java" linenumbering="unnumbered">ResourceConfig resourceConfig = new DefaultResourceConfig();
+resourceConfig.getSingletons().add(
+        new SingletonTypeInjectableProvider&lt;Context, SingletonType&gt;(
+               SingletonType.class, new SingletonType()) {});</programlisting>
+            </para>
+
+            <para>Jersey 1.x PerRequest:
+            <programlisting language="java" linenumbering="unnumbered">ResourceConfig resourceConfig = new DefaultResourceConfig();
+resourceConfig.getSingletons().add(
+        new PerRequestTypeInjectableProvider&lt;Context, PerRequestType&gt;() {
+            @Override
+            public Injectable&lt;PerRequestType&gt; getInjectable(ComponentContext ic, Context context) {
+                //...
+            }
+        });</programlisting>
+            </para>
+
+            <para>Jersey 2.0 HK2 Module:
+            <programlisting language="java" linenumbering="unnumbered">public static class MyHK2Module implements Module {
+
+    @Override
+    public void configure(BinderFactory binderFactory) {
+        // request scope binding
+        binderFactory.bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+        // singleton binding
+        binderFactory.bind().to(MyInjectableSingleton.class).in(Singleton.class);
+        // singleton instance binding
+        binderFactory.bind().toInstance(new MyInjectableSingleton());
+    }
+}
+
+// register module to ResourceConfig (can be done also in constructor)
+ResourceConfig rc = new ResourceConfig();
+rc.addClasses(/* ... */);
+rc.addModules(new MyHK2Module());</programlisting></para>
+
+            <para>Jersey 2.0 dynamic binding:
+            <programlisting language="java" linenumbering="unnumbered">public static class MyApplication extends Application {
+
+    public MyApplication(@Inject Services services) {
+        System.out.println("Registering injectables...");
+
+        final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
+
+        // request scope binding
+        dynamicBinderFactory.bind().to(MyInjectablePerRequest.class).in(RequestScope.class);
+        // singleton binding
+        dynamicBinderFactory.bind().to(MyInjectableSingleton.class).in(Singleton.class);
+        // singleton instance binding
+        dynamicBinderFactory.bind().toInstance(new MyInjectableSingleton());
+
+        // commits changes
+        dynamicBinderFactory.commit();
+    }
+
+    @Override
+    public Set&lt;Class&lt;?&gt;&gt; getClasses() {
+        return ...
+    }
+}</programlisting>
+            </para>
+        </section>
+    </section>
+
     <section id="mig-client-api">
         <title>Client API</title>
         <para>JAX-RS 2.0 provides functionality that is equivalent to the Jersey 1.x proprietary client API. Here is a rough mapping between the Jersey 1.x and JAX-RS 2.0 Client API classes:</para>

@@ -70,7 +70,7 @@ import com.google.common.collect.Maps;
  * Parent class for all tests written using Jersey test framework.
  *
  * @author Paul Sandoz
- * @author Srinivas.Bhimisetty@Sun.COM
+ * @author Srinivas Bhimisetty
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public abstract class JerseyTest {
@@ -157,6 +157,24 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
         ResourceConfig config = getResourceConfig(jaxrsApplication);
+        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        this.application = new ApplicationHandler(config);
+
+        this.tc = getContainer(application, getTestContainerFactory());
+        this.client = getClient(tc, application);
+    }
+
+    /**
+     * Construct a new instance with an {@link Application} class.
+     *
+     * @param jaxrsApplicationClass an application describing how to configure the
+     *        test container.
+     * @throws TestContainerException if the default test container factory
+     *         cannot be obtained, or the application descriptor is not
+     *         supported by the test container factory.
+     */
+    public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
+        ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
         config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
