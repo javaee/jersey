@@ -571,6 +571,9 @@
         </profile>
         <profile>
             <id>release</id>
+            <modules>
+                <module>docs</module>
+            </modules>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
