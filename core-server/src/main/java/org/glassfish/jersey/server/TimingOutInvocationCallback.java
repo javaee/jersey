@@ -67,9 +67,17 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     @Override
     public void result(final Response response) {
         if (done.compareAndSet(false, true)) {
-            set(response);
+            set(handleResponse(response));
         }
     }
+
+    /**
+     * Modify returned {@link Response}.
+     *
+     * @param response original response.
+     * @return modified response.
+     */
+    protected abstract Response handleResponse(final Response response);
 
     @Override
     public void failure(final Throwable exception) {
@@ -79,7 +87,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     }
 
     /**
-     * Convert the exception into a Response.
+     * Convert the exception into a {@link Response}.
      *
      * @param exception to be converted.
      * @return failure response.
@@ -123,7 +131,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     }
 
     /**
-     * Provide a timeout response.
+     * Provide a timeout {@link Response}.
      *
      * @return timeout response.
      */

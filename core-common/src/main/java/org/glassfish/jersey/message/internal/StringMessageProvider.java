@@ -79,6 +79,11 @@ public final class StringMessageProvider extends AbstractMessageReaderWriterProv
     }
 
     @Override
+    public long getSize(String s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        return s.length();
+    }
+
+    @Override
     public void writeTo(
             String t,
             Class<?> type,

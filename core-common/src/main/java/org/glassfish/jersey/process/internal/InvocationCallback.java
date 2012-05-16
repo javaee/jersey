@@ -77,7 +77,6 @@ public interface InvocationCallback {
      *
      * @param time new suspend time-out value.
      * @param unit new suspend time-out time unit.
-     * @param context suspended invocation context.
      */
     public void suspendTimeoutChanged(final long time, final TimeUnit unit);
 

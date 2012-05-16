@@ -66,7 +66,7 @@ import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 
 /**
  * Entry point of the writer interceptor chain. It contstructs the chain of wrapped
- * interceptor and invokes it. At the end of the chain {@link the MessageBodyWriter MBW}
+ * interceptor and invokes it. At the end of the chain the {@link MessageBodyWriter}
  * is invoked which writes the entity to the output stream. The
  * {@link ExceptionWrapperInterceptor} is always invoked on the client as a first
  * interceptor.
@@ -75,7 +75,6 @@ import org.glassfish.jersey.process.internal.PriorityComparator.Order;
  */
 @SuppressWarnings("rawtypes")
 public class WriterInterceptorExecutor extends InterceptorExecutor implements WriterInterceptorContext {
-    private final List<WriterInterceptor> interceptors;
     private Iterator<WriterInterceptor> iterator;
 
     private OutputStream outputStream;
@@ -85,6 +84,7 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
     /**
      * Reads a type from the {@link java.io.InputStream entityStream} using interceptors.
      *
+     * @param entity entity object to be processed.
      * @param genericType the generic type that is to be read from the input stream.
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
@@ -92,15 +92,18 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      *            annotations on that parameter returned by
      *            <code>Method.getParameterAnnotations</code>.
      * @param mediaType the media type of the HTTP entity.
-     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
+     * @param headers the mutable HTTP headers associated with HTTP entity.
      * @param properties the mutable map of {@link Request#getProperties() request-scoped
      *            properties}.
      * @param entityStream the {@link java.io.InputStream} of the HTTP entity. The stream is not
      *            closed after reading the entity.
      * @param workers {@link MessageBodyWorkers Message body workers}.
+     * @param sizeCallback {@link MessageBodySizeCallback} instance. Can be null.
      * @param intercept true if the user interceptors should be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed in the client.
+     * @param writeEntity true if the entity should be written. Otherwise only headers will
+     *            be written to underlying {@link OutputStream}.
      * @return the type that was read from the {@code entityStream}.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
      *             reader} fails.
@@ -108,14 +111,14 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      */
     public WriterInterceptorExecutor(Object entity, GenericType genericType, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> headers, Map<String, Object> properties, OutputStream entityStream,
-            MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean intercept) {
+            MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) {
 
         super(genericType, annotations, mediaType, properties);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;
 
-        interceptors = new ArrayList<WriterInterceptor>();
+        List<WriterInterceptor> interceptors = new ArrayList<WriterInterceptor>();
         for (WriterInterceptor interceptor : workers.getWriterInterceptors()) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
                 interceptors.add(interceptor);
@@ -123,7 +126,7 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
         }
         Collections.sort(interceptors, new PriorityComparator<WriterInterceptor>(Order.ASCENDING));
 
-        interceptors.add(new TerminalWriterInterceptor(workers, sizeCallback));
+        interceptors.add(new TerminalWriterInterceptor(workers, sizeCallback, writeEntity));
 
         this.iterator = interceptors.iterator();
     }
@@ -160,8 +163,7 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
 
     @Override
     public void setEntity(Object entity) {
-        this.setEntity(entity);
-
+        this.entity = entity;
     }
 
     @Override
@@ -191,11 +193,13 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
     private static class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
         private final MessageBodySizeCallback sizeCallback;
+        private final boolean writeEntity;
 
-        public TerminalWriterInterceptor(MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback) {
+        public TerminalWriterInterceptor(MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean writeEntity) {
             super();
             this.workers = workers;
             this.sizeCallback = sizeCallback;
+            this.writeEntity = writeEntity;
         }
 
         @Override
@@ -213,8 +217,11 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
                         context.getAnnotations(), context.getMediaType());
                 sizeCallback.onRequestEntitySize(size);
             }
-            writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
-                    context.getMediaType(), context.getHeaders(), context.getOutputStream());
+
+            if(writeEntity) {
+                writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
+                        context.getMediaType(), context.getHeaders(), context.getOutputStream());
+            }
         }
     }
 

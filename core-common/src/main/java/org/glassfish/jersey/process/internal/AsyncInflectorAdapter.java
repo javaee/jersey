@@ -61,7 +61,7 @@ import com.google.common.util.concurrent.Monitor;
 /**
  * Suspendable, asynchronous {@link Request} to {@link Response} inflector adapter
  * that provides implementation of the request suspend/resume capabilities of the
- * {@link RequestInvoker.InvocationContext invocation context} and returns
+ * {@link InvocationContext invocation context} and returns
  * a {@link ListenableFuture listenable response future} instead of a plain response
  * object.
  *

@@ -109,8 +109,8 @@ public class ResourceConfigTest {
 
         Response r = ah.apply(Requests.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
-        assertTrue("Injected application instance not same as used for building the Jersey handler.",
-                r.readEntity(Boolean.class));
+        assertEquals("Injected application instance not same as used for building the Jersey handler.",
+                "true", r.readEntity(String.class));
     }
 
     @Test
@@ -159,8 +159,8 @@ public class ResourceConfigTest {
         Application app;
 
         @GET
-        public boolean test(@QueryParam("id") int rcId) {
-            return (app instanceof MyResourceConfig2) && ((MyResourceConfig2) app).id == rcId;
+        public String test(@QueryParam("id") int rcId) {
+            return Boolean.toString((app instanceof MyResourceConfig2) && ((MyResourceConfig2) app).id == rcId);
         }
     }
 
@@ -170,7 +170,5 @@ public class ResourceConfigTest {
         protected void configure() {
             // do nothing
         }
-
     }
-
 }
