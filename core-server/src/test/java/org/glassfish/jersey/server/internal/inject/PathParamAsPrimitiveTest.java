@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -263,16 +262,12 @@ public class PathParamAsPrimitiveTest {
         _test("double", "3.14159265358979");
     }
 
-    // FIXME: should be returning 404 instead of 500 ?
-    @Ignore
     @Test
     public void testBadPrimitiveValue() throws Exception {
         Response response = app.apply(Requests.from("/int/abcdef", "GET").build()).get();
         assertEquals(404, response.getStatus());
     }
 
-    // FIXME: should be returning 404 instead of 500 ?
-    @Ignore
     @Test
     public void testBadPrimitiveWrapperValue() throws Exception {
         Response response = app.apply(Requests.from("/int/wrapper/abcdef", "GET").build()).get();
