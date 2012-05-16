@@ -41,18 +41,26 @@ package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.FilterContext;
 import javax.ws.rs.ext.PreMatchRequestFilter;
+
+import org.glassfish.jersey.message.internal.LanguageTag;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.uri.UriComponent;
+
+import com.google.common.collect.Maps;
 
 /**
  * A URI-based content negotiation filter mapping a dot-declared suffix in
@@ -89,11 +97,8 @@ import org.glassfish.jersey.server.ResourceConfig;
  */
 public class UriConnegFilter implements PreMatchRequestFilter {
 
-    public static final String PROPERTY_MEDIA_EXTENSIONS = "org.glassfish.jersey.server.filter.UriConnegFilter.mediaExtensions";
-    public static final String PROPERTY_LANGUAGE_EXTENSIONS = "org.glassfish.jersey.server.filter.UriConnegFilter.languageExtensions";
-
-    protected final Map<String, MediaType> mediaExtensions;
-    protected final Map<String, String> languageExtensions;
+    protected final Map<String, MediaType> mediaTypeMappings;
+    protected final Map<String, String> languageMappings;
 
     protected @Context UriInfo uriInfo;
 
@@ -102,13 +107,17 @@ public class UriConnegFilter implements PreMatchRequestFilter {
      * configures it.
      *
      * @param rc ResourceConfig instance where the filter should be registered.
-     * @param mediaExtensions the suffix to media type mappings.
-     * @param languageExtensions the suffix to language mappings.
+     * @param mediaTypeMappings the suffix to media type mappings.
+     * @param languageMappings the suffix to language mappings.
      */
-    public static void enableFor(ResourceConfig rc, Map<String, MediaType> mediaExtensions, Map<String, String> languageExtensions) {
+    public static void enableFor(ResourceConfig rc, Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
         rc.addClasses(UriConnegFilter.class);
-        rc.setProperty(PROPERTY_MEDIA_EXTENSIONS, mediaExtensions);
-        rc.setProperty(PROPERTY_LANGUAGE_EXTENSIONS, languageExtensions);
+        setIfNull(rc, ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypeMappings);
+        setIfNull(rc, ServerProperties.LANGUAGE_MAPPINGS, languageMappings);
+    }
+
+    public static void enableFor(ResourceConfig rc, String mediaTypeMappings, String languageMappings) {
+        enableFor(rc, extractMediaTypeMappings(mediaTypeMappings), extractLanguageMappings(languageMappings));
     }
 
     /**
@@ -121,28 +130,28 @@ public class UriConnegFilter implements PreMatchRequestFilter {
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
     public UriConnegFilter(@Context ResourceConfig rc) {
-        this((Map<String, MediaType>) rc.getProperty(PROPERTY_MEDIA_EXTENSIONS),
-                (Map<String, String>) rc.getProperty(PROPERTY_LANGUAGE_EXTENSIONS));
+        this(extractMediaTypeMappings(rc.getProperty(ServerProperties.MEDIA_TYPE_MAPPINGS)),
+                extractLanguageMappings(rc.getProperty(ServerProperties.LANGUAGE_MAPPINGS)));
     }
 
     /**
      * Create a filter with suffix to media type mappings and suffix to
      * language mappings.
      *
-     * @param mediaExtensions the suffix to media type mappings.
-     * @param languageExtensions the suffix to language mappings.
+     * @param mediaTypeMappings the suffix to media type mappings.
+     * @param languageMappings the suffix to language mappings.
      */
-    public UriConnegFilter(Map<String, MediaType> mediaExtensions, Map<String, String> languageExtensions) {
-        if (mediaExtensions == null) {
-            mediaExtensions = Collections.emptyMap();
+    public UriConnegFilter(Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
+        if (mediaTypeMappings == null) {
+            mediaTypeMappings = Collections.emptyMap();
         }
 
-        if (languageExtensions == null) {
-            languageExtensions = Collections.emptyMap();
+        if (languageMappings == null) {
+            languageMappings = Collections.emptyMap();
         }
 
-        this.mediaExtensions = mediaExtensions;
-        this.languageExtensions = languageExtensions;
+        this.mediaTypeMappings = mediaTypeMappings;
+        this.languageMappings = languageMappings;
     }
 
     @Override
@@ -183,7 +192,7 @@ public class UriConnegFilter implements PreMatchRequestFilter {
                 continue;
             }
 
-            final MediaType accept = mediaExtensions.get(suffix);
+            final MediaType accept = mediaTypeMappings.get(suffix);
 
             if (accept != null) {
                 requestBuilder = fc.getRequestBuilder();
@@ -201,13 +210,13 @@ public class UriConnegFilter implements PreMatchRequestFilter {
             if (suffix.length() == 0)
                 continue;
 
-            final String acceptLanguage = languageExtensions.get(suffix);
+            final String acceptLanguage = languageMappings.get(suffix);
             if (acceptLanguage != null) {
                 if (requestBuilder == null) {
                     requestBuilder = fc.getRequestBuilder();
                 }
 
-                requestBuilder.header("Accept-Language", acceptLanguage);
+                requestBuilder.header(HttpHeaders.ACCEPT_LANGUAGE, acceptLanguage);
 
                 final int index = path.lastIndexOf('.' + suffix);
                 path = new StringBuilder(path).delete(index, index + suffix.length() + 1).toString();
@@ -220,5 +229,92 @@ public class UriConnegFilter implements PreMatchRequestFilter {
             requestBuilder.redirect(uriInfo.getRequestUriBuilder().replacePath(path).build());
             fc.setRequest(requestBuilder.build());
         }
+    }
+
+    private static void setIfNull(ResourceConfig rc, String property, Object value) {
+        if (value != null && rc.getProperty(property) == null) {
+            rc.setProperty(property, value);
+        }
+    }
+
+    private static interface TypeParser<T> {
+        public T valueOf(String s);
+    }
+
+    private static Map<String, MediaType> extractMediaTypeMappings(Object mappings) {
+        // parse and validate mediaTypeMappings set through MEDIA_TYPE_MAPPINGS property
+        return parseAndValidateMappings(ServerProperties.MEDIA_TYPE_MAPPINGS, mappings, new TypeParser<MediaType>() {
+                public MediaType valueOf(String value) {
+                    return MediaType.valueOf(value);
+                }
+            });
+    }
+
+    private static Map<String, String> extractLanguageMappings(Object mappings) {
+        // parse and validate languageMappings set through LANGUAGE_MAPPINGS property
+        return parseAndValidateMappings(ServerProperties.LANGUAGE_MAPPINGS, mappings, new TypeParser<String>() {
+                public String valueOf(String value) {
+                    return LanguageTag.valueOf(value).toString();
+                }
+            });
+    }
+
+    private static <T> Map<String, T> parseAndValidateMappings(String property, Object mappings, TypeParser<T> parser) {
+        if (mappings == null) {
+            return Collections.emptyMap();
+        }
+
+        if (mappings instanceof Map) {
+            return (Map<String, T>) mappings;
+        }
+
+        HashMap<String, T> mappingsMap = Maps.newHashMap();
+
+        if (mappings instanceof String) {
+            parseMappings(property, (String) mappings, mappingsMap, parser);
+        } else if (mappings instanceof String[]) {
+            final String[] mappingsArray = (String[])mappings;
+            for (int i = 0; i < mappingsArray.length; i++) {
+                parseMappings(property, mappingsArray[i], mappingsMap, parser);
+            }
+        } else {
+            throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_TYPE(property));
+        }
+
+        encodeKeys(mappingsMap);
+
+        return mappingsMap;
+    }
+
+    private static <T> void parseMappings(String property, String mappings,
+                                   Map<String, T> mappingsMap, TypeParser<T> parser) {
+        if (mappings == null)
+            return;
+
+        String[] records = mappings.split(",");
+
+        for(int i = 0; i < records.length; i++) {
+            String[] record = records[i].split(":");
+            if (record.length != 2)
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_FORMAT(property, mappings));
+
+            String trimmedSegment = record[0].trim();
+            String trimmedValue = record[1].trim();
+
+            if (trimmedSegment.length() == 0)
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_KEY_EMPTY(property, records[i]));
+            if (trimmedValue.length() == 0)
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_VALUE_EMPTY(property, records[i]));
+
+            mappingsMap.put(trimmedSegment, parser.valueOf(trimmedValue));
+        }
+    }
+
+    private static <T> void encodeKeys(Map<String, T> map) {
+        Map<String, T> tempMap = new HashMap<String, T>();
+        for(Map.Entry<String, T> entry : map.entrySet())
+            tempMap.put(UriComponent.contextualEncode(entry.getKey(), UriComponent.Type.PATH_SEGMENT), entry.getValue());
+        map.clear();
+        map.putAll(tempMap);
     }
 }
