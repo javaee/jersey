@@ -41,11 +41,13 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 
 import org.glassfish.hk2.Provider;
@@ -54,49 +56,81 @@ import org.glassfish.hk2.ScopeInstance;
 
 import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkState;
-import org.glassfish.jersey.internal.util.ExtendedLogger;
 
 /**
- * Scopes a single request/response processing execution.
- *<p />
- * This implementation is derived from Guice Wiki article on
- * <a href="http://code.google.com/p/google-guice/wiki/CustomScopes">Custom Scopes</a>:
- * <p />
- * Apply this scope with a <code>try&hellip;finally</code> block:
+ * Scopes a single request/response processing execution on a single thread.
+ * <p>
+ * To execute a code inside of the request scope use one of the {@code runInScope(...)}
+ * methods and supply the task encapsulating the code that should be executed in the scope.
+ * </p>
+ * <p>
+ * Example:
+ * </p>
+ * <pre>
+ * &#064;Inject
+ * RequestScope requestScope;
  *
- * <pre><code>
- *   scope.enter();
- *   try {
- *     // explicitly seed some seed objects...
- *     scope.seed(Key.value(SomeObject.class), someObject);
- *     // create and access scoped objects
- *   } finally {
- *     scope.exit();
- *   }
- * </code></pre>
+ * ...
  *
- * The scope can be initialized with one or more seed instances by calling
- * <code>seed(key, instance)</code> before the injector will be called upon to
- * provide for this key. A typical use is for a Servlet filter to enter/exit the
- * scope, representing a Request Scope, and seed HttpServletRequest and
- * HttpServletResponse.  For each key inserted with seed(), it's good practice
- * (since you have to provide <i>some</i> binding anyhow) to include a
- * corresponding binding that will throw an exception if Guice is asked to
- * provide for that key if it was not yet seeded:
+ * requestScope.runInScope(new Runnable() {
+ *     &#064;Override
+ *     public void run() {
+ *          System.out.println("This is execute in the request scope...");
+ *     }
+ * });
+ * </pre>
+ * <p>
+ * An instance of the request scope can be suspended and retrieved via a call to
+ * {@link RequestScope#suspendCurrent} method. This instance can be later
+ * used to resume the same request scope and run another task in the same scope:
+ * </p>
+ * <pre>
+ *  Instance requestScopeInstance =
+ *      requestScope.runInScope(new Callable&lt;Instance&gt;() {
+ *          &#064;Override
+ *          public Instance call() {
+ *              // This is execute in the new request scope.
  *
- * <pre><code>
- *   bind(key)
- *       .toProvider(RequestScope.<KeyClass>unseededKeyProvider())
- *       .in(ScopeAnnotation.class);
- * </code></pre>
+ *              // The following call will cause that the
+ *              // RequestScope.Instance will not be released
+ *              // automatically and we will have to release
+ *              // it explicitly at the end.
+ *              return requestScope.suspendCurrent();
+ *          }
+ *      });
  *
- * @author Paul Sandoz
+ *  requestScope.runInScope(requestScopeInstance, new Runnable() {
+ *
+ *      &#064;Override
+ *      public void run() {
+ *          // This is execute in the same request scope as code above.
+ *      }
+ *  });
+ *
+ *  // we must release the scope instance explicitly
+ *  requestScopeInstance.release();
+ * </pre>
+ * <p>
+ * In the previous example the {@link RequestScope.Instance request scope instance}
+ * was suspended and retrieved which also informs {@code requestScope} that it
+ * should not automatically release the instance once the running task is finished.
+ * The {@code requestScopeInstance} is then used to initialize the next
+ * request-scoped execution. The second task will run in the same request scope as the
+ * first task. At the end the suspended {@code requestScopeInstance} must be
+ * manually {@link RequestScope.Instance#release released}. Not releasing the instance
+ * could cause memory leaks. Please note that calling {@link RequestScope#suspendCurrent}
+ * does not retrieve an immutable snapshot of the current request scope but
+ * a live reference to the internal {@link RequestScope.Instance request scope instance}
+ * which may change it's state during each request-scoped task execution for
+ * which this scope instance is used.
+ * </p>
+ *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class RequestScope implements Scope {
 
-    private static final ExtendedLogger logger =
-            new ExtendedLogger(Logger.getLogger(RequestScope.class.getName()), Level.FINEST);
+    private static final ExtendedLogger logger = new ExtendedLogger(Logger.getLogger(RequestScope.class.getName()), Level.FINEST);
 
     public static class Module extends AbstractModule {
 
@@ -106,7 +140,7 @@ public class RequestScope implements Scope {
             bind(RequestScope.class).toInstance(requestScope);
         }
     }
-    //
+
     /**
      * A thread local copy of the current scope instance.
      */
@@ -114,19 +148,230 @@ public class RequestScope implements Scope {
 
     @Override
     public ScopeInstance current() {
-        return getCurrentScopeInstance();
-    }
-
-    private Instance getCurrentScopeInstance() throws IllegalStateException {
         Instance scopeInstance = currentScopeInstance.get();
         checkState(scopeInstance != null, "Not inside a request scope.");
         return scopeInstance;
     }
 
     /**
+     * Get the current {@link RequestScope.Instance request scope instance}
+     * and mark it as suspended. This call prevents automatic
+     * {@link RequestScope.Instance#release() release} of the scope instance
+     * once the task that runs in the scope has finished.
+     * <p>
+     * The returned scope instance may be used to run additional task(s) in the
+     * same request scope using one of the {@code #runInScope(Instance, ...)} methods.
+     * </p>
+     * <p>
+     * Note that the returned instance must be {@link RequestScope.Instance#release()
+     * released} manually once not needed anymore to prevent memory leaks.
+     * </p>
+     *
+     * @return currently active {@link RequestScope.Instance request scope instance}
+     *         that was suspended or {@code null} if the thread is not currently running
+     *         in an active request scope.
+     */
+    public Instance suspendCurrent() {
+        final Instance scopeInstance = currentScopeInstance.get();
+        if (scopeInstance == null) {
+            return null;
+        }
+        try {
+            return scopeInstance.getReference();
+        } finally {
+            logger.debugLog("Returned a new reference of the request scope instance {0}", scopeInstance);
+        }
+    }
+
+    /**
+     * Creates a new instance of the {@link RequestScope.Instance request scope instance}.
+     * This instance can be then used to run task in the request scope. Returned instance
+     * is suspended by default and must therefore be closed explicitly as it is shown in
+     * the following example:
+     * <pre>
+     * Instance instance = requestScope.createInstance();
+     * requestScope.runInScope(instance, someRunnableTask);
+     * instance.release();
+     * </pre>
+     *
+     * @return New suspended request scope instance.
+     */
+    public Instance createInstance() {
+        return new Instance();
+    }
+
+    /**
+     * This interface extends {@link Callable} interface but removes the
+     * exception from {@code call} declaration.
+     * <p>
+     * This convenience interface may be used in places where a task
+     * producing a result needs to be executed in the request scope but no
+     * {@link Exception checked exceptions} are thrown during the task
+     * execution.
+     * </p>
+     *
+     * @param <T> type of the produced result.
+     */
+    public interface Producer<T> extends Callable<T> {
+        @Override
+        T call();
+    }
+
+    /**
+     * Runs the {@link Runnable task} in the request scope initialized from the
+     * {@link RequestScope.Instance scope instance}. The {@link RequestScope.Instance
+     * scope instance} is NOT released by the method (this must be done explicitly). The
+     * current thread might be already in any request scope and in that case the scope
+     * will be changed to the scope defined by the {@link RequestScope.Instance scope
+     * instance}. At the end of the method the request scope is returned to its original
+     * state.
+     *
+     * @param scopeInstance The request scope instance from which the request scope will
+     *                      be initialized.
+     * @param task          Task to be executed.
+     */
+    public void runInScope(Instance scopeInstance, Runnable task) {
+        Instance oldInstance = currentScopeInstance.get();
+        try {
+            currentScopeInstance.set(scopeInstance.getReference());
+            task.run();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            scopeInstance.release();
+        }
+    }
+
+    /**
+     * Runs the {@link Runnable task} in the new request scope. The current thread might
+     * be already in any request scope and in that case the scope will be changed to the
+     * scope defined by the {@link RequestScope.Instance scope instance}. At the end of
+     * the method the request scope is returned to its original state. The newly created
+     * {@link RequestScope.Instance scope instance} will be implicitly released at the end
+     * of the method call except the task will call
+     * {@link RequestScope#suspendCurrent}.
+     *
+     * @param task Task to be executed.
+     */
+    public void runInScope(Runnable task) {
+        Instance oldInstance = currentScopeInstance.get();
+        Instance instance = createInstance();
+        try {
+            currentScopeInstance.set(instance);
+            task.run();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            instance.release();
+        }
+    }
+
+    /**
+     * Runs the {@link Callable task} in the request scope initialized from the
+     * {@link RequestScope.Instance scope instance}. The {@link RequestScope.Instance
+     * scope instance} is NOT released by the method (this must be done explicitly). The
+     * current thread might be already in any request scope and in that case the scope
+     * will be changed to the scope defined by the {@link RequestScope.Instance scope
+     * instance}. At the end of the method the request scope is returned to its original
+     * state.
+     *
+     * @param scopeInstance The request scope instance from which the request scope will
+     *                      be initialized.
+     * @param task          Task to be executed.
+     * @param <T>           {@code task} result type.
+     * @return result returned by the {@code task}.
+     * @throws Exception Exception thrown by the {@code task}.
+     */
+    public <T> T runInScope(Instance scopeInstance, Callable<T> task) throws Exception {
+        Instance oldInstance = currentScopeInstance.get();
+        try {
+            currentScopeInstance.set(scopeInstance.getReference());
+            return task.call();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            scopeInstance.release();
+        }
+    }
+
+    /**
+     * Runs the {@link Callable task} in the new request scope. The current thread might
+     * be already in any request scope and in that case the scope will be changed to the
+     * scope defined by the {@link RequestScope.Instance scope instance}. At the end of
+     * the method the request scope is returned to its original state. The newly created
+     * {@link RequestScope.Instance scope instance} will be implicitly released at the end
+     * of the method call except the task will call
+     * {@link RequestScope#suspendCurrent}.
+     *
+     * @param task Task to be executed.
+     * @param <T>  {@code task} result type.
+     * @return result returned by the {@code task}.
+     * @throws Exception Exception thrown by the {@code task}.
+     */
+    public <T> T runInScope(Callable<T> task) throws Exception {
+        Instance oldInstance = currentScopeInstance.get();
+        Instance instance = createInstance();
+        try {
+            currentScopeInstance.set(instance);
+            return task.call();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            instance.release();
+        }
+    }
+
+    /**
+     * Runs the {@link RequestScope.Producer task} in the request scope initialized
+     * from the {@link RequestScope.Instance scope instance}.
+     * The {@link RequestScope.Instance scope instance} is NOT released by the method (this
+     * must be done explicitly). The current thread might be already in any request scope
+     * and in that case the scope will be changed to the scope defined by the
+     * {@link RequestScope.Instance scope instance}. At the end of the method the request
+     * scope is returned to its original state.
+     *
+     * @param scopeInstance The request scope instance from which the request scope will
+     *                      be initialized.
+     * @param task          Task to be executed.
+     * @param <T>           {@code task} result type.
+     * @return result returned by the {@code task}
+     */
+    public <T> T runInScope(Instance scopeInstance, Producer<T> task) {
+        Instance oldInstance = currentScopeInstance.get();
+        try {
+            currentScopeInstance.set(scopeInstance.getReference());
+            return task.call();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            scopeInstance.release();
+        }
+    }
+
+    /**
+     * Runs the {@link RequestScope.Producer task} in the new request scope. The
+     * current thread might be already in any request scope and in that case the scope
+     * will be changed to the scope defined by the {@link RequestScope.Instance scope
+     * instance}. At the end of the method the request scope is returned to its original
+     * state. The newly created {@link RequestScope.Instance scope instance} will be
+     * implicitly released at the end of the method call except the task will call
+     * {@link RequestScope#suspendCurrent}.
+     *
+     * @param task Task to be executed.
+     * @param <T>  {@code task} result type.
+     * @return result returned by the {@code task}.
+     */
+    public <T> T runInScope(Producer<T> task) {
+        Instance oldInstance = currentScopeInstance.get();
+        Instance instance = createInstance();
+        try {
+            currentScopeInstance.set(instance);
+            return task.call();
+        } finally {
+            currentScopeInstance.set(oldInstance);
+            instance.release();
+        }
+    }
+
+    /**
      * Implementation of the request scope instance.
      */
-    private static final class Instance implements ScopeInstance {
+    public static final class Instance implements ScopeInstance {
         /*
          * Scope instance UUID.
          *
@@ -149,6 +394,12 @@ public class RequestScope implements Scope {
             this.referenceCounter = new AtomicInteger(1);
         }
 
+        private Instance getReference() {
+            // TODO: replace counter with a phantom reference + reference queue-based solution
+            referenceCounter.incrementAndGet();
+            return this;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public <T> T get(Provider<T> inhabitant) {
@@ -159,8 +410,7 @@ public class RequestScope implements Scope {
         @SuppressWarnings("unchecked")
         public <T> T put(Provider<T> inhabitant, T value) {
             checkState(!store.containsKey(inhabitant), "An instance for the provider %s was "
-                    + "already seeded in this scope. Old instance: %s New instance: %s",
-                    inhabitant, store.get(inhabitant), value);
+                    + "already seeded in this scope. Old instance: %s New instance: %s", inhabitant, store.get(inhabitant), value);
 
             return (T) store.put(inhabitant, value);
         }
@@ -168,11 +418,6 @@ public class RequestScope implements Scope {
         @Override
         public <T> boolean contains(Provider<T> provider) {
             return store.containsKey(provider);
-        }
-
-        public Instance snapshot() {
-            referenceCounter.incrementAndGet();
-            return this;
         }
 
         @Override
@@ -188,126 +433,8 @@ public class RequestScope implements Scope {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
-                    .add("id", id.value())
-                    .add("referenceCounter", referenceCounter.get())
-                    .add("store size", store.size())
-                    .toString();
-        }
-    }
-
-    /**
-     * An opaque {@link RequestScope} state holder.
-     * <p />
-     * Instances of this class can be used to transfer an active {@code RequestScope}
-     * scope block from one thread to another.
-     */
-    public static final class Snapshot {
-
-        private final Instance scopeInstance;
-
-        private Snapshot(Instance instance) {
-            this.scopeInstance = instance.snapshot();
-        }
-    }
-
-    /**
-     * Takes snapshot of the state of the active {@link RequestScope} scope block
-     * in the current thread.
-     *
-     * @return currently active {@code RequestScope} scope block state snapshot
-     * @throws IllegalStateException in case there is no active {@code RequestScope}
-     *     scope block in the current thread.
-     */
-    public Snapshot takeSnapshot() throws IllegalStateException {
-        final Instance scopeInstance = getCurrentScopeInstance();
-        try {
-            return new Snapshot(scopeInstance);
-        } finally {
-            logger.debugLog("Taken snapshot of the request scope instance {0}", scopeInstance);
-        }
-    }
-
-    /**
-     * Provides information whether the current code is executed in a context of
-     * an active request scope.
-     *
-     * @return {@code true} if the current code runs in a context of an active
-     *     request scope, {@code false} otherwise.
-     */
-    public boolean isActive() {
-        final Instance scopeInstance = currentScopeInstance.get();
-        try {
-            return scopeInstance != null;
-        } finally {
-            if (scopeInstance == null) {
-                logger.debugLog("Active request scope instance not found");
-            } else {
-                logger.debugLog("Active request scope instance {0} found", scopeInstance);
-            }
-        }
-
-    }
-
-    /**
-     * Enters the new {@link RequestScope} scope block in the current thread.
-     * <p />
-     * NOTE: This method must not be called from within an active {@code RequestScope}
-     * scope block in the same thread.
-     *
-     * @throws IllegalStateException in case the method is called from an already
-     *     active {@code RequestScope} scope block in the same thread.
-     */
-    public void enter() throws IllegalStateException {
-        final Instance scopeInstance = new Instance();
-        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress.");
-        try {
-            currentScopeInstance.set(scopeInstance);
-        } finally {
-            logger.debugLog("Entered request scope instance {0}", scopeInstance);
-        }
-    }
-
-    /**
-     * Resumes/continues an existing {@link RequestScope} scope block in the
-     * current thread. All scope data are initialized from the provided
-     * scope {@link Snapshot snapshot}.
-     * <p />
-     * NOTE: This method must not be called from within an active {@code RequestScope}
-     * scope block in the same thread otherwise an exception will be thrown.
-     *
-     * @param snapshot snapshot of the scope block that should be resumed
-     *     in the current thread
-     * @throws IllegalStateException in case the method is called from an already
-     *     active {@code RequestScope} scope block in the same thread.
-     */
-    public void enter(Snapshot snapshot) throws IllegalStateException {
-        final Instance scopeInstance = snapshot.scopeInstance;
-        checkState(currentScopeInstance.get() == null, "A scoped block is already in progress.");
-        try {
-            currentScopeInstance.set(scopeInstance);
-        } finally {
-            logger.debugLog("Resumed request scope instance {0}", scopeInstance);
-        }
-    }
-
-    /**
-     * Exits the active scope block in the current thread. All scoped instances are discarded.
-     * <p />
-     * NOTE: This method must be called only from within an active {@code RequestScope}
-     * scope block in the current thread.
-     *
-     * @throws IllegalStateException in case there is no active {@code RequestScope} scope
-     *     block to exit in the current thread.
-     */
-    public void exit() throws IllegalStateException {
-        final Instance scopeInstance = currentScopeInstance.get();
-        checkState(scopeInstance != null, "No scoped block in progress.");
-        try {
-            currentScopeInstance.remove();
-            scopeInstance.release();
-        } finally {
-            logger.debugLog("Exited request scope instance {0}", scopeInstance);
+            return Objects.toStringHelper(this).add("id", id.value()).add("referenceCounter", referenceCounter.get())
+                    .add("store size", store.size()).toString();
         }
     }
 }

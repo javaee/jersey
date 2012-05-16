@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.process.internal;
 
+import java.util.concurrent.Callable;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
@@ -50,6 +52,7 @@ import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
+
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
 import org.glassfish.hk2.HK2;
@@ -58,7 +61,9 @@ import org.glassfish.hk2.Services;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Optional;
 
@@ -112,32 +117,39 @@ public class LinearRequestProcessorTest {
     }
 
     @Test
-    public void testInflect() throws Exception {
-        try {
-            requestScope.enter();
+    public void testInflect() {
 
-            final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(123, continuation.right().get().apply(continuation.left()).readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+        requestScope.runInScope(new Runnable() {
+
+            @Override
+            public void run() {
+                final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(Requests
+                        .from("http://examples.jersey.java.net/", "GET").entity("").build());
+                assertEquals(123, continuation.right().get().apply(continuation.left()).readEntity(Integer.class).intValue());
+            }
+        });
     }
 
-    @Test
-    public void testFailureHandling() {
-        try {
-            requestScope.enter();
 
-            final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            continuation.right().get().apply(continuation.left());
-        } catch (MappableException ex) {
-            // success
-            return;
-        } finally {
-            requestScope.exit();
-        }
-        fail();
+
+
+    @Test
+    public void testFailureHandling() throws Exception {
+        boolean result = requestScope.runInScope(new Callable<Boolean>() {
+
+            @Override
+            public Boolean call() throws Exception {
+                try {
+                    final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(Requests
+                            .from("http://examples.jersey.java.net/", "GET").entity("text").build());
+                    continuation.right().get().apply(continuation.left());
+                } catch (MappableException ex) {
+                    // success
+                    return true;
+                }
+                return false;
+            }
+        });
+        assertTrue(result);
     }
 }

@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.model;
 
 import java.net.URI;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.GET;
@@ -71,6 +71,7 @@ import org.glassfish.hk2.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -131,29 +132,46 @@ public class RMBuilderTest {
     }
 
     @Test
-    public void testHelloworld() throws InterruptedException, ExecutionException {
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
-        requestScope.enter();
-        Future<Response> res = invoker.apply(req);
-        requestScope.exit();
+    public void testHelloworld() throws Exception {
+        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
+
+        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
+
+            @Override
+            public Future<Response> call() throws Exception {
+                return invoker.apply(req);
+            }
+        });
+
         assertEquals("hello", res.get().getEntity());
     }
 
     @Test
-    public void testOptions() throws InterruptedException, ExecutionException {
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
-        requestScope.enter();
-        Future<Response> res = invoker.apply(req);
-        requestScope.exit();
+    public void testOptions() throws Exception {
+        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
+        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
+
+            @Override
+            public Future<Response> call() throws Exception {
+                return invoker.apply(req);
+            }
+        });
+
         assertEquals("GET", res.get().getEntity());
     }
 
     @Test
-    public void testSubResMethod() throws InterruptedException, ExecutionException {
-        Request req2 = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
-        requestScope.enter();
-        Future<Response> res2 = invoker.apply(req2);
-        requestScope.exit();
+    public void testSubResMethod() throws Exception {
+        final Request req2 = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
+
+        Future<Response> res2 = requestScope.runInScope(new Callable<Future<Response>>() {
+
+            @Override
+            public Future<Response> call() throws Exception {
+
+                return invoker.apply(req2);
+            }
+        });
         assertEquals("another", res2.get().getEntity());
     }
 }

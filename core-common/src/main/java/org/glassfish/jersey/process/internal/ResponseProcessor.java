@@ -51,6 +51,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.process.internal.RequestScope.Instance;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
@@ -106,7 +107,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
          * previously pushed into the context.
          *
          * @return created responder chain or {@link Optional#absent() absent value}
-         *     in case of no registered transformations.
+         *         in case of no registered transformations.
          */
         Optional<Responder> createStageChain();
     }
@@ -129,23 +130,6 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         private Factory<ExceptionMappers> exceptionMappersProvider;
 
         /**
-         *
-         * @param requestScope
-         * @param exceptionMapper
-         * @param respondingCtxProvider
-         * @param responseStagingCtxProvider
-         */
-        public Builder(
-                RequestScope requestScope,
-                ExceptionMapper<Throwable> exceptionMapper,
-                Factory<RespondingContext> respondingCtxProvider,
-                Factory<StagingContext<Response>> responseStagingCtxProvider) {
-            this.requestScope = requestScope;
-            this.respondingCtxProvider = respondingCtxProvider;
-            this.responseStagingCtxProvider = responseStagingCtxProvider;
-        }
-
-        /**
          * Default constructor meant to be used by injection framework.
          */
         public Builder() {
@@ -163,9 +147,10 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
                     exceptionMappersProvider);
         }
     }
+
     //
     private final RequestScope requestScope;
-    private volatile RequestScope.Snapshot requestScopeSnapshot;
+    private volatile Instance scopeInstance;
     private final InvocationCallback callback;
     private final Factory<InvocationContext> invocationCtxProvider;
     private final Factory<RespondingContext> respondingCtxProvider;
@@ -180,7 +165,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
             Factory<StagingContext<Response>> responseStagingCtxProvider,
             Factory<ExceptionMappers> exceptionMappersProvider) {
         this.requestScope = requestScope;
-        this.requestScopeSnapshot = null;
+        this.scopeInstance = null;
         this.callback = callback;
 
         this.invocationCtxProvider = invocationCtxProvider;
@@ -189,84 +174,74 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         this.exceptionMappersProvider = exceptionMappersProvider;
     }
 
-    public void setRequestScopeSnapshot(RequestScope.Snapshot snapshot) {
-        this.requestScopeSnapshot = snapshot;
+    public void setRequestScopeInstance(Instance instance) {
+        this.scopeInstance = instance;
     }
 
     @Override
     public void run() {
-        runInScope(new Runnable() {
+        try {
+            requestScope.runInScope(scopeInstance, new Runnable() {
 
-            @Override
-            public void run() {
-                final Future<Response> inflectedResponse = invocationCtxProvider.get().getInflectedResponse();
-                if (inflectedResponse.isCancelled()) {
-                    // the request processing has been cancelled; just cancel this future & return
-                    ResponseProcessor.super.cancel(true);
-                    return;
-                }
-
-                Response response;
-                try {
-                    response = inflectedResponse.get();
-                } catch (Exception ex) {
-                    final Throwable unwrapped = (ex instanceof ExecutionException) ? ex.getCause() : ex;
-                    LOGGER.log(Level.FINE,
-                            "Request-to-response transformation finished with an exception.", unwrapped);
-
-                    try {
-                        response = mapException(unwrapped);
-                    } catch (Exception ex2) {
-                        setResult(ex2);
+                @Override
+                public void run() {
+                    final Future<Response> inflectedResponse = invocationCtxProvider.get().getInflectedResponse();
+                    if (inflectedResponse.isCancelled()) {
+                        // the request processing has been cancelled; just cancel this future & return
+                        ResponseProcessor.super.cancel(true);
                         return;
                     }
 
-                    if (response == null) {
-                        setResult(unwrapped);
-                        return;
-                    }
-                }
-
-                for (int i = 0; i < 2; i++) {
+                    Response response;
                     try {
-                        response = runResponders(response);
-                        break;
+                        response = inflectedResponse.get();
                     } catch (Exception ex) {
+                        final Throwable unwrapped = (ex instanceof ExecutionException) ? ex.getCause() : ex;
                         LOGGER.log(Level.FINE,
-                                "Responder chain execution finished with an exception.", ex);
-                        if (i == 0) {
-                            // try to map the first responder exception
-                            try {
-                                response = mapException(ex);
-                            } catch (Exception ex2) {
-                                setResult(ex2);
-                                return;
-                            }
+                                "Request-to-response transformation finished with an exception.", unwrapped);
+
+                        try {
+                            response = mapException(unwrapped);
+                        } catch (Exception ex2) {
+                            setResult(ex2);
+                            return;
                         }
 
                         if (response == null) {
-                            setResult(ex);
+                            setResult(unwrapped);
                             return;
                         }
                     }
+
+                    for (int i = 0; i < 2; i++) {
+                        try {
+                            response = runResponders(response);
+                            break;
+                        } catch (Exception ex) {
+                            LOGGER.log(Level.FINE,
+                                    "Responder chain execution finished with an exception.", ex);
+                            if (i == 0) {
+                                // try to map the first responder exception
+                                try {
+                                    response = mapException(ex);
+                                } catch (Exception ex2) {
+                                    setResult(ex2);
+                                    return;
+                                }
+                            }
+
+                            if (response == null) {
+                                setResult(ex);
+                                return;
+                            }
+                        }
+                    }
+
+                    setResult(response);
                 }
-
-                setResult(response);
-            }
-        });
-    }
-
-    private void runInScope(Runnable task) {
-        if (requestScope.isActive()) {
-            // running inside a scope already (same-thread execution)
-            task.run();
-        } else {
-            try {
-                requestScope.enter(requestScopeSnapshot);
-                task.run();
-            } finally {
-                requestScope.exit();
-            }
+            });
+        } finally {
+            scopeInstance.release();
         }
     }
 

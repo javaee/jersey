@@ -39,15 +39,20 @@
  */
 package org.glassfish.jersey.process.internal;
 
+import java.util.concurrent.Callable;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.internal.MappableException;
+import org.glassfish.jersey.internal.TestRuntimeDelegate;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.internal.MappableException;
+
 import static org.glassfish.jersey.process.internal.Stages.acceptingTree;
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
@@ -57,11 +62,11 @@ import org.glassfish.hk2.Services;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Optional;
-import javax.ws.rs.ext.RuntimeDelegate;
-import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
 /**
  *
@@ -130,30 +135,33 @@ public class HierarchicalRequestProcessorTest {
 
     @Test
     public void testInflect() throws Exception {
-        try {
-            requestScope.enter();
 
-            final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(145, continuation.right().get().apply(continuation.left()).readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+        final Pair<Request, Optional<Inflector<Request, Response>>> continuation = requestScope
+                .runInScope(new Callable<Pair<Request, Optional<Inflector<Request, Response>>>>() {
+                    @Override
+                    public Pair<Request, Optional<Inflector<Request, Response>>> call() throws Exception {
+                        return processor.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
+                    }
+                });
+
+        assertEquals(145, continuation.right().get().apply(continuation.left()).readEntity(Integer.class).intValue());
     }
 
     @Test
-    public void testFailure() {
+    public void testFailure() throws Exception {
         try {
-            requestScope.enter();
-
-            final Pair<Request, Optional<Inflector<Request, Response>>> continuation = processor.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            continuation.right().get().apply(continuation.left());
+            requestScope.runInScope(new Callable<Pair<Request, Optional<Inflector<Request, Response>>>>() {
+                @Override
+                public Pair<Request, Optional<Inflector<Request, Response>>> call() throws Exception {
+                    final Pair<Request, Optional<Inflector<Request, Response>>> cont = processor.apply(Requests
+                            .from("http://examples.jersey.java.net/", "GET").entity("text").build());
+                    cont.right().get().apply(cont.left());
+                    return cont;
+                }
+            });
         } catch (MappableException ex) {
             // success
             return;
-        } finally {
-            requestScope.exit();
         }
         fail();
     }
