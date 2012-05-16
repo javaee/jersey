@@ -94,7 +94,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> extends Injec
 
     @Override
     public boolean isOptional(AnnotatedElement annotated, A annotation) {
-        return false; // TODO - is this ok?
+        return true;
     }
 
     @Override
