@@ -43,22 +43,31 @@ package org.glassfish.jersey.server;
  * Jersey server-side configuration properties.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public final class ServerProperties {
+
+    /**
+     * Common delimiters used by various properties.
+     */
+    public static final String COMMON_DELIMITERS = " ,;\n";
 
     /**
      * Defines one or more packages that contain application-specific resources and
      * providers. If the property is set, the specified packages will be scanned for
      * JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path}) and
      * providers (annotated with {@link javax.ws.rs.ext.Provider @Provider}).
-     * <p></p>
+     * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more package names
      * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
-     * <p></p>
+     * </p>
+     * <p>
      * A default value is not set.
-     * <p></p>
+     * </p>
+     * <p>
      * The name of the configuration property is <code>{@value}</code>.
+     * </p>
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
@@ -72,14 +81,17 @@ public final class ServerProperties {
      * Each path element MUST be an absolute or relative directory, or a Jar file.
      * The contents of a directory, including Java class files, jars files
      * and sub-directories are scanned (recursively).
-     * <p></p>
+     * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more paths
      * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
-     * <p></p>
+     * </p>
+     * <p>
      * A default value is not set.
-     * <p></p>
+     * </p>
+     * <p>
      * The name of the configuration property is <code>{@value}</code>.
+     * </p>
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
@@ -91,22 +103,61 @@ public final class ServerProperties {
      * and registered as either application JAX-RS root resources (annotated with
      * {@link javax.ws.rs.Path @Path}) or providers (annotated with
      * {@link javax.ws.rs.ext.Provider @Provider}).
-     * <p></p>
+     * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more class names
      * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
-     * <p></p>
+     * </p>
+     * <p>
      * A default value is not set.
-     * <p></p>
+     * </p>
+     * <p>
      * The name of the configuration property is <code>{@value}</code>.
+     * </p>
      */
     // TODO implement generic support
     public static final String PROVIDER_CLASSNAMES = "jersey.config.server.provider.classnames";
 
     /**
-     * Common delimiters used by various properties.
+     * Defines mapping of URI extensions to media types.
+     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
+     * information on media type mappings.
+     * <p>
+     * The property value MUST be an instance of {@link String}, {@code String[]} or {@code Map&lt;String, MediaType&gt;}.
+     * Each {@code String} instance represents one or more uri-extension-to-media-type map entries separated by
+     * a comma (","). Each map entry is a key-value pair separated by a colon (":").
+     * Here is an example of an acceptable String value mapping txt extension to text/plain and xml extension to application/xml:
+     * <pre>txt : text/plain, xml : application/xml</pre>
+     * </p>
+     * <p>
+     * A default value is not set.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
      */
-    public static final String COMMON_DELIMITERS = " ,;\n";
+    public static final String MEDIA_TYPE_MAPPINGS = "jersey.config.server.mediaTypeMappings";
+
+    /**
+     * Defines mapping of URI extensions to languages.
+     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
+     * information on language mappings.
+     * <p>
+     * The property value MUST be an instance of {@link String}, {@code String[]} or {@code Map&lt;String, String&gt;}.
+     * Each {@code String} instance represents one or more uri-extension-to-language map entries separated by
+     * a comma (","). Each map entry is a key-value pair separated by a colon (":").
+     * Here is an example of an acceptable String value mapping english extension to "en" value of Content-Language header
+     * and french extension to "fr" Content-Language header value:
+     * <pre>english : en, french : fr</pre>
+     * </p>
+     * <p>
+     * A default value is not set.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    public static final String LANGUAGE_MAPPINGS = "jersey.config.server.languageMappings";
 
     private ServerProperties() {
         // prevents instantiation

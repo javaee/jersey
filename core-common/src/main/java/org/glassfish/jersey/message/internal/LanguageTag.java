@@ -48,7 +48,7 @@ import java.util.Locale;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class LanguageTag {
+public class LanguageTag {
 
     protected String tag;
     protected String primaryTag;
