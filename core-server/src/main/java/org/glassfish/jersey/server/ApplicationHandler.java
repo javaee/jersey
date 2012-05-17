@@ -51,9 +51,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericEntity;
@@ -231,7 +233,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     @Inject
     private Factory<RouterModule.RoutingContext> routingContextFactory;
     @Inject
-    Factory<Ref<SecurityContext>> securityContextRefFactory;
+    private Factory<Ref<SecurityContext>> securityContextRefFactory;
     @Inject
     private Factory<CloseableService> closeableServiceFactory;
     //
@@ -433,23 +435,84 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
      * @return response future.
      */
     @Override
-    public Future<Response> apply(Request request) {
+    public Future<Response> apply(final Request request) {
+
+        final ContainerResponseWriter containerResponseWriter = new ContainerResponseWriter() {
+            @Override
+            public OutputStream writeResponseStatusAndHeaders(long contentLength, Response response) throws ContainerException {
+                if(contentLength >= 0) {
+                    response.getHeaders().asMap().putSingle("Content-Length", Long.toString(contentLength));
+                }
+
+                // fake output stream - Response is not written (serialized) in this case.
+                return new OutputStream() {
+                    @Override
+                    public void write(int i) throws IOException {
+                    }
+                };
+            }
+
+            @Override
+            public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
+            }
+
+            @Override
+            public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            }
+
+            @Override
+            public void cancel() {
+            }
+
+            @Override
+            public void commit() {
+            }
+        };
+
         final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
 
             @Override
+            protected Response handleResponse(Response response) {
+                ApplicationHandler.this.writeResponse(containerResponseWriter, request, response);
+                return (request.getMethod().equals(HttpMethod.HEAD) ? stripEntity(response): response);
+            }
+
+            @Override
             protected Response handleFailure(Throwable exception) {
-                return ApplicationHandler.handleFailure(exception);
+                final Response response = ApplicationHandler.handleFailure(exception);
+                ApplicationHandler.this.writeResponse(containerResponseWriter, request,
+                        response);
+                return response;
             }
 
             @Override
             protected Response handleTimeout(InvocationContext context) {
-                return ApplicationHandler.prepareTimeoutResponse(context);
+                final Response response = ApplicationHandler.prepareTimeoutResponse(context);
+                ApplicationHandler.this.writeResponse(containerResponseWriter, request,
+                        response);
+                return response;
             }
         };
 
         apply(request, callback, DEFAULT_SECURITY_CONTEXT, null);
 
         return callback;
+    }
+
+    /**
+     * Strips entity if present.
+     *
+     * @param originalResponse processed response.
+     * @return original response without entity.
+     */
+    private Response stripEntity(final Response originalResponse) {
+        if (originalResponse.hasEntity()) {
+            Response.ResponseBuilder result = Response.status(originalResponse.getStatus());
+            Responses.fillHeaders(result, originalResponse.getHeaders().asMap());
+            return result.build();
+        } else {
+            return originalResponse;
+        }
     }
 
     /**
@@ -572,8 +635,25 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         return Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build();
     }
 
-    private void writeResponse(final ContainerResponseWriter writer, Request request, Response response) {
+    /**
+     * Used to set proper Content-Length header to outgoing {@link Response}s.
+     */
+    private class MessageBodySizeCallback implements MessageBodyWorkers.MessageBodySizeCallback {
+        private long size = -1;
+
+        @Override
+        public void onRequestEntitySize(long size) throws IOException {
+            this.size = size;
+        }
+
+        public long getSize() {
+            return size;
+        }
+    }
+
+    private void writeResponse(final ContainerResponseWriter writer, final Request request, Response response) {
         CommittingOutputStream committingOutput = null;
+        final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
         try {
             final boolean entityExists = response.hasEntity();
@@ -613,10 +693,9 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
                     private OutputStream output;
 
-
                     @Override
                     protected void commit() throws IOException {
-                        output = writer.writeResponseStatusAndHeaders(-1, outResponse);
+                        output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), outResponse);
                     }
 
                     @Override
@@ -625,9 +704,9 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                     }
                 };
 
-
                 workers.writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
-                        response.getMetadata(), response.getProperties(), committingOutput, null, true);
+                        response.getMetadata(), response.getProperties(), committingOutput, messageBodySizeCallback,
+                        true, !request.getMethod().equals(HttpMethod.HEAD));
             } else {
                 writer.writeResponseStatusAndHeaders(0, response);
             }

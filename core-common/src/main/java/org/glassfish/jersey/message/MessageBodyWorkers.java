@@ -302,10 +302,46 @@ public interface MessageBodyWorkers {
             javax.ws.rs.WebApplicationException;
 
     /**
+     * Writers a type to the {@link OutputStream entityStream} using interceptors. If the
+     * parameter {@code intercept} is true then {@link WriterInterceptor writer
+     * interceptors} are excecuted before calling the {@link MessageBodyWriter message
+     * body writer}. The appropriate {@link MessageBodyWriter message body writer} is
+     * choosen after the interceptor execution based on parameter passed to this method
+     * and modified by the interceptors.
+     *
+     * @param entity Entity to be written to the entityStream
+     * @param genericType the generic type to be written into the {@code entityStream}.
+     * @param annotations an array of the annotations on the resource method that returns
+     *            the object.
+     * @param mediaType the media type of the HTTP entity.
+     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
+     * @param properties the mutable map of {@link Request#getProperties() request-scoped
+     *            properties}.
+     * @param entityStream the {@link OutputStream} for the HTTP entity.
+     * @param sizeCallback the {@link MessageBodySizeCallback} which will be invoked to
+     *            pass the size of the written entity. The callback will be invoked before
+     *            the first byte is written to the {@code entityStream}.
+     * @param intercept true if the user interceptors should be executed. Otherwise only
+     *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
+     *            be executed in the client.
+     * @param writeEntity true if the entity should be written. Otherwise only headers will
+     *            be written to underlying {@link OutputStream}.
+     * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
+     *             reader} fails.
+     * @throws IOException Thrown when reading from the {@code entityStream} fails.
+     */
+    public <T> void writeTo(Object entity, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws java.io.IOException,
+            javax.ws.rs.WebApplicationException;
+
+    /**
      * Callback which will be used to pass back the size of the entity. It will be invoked
      * in method
      * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
-     * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean)}
+     * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean)} and
+     * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
+     * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean, boolean)}
      * after selection of the {@link MessageBodyWriter message body writer} and before
      * writing to the output stream.
      */

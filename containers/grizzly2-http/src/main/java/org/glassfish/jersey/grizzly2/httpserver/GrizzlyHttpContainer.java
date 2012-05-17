@@ -179,6 +179,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 final javax.ws.rs.core.Response jaxrsResponse) throws ContainerException {
             try {
                 grizzlyResponse.setStatus(jaxrsResponse.getStatus());
+                grizzlyResponse.setContentLengthLong(contentLength);
 
                 for (final Map.Entry<String, List<String>> e : jaxrsResponse.getHeaders().asMap().entrySet()) {
                     for (final String value : e.getValue()) {
@@ -214,9 +215,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
-            ContainerRequestContext conteinerContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
+            ContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
                     getSecurityContext(request), null);
-            appHandler.apply(conteinerContext);
+            appHandler.apply(containerRequestContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
             logger.debugLog("GrizzlyHttpContaner.service(...) finished");

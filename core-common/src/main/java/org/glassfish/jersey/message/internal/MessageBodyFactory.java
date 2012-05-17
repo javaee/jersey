@@ -58,7 +58,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -66,7 +65,6 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -621,8 +619,16 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
 
+        writeTo(t, genericType, annotations, mediaType, httpHeaders, properties, entityStream, sizeCallback, intercept, true);
+    }
+
+    @Override
+    public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
+
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, genericType, annotations, mediaType,
-                httpHeaders, properties, entityStream, this, sizeCallback, intercept);
+                httpHeaders, properties, entityStream, this, sizeCallback, intercept, writeEntity);
         executor.proceed();
     }
 }

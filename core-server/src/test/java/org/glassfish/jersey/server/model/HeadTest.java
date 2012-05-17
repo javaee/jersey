@@ -83,7 +83,9 @@ public class HeadTest {
         Response response = app.apply(Requests.from("/", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
-        assertNull(response.getMetadata().getFirst("Content-Length"));
+        String length = response.getHeaders().getHeader("Content-Length");
+        assertNotNull(length);
+        assertEquals(3, Integer.parseInt(length));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
         assertFalse(response.hasEntity());
     }
@@ -207,10 +209,9 @@ public class HeadTest {
 
         Response response = app.apply(Requests.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
-//        FIXME:
-//        String length = response.getHeaders().getHeader("Content-Length");
-//        assertNotNull(length);
-//        assertEquals(3, Integer.parseInt(length));
+        String length = response.getHeaders().getHeader("Content-Length");
+        assertNotNull(length);
+        assertEquals(3, Integer.parseInt(length));
         assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, response.getHeaders().getMediaType());
         assertFalse(response.hasEntity());
     }

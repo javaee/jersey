@@ -58,8 +58,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.Requests;
@@ -74,7 +72,6 @@ import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
-import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.inject.Injector;
 
@@ -239,29 +236,26 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         private Services services;
         @Inject
         private Injector injector;
-        @Inject
-        private Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
-
 
         /**
-         * Create a new method selecting acceptor for all the methods on the same path.
+         * Create a new {@link MethodSelectingAcceptor} for all the methods on the same path.
          *
          * The acceptor selects the method that best matches the request based on
          * produce/consume information from the resource method models.
          *
          * @param workers message body workers.
          * @param methodAcceptorPairs [method model, method methodAcceptorPair] pairs.
+         * @return new {@link MethodSelectingAcceptor}
          */
         public MethodSelectingAcceptor build(
                 final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
-            return new MethodSelectingAcceptor(services, injector, workers, respondingContextFactory, methodAcceptorPairs);
+            return new MethodSelectingAcceptor(services, injector, workers, methodAcceptorPairs);
         }
 
     }
 
     private final Services services;
     private final Injector injector;
-    private final Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
@@ -271,12 +265,10 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
             Services services,
             Injector injector,
             MessageBodyWorkers msgWorkers,
-            Factory<ResponseProcessor.RespondingContext> respondingContextFactory,
             List<MethodAcceptorPair> methodAcceptorPairs) {
         this.injector = injector;
         this.workers = msgWorkers;
         this.services = services;
-        this.respondingContextFactory = respondingContextFactory;
         this.consumesProducesAcceptors = new HashMap<String, List<ConsumesProducesAcceptor>>();
         for (final MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
             String httpMethod = methodAcceptorPair.model.getHttpMethod();
@@ -288,7 +280,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
             }
             addAllConsumesProducesCombinations(httpMethodBoundAcceptors, methodAcceptorPair);
         }
-        // todo HEAD & OPTIONS
+
         if (!consumesProducesAcceptors.containsKey(HttpMethod.HEAD)) {
             this.acceptor = createHeadEnrichedAcceptor();
         } else {
@@ -460,29 +452,12 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         consumesProducesAcceptors.put(HttpMethod.OPTIONS, optionsAcceptors);
     }
 
-    private Response stripEntity(final Response originalResponse) {
-        if (originalResponse.hasEntity()) {
-            Response.ResponseBuilder result = Response.status(originalResponse.getStatus());
-            Responses.fillHeaders(result, originalResponse.getHeaders().asMap());
-            return result.build();
-        } else {
-            return originalResponse;
-        }
-    }
-
     private TreeAcceptor createHeadEnrichedAcceptor() {
         return new TreeAcceptor() {
 
             @Override
             public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
                 if (HttpMethod.HEAD.equals(request.getMethod())) {
-                    respondingContextFactory.get().push(new Function<Response, Response>() {
-                        @Override
-                        public Response apply(@Nullable Response response) {
-                            return stripEntity(response);
-                        }
-                    });
-
                     final Request getRequest = Requests.from(request).method(HttpMethod.GET).build();
                     return Stages.singletonTreeContinuation(getRequest, getMethodAcceptor(getRequest));
                 } else {

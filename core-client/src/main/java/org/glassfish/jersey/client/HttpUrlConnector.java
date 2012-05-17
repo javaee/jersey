@@ -117,7 +117,10 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
                 public void onRequestEntitySize(long size) {
                     if (size != -1 && size < Integer.MAX_VALUE) {
                         // HttpURLConnection uses the int type for content length
-                        uc.setFixedLengthStreamingMode((int)size);
+
+                        // this just does not work for several consecutive requests.
+                        // another day wasted on HttpUrlConnection bug :/
+                        // uc.setFixedLengthStreamingMode((int)size);
                     } else {
                         // TODO (copied from Jersey 1.x) it appears HttpURLConnection has some bugs in
                         // chunked encoding

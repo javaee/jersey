@@ -50,9 +50,9 @@ import org.glassfish.jersey.server.ContainerException;
  * A suspendable, request-scoped container response writer.
  *
  * Container sends a new instance of the response writer with every request as part
- * of the call to the Jersey application {@link JerseyApplication#apply(javax.ws.rs.core.Request,
- * ContainerResponseWriter) apply(...)} method. Each container response writer
- * represents an open connection to the client (waiting for a response).
+ * of the call to the Jersey application {@link ApplicationHandler#apply(ContainerRequestContext) apply(...)}
+ * method. Each container response writer represents an open connection to the client
+ * (waiting for a response).
  * <p />
  * For each request the Jersey runtime will make sure to directly call either
  * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}, {@link #cancel()}
@@ -152,8 +152,8 @@ public interface ContainerResponseWriter {
      * Cancel the request/response processing. This method automatically commits
      * and closes the writer.
      *<p />
-     * By invoking this method, {@link org.glassfish.jersey.server.JerseyApplication
-     * Jersey application} indicates to the container that the request processing
+     * By invoking this method, {@link org.glassfish.jersey.server.ApplicationHandler
+     * Jersey application handler} indicates to the container that the request processing
      * related to this container context has been canceled.
      * <p />
      * Similarly to {@link #commit()}, this enables the container context to release

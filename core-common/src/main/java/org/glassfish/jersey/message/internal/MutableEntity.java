@@ -247,8 +247,9 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     /**
      * Creates new instance initialized with mutable message, instance and its type.
+     *
      * @param message {@link AbstractMutableMessage} to which this entity belongs to.
-     * @param instanceType Pair which contains instance and its type.
+     * @param genericEntity entity instance and type.
      */
     public MutableEntity(AbstractMutableMessage<?> message, final GenericEntity<?> genericEntity) {
         this.message = message;

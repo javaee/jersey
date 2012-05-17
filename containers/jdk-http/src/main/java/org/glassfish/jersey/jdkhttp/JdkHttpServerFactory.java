@@ -56,7 +56,7 @@ import com.sun.net.httpserver.HttpsServer;
 
 /**
  * Factory for creating {@link HttpServer JDK HttpServer} instances adapted to
- * the {@link JerseyApplication Jersey Application}.
+ * the {@link ApplicationHandler}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
