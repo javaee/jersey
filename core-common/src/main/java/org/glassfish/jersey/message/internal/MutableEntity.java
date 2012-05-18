@@ -383,22 +383,21 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public MutableEntity content(Object content) {
-        if (content instanceof InputStream) {
-            this.genericEntity = null;
-            contentStream.setNewContentStream(InputStream.class.cast(content));
-            return this;
-        }
-
         contentStream.invalidateContentStream();
+
         if (content != null) {
             if (content instanceof GenericEntity) {
                 this.genericEntity = (GenericEntity<?>) content;
             } else {
                 this.genericEntity = new GenericEntity(content, extractType(content));
+                if (content instanceof InputStream) {
+                    contentStream.setNewContentStream(InputStream.class.cast(content));
+                }
             }
         } else {
             genericEntity = null;
         }
+
         return this;
     }
 
