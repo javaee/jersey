@@ -40,6 +40,7 @@
 package org.glassfish.jersey.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.concurrent.Callable;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -56,6 +57,7 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
@@ -84,32 +86,33 @@ public class JaxrsProvidersTest {
     }
 
     @Test
-    public void testProviders() {
-        final Services services = HK2.get().create(null,
-                new ContextInjectionResolver.Module(),
-                new ProcessingTestModule(),
-                new MessagingModules.MessageBodyProviders(),
-                new Module());
+    public void testProviders() throws Exception {
+        final Services services = HK2.get().create(null, new ContextInjectionResolver.Module(), new ProcessingTestModule(),
+                new MessagingModules.MessageBodyProviders(), new Module());
 
         ProcessingTestModule.initProviders(services);
-
         RequestScope scope = services.forContract(RequestScope.class).get();
 
-        try {
-            scope.enter();
+        scope.runInScope(new Callable<Object>() {
 
-            Providers instance = services.forContract(Providers.class).get();
+            @Override
+            public Object call() throws Exception {
+                Providers instance = services.forContract(Providers.class).get();
 
-            assertNotNull(instance);
-            assertSame(JaxrsProviders.class, instance.getClass());
+                assertNotNull(instance);
+                assertSame(JaxrsProviders.class, instance.getClass());
 
-            assertNotNull(instance.getExceptionMapper(Throwable.class));
-            assertNotNull(instance.getMessageBodyReader(String.class, String.class, new Annotation[0], MediaType.TEXT_PLAIN_TYPE));
-            assertNotNull(instance.getMessageBodyWriter(String.class, String.class, new Annotation[0], MediaType.TEXT_PLAIN_TYPE));
-            assertNotNull(instance.getContextResolver(String.class, MediaType.TEXT_PLAIN_TYPE));
+                assertNotNull(instance.getExceptionMapper(Throwable.class));
+                assertNotNull(instance.getMessageBodyReader(String.class, String.class, new Annotation[0],
+                        MediaType.TEXT_PLAIN_TYPE));
+                assertNotNull(instance.getMessageBodyWriter(String.class, String.class, new Annotation[0],
+                        MediaType.TEXT_PLAIN_TYPE));
+                assertNotNull(instance.getContextResolver(String.class, MediaType.TEXT_PLAIN_TYPE));
 
-        } finally {
-            scope.exit();
-        }
+                return null;
+            }
+
+        });
+
     }
 }

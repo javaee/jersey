@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.process.internal;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.core.Response;
@@ -53,6 +54,7 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -81,10 +83,7 @@ public class RequestInvokerTest {
     }
 
     private Services init(org.glassfish.hk2.Module acceptorsModule) {
-        final Services services = HK2.get().create(null,
-                new ProcessingTestModule(),
-                acceptorsModule,
-                new Module());
+        final Services services = HK2.get().create(null, new ProcessingTestModule(), acceptorsModule, new Module());
 
         ProcessingTestModule.initProviders(services);
 
@@ -97,63 +96,68 @@ public class RequestInvokerTest {
         final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
-        try {
-            requestScope.enter();
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new AbstractInvocationCallback() {
+        requestScope.runInScope(new Runnable() {
 
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(123, response.readEntity(Integer.class).intValue());
-                        }
+            @Override
+            public void run() {
 
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-        } finally {
-            requestScope.exit();
-        }
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
+                        new AbstractInvocationCallback() {
 
-        try {
-            requestScope.enter();
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(123, result.get().readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+                            @Override
+                            public void result(Response response) {
+                                assertEquals(123, response.readEntity(Integer.class).intValue());
+                            }
 
-        try {
-            requestScope.enter();
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new AbstractInvocationCallback() {
+                            @Override
+                            public void failure(Throwable exception) {
+                                fail(exception.getMessage());
+                            }
+                        });
+            }
+        });
 
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(-1, response.readEntity(Integer.class).intValue());
-                        }
+        requestScope.runInScope(new Callable<Object>() {
 
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-        } finally {
-            requestScope.exit();
-        }
+            @Override
+            public Object call() throws Exception {
+                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
+                        .build());
+                assertEquals(123, result.get().readEntity(Integer.class).intValue());
+                return null;
+            }
+        });
 
-        try {
-            requestScope.enter();
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            assertEquals(-1, result.get().readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+        requestScope.runInScope(new Runnable() {
+
+            @Override
+            public void run() {
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
+                        new AbstractInvocationCallback() {
+
+                            @Override
+                            public void result(Response response) {
+                                assertEquals(-1, response.readEntity(Integer.class).intValue());
+                            }
+
+                            @Override
+                            public void failure(Throwable exception) {
+                                fail(exception.getMessage());
+                            }
+                        });
+            }
+        });
+
+        requestScope.runInScope(new Callable<Object>() {
+
+            @Override
+            public Object call() throws Exception {
+                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text")
+                        .build());
+                assertEquals(-1, result.get().readEntity(Integer.class).intValue());
+                return null;
+            }
+        });
     }
 
     @Test
@@ -162,62 +166,68 @@ public class RequestInvokerTest {
         final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
-        try {
-            requestScope.enter();
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new AbstractInvocationCallback() {
+        requestScope.runInScope(new Runnable() {
 
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(145, response.readEntity(Integer.class).intValue());
-                        }
+            @Override
+            public void run() {
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
+                        new AbstractInvocationCallback() {
 
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-        } finally {
-            requestScope.exit();
-        }
+                            @Override
+                            public void result(Response response) {
+                                assertEquals(145, response.readEntity(Integer.class).intValue());
+                            }
 
-        try {
-            requestScope.enter();
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build());
-            assertEquals(145, result.get().readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+                            @Override
+                            public void failure(Throwable exception) {
+                                fail(exception.getMessage());
+                            }
+                        });
 
-        try {
-            requestScope.enter();
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                    new AbstractInvocationCallback() {
+            }
+        });
 
-                        @Override
-                        public void result(Response response) {
-                            assertEquals(-1, response.readEntity(Integer.class).intValue());
-                        }
+        requestScope.runInScope(new Callable<Object>() {
 
-                        @Override
-                        public void failure(Throwable exception) {
-                            fail(exception.getMessage());
-                        }
-                    });
-        } finally {
-            requestScope.exit();
-        }
+            @Override
+            public Object call() throws Exception {
+                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
+                        .build());
+                assertEquals(145, result.get().readEntity(Integer.class).intValue());
+                return null;
+            }
+        });
 
-        try {
-            requestScope.enter();
-            Future<Response> result = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build());
-            assertEquals(-1, result.get().readEntity(Integer.class).intValue());
-        } finally {
-            requestScope.exit();
-        }
+        requestScope.runInScope(new Runnable() {
+
+            @Override
+            public void run() {
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
+                        new AbstractInvocationCallback() {
+
+                            @Override
+                            public void result(Response response) {
+                                assertEquals(-1, response.readEntity(Integer.class).intValue());
+                            }
+
+                            @Override
+                            public void failure(Throwable exception) {
+                                fail(exception.getMessage());
+                            }
+                        });
+
+            }
+        });
+
+        requestScope.runInScope(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text")
+                        .build());
+                assertEquals(-1, result.get().readEntity(Integer.class).intValue());
+                return null;
+            }
+        });
+
     }
 }

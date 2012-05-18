@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.internal.routing;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
@@ -79,6 +79,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -178,13 +179,17 @@ public class ContextInjectedAsyncAppTest {
     }
 
     @Test
-    public void testAsyncApp() throws InterruptedException, ExecutionException {
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+    public void testAsyncApp() throws Exception {
+        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        requestScope.enter();
-        Future<Response> res = invoker.apply(req);
-        requestScope.exit();
+        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
 
+            @Override
+            public Future<Response> call() throws Exception {
+                return invoker.apply(req);
+            }
+        });
         assertEquals(expectedResponse, res.get().getEntity());
+
     }
 }

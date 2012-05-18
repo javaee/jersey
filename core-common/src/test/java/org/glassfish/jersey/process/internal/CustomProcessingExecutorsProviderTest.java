@@ -43,6 +43,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -60,11 +62,11 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Test for custom processing executors provider support.
@@ -138,45 +140,46 @@ public class CustomProcessingExecutorsProviderTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean passed = new AtomicBoolean(false);
 
-        try {
-            requestScope.enter();
+        requestScope.runInScope(new Runnable() {
 
-            invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                    new AbstractInvocationCallback() {
+            @Override
+            public void run() {
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
+                        new AbstractInvocationCallback() {
 
-                        @Override
-                        public void result(Response response) {
+                            @Override
+                            public void result(Response response) {
 
-                            try {
-                                final String reqThreadName = response.readEntity(String.class);
-                                assertTrue("Unexpected request processing thread name: " + reqThreadName,
-                                        reqThreadName.startsWith(REQ_THREAD_NAME));
+                                try {
+                                    final String reqThreadName = response.readEntity(String.class);
+                                    assertTrue("Unexpected request processing thread name: " + reqThreadName,
+                                            reqThreadName.startsWith(REQ_THREAD_NAME));
 
-                                final String respThreadName = Thread.currentThread().getName();
-                                assertTrue("Unexpected response processing thread name: " + respThreadName,
-                                        respThreadName.startsWith(RESP_THREAD_NAME));
+                                    final String respThreadName = Thread.currentThread().getName();
+                                    assertTrue("Unexpected response processing thread name: " + respThreadName,
+                                            respThreadName.startsWith(RESP_THREAD_NAME));
 
-                                passed.set(true);
-                            } finally {
-                                latch.countDown();
+                                    passed.set(true);
+                                } finally {
+                                    latch.countDown();
+                                }
                             }
-                        }
 
-                        @Override
-                        public void failure(Throwable exception) {
-                            try {
-                                LOGGER.log(Level.ALL, "Request processing failed.", exception);
-                                fail(exception.getMessage());
-                            } finally {
-                                latch.countDown();
+                            @Override
+                            public void failure(Throwable exception) {
+                                try {
+                                    LOGGER.log(Level.ALL, "Request processing failed.", exception);
+                                    fail(exception.getMessage());
+                                } finally {
+                                    latch.countDown();
+                                }
                             }
-                        }
-                    });
-            latch.await();
-            assertTrue("Test failed", passed.get());
-        } finally {
-            requestScope.exit();
-        }
+                        });
+            }
+
+        });
+        latch.await();
+        assertTrue("Test failed", passed.get());
+
     }
 }

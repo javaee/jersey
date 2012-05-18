@@ -39,10 +39,15 @@
  */
 package org.glassfish.jersey.filter;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
+import java.io.IOException;
+import java.util.concurrent.Callable;
+
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.FilterContext;
+import javax.ws.rs.ext.RequestFilter;
+import javax.ws.rs.ext.ResponseFilter;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
@@ -56,21 +61,20 @@ import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+
+import org.glassfish.hk2.HK2;
+import org.glassfish.hk2.Services;
+
+import org.jvnet.hk2.annotations.Inject;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
-import java.io.IOException;
+import static org.junit.Assert.*;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -154,20 +158,24 @@ public class LoggingFilterTest {
 
     @Test
     public void testLoggingFilter() throws Exception {
-        try {
-            requestScope.enter();
+        final CustomLoggingFilter logFilter = loggingFilter;
+        requestScope.runInScope(new Callable<Object>() {
 
-            ListenableFuture<Response> responseFuture = invoker.apply(
-                    Requests.from("http://examples.jersey.java.net/", "GET").entity("TEST\nEntity").build());
+            @Override
+            public Object call() throws Exception {
+                ListenableFuture<Response> responseFuture = invoker.apply(
+                        Requests.from("http://examples.jersey.java.net/", "GET").entity("TEST\nEntity").build());
 
-            assertNotNull(responseFuture.get());
+                assertNotNull(responseFuture.get());
 
-            assertFalse(this.loggingFilter.preMatchRequestLogged);
-            assertTrue(this.loggingFilter.requestLogged);
-            assertTrue(this.loggingFilter.responseLogged);
+                assertFalse(logFilter.preMatchRequestLogged);
+                assertTrue(logFilter.requestLogged);
+                assertTrue(logFilter.responseLogged);
+                return null;
 
-        } finally {
-            requestScope.exit();
-        }
+            }
+        });
+
+
     }
 }

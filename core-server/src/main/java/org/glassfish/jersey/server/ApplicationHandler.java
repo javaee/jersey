@@ -596,17 +596,22 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
      * @param securityContext         custom security context.
      * @param requestScopeInitializer custom request-scoped initializer.
      */
-    private void apply(Request request, InvocationCallback callback, SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
-        try {
-            requestScope.enter();
-            // TODO move to initialization stage
-            initRequestScopeInjections(securityContext, requestScopeInitializer);
+    private void apply(final Request request, final InvocationCallback callback, final SecurityContext securityContext,
+                       final RequestScopedInitializer requestScopeInitializer) {
+        requestScope.runInScope(new Runnable() {
 
-            invoker.apply(request, callback);
-        } finally {
-            closeableServiceFactory.get().close();
-            requestScope.exit();
-        }
+            @Override
+            public void run() {
+                try {
+                    // TODO move to initialization stage
+                    initRequestScopeInjections(securityContext, requestScopeInitializer);
+
+                    invoker.apply(request, callback);
+                } finally {
+                    closeableServiceFactory.get().close();
+                }
+            }
+        });
     }
 
     private void initRequestScopeInjections(SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {

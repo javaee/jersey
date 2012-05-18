@@ -103,8 +103,7 @@ public class App {
 
                     @Override
                     public ExecutorService getRespondingExecutor() {
-                        return Executors.newCachedThreadPool(
-                                new ThreadFactoryBuilder().setNameFormat("custom-response-executor-%d").build());
+                        return null;
                     }
                 }));
 

@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
@@ -80,6 +81,7 @@ import org.glassfish.hk2.inject.Injector;
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.util.concurrent.ListenableFuture;
+
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -212,68 +214,73 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         this.invoker = services.forContract(RequestInvoker.class).get();
     }
 
-    /*package*/ ListenableFuture<Response> submit(final JerseyInvocation invocation,
+    /*package*/ListenableFuture<Response> submit(final JerseyInvocation invocation,
             final javax.ws.rs.client.InvocationCallback<? super javax.ws.rs.core.Response> callback) {
-        try {
-            requestScope.enter();
+        return requestScope.runInScope(
+                new RequestScope.Producer<ListenableFuture<Response>>() {
 
-            final Injector injector = services.forContract(Injector.class).get();
-            References refs = injector.inject(References.class);
+                    @Override
+                    public ListenableFuture<Response> call() {
+                        final Injector injector = services.forContract(Injector.class).get();
+                        References refs = injector.inject(References.class);
 
-            final JerseyConfiguration cfg = invocation.configuration();
-            final ServiceProviders providers = refs.serviceProvidersBuilder.setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances()).build();
-            final ExceptionMapperFactory mappers = new ExceptionMapperFactory(providers);
-            final MessageBodyWorkers workers = new MessageBodyFactory(providers);
-            final ContextResolvers resolvers = new ContextResolverFactory(providers);
+                        final JerseyConfiguration cfg = invocation.configuration();
+                        final ServiceProviders providers = refs.serviceProvidersBuilder
+                                .setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances())
+                                .build();
+                        final ExceptionMapperFactory mappers = new ExceptionMapperFactory(providers);
+                        final MessageBodyWorkers workers = new MessageBodyFactory(providers);
+                        final ContextResolvers resolvers = new ContextResolverFactory(providers);
 
-            refs.configuration.set(cfg);
-            refs.serviceProviders.set(providers);
-            refs.exceptionMappers.set(mappers);
-            refs.messageBodyWorkers.set(workers);
-            refs.contextResolvers.set(resolvers);
+                        refs.configuration.set(cfg);
+                        refs.serviceProviders.set(providers);
+                        refs.exceptionMappers.set(mappers);
+                        refs.messageBodyWorkers.set(workers);
+                        refs.contextResolvers.set(resolvers);
 
-            final Request request = injector.inject(invocation.request());
-            Map<String,Object> properties = new HashMap<String, Object>(configuration().getProperties());
-            properties.putAll(request.getProperties());
-            request.getProperties().putAll(properties);
+                        final Request request = injector.inject(invocation.request());
+                        Map<String, Object> properties = new HashMap<String, Object>(configuration().getProperties());
+                        properties.putAll(request.getProperties());
+                        request.getProperties().putAll(properties);
 
-            return invoker.apply(request, new InvocationCallback() {
+                        return invoker.apply(request, new InvocationCallback() {
 
-                @Override
-                public void result(Response response) {
-                    callback.completed(response);
-                }
+                            @Override
+                            public void result(Response response) {
+                                callback.completed(response);
+                            }
 
-                @Override
-                public void failure(Throwable exception) {
-                    // TODO JAX-RS client callback interface as well as invocation exception
-                    // need to be fixed
-                    callback.failed(new InvocationException(exception.getMessage(), exception));
-                }
+                            @Override
+                            public void failure(Throwable exception) {
+                                // TODO JAX-RS client callback interface as well as invocation exception
+                                // need to be fixed
+                                callback.failed(new InvocationException(exception.getMessage(), exception));
+                            }
 
-                @Override
-                public void cancelled() {
-                    // TODO implement client-side cancel event logic
-                }
+                            @Override
+                            public void cancelled() {
+                                // TODO implement client-side cancel event logic
+                            }
 
-                @Override
-                public void suspended(long time, TimeUnit unit, InvocationContext context) {
-                    // TODO implement client-side suspend event logic
-                }
+                            @Override
+                            public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                                // TODO implement client-side suspend event logic
+                            }
 
-                @Override
-                public void suspendTimeoutChanged(long time, TimeUnit unit) {
-                    // TODO implement client-side suspend timeout change event logic
-                }
+                            @Override
+                            public void suspendTimeoutChanged(long time, TimeUnit unit) {
+                                // TODO implement client-side suspend timeout change event logic
+                            }
 
-                @Override
-                public void resumed() {
-                    // TODO implement client-side resume event logic
-                }
-            });
-        } finally {
-            requestScope.exit();
-        }
+                            @Override
+                            public void resumed() {
+                                // TODO implement client-side resume event logic
+                            }
+                        });
+
+                    }
+                });
+
     }
 
     @Override

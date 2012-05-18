@@ -49,8 +49,6 @@ import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Pair;
@@ -61,7 +59,11 @@ import org.glassfish.jersey.message.internal.MessageBodyProcessingException;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.RequestScope.Snapshot;
+import org.glassfish.jersey.process.internal.RequestScope.Instance;
+
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
+
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Optional;
@@ -177,48 +179,38 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         //        All code that needs to run in the scope should be converted
         //        into stages that are executed by the invoker
         //        (e.g. RequestExecutionInitStage).
-        final Snapshot scopeSnapshot = requestScope.takeSnapshot();
+        final Instance instance = requestScope.suspendCurrent();
         final ResponseProcessor responseProcessor = responseProcessorBuilder.build(callback);
         final Runnable requester = new Runnable() {
 
             @Override
             public void run() {
-                if (requestScope.isActive()) {
-                    // running inside a scope already (same-thread execution)
-                    runInScope();
-                } else {
-                    try {
-                        requestScope.enter(scopeSnapshot);
-                        runInScope();
-                    } finally {
-                        requestScope.exit();
-                    }
-                }
-            }
-
-            public void runInScope() {
                 // TODO this seems somewhat too specific to our Message implementation.
                 // We should come up with a solution that is more generic
                 // Messaging impl specific stuff does not belong to the generic invoker framework
-                final MessageBodyWorkers workers =
-                        services.forContract(MessageBodyWorkers.class).get();
+                final MessageBodyWorkers workers = services.forContract(MessageBodyWorkers.class).get();
 
-                final AsyncInflectorAdapter asyncInflector =
-                        new AsyncInflectorAdapter(new AcceptingInvoker(workers), callback);
+                final AsyncInflectorAdapter asyncInflector = new AsyncInflectorAdapter(new AcceptingInvoker(workers), callback);
 
-                Ref<InvocationContext> icRef =
-                        services.forContract(new TypeLiteral<Ref<InvocationContext>>() {}).get();
+                Ref<InvocationContext> icRef = services.forContract(new TypeLiteral<Ref<InvocationContext>>() {
+                }).get();
                 icRef.set(asyncInflector);
 
                 ListenableFuture<Response> response = asyncInflector.apply(request);
-                responseProcessor.setRequestScopeSnapshot(requestScope.takeSnapshot());
+                responseProcessor.setRequestScopeInstance(instance);
                 response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
             }
         };
 
         try {
             try {
-                executorsFactory.getRequestingExecutor().submit(requester);
+                executorsFactory.getRequestingExecutor().submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        requestScope.runInScope(instance, requester);
+                    }
+                });
                 return responseProcessor;
             } catch (RejectedExecutionException ex) {
                 throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_FAILED(), ex);
