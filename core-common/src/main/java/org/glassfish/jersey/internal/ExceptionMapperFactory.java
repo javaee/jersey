@@ -64,14 +64,20 @@ import org.glassfish.hk2.TypeLiteral;
 import org.jvnet.hk2.annotations.Inject;
 
 /**
- * ExceptionMapperFactory class.
+ * {@link ExceptionMappers Exception mappers} implementation that aggregates
+ * exception mappers and server as the main entry point for exception mapper
+ * instance lookup.
  *
  * @author Paul Sandoz
- * @author Santiago.PericasGeertsen@oracle.com
+ * @author Santiago Pericas-Geertsen (Santiago.PericasGeertsen at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ExceptionMapperFactory implements ExceptionMappers {
     private static final Logger LOGGER = Logger.getLogger(ExceptionMapperFactory.class.getName());
 
+    /**
+     * Exception mapper factory injection binding registration module.
+     */
     public static class Module extends AbstractModule {
 
         private static class InjectionFactory extends ReferencingFactory<ExceptionMappers> {
@@ -83,6 +89,12 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         //
         private final Class<? extends Scope> refScope;
 
+        /**
+         * Create exception mapper factory injection binding registration module.
+         *
+         * @param refScope scope of the injectable exception mapper factory
+         *                 {@link Ref reference}.
+         */
         public Module(Class<? extends Scope> refScope) {
             this.refScope = refScope;
         }
@@ -100,25 +112,37 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     private static class ExceptionMapperType {
 
-        ExceptionMapper em;
-        Class<? extends Throwable> c;
+        ExceptionMapper mapper;
+        Class<? extends Throwable> exceptionType;
 
-        public ExceptionMapperType(ExceptionMapper em, Class<? extends Throwable> c) {
-            this.em = em;
-            this.c = c;
+        public ExceptionMapperType(ExceptionMapper mapper, Class<? extends Throwable> exceptionType) {
+            this.mapper = mapper;
+            this.exceptionType = exceptionType;
         }
     }
-    private Set<ExceptionMapperType> emts = new HashSet<ExceptionMapperType>();
+    private Set<ExceptionMapperType> exceptionMapperTypes = new HashSet<ExceptionMapperType>();
 
+    /**
+     * Create new exception mapper factory initialized with a set of exception mappers.
+     *
+     * @param mappers exception mappers.
+     */
     public ExceptionMapperFactory(Set<ExceptionMapper> mappers) {
-        for (ExceptionMapper<?> em : mappers) {
-            Class<? extends Throwable> c = getExceptionType(em.getClass());
+        for (ExceptionMapper<?> mapper : mappers) {
+            Class<? extends Throwable> c = getExceptionType(mapper.getClass());
             if (c != null) {
-                emts.add(new ExceptionMapperType(em, c));
+                exceptionMapperTypes.add(new ExceptionMapperType(mapper, c));
             }
         }
     }
 
+    /**
+     * Create new exception mapper factory initialized with {@link ServiceProviders
+     * service providers} instance that will be used to look up all providers implementing
+     * {@link ExceptionMapper} interface.
+     *
+     * @param serviceProviders service providers lookup instance.
+     */
     public ExceptionMapperFactory(ServiceProviders serviceProviders) {
         this(serviceProviders.getAll(ExceptionMapper.class));
     }
@@ -128,11 +152,11 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     public <T extends Throwable> ExceptionMapper<T> find(Class<T> type) {
         int distance = Integer.MAX_VALUE;
         ExceptionMapper selectedEm = null;
-        for (ExceptionMapperType emt : emts) {
-            int d = distance(type, emt.c);
+        for (ExceptionMapperType mapperType : exceptionMapperTypes) {
+            int d = distance(type, mapperType.exceptionType);
             if (d < distance) {
                 distance = d;
-                selectedEm = emt.em;
+                selectedEm = mapperType.mapper;
                 if (distance == 0) {
                     break;
                 }
@@ -196,7 +220,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         } else if (t instanceof TypeVariable) {
             ClassTypePair ct = ReflectionHelper.resolveTypeVariable(c, dc, (TypeVariable) t);
             if (ct != null) {
-                return ct.getClass();
+                return ct.rawClass();
             } else {
                 return null;
             }

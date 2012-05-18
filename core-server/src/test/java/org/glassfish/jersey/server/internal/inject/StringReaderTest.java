@@ -40,10 +40,9 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.server.ParamException;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.net.URI;
+import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
@@ -62,10 +61,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.net.URI;
-import java.util.Date;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.ParamException;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -288,7 +289,6 @@ public class StringReaderTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testParamException() throws ExecutionException, InterruptedException {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 PathExceptionMapper.class,
@@ -304,10 +304,10 @@ public class StringReaderTest extends AbstractTest {
         response = _test(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
         assertEquals("matrix", response.readEntity(String.class));
 
-        response = _test(UriBuilder.fromPath("/").queryParam("x", " 123").build().toString());
+        response = _test(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
         assertEquals("query", response.readEntity(String.class));
 
-        response = _test(UriBuilder.fromPath("/").build().toString(), new Cookie("x", " 123"));
+        response = _test(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
         assertEquals("cookie", response.readEntity(String.class));
 
         response = apply(
@@ -316,6 +316,21 @@ public class StringReaderTest extends AbstractTest {
                         build()
         );
         assertEquals("header", response.readEntity(String.class));
+    }
+
+    @Test
+    @Ignore("@FormParam support not implemented yet")
+    // TODO once FormParam support is implemented, merge this test method with the method above.
+    public void testFormParamException() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ParamExceptionMapperResource.class,
+                PathExceptionMapper.class,
+                MatrixExceptionMapper.class,
+                QueryExceptionMapper.class,
+                CookieExceptionMapper.class,
+                HeaderExceptionMapper.class,
+                FormExceptionMapper.class);
+
+        Response response;
 
         Form f = new Form();
         f.param("x", " 123");
@@ -328,7 +343,6 @@ public class StringReaderTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testGeneralParamException() throws ExecutionException, InterruptedException {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 ParamExceptionMapper.class);
@@ -339,10 +353,10 @@ public class StringReaderTest extends AbstractTest {
         response = _test(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
         assertEquals("param", response.readEntity(String.class));
 
-        response = _test(UriBuilder.fromPath("/").queryParam("x", " 123").build().toString());
+        response = _test(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
         assertEquals("param", response.readEntity(String.class));
 
-        response = _test(UriBuilder.fromPath("/").build().toString(), new Cookie("x", " 123"));
+        response = _test(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
         assertEquals("param", response.readEntity(String.class));
 
         response = apply(
@@ -351,6 +365,16 @@ public class StringReaderTest extends AbstractTest {
                         build()
         );
         assertEquals("param", response.readEntity(String.class));
+    }
+
+    @Test
+    @Ignore("@FormParam support not implemented yet")
+    // TODO once FormParam support is implemented, merge this test method with the method above.
+    public void testGeneralFormParamException() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ParamExceptionMapperResource.class,
+                ParamExceptionMapper.class);
+
+        Response response;
 
         Form f = new Form();
         f.param("x", " 123");
@@ -360,11 +384,9 @@ public class StringReaderTest extends AbstractTest {
                         build()
         );
         assertEquals("param", response.readEntity(String.class));
-
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testURIParamException() throws ExecutionException, InterruptedException {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 URIExceptionMapper.class);
@@ -375,7 +397,7 @@ public class StringReaderTest extends AbstractTest {
         response = _test(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
         assertEquals("uri", response.readEntity(String.class));
 
-        response = _test(UriBuilder.fromPath("/").queryParam("x", " 123").build().toString());
+        response = _test(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
         assertEquals("uri", response.readEntity(String.class));
     }
 

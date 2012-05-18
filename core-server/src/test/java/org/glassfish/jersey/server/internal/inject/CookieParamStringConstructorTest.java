@@ -40,8 +40,11 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URI;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
@@ -49,12 +52,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -230,7 +231,6 @@ public class CookieParamStringConstructorTest extends AbstractTest {
                         cookie(new Cookie("arg3", "http://test")).build()
         );
 
-        // TODO XXX FIXME assertEquals(400, response.getStatus());
-        assertEquals(500, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 }

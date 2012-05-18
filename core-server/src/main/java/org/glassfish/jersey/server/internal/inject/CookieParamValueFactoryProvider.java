@@ -39,15 +39,20 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
-import org.glassfish.jersey.server.model.Parameter;
-import org.jvnet.hk2.annotations.Inject;
+import java.util.Map;
 
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.Map;
+
+import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
+import org.glassfish.jersey.server.ParamException;
+import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link CookieParam} injection annotation.
@@ -57,8 +62,14 @@ import java.util.Map;
  */
 final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider<CookieParam> {
 
+    /**
+     * Injection resolver for {@link CookieParam} annotation.
+     */
     static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
 
+        /**
+         * Create new {@link CookieParam} annotation injection resolver.
+         */
         public InjectionResolver() {
             super(CookieParam.class, CookieParamValueFactoryProvider.class);
         }
@@ -81,7 +92,12 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
                 cookies.putSingle(e.getKey(), e.getValue().getValue());
             }
 
-            return extractor.extract(cookies);
+            try {
+                return extractor.extract(cookies);
+            } catch (ExtractorException ex) {
+                throw new ParamException.CookieParamException(ex.getCause(),
+                        extractor.getName(), extractor.getDefaultValueString());
+            }
         }
     }
 
@@ -99,6 +115,11 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
+    /**
+     * {@link CookieParam} annotation value factory provider injection constructor.
+     * @param mpep multivalued parameter extractor provider.
+     * @param injector injector instance.
+     */
     public CookieParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
         super(mpep, injector, Parameter.Source.COOKIE);
     }
