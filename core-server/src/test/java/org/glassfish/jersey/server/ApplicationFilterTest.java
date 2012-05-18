@@ -40,7 +40,6 @@
 package org.glassfish.jersey.server;
 
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceBuilder;
 import junit.framework.Assert;
 import org.glassfish.jersey.filter.PreMatchRequestFilterModule;
 import org.glassfish.jersey.filter.RequestFilterModule;
@@ -102,7 +101,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
+        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -136,7 +135,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
+        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -170,7 +169,7 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
+        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
 
         // should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
@@ -273,6 +272,37 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(application.apply(Requests.from("/test", "GET").build()).get().getStatus(), 200);
+        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
+    }
+
+    public class ExceptionFilter implements RequestFilter {
+
+        @Override
+        public void preFilter(FilterContext context) throws IOException {
+            throw new IOException("test");
+        }
+    }
+
+    @Test
+    public void testFilterExceptionHandling() throws Exception {
+
+        List<RequestFilter> requestFilterList = new ArrayList<RequestFilter>();
+        requestFilterList.add(new ExceptionFilter());
+
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .addModules(new RequestFilterModule(requestFilterList));
+
+        Resource.Builder rb = Resource.builder("test");
+        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+
+            @Override
+            public Response apply(@Nullable Request request) {
+                return Responses.empty().status(200).build();
+            }
+        });
+        resourceConfig.addResources(rb.build());
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
+
+        assertEquals(500, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
     }
 }
