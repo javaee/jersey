@@ -61,7 +61,7 @@ import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
-import org.glassfish.jersey.server.testutil.AcceptorRootModule;
+import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -124,7 +124,7 @@ public class RMBuilderTest {
 
         final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
         runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build());
-        appRootModule.setRoot(runtimeModelBuilder.buildModel());
+        appRootModule.setMatchingRoot(runtimeModelBuilder.buildModel());
 
         invoker = injector.inject(RequestInvoker.class);
         requestScope = injector.inject(RequestScope.class);

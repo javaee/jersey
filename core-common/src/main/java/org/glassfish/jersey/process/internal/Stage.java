@@ -39,14 +39,17 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Function;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import javax.inject.Qualifier;
+
 import org.glassfish.jersey.internal.util.collection.Pair;
+
+import com.google.common.base.Function;
 
 /**
  * A generic unidirectional transformation function designed to be used in

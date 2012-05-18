@@ -67,7 +67,8 @@ public class JsonJacksonModule extends AbstractModule {
             }));
 
     /**
-     * Returns providers used for serialization and deserialization of Json entities.
+     * Get providers used for serialization and de-serialization of entities
+     * to/from JSON media type.
      *
      * @return {@link Collection} of providers.
      */

@@ -39,44 +39,33 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import javax.ws.rs.core.ExecutionContext;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.Inflector;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import com.google.common.base.Optional;
 
 /**
- * Jersey processing framework bindings configuration module.
+ * Default implementation of request accepting context.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingModule extends AbstractModule {
+class DefaultAcceptingContext implements RequestProcessor.AcceptingContext {
+    private Optional<Inflector<Request, Response>> inflector = Optional.absent();
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
-
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
+    @Override
+    public void setInflector(Inflector<Request, Response> inflector) {
+        this.inflector = Optional.of(inflector);
     }
 
     @Override
-    protected void configure() {
-        // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {})
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
+    public void setInflector(Optional<Inflector<Request, Response>> inflector) {
+        this.inflector = inflector;
+    }
 
-        // Processing executors
-        bind().to(ProcessingExecutorsFactory.class);
-
-        // Accepting context
-        bind(RequestProcessor.AcceptingContext.class).to(DefaultAcceptingContext.class).in(RequestScope.class);
+    @Override
+    public Optional<Inflector<Request, Response>> getInflector() {
+        return inflector;
     }
 }

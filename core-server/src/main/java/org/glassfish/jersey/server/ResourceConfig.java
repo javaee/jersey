@@ -58,7 +58,6 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceBuilder;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
 import org.glassfish.hk2.Module;
@@ -96,6 +95,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     //
     private InternalState internalState = new Mutable();
 
+    /**
+     * Create a new resource configuration without any custom properties or
+     * resource and provider classes.
+     */
     public ResourceConfig() {
         this.classLoader = ReflectionHelper.getContextClassLoader();
 
@@ -111,28 +114,45 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         this.customModules = Sets.newHashSet();
     }
 
+    /**
+     * Create a new resource configuration initialized with a given set of
+     * resource/provider classes.
+     *
+     * @param classes application-specific resource and/or provider classes.
+     */
     public ResourceConfig(Set<Class<?>> classes) {
         this();
         this.addClasses(classes);
     }
 
+    /**
+     * Create a new resource configuration initialized with a given set of
+     * resource/provider classes.
+     *
+     * @param classes application-specific resource and/or provider classes.
+     */
     public ResourceConfig(Class<?>... classes) {
         this(Sets.newHashSet(classes));
     }
 
-    public ResourceConfig(ResourceConfig that) {
-        this.classLoader = that.classLoader;
+    /**
+     * Create a copy of an existing configuration.
+     *
+     * @param original original configuration.
+     */
+    public ResourceConfig(ResourceConfig original) {
+        this.classLoader = original.classLoader;
 
-        this.classes = Sets.newHashSet(that.classes);
-        this.singletons = Sets.newHashSet(that.singletons);
-        this.resources = Sets.newHashSet(that.resources);
+        this.classes = Sets.newHashSet(original.classes);
+        this.singletons = Sets.newHashSet(original.singletons);
+        this.resources = Sets.newHashSet(original.resources);
         this.resourcesView = Collections.unmodifiableSet(this.resources);
 
-        this.properties = Maps.newHashMap(that.properties);
+        this.properties = Maps.newHashMap(original.properties);
         this.propertiesView = Collections.unmodifiableMap(this.properties);
 
-        this.resourceFinders = Sets.newHashSet(that.resourceFinders);
-        this.customModules = Sets.newHashSet(that.customModules);
+        this.resourceFinders = Sets.newHashSet(original.resourceFinders);
+        this.customModules = Sets.newHashSet(original.customModules);
     }
 
     /**
@@ -166,8 +186,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
      *
      * @param applicationClass Class representing a JAX-RS application.
-     * @param defaultClasses Default set of classes that should be returned from {@link #getClasses()} if the underlying
-     *                       application does not provide any classes and singletons.
+     * @param defaultClasses   Default set of classes that should be returned from {@link #getClasses()} if the underlying
+     *                         application does not provide any classes and singletons.
      * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
      */
     public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass, Set<Class<?>> defaultClasses) {
@@ -214,10 +234,22 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return addSingletons(Sets.newHashSet(singletons));
     }
 
+    /**
+     * Add new resource models to the configuration.
+     *
+     * @param resources resource models.
+     * @return updated resource configuration.
+     */
     public final ResourceConfig addResources(Resource... resources) {
         return addResources(Sets.newHashSet(resources));
     }
 
+    /**
+     * Add new resource models to the configuration.
+     *
+     * @param resources resource models.
+     * @return updated resource configuration.
+     */
     public final ResourceConfig addResources(Set<Resource> resources) {
         return internalState.addResources(resources);
     }
@@ -225,7 +257,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     /**
      * Set a {@code ResourceConfig} property.
      *
-     * @param name property name.
+     * @param name  property name.
      * @param value property value.
      * @return updated resource configuration instance.
      */
@@ -354,6 +386,12 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return cachedClassesView;
     }
 
+    /**
+     * Get configured resource and/or provider classes. The method is overridden
+     * in a {@link WrappingResourceConfig private sub-type}.
+     *
+     * @return set of configured resource and/or provider classes.
+     */
     Set<Class<?>> _getClasses() {
         Set<Class<?>> result = Sets.newHashSet();
 
@@ -430,6 +468,12 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         return cachedSingletonsView;
     }
 
+    /**
+     * Get configured resource and/or provider instances. The method is overridden
+     * in a {@link WrappingResourceConfig private sub-type}.
+     *
+     * @return set of configured resource and/or provider instances.
+     */
     Set<Object> _getSingletons() {
         Set<Object> result = Sets.newHashSet();
         result.addAll(singletons);
@@ -449,7 +493,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * Get resource and provider class loader.
      *
      * @return class loader to be used when looking up the resource classes and
-     *     providers.
+     *         providers.
      */
     public final ClassLoader getClassLoader() {
         return classLoader;
@@ -490,6 +534,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     /**
      * Allows overriding the {@link #getApplication()} method functionality in {@link WrappingResourceConfig}.
+     *
      * @return JAX-RS application corresponding with this ResourceConfig.
      */
     Application _getApplication() {
@@ -498,6 +543,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     /**
      * Method used by ApplicationHandler to retrieve application class (this method is overriden by WrappingResourceConfig.
+     *
      * @return application class
      */
     Class<? extends Application> getApplicationClass() {
@@ -508,6 +554,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * This method is used by ApplicationHandler to set application instance to the resource config (should
      * always be called on WrappingResourceConfig instance, never on plain instances of ResourceConfig
      * unless we have a bug in the code).
+     *
      * @param app JAX-RS application
      * @return this ResourceConfig instance (for convenience)
      */
@@ -518,6 +565,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     /**
      * Allows overriding the setApplication() method functionality in WrappingResourceConfig.
+     *
      * @param app application to be set for this ResourceConfig
      * @return this resource config instance
      */
@@ -530,7 +578,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * where each entry may contain zero or more elements separated by ';'.
      *
      * @param elements an array where each String entry may contain zero or more
-     *        {@link ServerProperties#COMMON_DELIMITERS} separated elements.
+     *                 {@link ServerProperties#COMMON_DELIMITERS} separated elements.
      * @return the array of elements, each element is trimmed, the array will
      *         not contain any empty or null entries.
      */
@@ -543,10 +591,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * where each entry may contain zero or more elements separated by characters
      * in delimiters string.
      *
-     * @param elements an array where each String entry may contain zero or more
-     *        delimiters separated elements.
+     * @param elements   an array where each String entry may contain zero or more
+     *                   delimiters separated elements.
      * @param delimiters string with delimiters, every character represents one
-     *        delimiter.
+     *                   delimiter.
      * @return the array of elements, each element is trimmed, the array will
      *         not contain any empty or null entries.
      */
@@ -575,10 +623,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
      * that may contain zero or more elements separated by characters in
      * delimiters string.
      *
-     * @param elements a String that may contain zero or more
-     *        delimiters separated elements.
+     * @param elements   a String that may contain zero or more
+     *                   delimiters separated elements.
      * @param delimiters string with delimiters, every character represents one
-     *        delimiter.
+     *                   delimiter.
      * @return the array of elements, each element is trimmed.
      */
     public static String[] getElements(String elements, String delimiters) {
@@ -597,13 +645,21 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
     private interface InternalState {
         ResourceConfig addClasses(Set<Class<?>> classes);
+
         ResourceConfig addResources(Set<Resource> resources);
+
         ResourceConfig addFinder(ResourceFinder resourceFinder);
+
         ResourceConfig addModules(Set<Module> modules);
+
         ResourceConfig addProperties(Map<String, Object> properties);
+
         ResourceConfig addSingletons(Set<Object> singletons);
+
         ResourceConfig setClassLoader(ClassLoader classLoader);
+
         ResourceConfig setProperty(String name, Object value);
+
         ResourceConfig setApplication(Application application);
     }
 
@@ -764,28 +820,30 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         /**
-         * Get the original uninstantiated JAX-RS {@link Application} class.
-         *
+         * Get the original JAX-RS {@link Application} class provided it was not
+         * instantiated yet. A {@code null} is returned in case the class has been
+         * instantiated already or was not configured at all.
+         * <p>
          * This class will be used to initialize the resource configuration instance.
          * If there is no JAX-RS application class set, or if the class has been
          * instantiated already, the method will return {@code null}.
-         *
-         * @return original uninstantiated JAX-RS application class or {@code null}
-         *     if there is no such class or if the class has been already instantiated.
+         * </p>
+         * @return original JAX-RS application class or {@code null} if there is no
+         *         such class configured or if the class has been already instantiated.
          */
+        @Override
         Class<? extends Application> getApplicationClass() {
             return applicationClass;
         }
 
         /**
          * Merges fields (e.g. custom modules, properties) of the given application with this application.
-         * <p/>
+         * <p>
          * The merging should be done because of the possibility of reloading this {@code ResourceConfig} in a container
          * so this resource config should know about custom modules and properties of the underlying application to ensure
          * the reload process will complete successfully.
-         *
+         * </p>
          * @param application the application which fields should be merged with this application.
-         *
          * @see org.glassfish.jersey.server.spi.Container#reload()
          * @see org.glassfish.jersey.server.spi.Container#reload(ResourceConfig)
          */

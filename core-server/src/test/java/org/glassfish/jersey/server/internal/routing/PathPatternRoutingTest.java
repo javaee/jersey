@@ -62,7 +62,7 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
-import org.glassfish.jersey.server.testutil.AcceptorRootModule;
+import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.uri.PathPattern;
 
@@ -141,16 +141,16 @@ public class PathPatternRoutingTest {
                 return Responses.from(200, req).entity("B").build();
             }
         });
-        appRootModule.setRoot(routeBuilder.root(
+        appRootModule.setMatchingRoot(routeBuilder.root(
                 routeBuilder.route("{p1}").to(LastPathSegmentTracingFilter.class)
-                    .to(routeBuilder.route("b").to(LastPathSegmentTracingFilter.class)
-                        .to(routeBuilder.route(new PathPattern("{p2}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
-                    .to(routeBuilder.route("d").to(LastPathSegmentTracingFilter.class)
-                        .to(routeBuilder.route(new PathPattern("{p3 : [^/]+}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection))
-                        // this is how resource methods on sub-resources get mapped:
-                        .to(routeBuilder.route(PathPattern.EMPTY_PATTERN).to(LastPathSegmentTracingFilter.class).to(inflection))
-                        .to(routeBuilder.route(new PathPattern("/", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
-                .build()));
+                        .to(routeBuilder.route("b").to(LastPathSegmentTracingFilter.class)
+                                .to(routeBuilder.route(new PathPattern("{p2}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
+                        .to(routeBuilder.route("d").to(LastPathSegmentTracingFilter.class)
+                                .to(routeBuilder.route(new PathPattern("{p3 : [^/]+}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection))
+                                        // this is how resource methods on sub-resources get mapped:
+                                .to(routeBuilder.route(PathPattern.EMPTY_PATTERN).to(LastPathSegmentTracingFilter.class).to(inflection))
+                                .to(routeBuilder.route(new PathPattern("/", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
+                        .build()));
 
         this.invoker = injector.inject(RequestInvoker.class);
         this.requestScope = injector.inject(RequestScope.class);

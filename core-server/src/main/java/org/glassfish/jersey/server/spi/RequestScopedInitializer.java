@@ -41,8 +41,6 @@ package org.glassfish.jersey.server.spi;
 
 import org.glassfish.hk2.Services;
 
-import org.glassfish.jersey.server.ApplicationHandler;
-
 /**
  * Custom initialization provider that is guaranteed to be run from within an active
  * request scope.
@@ -57,7 +55,7 @@ public interface RequestScopedInitializer {
      * Perform request-scoped initialization.
      *
      * @param services current HK2 services instance configured in the
-     * {@link JerseyApplication}.
+     *                 {@link org.glassfish.jersey.server.ApplicationHandler}.
      */
     public void initialize(Services services);
 }

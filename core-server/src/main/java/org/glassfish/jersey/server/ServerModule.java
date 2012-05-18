@@ -58,18 +58,7 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.*;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.DefaultStagingContext;
-import org.glassfish.jersey.process.internal.ExceptionMapper;
-import org.glassfish.jersey.process.internal.FilterModule;
-import org.glassfish.jersey.process.internal.HierarchicalRequestProcessor;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.StagingContext;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -84,8 +73,8 @@ import org.glassfish.hk2.scopes.Singleton;
 import org.jvnet.hk2.annotations.Inject;
 
 /**
+ * Server injection binding configuration module.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerModule extends AbstractModule {
@@ -197,30 +186,39 @@ public class ServerModule extends AbstractModule {
                 new CloseableServiceModule());
 
         // exception mapper
-        bind(new TypeLiteral<ExceptionMapper<Throwable>>() {}).toInstance(new ServerExceptionMapper());
+        bind(new TypeLiteral<ExceptionMapper<Throwable>>() {
+        }).toInstance(new ServerExceptionMapper());
 
         // Request/Response staging contexts
-        bind(new TypeLiteral<StagingContext<Request>>() {}).to(RequestStagingContext.class).in(RequestScope.class);
+        bind(new TypeLiteral<StagingContext<Request>>() {
+        }).to(RequestStagingContext.class).in(RequestScope.class);
 
-        bind(new TypeLiteral<StagingContext<Response>>() {}).to(ResponseStagingContext.class).in(RequestScope.class);
+        bind(new TypeLiteral<StagingContext<Response>>() {
+        }).to(ResponseStagingContext.class).in(RequestScope.class);
 
         bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Request>>() {}).toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<Request>>() {
+        }).toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
 
         bind(RequestHeaders.class).toFactory(RequestHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<RequestHeaders>>() {}).toFactory(ReferencingFactory.<RequestHeaders>referenceFactory()).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<RequestHeaders>>() {
+        }).toFactory(ReferencingFactory.<RequestHeaders>referenceFactory()).in(RequestScope.class);
 
         bind(HttpHeaders.class).toFactory(HttpHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<HttpHeaders>>() {}).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<HttpHeaders>>() {
+        }).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
 
         bind(Response.class).toFactory(ResponseReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Response>>() {}).toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<Response>>() {
+        }).toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
 
         bind(ResponseHeaders.class).toFactory(ResponseHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<ResponseHeaders>>() {}).toFactory(ReferencingFactory.<ResponseHeaders>referenceFactory()).in(RequestScope.class);
+        bind(new TypeLiteral<Ref<ResponseHeaders>>() {
+        }).toFactory(ReferencingFactory.<ResponseHeaders>referenceFactory()).in(RequestScope.class);
 
-        // Request processor
-        bind(RequestProcessor.class).to(HierarchicalRequestProcessor.class);
+        // Request processors
+        bind(RequestProcessor.class).to(LinearRequestProcessor.class); // main processor
+        bind().to(HierarchicalRequestProcessor.class); // matching processor
         // Request invoker
         bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
 

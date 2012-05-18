@@ -57,7 +57,7 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
-import org.glassfish.jersey.server.testutil.AcceptorRootModule;
+import org.glassfish.jersey.server.AcceptorRootModule;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
@@ -122,13 +122,13 @@ public class RedirectingFilterTest {
             }
         });
 
-        appRootModule.setRoot(routeBuilder.root(
+        appRootModule.setMatchingRoot(routeBuilder.root(
                 routeBuilder.route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
-                    .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
-                        .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, true)).to(inflection)))
-                    .to(routeBuilder.route("d(/.*)?").to(LastPathSegmentTracingFilter.class)
-                        .to(routeBuilder.route("e").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, false)).to(inflection)))
-                .build()));
+                        .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
+                                .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, true)).to(inflection)))
+                        .to(routeBuilder.route("d(/.*)?").to(LastPathSegmentTracingFilter.class)
+                                .to(routeBuilder.route("e").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, false)).to(inflection)))
+                        .build()));
 
         invoker = injector.inject(RequestInvoker.class);
     }

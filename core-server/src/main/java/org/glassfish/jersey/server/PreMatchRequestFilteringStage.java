@@ -37,34 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.testutil;
+package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.PreMatchRequestFilter;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
+import org.glassfish.jersey.internal.MappableException;
+import org.glassfish.jersey.process.internal.AbstractFilterProcessor;
+
+import com.google.common.base.Function;
 
 /**
+ * Function that executes pre-matching filters.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class AcceptorRootModule implements Module, Factory<TreeAcceptor> {
-
-    private TreeAcceptor root;
-
-    @Override
-    public TreeAcceptor get() {
-        return root;
-    }
-
-    public void setRoot(TreeAcceptor root) {
-        this.root = root;
-    }
+class PreMatchRequestFilteringStage extends AbstractFilterProcessor<PreMatchRequestFilter>
+        implements Function<Request, Request> {
 
     @Override
-    public void configure(BinderFactory binderFactory) {
-        binderFactory.bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(this);
+    public Request apply(Request data) {
+        javax.ws.rs.ext.FilterContext filterContext = filterContextFactory.get();
+
+        // Initialize filter context
+        filterContext.setRequest(data);
+
+        // Execute pre-match filter chain
+        assert filterContext.getResponse() == null;
+        for (PreMatchRequestFilter filter : getFilters(PreMatchRequestFilter.class)) {
+            try {
+                filter.preMatchFilter(filterContext);
+                if (filterContext.getResponse() != null) {
+                    break;
+                }
+            } catch (Exception e) {
+                throw new MappableException(e);
+            }
+        }
+
+        return filterContext.getRequest();
     }
 }

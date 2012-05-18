@@ -73,7 +73,6 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
-import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
@@ -85,11 +84,10 @@ import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.PreMatchRequestFilterAcceptor;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.StagingContext;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -118,7 +116,6 @@ import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -180,11 +177,19 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
     private class ApplicationModule extends AbstractModule {
 
-        private class RootAcceptorProvider implements Factory<TreeAcceptor> {
+        private class RootResourceMatchingAcceptorProvider implements Factory<TreeAcceptor> {
 
             @Override
             public TreeAcceptor get() {
-                return ApplicationHandler.this.rootAcceptor;
+                return ApplicationHandler.this.rootResourceMatchingAcceptor;
+            }
+        }
+
+        private class RootStageAcceptorProvider implements Factory<LinearAcceptor> {
+
+            @Override
+            public LinearAcceptor get() {
+                return ApplicationHandler.this.rootStageAcceptor;
             }
         }
 
@@ -214,18 +219,13 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
             bind(ApplicationHandler.class).toInstance(ApplicationHandler.this);
 
-            bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootAcceptorProvider()).in(Singleton.class);
-
-            bind().to(PreMatchRequestFilterAcceptor.class).in(Singleton.class);
+            bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootResourceMatchingAcceptorProvider())
+                    .in(Singleton.class);
+            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootStageAcceptorProvider())
+                    .in(Singleton.class);
         }
     }
 
-    // FIXME move filter acceptor away from here! It must be part of the root acceptor chain!
-    @Inject
-    private PreMatchRequestFilterAcceptor preMatchFilterAcceptor;
-    @Inject
-    private Factory<StagingContext<Request>> requestStagingContext;
-    // FIXME END
     @Inject
     private RequestScope requestScope;
     @Inject
@@ -238,10 +238,22 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private Factory<CloseableService> closeableServiceFactory;
     //
     private Services services;
-    private TreeAcceptor rootAcceptor;
+    /**
+     * Root linear request acceptor.
+     * This is the main entry point for the whole request processing.
+     */
+    private LinearAcceptor rootStageAcceptor;
+    /**
+     * Root hierarchical request matching acceptor.
+     * Invoked in a single linear stage as part of the main linear accepting chain.
+     */
+    private TreeAcceptor rootResourceMatchingAcceptor;
     private final ResourceConfig configuration;
     private References refs;
 
+    /**
+     * Create new application handler using a default configuration.
+     */
     public ApplicationHandler() {
         initServices();
         this.configuration = new ResourceConfig();
@@ -348,7 +360,16 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             runtimeModelBuilder.process(r);
         }
 
-        this.rootAcceptor = runtimeModelBuilder.buildModel();
+        this.rootResourceMatchingAcceptor = runtimeModelBuilder.buildModel();
+
+        // Create a linear accepting chain
+        final PreMatchRequestFilteringStage preMatchRequestFilteringStage = injector.inject(PreMatchRequestFilteringStage.class);
+        final ResourceMatchingStage resourceMatchingStage = injector.inject(ResourceMatchingStage.class);
+        final InflectorExtractingStage inflectorExtractingStage = injector.inject(InflectorExtractingStage.class);
+        this.rootStageAcceptor = Stages
+                .acceptingChain(preMatchRequestFilteringStage)
+                .to(resourceMatchingStage)
+                .build(inflectorExtractingStage);
 
         injector.inject(this);
     }
@@ -440,7 +461,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         final ContainerResponseWriter containerResponseWriter = new ContainerResponseWriter() {
             @Override
             public OutputStream writeResponseStatusAndHeaders(long contentLength, Response response) throws ContainerException {
-                if(contentLength >= 0) {
+                if (contentLength >= 0) {
                     response.getHeaders().asMap().putSingle("Content-Length", Long.toString(contentLength));
                 }
 
@@ -474,7 +495,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             @Override
             protected Response handleResponse(Response response) {
                 ApplicationHandler.this.writeResponse(containerResponseWriter, request, response);
-                return (request.getMethod().equals(HttpMethod.HEAD) ? stripEntity(response): response);
+                return (request.getMethod().equals(HttpMethod.HEAD) ? stripEntity(response) : response);
             }
 
             @Override
@@ -578,15 +599,10 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private void apply(Request request, InvocationCallback callback, SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
         try {
             requestScope.enter();
+            // TODO move to initialization stage
             initRequestScopeInjections(securityContext, requestScopeInitializer);
-            // FIXME: This must be moved into the acceptor chain otherwise exception mapping & possibly
-            //        other stuff may not work!
-            requestStagingContext.get().beforeStage(preMatchFilterAcceptor, request);
-            final Pair<Request, Optional<LinearAcceptor>> pair = preMatchFilterAcceptor.apply(request);
-            requestStagingContext.get().afterStage(preMatchFilterAcceptor, pair.left());
-            // FIXME END
 
-            invoker.apply(pair.left(), callback);
+            invoker.apply(request, callback);
         } finally {
             closeableServiceFactory.get().close();
             requestScope.exit();
@@ -594,7 +610,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     }
 
     private void initRequestScopeInjections(SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
-        Ref<SecurityContext> secReference = securityContextRefFactory.get();
+        final Ref<SecurityContext> secReference = securityContextRefFactory.get();
         secReference.set(securityContext);
 
         if (requestScopeInitializer != null) {
@@ -748,10 +764,20 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         return services;
     }
 
+    /**
+     * Get the service providers configured for the application.
+     *
+     * @return application service providers.
+     */
     public ServiceProviders getServiceProviders() {
         return refs.providers.get();
     }
 
+    /**
+     * Get the application configuration.
+     *
+     * @return application configuration.
+     */
     public ResourceConfig getConfiguration() {
         return configuration;
     }

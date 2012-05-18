@@ -37,44 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server;
 
-package org.glassfish.jersey.process.internal;
+import org.glassfish.jersey.process.internal.LinearAcceptor;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
 
-import com.google.common.base.Optional;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.internal.MappableException;
+import org.glassfish.hk2.BinderFactory;
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.PreMatchRequestFilter;
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
+ * Test utility module for testing hierarchical request accepting (i.e. resource matching).
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class PreMatchRequestFilterAcceptor extends AbstractFilterProcessor<PreMatchRequestFilter> implements LinearAcceptor {
+public class AcceptorRootModule implements Module, Factory<LinearAcceptor> {
+
+    private TreeAcceptor matchingRoot;
+    @Inject
+    private Factory<ResourceMatchingStage> matchingStageFactory;
+    @Inject
+    private Factory<InflectorExtractingStage> inflectorExtractingStageFactory;
 
     @Override
-    public Pair<Request, Optional<LinearAcceptor>> apply(Request data) {
-        javax.ws.rs.ext.FilterContext filterContext = filterContextFactory.get();
-
-        // Initialize filter context
-        filterContext.setRequest(data);
-
-        // Execute pre-match filter chain
-        assert filterContext.getResponse() == null;
-        for (PreMatchRequestFilter filter : getFilters(PreMatchRequestFilter.class)) {
-            try {
-                filter.preMatchFilter(filterContext);
-                if (filterContext.getResponse() != null) {
-                    break;
-                }
-            } catch (Exception e) {
-                throw new MappableException(e);
-            }
-        }
-        
-        return Tuples.of(filterContext.getRequest(), Optional.<LinearAcceptor>absent());
+    public LinearAcceptor get() {
+        return Stages.acceptingChain(matchingStageFactory.get()).build(inflectorExtractingStageFactory.get());
     }
 
+    /**
+     * Set the root resource matching acceptor.
+     *
+     * @param matchingRoot root resource matching acceptor.
+     */
+    public void setMatchingRoot(TreeAcceptor matchingRoot) {
+        this.matchingRoot = matchingRoot;
+    }
+
+    @Override
+    public void configure(BinderFactory binderFactory) {
+        binderFactory.bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(this);
+        binderFactory.bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new Factory<TreeAcceptor>() {
+            @Override
+            public TreeAcceptor get() throws ComponentException {
+                return matchingRoot;
+            }
+        });
+    }
 }

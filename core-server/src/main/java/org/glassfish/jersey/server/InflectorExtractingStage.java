@@ -37,46 +37,50 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.ExecutionContext;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.LinearAcceptor;
+import org.glassfish.jersey.process.internal.RequestProcessor;
+import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.base.Optional;
+
 /**
- * Jersey processing framework bindings configuration module.
+ * Linear accepting stage that extracts the inflector from the accepting context
+ * and returns it wrapped in a next stage.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingModule extends AbstractModule {
+public class InflectorExtractingStage implements LinearAcceptor {
+    private final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
-
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
+    /**
+     * Create new inflector extracting acceptor.
+     *
+     * @param acceptingContextFactory accepting context factory;
+     */
+    public InflectorExtractingStage(@Inject Factory<RequestProcessor.AcceptingContext> acceptingContextFactory) {
+        this.acceptingContextFactory = acceptingContextFactory;
     }
 
     @Override
-    protected void configure() {
-        // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {})
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
+    public Pair<Request, Optional<LinearAcceptor>> apply(final Request request) {
+        final Optional<Inflector<Request,Response>> inflector = acceptingContextFactory.get().getInflector();
 
-        // Processing executors
-        bind().to(ProcessingExecutorsFactory.class);
+        if (inflector.isPresent()) {
+            return Tuples.of(request, Optional.of(Stages.asLinearAcceptor(inflector.get())));
+        }
 
-        // Accepting context
-        bind(RequestProcessor.AcceptingContext.class).to(DefaultAcceptingContext.class).in(RequestScope.class);
+        return Stages.terminalLinearContinuation(request);
     }
 }

@@ -66,7 +66,7 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.glassfish.jersey.server.testutil.AcceptorRootModule;
+import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -167,12 +167,12 @@ public class PatternRoutingAsyncInflectorTest {
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        appRootModule.setRoot(routeBuilder.root(routeBuilder
+        appRootModule.setMatchingRoot(routeBuilder.root(routeBuilder
                 .route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
-                    .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
+                .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector))))
                         .to(routeBuilder.route("d(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector)))))
-                    .build()));
+                .build()));
 
         this.invoker = injector.inject(RequestInvoker.class);
         this.requestScope = injector.inject(RequestScope.class);

@@ -37,46 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.ExecutionContext;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.HierarchicalRequestProcessor;
+import org.glassfish.jersey.process.internal.RequestProcessor;
 
 import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+
 /**
- * Jersey processing framework bindings configuration module.
+ * Linear request accepting stage that encapsulates hierarchical resource matching.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingModule extends AbstractModule {
+class ResourceMatchingStage implements Function<Request, Request> {
+    private final HierarchicalRequestProcessor processor;
+    private final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
-
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
+    /**
+     * Create a new resource matching stage.
+     *
+     * @param processor hierarchical request processor.
+     * @param acceptingContextFactory request processing accepting context provider.
+     */
+    public ResourceMatchingStage(
+            @Inject HierarchicalRequestProcessor processor,
+            @Inject Factory<RequestProcessor.AcceptingContext> acceptingContextFactory) {
+        this.processor = processor;
+        this.acceptingContextFactory = acceptingContextFactory;
     }
 
     @Override
-    protected void configure() {
-        // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {})
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
+    public Request apply(Request request) {
+        final Pair<Request, Optional<Inflector<Request,Response>>> result = processor.apply(request);
 
-        // Processing executors
-        bind().to(ProcessingExecutorsFactory.class);
+        acceptingContextFactory.get().setInflector(result.right());
 
-        // Accepting context
-        bind(RequestProcessor.AcceptingContext.class).to(DefaultAcceptingContext.class).in(RequestScope.class);
+        return result.left();
     }
 }

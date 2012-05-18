@@ -39,11 +39,11 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.process.Inflector;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Optional;
 
@@ -55,6 +55,38 @@ import com.google.common.base.Optional;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface RequestProcessor extends Stage<Request, Optional<Inflector<Request, Response>>> {
+    /**
+     * Request accepting context.
+     */
+    public static interface AcceptingContext {
+        /**
+         * Set the request to response inflector.
+         *
+         * This method can be used in a non-terminal stage to set the inflector that
+         * can be retrieved and processed by a subsequent stage.
+         *
+         * @param inflector request to response inflector. Must not be {@code null}.
+         */
+        public void setInflector(Inflector<Request, Response> inflector);
+
+        /**
+         * Set the request to response inflector optionally.
+         *
+         * This method can be used in a non-terminal stage to optionally set the
+         * inflector that can be retrieved and processed by a subsequent stage.
+         *
+         * @param inflector optional request to response inflector. Must not be
+         *                  {@code null}.
+         */
+        public void setInflector(Optional<Inflector<Request, Response>> inflector);
+
+        /**
+         * Get the (optional) request to response inflector.
+         *
+         * @return optional request to response inflector.
+         */
+        public Optional<Inflector<Request, Response>> getInflector();
+    }
 
     /**
      * Traverse through the nested request stages and apply request transformations
@@ -65,8 +97,8 @@ public interface RequestProcessor extends Stage<Request, Optional<Inflector<Requ
      *
      * @param request request data to be transformed
      * @return continuation with the transformed request on the {@link Pair#left()
-     *     left side} and the (optional) request-to-response inflector on the
-     *     {@link Pair#right() right side}.
+     *         left side} and the (optional) request-to-response inflector on the
+     *         {@link Pair#right() right side}.
      */
     @Override
     public Pair<Request, Optional<Inflector<Request, Response>>> apply(Request request);

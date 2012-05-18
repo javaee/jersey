@@ -47,7 +47,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ServerModule;
-import org.glassfish.jersey.server.testutil.AcceptorRootModule;
+import org.glassfish.jersey.server.AcceptorRootModule;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;

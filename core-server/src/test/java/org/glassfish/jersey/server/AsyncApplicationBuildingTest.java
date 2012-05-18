@@ -74,7 +74,6 @@ import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -250,7 +249,6 @@ public class AsyncApplicationBuildingTest {
     }
 
     @Test
-    @Ignore
     public void testJaxrsApplicationInjection() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceB.class)
                 .addSingletons(new ResourceAReader());

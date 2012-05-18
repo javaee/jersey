@@ -45,10 +45,12 @@ import java.util.Map;
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.client.Configuration;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.process.internal.PriorityComparator.Order;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -59,7 +61,7 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-abstract class AbstractFilterProcessor<T> {
+public abstract class AbstractFilterProcessor<T> {
 
     private PriorityComparator.Order order;
 
