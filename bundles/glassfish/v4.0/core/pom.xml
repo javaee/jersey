@@ -71,9 +71,14 @@
             <artifactId>jersey-container-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+         <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
             <version>${project.version}</version>
         </dependency>
    </dependencies>
