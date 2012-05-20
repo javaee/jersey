@@ -52,8 +52,11 @@ import java.util.regex.PatternSyntaxException;
  * A URI template.
  *
  * @author Paul Sandoz
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class UriTemplate {
+
+    private static String[] EMPTY_VALUES = new String[0];
 
     /**
      * Order the templates according to JAX-RS specification.
@@ -597,90 +600,15 @@ public class UriTemplate {
      *        contextually encode the template value
      * @return a URI
      */
+    @SuppressWarnings("unchecked")
     public static String createURIWithStringValues(
             final String scheme, final String authority,
             final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment,
             final Map<String, ? extends Object> values, final boolean encode) {
 
-        StringBuilder sb = new StringBuilder();
-
-        if (scheme != null) {
-            createURIComponent(UriComponent.Type.SCHEME, scheme, values, false, sb).
-                    append(':');
-        }
-
-        if (userInfo != null || host != null || port != null) {
-            sb.append("//");
-
-            if (userInfo != null && userInfo.length() > 0) {
-                createURIComponent(UriComponent.Type.USER_INFO, userInfo, values, encode, sb).
-                        append('@');
-            }
-
-            if (host != null) {
-                // TODO check IPv6 address
-                createURIComponent(UriComponent.Type.HOST, host, values, encode, sb);
-            }
-
-            if (port != null && port.length() > 0) {
-                sb.append(':');
-                createURIComponent(UriComponent.Type.PORT, port, values, false, sb);
-            }
-        } else if (authority != null) {
-            sb.append("//");
-
-            createURIComponent(UriComponent.Type.AUTHORITY, authority, values, encode, sb);
-        }
-
-        if (path != null) {
-            createURIComponent(UriComponent.Type.PATH, path, values, encode, sb);
-        }
-
-        if (query != null && query.length() > 0) {
-            sb.append('?');
-            createURIComponent(UriComponent.Type.QUERY_PARAM, query, values, encode, sb);
-        }
-
-        if (fragment != null && fragment.length() > 0) {
-            sb.append('#');
-            createURIComponent(UriComponent.Type.FRAGMENT, fragment, values, encode, sb);
-        }
-        return sb.toString();
-    }
-
-    private static StringBuilder createURIComponent(final UriComponent.Type t,
-            String template,
-            final Map<String, ? extends Object> values,
-            final boolean encode,
-            final StringBuilder b) {
-        if (template.indexOf('{') == -1) {
-            b.append(template);
-            return b;
-        }
-
-        // Find all template variables
-        template = new UriTemplateParser(template).getNormalizedTemplate();
-        final Matcher m = TEMPLATE_NAMES_PATTERN.matcher(template);
-
-        int i = 0;
-        while (m.find()) {
-            b.append(template, i, m.start());
-            Object tValue = values.get(m.group(1));
-            if (tValue != null) {
-                if (encode) {
-                    tValue = UriComponent.encode(tValue.toString(), t);
-                } else {
-                    tValue = UriComponent.contextualEncode(tValue.toString(), t);
-                }
-                b.append(tValue);
-            } else {
-                throw templateVariableHasNoValue(m.group(1));
-            }
-            i = m.end();
-        }
-        b.append(template, i, template.length());
-        return b;
+        return createURIWithStringValues(scheme, authority, userInfo, host, port, path, query, fragment, EMPTY_VALUES,
+                encode, (Map<String, Object>) values);
     }
 
     /**
@@ -806,7 +734,16 @@ public class UriTemplate {
             final String path, final String query, final String fragment,
             final String[] values, final boolean encode) {
 
-        final Map<String, String> mapValues = new HashMap<String, String>();
+        final Map<String, Object> mapValues = new HashMap<String, Object>();
+        return createURIWithStringValues(scheme, authority, userInfo, host, port, path, query, fragment, values, encode,
+                mapValues);
+    }
+
+    private static String createURIWithStringValues(
+            final String scheme, final String authority, final String userInfo, final String host, final String port,
+            final String path, final String query, final String fragment, final String[] values, final boolean encode,
+            final Map<String, Object> mapValues) {
+
         final StringBuilder sb = new StringBuilder();
         int offset = 0;
 
@@ -844,6 +781,9 @@ public class UriTemplate {
         }
 
         if (path != null) {
+            if (sb.length() > 0 && path.charAt(0) != '/') {
+                sb.append("/");
+            }
             offset = createURIComponent(UriComponent.Type.PATH, path, values,
                     offset, encode, mapValues, sb);
         }
@@ -866,7 +806,7 @@ public class UriTemplate {
             String template,
             final String[] values, final int offset,
             final boolean encode,
-            final Map<String, String> mapValues,
+            final Map<String, Object> mapValues,
             final StringBuilder b) {
         if (template.indexOf('{') == -1) {
             b.append(template);
@@ -884,22 +824,18 @@ public class UriTemplate {
             // Check if a template variable has already occurred
             // If so use the value to ensure that two or more declarations of
             // a template variable have the same value
-            String tValue = mapValues.get(tVariable);
-            if (tValue != null) {
-                b.append(tValue);
-            } else if (v < values.length) {
+            Object tValue = mapValues.get(tVariable);
+            if (tValue == null && v < values.length) {
                 tValue = values[v++];
-                if (tValue != null) {
-                    if (encode) {
-                        tValue = UriComponent.encode(tValue, t);
-                    } else {
-                        tValue = UriComponent.contextualEncode(tValue, t);
-                    }
-                    mapValues.put(tVariable, tValue);
-                    b.append(tValue);
+            }
+            if (tValue != null) {
+                mapValues.put(tVariable, tValue);
+                if (encode) {
+                    tValue = UriComponent.encode(tValue.toString(), t);
                 } else {
-                    throw templateVariableHasNoValue(tVariable);
+                    tValue = UriComponent.contextualEncode(tValue.toString(), t);
                 }
+                b.append(tValue);
             } else {
                 throw templateVariableHasNoValue(tVariable);
             }

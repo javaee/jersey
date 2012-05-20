@@ -41,6 +41,7 @@ package org.glassfish.jersey.uri.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -49,11 +50,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class UriBuilderImplTest {
 
@@ -90,8 +93,7 @@ public class UriBuilderImplTest {
         assertEquals("http://a%40b@examples.jersey.java.net/a@b/a@b", result);
 
         result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T}").path("{T}").segment("{T}").build("a@b").toString();
-        assertEquals("http://a%40b@examples.jersey.java.net/a%40b/a%40b", result);
-        // TODO fix above to assertEquals("http://a%40b@examples.jersey.java.net/a@b/a@b", result);
+        assertEquals("http://a%40b@examples.jersey.java.net/a@b/a@b", result);
     }
 
     @Test
@@ -99,6 +101,27 @@ public class UriBuilderImplTest {
         UriBuilder builder = new UriBuilderImpl().matrixParam("matrix", "param1", "param2");
         builder.replaceMatrixParam("matrix", (Object[]) null);
         assertEquals(builder.build().toString(), "");
+    }
+
+    // for completeness (added along with regression tests for JERSEY-1114)
+    @Test
+    public void testBuildNoSlashUri() {
+        UriBuilder builder = new UriBuilderImpl().uri(URI.create("http://localhost:8080")).path("test");
+        assertEquals("http://localhost:8080/test", builder.build().toString());
+    }
+
+    // regression test for JERSEY-1114
+    @Test
+    public void testBuildFromMapNoSlashInUri() {
+        UriBuilder builder = new UriBuilderImpl().uri(URI.create("http://localhost:8080")).path("test");
+        assertEquals("http://localhost:8080/test", builder.buildFromMap(new HashMap<String, Object>()).toString());
+    }
+
+    // regression test for JERSEY-1114
+    @Test
+    public void testBuildFromArrayNoSlashInUri() {
+        UriBuilder builder = new UriBuilderImpl().uri(URI.create("http://localhost:8080")).path("test");
+        assertEquals("http://localhost:8080/test", builder.build("testing").toString());
     }
 
     @Test
