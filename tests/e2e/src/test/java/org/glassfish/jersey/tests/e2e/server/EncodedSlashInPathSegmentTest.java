@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,59 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.tests.e2e.server;
 
-import java.util.Iterator;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
-import javax.ws.rs.core.Request;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.junit.Test;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
-
-import com.google.common.collect.Iterators;
+import static junit.framework.Assert.assertEquals;
 
 /**
- * TODO javadoc.
+ * Test for JERSEY-1167.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-final class MatchResultInitializerAcceptor implements TreeAcceptor {
-
-    /**
-     * TODO javadoc.
-     */
-    class Builder {
-
-        private final Factory<RoutingContext> contextProvider;
-
-        public Builder(@Inject Factory<RoutingContext> contextProvider) {
-            this.contextProvider = contextProvider;
-        }
-
-        public MatchResultInitializerAcceptor build(TreeAcceptor rootRoute) {
-            return new MatchResultInitializerAcceptor(contextProvider, rootRoute);
-        }
-    }
-    private final Factory<RoutingContext> contextProvider;
-    private final TreeAcceptor rootRoute;
-
-    private MatchResultInitializerAcceptor(Factory<RoutingContext> contextProvider, TreeAcceptor rootRoute) {
-        this.contextProvider = contextProvider;
-        this.rootRoute = rootRoute;
-    }
+public class EncodedSlashInPathSegmentTest extends JerseyTest {
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
-        final RoutingContext rc = contextProvider.get();
-        rc.pushMatchResult(new SingleMatchResult(Requests.relativePath(request, false)));
-
-        return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(rootRoute));
+    protected Application configure() {
+        return new ResourceConfig(EncodedSlashResource.class);
     }
+
+    @Path("/test/{p}")
+    public static class EncodedSlashResource {
+
+        @GET
+        public String get(@PathParam("p") String p) {
+            return p;
+        }
+    }
+
+    @Test
+    public void testEncodedSlashInPathParam() throws Exception {
+
+        final Response response = target().path("test/one%2Ftwo").request().get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("one/two", response.readEntity(String.class));
+    }
+
 }
