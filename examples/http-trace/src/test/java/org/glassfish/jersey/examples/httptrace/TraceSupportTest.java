@@ -57,10 +57,10 @@ public class TraceSupportTest extends JerseyTest {
         return App.create();
     }
     private String[] expectedFragmentsProgrammatic = new String[]{
-        "TRACE http://localhost:9998/tracing/programmatic"
+        "TRACE http://localhost:" + this.getPort() + "/tracing/programmatic"
     };
     private String[] expectedFragmentsAnnotated = new String[]{
-        "TRACE http://localhost:9998/tracing/annotated"
+        "TRACE http://localhost:" + this.getPort() + "/tracing/annotated"
     };
 
     private Target prepareTarget(String path) {
