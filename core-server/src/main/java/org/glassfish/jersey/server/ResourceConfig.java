@@ -423,7 +423,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         for (ResourceFinder resourceFinder : rfs) {
             while (resourceFinder.hasNext()) {
                 final String next = resourceFinder.next();
-
                 if (afl.accept(next)) {
                     try {
                         afl.process(next, resourceFinder.open());

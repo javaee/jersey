@@ -46,7 +46,7 @@ import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
 
 /**
- * Factory that provides injection of the referenced instace.
+ * Factory that provides injection of the referenced instance.
  *
  * @param <T>
  * @author Marek Potociar (marek.potociar at oracle.com)

@@ -411,7 +411,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
      *
      * @param modules Modules to be registered.
      */
-    private void registerAdditionalModules(final Set<Module> modules) {
+    public void registerAdditionalModules(final Set<Module> modules) {
         final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
 
         for (Module module : modules) {

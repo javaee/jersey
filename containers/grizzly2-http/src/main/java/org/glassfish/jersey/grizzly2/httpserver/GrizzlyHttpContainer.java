@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,13 +56,26 @@ import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
+import org.jvnet.hk2.annotations.Inject;
+
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.utils.Charsets;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.PerLookup;
+
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -71,6 +85,7 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 /**
  * Grizzly 2 Jersey HTTP Container.
@@ -81,6 +96,44 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
+
+    /**
+     * Referencing factory for Grizzly request.
+     */
+    private static class GrizzlyRequestReferencingFactory extends ReferencingFactory<Request> {
+
+        public GrizzlyRequestReferencingFactory(@Inject Factory<Ref<Request>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
+     * Referencing factory for Grizzly response.
+     */
+    private static class GrizzlyResponseReferencingFactory extends ReferencingFactory<Response> {
+
+        public GrizzlyResponseReferencingFactory(@Inject Factory<Ref<Response>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
+     * An internal module to enable Grizzly HTTP container specific types injection.
+     * This module allows to inject underlying Grizzly HTTP request and response instances.
+     */
+    private static class GrizzlyModule extends AbstractModule {
+
+        @Override
+        protected void configure() {
+            bind(Request.class).toFactory(GrizzlyRequestReferencingFactory.class).in(PerLookup.class);
+            bind(new TypeLiteral<Ref<Request>>() {}).
+                    toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
+
+            bind(Response.class).toFactory(GrizzlyResponseReferencingFactory.class).in(PerLookup.class);
+            bind(new TypeLiteral<Ref<Response>>() {}).
+                    toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
+        }
+    }
 
     private static final CompletionHandler<Response> EMPTY_COMPLETION_HANDLER = new CompletionHandler<Response>() {
 
@@ -201,7 +254,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
-    private transient ApplicationHandler appHandler;
+    private volatile ApplicationHandler appHandler;
     private final ContainerLifecycleListener containerListener;
 
     /**
@@ -212,6 +265,8 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     GrizzlyHttpContainer(final ApplicationHandler application) {
         this.appHandler = application;
         this.containerListener = ConfigHelper.getContainerLifecycleListener(application);
+
+        this.appHandler.registerAdditionalModules(new HashSet<Module>() {{add(new GrizzlyModule());}});
     }
 
     @Override
@@ -226,7 +281,14 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
             ContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
-                    getSecurityContext(request), null);
+                    getSecurityContext(request), new RequestScopedInitializer() {
+
+                    @Override
+                    public void initialize(Services services) {
+                        services.forContract(new TypeLiteral<Ref<Request>>() {}).get().set(request);
+                        services.forContract(new TypeLiteral<Ref<Response>>() {}).get().set(response);
+                    }
+                });
             appHandler.apply(containerRequestContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
@@ -246,7 +308,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload(ResourceConfig configuration) {
-        appHandler = new ApplicationHandler(configuration);
+        appHandler = new ApplicationHandler(configuration.addModules(new GrizzlyModule()));
         containerListener.onReload(this);
     }
 
