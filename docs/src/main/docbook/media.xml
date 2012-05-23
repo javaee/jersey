@@ -46,7 +46,18 @@
 %ents;
 ]>
 
-<chapter id="json">
-  <title>JSON Support</title>
-    TODO: Describe support for JSON (various notations/options)
+<chapter id="media">
+  <title>Support for Common Media Types</title>
+  <section id="json">
+    <title>JSON</title>
+      TODO: Describe support for JSON (various notations/options)
+  </section>
+  <section id="xml">
+  <title>XML</title>
+    TODO: Describe support for XML
+  </section>
+  <section id="multipart">
+    <title>Multipart</title>
+      TODO: Describe support for multipart
+  </section>
 </chapter>
