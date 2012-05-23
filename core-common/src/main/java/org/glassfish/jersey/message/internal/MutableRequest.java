@@ -85,7 +85,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     /**
      * Creates new instance initialized with {@code applicationRootUri}, {@code requestUri}, {@code http method}.
 
-     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param baseUri Absolute application root URI (base URI).
      * @param requestUri Absolute request URI.
      * @param method Request HTTP method.
      */
@@ -98,7 +98,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     /**
      * Creates new instance initialized with {@code applicationRootUri}, {@code requestUri}, {@code http method}
      * and {@code entity inputStream}.
-     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param baseUri Absolute application root URI (base URI).
      * @param requestUri Absolute request URI.
      * @param method Request HTTP method.
      * @param inputStream {@link InputStream Entity content stream}.
@@ -113,7 +113,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     /**
      * Creates new instance initialized with URIs created from strings ({@code applicationRootUri}, {@code requestUri})
      *  and from {@code HTTP method}.
-     * @param applicationRootUri Absolute application root URI (base URI).
+     * @param baseUri Absolute application root URI (base URI).
      * @param requestUri Absolute request URI.
      * @param method Request HTTP method.
      */
