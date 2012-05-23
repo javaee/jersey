@@ -73,7 +73,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsExchange;
 
 /**
- * Container adapter between {@link HttpServer JDK HttpServer} and {@link JerseyApplication Jersey application}.
+ * Container adapter between {@link HttpServer JDK HttpServer} and {@link ApplicationHandler}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -82,7 +82,7 @@ public class JdkHttpHandlerContainer implements HttpHandler {
     private final ApplicationHandler appHandler;
 
     /**
-     * Creates a new Container connected to given {@link JerseyApplication Jersey application}.
+     * Creates a new Container connected to given {@link ApplicationHandler}.
      *
      * @param appHandler Jersey application handler for which the container should be
      * initialized.
