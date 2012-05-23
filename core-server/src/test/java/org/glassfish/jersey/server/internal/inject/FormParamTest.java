@@ -50,6 +50,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
@@ -73,6 +74,34 @@ import static org.junit.Assert.assertNotNull;
  */
 public class FormParamTest extends AbstractTest {
 
+
+    @Path("/")
+    public static class SimpleFormResource {
+        @POST
+        public String post(
+                @FormParam("a") String a
+        ) {
+            assertEquals("foo", a);
+            return a;
+        }
+    }
+
+    @Test
+    public void testSimpleFormResource() throws ExecutionException, InterruptedException {
+        initiateWebApplication(SimpleFormResource.class);
+
+        Form form = new Form();
+        form.param("a", "foo");
+
+        final Response response = apply(
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+        );
+
+        String s = response.readEntity(String.class);
+        assertEquals("foo", s);
+    }
+
+
     @Path("/")
     public static class FormResourceNoConsumes {
         @POST
@@ -85,7 +114,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormResourceNoConsumes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceNoConsumes.class);
 
@@ -93,7 +121,33 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_OCTET_STREAM_TYPE).entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+        );
+
+        String s = response.readEntity(String.class);
+        assertEquals("foo", s);
+    }
+
+    @Path("/")
+    public static class FormResourceFormEntityParam {
+        @POST
+        public String post(
+                @FormParam("a") String a,
+                Form form) {
+            assertEquals(a, form.asMap().getFirst("a"));
+            return a;
+        }
+    }
+
+    @Test
+    public void testFormResourceFormEntityParam() throws ExecutionException, InterruptedException {
+        initiateWebApplication(FormResourceFormEntityParam.class);
+
+        Form form = new Form();
+        form.param("a", "foo");
+
+        final Response response = apply(
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -151,7 +205,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormParamX() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceX.class);
 
@@ -160,7 +213,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "bar");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_OCTET_STREAM_TYPE).entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -168,7 +221,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormParamY() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceY.class);
 
@@ -177,7 +229,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "bar");
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -199,7 +251,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormParamTypes.class);
 
@@ -209,7 +260,7 @@ public class FormParamTest extends AbstractTest {
         form.param("decimal", "3.14");
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -231,14 +282,13 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormDefaultValueParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormDefaultValueParamTypes.class);
 
         Form form = new Form();
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -271,14 +321,13 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormConstructorValueParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormConstructorValueParamTypes.class);
 
         Form form = new Form();
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -307,6 +356,7 @@ public class FormParamTest extends AbstractTest {
     public static class FormResourceJAXB {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        @Produces(MediaType.APPLICATION_XML)
         public JAXBBean post(
                 @FormParam("a") JAXBBean a,
                 @FormParam("b") List<JAXBBean> b) {
@@ -319,7 +369,7 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
+    @Ignore("not supported yet")
     public void testFormParamJAXB() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceJAXB.class);
 
@@ -329,15 +379,16 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<jaxbBean><value>b2</value></jaxbBean>");
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
+
+        System.out.println(response.getEntity());
 
         JAXBBean b = response.readEntity(JAXBBean.class);
         assertEquals("a", b.value);
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormParamJAXBError() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceJAXB.class);
 
@@ -347,7 +398,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<x><value>b2</value></jaxbBean>");
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         // TODO XXX FIXME assertEquals(400, response.getStatus());
@@ -370,7 +421,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not implemented yet")
     public void testFormParamDate() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceDate.class);
 
@@ -384,24 +434,25 @@ public class FormParamTest extends AbstractTest {
         form.param("c", date_ANSI_C);
 
         final Response response = apply(
-                Requests.from("/", "POST").entity(form).build()
+                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         assertEquals("POST", response.readEntity(String.class));
     }
 
-    public static class ParamBean {
-        @FormParam("a") String a;
+//    @InjectParam replace with @Inject?
 
-        @FormParam("b") String b;
-
-        @Context
-        UriInfo ui;
-
-        @QueryParam("a") String qa;
-    }
-
-    // @InjectParam replace with @Inject?
+//    public static class ParamBean {
+//        @FormParam("a") String a;
+//
+//        @FormParam("b") String b;
+//
+//        @Context
+//        UriInfo ui;
+//
+//        @QueryParam("a") String qa;
+//    }
+//
 //    @Path("/")
 //    public static class FormResourceBean {
 //        @POST

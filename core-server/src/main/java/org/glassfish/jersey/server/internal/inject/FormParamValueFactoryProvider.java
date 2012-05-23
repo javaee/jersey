@@ -46,6 +46,8 @@ import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ParamException;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.internal.ExtractorException;
 
@@ -61,12 +63,19 @@ import org.jvnet.hk2.annotations.Inject;
  */
 final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<FormParam> {
 
+    /**
+     * Used internally for storing {@link javax.ws.rs.core.Form} instance in {@link org.glassfish.jersey.server.internal.inject.HttpContext}
+     * properties.
+     */
+    private static final String FORM_PROPERTY = "jersey.config.server.representation.form";
+
     static final class InjectionResolver extends ParamInjectionResolver<FormParam> {
 
         public InjectionResolver() {
             super(FormParam.class, FormParamValueFactoryProvider.class);
         }
     }
+
 
     private static final class FormParamValueFactory extends AbstractHttpContextValueFactory<Object> {
 
@@ -95,39 +104,39 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private void cacheForm(final HttpContext context, final Form form) {
-            throw new UnsupportedOperationException("Form parameter injection not supported yet.");
+            context.getProperties().put(FORM_PROPERTY, form);
+        }
 
-// TODO implement
-//            context.getProperties().put(FormDispatchProvider.FORM_PROPERTY, form);
+        private Form getForm(HttpContext context) {
+            final Request request = ensureValidRequest(context.getRequest());
+            return getFormParameters(request);
         }
 
         private Form getCachedForm(final HttpContext context) {
-            throw new UnsupportedOperationException("Form parameter injection not supported yet.");
-
-// TODO implement
-//            return (Form) context.getProperties().get(FormDispatchProvider.FORM_PROPERTY);
+            return (Form) context.getProperties().get(FORM_PROPERTY);
         }
 
         private Request ensureValidRequest(final Request request) throws IllegalStateException {
             if (request.getMethod().equals("GET")) {
                 throw new IllegalStateException(
-                        "The @FormParam is utilized when the request method is GET");
+                        LocalizationMessages.FORM_PARAM_METHOD_ERROR());
             }
 
             if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getHeaders().getMediaType())) {
                 throw new IllegalStateException(
-                        "The @FormParam is utilized when the content type of the request entity "
-                        + "is not application/x-www-form-urlencoded");
+                        LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
             }
             return request;
         }
 
-        private Form getForm(HttpContext context) {
-            throw new UnsupportedOperationException("Form parameter injection not supported yet.");
-
-// TODO implement
-//            final Request request = ensureValidRequest(context.getRequest());
-//            return request.getFormParameters();
+        private Form getFormParameters(Request request) {
+            if (request.getHeaders().getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+                request.bufferEntity();
+                Form f = request.readEntity(Form.class);
+                return (f == null ? new Form() : f);
+            } else {
+                return new Form();
+            }
         }
     }
 
@@ -138,7 +147,8 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
     @Override
     public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
+
+        if (parameterName == null || parameterName.isEmpty()) {
             // Invalid query parameter name
             return null;
         }
@@ -147,7 +157,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         if (e == null) {
             return null;
         }
-
         return new FormParamValueFactory(e, !parameter.isEncoded());
     }
 }
