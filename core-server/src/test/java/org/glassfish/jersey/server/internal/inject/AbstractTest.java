@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- * Class used for {@link JerseyApplication} initialization and for executing {@link Request}s.
+ * Class used for {@link ApplicationHandler} initialization and for executing {@link Request}s.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
