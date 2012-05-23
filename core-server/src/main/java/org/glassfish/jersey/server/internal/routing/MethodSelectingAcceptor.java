@@ -129,28 +129,51 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
      */
     private static class ConsumesProducesAcceptor {
 
-        MediaType consumes;
-        MediaType produces;
-        MethodAcceptorPair methodAcceptorPair;
+        private CombinedClientServerMediaType.EffectiveMediaType consumes;
+        private CombinedClientServerMediaType.EffectiveMediaType produces;
+        private MethodAcceptorPair methodAcceptorPair;
 
-        ConsumesProducesAcceptor(
-                MediaType consumes,
-                MediaType produces,
+        private ConsumesProducesAcceptor(
+                CombinedClientServerMediaType.EffectiveMediaType consumes,
+                CombinedClientServerMediaType.EffectiveMediaType produces,
                 MethodAcceptorPair methodAcceptorPair) {
-
             this.methodAcceptorPair = methodAcceptorPair;
             this.consumes = consumes;
             this.produces = produces;
         }
 
+        /**
+         * Returns the {@link CombinedClientServerMediaType.EffectiveMediaType extended media type} which can be
+         * consumed by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor acceptor}.
+         * @return Consumed type.
+         */
+        public CombinedClientServerMediaType.EffectiveMediaType getConsumes() {
+            return consumes;
+        }
+
+        /**
+         * Returns the {@link CombinedClientServerMediaType.EffectiveMediaType extended media type} which can be
+         * produced by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor acceptor}.
+         * @return Produced type.
+         */
+        public CombinedClientServerMediaType.EffectiveMediaType getProduces() {
+            return produces;
+        }
+
+
+        /**
+         * Determines whether this {@link ConsumesProducesAcceptor acceptor} can process the {@code request}.
+         * @param request The request to be tested.
+         * @return True if the {@code request} can be processed by this acceptor, false otherwise.
+         */
         boolean isConsumable(Request request) {
             MediaType contentType = request.getHeaders().getMediaType();
-            return contentType == null || consumes.isCompatible(contentType);
+            return contentType == null || consumes.getMediaType().isCompatible(contentType);
         }
 
         @Override
         public String toString() {
-            return String.format("%s->%s:%s", consumes, produces, methodAcceptorPair);
+            return String.format("%s->%s:%s", consumes.getMediaType(), produces.getMediaType(), methodAcceptorPair);
         }
     }
 
@@ -166,10 +189,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         CombinedClientServerMediaType produces;
         MethodAcceptorPair methodAcceptorPair;
 
-        RequestSpecificConsumesProducesAcceptor(
-                CombinedClientServerMediaType consumes,
-                CombinedClientServerMediaType produces,
-                MethodAcceptorPair methodAcceptorPair) {
+        RequestSpecificConsumesProducesAcceptor(CombinedClientServerMediaType consumes, CombinedClientServerMediaType produces,
+                                                MethodAcceptorPair methodAcceptorPair) {
 
             this.methodAcceptorPair = methodAcceptorPair;
             this.consumes = consumes;
@@ -191,7 +212,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
             }
             RequestSpecificConsumesProducesAcceptor other = (RequestSpecificConsumesProducesAcceptor) o;
             final int consumedComparison = CombinedClientServerMediaType.COMPARATOR.compare(consumes, other.consumes);
-            return (consumedComparison != 0) ? consumedComparison : CombinedClientServerMediaType.COMPARATOR.compare(produces, other.produces);
+            return (consumedComparison != 0) ? consumedComparison : CombinedClientServerMediaType.COMPARATOR.compare(produces,
+                    other.produces);
         }
     }
 
@@ -309,41 +331,60 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
     private void addAllConsumesProducesCombinations(List<ConsumesProducesAcceptor> list,
                                                     MethodAcceptorPair methodAcceptorPair) {
         final List<MediaType> effectiveInputTypes = new LinkedList<MediaType>();
-        final List<MediaType> effectiveOutputTypes = new LinkedList<MediaType>();
         ResourceMethod resourceMethod = methodAcceptorPair.model;
-        effectiveInputTypes.addAll(resourceMethod.getConsumedTypes());
-        if (effectiveInputTypes.isEmpty()) {
-            if (workers != null) {
-                final Invocable invocableMethod = resourceMethod.getInvocable();
-                for (Parameter p : invocableMethod.getParameters()) {
-                    if (p.getSource() == Parameter.Source.ENTITY) {
-                        final GenericType<?> paramType = p.getParameterType();
-                        effectiveInputTypes.addAll(workers.getMessageBodyReaderMediaTypes(
-                                paramType.getRawType(), paramType.getType(), p.getDeclaredAnnotations()));
-                    }
-                }
-            }
-        }
-        if (effectiveInputTypes.isEmpty()) {
-            effectiveInputTypes.add(MediaType.valueOf("*/*"));
-        }
-        effectiveOutputTypes.addAll(resourceMethod.getProducedTypes());
-        if (effectiveOutputTypes.isEmpty()) {
-            if (workers != null) {
-                final Invocable invocableMethod = resourceMethod.getInvocable();
-                final GenericType<?> responseType = invocableMethod.getResponseType();
-                effectiveOutputTypes.addAll(workers.getMessageBodyWriterMediaTypes(
-                        responseType.getRawType(),
-                        responseType.getType(),
-                        invocableMethod.getHandlingMethod().getDeclaredAnnotations()));
-            }
-        }
-        if (effectiveOutputTypes.isEmpty()) {
-            effectiveOutputTypes.add(MediaType.valueOf("*/*"));
-        }
+
+        boolean consumesFromWorkers = fillMediaTypes(effectiveInputTypes, resourceMethod, resourceMethod.getConsumedTypes(),
+                true);
+        final List<MediaType> effectiveOutputTypes = new LinkedList<MediaType>();
+        boolean producesFromWorkers = fillMediaTypes(effectiveOutputTypes, resourceMethod, resourceMethod.getProducedTypes(),
+                false);
+
         for (MediaType consumes : effectiveInputTypes) {
             for (MediaType produces : effectiveOutputTypes) {
-                list.add(new ConsumesProducesAcceptor(consumes, produces, methodAcceptorPair));
+                list.add(new ConsumesProducesAcceptor(new CombinedClientServerMediaType.EffectiveMediaType(consumes,
+                        consumesFromWorkers),
+                        new CombinedClientServerMediaType.EffectiveMediaType(produces, producesFromWorkers), methodAcceptorPair));
+            }
+        }
+    }
+
+    private boolean fillMediaTypes(List<MediaType> effectiveTypes, ResourceMethod resourceMethod, List<MediaType> methodTypes,
+                                   boolean inputTypes) {
+        boolean consumesFromWorkers = false;
+        effectiveTypes.addAll(methodTypes);
+        if (effectiveTypes.isEmpty()) {
+            if (workers != null) {
+                final Invocable invocableMethod = resourceMethod.getInvocable();
+                if (inputTypes) {
+                    fillInputTypesFromWorkers(effectiveTypes, invocableMethod);
+                } else {
+                    fillOutputParameters(effectiveTypes, invocableMethod);
+                }
+                consumesFromWorkers = !effectiveTypes.isEmpty();
+            }
+        }
+        if (effectiveTypes.isEmpty()) {
+            effectiveTypes.add(MediaType.valueOf("*/*"));
+        }
+        return consumesFromWorkers;
+    }
+
+    private void fillOutputParameters(List<MediaType> effectiveOutputTypes, Invocable invocableMethod) {
+        final GenericType<?> responseType = invocableMethod.getResponseType();
+        final List<MediaType> messageBodyWriterMediaTypes = workers.getMessageBodyWriterMediaTypes(
+                responseType.getRawType(),
+                responseType.getType(),
+                invocableMethod.getHandlingMethod().getDeclaredAnnotations());
+        effectiveOutputTypes.addAll(messageBodyWriterMediaTypes);
+    }
+
+    private void fillInputTypesFromWorkers(List<MediaType> effectiveInputTypes, Invocable invocableMethod) {
+        for (Parameter p : invocableMethod.getParameters()) {
+            if (p.getSource() == Parameter.Source.ENTITY) {
+                final GenericType<?> paramType = p.getParameterType();
+                final List<MediaType> messageBodyReaderMediaTypes = workers.getMessageBodyReaderMediaTypes(
+                        paramType.getRawType(), paramType.getType(), p.getDeclaredAnnotations());
+                effectiveInputTypes.addAll(messageBodyReaderMediaTypes);
             }
         }
     }
@@ -376,14 +417,15 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
 
         for (MediaType acceptableMediaType : acceptableMediaTypes) {
             for (final ConsumesProducesAcceptor satisfiable : satisfyingAcceptors) {
-                if (satisfiable.produces.isCompatible(acceptableMediaType)) {
+                if (satisfiable.produces.getMediaType().isCompatible(acceptableMediaType)) {
 
                     final MediaType requestContentType = request.getHeaders().getMediaType();
-                    final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE : requestContentType;
+                    final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE :
+                            requestContentType;
 
                     final RequestSpecificConsumesProducesAcceptor candidate = new RequestSpecificConsumesProducesAcceptor(
-                            CombinedClientServerMediaType.create(effectiveContentType, satisfiable.consumes),
-                            CombinedClientServerMediaType.create(acceptableMediaType, satisfiable.produces),
+                            CombinedClientServerMediaType.create(effectiveContentType, satisfiable.getConsumes()),
+                            CombinedClientServerMediaType.create(acceptableMediaType, satisfiable.getProduces()),
                             satisfiable.methodAcceptorPair);
                     methodSelector.consider(candidate);
                 }
@@ -397,7 +439,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
                 reportMethodSelectionAmbiguity(acceptableMediaTypes, selected, methodSelector.sameFitnessAcceptors);
             }
 
-            final MediaType effectiveResponseType = selected.produces.combinedMediaType;
+            final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
             injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
             services.forContract(ResponseProcessor.RespondingContext.class).get().push(new Function<Response, Response>() {
                 @Override
@@ -473,8 +515,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
 
         return new ConsumesProducesAcceptor(
-                MediaType.WILDCARD_TYPE,
-                MediaType.TEXT_PLAIN_TYPE,
+                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
+                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.TEXT_PLAIN_TYPE, false),
                 new MethodAcceptorPair(null, Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 
                     @Override
@@ -489,8 +531,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
     private ConsumesProducesAcceptor createGenericOptionsInflector(final Set<String> allowedMethods) {
 
         return new ConsumesProducesAcceptor(
-                MediaType.WILDCARD_TYPE,
-                MediaType.WILDCARD_TYPE,
+                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
+                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new MethodAcceptorPair(null, Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 
                     @Override

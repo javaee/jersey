@@ -378,17 +378,48 @@ public class BasicValidator extends ResourceModelValidator {
         final List<MediaType> outputTypes1 = getEffectiveOutputTypes(m1);
         final List<MediaType> outputTypes2 = getEffectiveOutputTypes(m2);
 
-        if (intersectingMediaTypes(inputTypes1, inputTypes2, outputTypes1, outputTypes2)) {
+        boolean consumesFails = false;
+        boolean consumesOnlyIntersects = false;
+        if (m1.getConsumedTypes().isEmpty() || m2.getConsumedTypes().isEmpty()) {
+            consumesFails = inputTypes1.equals(inputTypes2);
+            if (!consumesFails) {
+                consumesOnlyIntersects = MediaTypes.intersect(inputTypes1, inputTypes2);
+            }
+        } else {
+            consumesFails = MediaTypes.intersect(inputTypes1, inputTypes2);
+        }
+
+        boolean producesFails = false;
+        boolean producesOnlyIntersects = false;
+        if (m1.getProducedTypes().isEmpty() || m2.getProducedTypes().isEmpty()) {
+            producesFails = outputTypes1.equals(outputTypes2);
+            if (!producesFails) {
+                producesOnlyIntersects = MediaTypes.intersect(outputTypes1, outputTypes2);
+            }
+        } else {
+            producesFails = MediaTypes.intersect(outputTypes1, outputTypes2);
+        }
+
+        if (consumesFails && producesFails) {
+            // fatal
+            final String rcName = resource.getName();
+            addFatalIssue(resource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(rcName, httpMethod, m1.getInvocable()
+                    .getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+        } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
+                (consumesOnlyIntersects && producesOnlyIntersects)) {
+            // warning
             final String rcName = resource.getName();
             if (m1.getInvocable().requiresEntity()) {
-                addFatalIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_IN(
+                addMinorIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_IN(
                         rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             } else {
-                addFatalIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
+                addMinorIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
                         rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             }
         }
+
     }
+
 
     private static final List<MediaType> StarTypeList = Arrays.asList(new MediaType("*", "*"));
 
@@ -426,10 +457,6 @@ public class BasicValidator extends ResourceModelValidator {
 
     private boolean sameHttpMethod(ResourceMethod m1, ResourceMethod m2) {
         return m1.getHttpMethod().equals(m2.getHttpMethod());
-    }
-
-    private boolean intersectingMediaTypes(List<MediaType> i1, List<MediaType> i2, List<MediaType> o1, List<MediaType> o2) {
-        return MediaTypes.intersect(i1, i2) && MediaTypes.intersect(o1, o2);
     }
 
     private boolean samePath(Routed m1, Routed m2) {

@@ -41,8 +41,11 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.Comparator;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.QualitySourceMediaType;
 
@@ -50,12 +53,13 @@ import org.glassfish.jersey.message.internal.QualitySourceMediaType;
  * Represents function S as defined in the Request Matching part of the spec.
  *
  * @author Jakub Podlesak
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 class CombinedClientServerMediaType {
 
-    private static int wildcardsMatched(MediaType clientMt, MediaType serverMt) {
+    private static int wildcardsMatched(MediaType clientMt, EffectiveMediaType serverMt) {
         return b2i(clientMt.isWildcardType() ^ serverMt.isWildcardType())
-                + b2i(clientMt.isWildcardSubtype() ^ serverMt.isWildcardSubtype());
+                + b2i(clientMt.isWildcardSubtype() ^ serverMt.isWildcardSubType());
     }
 
     private static int b2i(boolean b) {
@@ -65,24 +69,32 @@ class CombinedClientServerMediaType {
     private static int m2i(MediaType mt) {
         return 10 * b2i(mt.isWildcardType()) + b2i(mt.isWildcardSubtype());
     }
-    MediaType combinedMediaType;
-    int q, qs, d;
-    public static final CombinedClientServerMediaType NO_MATCH = new CombinedClientServerMediaType();
+
+    private MediaType combinedMediaType;
+    private int q, qs, d;
+    private static final CombinedClientServerMediaType NO_MATCH = new CombinedClientServerMediaType();
 
     private CombinedClientServerMediaType() {
     }
 
-    public static CombinedClientServerMediaType create(MediaType clientMt, MediaType serverMt) {
-        if (!clientMt.isCompatible(serverMt)) {
+    /**
+     * Create combined client/server media type.
+     *
+     * @param clientMt client-side media type.
+     * @param serverMt server-side media type.
+     * @return combined client/server media type.
+     */
+    public static CombinedClientServerMediaType create(MediaType clientMt, EffectiveMediaType serverMt) {
+        if (!clientMt.isCompatible(serverMt.getMediaType())) {
             return NO_MATCH;
         }
 
         CombinedClientServerMediaType result = new CombinedClientServerMediaType();
 
-        result.combinedMediaType = MediaTypes.stripQualityParams(MediaTypes.mostSpecific(clientMt, serverMt));
+        result.combinedMediaType = MediaTypes.stripQualityParams(MediaTypes.mostSpecific(clientMt, serverMt.getMediaType()));
         result.d = wildcardsMatched(clientMt, serverMt);
         result.q = MediaTypes.getQuality(clientMt);
-        result.qs = QualitySourceMediaType.getQualitySource(serverMt);
+        result.qs = QualitySourceMediaType.getQualitySource(serverMt.getMediaType());
         return result;
     }
 
@@ -94,15 +106,21 @@ class CombinedClientServerMediaType {
         }
     };
 
-    public final static Comparator<CombinedClientServerMediaType> COMPARATOR = new Comparator<CombinedClientServerMediaType>() {
+
+    /**
+     * Comparator used to compare {@link CombinedClientServerMediaType}. The comparator sorts the elements of list
+     * in the ascending order from the least appropriate to the most appropriate {@link MediaType media type}.
+     */
+    final static Comparator<CombinedClientServerMediaType> COMPARATOR = new Comparator<CombinedClientServerMediaType>() {
 
         @Override
         public int compare(CombinedClientServerMediaType c1, CombinedClientServerMediaType c2) {
-            int partialComparism = partialOrderComparator.compare(c1.combinedMediaType, c2.combinedMediaType);
-            if (partialComparism > 0) {
+            int partialComparison = partialOrderComparator.compare(c1.combinedMediaType, c2.combinedMediaType);
+
+            if (partialComparison > 0) {
                 return 1;
             } else {
-                if (partialComparism == 0) {
+                if (partialComparison == 0) {
                     if (c1.q > c2.q) {
                         return 1;
                     } else if (c1.q == c2.q) {
@@ -120,8 +138,133 @@ class CombinedClientServerMediaType {
 
     @Override
     public String toString() {
-        return String.format("%s:%d:%d:%d", combinedMediaType, q, qs,d);
+        return String.format("%s:%d:%d:%d", combinedMediaType, q, qs, d);
     }
 
+
+    int getQ() {
+        return q;
+    }
+
+    int getQs() {
+        return qs;
+    }
+
+    int getD() {
+        return d;
+    }
+
+    MediaType getCombinedMediaType() {
+        return combinedMediaType;
+    }
+
+    /**
+     * {@link MediaType Media type} extended by flag indicating whether media type was
+     * obtained from user annotations {@link Consumes} or {@link Produces} or has no
+     * annotation and therefore was derived from {@link MessageBodyWorkers}.
+     */
+    static class EffectiveMediaType {
+        /**
+         * True if the MediaType was not defined by annotation and therefore was
+         * derived from Message Body Providers.
+         */
+        private final boolean derived;
+        private final MediaType mediaType;
+
+        /**
+         * Creates new instance with {@code mediaType} and flag indicating the origin of
+         * the mediaType.
+         *
+         * @param mediaType                The media type.
+         * @param fromMessageBodyProviders True if {@code mediaType} was derived from
+         *                                 {@link MessageBodyWorkers}.
+         */
+        public EffectiveMediaType(MediaType mediaType, boolean fromMessageBodyProviders) {
+            this.derived = fromMessageBodyProviders;
+            this.mediaType = mediaType;
+        }
+
+        /**
+         * Creates new instance with {@code mediaType} which was obtained from user
+         * annotations {@link Consumes} or {@link Produces}.
+         *
+         * @param mediaTypeValue The string media type.
+         */
+        public EffectiveMediaType(String mediaTypeValue) {
+            this(MediaType.valueOf(mediaTypeValue), false);
+        }
+
+        /**
+         * Creates new instance with {@code mediaType} which was obtained from user
+         * annotations {@link Consumes} or {@link Produces}.
+         *
+         * @param mediaType The media type.
+         */
+        public EffectiveMediaType(MediaType mediaType) {
+            this(mediaType, false);
+        }
+
+        /**
+         * Returns true if Type of {@link MediaType} was originally  defined as wildcard.
+         *
+         * @return Returns true if method {@link Consumes} or {@link Produces} was
+         *         annotated with wildcard type (for example '*&#47;*') or it has no
+         *         annotation at all.
+         */
+        public boolean isWildcardType() {
+            if (mediaType.isWildcardType()) {
+                return true;
+            }
+            return derived;
+        }
+
+        /**
+         * Returns True if SubType of {@link MediaType} was originally defined as wildcard.
+         *
+         * @return Returns true if method {@link Consumes} or {@link Produces} was
+         *         annotated with wildcard subtype (for example 'text&#47;*') or it has no
+         *         annotation at all.
+         */
+        public boolean isWildcardSubType() {
+            if (mediaType.isWildcardSubtype()) {
+                return true;
+            }
+            return derived;
+        }
+
+        /**
+         * Returns {@link MediaType}.
+         *
+         * @return Media type.
+         */
+        public MediaType getMediaType() {
+            return mediaType;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("mediaType=[%s], fromProviders=%b", mediaType, derived);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof EffectiveMediaType)) return false;
+
+            EffectiveMediaType that = (EffectiveMediaType) o;
+
+            if (derived != that.derived) return false;
+            if (!mediaType.equals(that.mediaType)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = (derived ? 1 : 0);
+            result = 31 * result + mediaType.hashCode();
+            return result;
+        }
+    }
 
 }

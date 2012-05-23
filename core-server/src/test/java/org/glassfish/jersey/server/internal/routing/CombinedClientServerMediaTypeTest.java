@@ -45,8 +45,8 @@ import java.util.Comparator;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -66,43 +66,56 @@ public class CombinedClientServerMediaTypeTest {
     public void testComparator() {
         final Comparator<CombinedClientServerMediaType> comparator = CombinedClientServerMediaType.COMPARATOR;
 
-        CombinedClientServerMediaType c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html"));
-        CombinedClientServerMediaType c2 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html"));
+        CombinedClientServerMediaType c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"),
+                new CombinedClientServerMediaType.EffectiveMediaType("text/html"));
+        CombinedClientServerMediaType c2 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"),
+                new CombinedClientServerMediaType.EffectiveMediaType("text/html"));
         assertTrue(comparator.compare(c1, c2) == 0);
 
-        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html;qs=0.7"));
-        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"), MediaType.valueOf("application/xml;qs=0.7"));
+        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), new CombinedClientServerMediaType
+                .EffectiveMediaType("text/html;qs=0.7"));
+        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"),
+                new CombinedClientServerMediaType.EffectiveMediaType("application/xml;qs=0.7"));
         assertTrue(comparator.compare(c1, c2) == 0);
 
-        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html;qs=0.8"));
-        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"), MediaType.valueOf("application/xml;qs=0.7"));
+        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), new CombinedClientServerMediaType
+                .EffectiveMediaType("text/html;qs=0.8"));
+        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"),
+                new CombinedClientServerMediaType.EffectiveMediaType("application/xml;qs=0.7"));
         assertTrue(comparator.compare(c1, c2) > 0);
 
-        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html;qs=0.7"));
-        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml;q=0.9"), MediaType.valueOf("application/xml;qs=0.7"));
+        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), new CombinedClientServerMediaType
+                .EffectiveMediaType("text/html;qs=0.7"));
+        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml;q=0.9"),
+                new CombinedClientServerMediaType.EffectiveMediaType("application/xml;qs=0.7"));
         assertTrue(comparator.compare(c1, c2) > 0);
 
-        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), MediaType.valueOf("text/html;qs=0.5"));
-        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml;q=0.9"), MediaType.valueOf("application/xml;qs=0.9"));
+        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/html"), new CombinedClientServerMediaType
+                .EffectiveMediaType("text/html;qs=0.5"));
+        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml;q=0.9"),
+                new CombinedClientServerMediaType.EffectiveMediaType("application/xml;qs=0.9"));
         assertTrue(comparator.compare(c1, c2) > 0);
 
-        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/*"), MediaType.valueOf("text/html;qs=0.7"));
-        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"), MediaType.valueOf("application/xml;qs=0.7"));
+        c1 = CombinedClientServerMediaType.create(MediaType.valueOf("text/*"), new CombinedClientServerMediaType
+                .EffectiveMediaType("text/html;qs=0.7"));
+        c2 = CombinedClientServerMediaType.create(MediaType.valueOf("application/xml"),
+                new CombinedClientServerMediaType.EffectiveMediaType("application/xml;qs=0.7"));
         assertTrue(comparator.compare(c1, c2) < 0);
     }
 
     public void checkCombination(String clientType, String serverType, String type, String subtype, int q, int qs, int d) {
         MediaType clientMt = MediaType.valueOf(clientType);
-        MediaType serverMt = MediaType.valueOf(serverType);
+        CombinedClientServerMediaType.EffectiveMediaType serverMt = new CombinedClientServerMediaType.EffectiveMediaType
+                (serverType);
         CombinedClientServerMediaType combinedType = CombinedClientServerMediaType.create(clientMt, serverMt);
         checkCombinedType(type, subtype, q, qs, d, combinedType);
     }
 
     public void checkCombinedType(String type, String subtype, int q, int qs, int d, CombinedClientServerMediaType combinedType) {
-        assertEquals(q, combinedType.q);
-        assertEquals(qs, combinedType.qs);
-        assertEquals(d, combinedType.d);
-        assertEquals(type, combinedType.combinedMediaType.getType());
-        assertEquals(subtype, combinedType.combinedMediaType.getSubtype());
+        assertEquals(q, combinedType.getQ());
+        assertEquals(qs, combinedType.getQs());
+        assertEquals(d, combinedType.getD());
+        assertEquals(type, combinedType.getCombinedMediaType().getType());
+        assertEquals(subtype, combinedType.getCombinedMediaType().getSubtype());
     }
 }

@@ -45,6 +45,7 @@ import static junit.framework.Assert.fail;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -288,6 +289,96 @@ public class PathAndResourceMethodErrorsTest {
         @GET
         @Produces({"text/plain", "image/png"})
         public String getText3() {
+            return null;
+        }
+    }
+
+    @Test
+    public void testAmbiguousClassProducingWarnings() {
+
+        final List<ResourceModelIssue> issues = initiateWebApplication(AmbiguousClassProducingWarnings.class);
+        assertEquals(2, issues.size());
+        assertNumberOfIssues(issues, 1, 1);
+    }
+
+    private void assertNumberOfIssues(final List<ResourceModelIssue> issues, int expectedFatalCount, int expectedWarningCount) {
+        int fatalCount = 0;
+        int warningCount = 0;
+
+        for (ResourceModelIssue issue : issues) {
+            if (issue.isFatal()) {
+                fatalCount++;
+            } else {
+                warningCount++;
+            }
+        }
+        assertEquals(expectedFatalCount, fatalCount);
+        assertEquals(expectedWarningCount, warningCount);
+    }
+
+    @Path("test")
+    public static class AmbiguousClassProducingWarnings {
+        // GET methods validation will produce a warning
+        @GET
+        @Produces("text/plain")
+        public String getHtml() {
+            return null;
+        }
+
+        @GET
+        public String getAllPossible() {
+            return null;
+        }
+
+        // POST methods validation will fail
+        @POST
+        @Consumes("text/plain")
+        public String postA() {
+            return null;
+        }
+
+        @POST
+        @Consumes("text/plain")
+        public String postB() {
+            return null;
+        }
+    }
+
+    @Test
+    public void testAmbiguousPostClassProducingWarnings() {
+
+        final List<ResourceModelIssue> issues = initiateWebApplication(AmbiguousPostClassProducingWarnings.class);
+        assertEquals(2, issues.size());
+        assertNumberOfIssues(issues, 1, 1);
+    }
+
+    @Path("test2")
+    public static class AmbiguousPostClassProducingWarnings {
+        // GET methods validation will fail
+        @GET
+        @Produces("text/plain")
+        public String getPlain() {
+            return null;
+        }
+
+        @GET
+        @Produces("text/plain")
+        public String getPlain2() {
+            return null;
+        }
+
+
+        // POST methods validation will produce a warning
+        @POST
+        @Consumes("text/plain")
+        @Produces("text/plain")
+        public String postA() {
+            return null;
+        }
+
+        @POST
+        @Consumes("text/plain")
+        public String postB() {
             return null;
         }
     }
