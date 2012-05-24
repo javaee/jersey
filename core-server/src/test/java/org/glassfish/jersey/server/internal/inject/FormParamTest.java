@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
 import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.mail.internet.MimeMultipart;
@@ -68,12 +67,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- *
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class FormParamTest extends AbstractTest {
-
 
     @Path("/")
     public static class SimpleFormResource {
@@ -295,7 +292,6 @@ public class FormParamTest extends AbstractTest {
         assertEquals("1 3.14 3.14", s);
     }
 
-
     public static class TrimmedString {
         private final String string;
 
@@ -334,7 +330,6 @@ public class FormParamTest extends AbstractTest {
         assertEquals("", s);
     }
 
-
     @Path("/")
     public static class MultipartFormResourceX {
         @POST
@@ -369,7 +364,6 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Test
-    @Ignore("not supported yet")
     public void testFormParamJAXB() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceJAXB.class);
 
@@ -381,8 +375,6 @@ public class FormParamTest extends AbstractTest {
         final Response response = apply(
                 Requests.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
-
-        System.out.println(response.getEntity());
 
         JAXBBean b = response.readEntity(JAXBBean.class);
         assertEquals("a", b.value);
@@ -401,8 +393,7 @@ public class FormParamTest extends AbstractTest {
                 Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
-        // TODO XXX FIXME assertEquals(400, response.getStatus());
-        assertEquals(500, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Path("/")

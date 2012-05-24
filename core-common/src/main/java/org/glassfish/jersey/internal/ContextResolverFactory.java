@@ -257,7 +257,7 @@ public class ContextResolverFactory implements ContextResolvers {
 
             ContextResolver<T> _cr = crMapCache.putIfAbsent(m, cr);
             // If there is already a value in the cache use that
-            // instance, and discard the new and redundent instance, to
+            // instance, and discard the new and redundant instance, to
             // ensure the same instance is always returned.
             // The cached instance and the new instance will have the same
             // functionality.
