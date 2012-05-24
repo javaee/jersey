@@ -49,7 +49,7 @@ import org.glassfish.jersey.server.model.Invocable;
 
 /**
  * A resource method dispatcher responsible for consuming a JAX-RS {@link Request request}
- * by invoking the configured {@link InvocableResourceMethod resource method} on a given
+ * by invoking the configured {@link Invocable resource method} on a given
  * resource instance and returning the method invocation result in a form of a
  * JAX-RS {@link Response response}.
  *
@@ -79,7 +79,7 @@ public interface ResourceMethodDispatcher {
 
         /**
          * Create a {@link ResourceMethodDispatcher resource method dispatcher} for
-         * a given {@link InvocableResourceMethod invocable resource method}.
+         * a given {@link Invocable invocable resource method}.
          * <p/>
          * If the provider supports the invocable resource method, it will
          * return a new non-null dispatcher instance configured to invoke the supplied
@@ -97,7 +97,7 @@ public interface ResourceMethodDispatcher {
     }
 
     /**
-     * Reflectively dispatch a request to the underlying {@link InvocableResourceMethod
+     * Reflectively dispatch a request to the underlying {@link Invocable
      * invocable resource method} via the configured {@link InvocationHandler
      * invocation handler} using the provided resource class instance.
      * <p />
