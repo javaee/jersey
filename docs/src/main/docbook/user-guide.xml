@@ -76,8 +76,7 @@ contact us at <ulink
   <xi:include href="mbw.xml" />
   <xi:include href="async.xml"/>
   <xi:include href="resource-builder.xml"/>
-  <xi:include href="json.xml"/>
-  <xi:include href="xml.xml"/>
+  <xi:include href="media.xml"/>
   <xi:include href="sse.xml"/>
   <xi:include href="security.xml" />
   <xi:include href="wadl.xml" />
