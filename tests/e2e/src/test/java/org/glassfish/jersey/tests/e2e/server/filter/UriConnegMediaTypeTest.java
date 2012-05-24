@@ -49,18 +49,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.UriConnegFilter;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -92,7 +94,8 @@ public class UriConnegMediaTypeTest extends JerseyTest {
     public static abstract class Base {
         @GET
         @Produces("application/foo")
-        public String doGetFoo() {
+        public String doGetFoo(@Context HttpHeaders headers) {
+            assertEquals(1, headers.getAcceptableMediaTypes().size());
             return "foo";
         }
 
@@ -210,6 +213,9 @@ public class UriConnegMediaTypeTest extends JerseyTest {
         Target r = target().path(base);
 
         String s = r.path(path + ".foo" + terminate).request().get(String.class);
+        assertEquals("foo", s);
+
+        s = r.path(path + ".foo" + terminate).request("application/bar").get(String.class);
         assertEquals("foo", s);
 
         s = r.path(path + ".foot" + terminate).request().get(String.class);

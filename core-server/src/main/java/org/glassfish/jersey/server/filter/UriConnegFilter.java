@@ -196,6 +196,8 @@ public class UriConnegFilter implements PreMatchRequestFilter {
 
             if (accept != null) {
                 requestBuilder = fc.getRequestBuilder();
+
+                requestBuilder.header(HttpHeaders.ACCEPT, null);
                 requestBuilder.header(HttpHeaders.ACCEPT, accept.toString());
 
                 final int index = path.lastIndexOf('.' + suffix);
@@ -216,6 +218,7 @@ public class UriConnegFilter implements PreMatchRequestFilter {
                     requestBuilder = fc.getRequestBuilder();
                 }
 
+                requestBuilder.header(HttpHeaders.ACCEPT_LANGUAGE, null);
                 requestBuilder.header(HttpHeaders.ACCEPT_LANGUAGE, acceptLanguage);
 
                 final int index = path.lastIndexOf('.' + suffix);
