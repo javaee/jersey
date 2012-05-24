@@ -44,6 +44,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 
@@ -56,6 +57,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
@@ -63,8 +66,6 @@ import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 
 import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import org.xml.sax.InputSource;
 
@@ -75,21 +76,32 @@ import org.xml.sax.InputSource;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO fix the implementation and complete javadoc.
 public class JaxbStringReaderProvider {
 
     private static final Map<Class, JAXBContext> jaxbContexts = new WeakHashMap<Class, JAXBContext>();
-    private final ContextResolver<JAXBContext> context;
-    private final ContextResolver<Unmarshaller> unmarshaller;
+    private final Supplier<ContextResolver<JAXBContext>> mtContext;
+    private final Supplier<ContextResolver<Unmarshaller>> mtUnmarshaller;
 
     /**
      * Create JAXB string reader provider.
      *
-     * @param ps
+     * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
      */
-    public JaxbStringReaderProvider(Providers ps) {
-        this.context = ps.getContextResolver(JAXBContext.class, null);
-        this.unmarshaller = ps.getContextResolver(Unmarshaller.class, null);
+    public JaxbStringReaderProvider(final Providers ps) {
+        this.mtContext = Suppliers.memoize(new Supplier<ContextResolver<JAXBContext>>() {
+
+            @Override
+            public ContextResolver<JAXBContext> get() {
+                return ps.getContextResolver(JAXBContext.class, null);
+            }
+        });
+
+        this.mtUnmarshaller = Suppliers.memoize(new Supplier<ContextResolver<Unmarshaller>>() {
+            @Override
+            public ContextResolver<Unmarshaller> get() {
+                return ps.getContextResolver(Unmarshaller.class, null);
+            }
+        });
     }
 
     /**
@@ -100,24 +112,24 @@ public class JaxbStringReaderProvider {
      * @throws JAXBException in case there's an error retrieving the unmarshaller.
      */
     protected final Unmarshaller getUnmarshaller(Class type) throws JAXBException {
-        if (unmarshaller != null) {
-            Unmarshaller u = unmarshaller.getContext(type);
+        final ContextResolver<Unmarshaller> unmarshallerContextResolver = mtUnmarshaller.get();
+        if (unmarshallerContextResolver != null) {
+            Unmarshaller u = unmarshallerContextResolver.getContext(type);
             if (u != null) {
                 return u;
             }
         }
-
         return getJAXBContext(type).createUnmarshaller();
     }
 
     private JAXBContext getJAXBContext(Class type) throws JAXBException {
-        if (context != null) {
-            JAXBContext c = context.getContext(type);
+        final ContextResolver<JAXBContext> jaxbContextContextResolver = mtContext.get();
+        if (jaxbContextContextResolver != null) {
+            JAXBContext c = jaxbContextContextResolver.getContext(type);
             if (c != null) {
                 return c;
             }
         }
-
         return getStoredJAXBContext(type);
     }
 
@@ -144,18 +156,16 @@ public class JaxbStringReaderProvider {
      */
     public static class RootElementProvider extends JaxbStringReaderProvider implements StringValueReaderProvider {
 
-        // Delay construction of factory
-        private final Factory<SAXParserFactory> spfProvider;
+        @Context
+        private Factory<SAXParserFactory> spfProvider;
 
         /**
-         * TODO javadoc.
+         * Creates new instance.
          *
-         * @param spfProvider
-         * @param ps
+         * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
          */
-        public RootElementProvider(@Inject Factory<SAXParserFactory> spfProvider, @Inject Providers ps) {
+        public RootElementProvider(@Context Providers ps) {
             super(ps);
-            this.spfProvider = spfProvider;
         }
 
         @Override
