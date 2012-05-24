@@ -43,8 +43,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -57,21 +55,12 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.DefaultStagingContext;
-import org.glassfish.jersey.process.internal.FilterModule;
-import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.LinearRequestProcessor;
-import org.glassfish.jersey.process.internal.ProcessingModule;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.StagingContext;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.TypeLiteral;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -89,16 +78,15 @@ public class ClientModule extends AbstractModule {
         }
     }
     //
-    private final Inflector<Request, Response> connector;
+    private final Factory<LinearAcceptor> rootAcceptorFactory;
 
     /**
-     * Creates {@link ClientModule} with custom connector.
+     * Creates {@link ClientModule} with custom root acceptor.
      *
-     * @see Inflector
-     * @param connector used for transforming {@link Request} to {@link Response}
+     * @param rootAcceptorFactory root of the request processing chain. Must not be {@code null}.
      */
-    public ClientModule(Inflector<Request, Response> connector) {
-        this.connector = connector;
+    public ClientModule(Factory<LinearAcceptor> rootAcceptorFactory) {
+        this.rootAcceptorFactory = rootAcceptorFactory;
     }
 
     @Override
@@ -124,14 +112,7 @@ public class ClientModule extends AbstractModule {
 
 
         // Request processor
-
-        // TODO uncomment qualifier once the HK2 issue is fixed
-        if (connector != null) {
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(Stages.asLinearAcceptor(connector));
-        } else {
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(Stages.asLinearAcceptor(
-                    new HttpUrlConnector()));
-        }
+        bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(rootAcceptorFactory);
 
         bind(RequestProcessor.class).to(LinearRequestProcessor.class);
         // Request invoker

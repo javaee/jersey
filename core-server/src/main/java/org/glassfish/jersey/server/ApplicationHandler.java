@@ -84,6 +84,7 @@ import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
+import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -252,7 +253,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     private References refs;
 
     /**
-     * Create new application handler using a default configuration.
+     * Create a new Jersey application handler using a default configuration.
      */
     public ApplicationHandler() {
         initServices();
@@ -260,6 +261,14 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         initialize();
     }
 
+    /**
+     * Create a new Jersey server-side application handler configured by a
+     * {@link Application JAX-RS Application (sub-)class}.
+     *
+     * @param jaxrsApplicationClass JAX-RS {@code Application} (sub-)class that will be
+     *                              instantiated and used to configure the new Jersey
+     *                              application handler.
+     */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
         initServices();
         if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
@@ -270,6 +279,13 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         initialize();
     }
 
+    /**
+     * Create a new Jersey server-side application handler configured by an instance
+     * of a {@link Application JAX-RS Application sub-class}.
+     *
+     * @param application an instance of a JAX-RS {@code Application} (sub-)class that
+     *                    will be used to configure the new Jersey application handler.
+     */
     public ApplicationHandler(Application application) {
         initServices();
         this.configuration = ResourceConfig.forApplication(application);
@@ -367,7 +383,8 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         final ResourceMatchingStage resourceMatchingStage = injector.inject(ResourceMatchingStage.class);
         final InflectorExtractingStage inflectorExtractingStage = injector.inject(InflectorExtractingStage.class);
         this.rootStageAcceptor = Stages
-                .acceptingChain(preMatchRequestFilteringStage)
+                .acceptingChain(injector.inject(MessageBodyWorkersInitializer.class))
+                .to(preMatchRequestFilteringStage)
                 .to(resourceMatchingStage)
                 .build(inflectorExtractingStage);
 

@@ -82,15 +82,25 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         this.client = builder.client;
     }
 
+    /**
+     * Jersey-specific {@link javax.ws.rs.client.Invocation.Builder client invocation builder}.
+     */
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
         private final Request.RequestBuilder request;
         private JerseyConfiguration configuration;
         private JerseyClient client;
 
-        protected Builder(URI uri, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
+        /**
+         * Create new Jersey-specific client invocation builder.
+         *
+         * @param uri invoked request URI.
+         * @param configuration Jersey client configuration.
+         * @param client Jersey client that will process the invocation.
+         */
+        protected Builder(URI uri, JerseyConfiguration configuration, JerseyClient client) {
             this.request = Requests.from(uri, uri, "");
-            this.configuration = jerseyConfiguration;
+            this.configuration = configuration;
             this.client = client;
         }
 

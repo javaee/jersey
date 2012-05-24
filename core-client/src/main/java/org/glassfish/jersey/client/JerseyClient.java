@@ -55,7 +55,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
@@ -68,11 +67,16 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.LinearAcceptor;
+import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
 import org.glassfish.hk2.Services;
@@ -81,7 +85,6 @@ import org.glassfish.hk2.inject.Injector;
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.util.concurrent.ListenableFuture;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -108,12 +111,21 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         private Ref<ContextResolvers> contextResolvers;
     }
 
+    private class RootAcceptorFactory implements Factory<LinearAcceptor> {
+
+        @Override
+        public LinearAcceptor get() throws ComponentException {
+            final MessageBodyWorkersInitializer mbwInitializer = injector.inject(MessageBodyWorkersInitializer.class);
+            return Stages.acceptingChain(mbwInitializer).build(Stages.asLinearAcceptor(connector));
+        }
+    }
+
     /**
      * {@link JerseyClient Jersey client} instance builder.
      */
     public static class Builder {
 
-        private Inflector<Request, Response> transport;
+        private Inflector<Request, Response> connector;
         private final List<Module> customModules = new LinkedList<Module>();
 
         /**
@@ -124,18 +136,19 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         }
 
         /**
-         * Set Jersey client transport.
+         * Set Jersey client transport connector.
          *
-         * @param transport client transport.
+         * @param connector client transport connector.
          * @return updated Jersey client builder.
          */
-        public Builder transport(Inflector<Request, Response> transport) {
-            this.transport = transport;
+        public Builder transport(Inflector<Request, Response> connector) {
+            this.connector = connector;
             return this;
         }
 
         /**
          * Register custom HK2 modules for the Jersey client.
+         *
          * @param modules custom HK2 modules to be registered with the Jersey client.
          * @return updated Jersey client builder.
          */
@@ -152,76 +165,98 @@ public class JerseyClient implements javax.ws.rs.client.Client {
          * @return new Jersey client.
          */
         public JerseyClient build() {
-            return new JerseyClient(new JerseyConfiguration(), transport, customModules);
+            return new JerseyClient(new JerseyConfiguration(), connector, customModules);
         }
 
         /**
          * Build a new Jersey client using an additional custom configuration.
          *
          * @param configuration JAX-RS client configuration for the new Jersey
-         *     client.
+         *                      client.
          * @return new Jersey client.
          */
         public JerseyClient build(javax.ws.rs.client.Configuration configuration) {
-            return new JerseyClient(new JerseyConfiguration(configuration), transport, customModules);
+            final JerseyConfiguration jerseyConfiguration;
+            if (configuration instanceof JerseyConfiguration) {
+                jerseyConfiguration = new JerseyConfiguration(configuration);
+            } else {
+                jerseyConfiguration = (JerseyConfiguration) configuration;
+            }
+            return new JerseyClient(jerseyConfiguration, connector, customModules);
         }
     }
-    /**
-     * JerseyClient configuration
-     */
-    private final JerseyConfiguration jerseyConfiguration;
-    private final AtomicBoolean closedFlag;
-    //
-    private RequestInvoker invoker;
-    private Inflector<Request, Response> transport;
-    private RequestScope requestScope;
-    private Services services;
 
+    private final JerseyConfiguration configuration;
+    private final AtomicBoolean closedFlag;
+    private Inflector<Request, Response> connector;
+    private Injector injector;
+    //
+    @Inject
+    private RequestInvoker invoker;
+    @Inject
+    private RequestScope requestScope;
+
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param configuration jersey client configuration.
+     * @param connector     transport connector. If {@code null}, the {@link HttpUrlConnector
+     *                      default transport} will be used.
+     * @param customModules custom HK2 modules to be registered with the client.
+     */
     protected JerseyClient(
-            final JerseyConfiguration jerseyConfiguration,
-            final Inflector<Request, Response> transport,
+            final JerseyConfiguration configuration,
+            final Inflector<Request, Response> connector,
             final List<Module> customModules) {
-        this.jerseyConfiguration = jerseyConfiguration;
+        this.configuration = configuration;
         this.closedFlag = new AtomicBoolean(false);
-        this.transport = transport;
+        this.connector = (connector == null) ? new HttpUrlConnector() : connector;
 
         initialize(customModules);
     }
 
     /**
-     * Initialize the newly constructed client instance
+     * Initialize the newly constructed client instance.
      *
      * @param customModules list of {@link Module}.
      */
     private void initialize(final List<Module> customModules) {
         final Module[] jerseyModules = new Module[]{
-            new ClientModule(transport)
+                new ClientModule(new RootAcceptorFactory())
         };
 
+        final Services services;
         if (customModules.isEmpty()) {
-            this.services = HK2.get().create(null, jerseyModules);
+            services = HK2.get().create(null, jerseyModules);
         } else {
-            final Object[] customModulesArray = customModules.toArray();
+            final Module[] customModulesArray = customModules.toArray(new Module[customModules.size()]);
 
             Module[] modules = new Module[jerseyModules.length + customModulesArray.length];
             System.arraycopy(jerseyModules, 0, modules, 0, jerseyModules.length);
             System.arraycopy(customModulesArray, 0, modules, jerseyModules.length, customModulesArray.length);
 
-            this.services = HK2.get().create(null, modules);
+            services = HK2.get().create(null, modules);
         }
+        this.injector = services.forContract(Injector.class).get();
 
-        this.requestScope = services.forContract(RequestScope.class).get();
-        this.invoker = services.forContract(RequestInvoker.class).get();
+        this.injector.inject(this);
     }
 
-    /*package*/ListenableFuture<Response> submit(final JerseyInvocation invocation,
+    /**
+     * Submit a configured invocation for processing.
+     *
+     * @param invocation invocation to be processed (invoked).
+     * @param callback callback receiving invocation processing notifications.
+     * @return response future.
+     */
+    /*package*/ ListenableFuture<Response> submit(
+            final JerseyInvocation invocation,
             final javax.ws.rs.client.InvocationCallback<? super javax.ws.rs.core.Response> callback) {
         return requestScope.runInScope(
                 new RequestScope.Producer<ListenableFuture<Response>>() {
 
                     @Override
                     public ListenableFuture<Response> call() {
-                        final Injector injector = services.forContract(Injector.class).get();
                         References refs = injector.inject(References.class);
 
                         final JerseyConfiguration cfg = invocation.configuration();
@@ -311,7 +346,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     @Override
     public JerseyConfiguration configuration() {
         checkClosed();
-        return jerseyConfiguration;
+        return configuration;
     }
 
     @Override

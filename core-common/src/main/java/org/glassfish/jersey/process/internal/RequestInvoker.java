@@ -45,19 +45,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MessageBodyProcessingException;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
@@ -185,12 +179,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
 
             @Override
             public void run() {
-                // TODO this seems somewhat too specific to our Message implementation.
-                // We should come up with a solution that is more generic
-                // Messaging impl specific stuff does not belong to the generic invoker framework
-                final MessageBodyWorkers workers = services.forContract(MessageBodyWorkers.class).get();
-
-                final AsyncInflectorAdapter asyncInflector = new AsyncInflectorAdapter(new AcceptingInvoker(workers), callback);
+                final AsyncInflectorAdapter asyncInflector = new AsyncInflectorAdapter(new AcceptingInvoker(), callback);
 
                 Ref<InvocationContext> icRef = services.forContract(new TypeLiteral<Ref<InvocationContext>>() {
                 }).get();
@@ -228,33 +217,21 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
 
     private class AcceptingInvoker implements Inflector<Request, Response> {
 
-        private final MessageBodyWorkers workers;
-
-        public AcceptingInvoker(MessageBodyWorkers workers) {
-            this.workers = workers;
-        }
-
         @Override
         public Response apply(Request request) {
-            final RequestBuilder rb = Requests.toBuilder(request);
-            Requests.setMessageWorkers(rb, workers);
-            Request requestWithWorkers = rb.build();
-
             Pair<Request, Optional<Inflector<Request, Response>>> result;
             try {
-                result = requestProcessor.apply(requestWithWorkers);
-            } catch (final MessageBodyProcessingException mbpe) {
-                 // Handling of exception from Message Body Providers on client -> just throw it and do not return response
-                throw mbpe;
+                result = requestProcessor.apply(request);
+            // MessageBodyProcessingException from Message Body Providers is propagated up and response is not returned
             } catch (final WebApplicationException wae) {
-                result = Tuples.<Request, Optional<Inflector<Request, Response>>>of(requestWithWorkers,
+                result = Tuples.of(request,
                         Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {
 
-                    @Override
-                    public Response apply(Request data) {
-                        return wae.getResponse();
-                    }
-                }));
+                            @Override
+                            public Response apply(Request data) {
+                                return wae.getResponse();
+                            }
+                        }));
             }
 
             final Optional<Inflector<Request, Response>> inflector = result.right();
@@ -262,23 +239,8 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 throw new InflectorNotFoundException("Terminal stage did not provide an inflector");
             }
 
-            final Inflector<Request, Response> workersAwareResponseInflector = new Inflector<Request, Response>() {
-
-                @Override
-                public Response apply(Request data) {
-                    final Response originalResponse = inflector.get().apply(data);
-                    if (originalResponse != null) {
-                        final ResponseBuilder rb = Responses.toBuilder(originalResponse);
-                        Responses.setMessageWorkers(rb, workers);
-                        return rb.build();
-                    } else {
-                        return null;
-                    }
-                }
-            };
-
             // FIXME filter processor should be part of the acceptor chain
-            final FilteringInflector filteringInflector = filteringInflectorBuilder.build(workersAwareResponseInflector);
+            final FilteringInflector filteringInflector = filteringInflectorBuilder.build(inflector.get());
 
             return filteringInflector.apply(result.left());
         }

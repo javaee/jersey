@@ -39,18 +39,6 @@
  */
 package org.glassfish.jersey.client;
 
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,12 +46,27 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
 
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+
+import org.glassfish.jersey.internal.util.CommittingOutputStream;
+import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.process.Inflector;
+
+import com.google.common.base.Predicates;
+import com.google.common.collect.Maps;
+
 /**
- * Connector based on {@link HttpURLConnection}.
+ * Default client transport connector using {@link HttpURLConnection}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class HttpUrlConnector extends RequestWriter implements Inflector<Request, Response> {
+public class HttpUrlConnector extends RequestWriter implements Inflector<Request, Response> {
 
     private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
         if (uc.getResponseCode() < 300) {
@@ -78,18 +81,16 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
     public Response apply(Request request) {
         try {
             return _apply(request);
-        } catch (IOException ioex) {
-            throw new RuntimeException(ioex);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
-    public Response _apply(final Request request) throws IOException {
+    private Response _apply(final Request request) throws IOException {
         final HttpURLConnection uc;
-        // TODO introduce & leverage optional connection factory to support customized
-        // connections
+        // TODO introduce & leverage optional connection factory to support customized connections
         uc = (HttpURLConnection) request.getUri().toURL().openConnection();
         uc.setRequestMethod(request.getMethod());
-        // TODO process properties
 
         if (uc instanceof HttpsURLConnection) {
             if (request.getProperties().containsKey(ClientProperties.HOSTNAME_VERIFIER)) {
@@ -107,7 +108,6 @@ class HttpUrlConnector extends RequestWriter implements Inflector<Request, Respo
             }
         }
 
-        // TODO write entity
         final Object entity = request.getEntity();
         if (entity != null) {
             uc.setDoOutput(true);
