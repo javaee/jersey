@@ -39,10 +39,18 @@
  */
 package org.glassfish.jersey.internal;
 
-import com.google.common.collect.Maps;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.TypeLiteral;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.ContextResolver;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
@@ -53,18 +61,14 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.ContextResolvers;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Scope;
+import org.glassfish.hk2.TypeLiteral;
+
 import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.ContextResolver;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Maps;
 
 /**
  * A factory implementation for managing {@link ContextResolver} instances.
@@ -74,6 +78,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ContextResolverFactory implements ContextResolvers {
 
+    /**
+     * Injection binding module defining {@link ContextResolverFactory} and
+     * {@link ContextResolvers} bindings.
+     */
     public static class Module extends AbstractModule {
 
         private static class InjectionFactory extends ReferencingFactory<ContextResolvers> {
@@ -82,9 +90,16 @@ public class ContextResolverFactory implements ContextResolvers {
                 super(referenceFactory);
             }
         }
+
         //
         private final Class<? extends Scope> refScope;
 
+        /**
+         * Create new context resolver factory injection bindings module.
+         *
+         * @param refScope scope of the {@link Ref Ref&lt;ContextResolvers&gt;} value
+         *                 injection.
+         */
         public Module(Class<? extends Scope> refScope) {
             this.refScope = refScope;
         }
@@ -94,16 +109,24 @@ public class ContextResolverFactory implements ContextResolvers {
             bind(ContextResolvers.class)
                     .toFactory(InjectionFactory.class)
                     .in(RequestScope.class);
-            
-            bind(new TypeLiteral<Ref<ContextResolvers>>() {})
+
+            bind(new TypeLiteral<Ref<ContextResolvers>>() {
+            })
                     .toFactory(ReferencingFactory.<ContextResolvers>referenceFactory())
                     .in(refScope);
         }
     }
+
     //
     private final Map<Type, Map<MediaType, ContextResolver>> resolver = Maps.newHashMapWithExpectedSize(3);
     private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache = Maps.newHashMapWithExpectedSize(3);
 
+    /**
+     * Create new context resolver factory backed by the supplied {@link ServiceProviders
+     * service providers}.
+     *
+     * @param serviceProviders service providers backing the context resolver factory.
+     */
     public ContextResolverFactory(ServiceProviders serviceProviders) {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
@@ -154,6 +177,7 @@ public class ContextResolverFactory implements ContextResolvers {
 
         return (as != null) ? as[0] : Object.class;
     }
+
     private static final NullContextResolverAdapter NULL_CONTEXT_RESOLVER =
             new NullContextResolverAdapter();
 

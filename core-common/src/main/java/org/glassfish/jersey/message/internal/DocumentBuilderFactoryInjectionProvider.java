@@ -41,8 +41,8 @@ package org.glassfish.jersey.message.internal;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.message.MessageProperties;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.scopes.PerThread;
@@ -62,6 +62,11 @@ public class DocumentBuilderFactoryInjectionProvider implements Factory<Document
 
     private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
 
+    /**
+     * Create new document builder factory provider.
+     *
+     * @param featuresAndPropertiesFactory features and properties provider.
+     */
     public DocumentBuilderFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }

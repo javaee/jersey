@@ -74,8 +74,14 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
             return Tuples.of(initialValue);
         }
     }
+
     private final Factory<Ref<T>> referenceFactory;
 
+    /**
+     * Create new referencing injection factory.
+     *
+     * @param referenceFactory reference provider backing the factory.
+     */
     public ReferencingFactory(Factory<Ref<T>> referenceFactory) {
         this.referenceFactory = referenceFactory;
     }
@@ -85,10 +91,25 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
         return referenceFactory.get().get();
     }
 
+    /**
+     * Get a reference factory providing an empty reference.
+     *
+     * @param <T> reference type.
+     * @return reference factory providing an empty reference.
+     */
     public static <T> Factory<Ref<T>> referenceFactory() {
         return new EmptyReferenceFactory<T>();
     }
 
+    /**
+     * Get a reference factory providing an initialized reference.
+     *
+     * @param <T>          reference type.
+     * @param initialValue initial value stored in the reference provided
+     *                     by the returned factory.
+     * @return reference factory providing a reference initialized with an
+     *         {@code initialValue}.
+     */
     public static <T> Factory<Ref<T>> referenceFactory(T initialValue) {
         if (initialValue == null) {
             return new EmptyReferenceFactory<T>();

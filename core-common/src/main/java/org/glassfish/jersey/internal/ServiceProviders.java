@@ -110,10 +110,16 @@ public class ServiceProviders {
             return this;
         }
 
+        /**
+         * Build service providers.
+         *
+         * @return configured service providers.
+         */
         public ServiceProviders build() {
             return new ServiceProviders(services, classes, instances);
         }
     }
+
     //
     private static final Logger LOGGER = Logger.getLogger(ServiceProviders.class.getName());
     //
@@ -132,10 +138,10 @@ public class ServiceProviders {
      * registered provider instances and classes. This method does not perform
      * service provider lookup in {@code META-INF/services}.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
      * @return instances of all internally registered providers of the given
-     *     provider type.
+     *         provider type.
      */
     public <T> Set<T> getCustom(Class<T> providerContract) {
         Set<T> result = new LinkedHashSet<T>(getCustomInstances(providerContract));
@@ -160,12 +166,12 @@ public class ServiceProviders {
      * The returned provider list, if not empty, is sorted using the supplied
      * {@link Comparator comparator} before it is returned.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
-     * @param comparator contract comparator used for ordering provider instances
-     *     in the set.
+     * @param comparator       contract comparator used for ordering provider instances
+     *                         in the set.
      * @return sorted list of instances of all internally registered providers of
-     *     the given provider type.
+     *         the given provider type.
      */
     public <T> List<T> getCustom(Class<T> providerContract, final Comparator<T> comparator) {
         final List<T> providers = Lists.newArrayList(getDefault(providerContract));
@@ -178,10 +184,10 @@ public class ServiceProviders {
      * service provider lookup in {@code META-INF/services}. This method ignores any
      * internally registered provider instances or classes.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
      * @return instances of all providers of the given provider type found
-     *     during the service provider lookup.
+     *         during the service provider lookup.
      */
     public <T> Set<T> getDefault(Class<T> providerContract) {
         return Providers.getProviders(services, providerContract);
@@ -195,12 +201,12 @@ public class ServiceProviders {
      * The returned provider list, if not empty, is sorted using the supplied
      * {@link Comparator comparator} before it is returned.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
-     * @param comparator contract comparator used for ordering provider instances
-     *     in the set.
+     * @param comparator       contract comparator used for ordering provider instances
+     *                         in the set.
      * @return sorted list of instances of all providers of the given provider type
-     *     found during the service provider lookup.
+     *         found during the service provider lookup.
      */
     public <T> List<T> getDefault(Class<T> providerContract, final Comparator<T> comparator) {
         final List<T> providers = Lists.newArrayList(getDefault(providerContract));
@@ -215,10 +221,10 @@ public class ServiceProviders {
      * combination of the results returned by {@link #getCustom(java.lang.Class)}
      * and {@link #getDefault(java.lang.Class)}.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
      * @return instances of all providers of the given provider type found both
-     *     in the internal storage as well as during the service provider lookup.
+     *         in the internal storage as well as during the service provider lookup.
      */
     public <T> Set<T> getAll(Class<T> providerContract) {
         Set<T> result = new LinkedHashSet<T>(getCustom(providerContract));
@@ -236,13 +242,13 @@ public class ServiceProviders {
      * The returned provider list, if not empty, is sorted using the supplied
      * {@link Comparator comparator} before it is returned.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
-     * @param comparator contract comparator used for ordering provider instances
-     *     in the set.
+     * @param comparator       contract comparator used for ordering provider instances
+     *                         in the set.
      * @return sorted list of instances of all providers of the given provider type
-     *     found both in the internal storage as well as during the service provider
-     *     lookup.
+     *         found both in the internal storage as well as during the service provider
+     *         lookup.
      */
     public <T> List<T> getAll(Class<T> providerContract, final Comparator<T> comparator) {
         final List<T> providers = Lists.newArrayList(getAll(providerContract));
@@ -276,9 +282,9 @@ public class ServiceProviders {
      * listener for every provider instance that matches the requested provider
      * type.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
-     * @param listener provider listener invoked with every matched provider instance.
+     * @param listener         provider listener invoked with every matched provider instance.
      */
     public <T> void getCustom(Class<T> providerContract, ServiceListener<T> listener) {
         for (T t : getCustom(providerContract)) {
@@ -296,9 +302,9 @@ public class ServiceProviders {
      * listener for every provider instance that matches the requested provider
      * type.
      *
-     * @param <T> provider Java type.
+     * @param <T>              provider Java type.
      * @param providerContract provider contract class.
-     * @param listener provider listener invoked with every matched provider instance.
+     * @param listener         provider listener invoked with every matched provider instance.
      */
     public <T> void getAll(Class<T> providerContract, ServiceListener<T> listener) {
         for (T t : getCustom(providerContract)) {
@@ -320,11 +326,11 @@ public class ServiceProviders {
      * failing implementation class is ignored and not included in the returned
      * list of provider instances.
      *
-     * @param <T> requested provider Java type.
+     * @param <T>              requested provider Java type.
      * @param providerContract provider contract class.
-     * @param classNames provider implementation class names.
+     * @param classNames       provider implementation class names.
      * @return provider instances instantiated from the supplied provider implementation
-     *     class names.
+     *         class names.
      */
     public <T> List<T> instantiate(Class<T> providerContract, String[] classNames) {
         List<T> ps = new LinkedList<T>();
@@ -361,11 +367,11 @@ public class ServiceProviders {
      * implementation class is ignored and not included in the returned list of
      * provider instances.
      *
-     * @param <T> requested provider Java type.
+     * @param <T>              requested provider Java type.
      * @param providerContract provider contract class.
-     * @param classes provider implementation classes.
+     * @param classes          provider implementation classes.
      * @return provider instances instantiated from the supplied provider implementation
-     *     class names.
+     *         class names.
      */
     public <T> List<T> instantiate(Class<T> providerContract, Class<? extends T>[] classes) {
         List<T> ps = new LinkedList<T>();
