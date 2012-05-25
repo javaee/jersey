@@ -48,9 +48,7 @@ import java.util.List;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 import static junit.framework.Assert.assertFalse;
@@ -62,7 +60,6 @@ import static junit.framework.Assert.assertNotNull;
  */
 public class MutableEntityTest {
     @Test
-    @Ignore
     public void inputStreamEntityTest() {
         ByteArrayInputStream bais = new ByteArrayInputStream("some string".getBytes());
 

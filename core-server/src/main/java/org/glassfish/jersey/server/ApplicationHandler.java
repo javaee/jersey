@@ -80,6 +80,7 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.FilteringAcceptor;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -381,11 +382,13 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
         // Create a linear accepting chain
         final PreMatchRequestFilteringStage preMatchRequestFilteringStage = injector.inject(PreMatchRequestFilteringStage.class);
         final ResourceMatchingStage resourceMatchingStage = injector.inject(ResourceMatchingStage.class);
+        final FilteringAcceptor resourceFilteringStage = injector.inject(FilteringAcceptor.class);
         final InflectorExtractingStage inflectorExtractingStage = injector.inject(InflectorExtractingStage.class);
         this.rootStageAcceptor = Stages
                 .acceptingChain(injector.inject(MessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(resourceMatchingStage)
+                .to(resourceFilteringStage)
                 .build(inflectorExtractingStage);
 
         injector.inject(this);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,48 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.process.internal;
 
-import java.util.Map;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ResponseFilter;
-
-import org.glassfish.jersey.internal.MappableException;
-
-import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
+ * Abstract chainable linear acceptor.
+ *
+ * Implements support for managing the default next stage value.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResponseFilterResponder extends AbstractFilterProcessor<ResponseFilter> implements Function<Response, Response> {
+public abstract class AbstractChainableAcceptor implements ChainableAcceptor {
 
-    public ResponseFilterResponder() {
-        super(PriorityComparator.Order.DESCENDING);
+    private Optional<LinearAcceptor> nextStage;
+
+    /**
+     * Create a new chainable acceptor with no next stage set.
+     */
+    protected AbstractChainableAcceptor() {
+        nextStage = Optional.absent();
+    }
+
+    /**
+     * Create a new chainable acceptor with an initialized default
+     * next stage value.
+     *
+     * @param nextStage default next stage.
+     */
+    protected AbstractChainableAcceptor(LinearAcceptor nextStage) {
+        this.nextStage = Optional.of(nextStage);
     }
 
     @Override
-    public Response apply(Response data) {
-        JerseyFilterContext filterContext = filterContextFactory.get();
+    public final void setDefaultNext(LinearAcceptor acceptor) {
+        this.nextStage = Optional.of(acceptor);
+    }
 
-        // Initialize filter context
-        filterContext.setResponse(data);
-        Map<String, Object> properties = getProperties();
-        if (properties != null) {
-            filterContext.setProperties(properties);
-        }
-
-        // Execute post filter chain
-        for (ResponseFilter filter : getFilters(ResponseFilter.class)) {
-            try {
-                filter.postFilter(filterContext);
-            } catch (Exception e) {
-                throw new MappableException(e);
-            }
-        }
-
-        return filterContext.getResponse();
+    /**
+     * Get the default next stage currently configured on the acceptor.
+     *
+     * @return default next stage currently configured on the acceptor.
+     */
+    public final Optional<LinearAcceptor> getDefaultNext() {
+        return nextStage;
     }
 }

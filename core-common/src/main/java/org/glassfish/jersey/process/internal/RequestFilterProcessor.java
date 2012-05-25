@@ -40,23 +40,25 @@
 
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Optional;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.internal.MappableException;
+import java.util.Map;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.RequestFilter;
-import java.util.Map;
+
+import org.glassfish.jersey.internal.MappableException;
+
+import com.google.common.base.Function;
 
 /**
+ * Executes the configured set of request filters on a request.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class RequestFilterAcceptor extends AbstractFilterProcessor<RequestFilter> implements LinearAcceptor {
+public class RequestFilterProcessor extends AbstractFilterProcessor<RequestFilter> implements Function<Request, Request> {
 
     @Override
-    public Pair<Request, Optional<LinearAcceptor>> apply(Request data) {
+    public Request apply(Request data) {
         JerseyFilterContext filterContext = filterContextFactory.get();
 
         // Initialize filter context
@@ -79,6 +81,6 @@ public class RequestFilterAcceptor extends AbstractFilterProcessor<RequestFilter
             }
         }
 
-        return Tuples.of(filterContext.getRequest(), Optional.<LinearAcceptor>absent());
+        return filterContext.getRequest();
     }
 }

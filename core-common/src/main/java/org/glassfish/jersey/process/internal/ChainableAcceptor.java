@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,23 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-
 /**
- * Configures injection of filtering artifacts.
+ * Linear acceptor that can be composed into a chain.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * The acceptor exposes a method for setting a value of the
+ * {@link #setDefaultNext(LinearAcceptor) next acceptor} in the chain that
+ * should be returned from the chain by default.
+ * <p>
+ * The typical use case for implementing the acceptor is a logic that usually
+ * needs to perform some logic, but unlike an {@link LinearAcceptor.Builder#to(com.google.common.base.Function)
+ * acceptor created from a function} it also needs to be able to decide to override
+ * the default next acceptor and return a different acceptor, effectively branching
+ * away from the original linear acceptor chain. This technique can be e.g. used
+ * to break the accepting chain by returning a custom {@link Inflecting inflecting}
+ * acceptor, etc.
+ * </p>
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class FilterModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(javax.ws.rs.ext.FilterContext.class).to(JerseyFilterContext.class).in(RequestScope.class);
+public interface ChainableAcceptor extends LinearAcceptor {
 
-        bind().to(RequestFilterProcessor.class);
-        bind().to(ResponseFilterProcessor.class);
-        bind().to(FilteringAcceptor.class);
-    }
+    /**
+     * Set the default next acceptor that should be returned from the
+     * linear acceptor after it has been invoked by default.
+     *
+     * @param acceptor the next default acceptor in the chain.
+     */
+    public void setDefaultNext(LinearAcceptor acceptor);
 }

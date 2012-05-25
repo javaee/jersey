@@ -65,6 +65,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.FilteringAcceptor;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
@@ -115,8 +116,13 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
         @Override
         public LinearAcceptor get() throws ComponentException {
-            final MessageBodyWorkersInitializer mbwInitializer = injector.inject(MessageBodyWorkersInitializer.class);
-            return Stages.acceptingChain(mbwInitializer).build(Stages.asLinearAcceptor(connector));
+            final MessageBodyWorkersInitializer workersInitializationStage = injector.inject(MessageBodyWorkersInitializer.class);
+            final FilteringAcceptor filteringStage = injector.inject(FilteringAcceptor.class);
+
+            return Stages
+                    .acceptingChain(workersInitializationStage)
+                    .to(filteringStage)
+                    .build(Stages.asLinearAcceptor(connector));
         }
     }
 

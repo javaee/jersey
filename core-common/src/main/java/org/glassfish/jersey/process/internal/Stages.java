@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.process.Inflector;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -51,6 +50,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -267,12 +267,29 @@ public final class Stages {
         return new LinearAcceptorChainBuilder(transformation);
     }
 
+    /**
+     * Start building a linear accepting chain.
+     *
+     * @param rootStage root {@link ChainableAcceptor chainable linear stage}.
+     * @return linear accepting chain builder.
+     */
+    public static LinearAcceptor.Builder acceptingChain(ChainableAcceptor rootStage) {
+        return new LinearAcceptorChainBuilder(rootStage);
+    }
+
     private static class LinearAcceptorChainBuilder implements LinearAcceptor.Builder {
 
         private final Deque<Function<Request, Request>> transformations = new LinkedList<Function<Request, Request>>();
+        private LinearAcceptor rootStage;
+        private ChainableAcceptor lastStage;
 
         private LinearAcceptorChainBuilder(Function<Request, Request> transformation) {
             transformations.push(transformation);
+        }
+
+        private LinearAcceptorChainBuilder(ChainableAcceptor rootStage) {
+            this.rootStage = rootStage;
+            this.lastStage = rootStage;
         }
 
         @Override
@@ -282,18 +299,44 @@ public final class Stages {
         }
 
         @Override
-        public LinearAcceptor build(LinearAcceptor stage) {
-            Function<Request, Request> t;
-            while ((t = transformations.poll()) != null) {
-                stage = new LinkedLinearAcceptor(t, stage);
-            }
+        public LinearAcceptor.Builder to(final ChainableAcceptor stage) {
+            addTailStage(stage);
+            lastStage = stage;
 
-            return stage;
+            return this;
+        }
+
+        private void addTailStage(LinearAcceptor lastStage) {
+            LinearAcceptor tail = lastStage;
+            if (!transformations.isEmpty()) {
+                tail = convertTransformations(lastStage);
+            }
+            if (rootStage != null) {
+                this.lastStage.setDefaultNext(tail);
+            } else {
+                rootStage = tail;
+            }
+        }
+
+        @Override
+        public LinearAcceptor build(LinearAcceptor stage) {
+            addTailStage(stage);
+
+            return rootStage;
         }
 
         @Override
         public LinearAcceptor build() {
-            LinearAcceptor stage = new LinkedLinearAcceptor(transformations.poll());
+            return build(null);
+        }
+
+        private LinearAcceptor convertTransformations(LinearAcceptor successor) {
+            LinearAcceptor stage;
+            if (successor == null) {
+                stage = new LinkedLinearAcceptor(transformations.poll());
+            } else {
+                stage = new LinkedLinearAcceptor(transformations.poll(), successor);
+            }
 
             Function<Request, Request> t;
             while ((t = transformations.poll()) != null) {

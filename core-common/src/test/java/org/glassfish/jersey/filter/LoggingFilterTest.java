@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.FilteringInflector;
+import org.glassfish.jersey.process.internal.FilteringAcceptor;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
 import org.glassfish.jersey.process.internal.LinearRequestProcessor;
 import org.glassfish.jersey.process.internal.ProcessingTestModule;
@@ -84,19 +84,19 @@ public class LoggingFilterTest {
     public static class Module extends AbstractModule {
 
         @Inject
-        private FilteringInflector.Builder filteringInflectorBuilder;
+        private FilteringAcceptor filteringAcceptor;
 
         @Override
         @SuppressWarnings("unchecked")
         protected void configure() {
-            final LinearAcceptor inflectingStage = Stages.asLinearAcceptor(
-                    filteringInflectorBuilder.build(new Inflector<Request, Response>() {
+            final LinearAcceptor inflectingStage = Stages.acceptingChain(filteringAcceptor).build(Stages.asLinearAcceptor(
+                    new Inflector<Request, Response>() {
 
-                @Override
-                public Response apply(Request data) {
-                    return Responses.from(200, data).entity(data.readEntity(String.class)).build();
-                }
-            }));
+                        @Override
+                        public Response apply(Request data) {
+                            return Responses.from(200, data).entity(data.readEntity(String.class)).build();
+                        }
+                    }));
 
             bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(inflectingStage);
 

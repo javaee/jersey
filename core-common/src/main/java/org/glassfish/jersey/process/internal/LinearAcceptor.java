@@ -63,15 +63,33 @@ public interface LinearAcceptor extends Stage<Request, Optional<LinearAcceptor>>
 
         /**
          * Add a transformation function as a next stage to the linear acceptor chain.
-         * <p/>
-         * The order of the {@code add(...)} method invocations matches the order
+         * <p>
+         * The order of the {@code to(...)} method invocations matches the order
          * of the acceptor execution in the {@link LinearRequestProcessor request processor}.
+         * </p>
          *
          * @param transformation a transformation function to be added as a next
-         *     acceptor to the linear acceptor chain.
+         *                       acceptor to the linear acceptor chain.
          * @return updated builder instance.
          */
         public Builder to(Function<Request, Request> transformation);
+
+        /**
+         * Add a new {@link ChainableAcceptor chainable acceptor} as a next stage to the
+         * linear acceptor chain.
+         * <p>
+         * The order of the {@code to(...)} method invocations matches the order
+         * of the acceptor execution in the {@link LinearRequestProcessor request processor}.
+         * A subsequent call to a {@code to(...)} method  will automatically invoke the
+         * {@link ChainableAcceptor#setDefaultNext(LinearAcceptor)} method on the chainable
+         * acceptor.
+         * </p>
+         *
+         * @param acceptor a chainable acceptor to be added as a next
+         *                       acceptor to the linear acceptor chain.
+         * @return updated builder instance.
+         */
+        public Builder to(ChainableAcceptor acceptor);
 
         /**
          * Build a acceptor chain.

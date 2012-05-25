@@ -37,77 +37,83 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.process.internal;
-
-import org.glassfish.jersey.process.Inflector;
-import com.google.common.base.Optional;
-import org.glassfish.hk2.Factory;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.jvnet.hk2.annotations.Inject;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.process.Inflector;
+
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
+
+import com.google.common.base.Optional;
+
 /**
+ * Filtering {@link ChainableAcceptor chainable acceptor} that runs
+ * {@link RequestFilterProcessor request filter processor} on a request
+ * and registers {@link ResponseFilterProcessor response filter processor}
+ * to be run on a response.
+ * <p>
+ * The acceptor may break the chain by directly returning a response in case
+ * any of the executed request filters sets a response in the filter context.
+ * </p>
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class FilteringInflector implements Inflector<Request, Response> {
+public class FilteringAcceptor extends AbstractChainableAcceptor {
 
-    // TODO This builder is not very useful!
-    public static class Builder {
-
-        @Inject
-        private RequestFilterAcceptor requestFilterAcceptor;
-
-        @Inject
-        private ResponseFilterResponder responseFilterResponder;
-
-        @Inject
-        private Factory<JerseyFilterContext> filterContextFactory;
-
-        @Inject
-        private Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
-
-        public Builder() {
-            // Injection constructor
-        }
-
-        public FilteringInflector build(Inflector<Request, Response> wrapped) {
-            return new FilteringInflector(wrapped, requestFilterAcceptor, responseFilterResponder,
-                    filterContextFactory, respondingContextFactory);
-        }
-    }
-
-    private final Inflector<Request, Response> wrapped;
-    private final RequestFilterAcceptor requestFilterAcceptor;
-    private final ResponseFilterResponder responseFilterResponder;
+    private final RequestFilterProcessor requestFilterProcessor;
+    private final ResponseFilterProcessor responseFilterProcessor;
     private final Factory<JerseyFilterContext> filterContextFactory;
     private final Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
 
-    private FilteringInflector(Inflector<Request, Response> wrapped,
-                               RequestFilterAcceptor requestFilterAcceptor,
-                               ResponseFilterResponder responseFilterResponder,
-                               Factory<JerseyFilterContext> filterContextFactory,
-                               Factory<ResponseProcessor.RespondingContext> respondingContextFactory) {
-        this.wrapped = wrapped;
-        this.requestFilterAcceptor = requestFilterAcceptor;
-        this.responseFilterResponder = responseFilterResponder;
+    /**
+     * Create a new filtering acceptor.
+     *
+     * @param requestFilterProcessor   request filter processor to be executed on
+     *                                 requests.
+     * @param responseFilterProcessor  response filter processor to be executed on
+     *                                 responses.
+     * @param filterContextFactory     factory providing request-scoped filter contexts.
+     * @param respondingContextFactory factory providing request-scoped responding
+     *                                 contexts.
+     */
+    public FilteringAcceptor(@Inject RequestFilterProcessor requestFilterProcessor,
+                             @Inject ResponseFilterProcessor responseFilterProcessor,
+                             @Inject Factory<JerseyFilterContext> filterContextFactory,
+                             @Inject Factory<ResponseProcessor.RespondingContext> respondingContextFactory) {
+        this.requestFilterProcessor = requestFilterProcessor;
+        this.responseFilterProcessor = responseFilterProcessor;
         this.filterContextFactory = filterContextFactory;
         this.respondingContextFactory = respondingContextFactory;
     }
 
     @Override
-    public Response apply(Request request) {
+    public Pair<Request, Optional<LinearAcceptor>> apply(Request request) {
         JerseyFilterContext filterContext = filterContextFactory.get();
 
-        respondingContextFactory.get().push(responseFilterResponder);
+        respondingContextFactory.get().push(responseFilterProcessor);
 
         filterContext.setResponse(null);
-        Pair<Request, Optional<LinearAcceptor>> pair = requestFilterAcceptor.apply(request);
-        final Response response = filterContext.getResponse();
+        final Request filteredRequest = requestFilterProcessor.apply(request);
+        final Response filterContextResponse = filterContext.getResponse();
 
-        return (response != null) ? response : wrapped.apply(pair.left());
+        if (filterContextResponse == null) {
+            // continue accepting
+            return Tuples.of(filteredRequest, getDefaultNext());
+        } else {
+            // abort accepting & return response
+            return Tuples.of(filteredRequest, Optional.of(Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+                @Override
+                public Response apply(Request request) {
+                    return filterContextResponse;
+                }
+            })));
+        }
     }
 }

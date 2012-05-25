@@ -40,20 +40,50 @@
 
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ResponseFilter;
+
+import org.glassfish.jersey.internal.MappableException;
+
+import com.google.common.base.Function;
 
 /**
- * Configures injection of filtering artifacts.
+ * Executes the configured set of response filters on a response.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class FilterModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(javax.ws.rs.ext.FilterContext.class).to(JerseyFilterContext.class).in(RequestScope.class);
+public class ResponseFilterProcessor extends AbstractFilterProcessor<ResponseFilter> implements Function<Response, Response> {
 
-        bind().to(RequestFilterProcessor.class);
-        bind().to(ResponseFilterProcessor.class);
-        bind().to(FilteringAcceptor.class);
+    /**
+     * Create a new response filter processor.
+     */
+    public ResponseFilterProcessor() {
+        super(PriorityComparator.Order.DESCENDING);
+    }
+
+    @Override
+    public Response apply(Response data) {
+        JerseyFilterContext filterContext = filterContextFactory.get();
+
+        // Initialize filter context
+        filterContext.setResponse(data);
+        Map<String, Object> properties = getProperties();
+        if (properties != null) {
+            filterContext.setProperties(properties);
+        }
+
+        // Execute post filter chain
+        for (ResponseFilter filter : getFilters(ResponseFilter.class)) {
+            try {
+                filter.postFilter(filterContext);
+            } catch (Exception e) {
+                throw new MappableException(e);
+            }
+        }
+
+        return filterContext.getResponse();
     }
 }

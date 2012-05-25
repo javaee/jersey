@@ -120,13 +120,12 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         public void cancelled() {
         }
     };
+
     //
     @Inject
     private RequestScope requestScope;
     @Inject
     private RequestProcessor requestProcessor;
-    @Inject
-    private FilteringInflector.Builder filteringInflectorBuilder;
     @Inject
     private ResponseProcessor.Builder responseProcessorBuilder;
     @Inject
@@ -222,7 +221,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
             Pair<Request, Optional<Inflector<Request, Response>>> result;
             try {
                 result = requestProcessor.apply(request);
-            // MessageBodyProcessingException from Message Body Providers is propagated up and response is not returned
+                // MessageBodyProcessingException from Message Body Providers is propagated up and response is not returned
             } catch (final WebApplicationException wae) {
                 result = Tuples.of(request,
                         Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {
@@ -239,10 +238,7 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
                 throw new InflectorNotFoundException("Terminal stage did not provide an inflector");
             }
 
-            // FIXME filter processor should be part of the acceptor chain
-            final FilteringInflector filteringInflector = filteringInflectorBuilder.build(inflector.get());
-
-            return filteringInflector.apply(result.left());
+            return inflector.get().apply(result.left());
         }
     }
 }
