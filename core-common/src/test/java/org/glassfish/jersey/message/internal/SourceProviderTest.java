@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
+/*
+ * Portions contributed by Joseph Walton (Atlassian)
+ */
+
 package org.glassfish.jersey.message.internal;
 
-import javax.xml.parsers.SAXParserFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
-import org.glassfish.jersey.FeaturesAndProperties;
-import org.glassfish.jersey.message.MessageProperties;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerThread;
+import org.glassfish.jersey.internal.inject.AbstractModule;
 
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import org.glassfish.hk2.Services;
 
-/**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
- */
-@Scoped(PerThread.class)
-public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFactory> {
-    private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
+import org.junit.Before;
+import org.junit.Test;
 
-    public SaxParserFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
-        this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
+public class SourceProviderTest {
+    private Services services;
+
+    @Before
+    public void setUp() {
+        services = SaxParserFactoryInjectionProviderTest.createServices(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(SourceProvider.SaxSourceReader.class).to(SourceProvider.SaxSourceReader.class);
+            }
+        });
     }
 
-    @Override
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
+    @Test
+    public void saxSourceReaderDoesNotReadExternalDtds() throws Exception {
+        SourceProvider.SaxSourceReader reader = services.forContract(SourceProvider.SaxSourceReader.class).get();
+        InputStream entityStream = new ByteArrayInputStream("<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>".getBytes("us-ascii"));
+        SAXSource ss = reader.readFrom(null, null, null, null, null, entityStream);
 
-        factory.setNamespaceAware(true);
-
-        if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
+        TransformerFactory.newInstance().newTransformer().transform(ss, new StreamResult(new ByteArrayOutputStream()));
     }
 }

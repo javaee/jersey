@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
+/*
+ * Portions contributed by Joseph Walton (Atlassian)
+ */
+
 package org.glassfish.jersey.message.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
 
-import org.glassfish.jersey.FeaturesAndProperties;
-import org.glassfish.jersey.message.MessageProperties;
+import org.glassfish.hk2.Services;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerThread;
+import org.junit.Before;
+import org.junit.Test;
 
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+public class AbstractJaxbProviderTest {
+    private Services services;
 
-/**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
- */
-@Scoped(PerThread.class)
-public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFactory> {
-    private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
-
-    public SaxParserFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
-        this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
+    @Before
+    public void setUp() {
+        services = SaxParserFactoryInjectionProviderTest.createServices();
     }
 
-    @Override
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
+    @Test
+    public void abstractJaxbProviderDoesNotReadExternalDtds() throws Exception {
+        SAXParserFactory spf = services.forContract(SAXParserFactory.class).get();
 
-        factory.setNamespaceAware(true);
+        String url = "file:///no-such-file";
+        String s = "<!DOCTYPE x SYSTEM '" + url + "'><x/>";
+        SAXSource saxSource = AbstractJaxbProvider.getSAXSource(spf, new ByteArrayInputStream(s.getBytes("us-ascii")));
 
-        if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
+        TransformerFactory.newInstance().newTransformer().transform(saxSource, new StreamResult(new ByteArrayOutputStream()));
     }
 }

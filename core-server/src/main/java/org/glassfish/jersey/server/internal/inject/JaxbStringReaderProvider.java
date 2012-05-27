@@ -57,17 +57,18 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
-import org.glassfish.jersey.internal.ExtractorException;
-import org.glassfish.jersey.internal.ProcessingException;
 
 import org.glassfish.hk2.Factory;
 
 import org.xml.sax.InputSource;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 /**
  * String reader provider producing {@link StringValueReader string readers} that
@@ -156,7 +157,6 @@ public class JaxbStringReaderProvider {
      */
     public static class RootElementProvider extends JaxbStringReaderProvider implements StringValueReaderProvider {
 
-        @Context
         private Factory<SAXParserFactory> spfProvider;
 
         /**
@@ -164,8 +164,9 @@ public class JaxbStringReaderProvider {
          *
          * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
          */
-        public RootElementProvider(@Context Providers ps) {
+        public RootElementProvider(@Context Factory<SAXParserFactory> spfProvider, @Context Providers ps) {
             super(ps);
+            this.spfProvider = spfProvider;
         }
 
         @Override
