@@ -136,26 +136,6 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Create a copy of an existing configuration.
-     *
-     * @param original original configuration.
-     */
-    public ResourceConfig(ResourceConfig original) {
-        this.classLoader = original.classLoader;
-
-        this.classes = Sets.newHashSet(original.classes);
-        this.singletons = Sets.newHashSet(original.singletons);
-        this.resources = Sets.newHashSet(original.resources);
-        this.resourcesView = Collections.unmodifiableSet(this.resources);
-
-        this.properties = Maps.newHashMap(original.properties);
-        this.propertiesView = Collections.unmodifiableMap(this.properties);
-
-        this.resourceFinders = Sets.newHashSet(original.resourceFinders);
-        this.customModules = Sets.newHashSet(original.customModules);
-    }
-
-    /**
      * Returns a {@link ResourceConfig} instance for the supplied application.
      *
      * If the application is an instance of {@link ResourceConfig} the method simply returns the application.
