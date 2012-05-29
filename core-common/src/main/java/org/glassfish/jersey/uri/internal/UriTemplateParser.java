@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.uri;
+package org.glassfish.jersey.uri.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +49,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import org.glassfish.jersey.uri.internal.CharacterIterator;
 
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
@@ -75,58 +77,6 @@ public class UriTemplateParser {
     }
     private static final Pattern TEMPLATE_VALUE_PATTERN = Pattern.compile("[^/]+?");
 
-    private interface CharacterIterator {
-
-        boolean hasNext();
-
-        char next();
-
-        char peek();
-
-        int pos();
-    }
-
-    private static final class StringCharacterIterator implements CharacterIterator {
-
-        private int pos;
-        private String s;
-
-        public StringCharacterIterator(final String s) {
-            this.s = s;
-            this.pos = 0;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return pos < s.length();
-        }
-
-        @Override
-        public char next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return s.charAt(pos++);
-        }
-
-        @Override
-        public char peek() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-
-            return s.charAt(pos);
-        }
-
-        @Override
-        public int pos() {
-            if (pos == 0) {
-                throw new IllegalStateException("Iterator not used yet.");
-            }
-
-            return pos - 1;
-        }
-    }
     private final String template;
     private final StringBuffer regex = new StringBuffer();
     private final StringBuffer normalizedTemplate = new StringBuffer();
@@ -151,7 +101,7 @@ public class UriTemplateParser {
         }
 
         this.template = template;
-        parse(new StringCharacterIterator(template));
+        parse(new CharacterIterator(template));
         try {
             pattern = Pattern.compile(regex.toString());
         } catch (PatternSyntaxException ex) {

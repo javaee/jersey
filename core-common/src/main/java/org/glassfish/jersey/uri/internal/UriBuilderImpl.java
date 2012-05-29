@@ -60,6 +60,8 @@ import org.glassfish.jersey.uri.UriTemplate;
  *
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ *
  */
 public class UriBuilderImpl extends UriBuilder {
 
@@ -69,7 +71,7 @@ public class UriBuilderImpl extends UriBuilder {
     private String authority;
     private String userInfo;
     private String host;
-    private int port = -1;
+    private String port;
     private final StringBuilder path;
     private MultivaluedMap<String, String> matrixParams;
     private final StringBuilder query;
@@ -133,7 +135,7 @@ public class UriBuilderImpl extends UriBuilder {
                 authority = uri.getRawAuthority();
                 userInfo = null;
                 host = null;
-                port = -1;
+                port = null;
             } else {
                 authority = null;
                 if (uri.getRawUserInfo() != null) {
@@ -143,7 +145,7 @@ public class UriBuilderImpl extends UriBuilder {
                     host = uri.getHost();
                 }
                 if (uri.getPort() != -1) {
-                    port = uri.getPort();
+                    port = String.valueOf(uri.getPort());
                 }
             }
         }
@@ -156,6 +158,61 @@ public class UriBuilderImpl extends UriBuilder {
             query.setLength(0);
             query.append(uri.getRawQuery());
 
+        }
+
+        return this;
+    }
+
+    // TODO: add override once the method is added to UriBuilder
+    public UriBuilder uri(String uriTemplate) {
+        UriParser parser = new UriParser(uriTemplate);
+        parser.parse();
+
+        if (parser.getFragment() != null) {
+            this.fragment = parser.getFragment();
+        }
+
+        if (parser.isOpaque()) {
+            this.ssp = parser.getSsp();
+            this.scheme = parser.getScheme();
+            return this;
+        }
+
+        if (parser.getScheme() == null && this.ssp != null && parser.getSsp() != null) {
+            // relative uri with ssp
+            this.ssp = parser.getSsp();
+        } else {
+            this.scheme = parser.getScheme();
+        }
+
+        if (parser.getAuthority() != null) {
+            if (parser.getAuthority() == null && parser.getHost() == null && parser.getPort() == null) {
+                this.authority = parser.getAuthority();
+                this.userInfo = null;
+                this.host = null;
+                this.port = null;
+            } else {
+                this.authority = null;
+                if (parser.getUserInfo() != null) {
+                    this.userInfo = parser.getUserInfo();
+                }
+                if (parser.getHost() != null) {
+                    this.host = parser.getHost();
+                }
+                if (parser.getPort() != null) {
+                    this.port = parser.getPort();
+                }
+            }
+
+        }
+
+        if (parser.getPath() != null) {
+            this.path.setLength(0);
+            this.path.append(parser.getPath());
+        }
+        if (parser.getQuery() != null) {
+            this.query.setLength(0);
+            this.query.append(parser.getQuery());
         }
 
         return this;
@@ -179,7 +236,7 @@ public class UriBuilderImpl extends UriBuilder {
         }
 
         // TODO encode or validate scheme specific part
-        // This will not work for template variables present in the spp
+        // This will not work for template variables present in the ssp
         StringBuilder sb = new StringBuilder();
         if (scheme != null) {
             sb.append(scheme).append(':');
@@ -202,12 +259,12 @@ public class UriBuilderImpl extends UriBuilder {
                     authority = uri.getRawAuthority();
                     userInfo = null;
                     host = null;
-                    port = -1;
+                    port = null;
                 } else {
                     authority = null;
                     userInfo = uri.getRawUserInfo();
                     host = uri.getHost();
-                    port = uri.getPort();
+                    port = uri.getPort() == -1 ? null : String.valueOf(uri.getPort());
                 }
             }
 
@@ -251,7 +308,7 @@ public class UriBuilderImpl extends UriBuilder {
         {
             throw new IllegalArgumentException("Invalid port value");
         }
-        this.port = port;
+        this.port = port == -1 ? null : String.valueOf(port);
         return this;
     }
 
@@ -642,7 +699,7 @@ public class UriBuilderImpl extends UriBuilder {
 
         String uri = UriTemplate.createURI(
                 scheme, authority,
-                userInfo, host, (port != -1) ? String.valueOf(port) : null,
+                userInfo, host, port,
                 path.toString(), query.toString(), fragment, values, encode);
         return createURI(uri);
     }
@@ -671,7 +728,7 @@ public class UriBuilderImpl extends UriBuilder {
 
         String uri = UriTemplate.createURI(
                 scheme, authority,
-                userInfo, host, (port != -1) ? String.valueOf(port) : null,
+                userInfo, host, port,
                 path.toString(), query.toString(), fragment, values, encode);
         return createURI(uri);
     }
@@ -689,7 +746,7 @@ public class UriBuilderImpl extends UriBuilder {
         if (ssp != null) {
             sb.append(ssp);
         } else {
-            if (userInfo != null || host != null || port != -1) {
+            if (userInfo != null || host != null || port != null) {
                 sb.append("//");
 
                 if (userInfo != null && userInfo.length() > 0) {
@@ -701,7 +758,7 @@ public class UriBuilderImpl extends UriBuilder {
                     sb.append(host);
                 }
 
-                if (port != -1) {
+                if (port != null) {
                     sb.append(':').append(port);
                 }
             } else if (authority != null) {
@@ -738,4 +795,5 @@ public class UriBuilderImpl extends UriBuilder {
     private String replaceNull(String s) {
         return (s != null) ? s : "";
     }
+
 }

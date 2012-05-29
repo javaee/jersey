@@ -48,6 +48,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.glassfish.jersey.uri.internal.UriTemplateParser;
+
 /**
  * A URI template.
  *
@@ -780,7 +782,7 @@ public class UriTemplate {
                     offset, encode, mapValues, sb);
         }
 
-        if (path != null) {
+        if (path != null && path.length() > 0) {
             if (sb.length() > 0 && path.charAt(0) != '/') {
                 sb.append("/");
             }

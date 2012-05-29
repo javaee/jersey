@@ -75,6 +75,7 @@ core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParam
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParamSortedSetStringConstructorTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParamStringConstructorTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/StringReaderTest.java
+org.glassfish.jersey.uri.internal/UriBuilderImplTest.java (contains merged UriBuilderTest.java)
 
 TODO:
 
@@ -525,7 +526,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/template/ViewProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/trace/TraceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/AutomataMatchingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/LinearMatchingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriBuilderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriComponentDecodeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriComponentEncodeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriComponentValidateTest.java

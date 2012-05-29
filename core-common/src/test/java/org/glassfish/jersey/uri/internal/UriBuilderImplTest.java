@@ -39,16 +39,27 @@
  */
 package org.glassfish.jersey.uri.internal;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.uri.UriComponent;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -57,6 +68,8 @@ import static org.junit.Assert.fail;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
 public class UriBuilderImplTest {
 
@@ -82,17 +95,21 @@ public class UriBuilderImplTest {
     @Test
     public void testPathTemplateValueEncoding() throws URISyntaxException {
         String result;
-        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("a/b").path("a/b").segment("a/b").build().toString();
+        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("a/b").path("a/b").segment
+                ("a/b").build().toString();
         assertEquals("http://a%2Fb@examples.jersey.java.net/a/b/a%2Fb", result);
 
-        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T1}").path("{T2}").segment("{T3}").build("a/b", "a/b", "a/b").toString();
+        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T1}").path("{T2}").segment
+                ("{T3}").build("a/b", "a/b", "a/b").toString();
         assertEquals("http://a%2Fb@examples.jersey.java.net/a/b/a/b", result);
         // TODO fix above to assertEquals("http://a%2Fb@examples.jersey.java.net/a%2Fb/a%2Fb", result);
 
-        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T1}").path("{T2}").segment("{T2}").build("a@b", "a@b").toString();
+        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T1}").path("{T2}").segment
+                ("{T2}").build("a@b", "a@b").toString();
         assertEquals("http://a%40b@examples.jersey.java.net/a@b/a@b", result);
 
-        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T}").path("{T}").segment("{T}").build("a@b").toString();
+        result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("{T}").path("{T}").segment
+                ("{T}").build("a@b").toString();
         assertEquals("http://a%40b@examples.jersey.java.net/a@b/a@b", result);
     }
 
@@ -149,4 +166,887 @@ public class UriBuilderImplTest {
         URI uri = new UriBuilderImpl().path("http://localhost/").replaceQueryParam("foo", "test").clone().build();
         assertEquals("http://localhost/?foo=test", uri.toString());
     }
+
+    @Test
+    public void testUriBuilderTemplatesSimple() {
+        testUri("a:/path");
+        testUri("a:/p");
+        testUri("a:/path/x/y/z");
+        testUri("a:/path/x?q=12#fragment");
+        testUri("a:/p?q#f");
+        testUri("a://host");
+        testUri("a://host:5555/a/b");
+        testUri("a://h:5/a/b");
+        testUri("a:/user@host:12345");         //user@host:12345 is not authority but path
+        testUri("a:/user@host:12345/a/b/c");
+        testUri("a:/user@host:12345/a/b/c?aaa&bbb#ccc");
+        testUri("a:/user@host.hhh.ddd.c:12345/a/b/c?aaa&bbb#ccc");
+        testUri("/a");
+        testUri("/a/../../b/c/d");
+        testUri("//localhost:80/a/b");
+        testUri("//l:8/a/b");
+        testUri("a/b");
+        testUri("a");
+        testUri("../../s");
+        testUri("mailto:test@test.com");
+        testUri("http://orac@le:co@m:1234/a/b/ccc?a#fr");
+        testUri("http://[::FFFF:129.144.52.38]:1234/a/b/ccc?a#fr");
+        testUri("http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:1234/a/b/ccc?a#fr");
+
+    }
+
+    @Test
+    @Ignore
+    public void failingTests() {
+        testUri("a://#fragment"); // fails in UriBuilderImpl
+        testUri("a://?query");
+
+
+        // fails: opaque uris are not supported by UriTemplate
+        URI uri = new UriBuilderImpl().uri("{scheme}://{mailto}").build("mailto", "email@test.ttt");
+        assertEquals("mailto:email@test.ttt", uri.toString());
+    }
+
+    @Test
+    public void testUriBuilderTemplates() {
+        URI uri = new UriBuilderImpl().uri("http://localhost:8080/{path}").build("a/b/c");
+        assertEquals("http://localhost:8080/a/b/c", uri.toString());
+
+        uri = new UriBuilderImpl().uri("{scheme}://{host}").build("http", "localhost");
+        assertEquals("http://localhost", uri.toString());
+
+
+        uri = new UriBuilderImpl().uri("http://{host}:8080/{path}").build("l", "a/b/c");
+        assertEquals("http://l:8080/a/b/c", uri.toString());
+
+        uri = new UriBuilderImpl().uri("{scheme}://{host}:{port}/{path}").build("s", "h", new Integer(1), "a");
+        assertEquals("s://h:1/a", uri.toString());
+
+        Map<String, Object> values = new HashMap<String, Object>();
+        values.put("scheme", "s");
+        values.put("host", "h");
+        values.put("port", new Integer(1));
+        values.put("path", "p");
+        values.put("query", "q");
+        values.put("fragment", "f");
+
+        uri = new UriBuilderImpl().uri("{scheme}://{host}:{port}/{path}?{query}#{fragment}").buildFromMap(values);
+        assertEquals("s://h:1/p?q#f", uri.toString());
+
+
+        uri = new UriBuilderImpl().uri("{scheme}://{host}:{port}/{path}/{path2}").build("s", "h", new Integer(1), "a", "b");
+        assertEquals("s://h:1/a/b", uri.toString());
+
+
+        uri = new UriBuilderImpl().uri("{scheme}://{host}:{port}/{path}/{path2}").build("s", "h", new Integer(1), "a", "b");
+        assertEquals("s://h:1/a/b", uri.toString());
+
+        uri = new UriBuilderImpl().uri("//{host}:{port}/{path}/{path2}").build("h", new Integer(1), "a", "b");
+        assertEquals("//h:1/a/b", uri.toString());
+
+
+        uri = new UriBuilderImpl().uri("/{a}/{a}/{b}").build("a", "b");
+        assertEquals("/a/a/b", uri.toString());
+
+        uri = new UriBuilderImpl().uri("/{a}/{a}/{b}?{queryParam}").build("a", "b", "query");
+        assertEquals("/a/a/b?query", uri.toString());
+
+        // partial templates
+        uri = new UriBuilderImpl().uri("/{a}xx/{a}/{b}?{queryParam}").build("a", "b", "query");
+        assertEquals("/axx/a/b?query", uri.toString());
+
+        uri = new UriBuilderImpl().uri("my{scheme}://my{host}:1{port}/my{path}/my{path2}").build("s", "h", new Integer(1), "a",
+                "b");
+        assertEquals("mys://myh:11/mya/myb", uri.toString());
+
+        uri = new UriBuilderImpl().uri("my{scheme}post://my{host}post:5{port}9/my{path}post/my{path2}post").build("s", "h",
+                new Integer(1), "a", "b");
+        assertEquals("myspost://myhpost:519/myapost/mybpost", uri.toString());
+    }
+
+
+    private void testUri(String input) {
+        URI uri = new UriBuilderImpl().uri(input).clone().build();
+
+        URI originalUri = URI.create(input);
+        assertEquals(originalUri.getScheme(), uri.getScheme());
+        assertEquals(originalUri.getHost(), uri.getHost());
+        assertEquals(originalUri.getPort(), uri.getPort());
+        assertEquals(originalUri.getUserInfo(), uri.getUserInfo());
+        assertEquals(originalUri.getPath(), uri.getPath());
+        assertEquals(originalUri.getQuery(), uri.getQuery());
+        assertEquals(originalUri.getFragment(), uri.getFragment());
+        assertEquals(originalUri.getRawSchemeSpecificPart(), uri.getRawSchemeSpecificPart());
+        assertEquals(originalUri.isAbsolute(), uri.isAbsolute());
+        assertEquals(input, uri.toString());
+    }
+
+
+    @org.junit.Test
+    public void testOpaqueUri() {
+        URI bu = UriBuilderImpl.fromUri("mailto:a@b").build();
+        Assert.assertEquals(URI.create("mailto:a@b"), bu);
+    }
+
+    @Test
+    public void testOpaqueUriReplaceSchemeSpecificPart() {
+        URI bu = UriBuilderImpl.fromUri("mailto:a@b").schemeSpecificPart("c@d").build();
+        Assert.assertEquals(URI.create("mailto:c@d"), bu);
+    }
+
+    @Test
+    public void testOpaqueReplaceUri() {
+        URI bu = UriBuilderImpl.fromUri("mailto:a@b").uri(URI.create("c@d")).build();
+        Assert.assertEquals(URI.create("mailto:c@d"), bu);
+    }
+
+    @Test
+    public void testReplaceScheme() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                scheme("https").build();
+        Assert.assertEquals(URI.create("https://localhost:8080/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplaceSchemeSpecificPart() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                schemeSpecificPart("//localhost:8080/a/b/c/d").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/d"), bu);
+    }
+
+    @Test
+    public void testNameAuthorityUri() {
+        URI bu = UriBuilderImpl.fromUri("http://x_y/a/b/c").build();
+        Assert.assertEquals(URI.create("http://x_y/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplaceNameAuthorityUriWithHost() {
+        URI bu = UriBuilderImpl.fromUri("http://x_y.com/a/b/c").host("xy.com").build();
+        Assert.assertEquals(URI.create("http://xy.com/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplaceNameAuthorityUriWithSSP() {
+        URI bu = UriBuilderImpl.fromUri("http://x_y.com/a/b/c").schemeSpecificPart("//xy.com/a/b/c").build();
+        Assert.assertEquals(URI.create("http://xy.com/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://x_y.com/a/b/c").schemeSpecificPart("//v_w.com/a/b/c").build();
+        Assert.assertEquals(URI.create("http://v_w.com/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplaceUserInfo() {
+        URI bu = UriBuilderImpl.fromUri("http://bob@localhost:8080/a/b/c").
+                userInfo("sue").build();
+        Assert.assertEquals(URI.create("http://sue@localhost:8080/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplaceHost() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                host("a.com").build();
+        Assert.assertEquals(URI.create("http://a.com:8080/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplacePort() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                port(9090).build();
+        Assert.assertEquals(URI.create("http://localhost:9090/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                port(-1).build();
+        Assert.assertEquals(URI.create("http://localhost/a/b/c"), bu);
+    }
+
+    @Test
+    public void testReplacePath() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                replacePath("/x/y/z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/x/y/z"), bu);
+    }
+
+    @Test
+    public void testReplacePathNull() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                replacePath(null).build();
+
+        Assert.assertEquals(URI.create("http://localhost:8080"), bu);
+    }
+
+    @Test
+    public void testReplaceMatrix() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c;a=x;b=y").
+                replaceMatrix("x=a;y=b").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c;x=a;y=b"), bu);
+    }
+
+    @Test
+    public void testReplaceMatrixParams() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c;a=x;b=y").
+                replaceMatrixParam("a", "z", "zz");
+
+        {
+            URI bu = ubu.build();
+            List<PathSegment> ps = UriComponent.decodePath(bu, true);
+            MultivaluedMap<String, String> mps = ps.get(2).getMatrixParameters();
+            List<String> a = mps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+            List<String> b = mps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+        }
+
+        {
+            URI bu = ubu.replaceMatrixParam("a", "_z_", "_zz_").build();
+            List<PathSegment> ps = UriComponent.decodePath(bu, true);
+            MultivaluedMap<String, String> mps = ps.get(2).getMatrixParameters();
+            List<String> a = mps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("_z_", a.get(0));
+            Assert.assertEquals("_zz_", a.get(1));
+            List<String> b = mps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+        }
+
+        {
+            URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c;a=x;b=y").
+                    replaceMatrixParam("a", "z", "zz").matrixParam("c", "c").
+                    path("d").build();
+
+            List<PathSegment> ps = UriComponent.decodePath(bu, true);
+            MultivaluedMap<String, String> mps = ps.get(2).getMatrixParameters();
+            List<String> a = mps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+            List<String> b = mps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+            List<String> c = mps.get("c");
+            Assert.assertEquals(1, c.size());
+            Assert.assertEquals("c", c.get(0));
+        }
+    }
+
+    @Test
+    public void testReplaceMatrixParamsEmpty() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                replaceMatrixParam("a", "z", "zz");
+        {
+            URI bu = ubu.build();
+            List<PathSegment> ps = UriComponent.decodePath(bu, true);
+            MultivaluedMap<String, String> mps = ps.get(2).getMatrixParameters();
+            List<String> a = mps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+        }
+    }
+
+    @Test
+    public void testReplaceMatrixParamsEncoded() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost/").
+                replaceMatrix("limit=10;sql=select+*+from+users");
+        ubu.replaceMatrixParam("limit", 100);
+
+        URI bu = ubu.build();
+        Assert.assertEquals(URI.create("http://localhost/;limit=100;sql=select+*+from+users"), bu);
+    }
+
+    @Test
+    public void testReplaceQuery() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c?a=x&b=y").
+                replaceQuery("x=a&y=b").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?x=a&y=b"), bu);
+    }
+
+    @Test
+    public void testBuildEncodedQuery() {
+        URI u = UriBuilder.fromPath("").
+                queryParam("y", "1 %2B 2").build();
+        Assert.assertEquals(URI.create("?y=1+%2B+2"), u);
+
+        // Issue 216
+        u = UriBuilder.fromPath("http://localhost:8080").path("/{x}/{y}/{z}/{x}").
+                buildFromEncoded("%xy", " ", "=");
+        Assert.assertEquals(URI.create("http://localhost:8080/%25xy/%20/=/%25xy"), u);
+    }
+
+    @Test
+    public void testReplaceQueryParams() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c?a=x&b=y").
+                replaceQueryParam("a", "z", "zz").queryParam("c", "c");
+
+        {
+            URI bu = ubu.build();
+
+            MultivaluedMap<String, String> qps = UriComponent.decodeQuery(bu, true);
+            List<String> a = qps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+            List<String> b = qps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+            List<String> c = qps.get("c");
+            Assert.assertEquals(1, c.size());
+            Assert.assertEquals("c", c.get(0));
+        }
+
+        {
+            URI bu = ubu.replaceQueryParam("a", "_z_", "_zz_").build();
+
+            MultivaluedMap<String, String> qps = UriComponent.decodeQuery(bu, true);
+            List<String> a = qps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("_z_", a.get(0));
+            Assert.assertEquals("_zz_", a.get(1));
+            List<String> b = qps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+            List<String> c = qps.get("c");
+            Assert.assertEquals(1, c.size());
+            Assert.assertEquals("c", c.get(0));
+        }
+
+        // issue 257 - param is removed after setting it to null
+        {
+            URI u1 = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", null).build();
+            Assert.assertTrue(u1.toString().equals("http://localhost:8080"));
+
+            URI u2 = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x").build();
+            Assert.assertTrue(u2.toString().equals("http://localhost:8080"));
+        }
+
+        // issue 257 - IllegalArgumentException
+        {
+            boolean caught = false;
+
+            try {
+                URI u = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", "1", null,
+                        "2").build();
+            } catch (IllegalArgumentException iae) {
+                caught = true;
+            }
+
+            Assert.assertTrue(caught);
+        }
+
+    }
+
+    @Test
+    public void testReplaceQueryParamsEmpty() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                replaceQueryParam("a", "z", "zz").queryParam("c", "c");
+
+        {
+            URI bu = ubu.build();
+
+            MultivaluedMap<String, String> qps = UriComponent.decodeQuery(bu, true);
+            List<String> a = qps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+            List<String> c = qps.get("c");
+            Assert.assertEquals(1, c.size());
+            Assert.assertEquals("c", c.get(0));
+        }
+    }
+
+    @Test
+    public void testReplaceQueryParamsEncoded() {
+        UriBuilder ubu = UriBuilderImpl.fromUri("http://localhost/").
+                replaceQuery("limit=10&sql=select+*+from+users");
+        ubu.replaceQueryParam("limit", 100);
+
+        URI bu = ubu.build();
+        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+*+from+users"), bu);
+    }
+
+    @Test
+    public void testReplaceFragment() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c?a=x&b=y#frag").
+                fragment("ment").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=x&b=y#ment"), bu);
+    }
+
+    @Test
+    public void testReplaceUri() {
+        URI u = URI.create("http://bob@localhost:8080/a/b/c?a=x&b=y#frag");
+
+        URI bu = UriBuilder.fromUri(u).
+                uri(URI.create("https://bob@localhost:8080")).build();
+        Assert.assertEquals(URI.create("https://bob@localhost:8080/a/b/c?a=x&b=y#frag"), bu);
+
+        bu = UriBuilder.fromUri(u).
+                uri(URI.create("https://sue@localhost:8080")).build();
+        Assert.assertEquals(URI.create("https://sue@localhost:8080/a/b/c?a=x&b=y#frag"), bu);
+
+        bu = UriBuilder.fromUri(u).
+                uri(URI.create("https://sue@localhost:9090")).build();
+        Assert.assertEquals(URI.create("https://sue@localhost:9090/a/b/c?a=x&b=y#frag"), bu);
+
+        bu = UriBuilder.fromUri(u).
+                uri(URI.create("/x/y/z")).build();
+        Assert.assertEquals(URI.create("http://bob@localhost:8080/x/y/z?a=x&b=y#frag"), bu);
+
+        bu = UriBuilder.fromUri(u).
+                uri(URI.create("?x=a&b=y")).build();
+        Assert.assertEquals(URI.create("http://bob@localhost:8080/a/b/c?x=a&b=y#frag"), bu);
+
+        bu = UriBuilder.fromUri(u).
+                uri(URI.create("#ment")).build();
+        Assert.assertEquals(URI.create("http://bob@localhost:8080/a/b/c?a=x&b=y#ment"), bu);
+    }
+
+    @Test
+    public void testSchemeSpecificPart() {
+        URI u = URI.create("http://bob@localhost:8080/a/b/c?a=x&b=y#frag");
+
+        URI bu = UriBuilder.fromUri(u).
+                schemeSpecificPart("//sue@remotehost:9090/x/y/z?x=a&y=b").build();
+        Assert.assertEquals(URI.create("http://sue@remotehost:9090/x/y/z?x=a&y=b#frag"), bu);
+    }
+
+    @Test
+    public void testAppendPath() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080").
+                path("a/b/c").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/").
+                path("a/b/c").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080").
+                path("/a/b/c").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c/").
+                path("/").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c/").
+                path("/x/y/z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/x/y/z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("x/y/z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a%20/b%20/c%20").
+                path("/x /y /z ").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a%20/b%20/c%20/x%20/y%20/z%20"), bu);
+    }
+
+    @Test
+    public void testAppendSegment() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080").
+                segment("a/b/c;x").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a%2Fb%2Fc%3Bx"), bu);
+    }
+
+    @Test
+    public void testRelativefromUri() {
+        URI bu = UriBuilderImpl.fromUri("a/b/c").
+                build();
+        Assert.assertEquals(URI.create("a/b/c"), bu);
+
+        bu = UriBuilderImpl.fromUri("a/b/c").path("d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilderImpl.fromUri("a/b/c/").path("d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilderImpl.fromUri("a/b/c").path("/d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilderImpl.fromUri("a/b/c/").path("/d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilderImpl.fromUri("").queryParam("x", "y").
+                build();
+        Assert.assertEquals(URI.create("?x=y"), bu);
+
+    }
+
+    @Test
+    public void testRelativefromPath() {
+        URI bu = UriBuilder.fromPath("a/b/c").
+                build();
+        Assert.assertEquals(URI.create("a/b/c"), bu);
+
+        bu = UriBuilder.fromPath("a/b/c").path("d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilder.fromPath("a/b/c/").path("d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilder.fromPath("a/b/c").path("/d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilder.fromPath("a/b/c/").path("/d").
+                build();
+        Assert.assertEquals(URI.create("a/b/c/d"), bu);
+
+        bu = UriBuilder.fromPath("").queryParam("x", "y").
+                build();
+        Assert.assertEquals(URI.create("?x=y"), bu);
+    }
+
+    @Test
+    public void testAppendQueryParams() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c?a=x&b=y").
+                queryParam("c", "z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=x&b=y&c=z"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c?a=x&b=y").
+                queryParam("c= ", "z= ").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=x&b=y&c%3D+=z%3D+"), bu);
+
+        try {
+            bu = UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x", null).build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(true);
+        } catch (NullPointerException e) {
+            Assert.assertTrue(false);
+        }
+    }
+
+    @Test
+    public void testAppendMatrixParams() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c;a=x;b=y").
+                matrixParam("c", "z").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c;a=x;b=y;c=z"), bu);
+
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c;a=x;b=y").
+                matrixParam("c=/ ;", "z=/ ;").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c;a=x;b=y;c%3D%2F%20%3B=z%3D%2F%20%3B"), bu);
+    }
+
+    @Test
+    public void testAppendPathAndMatrixParams() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/").
+                path("a").matrixParam("x", "foo").matrixParam("y", "bar").
+                path("b").matrixParam("x", "foo").matrixParam("y", "bar").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a;x=foo;y=bar/b;x=foo;y=bar"), bu);
+    }
+
+    @Path("resource")
+    class Resource {
+        @Path("method")
+        public
+        @GET
+        String get() {
+            return "";
+        }
+
+        @Path("locator")
+        public Object locator() {
+            return null;
+        }
+    }
+
+    @Test
+    public void testResourceAppendPath() throws NoSuchMethodException {
+        URI ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(Resource.class).build();
+        Assert.assertEquals(URI.create("http://localhost:8080/base/resource"), ub);
+
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(Resource.class, "get").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method"), ub);
+
+        Method get = Resource.class.getMethod("get");
+        Method locator = Resource.class.getMethod("locator");
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(get).path(locator).build();
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method/locator"), ub);
+    }
+
+    @Path("resource/{id}")
+    class ResourceWithTemplate {
+        @Path("method/{id1}")
+        public
+        @GET
+        String get() {
+            return "";
+        }
+
+        @Path("locator/{id2}")
+        public Object locator() {
+            return null;
+        }
+    }
+
+    @Test
+    public void testResourceWithTemplateAppendPath() throws NoSuchMethodException {
+        URI ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(ResourceWithTemplate.class).build("foo");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/resource/foo"), ub);
+
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(ResourceWithTemplate.class, "get").build("foo");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo"), ub);
+
+        Method get = ResourceWithTemplate.class.getMethod("get");
+        Method locator = ResourceWithTemplate.class.getMethod("locator");
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(get).path(locator).build("foo", "bar");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo/locator/bar"), ub);
+    }
+
+    @Path("resource/{id: .+}")
+    class ResourceWithTemplateRegex {
+        @Path("method/{id1: .+}")
+        public
+        @GET
+        String get() {
+            return "";
+        }
+
+        @Path("locator/{id2: .+}")
+        public Object locator() {
+            return null;
+        }
+    }
+
+    @Test
+    public void testResourceWithTemplateRegexAppendPath() throws NoSuchMethodException {
+        URI ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(ResourceWithTemplateRegex.class).build("foo");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/resource/foo"), ub);
+
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(ResourceWithTemplateRegex.class, "get").build("foo");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo"), ub);
+
+        Method get = ResourceWithTemplateRegex.class.getMethod("get");
+        Method locator = ResourceWithTemplateRegex.class.getMethod("locator");
+        ub = UriBuilderImpl.fromUri("http://localhost:8080/base").
+                path(get).path(locator).build("foo", "bar");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo/locator/bar"), ub);
+    }
+
+    @Test
+    public void testBuildTemplates() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").build("x", "y", "z");
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x"), bu);
+    }
+
+    @Test
+    public void testBuildTemplatesWithNameAuthority() {
+        URI bu = UriBuilderImpl.fromUri("http://x_y.com:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").build("x", "y", "z");
+        Assert.assertEquals(URI.create("http://x_y.com:8080/a/b/c/x/y/z/x"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        bu = UriBuilderImpl.fromUri("http://x_y.com:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://x_y.com:8080/a/b/c/x/y/z/x"), bu);
+    }
+
+    @Test
+    public void testBuildFromMap() {
+        Map maps = new HashMap();
+        maps.put("x", null);
+        maps.put("y", "/path-absolute/test1");
+        maps.put("z", "fred@example.com");
+        maps.put("w", "path-rootless/test2");
+        maps.put("u", "extra");
+
+        boolean caught = false;
+
+        try {
+            System.out.println(UriBuilder.fromPath("").path("{w}/{x}/{y}/{z}/{x}").
+                    buildFromEncodedMap(maps));
+
+        } catch (IllegalArgumentException ex) {
+            caught = true;
+        }
+
+        Assert.assertTrue(caught);
+    }
+
+    @Test
+    public void testBuildQueryTemplates() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").build("=+&%xx%20");
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%2520"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("b", "=+&%xx%20");
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%2520"), bu);
+    }
+
+    @Test
+    public void testBuildFromEncodedQueryTemplates() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").buildFromEncoded("=+&%xx%20");
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%20"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("b", "=+&%xx%20");
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").buildFromEncodedMap(m);
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%20"), bu);
+    }
+
+    @Test
+    public void testBuildFragmentTemplates() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").build("x", "y", "z");
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        bu = UriBuilderImpl.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), bu);
+    }
+
+    @Test
+    public void testTemplatesDefaultPort() {
+        URI bu = UriBuilderImpl.fromUri("http://localhost/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").build("x", "y", "z");
+        Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), bu);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        bu = UriBuilderImpl.fromUri("http://localhost/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), bu);
+    }
+
+    @Test
+    public void testClone() {
+        UriBuilder ub = UriBuilderImpl.fromUri("http://user@localhost:8080/?query#fragment").path("a");
+        URI full = ub.clone().path("b").build();
+        URI base = ub.build();
+
+        Assert.assertEquals(URI.create("http://user@localhost:8080/a?query#fragment"), base);
+        Assert.assertEquals(URI.create("http://user@localhost:8080/a/b?query#fragment"), full);
+    }
+
+    @Test
+    public void testIllegalArgumentException() {
+        boolean caught = false;
+        try {
+            UriBuilder.fromPath(null);
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+
+        caught = false;
+        try {
+            UriBuilder.fromUri((URI) null);
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+
+        caught = false;
+        try {
+            UriBuilder.fromUri((String) null);
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+    }
+
+    @Test
+    public void testVariableWithoutValue() {
+        boolean caught = false;
+        try {
+            UriBuilder.fromPath("http://localhost:8080").
+                    path("/{a}/{b}").
+                    buildFromEncoded("aVal");
+
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+    }
+
+    @Test
+    public void testPortValue() {
+        boolean caught = false;
+        try {
+            UriBuilder.fromPath("http://localhost").port(-2);
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+    }
+
+    @Test
+    public void testHostValue() {
+        boolean caught = false;
+        try {
+            UriBuilder.fromPath("http://localhost").host("");
+        } catch (IllegalArgumentException e) {
+            caught = true;
+        }
+        Assert.assertTrue(caught);
+
+        URI bu = UriBuilder.fromPath("").host("abc").build();
+        Assert.assertEquals(URI.create("//abc"), bu);
+
+        bu = UriBuilder.fromPath("").host("abc").host(null).build();
+        Assert.assertEquals(URI.create(""), bu);
+    }
+
+
+    @Test
+    public void testEncodeTemplateNames() {
+        URI bu = UriBuilder.fromPath("http://localhost:8080").
+                path("/{a}/{b}").
+                replaceQuery("q={c}").
+                build();
+        Assert.assertEquals(URI.create("http://localhost:8080/%7Ba%7D/%7Bb%7D?q=%7Bc%7D"), bu);
+    }
+
 }
