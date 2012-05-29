@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.servlet;
 
-import javax.servlet.ServletContext;
 import java.util.Enumeration;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 
 /**
  * The Web configuration for accessing initialization parameters of a Web
@@ -72,6 +75,20 @@ public interface WebConfig {
     ConfigType getConfigType();
 
     /**
+     * Get the corresponding ServletConfig if this WebConfig represents a {@link ServletConfig}
+     *
+     * @return servlet config or null
+     */
+    ServletConfig getServletConfig();
+
+    /**
+     * Get the corresponding FilterConfig if this WebConfig represents a {@link FilterConfig}
+     *
+     * @return filter config or null
+     */
+    FilterConfig getFilterConfig();
+
+    /**
      * Get the name of the Web component.
      *
      * @return the name of the Web component.
@@ -99,14 +116,4 @@ public interface WebConfig {
      * @return the {@link ServletContext}.
      */
     ServletContext getServletContext();
-
-//    /**
-//     * Get the default {@link ResourceConfig}.
-//     *
-//     * @param props the map of properties.
-//     *
-//     * @return the default {@link ResourceConfig}.
-//     * @throws javax.servlet.ServletException
-//     */
-//    ResourceConfig getDefaultResourceConfig(Map<String, Object> props) throws ServletException;
 }

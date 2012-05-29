@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.servlet;
 
-import javax.servlet.ServletContext;
 import java.util.Enumeration;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 
 /**
  * A servlet based web config. Delegates all invocations to the servlet
@@ -63,6 +66,16 @@ public class WebServletConfig implements WebConfig {
     }
 
     @Override
+    public ServletConfig getServletConfig() {
+        return servlet.getServletConfig();
+    }
+
+    @Override
+    public FilterConfig getFilterConfig() {
+        return null;
+    }
+
+    @Override
     public String getName() {
         return servlet.getServletName();
     }
@@ -81,9 +94,4 @@ public class WebServletConfig implements WebConfig {
     public ServletContext getServletContext() {
         return servlet.getServletContext();
     }
-
-//    public ResourceConfig getDefaultResourceConfig(Map<String, Object> props)
-//            throws ServletException {
-//        return servlet.getDefaultResourceConfig(props, servlet.getServletConfig());
-//    }
 }

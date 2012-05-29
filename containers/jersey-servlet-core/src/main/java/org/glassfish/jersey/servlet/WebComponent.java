@@ -60,22 +60,31 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
-
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
+
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.PerLookup;
+import org.glassfish.hk2.scopes.Singleton;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * An abstract Web component that may be extended by a Servlet and/or
@@ -84,6 +93,7 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class WebComponent {
 
@@ -120,72 +130,72 @@ public class WebComponent {
         };
     }
 
-    private class WebComponentModule extends AbstractModule {
+    private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
+        public HttpServletRequestReferencingFactory(@Inject Factory<Ref<HttpServletRequest>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
 
+    private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
+
+        public HttpServletResponseReferencingFactory(@Inject Factory<Ref<HttpServletResponse>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    private class WebComponentModule extends AbstractModule {
         @Override
         protected void configure() {
+            bind(HttpServletRequest.class).toFactory(HttpServletRequestReferencingFactory.class).in(PerLookup.class);
+            bind(new TypeLiteral<Ref<HttpServletRequest>>() {}).
+                    toFactory(ReferencingFactory.<HttpServletRequest>referenceFactory()).in(RequestScope.class);
 
-            // TODO: implement proper factories.
-            bind(HttpServletRequest.class).toFactory(new Factory<HttpServletRequest>() {
-
-                @Override
-                public HttpServletRequest get() throws ComponentException {
-                    return null;
-                }
-            });
-
-            bind(HttpServletResponse.class).toFactory(new Factory<HttpServletResponse>() {
-
-                @Override
-                public HttpServletResponse get() throws ComponentException {
-                    return null;
-                }
-            });
+            bind(HttpServletResponse.class).toFactory(HttpServletResponseReferencingFactory.class).in(PerLookup.class);
+            bind(new TypeLiteral<Ref<HttpServletResponse>>() {}).
+                    toFactory(ReferencingFactory.<HttpServletResponse>referenceFactory()).in(RequestScope.class);
 
             bind(ServletContext.class).toFactory(new Factory<ServletContext>() {
-
                 @Override
                 public ServletContext get() throws ComponentException {
-                    return null;
+                    return webConfig.getServletContext();
                 }
-            });
+            }).in(Singleton.class);
 
-            bind(ServletConfig.class).toFactory(new Factory<ServletConfig>() {
+            if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
+                bind(ServletConfig.class).toFactory(new Factory<ServletConfig>() {
+                    @Override
+                    public ServletConfig get() throws ComponentException {
+                        return webConfig.getServletConfig();
+                    }
+                }).in(Singleton.class);
+            } else {
+                bind(FilterConfig.class).toFactory(new Factory<FilterConfig>() {
 
-                @Override
-                public ServletConfig get() throws ComponentException {
-                    return null;
-                }
-            });
+                    @Override
+                    public FilterConfig get() throws ComponentException {
+                        return webConfig.getFilterConfig();
+                    }
+                }).in(Singleton.class);
+            }
 
             bind(WebConfig.class).toFactory(new Factory<WebConfig>() {
-
                 @Override
                 public WebConfig get() throws ComponentException {
-                    return null;
+                    return webConfig;
                 }
-            });
-
-            bind(FilterConfig.class).toFactory(new Factory<FilterConfig>() {
-
-                @Override
-                public FilterConfig get() throws ComponentException {
-                    return null;
-                }
-            });
-
+            }).in(Singleton.class);
         }
     }
     //
-    /* package */ final ApplicationHandler appHandler;
+    final ApplicationHandler appHandler;
+    final WebConfig webConfig;
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
 
-    public WebComponent(final WebConfig webConfig) throws ServletException {
-        this.appHandler = new ApplicationHandler(createResourceConfig(webConfig, new WebComponentModule()));
-        this.asyncExtensionDelegate = getAsyncExtensionDelegate();
-    }
-
-    public WebComponent(final ResourceConfig resourceConfig) throws ServletException {
+    public WebComponent(final WebConfig webConfig, ResourceConfig resourceConfig) throws ServletException {
+        this.webConfig = webConfig;
+        if (resourceConfig == null) {
+            resourceConfig = createResourceConfig(webConfig);
+        }
         resourceConfig.addModules(new WebComponentModule());
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
@@ -221,7 +231,13 @@ public class WebComponent {
                     asyncExtensionDelegate.createDelegate(request, response));
 
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
-                    getSecurityContext(request), null);
+                    getSecurityContext(request), new RequestScopedInitializer() {
+                @Override
+                public void initialize(Services services) {
+                    services.forContract(new TypeLiteral<Ref<HttpServletRequest>>() {}).get().set(request);
+                    services.forContract(new TypeLiteral<Ref<HttpServletResponse>>() {}).get().set(response);
+                }
+            });
 
             appHandler.apply(containerContext);
 
@@ -261,7 +277,7 @@ public class WebComponent {
         };
     }
 
-    private ResourceConfig createResourceConfig(WebConfig config, Module... modules) throws ServletException {
+    private static ResourceConfig createResourceConfig(WebConfig config) throws ServletException {
         final Map<String, Object> initParams = getInitParams(config);
 
         // check if the JAX-RS application config class property is present
@@ -269,7 +285,7 @@ public class WebComponent {
 
         if (jaxrsApplicationClassName == null) {
             // If no resource config class property is present, create default config
-            final ResourceConfig rc = new ResourceConfig().addProperties(initParams).addModules(modules);
+            final ResourceConfig rc = new ResourceConfig().addProperties(initParams);
 
             final String webapp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
             if (webapp != null && !"false".equals(webapp)) {
@@ -282,7 +298,7 @@ public class WebComponent {
             Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException(jaxrsApplicationClassName);
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
-                        .addProperties(initParams).addModules(modules);
+                        .addProperties(initParams);
             } else {
                 String message = "Resource configuration class, " + jaxrsApplicationClassName +
                         ", is not a super class of " + javax.ws.rs.core.Application.class;
@@ -307,7 +323,7 @@ public class WebComponent {
         return builder;
     }
 
-    private Map<String, Object> getInitParams(WebConfig webConfig) {
+    private static Map<String, Object> getInitParams(WebConfig webConfig) {
         Map<String, Object> props = new HashMap<String, Object>();
         Enumeration names = webConfig.getInitParameterNames();
         while (names.hasMoreElements()) {
