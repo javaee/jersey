@@ -121,6 +121,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private static final long serialVersionUID = 3932047066686065219L;
     private transient FilterConfig filterConfig;
     private transient WebComponent webComponent;
+    private ResourceConfig resourceConfig;
     // TODO
     private transient Pattern staticContentPattern;
     private String filterContextPath = null;
@@ -137,10 +138,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @throws javax.servlet.ServletException in case of an initialization failure
      */
     protected void init(WebConfig webConfig) throws ServletException {
-        // create a new web component only if null
-        // if not null it means it was initialized by the JerseyServletContainerInitializer
-        webComponent = webComponent == null ? new WebComponent(webConfig) : webComponent;
-
+        webComponent = new WebComponent(webConfig, resourceConfig);
         containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
         containerListener.onStartup(this);
     }
@@ -150,7 +148,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     public ServletContainer(ResourceConfig resourceConfig) throws ServletException {
-        webComponent = new WebComponent(resourceConfig);
+        this.resourceConfig = resourceConfig;
     }
 
     /**
@@ -509,7 +507,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     @Override
     public void reload(ResourceConfig configuration) {
         try {
-            webComponent = new WebComponent(configuration);
+            webComponent = new WebComponent(webComponent.webConfig, configuration);
             containerListener.onReload(this);
         } catch (ServletException ex) {
             logger.log(Level.SEVERE, "Reload failed", ex);

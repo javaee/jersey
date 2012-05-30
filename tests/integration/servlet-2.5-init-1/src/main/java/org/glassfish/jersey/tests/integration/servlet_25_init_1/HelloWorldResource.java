@@ -42,9 +42,18 @@ package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.glassfish.jersey.servlet.WebConfig;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 @Path("helloworld")
 public class HelloWorldResource {
@@ -53,5 +62,14 @@ public class HelloWorldResource {
     @Produces("text/plain")
     public String get() {
         return "Hello World! " + this.getClass().getPackage().getName();
+    }
+
+    @GET
+    @Path("injection")
+    public String getInjection(@Context HttpServletRequest request, @Context HttpServletResponse response,
+                               @Context WebConfig webConfig, @Context ServletConfig servletConfig,
+                               @Context ServletContext servletContext) {
+        return request.getMethod() + (response != null) + webConfig.getName() + servletConfig.getServletName() +
+                servletContext.getServletContextName();
     }
 }

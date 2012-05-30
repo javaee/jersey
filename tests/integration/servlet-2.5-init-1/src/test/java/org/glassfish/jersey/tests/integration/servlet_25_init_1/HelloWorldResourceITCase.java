@@ -90,4 +90,10 @@ public class HelloWorldResourceITCase extends JerseyTest {
         Response r = target().path("application_path/unreachable").request().get();
         assertTrue("Managed to reach a resource that is not registered in the application.", r.getStatus() >= 400);
     }
+
+    @Test
+    public void testInjection() {
+        String s = target().path("servlet_path/helloworld/injection").request().get(String.class);
+        assertEquals("GETtruetestServlet1testServlet1/", s);
+    }
 }

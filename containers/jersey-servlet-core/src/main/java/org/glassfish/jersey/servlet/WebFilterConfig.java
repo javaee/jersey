@@ -39,9 +39,11 @@
  */
 package org.glassfish.jersey.servlet;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 import java.util.Enumeration;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 
 /**
  * A filter based web config. Delegates all invocations to the filter
@@ -61,6 +63,16 @@ public class WebFilterConfig implements WebConfig {
     @Override
     public WebConfig.ConfigType getConfigType() {
         return WebConfig.ConfigType.FilterConfig;
+    }
+
+    @Override
+    public ServletConfig getServletConfig() {
+        return null;
+    }
+
+    @Override
+    public FilterConfig getFilterConfig() {
+        return filterConfig;
     }
 
     @Override
