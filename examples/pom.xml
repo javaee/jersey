@@ -80,32 +80,46 @@
         <module>server-sent-events</module>
     </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xslt-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>create-example-gf-pom</id>
+                            <phase>package</phase> <!-- append to the packaging phase. -->
+                            <goals>
+                                <goal>transform</goal> <!-- goals == mojos -->
+                            </goals>
+                            <configuration>
+                                <xslFile>../gf-project-src-pom.xsl</xslFile>
+                                <srcDir>.</srcDir>
+                                <srcIncludes>pom.xml</srcIncludes>
+                                <destDir>target/gf-pom-file</destDir>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                 <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <descriptors>
+                            <descriptor>../gf-project-src-assembly.xml</descriptor>
+                        </descriptors>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                            <phase>package</phase> <!-- append to the packaging phase. -->
+                            <goals>
+                                <goal>attached</goal> <!-- goals == mojos -->
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

@@ -56,5 +56,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
+        <module>docs-and-examples</module>
     </modules>
 </project>

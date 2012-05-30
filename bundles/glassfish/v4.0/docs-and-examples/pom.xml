@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -42,63 +42,75 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>org.glassfish.jersey.examples</groupId>
+        <groupId>org.glassfish.jersey.bundles.glassfish.v4_0</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
-
-    <artifactId>multipart-webapp</artifactId>
-    <name>jersey-examples-multipart-webapp</name>
-    <packaging>war</packaging>
-
-    <description>Jersey Multipart example.</description>
-
+    <artifactId>jersey-gfv4_0-docs-and-examples</artifactId>
+    <name>jersey-bundles-glassfish-v4.0-docs-and-examples</name>
+    <packaging>pom</packaging>
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-webapp</artifactId>
             <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
         </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-servlet</artifactId>
+         <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>multipart-webapp</artifactId>
             <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
         </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
+  </dependencies>
     <build>
-        <finalName>${artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
-                <version>6.1.24</version>
-                <configuration>
-                    <webApp>${basedir}/target/multipart-webapp.war</webApp>
-                    <contextPath>multipart-webapp</contextPath>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-examples</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                          <stripVersion>true</stripVersion>
+                          <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
+                          <outputDirectory>${project.build.directory}/dependency/examples</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/ips.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!-- this is used for inheritance merges -->
+                        <phase>package</phase>
+                        <!-- append to the packaging phase. -->
+                        <goals>
+                            <goal>attached</goal>
+                            <!-- goals == mojos -->
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
-         </plugins>
+        </plugins>
     </build>
+
+    <properties>
+        <assembly.directory>${project.build.directory}/assembly</assembly.directory>
+    </properties>
+
 </project>

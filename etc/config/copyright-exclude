@@ -34,6 +34,7 @@ jaxb.index
 /LICENSE.txt
 /third-party-license-readme.txt
 /bundles/glassfish/v4.0/core/src/main/resources/jersey-core_proto.py
+/bundles/glassfish/v4.0/docs-and-examples/src/main/resources/jersey-docs-and-examples_proto.py
 nb-configuration.xml
 /archetype-resources/
 /examples/https-clientserver-grizzly/client.cert

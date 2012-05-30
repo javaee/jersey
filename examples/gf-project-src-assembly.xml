@@ -2,7 +2,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -39,49 +39,26 @@
     holder.
 
 -->
+
 <assembly>
-    <id>dist</id>
-    <formats>
-        <format>zip</format>
-        <format>tar.gz</format>
-        <format>tar.bz2</format>
-    </formats>
-        <fileSets>
-        <fileSet>
-            <directory>src/main/resources</directory>
-            <outputDirectory></outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/assembly/apidocs</directory>
-            <outputDirectory>apidocs</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/assembly</directory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-            <outputDirectory>lib</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/dependency</directory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-            <excludes>
-                <exclude>jersey*.jar</exclude>
-            </excludes>
-            <outputDirectory>ext</outputDirectory>
-        </fileSet>
-    </fileSets>
-    <files>
-        <file>
-        <source>../../LICENSE.txt</source>
-        <destName>Jersey-LICENSE.txt</destName>
-        <outputDirectory></outputDirectory>
-      </file>
-       <file>
-        <source>../../third-party-license-readme.txt</source>
-        <outputDirectory></outputDirectory>
-      </file>
-    </files>
+  <id>gf-project-src</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}</directory>
+      <outputDirectory>/</outputDirectory>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <excludes>
+        <exclude>pom.xml</exclude>
+        <exclude>**/target/**</exclude>
+        <exclude>**/sun-web.xml</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/target/gf-pom-file</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
 </assembly>
