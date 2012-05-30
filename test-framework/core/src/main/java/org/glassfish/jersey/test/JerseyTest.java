@@ -47,6 +47,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
@@ -380,6 +381,19 @@ public abstract class JerseyTest {
     }
 
     /**
+     * Create a web resource whose URI refers to the base URI the Web
+     * application is deployed at plus the path specified in the argument.
+     *
+     * This method is an equivalent of calling {@code target().path(path)}.
+     *
+     * @param path Relative path (from base URI) this target should point to.
+     * @return the created web resource
+     */
+    public Target target(String path) {
+        return target().path(path);
+    }
+
+    /**
      * Get the client that is configured for this test.
      *
      * @return the configured client.
@@ -445,7 +459,19 @@ public abstract class JerseyTest {
             c.configuration().register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
         }
 
+        configureClient(c.configuration());
+
         return c;
+    }
+
+    /**
+     * Can be overridden by subclasses to conveniently configure the client instance
+     * used by the test.
+     *
+     * @param clientConfig Client configuration that can be modified to configure the client.
+     */
+    protected void configureClient(Configuration clientConfig) {
+        // nothing
     }
 
     /**

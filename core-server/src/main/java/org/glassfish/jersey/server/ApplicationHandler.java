@@ -60,6 +60,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -704,7 +705,12 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 final Object entity = response.getEntity();
                 final RoutingContext routingContext = routingContextFactory.get();
 
-                final MediaType outputMediaType = routingContext.getEffectiveAcceptableType();
+                // fix for issue JERSEY-1187
+                // media type set in the response takes precedence over any 'effective' media type
+                final MediaType outputMediaType = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE) ?
+                        MediaType.valueOf(response.getMetadata().get(HttpHeaders.CONTENT_TYPE).get(0).toString())
+                        : routingContext.getEffectiveAcceptableType();
+
                 final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
                 Type entityType = routingContext.getResponseMethodType();
 

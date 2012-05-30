@@ -439,6 +439,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
                 reportMethodSelectionAmbiguity(acceptableMediaTypes, selected, methodSelector.sameFitnessAcceptors);
             }
 
+            // TODO: if the response already has content type set, we should not be spending cycles calculating
+            // TODO: the effective media type in advance - see issue JERSEY-1187
             final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
             injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
             services.forContract(ResponseProcessor.RespondingContext.class).get().push(new Function<Response, Response>() {

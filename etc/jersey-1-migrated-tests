@@ -1,6 +1,8 @@
 DONE:
 
+core-client/src/test/java/org/glassfish/jersey/client/filter/CsrfProtectionFilter.java
 core-common/src/test/java/org/glassfish/jersey/uri/UriTemplateTest.java
+core-server/src/test/java/org/glassfish/jersey/server/filter/CsrfProtectionFilterTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/PathParamAsPathSegmentTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/PathParamAsPrimitiveTest.java
 core-server/src/test/java/org/glassfish/jersey/server/model/AcceptTest.java
@@ -75,7 +77,9 @@ core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParam
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParamSortedSetStringConstructorTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/QueryParamStringConstructorTest.java
 core-server/src/test/java/org/glassfish/jersey/server/internal/inject/StringReaderTest.java
-org.glassfish.jersey.uri.internal/UriBuilderImplTest.java (contains merged UriBuilderTest.java)
+core-common/src/test/java/org/glassfish/jersey/uri/internal/UriBuilderImplTest.java (contains merged UriBuilderTest.java)
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/BeanStreamingTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/CharsetTest.java
 
 TODO:
 
@@ -314,7 +318,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/client/AllowHttpHeaderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/AsyncHttpMethodTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/ConfigurationTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/ConnectionListenerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/CsrfProtectionFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/HTTPDigestAuthFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/GenericTypeAndEntityTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/HttpHeadersTest.java
@@ -328,7 +331,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/config/JarZipSchemeScan
 jersey-tests/src/test/java/com/sun/jersey/impl/container/config/PackageResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/config/ServiceFinderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/CachedEntityFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/CsrfProtectionFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/EntityWriterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/FormFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedResourceFiltersTest.java
@@ -393,8 +395,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ResponseWrit
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/VoidPostTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/ResourceConfiguratorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/servlet/ThreadLocalInvokerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/BeanStreamingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/CharsetTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/ContextResolverMediaTypeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/EmptyJSONRequestWthJAXBTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/EmptyXMLRequestWthJAXBTest.java

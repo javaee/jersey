@@ -41,16 +41,14 @@ package org.glassfish.jersey.examples.jsonjaxb;
 
 import java.util.List;
 
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -73,11 +71,8 @@ public class JsonJaxbTest extends JerseyTest {
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
-        origClient.configuration().enable(new JsonJaxbFeature());
-        origClient.configuration().register(JaxbContextResolver.class);
-        return origClient;
+    protected void configureClient(Configuration config) {
+        config.enable(new JsonJaxbFeature()).register(JaxbContextResolver.class);
     }
 
     @Before
