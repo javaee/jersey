@@ -40,10 +40,6 @@
 
 package org.glassfish.jersey.tests.e2e.entity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -52,7 +48,6 @@ import java.util.Map;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Target;
@@ -66,32 +61,24 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.WriterInterceptor;
-import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.xml.bind.JAXBContext;
 
 import org.glassfish.jersey.media.json.JsonJaxbContext;
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
 import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class CharsetTest extends JerseyTest {
-    private static byte[] requestEntity;
-
+public class CharsetTest extends AbstractTypeTester {
     private static String[] CHARSETS = {
             "US-ASCII",
             "ISO-8859-1",
@@ -149,36 +136,16 @@ public class CharsetTest extends JerseyTest {
         }
     }
 
-    public static class RequestEntityInterceptor implements WriterInterceptor {
-        @Override
-        public void aroundWriteTo(WriterInterceptorContext writerInterceptorContext) throws IOException, WebApplicationException {
-            OutputStream original = writerInterceptorContext.getOutputStream();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            writerInterceptorContext.setOutputStream(baos);
-            writerInterceptorContext.proceed();
-            requestEntity = baos.toByteArray();
-            original.write(requestEntity);
-        }
-    }
-
-    private static void _verify(byte[] in, byte[] out) {
-        assertEquals(in.length, out.length);
-        for (int i = 0; i < in.length; i++) {
-            if (in[i] != out[i])
-                assertEquals("Index: " + i, in[i], out[i]);
-        }
-    }
-
     @Override
     protected Application configure() {
-        return new ResourceConfig(getClass().getDeclaredClasses()).addModules(new JsonJaxbModule());
+        return ((ResourceConfig) super.configure()).addModules(new JsonJaxbModule());
     }
 
     @Override
     protected void configureClient(Configuration clientConfig) {
+        super.configureClient(clientConfig);
         clientConfig.enable(new JsonJaxbFeature());
         clientConfig.getProviderClasses().add(MyJaxbContextResolver.class);
-        clientConfig.getProviderClasses().add(RequestEntityInterceptor.class);
     }
 
     @Test
@@ -195,16 +162,6 @@ public class CharsetTest extends JerseyTest {
 
             _verify(inBytes, outBytes);
         }
-    }
-
-    private static byte[] getEntityAsByteArray(Response r) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            ReaderWriter.writeTo(r.readEntity(InputStream.class), baos);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return baos.toByteArray();
     }
 
     public static abstract class CharsetResource<T> {
@@ -337,10 +294,12 @@ public class CharsetTest extends JerseyTest {
         }
     }
 
+    @Override
     public <T> void _test(T in, Class resource) {
         _test(in, resource, MediaType.TEXT_PLAIN_TYPE);
     }
 
+    @Override
     public <T> void _test(T in, Class resource, MediaType m) {
         Target t = target(resource.getSimpleName());
         for (String charset : CHARSETS) {
