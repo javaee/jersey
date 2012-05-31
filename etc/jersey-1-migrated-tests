@@ -80,6 +80,8 @@ core-server/src/test/java/org/glassfish/jersey/server/internal/inject/StringRead
 core-common/src/test/java/org/glassfish/jersey/uri/internal/UriBuilderImplTest.java (contains merged UriBuilderTest.java)
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/BeanStreamingTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/CharsetTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/ContextResolverMediaTypeTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/EmptyRequestWithJaxbTest.java
 
 TODO:
 
@@ -395,9 +397,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ResponseWrit
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/VoidPostTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/ResourceConfiguratorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/servlet/ThreadLocalInvokerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/ContextResolverMediaTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/EmptyJSONRequestWthJAXBTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/EmptyXMLRequestWthJAXBTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/EntityHolderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/EntityTypesTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/GenericTypeAndEntityTest.java
