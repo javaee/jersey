@@ -60,7 +60,7 @@ public interface Entity {
 
         public <T> B content(T content, GenericType<T> type);
 
-        public <T> B writeAnnotations(Annotation[] annotations);
+        public B writeAnnotations(Annotation[] annotations);
     }
 
     public boolean isEmpty();
