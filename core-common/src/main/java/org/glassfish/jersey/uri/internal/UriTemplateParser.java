@@ -50,8 +50,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.glassfish.jersey.uri.internal.CharacterIterator;
-
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
  *

@@ -48,21 +48,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.Target;
-
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.glassfish.jersey.test.spi.TestContainer;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -86,10 +85,8 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        Client origClient = super.getClient(tc, applicationHandler);
-        origClient.configuration().enable(new JsonJacksonFeature());
-        return origClient;
+    protected void configureClient(Configuration config) {
+        config.enable(new JsonJacksonFeature());
     }
 
     @Test

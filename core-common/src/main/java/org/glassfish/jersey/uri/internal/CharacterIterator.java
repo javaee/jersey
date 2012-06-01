@@ -100,7 +100,7 @@ final class CharacterIterator {
     /**
      * Returns the current internal position of the iterator.
      *
-     * @return
+     * @return current position of the iterator
      */
     public int pos() {
         return pos;

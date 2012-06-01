@@ -93,7 +93,7 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      *            <code>Method.getParameterAnnotations</code>.
      * @param mediaType the media type of the HTTP entity.
      * @param headers the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link Request#getProperties() request-scoped
+     * @param properties the mutable map of {@link javax.ws.rs.core.Request#getProperties() request-scoped
      *            properties}.
      * @param entityStream the {@link java.io.InputStream} of the HTTP entity. The stream is not
      *            closed after reading the entity.

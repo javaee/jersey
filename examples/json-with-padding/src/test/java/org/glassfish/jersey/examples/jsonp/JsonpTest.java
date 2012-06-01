@@ -41,14 +41,13 @@ package org.glassfish.jersey.examples.jsonp;
 
 import java.util.List;
 
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Target;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -67,11 +66,8 @@ public class JsonpTest extends JerseyTest {
     }
 
     @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        javax.ws.rs.client.Client origClient = super.getClient(tc, applicationHandler);
-        origClient.configuration().register(JAXBContextResolver.class);
-
-        return origClient;
+    protected void configureClient(Configuration config) {
+        config.register(JAXBContextResolver.class);
     }
 
     /**

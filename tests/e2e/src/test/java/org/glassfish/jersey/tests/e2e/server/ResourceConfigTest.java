@@ -6,17 +6,15 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -121,10 +119,8 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        final Client client = super.getClient(tc, application);
-        client.configuration().enable(new JsonJacksonFeature());
-        return client;
+    protected void configureClient(Configuration c) {
+        c.enable(new JsonJacksonFeature());
     }
 
     /**
