@@ -632,7 +632,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     try {
                         responseFuture.set(response.readEntity(responseType));
                     } catch (Exception e) {
-                        failed(new InvocationException("Unexpected error during response processing.", e));
+                        failed(new InvocationException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), e));
                     }
                 } else {
                     failed(convertToException(response));
