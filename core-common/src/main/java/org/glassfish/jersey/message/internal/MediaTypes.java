@@ -382,7 +382,7 @@ public class MediaTypes {
                 newParameters.put(e.getKey(), e.getValue());
             }
         }
-        return new MediaType(mediaType.getType(), mediaType.getSubtype(), null);
+        return new MediaType(mediaType.getType(), mediaType.getSubtype(), newParameters);
     }
 
 
