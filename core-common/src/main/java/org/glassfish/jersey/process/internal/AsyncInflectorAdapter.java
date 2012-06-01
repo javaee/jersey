@@ -131,6 +131,9 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
                 LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_SUSPENDED_RESPONSE_IGNORED(response));
             }
         } catch (Exception ex) {
+            // TODO: (MM) is this correct? - resume(ex) seems to throw IllegalStateException if not in resumableState
+            // TODO: also invokes callback(), while the above comment says we don't want to invoke callback.resume()
+            // TODO: in some cases
             resume(ex); // resume with exception (if not resumed by an external event already)
         }
         return this;

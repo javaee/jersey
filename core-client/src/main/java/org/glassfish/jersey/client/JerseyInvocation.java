@@ -629,7 +629,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             @Override
             public void completed(Response response) {
                 if (response.getStatus() < 300) {
-                    responseFuture.set(response.readEntity(responseType));
+                    try {
+                        responseFuture.set(response.readEntity(responseType));
+                    } catch (Exception e) {
+                        failed(new InvocationException("Unexpected error during response processing.", e));
+                    }
                 } else {
                     failed(convertToException(response));
                 }
