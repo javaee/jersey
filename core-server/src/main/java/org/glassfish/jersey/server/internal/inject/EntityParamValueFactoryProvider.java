@@ -40,11 +40,15 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
-import javax.ws.rs.core.Request;
+
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Request;
+
+import org.glassfish.jersey.server.model.Parameter;
+
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.server.model.Parameter;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -72,7 +76,8 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
             final Request request = context.getRequest();
 
             final GenericType<?> parameterType = parameter.getParameterType();
-            return (parameterType.getRawType().isInstance(request))
+            final Class<?> rawType = parameterType.getRawType();
+            return Request.class.isAssignableFrom(rawType) && rawType.isInstance(request)
                     ? request
                     : request.readEntity(parameterType, parameter.getAnnotations());
         }
