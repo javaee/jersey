@@ -48,7 +48,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.GenericEntity;
 
 /**
  * An example resource utilizing collections of JAXB beans.
@@ -86,19 +85,5 @@ public class JaxbCollectionResource {
         }
 
         return el;
-    }
-
-    @Path("XmlTypeGenericEntity")
-    @POST
-    public GenericEntity<Collection<JaxbXmlRootElement>> postXmlTypeGenericEntity(List<JaxbXmlType> tl) {
-        List<JaxbXmlRootElement> el = new ArrayList<JaxbXmlRootElement>();
-
-        for (JaxbXmlType t : tl) {
-            el.add(new JaxbXmlRootElement(t.value));
-        }
-
-        GenericEntity<Collection<JaxbXmlRootElement>> entity = new GenericEntity<Collection<JaxbXmlRootElement>>(el) {};
-
-        return entity;
     }
 }

@@ -756,7 +756,8 @@ public class ReflectionHelper {
             if (t instanceof Class) {
                 return ClassTypePair.of((Class) t);
             } else if (t instanceof GenericArrayType) {
-                t = ((GenericArrayType) t).getGenericComponentType();
+                GenericArrayType gat = (GenericArrayType) t;
+                t = gat.getGenericComponentType();
                 if (t instanceof Class) {
                     c = (Class<?>) t;
                     try {
@@ -772,7 +773,7 @@ public class ReflectionHelper {
                         return null;
                     }
                     try {
-                        return ClassTypePair.of(getArrayClass(c), t);
+                        return ClassTypePair.of(getArrayClass(c), gat);
                     } catch (Exception e) {
                         return null;
                     }

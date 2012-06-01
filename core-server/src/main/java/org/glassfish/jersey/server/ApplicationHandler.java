@@ -42,7 +42,6 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -702,7 +701,7 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
             final MessageBodyWorkers workers = Requests.getMessageWorkers(request);
             if (entityExists) {
-                final Object entity = response.getEntity();
+                Object entity = response.getEntity();
                 final RoutingContext routingContext = routingContextFactory.get();
 
                 // fix for issue JERSEY-1187
@@ -717,16 +716,11 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
                 // TODO this is just a quick workaround for issue #JERSEY-1089
                 //      which needs to be fixed by a common solution
                 if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
-                    final Type genericSuperclass = entity.getClass().getGenericSuperclass();
-                    entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
+                    entityType = entity instanceof GenericEntity ? ((GenericEntity) entity).getType() : entity.getClass();
                 }
 
-                if (entityType instanceof ParameterizedType) {
-                    ParameterizedType paramEntityType = (ParameterizedType) entityType;
-                    Type rawEntityType = paramEntityType.getRawType();
-                    if (rawEntityType == GenericEntity.class) {
-                        entityType = paramEntityType.getActualTypeArguments()[0];
-                    }
+                if (entity instanceof GenericEntity) {
+                    entity = ((GenericEntity) entity).getEntity();
                 }
 
                 // TODO this is just a quick workaround for issue #JERSEY-1088

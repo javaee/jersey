@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -284,9 +285,16 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     @Override
     public Object content() {
-        return content(Object.class);
-        // TODO the following might be more suitable:
-        // return (instanceType == null) ? contentStream : content(Object.class);
+        if (genericEntity == null) {
+            // TODO: might be better to return the content stream
+            return null;
+        }
+        return isGESignficant() ? genericEntity : genericEntity.getEntity();
+    }
+
+    private boolean isGESignficant() {
+        return genericEntity.getType() instanceof ParameterizedType ||
+                genericEntity.getType() instanceof GenericArrayType;
     }
 
     @Override
@@ -403,11 +411,11 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     public void rawEntityStream(InputStream inputStream) {
         contentStream.setExternalContentStream(inputStream);
-
+        genericEntity = null;
     }
 
     @Override
-    public MutableEntity content(Object content, Type type) {
+    public <T> MutableEntity content(T content, Type type) {
         contentStream.invalidateContentStream();
         if (content != null) {
             this.genericEntity = new GenericEntity(content, type);
@@ -418,7 +426,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
-    public <T> MutableEntity content(Object content, GenericType<T> type) {
+    public <T> MutableEntity content(T content, GenericType<T> type) {
         contentStream.invalidateContentStream();
         if (content != null) {
             this.genericEntity = new GenericEntity(content, type.getType());

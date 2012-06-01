@@ -239,8 +239,7 @@ public class RequestWriter {
             entity = ge.getEntity();
             entityType = ge.getType();
         } else {
-            final Type genericSuperclass = entity.getClass().getGenericSuperclass();
-            entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
+            entityType = entity.getClass();
         }
         final Class<?> entityClass = entity.getClass();
 

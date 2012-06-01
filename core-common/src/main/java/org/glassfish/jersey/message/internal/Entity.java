@@ -56,11 +56,11 @@ public interface Entity {
 
         public B content(Object content);
 
-        public B content(Object content, Type type);
+        public <T> B content(T content, Type type);
 
-        public <T> B content(Object content, GenericType<T> type);
+        public <T> B content(T content, GenericType<T> type);
 
-        public B writeAnnotations(Annotation[] annotations);
+        public <T> B writeAnnotations(Annotation[] annotations);
     }
 
     public boolean isEmpty();

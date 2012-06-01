@@ -145,13 +145,13 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> M content(Object content, GenericType<T> type) {
+    public <T> M content(T content, GenericType<T> type) {
         entity.content(content, type);
         return (M) this;
     }
 
     @SuppressWarnings("unchecked")
-    public M content(Object content, Type type) {
+    public <T> M content(T content, Type type) {
         entity.content(content, type);
         return (M) this;
     }

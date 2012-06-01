@@ -164,26 +164,6 @@ public class JaxbTest extends JerseyTest {
     }
 
     @Test
-    public void testXmlTypeCollectionWithGenericEntity() {
-        GenericType<Collection<JaxbXmlRootElement>> genericRootElement =
-                new GenericType<Collection<JaxbXmlRootElement>>() {};
-        GenericType<Collection<JaxbXmlType>> genericXmlType =
-                new GenericType<Collection<JaxbXmlType>>() {
-                };
-
-        Collection<JaxbXmlRootElement> ce1 = target().path("jaxb/collection/XmlRootElement").request()
-                .get(genericRootElement);
-
-        Collection<JaxbXmlType> ct1 = target().path("jaxb/collection/XmlTypeGenericEntity").request("application/xml")
-                .post(xml(new GenericEntity<Collection<JaxbXmlRootElement>>(ce1) {}), genericXmlType);
-
-        Collection<JaxbXmlType> ct2 = target().path("jaxb/collection/XmlRootElement").request()
-                .get(genericXmlType);
-
-        assertEquals(ct1, ct2);
-    }
-
-    @Test
     public void testRootElementArray() {
         JaxbXmlRootElement[] ae1 = target().path("jaxb/array/XmlRootElement").request()
                 .get(JaxbXmlRootElement[].class);
