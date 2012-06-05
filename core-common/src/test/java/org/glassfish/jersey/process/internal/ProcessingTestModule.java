@@ -48,8 +48,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ServiceProviders;
-import org.glassfish.jersey.internal.ServiceProvidersModule;
+import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -75,10 +74,6 @@ public class ProcessingTestModule extends AbstractModule {
     private static final class Refs {
 
         @Inject
-        public ServiceProviders.Builder serviceProvidersBuilder;
-        @Inject
-        public Ref<ServiceProviders> serviceProviders;
-        @Inject
         public Ref<ExceptionMappers> exceptionMappers;
         @Inject
         public Ref<MessageBodyWorkers> messageBodyWorkers;
@@ -90,19 +85,18 @@ public class ProcessingTestModule extends AbstractModule {
         initProviders(services, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
     }
 
-    public static void initProviders(final Services services, final Set<Class<?>> providerClasses, final Set<Object> providerInstances) throws IllegalStateException {
+    public static void initProviders(final Services services, final Set<Class<?>> providerClasses,
+                                     final Set<Object> providerInstances) throws IllegalStateException {
         final Injector injector = services.forContract(Injector.class).get();
         ProcessingTestModule.Refs refs = injector.inject(ProcessingTestModule.Refs.class);
 
-        final ServiceProviders providers = refs.serviceProvidersBuilder
-                .setProviderClasses(providerClasses)
-                .setProviderInstances(providerInstances)
-                .build();
-        final MessageBodyWorkers workers = new MessageBodyFactory(providers);
-        final ExceptionMappers mappers = new ExceptionMapperFactory(providers);
-        final ContextResolvers resolvers = new ContextResolverFactory(providers);
+        final ProviderBinder providers = injector.inject(ProviderBinder.class);
+        providers.bindClasses(providerClasses);
+        providers.bindInstances(providerInstances);
+        final MessageBodyWorkers workers = new MessageBodyFactory(services);
+        final ExceptionMappers mappers = new ExceptionMapperFactory(services);
+        final ContextResolvers resolvers = new ContextResolverFactory(services);
 
-        refs.serviceProviders.set(providers);
         refs.messageBodyWorkers.set(workers);
         refs.exceptionMappers.set(mappers);
         refs.contextResolvers.set(resolvers);
@@ -115,7 +109,7 @@ public class ProcessingTestModule extends AbstractModule {
                 new ProcessingModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
-                new ServiceProvidersModule(Singleton.class),
+                new ProviderBinder.ProviderBinderModule(),
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),

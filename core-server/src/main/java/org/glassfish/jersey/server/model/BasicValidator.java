@@ -61,9 +61,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.PerLookup;
+import org.glassfish.jersey.spi.Singleton;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -88,12 +91,22 @@ import org.glassfish.jersey.uri.UriTemplate;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class BasicValidator extends ResourceModelValidator {
+    private static final Set<Class<?>> SCOPE_ANNOTATIONS = getScopeAnnotations();
+
+    private static Set<Class<?>> getScopeAnnotations() {
+        Set<Class<?>> scopeAnnotations = new HashSet<Class<?>>();
+        scopeAnnotations.add(Singleton.class);
+        scopeAnnotations.add(PerLookup.class);
+        return scopeAnnotations;
+    }
 
     private final MessageBodyWorkers workers;
+    protected final Set<Class<?>> checkedClasses = new HashSet<Class<?>>();
 
     /**
      * Construct a new basic validator with an empty issue list.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public BasicValidator() {
         this(new LinkedList<ResourceModelIssue>(), null);
     }
@@ -130,15 +143,58 @@ public class BasicValidator extends ResourceModelValidator {
         checkSRLAmbiguities(resource);
     }
 
+
     @Override
     public void visitResourceHandlerConstructor(HandlerConstructor constructor) {
-        // TODO: check parameters
+
+        Class<?> resClass = constructor.getConstructor().getDeclaringClass();
+        boolean isSingleton = isSingleton(resClass);
+        int paramCount = 0;
+        for (Parameter p : constructor.getParameters()) {
+            validateParameter(getIssueList(), p, constructor.getConstructor(), constructor.getConstructor().toGenericString(),
+                    Integer.toString(++paramCount),
+                    isSingleton);
+        }
+    }
+
+    /**
+     * Check if the resource class is declared to be a singleton.
+     *
+     * @param resourceClass resource class.
+     * @return {@code true} if the resource class is a singleton, {@code false} otherwise.
+     */
+    public static boolean isSingleton(Class<?> resourceClass) {
+        return resourceClass.isAnnotationPresent(Singleton.class)
+                || (isProvider(resourceClass) && !resourceClass.isAnnotationPresent(PerLookup.class));
     }
 
     @Override
     public void visitInvocable(Invocable invocable) {
         // TODO: check invocable.
+        Class resClass = invocable.getHandler().getHandlerClass();
+        if (resClass != null && !checkedClasses.contains(resClass)) {
+            checkedClasses.add(resClass);
+            final boolean provider = isProvider(resClass);
+            int counter = 0;
+            for (Annotation annotation : resClass.getAnnotations()) {
+                if (SCOPE_ANNOTATIONS.contains(annotation.annotationType())) {
+                    counter++;
+                }
+            }
+            if (counter == 0 && provider) {
+                addMinorIssue(resClass, LocalizationMessages.RESOURCE_IMPLEMENTS_PROVIDER(resClass,
+                        Providers.getProviderInterfaces(resClass)));
+            } else if (counter > 1) {
+                addFatalIssue(resClass, LocalizationMessages.RESOURCE_MULTIPLE_SCOPE_ANNOTATIONS(resClass));
+            }
+        }
     }
+
+
+    private static boolean isProvider(Class resClass) {
+        return !Providers.getProviderInterfaces(resClass).isEmpty();
+    }
+
 
     @Override
     public void visitMethodHandler(MethodHandler methodHandler) {
@@ -218,7 +274,7 @@ public class BasicValidator extends ResourceModelValidator {
         // and make sure the Path is not null
         if ((null == method.getPath()) || (null == method.getPath()) || (method.getPath().length() == 0)) {
             addFatalIssue(method, LocalizationMessages.SUBRES_METHOD_URI_PATH_INVALID(
-                            method.getInvocable().getHandlingMethod(), method.getPath()));
+                    method.getInvocable().getHandlingMethod(), method.getPath()));
         }
     }
 
@@ -251,21 +307,30 @@ public class BasicValidator extends ResourceModelValidator {
     /**
      * Validate a single parameter instance.
      *
-     * @param issueList an existing list of issues that will be modified.
-     * @param parameter parameter to be validated.
-     * @param source parameter source; used for issue reporting.
-     * @param reportedSourceName source name; used for issue reporting.
+     * @param issueList             an existing list of issues that will be modified.
+     * @param parameter             parameter to be validated.
+     * @param source                parameter source; used for issue reporting.
+     * @param reportedSourceName    source name; used for issue reporting.
      * @param reportedParameterName parameter name; used for issue reporting.
+     * @param injectionsForbidden   true if parameters cannnot be injected by
+     *                              annotations, eg. {@link HeaderParam @HeaderParam}.
      */
     static void validateParameter(final List<ResourceModelIssue> issueList,
                                   final Parameter parameter,
                                   final Object source,
                                   final String reportedSourceName,
-                                  final String reportedParameterName) {
+                                  final String reportedParameterName, boolean injectionsForbidden) {
         int counter = 0;
         final Annotation[] annotations = parameter.getAnnotations();
         for (Annotation a : annotations) {
             if (PARAM_ANNOTATION_SET.contains(a.annotationType())) {
+                if (injectionsForbidden) {
+                    issueList.add(new ResourceModelIssue(
+                            source,
+                            LocalizationMessages.SINGLETON_INJECTS_PARAMETER(reportedSourceName, reportedParameterName),
+                            true));
+                    break;
+                }
                 counter++;
                 if (counter > 1) {
                     issueList.add(new ResourceModelIssue(
@@ -311,7 +376,8 @@ public class BasicValidator extends ResourceModelValidator {
         final Method handlingMethod = invocable.getHandlingMethod();
         int paramCount = 0;
         for (Parameter p : invocable.getParameters()) {
-            validateParameter(getIssueList(), p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount));
+            validateParameter(getIssueList(), p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount),
+                    false);
             if (method.getType() == ResourceMethod.JaxrsType.SUB_RESOURCE_LOCATOR
                     && Parameter.Source.ENTITY == p.getSource()) {
                 addFatalIssue(method, LocalizationMessages.SUBRES_LOC_HAS_ENTITY_PARAM(invocable.getHandlingMethod()));
@@ -377,7 +443,7 @@ public class BasicValidator extends ResourceModelValidator {
         final List<MediaType> outputTypes1 = getEffectiveOutputTypes(m1);
         final List<MediaType> outputTypes2 = getEffectiveOutputTypes(m2);
 
-        boolean consumesFails = false;
+        boolean consumesFails;
         boolean consumesOnlyIntersects = false;
         if (m1.getConsumedTypes().isEmpty() || m2.getConsumedTypes().isEmpty()) {
             consumesFails = inputTypes1.equals(inputTypes2);
@@ -388,7 +454,7 @@ public class BasicValidator extends ResourceModelValidator {
             consumesFails = MediaTypes.intersect(inputTypes1, inputTypes2);
         }
 
-        boolean producesFails = false;
+        boolean producesFails;
         boolean producesOnlyIntersects = false;
         if (m1.getProducedTypes().isEmpty() || m2.getProducedTypes().isEmpty()) {
             producesFails = outputTypes1.equals(outputTypes2);
@@ -460,4 +526,5 @@ public class BasicValidator extends ResourceModelValidator {
     private boolean samePath(Routed m1, Routed m2) {
         return new UriTemplate(m1.getPath()).equals(new UriTemplate(m2.getPath()));
     }
+
 }

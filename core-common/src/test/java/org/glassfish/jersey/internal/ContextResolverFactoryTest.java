@@ -126,12 +126,11 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final Services services = HK2.get().create(null, new Module(), new ServiceProvidersModule());
-        final ServiceProviders sp = services.forContract(ServiceProviders.Builder.class).get()
-                .setProviderClasses(Sets.<Class<?>>newHashSet(CustomIntegerResolverC.class))
-                .build();
+        final Services services = HK2.get().create(null, new Module(), new ProviderBinder.ProviderBinderModule());
+        final ProviderBinder providerBinder = services.forContract(ProviderBinder.class).get();
+        providerBinder.bindClasses(Sets.<Class<?>>newHashSet(CustomIntegerResolverC.class));
 
-        crf = new ContextResolverFactory(sp);
+        crf = new ContextResolverFactory(services);
     }
 
     @Test

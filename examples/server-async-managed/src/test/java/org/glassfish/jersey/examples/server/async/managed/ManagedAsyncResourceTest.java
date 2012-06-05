@@ -70,6 +70,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// FIXME unignore - async tests are temporarily ignored until the intermittent failure issue is resolved.
 public class ManagedAsyncResourceTest extends JerseyTest {
 
     private static final Logger LOGGER = Logger.getLogger(ManagedAsyncResourceTest.class.getName());

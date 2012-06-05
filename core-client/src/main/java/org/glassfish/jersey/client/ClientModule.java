@@ -48,7 +48,7 @@ import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ServiceProvidersModule;
+import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -122,7 +122,7 @@ class ClientModule extends AbstractModule {
         public RequestInvoker<ClientRequest, ClientResponse> build(
                 final Stage<ClientRequest> rootStage) {
 
-            final AsyncInflectorAdapter.Builder<ClientRequest,ClientResponse> asyncAdapterBuilder =
+            final AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse> asyncAdapterBuilder =
                     new AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse>() {
                         @Override
                         public AsyncInflectorAdapter<ClientRequest, ClientResponse> create(
@@ -204,7 +204,7 @@ class ClientModule extends AbstractModule {
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
                 new MessagingModules.HeaderDelegateProviders(),
-                new ServiceProvidersModule(RequestScope.class),
+                new ProviderBinder.ProviderBinderModule(),
                 new MessageBodyFactory.Module(RequestScope.class),
                 new ExceptionMapperFactory.Module(RequestScope.class),
                 new ContextResolverFactory.Module(RequestScope.class),

@@ -50,8 +50,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
+import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.ServiceFinderModule;
-import org.glassfish.jersey.internal.ServiceProvidersModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -72,6 +72,7 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
+import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.ResourceModelModule;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -213,7 +214,7 @@ public class ServerModule extends AbstractModule {
                 new ProcessingModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
-                new ServiceProvidersModule(),
+                new ProviderBinder.ProviderBinderModule(),
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),
@@ -224,7 +225,8 @@ public class ServerModule extends AbstractModule {
                 new ResourceModelModule(),
                 new RouterModule(),
                 new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
-                new CloseableServiceModule());
+                new CloseableServiceModule(),
+                new SingletonResourceBinder.SingletonResourceBinderModule());
 
         // Request/Response injection interfaces
         bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);

@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ServiceProviders;
+import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -113,16 +113,10 @@ public class PatternRoutingTest {
     @Before
     public void setupApplication() {
         Services services = HK2.get().create(null, new ServerModule());
-
-        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>() {
-        }).get();
-        providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
-        }).get();
-        workers.set(new MessageBodyFactory(providers.get()));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>() {
-        }).get();
-        mappers.set(new ExceptionMapperFactory(providers.get()));
+        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
+        workers.set(new MessageBodyFactory(services));
+        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
+        mappers.set(new ExceptionMapperFactory(services));
 
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);

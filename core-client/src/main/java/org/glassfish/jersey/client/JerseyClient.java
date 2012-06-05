@@ -150,7 +150,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag;
     private Inflector<ClientRequest, ClientResponse> connector;
     private RequestInvoker<ClientRequest, ClientResponse> invoker;
-    //
+
     @Inject
     private RequestScope requestScope;
 

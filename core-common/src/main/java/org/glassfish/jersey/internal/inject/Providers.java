@@ -45,7 +45,9 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +67,7 @@ import com.google.common.collect.Sets;
  * interaction with HK2 injection layer.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class Providers {
 
@@ -202,7 +205,22 @@ public class Providers {
     }
 
     /**
-     * Get the set of all providers registered for the given service provider contract
+     * Get the set of default providers registered for the given service provider contract
+     * in the underlying {@link Services HK2 services} container.
+     *
+     * @param <T> service provider contract Java type.
+     * @param services underlying HK2 services container.
+     * @param contract service provider contract.
+     * @return set of all available default service provider instances for the contract.
+     */
+    public static <T> Set<T> getProviders(Services services, Class<T> contract) {
+        final Collection<Provider<T>> hk2Providers = services.forContract(contract).all();
+        return getClasses(hk2Providers);
+    }
+
+
+    /**
+     * Get the set of all custom providers registered for the given service provider contract
      * in the underlying {@link Services HK2 services} container.
      *
      * @param <T> service provider contract Java type.
@@ -210,14 +228,53 @@ public class Providers {
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> Set<T> getProviders(Services services, Class<T> contract) {
-        final Collection<Provider<T>> hk2Providers = services.forContract(contract).all();
+    public static <T> Set<T> getCustomProviders(Services services, Class<T> contract) {
+        final Collection<Provider<T>> hk2Providers = services.forContract(contract).annotatedWith(Custom.class).all();
+        return getClasses(hk2Providers);
+    }
+
+    /**
+     * Get the set of all providers (custom and default) registered for the given service provider contract
+     * in the underlying {@link Services HK2 services} container.
+     *
+     * @param <T> service provider contract Java type.
+     * @param services underlying HK2 services container.
+     * @param contract service provider contract.
+     * @return set of all available service provider instances for the contract.
+     */
+    public static <T> List<T> getAllProviders(Services services, Class<T> contract) {
+        List<T> providers = new ArrayList<T>(getClasses(services.forContract(contract).annotatedWith(Custom.class).all()));
+        providers.addAll(getClasses(services.forContract(contract).all()));
+        return providers;
+    }
+
+    /**
+     * Get the set of all providers (custom and default) registered for the given service provider contract
+     * in the underlying {@link Services HK2 services} container ordered based on the given {@code comparator}.
+     *
+     * @param <T> service provider contract Java type.
+     * @param services underlying HK2 services container.
+     * @param contract service provider contract.
+     * @return set of all available service provider instances for the contract ordered using the given
+     * {@link Comparator comparator}.
+     */
+    public static <T> List<T> getAllProviders(Services services, Class<T> contract, Comparator<T> comparator) {
+        List<T> providers = new ArrayList<T>(getClasses(services.forContract(contract).annotatedWith(Custom.class).all()));
+        providers.addAll(getClasses(services.forContract(contract).all()));
+        Collections.sort(providers, comparator);
+        return providers;
+    }
+
+
+    private static <T> Set<T> getClasses(Collection<Provider<T>> hk2Providers) {
         if (hk2Providers.isEmpty()) {
             return Sets.newLinkedHashSet();
         } else {
             return Sets.newLinkedHashSet(Collections2.transform(hk2Providers, new ProviderToService<T>()));
         }
     }
+
+
 
     /**
      * Get the set of all providers registered for the given service provider contract
@@ -242,22 +299,52 @@ public class Providers {
     }
 
     /**
-     * Get the set of {@link Factory HK2 factories} for all providers registered
-     * for the given service provider contract in the underlying {@link Services
-     * HK2 services} container.
+     * Returns provider interfaces which are implemented by the {@code clazz}. Provider interfaces are
+     * all interfaces from packages {@code javax.ws.rs.*} and {@code org.glassfish.jersey.*} (except
+     * for {@code org.glassfish.jersey.test.*} and {@code org.glassfish.jersey.process.Inflector}).
      *
-     * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
-     * @param contract service provider contract.
-     * @return set of factories for all available service provider instances for
-     *     the contract.
+     * @param clazz Class to extract interfaces.
+     * @return Set of provider interfaces implemented by the given class.
      */
-    public static <T> Set<T> getProviderFactories(Services services, Class<T> contract) {
-        final Collection<Provider<T>> hk2Providers = services.forContract(contract).all();
-        if (hk2Providers.isEmpty()) {
-            return Sets.newLinkedHashSet();
-        } else {
-            return Sets.newLinkedHashSet(Collections2.transform(hk2Providers, new ProviderToService<T>()));
+    public static Set<Class<?>> getProviderInterfaces(Class<?> clazz) {
+        Set<Class<?>> interfaces = new HashSet<Class<?>>();
+        getInterfaces(clazz, interfaces);
+        return interfaces;
+    }
+
+    private static void getInterfaces(Class<?> clazz, Set<Class<?>> interfaces) {
+        for (Class<?> parent : getParents(clazz)) {
+            if (parent.isInterface()) {
+                final String packageName = parent.getPackage().getName();
+                if (packageName.startsWith("javax.ws.rs")
+                        || (packageName.startsWith("org.glassfish.jersey")
+                        && !packageName.startsWith("org.glassfish.jersey.test")
+                        && !parent.getName().equals("org.glassfish.jersey.process.Inflector")
+                )) {
+                    interfaces.add(parent);
+                }
+            }
+            getInterfaces(parent, interfaces);
         }
+    }
+
+    private static List<Class<?>> getParents(Class<?> clazz) {
+        List<Class<?>> list = new ArrayList<Class<?>>();
+        Collections.addAll(list, clazz.getInterfaces());
+        if (clazz.getSuperclass() != null) {
+            list.add(clazz.getSuperclass());
+        }
+        return list;
+    }
+
+    /**
+     * Returns {@code true} if the given class is a provider (implements specific interfaces).
+     * See {@link #getProviderInterfaces}.
+     *
+     * @param clazz class to test.
+     * @return {@code true} if the class is provider, {@code false} otherwise.
+     */
+    public static boolean isProvider(Class<?> clazz) {
+        return !getProviderInterfaces(clazz).isEmpty();
     }
 }

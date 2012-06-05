@@ -43,6 +43,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
+import org.glassfish.jersey.spi.Singleton;
+
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -160,7 +162,7 @@ public class SubResourceClassDynamicTest {
         }
     }
 
-    //@Singleton
+    @Singleton
     static public class ChildWithTemplatesSingleton {
 
         private int i = 0;

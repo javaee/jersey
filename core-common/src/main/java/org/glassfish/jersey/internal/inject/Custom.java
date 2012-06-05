@@ -37,26 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+import javax.inject.Qualifier;
 
 /**
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * {@link Qualifier Qualifier annotation} used to annotate HK2 injections and
+ * bindings for user custom providers. Providers are classes which implement one
+ * of the provider interfaces (for example {@link javax.ws.rs.ext.MessageBodyReader
+ * Message body reader interface}).
+ * <p>
+ * Custom providers can be bound into the HK2 container using {@code &#64;Custom}
+ * annotation via  {@link org.glassfish.hk2.NamedBinder#annotatedWith(Class)} method.
+ * For example:
+ * </p>
+ * <pre>
+ *  binderFactory.bind(MessageBodyReader.class).annotatedWith(Custom.class).toInstance(instanceOfMbr);
+ * </pre>
+ * <p>
+ * Once bound, the custom providers can be injected using {@code &#64;Custom} qualifier
+ * annotation again. For example:
+ * </p>
+ * <pre>
+ *     &#064;Custom
+ *     &#064;Inject
+ *     MessageBodyReader messageBodyReader;
+ * </pre>
+ *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("reload")
-public class ReloadResource {
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Custom {
 
-    @GET
-    @Produces("text/plain")
-    public String get() {
-        ReloadContainerLifecycleListener.container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class,
-                ReloadContainerLifecycleListener.class));
-        return "Reload resource";
-    }}
+}

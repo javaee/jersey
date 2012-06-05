@@ -44,7 +44,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.glassfish.hk2.Services;
 import org.glassfish.hk2.inject.Injector;
+
 
 /**
  * Resource method handler model.
@@ -66,9 +68,9 @@ public abstract class MethodHandler implements ResourceModelComponent {
     /**
      * Create a class-based method handler from a class.
      *
-     * @param handlerClass method handler class.
+     * @param handlerClass         method handler class.
      * @param disableParamDecoding if set to {@code true}, any injected constructor
-     *     parameters must be kept encoded and must not be automatically decoded.
+     *                             parameters must be kept encoded and must not be automatically decoded.
      * @return new class-based method handler.
      */
     public static MethodHandler create(final Class<?> handlerClass, final boolean disableParamDecoding) {
@@ -91,7 +93,7 @@ public abstract class MethodHandler implements ResourceModelComponent {
      * This method
      *
      * @param handlerInstance method handler instance (singleton).
-     * @param handlerClass declared handler class.
+     * @param handlerClass    declared handler class.
      * @return new instance-based method handler.
      */
     public static MethodHandler create(final Object handlerInstance, Class<?> handlerClass) {
@@ -121,10 +123,19 @@ public abstract class MethodHandler implements ResourceModelComponent {
     /**
      * Get the injected resource method handler instance.
      *
-     * @param injector injector that can be used to inject the instance.
+     * @param services services that can be used to inject get the instance.
      * @return injected resource method handler instance.
      */
-    public abstract Object getInstance(final Injector injector);
+    public abstract Object getInstance(final Services services);
+
+    /**
+     * Return whether the method handler {@link #getInstance(org.glassfish.hk2.Services) creates instances}
+     * based on {@link Class classes}.
+     *
+     * @return True is instances returned bu this method handler are created from {@link Class classes} given to HK2, false\
+     *         otherwise (for example when method handler was initialized from instance)
+     */
+    public abstract boolean isClassBased();
 
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
@@ -167,8 +178,13 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final Injector injector) {
-            return injector.inject(handlerClass);
+        public Object getInstance(final Services services) {
+            return services.forContract(handlerClass).get();
+        }
+
+        @Override
+        public boolean isClassBased() {
+            return true;
         }
 
         @Override
@@ -205,10 +221,16 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final Injector injector) {
+        public Object getInstance(final Services services) {
             // TODO: should we do the injection only once? Or not at all?
+            Injector injector = services.byType(Injector.class).get();
             injector.inject(handler);
             return handler;
+        }
+
+        @Override
+        public boolean isClassBased() {
+            return false;
         }
     }
 }

@@ -84,6 +84,8 @@ public final class RuntimeModelBuilder {
     private PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder;
     @Inject
     private MethodSelectingRouter.Builder methodSelectingAcceptorBuilder;
+    @Inject
+    private SingletonResourceBinder resourceProvider;
 
     private MessageBodyWorkers workers;
     private boolean subResourceMode;
