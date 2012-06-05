@@ -60,12 +60,12 @@ public class UriTemplateParser {
     private static final Set<Character> RESERVED_REGEX_CHARACTERS = initReserved();
 
     private static Set<Character> initReserved() {
-        // TODO need to escape all regex characters present
         char[] reserved = {
-            '.',
-            '?',
-            '(',
-            ')'};
+            '.', '^', '&', '!',
+            '?', '-', ':', '<',
+            '(', '[', '$', '=',
+            ')', ']', ',', '>',
+            '*', '+', '|'};
 
         Set<Character> s = new HashSet<Character>(reserved.length);
         for (char c : reserved) {
