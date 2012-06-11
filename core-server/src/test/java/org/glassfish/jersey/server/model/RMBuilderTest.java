@@ -58,10 +58,11 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.server.ProcessorBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
-import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -108,10 +109,7 @@ public class RMBuilderTest {
 
     @Before
     public void setupApplication() {
-        final AcceptorRootModule appRootModule = new AcceptorRootModule();
-        Services services = HK2.get().create(null,
-                new ServerModule(),
-                appRootModule);
+        Services services = HK2.get().create(null, new ServerModule());
 
         final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
@@ -125,14 +123,15 @@ public class RMBuilderTest {
 
         final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
         runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build());
-        appRootModule.setMatchingRoot(runtimeModelBuilder.buildModel());
+        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
+        final RequestProcessor requestProcessor = processorBuilder.build(runtimeModelBuilder.buildModel());
 
-        invoker = injector.inject(RequestInvoker.class);
+        invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         requestScope = injector.inject(RequestScope.class);
     }
 
     @Test
-    public void testHelloworld() throws Exception {
+    public void testHelloWorld() throws Exception {
         final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
 
         Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {

@@ -58,12 +58,13 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.server.ProcessorBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
-import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -114,10 +115,7 @@ public class PatternRoutingTest {
 
     @Before
     public void setupApplication() {
-        final AcceptorRootModule appRootModule = new AcceptorRootModule();
-        Services services = HK2.get().create(null,
-                new ServerModule(),
-                appRootModule);
+        Services services = HK2.get().create(null, new ServerModule());
 
         final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
@@ -129,6 +127,7 @@ public class PatternRoutingTest {
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
+        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
         TreeAcceptor inflection = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 
             @Override
@@ -137,8 +136,7 @@ public class PatternRoutingTest {
                 return Responses.from(200, req).entity("B").build();
             }
         });
-
-        appRootModule.setMatchingRoot(routeBuilder.root(
+        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(
                 routeBuilder.route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(inflection)))
@@ -146,7 +144,7 @@ public class PatternRoutingTest {
                                 .to(routeBuilder.route("e(/)?").to(LastPathSegmentTracingFilter.class).to(inflection)))
                         .build()));
 
-        invoker = injector.inject(RequestInvoker.class);
+        invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         requestScope = injector.inject(RequestScope.class);
     }
 

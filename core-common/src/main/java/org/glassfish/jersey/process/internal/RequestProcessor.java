@@ -54,7 +54,7 @@ import com.google.common.base.Optional;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface RequestProcessor extends Stage<Request, Optional<Inflector<Request, Response>>> {
+public interface RequestProcessor {
     /**
      * Request accepting context.
      */
@@ -100,6 +100,5 @@ public interface RequestProcessor extends Stage<Request, Optional<Inflector<Requ
      *         left side} and the (optional) request-to-response inflector on the
      *         {@link Pair#right() right side}.
      */
-    @Override
     public Pair<Request, Optional<Inflector<Request, Response>>> apply(Request request);
 }

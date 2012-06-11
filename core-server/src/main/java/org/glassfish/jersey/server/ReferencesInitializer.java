@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,53 +39,67 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.RequestHeaders;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.ResponseHeaders;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.ComponentException;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+
 import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.base.Function;
+
 /**
- * Test utility module for testing hierarchical request accepting (i.e. resource matching).
+ * Request/response injection references initialization stage.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class AcceptorRootModule implements Module, Factory<LinearAcceptor> {
+class ReferencesInitializer implements Function<Request, Request> {
 
-    private TreeAcceptor matchingRoot;
     @Inject
-    private Factory<ResourceMatchingStage> matchingStageFactory;
+    private Factory<Ref<Request>> requestReference;
     @Inject
-    private Factory<InflectorExtractingStage> inflectorExtractingStageFactory;
-
-    @Override
-    public LinearAcceptor get() {
-        return Stages.acceptingChain(matchingStageFactory.get()).build(inflectorExtractingStageFactory.get());
-    }
+    private Factory<Ref<RequestHeaders>> requestHeadersReference;
+    @Inject
+    private Factory<Ref<HttpHeaders>> httpHeadersReference;
+    @Inject
+    private Factory<Ref<Response>> responseReference;
+    @Inject
+    private Factory<Ref<ResponseHeaders>> responseHeadersReference;
+    @Inject
+    private Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
 
     /**
-     * Set the root resource matching acceptor.
+     * Initialize the request references using the incoming request and register
+     * a response reference initialization stage in the
+     * {@link org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext
+     * responding context}.
      *
-     * @param matchingRoot root resource matching acceptor.
+     * @param request incoming request.
+     * @return same (unmodified) request.
      */
-    public void setMatchingRoot(TreeAcceptor matchingRoot) {
-        this.matchingRoot = matchingRoot;
-    }
-
     @Override
-    public void configure(BinderFactory binderFactory) {
-        binderFactory.bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(this);
-        binderFactory.bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new Factory<TreeAcceptor>() {
+    public Request apply(final Request request) {
+        requestReference.get().set(request);
+        requestHeadersReference.get().set(request.getHeaders());
+        httpHeadersReference.get().set(Requests.httpHeaders(request));
+
+        respondingContextFactory.get().push(new Function<Response, Response>() {
             @Override
-            public TreeAcceptor get() throws ComponentException {
-                return matchingRoot;
+            public Response apply(final Response response) {
+                responseReference.get().set(response);
+                responseHeadersReference.get().set((response != null) ? response.getHeaders() : null);
+
+                return response;
             }
         });
+
+        return request;
     }
 }

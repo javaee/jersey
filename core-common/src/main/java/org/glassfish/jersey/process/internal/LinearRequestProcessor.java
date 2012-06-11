@@ -39,16 +39,12 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.process.Inflector;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -56,7 +52,7 @@ import com.google.common.base.Preconditions;
 /**
  * A composite {@link LinearAcceptor linear acceptor} request processor.
  * <p/>
- * When {@link #apply(java.lang.Object) invoked}, the supplied data are first
+ * When {@link #apply(javax.ws.rs.core.Request) invoked}, the supplied data are first
  * transformed by the nested linear stage chain. Once a terminal stage is reached
  * a continuation is returned with the transformed request on the {@link Pair#left() left side}
  * and the inflector (optionally) {@link Inflecting provided by the terminal stage}
@@ -67,20 +63,14 @@ import com.google.common.base.Preconditions;
 public class LinearRequestProcessor implements RequestProcessor {
 
     private final LinearAcceptor rootAcceptor;
-    private final Factory<StagingContext<Request>> contextProvider;
 
     /**
      * Construct a {@link LinearAcceptor linear acceptor} request processor.
      *
      * @param rootAcceptor head of the nested linear stage chain to be run.
-     * @param contextProvider provider of the staging context to be invoked
-     *     before and after each stage is applied.
      */
-    public LinearRequestProcessor(
-            @Inject @Stage.Root LinearAcceptor rootAcceptor,
-            @Inject Factory<StagingContext<Request>> contextProvider) {
+    public LinearRequestProcessor(LinearAcceptor rootAcceptor) {
         this.rootAcceptor = rootAcceptor;
-        this.contextProvider = contextProvider;
     }
 
     /**
@@ -93,20 +83,18 @@ public class LinearRequestProcessor implements RequestProcessor {
      */
     @Override
     public Pair<Request, Optional<Inflector<Request, Response>>> apply(Request request) {
-        final StagingContext<Request> context = contextProvider.get();
+        Optional<LinearAcceptor> currentStage = Optional.fromNullable(rootAcceptor);
+        Pair<Request, Optional<LinearAcceptor>> continuation = Tuples.of(request, currentStage);
 
-        LinearAcceptor stage = rootAcceptor;
-        Pair<Request, Optional<LinearAcceptor>> continuation = Tuples.of(request, Optional.fromNullable(stage));
-        while (continuation.right().isPresent()) {
-            stage = continuation.right().get();
-            context.beforeStage(stage, continuation.left());
-            continuation = stage.apply(continuation.left());
-            context.afterStage(stage, continuation.left());
+        Optional<LinearAcceptor> lastStage = Optional.absent();
+        while (currentStage.isPresent()) {
+            lastStage = currentStage;
+            continuation = currentStage.get().apply(continuation.left());
+            currentStage = continuation.right();
         }
 
         Request processed = continuation.left();
 
-        final Optional<Stage<Request, ?>> lastStage = contextProvider.get().lastStage();
         Preconditions.checkState(lastStage.isPresent(),
                 "No stage has been invoked as part of the processing.");
 

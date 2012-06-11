@@ -46,15 +46,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -65,25 +62,12 @@ import static org.junit.Assert.fail;
  */
 public class RequestInvokerTest {
 
-    public static class Module extends AbstractModule {
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected void configure() {
-
-            bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
-
-            bind().to(ResponseProcessor.Builder.class);
-            bind().to(RequestInvoker.class);
-        }
-    }
-
     public RequestInvokerTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
-    private Services init(org.glassfish.hk2.Module acceptorsModule) {
-        final Services services = HK2.get().create(null, new ProcessingTestModule(), acceptorsModule, new Module());
+    private Services init() {
+        final Services services = HK2.get().create(null, new ProcessingTestModule());
 
         ProcessingTestModule.initProviders(services);
 
@@ -92,8 +76,9 @@ public class RequestInvokerTest {
 
     @Test
     public void testLinear() throws Exception {
-        final Services services = init(new LinearRequestProcessorTest.Module());
-        final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
+        final Services services = init();
+        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(LinearRequestProcessorTest.createProcessor());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
@@ -162,8 +147,9 @@ public class RequestInvokerTest {
 
     @Test
     public void testHiearchical() throws Exception {
-        final Services services = init(new HierarchicalRequestProcessorTest.Module());
-        final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
+        final Services services = init();
+        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(HierarchicalRequestProcessorTest.createProcessor());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {

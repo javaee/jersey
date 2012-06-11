@@ -55,8 +55,7 @@ import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -92,7 +91,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class RequestInvoker implements Inflector<Request, ListenableFuture<Response>> {
+public class RequestInvoker {
 
     private static final InvocationCallback EMPTY_CALLBACK = new InvocationCallback() {
 
@@ -121,25 +120,54 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         }
     };
 
-    //
-    @Inject
-    private RequestScope requestScope;
-    @Inject
-    private RequestProcessor requestProcessor;
-    @Inject
-    private ResponseProcessor.Builder responseProcessorBuilder;
-    @Inject
-    private Services services;
-    //
-    @Inject
-    private ProcessingExecutorsFactory executorsFactory;
-
-
     /**
-     * Default constructor meant to be used by the injection framework.
+     * Injection-enabled {@link RequestInvoker} instance builder.
      */
-    public RequestInvoker() {
-        // Injection constructor
+    public static final class Builder {
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        private ResponseProcessor.Builder responseProcessorBuilder;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        /**
+         * Build a new {@link RequestInvoker request invoker} configured to use
+         * the supplied request processor for processing requests.
+         *
+         * @param requestProcessor custom request processor.
+         * @return new request invoker instance.
+         */
+        public RequestInvoker build(final RequestProcessor requestProcessor) {
+            return new RequestInvoker(
+                    requestProcessor,
+                    requestScope,
+                    responseProcessorBuilder,
+                    invocationContextReferenceFactory,
+                    executorsFactory);
+        }
+    }
+
+    private final RequestProcessor requestProcessor;
+    private final RequestScope requestScope;
+    private final ResponseProcessor.Builder responseProcessorBuilder;
+    private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+    private final ProcessingExecutorsFactory executorsFactory;
+
+    private RequestInvoker(
+            final RequestProcessor requestProcessor,
+            final RequestScope requestScope,
+            final ResponseProcessor.Builder responseProcessorBuilder,
+            final Factory<Ref<InvocationContext>> invocationContextReferenceFactory,
+            final ProcessingExecutorsFactory executorsFactory) {
+
+        this.requestScope = requestScope;
+        this.requestProcessor = requestProcessor;
+        this.responseProcessorBuilder = responseProcessorBuilder;
+        this.invocationContextReferenceFactory = invocationContextReferenceFactory;
+        this.executorsFactory = executorsFactory;
     }
 
     /**
@@ -148,7 +176,6 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
      * @param request request data to be transformed into a response result.
      * @return future response.
      */
-    @Override
     public ListenableFuture<Response> apply(final Request request) {
         return apply(request, EMPTY_CALLBACK);
     }
@@ -161,9 +188,9 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
      * is invoked. The result callback can be invoked on a different thread but
      * still in the same {@link InvocationContext request invocation context}.
      *
-     * @param request request data to be transformed into a response result.
+     * @param request  request data to be transformed into a response result.
      * @param callback result callback called when the request transformation is
-     *     done. Must not be {@code null}.
+     *                 done. Must not be {@code null}.
      * @return future response.
      */
     public ListenableFuture<Response> apply(final Request request, final InvocationCallback callback) {
@@ -173,19 +200,16 @@ public class RequestInvoker implements Inflector<Request, ListenableFuture<Respo
         //        into stages that are executed by the invoker
         //        (e.g. RequestExecutionInitStage).
         final Instance instance = requestScope.suspendCurrent();
-        final ResponseProcessor responseProcessor = responseProcessorBuilder.build(callback);
+        final ResponseProcessor responseProcessor = responseProcessorBuilder.build(callback, instance);
         final Runnable requester = new Runnable() {
 
             @Override
             public void run() {
                 final AsyncInflectorAdapter asyncInflector = new AsyncInflectorAdapter(new AcceptingInvoker(), callback);
 
-                Ref<InvocationContext> icRef = services.forContract(new TypeLiteral<Ref<InvocationContext>>() {
-                }).get();
-                icRef.set(asyncInflector);
+                invocationContextReferenceFactory.get().set(asyncInflector);
 
                 ListenableFuture<Response> response = asyncInflector.apply(request);
-                responseProcessor.setRequestScopeInstance(instance);
                 response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
             }
         };

@@ -110,6 +110,12 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
     private final Inflector<Request, Response> wrapped;
     private final InvocationCallback callback;
 
+    /**
+     * Create a new asynchronous inflector adapter for an inflector.
+     *
+     * @param wrapped wrapped inflector.
+     * @param callback invocation callback.
+     */
     AsyncInflectorAdapter(final Inflector<Request, Response> wrapped, final InvocationCallback callback) {
         this.wrapped = wrapped;
         this.callback = callback;
@@ -117,24 +123,26 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
 
     @Override
     public ListenableFuture<Response> apply(Request request) {
+        final Response response;
+
         try {
-            Response response = wrapped.apply(request);
-            if (executionStateMonitor.enterIf(runningState)) {
-                // mark as resumed & don't invoke callback.resume() since we are resuming synchronously
-                try {
-                    executionState = State.RESUMED;
-                    set(response);
-                } finally {
-                    executionStateMonitor.leave();
-                }
-            } else if (response != null) {
-                LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_SUSPENDED_RESPONSE_IGNORED(response));
-            }
+            response = wrapped.apply(request);
         } catch (Exception ex) {
-            // TODO: (MM) is this correct? - resume(ex) seems to throw IllegalStateException if not in resumableState
-            // TODO: also invokes callback(), while the above comment says we don't want to invoke callback.resume()
-            // TODO: in some cases
             resume(ex); // resume with exception (if not resumed by an external event already)
+            return this;
+        }
+
+        if (executionStateMonitor.enterIf(runningState)) {
+            // The context was not suspended during the call to the wrapped inflector's apply(...) method;
+            // mark as resumed & don't invoke callback.resume() since we are resuming synchronously
+            try {
+                executionState = State.RESUMED;
+                set(response);
+            } finally {
+                executionStateMonitor.leave();
+            }
+        } else if (response != null) {
+            LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_SUSPENDED_RESPONSE_IGNORED(response));
         }
         return this;
     }
@@ -156,29 +164,37 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
 
     @Override
     public void resume(final Object response) {
-        if (executionStateMonitor.enterIf(resumableState)) {
-            try {
-                executionState = State.RESUMED;
-            } finally {
-                executionStateMonitor.leave();
+        resume(new Runnable() {
+            @Override
+            public void run() {
+                set(toJaxrsResponse(response));
             }
-            callback.resumed();
-            set(toJaxrsResponse(response));
-        } else {
-            throw new IllegalStateException(LocalizationMessages.ILLEGAL_INVOCATION_CONTEXT_STATE(executionState, "resume"));
-        }
+        });
     }
 
     @Override
     public void resume(final Exception response) {
+        resume(new Runnable() {
+            @Override
+            public void run() {
+                setException(response);
+            }
+        });
+    }
+
+    private void resume(final Runnable resumeHandler) {
         if (executionStateMonitor.enterIf(resumableState)) {
+            final boolean invokeCallback;
             try {
+                invokeCallback = executionState == State.SUSPENDED;
                 executionState = State.RESUMED;
             } finally {
                 executionStateMonitor.leave();
             }
-            callback.resumed();
-            setException(response);
+            resumeHandler.run();
+            if (invokeCallback) {
+                callback.resumed();
+            }
         } else {
             throw new IllegalStateException(LocalizationMessages.ILLEGAL_INVOCATION_CONTEXT_STATE(executionState, "resume"));
         }

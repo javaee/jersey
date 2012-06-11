@@ -48,7 +48,6 @@ import javax.ws.rs.ext.FilterContext;
 import javax.ws.rs.ext.RequestFilter;
 import javax.ws.rs.ext.ResponseFilter;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -57,20 +56,15 @@ import org.glassfish.jersey.process.internal.LinearAcceptor;
 import org.glassfish.jersey.process.internal.LinearRequestProcessor;
 import org.glassfish.jersey.process.internal.ProcessingTestModule;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
-import org.jvnet.hk2.annotations.Inject;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
@@ -81,28 +75,6 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public class LoggingFilterTest {
 
-    public static class Module extends AbstractModule {
-
-        @Inject
-        private FilteringAcceptor filteringAcceptor;
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected void configure() {
-            final LinearAcceptor inflectingStage = Stages.acceptingChain(filteringAcceptor).build(Stages.asLinearAcceptor(
-                    new Inflector<Request, Response>() {
-
-                        @Override
-                        public Response apply(Request data) {
-                            return Responses.from(200, data).entity(data.readEntity(String.class)).build();
-                        }
-                    }));
-
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(inflectingStage);
-
-            bind(RequestProcessor.class).to(LinearRequestProcessor.class);
-        }
-    }
     private RequestInvoker invoker;
     private RequestScope requestScope;
     private CustomLoggingFilter loggingFilter;
@@ -141,13 +113,22 @@ public class LoggingFilterTest {
 
         final Services services = HK2.get().create(null,
                 new ProcessingTestModule(),
-                new Module(),
                 requestFilterModule,
                 responseFilterModule);
 
         ProcessingTestModule.initProviders(services);
 
-        invoker = services.forContract(RequestInvoker.class).get();
+        FilteringAcceptor filteringAcceptor = services.forContract(FilteringAcceptor.class).get();
+        final LinearAcceptor rootAcceptor = Stages.acceptingChain(filteringAcceptor).build(Stages.asLinearAcceptor(
+                new Inflector<Request, Response>() {
+
+                    @Override
+                    public Response apply(Request data) {
+                        return Responses.from(200, data).entity(data.readEntity(String.class)).build();
+                    }
+                }));
+
+        invoker = services.forContract(RequestInvoker.Builder.class).get().build(new LinearRequestProcessor(rootAcceptor));
         requestScope = services.forContract(RequestScope.class).get();
 
     }

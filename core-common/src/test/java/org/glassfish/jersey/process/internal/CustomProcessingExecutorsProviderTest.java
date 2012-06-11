@@ -51,18 +51,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.ProcessingExecutorsModule;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -78,30 +75,6 @@ public class CustomProcessingExecutorsProviderTest {
 
     private static final String REQ_THREAD_NAME = "custom-requesting-thread";
     private static final String RESP_THREAD_NAME = "custom-responding-thread";
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected void configure() {
-            final LinearAcceptor inflectingStage = Stages.asLinearAcceptor(new Inflector<Request, Response>() {
-
-                @Override
-                public Response apply(Request data) {
-                    return Response.ok(Thread.currentThread().getName()).build();
-                }
-            });
-
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(inflectingStage);
-            bind(RequestProcessor.class).to(LinearRequestProcessor.class);
-
-            bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
-
-            bind().to(ResponseProcessor.Builder.class);
-            bind().to(RequestInvoker.class);
-
-        }
-    }
 
     public CustomProcessingExecutorsProviderTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
@@ -123,8 +96,7 @@ public class CustomProcessingExecutorsProviderTest {
 
         final Services services = HK2.get().create(null,
                 new ProcessingTestModule(),
-                new ProcessingExecutorsModule(customExecutorsProvider),
-                new Module());
+                new ProcessingExecutorsModule(customExecutorsProvider));
 
         ProcessingTestModule.initProviders(services);
 
@@ -134,7 +106,17 @@ public class CustomProcessingExecutorsProviderTest {
     @Test
     public void testCustomProcessingExecutors() throws Exception {
         final Services services = init();
-        final RequestInvoker invoker = services.forContract(RequestInvoker.class).get();
+
+        final LinearRequestProcessor requestProcessor =
+                new LinearRequestProcessor(Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+
+                    @Override
+                    public Response apply(Request data) {
+                        return Response.ok(Thread.currentThread().getName()).build();
+                    }
+                }));
+
+        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get().build(requestProcessor);
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         final CountDownLatch latch = new CountDownLatch(1);

@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.util.collection.Pair;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface TreeAcceptor extends Stage<Request, Iterator<TreeAcceptor>> {
+public interface TreeAcceptor {
 
     /**
      * A {@link TreeAcceptor} builder.
@@ -80,8 +80,10 @@ public interface TreeAcceptor extends Stage<Request, Iterator<TreeAcceptor>> {
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
+     * Transforms supplied data and returns transformed data together with
+     * a processing continuation in the form of a &lt;data,&nbsp;continuation&gt;
+     * {@link Pair pair}.
+     * <p>
      * The returned continuation is an {@link Iterator iterator} over the next level
      * of the tree acceptors that should be invoked. A non-empty iterator
      * typically indicates that the processing is expected to continue further, while
@@ -89,7 +91,12 @@ public interface TreeAcceptor extends Stage<Request, Iterator<TreeAcceptor>> {
      * hierarchical data transformation previously reached a leaf node and the depth-first
      * processing algorithm needs to determine whether the processing is finished or
      * whether it should back-up, move to a next branch and continue.
+     * </p>
+     *
+     * @param data data to be transformed.
+     * @return a {@link Pair pair} of transformed data and processing continuation;
+     *     the transformed data is on the left and the processing continuation on
+     *     the right side of the pair.
      */
-    @Override
     Pair<Request, Iterator<TreeAcceptor>> apply(Request data);
 }

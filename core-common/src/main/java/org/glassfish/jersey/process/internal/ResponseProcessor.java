@@ -51,7 +51,6 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.process.internal.RequestScope.Instance;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
@@ -76,7 +75,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  * registered response filters and returns a result once finished.
  *
  * In case the request transformation finished with an exception, the response processor
- * tries to map the exception to a response using the registered {@link ExceptionMapper
+ * tries to map the exception to a response using the registered {@link javax.ws.rs.ext.ExceptionMapper
  * exception mappers} and, if successful, runs the mapped response instance through
  * the chain of registered response filters and returns a result once finished.
  * In case the exception was not mapped to a response, the exception is presented
@@ -90,13 +89,13 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
 
     /**
      * Injectable context that can be used during the data processing for
-     * registering {@link Stage} instances that will be invoked during the
+     * registering response processing functions that will be invoked during the
      * response processing.
      */
     public static interface RespondingContext {
 
         /**
-         * Push response transformation function that should be applied
+         * Push response transformation function that should be applied.
          *
          * @param responseTransformation response transformation function.
          */
@@ -125,8 +124,6 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         @Inject
         private Factory<RespondingContext> respondingCtxProvider;
         @Inject
-        private Factory<StagingContext<Response>> responseStagingCtxProvider;
-        @Inject
         private Factory<ExceptionMappers> exceptionMappersProvider;
 
         /**
@@ -136,46 +133,50 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
             // Injection constructor
         }
 
-        public ResponseProcessor build(final InvocationCallback callback) {
+        /**
+         * Build a response processor for a given request scope instance
+         * and invocation callback.
+         *
+         * @param callback      the invocation callback to be invoked once the
+         *                      response processing has finished.
+         * @param scopeInstance the instance of the request scope this processor
+         *                      belongs to.
+         * @return new response processor instance.
+         */
+        public ResponseProcessor build(final InvocationCallback callback, final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor(
                     requestScope,
+                    scopeInstance,
                     callback,
                     invocationCtxProvider,
                     respondingCtxProvider,
-                    responseStagingCtxProvider,
                     exceptionMappersProvider);
         }
     }
 
     //
     private final RequestScope requestScope;
-    private volatile Instance scopeInstance;
+    private volatile RequestScope.Instance scopeInstance;
     private final InvocationCallback callback;
     private final Factory<InvocationContext> invocationCtxProvider;
     private final Factory<RespondingContext> respondingCtxProvider;
-    private final Factory<StagingContext<Response>> responseStagingCtxProvider;
     private final Factory<ExceptionMappers> exceptionMappersProvider;
 
-    public ResponseProcessor(
+    private ResponseProcessor(
             RequestScope requestScope,
+            RequestScope.Instance scopeInstance,
             InvocationCallback callback,
             Factory<InvocationContext> invocationCtxProvider,
             Factory<RespondingContext> respondingCtxProvider,
-            Factory<StagingContext<Response>> responseStagingCtxProvider,
             Factory<ExceptionMappers> exceptionMappersProvider) {
         this.requestScope = requestScope;
-        this.scopeInstance = null;
+        this.scopeInstance = scopeInstance;
         this.callback = callback;
 
         this.invocationCtxProvider = invocationCtxProvider;
         this.respondingCtxProvider = respondingCtxProvider;
-        this.responseStagingCtxProvider = responseStagingCtxProvider;
         this.exceptionMappersProvider = exceptionMappersProvider;
-    }
-
-    public void setRequestScopeInstance(Instance instance) {
-        this.scopeInstance = instance;
     }
 
     @Override
@@ -249,14 +250,10 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         Optional<Responder> responder = respondingCtxProvider.get().createStageChain();
 
         if (responder.isPresent()) {
-            final StagingContext<Response> context = responseStagingCtxProvider.get();
-
             Pair<Response, Optional<Responder>> continuation = Tuples.of(response, responder);
             while (continuation.right().isPresent()) {
                 Responder next = continuation.right().get();
-                context.beforeStage(next, continuation.left());
                 continuation = next.apply(continuation.left());
-                context.afterStage(next, continuation.left());
             }
 
             return continuation.left();

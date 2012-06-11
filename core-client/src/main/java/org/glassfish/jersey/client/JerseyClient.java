@@ -69,6 +69,7 @@ import org.glassfish.jersey.process.internal.FilteringAcceptor;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.LinearAcceptor;
+import org.glassfish.jersey.process.internal.LinearRequestProcessor;
 import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -76,8 +77,6 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
 import org.glassfish.hk2.Services;
@@ -110,20 +109,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         private Ref<MessageBodyWorkers> messageBodyWorkers;
         @Inject
         private Ref<ContextResolvers> contextResolvers;
-    }
-
-    private class RootAcceptorFactory implements Factory<LinearAcceptor> {
-
-        @Override
-        public LinearAcceptor get() throws ComponentException {
-            final MessageBodyWorkersInitializer workersInitializationStage = injector.inject(MessageBodyWorkersInitializer.class);
-            final FilteringAcceptor filteringStage = injector.inject(FilteringAcceptor.class);
-
-            return Stages
-                    .acceptingChain(workersInitializationStage)
-                    .to(filteringStage)
-                    .build(Stages.asLinearAcceptor(connector));
-        }
     }
 
     /**
@@ -196,9 +181,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag;
     private Inflector<Request, Response> connector;
     private Injector injector;
-    //
-    @Inject
     private RequestInvoker invoker;
+    //
     @Inject
     private RequestScope requestScope;
 
@@ -228,7 +212,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     private void initialize(final List<Module> customModules) {
         final Module[] jerseyModules = new Module[]{
-                new ClientModule(new RootAcceptorFactory())
+                new ClientModule()
         };
 
         final Services services;
@@ -244,6 +228,16 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             services = HK2.get().create(null, modules);
         }
         this.injector = services.forContract(Injector.class).get();
+
+        final MessageBodyWorkersInitializer workersInitializationStage = injector.inject(MessageBodyWorkersInitializer.class);
+        final FilteringAcceptor filteringStage = injector.inject(FilteringAcceptor.class);
+
+        LinearAcceptor rootAcceptor = Stages
+                .acceptingChain(workersInitializationStage)
+                .to(filteringStage)
+                .build(Stages.asLinearAcceptor(connector));
+
+        this.invoker = injector.inject(RequestInvoker.Builder.class).build(new LinearRequestProcessor(rootAcceptor));
 
         this.injector.inject(this);
     }

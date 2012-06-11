@@ -112,7 +112,7 @@ public final class Stages {
      * Creates a leaf-node {@link TreeAcceptor} that implements {@link Inflecting}
      * interface and returns the provided {@link Inflector} instance
      * when the {@link Inflecting#inflector()} method is called.
-     * {@link TreeAcceptor#apply(java.lang.Object) } method of the created
+     * {@link TreeAcceptor#apply(javax.ws.rs.core.Request)} method of the created
      * hierarchical acceptor returns the unchanged request and an empty
      * continuation iterator.
      *
@@ -148,7 +148,7 @@ public final class Stages {
      * Creates a terminal {@link LinearAcceptor} that implements {@link Inflecting}
      * interface and returns the provided {@link Inflector} instance
      * when the {@link Inflecting#inflector()} method is called.
-     * {@link LinearAcceptor#apply(java.lang.Object) } method of the created
+     * {@link LinearAcceptor#apply(javax.ws.rs.core.Request)} method of the created
      * linear acceptor returns the unchanged supplied request and a continuation
      * referring to an {@link Optional#absent() absent} next linear acceptor.
      *
@@ -181,7 +181,7 @@ public final class Stages {
     }
 
     /**
-     * (Optionally) extracts an {@link Inflector inflector} from a {@link Stage stage},
+     * (Optionally) extracts an {@link Inflector inflector} from a  processing stage,
      * provided the stage implements {@link Inflecting} interface. Otherwise method
      * returns an {@link Optional#absent() absent} inflector.
      *
@@ -192,7 +192,7 @@ public final class Stages {
      *     otherwise.
      */
     @SuppressWarnings("unchecked")
-    public static <DATA, RESULT> Optional<Inflector<DATA, RESULT>> extractInflector(Stage<DATA, ?> stage) {
+    public static <DATA, RESULT> Optional<Inflector<DATA, RESULT>> extractInflector(Object stage) {
         if (stage instanceof Inflecting) {
             return Optional.fromNullable(((Inflecting<DATA, RESULT>) stage).inflector());
         }

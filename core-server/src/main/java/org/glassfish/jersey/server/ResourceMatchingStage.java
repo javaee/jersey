@@ -46,6 +46,7 @@ import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.HierarchicalRequestProcessor;
 import org.glassfish.jersey.process.internal.RequestProcessor;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
 
 import org.glassfish.hk2.Factory;
 
@@ -60,18 +61,29 @@ import com.google.common.base.Optional;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ResourceMatchingStage implements Function<Request, Request> {
+    /**
+     * Injectable {@link ResourceMatchingStage resource matching stage} builder.
+     */
+    static class Builder {
+        @Inject
+        private Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
+
+        /**
+         * Build a properly injected resource matching acceptor.
+         *
+         * @param rootAcceptor root matching acceptor.
+         * @return properly injected resource matching acceptor.
+         */
+        public ResourceMatchingStage build(final TreeAcceptor rootAcceptor) {
+            return new ResourceMatchingStage(new HierarchicalRequestProcessor(rootAcceptor), acceptingContextFactory);
+        }
+    }
+
     private final HierarchicalRequestProcessor processor;
     private final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
 
-    /**
-     * Create a new resource matching stage.
-     *
-     * @param processor hierarchical request processor.
-     * @param acceptingContextFactory request processing accepting context provider.
-     */
-    public ResourceMatchingStage(
-            @Inject HierarchicalRequestProcessor processor,
-            @Inject Factory<RequestProcessor.AcceptingContext> acceptingContextFactory) {
+    private ResourceMatchingStage(final HierarchicalRequestProcessor processor,
+                                  final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory) {
         this.processor = processor;
         this.acceptingContextFactory = acceptingContextFactory;
     }

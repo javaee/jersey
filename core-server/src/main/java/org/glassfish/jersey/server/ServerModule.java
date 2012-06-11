@@ -56,9 +56,10 @@ import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.process.internal.*;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.process.internal.FilterModule;
+import org.glassfish.jersey.process.internal.ProcessingModule;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.SecurityContextModule;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -78,50 +79,6 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerModule extends AbstractModule {
-
-    private static class RequestStagingContext extends DefaultStagingContext<Request> {
-
-        @Inject
-        private Ref<Request> requestReference;
-        @Inject
-        private Ref<RequestHeaders> requestHeadersReference;
-        @Inject
-        private Ref<HttpHeaders> httpHeadersReference;
-
-        @Override
-        protected void before(final Stage<Request, ?> stage, final Request request) {
-            requestReference.set(request);
-            requestHeadersReference.set(request.getHeaders());
-            httpHeadersReference.set(Requests.httpHeaders(request));
-        }
-
-        @Override
-        protected void after(final Stage<Request, ?> stage, final Request request) {
-            requestReference.set(request);
-            requestHeadersReference.set(request.getHeaders());
-            httpHeadersReference.set(Requests.httpHeaders(request));
-        }
-    }
-
-    private static class ResponseStagingContext extends DefaultStagingContext<Response> {
-
-        @Inject
-        private Ref<Response> responseReference;
-        @Inject
-        private Ref<ResponseHeaders> responseHeadersReference;
-
-        @Override
-        protected void before(final Stage<Response, ?> stage, final Response response) {
-            responseReference.set(response);
-            responseHeadersReference.set(response.getHeaders());
-        }
-
-        @Override
-        protected void after(final Stage<Response, ?> stage, final Response response) {
-            responseReference.set(response);
-            responseHeadersReference.set(response.getHeaders());
-        }
-    }
 
     private static class RequestReferencingFactory extends ReferencingFactory<Request> {
 
@@ -177,13 +134,7 @@ public class ServerModule extends AbstractModule {
                 new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceModule());
 
-        // Request/Response staging contexts
-        bind(new TypeLiteral<StagingContext<Request>>() {
-        }).to(RequestStagingContext.class).in(RequestScope.class);
-
-        bind(new TypeLiteral<StagingContext<Response>>() {
-        }).to(ResponseStagingContext.class).in(RequestScope.class);
-
+        // Request/Response injection interfaces
         bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<Request>>() {
         }).toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
@@ -203,15 +154,5 @@ public class ServerModule extends AbstractModule {
         bind(ResponseHeaders.class).toFactory(ResponseHeadersReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<ResponseHeaders>>() {
         }).toFactory(ReferencingFactory.<ResponseHeaders>referenceFactory()).in(RequestScope.class);
-
-        // Request processors
-        bind(RequestProcessor.class).to(LinearRequestProcessor.class); // main processor
-        bind().to(HierarchicalRequestProcessor.class); // matching processor
-        // Request invoker
-        bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
-
-        bind().to(ResponseProcessor.Builder.class);
-
-        bind().to(RequestInvoker.class);
     }
 }

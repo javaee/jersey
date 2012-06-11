@@ -79,18 +79,7 @@ import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.FilteringAcceptor;
-import org.glassfish.jersey.process.internal.InflectorNotFoundException;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
@@ -136,7 +125,7 @@ import com.google.common.collect.Sets;
  * @see ResourceConfig
  * @see org.glassfish.jersey.server.spi.ContainerProvider
  */
-public final class ApplicationHandler implements Inflector<Request, Future<Response>> {
+public final class ApplicationHandler {
 
     private static final Logger LOGGER = Logger.getLogger(ApplicationHandler.class.getName());
     /**
@@ -179,22 +168,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
 
     private class ApplicationModule extends AbstractModule {
 
-        private class RootResourceMatchingAcceptorProvider implements Factory<TreeAcceptor> {
-
-            @Override
-            public TreeAcceptor get() {
-                return ApplicationHandler.this.rootResourceMatchingAcceptor;
-            }
-        }
-
-        private class RootStageAcceptorProvider implements Factory<LinearAcceptor> {
-
-            @Override
-            public LinearAcceptor get() {
-                return ApplicationHandler.this.rootStageAcceptor;
-            }
-        }
-
         private class JaxrsApplicationProvider implements Factory<Application> {
 
             @Override
@@ -220,18 +193,11 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             bind(Application.class).toFactory(new JaxrsApplicationProvider()).in(Singleton.class);
 
             bind(ApplicationHandler.class).toInstance(ApplicationHandler.this);
-
-            bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootResourceMatchingAcceptorProvider())
-                    .in(Singleton.class);
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(new RootStageAcceptorProvider())
-                    .in(Singleton.class);
         }
     }
 
     @Inject
     private RequestScope requestScope;
-    @Inject
-    private RequestInvoker invoker;
     @Inject
     private Factory<RouterModule.RoutingContext> routingContextFactory;
     @Inject
@@ -241,15 +207,9 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
     //
     private Services services;
     /**
-     * Root linear request acceptor.
-     * This is the main entry point for the whole request processing.
+     * Request invoker.
      */
-    private LinearAcceptor rootStageAcceptor;
-    /**
-     * Root hierarchical request matching acceptor.
-     * Invoked in a single linear stage as part of the main linear accepting chain.
-     */
-    private TreeAcceptor rootResourceMatchingAcceptor;
+    private RequestInvoker invoker;
     private final ResourceConfig configuration;
     private References refs;
 
@@ -384,20 +344,32 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             runtimeModelBuilder.process(r);
         }
 
-        this.rootResourceMatchingAcceptor = runtimeModelBuilder.buildModel();
+        // assembly request processing chain
+        /**
+         * Root hierarchical request matching acceptor.
+         * Invoked in a single linear stage as part of the main linear accepting chain.
+         */
+        final TreeAcceptor rootResourceMatchingAcceptor = runtimeModelBuilder.buildModel();
 
-        // Create a linear accepting chain
         final PreMatchRequestFilteringStage preMatchRequestFilteringStage = injector.inject(PreMatchRequestFilteringStage.class);
-        final ResourceMatchingStage resourceMatchingStage = injector.inject(ResourceMatchingStage.class);
+        final ResourceMatchingStage resourceMatchingStage =
+                injector.inject(ResourceMatchingStage.Builder.class).build(rootResourceMatchingAcceptor);
         final FilteringAcceptor resourceFilteringStage = injector.inject(FilteringAcceptor.class);
         final InflectorExtractingStage inflectorExtractingStage = injector.inject(InflectorExtractingStage.class);
-        this.rootStageAcceptor = Stages
-                .acceptingChain(injector.inject(MessageBodyWorkersInitializer.class))
+        /**
+         *  Root linear request acceptor. This is the main entry point for the whole request processing.
+         */
+        final LinearAcceptor rootStageAcceptor = Stages
+                .acceptingChain(injector.inject(ReferencesInitializer.class))
+                .to(injector.inject(MessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(resourceMatchingStage)
                 .to(resourceFilteringStage)
                 .build(inflectorExtractingStage);
 
+        this.invoker = injector.inject(RequestInvoker.Builder.class).build(new LinearRequestProcessor(rootStageAcceptor));
+
+        // inject self
         injector.inject(this);
     }
 
@@ -482,7 +454,6 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
      * @param request request data.
      * @return response future.
      */
-    @Override
     public Future<Response> apply(final Request request) {
 
         final ContainerResponseWriter containerResponseWriter = new ContainerResponseWriter() {

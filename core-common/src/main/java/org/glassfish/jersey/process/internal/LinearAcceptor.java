@@ -54,7 +54,7 @@ import com.google.common.base.Optional;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface LinearAcceptor extends Stage<Request, Optional<LinearAcceptor>> {
+public interface LinearAcceptor {
 
     /**
      * Linear acceptor chain builder.
@@ -108,14 +108,21 @@ public interface LinearAcceptor extends Stage<Request, Optional<LinearAcceptor>>
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
+     * Transforms supplied data and returns transformed data together with
+     * a processing continuation in the form of a &lt;data,&nbsp;continuation&gt;
+     * {@link Pair pair}.
+     * <p>
      * The returned continuation is ({@link Optional optionally}) the next linear
      * acceptor that should be invoked. A {@link Optional#isPresent() present}
      * continuation indicates the processing is expected to continue further, while
      * {@link Optional#absent() absence} of a continuation indicates that the
      * unidirectional request transformation passed its final stage.
+     * </p>
+     *
+     * @param data data to be transformed.
+     * @return a {@link Pair pair} of transformed data and processing continuation;
+     *     the transformed data is on the left and the processing continuation on
+     *     the right side of the pair.
      */
-    @Override
     public Pair<Request, Optional<LinearAcceptor>> apply(Request data);
 }
