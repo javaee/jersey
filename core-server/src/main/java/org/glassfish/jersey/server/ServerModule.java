@@ -79,14 +79,6 @@ import org.jvnet.hk2.annotations.Inject;
  */
 public class ServerModule extends AbstractModule {
 
-    private static class ServerExceptionMapper implements ExceptionMapper<Throwable> {
-
-        @Override
-        public Response apply(Throwable exception) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
-
     private static class RequestStagingContext extends DefaultStagingContext<Request> {
 
         @Inject
@@ -184,10 +176,6 @@ public class ServerModule extends AbstractModule {
                 new RouterModule(),
                 new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceModule());
-
-        // exception mapper
-        bind(new TypeLiteral<ExceptionMapper<Throwable>>() {
-        }).toInstance(new ServerExceptionMapper());
 
         // Request/Response staging contexts
         bind(new TypeLiteral<StagingContext<Request>>() {
