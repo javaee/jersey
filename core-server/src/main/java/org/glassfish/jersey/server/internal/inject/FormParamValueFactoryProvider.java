@@ -46,7 +46,6 @@ import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ParamException;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.internal.ExtractorException;
@@ -62,12 +61,6 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<FormParam> {
-
-    /**
-     * Used internally for storing {@link javax.ws.rs.core.Form} instance in {@link org.glassfish.jersey.server.internal.inject.HttpContext}
-     * properties.
-     */
-    private static final String FORM_PROPERTY = "jersey.config.server.representation.form";
 
     static final class InjectionResolver extends ParamInjectionResolver<FormParam> {
 
@@ -104,7 +97,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private void cacheForm(final HttpContext context, final Form form) {
-            context.getProperties().put(FORM_PROPERTY, form);
+            context.getProperties().put(HttpContext.FORM_PROPERTY, form);
         }
 
         private Form getForm(HttpContext context) {
@@ -113,7 +106,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private Form getCachedForm(final HttpContext context) {
-            return (Form) context.getProperties().get(FORM_PROPERTY);
+            return (Form) context.getProperties().get(HttpContext.FORM_PROPERTY);
         }
 
         private Request ensureValidRequest(final Request request) throws IllegalStateException {

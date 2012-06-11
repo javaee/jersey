@@ -43,13 +43,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 
@@ -64,15 +69,18 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
@@ -96,6 +104,8 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class WebComponent {
+
+    private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
@@ -227,7 +237,13 @@ public class WebComponent {
 
         Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
         requestBuilder = addRequestHeaders(request, requestBuilder);
+
         final Request jaxRsRequest = requestBuilder.build();
+
+        // Check if any servlet filters have consumed a request entity
+        // of the media type application/x-www-form-urlencoded
+        // This can happen if a filter calls request.getParameter(...)
+        filterFormParameters(request, jaxRsRequest);
 
         try {
             final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, request, response,
@@ -380,4 +396,26 @@ public class WebComponent {
         }
     }
 
+    private void filterFormParameters(HttpServletRequest hsr, Request request) throws IOException {
+        if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getHeaders().getMediaType())
+                && !request.hasEntity()) {
+
+            Form f = new Form();
+
+            Enumeration e = hsr.getParameterNames();
+            while (e.hasMoreElements()) {
+                String name = (String) e.nextElement();
+                String[] values = hsr.getParameterValues(name);
+
+                f.asMap().put(name, Arrays.asList(values));
+            }
+
+            if (!f.asMap().isEmpty()) {
+                request.getProperties().put(HttpContext.FORM_PROPERTY, f);
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, LocalizationMessages.FORM_PARAM_CONSUMED(request.getUri()));
+                }
+            }
+        }
+    }
 }

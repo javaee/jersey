@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,55 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.integration.formconsumption;
 
-package org.glassfish.jersey.server.internal.inject;
+import java.io.IOException;
 
-import java.util.Map;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import org.glassfish.jersey.uri.ExtendedUriInfo;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
- * A HttpContext makes it possible for a web resource implementation class to
- * access and manipulate HTTP request and response information directly. Typically
- * a HttpContext is injected on to a resource class using the
- * annotation {@link javax.ws.rs.core.Context}.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
-    /**
-     * Used internally for storing {@link javax.ws.rs.core.Form} instance in {@link HttpContext}
-     * properties.
-     */
-    String FORM_PROPERTY = "jersey.config.server.representation.form";
+public class MyFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
 
-    /**
-     * Get the extended URI information.
-     * @return the extended URI information.
-     */
-    ExtendedUriInfo getUriInfo();
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        // consume entity
+        servletRequest.getParameter("text");
+        filterChain.doFilter(servletRequest, servletResponse);
+    }
 
-    /**
-     * Get the HTTP request information.
-     * @return the HTTP request information
-     */
-    Request getRequest();
-
-    /**
-     * Get the HTTP response information.
-     * @return the HTTP response information
-     */
-    Response getResponse();
-
-    /**
-     * Get the mutable properties.
-     * <p>
-     * Care should be taken not to clear the properties or remove properties
-     * that are unknown otherwise unspecified behavior may result.
-     *
-     * @return the properties.
-     */
-    Map<String, Object> getProperties();
+    @Override
+    public void destroy() {
+    }
 }
