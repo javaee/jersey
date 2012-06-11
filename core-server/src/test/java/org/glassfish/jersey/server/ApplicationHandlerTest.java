@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -47,9 +48,11 @@ import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.model.ModelValidationException;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test basic application behavior.
@@ -77,11 +80,75 @@ public class ApplicationHandlerTest {
         }
     }
 
+    @Path("merged")
+    public static class MergedA {
+
+        public static final String RESPONSE = "Got in A";
+
+        @GET
+        public String doGet() {
+            return RESPONSE;
+        }
+    }
+
+    @Path("merged")
+    public static class MergedA1 {
+
+        public static final String RESPONSE = "Got in A";
+
+        @GET
+        public String doGet() {
+            return RESPONSE;
+        }
+    }
+
+    @Path("merged")
+    public static class MergedB {
+
+        public static final String RESPONSE = "Posted in B";
+
+        @POST
+        public String doPost() {
+
+            return RESPONSE;
+        }
+    }
+
     @Test
     public void testReturnBadRequestOnIllHeaderValue() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
         Response response = app.apply(Requests.from("/", "GET").header(HttpHeaders.CONTENT_LENGTH, "text").build()).get();
         assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    public void testMergedResources() throws Exception {
+        ApplicationHandler app = createApplication(MergedA.class, MergedB.class);
+
+        Response response;
+
+        response = app.apply(Requests.from("/merged", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MergedA.RESPONSE, response.readEntity(String.class));
+
+        response = app.apply(Requests.from("/merged", "POST").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MergedB.RESPONSE, response.readEntity(String.class));
+    }
+
+    /**
+     * This test ensures that resource validation kicks in AFTER resources are merged.
+     */
+    @Test
+    public void testMergedResourcesValidationFailure() throws Exception {
+        try {
+            createApplication(MergedA.class, MergedA1.class);
+        } catch (ModelValidationException ex) {
+            // success
+            return;
+        }
+
+        fail("Model validation exception was expected but not thrown.");
     }
 }

@@ -126,7 +126,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      */
     public static final class Builder {
 
-        private String name;
+        private List<String> names;
         private String path;
         private boolean isRoot;
 
@@ -137,13 +137,13 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final List<ResourceMethod> locators;
 
         private Builder() {
-            this.name = "[unnamed]";
-
             this.methodBuilders = Sets.newIdentityHashSet();
 
             this.resourceMethods = Lists.newLinkedList();
             this.subResourceMethods = Lists.newLinkedList();
             this.locators = Lists.newLinkedList();
+
+            name("[unnamed]");
         }
 
         private Builder(final String path) {
@@ -161,8 +161,8 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @return updated builder object.
          * @see org.glassfish.jersey.server.model.Resource#getName()
          */
-        public Builder name(String name) {
-            this.name = name;
+        public Builder name(final String name) {
+            this.names =  Lists.newArrayList(name);
             return this;
         }
 
@@ -174,7 +174,7 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param path new path for the resource.
          * @return updated builder object.
          */
-        public Builder path(String path) {
+        public Builder path(final String path) {
             this.path = path;
             // we need to maintain a separate flag because the entered path value
             // can be null.
@@ -194,7 +194,7 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param httpMethod HTTP method that will be processed by the method.
          * @return a new resource method builder.
          */
-        public ResourceMethod.Builder addMethod(String httpMethod) {
+        public ResourceMethod.Builder addMethod(final String httpMethod) {
             ResourceMethod.Builder builder = new ResourceMethod.Builder(this);
             methodBuilders.add(builder);
             return builder.httpMethod(httpMethod);
@@ -222,10 +222,37 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param resource to be merged into this resource model builder.
          * @return updated builder object.
          */
-        public Builder mergeWith(Resource resource) {
+        public Builder mergeWith(final Resource resource) {
             this.resourceMethods.addAll(resource.getResourceMethods());
             this.subResourceMethods.addAll(resource.getSubResourceMethods());
             this.locators.addAll(resource.getSubResourceLocators());
+
+            this.names.addAll(resource.names);
+
+            return this;
+        }
+
+        /**
+         * Merge methods from a given resource model builder into this resource model
+         * builder.
+         * <p>
+         * NOTE: Any "open" method builders in the supplied {@code resourceBuilder} that have
+         * not been {@link org.glassfish.jersey.server.model.ResourceMethod.Builder#build()
+         * explicitly converted to method models} will be closed as part of this merge operation
+         * before merging the resource builder instances.
+         * </p>
+         *
+         * @param resourceBuilder to be merged into this resource model builder.
+         * @return updated builder object.
+         */
+        public Builder mergeWith(Builder resourceBuilder) {
+            resourceBuilder.processMethodBuilders();
+
+            this.resourceMethods.addAll(resourceBuilder.resourceMethods);
+            this.subResourceMethods.addAll(resourceBuilder.subResourceMethods);
+            this.locators.addAll(resourceBuilder.locators);
+
+            this.names.addAll(resourceBuilder.names);
 
             return this;
         }
@@ -265,19 +292,23 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @return new (immutable) resource model.
          */
         public Resource build() {
-            // We have to iterate the set this way to prevent ConcurrentModificationExceptions
-            // caused by the nested invocation of Set.remove(...) in Resource.Builder.onBuildMethod(...).
-            while (!methodBuilders.isEmpty()) {
-                methodBuilders.iterator().next().build();
-            }
+            processMethodBuilders();
 
             return new Resource(
-                    name,
+                    Collections.unmodifiableList(Lists.newArrayList(names)),
                     path,
                     isRoot,
                     Collections.unmodifiableList(Lists.newArrayList(resourceMethods)),
                     Collections.unmodifiableList(Lists.newArrayList(subResourceMethods)),
                     Collections.unmodifiableList(Lists.newArrayList(locators)));
+        }
+
+        private void processMethodBuilders() {
+            // We have to iterate the set this way to prevent ConcurrentModificationExceptions
+            // caused by the nested invocation of Set.remove(...) in Resource.Builder.onBuildMethod(...).
+            while (!methodBuilders.isEmpty()) {
+                methodBuilders.iterator().next().build();
+            }
         }
     }
 
@@ -402,7 +433,8 @@ public final class Resource implements Routed, ResourceModelComponent {
         return b;
     }
 
-    private final String name;
+    private final List<String> names;
+    private transient String name;
     private final String path;
     private final PathPattern pathPattern;
     private final boolean isRoot;
@@ -411,14 +443,14 @@ public final class Resource implements Routed, ResourceModelComponent {
     private final List<ResourceMethod> subResourceLocators;
 
     private Resource(
-            final String name,
+            final List<String> names,
             final String path,
             final boolean isRoot,
             final List<ResourceMethod> resourceMethods,
             final List<ResourceMethod> subResourceMethods,
             final List<ResourceMethod> subResourceLocators) {
 
-        this.name = name;
+        this.names = names;
         this.path = path;
         this.isRoot = isRoot;
 
@@ -460,6 +492,17 @@ public final class Resource implements Routed, ResourceModelComponent {
      * @return reference JAX-RS resource handler class.
      */
     public String getName() {
+        if (name == null) {
+            if (names.size() == 1) {
+                name = names.get(0);
+            } else {
+                // return merged name
+                StringBuilder nameBuilder = new StringBuilder("Merge of ");
+                nameBuilder.append(names.toString());
+                name = nameBuilder.toString();
+            }
+        }
+
         return name;
     }
 

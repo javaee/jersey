@@ -327,9 +327,16 @@ public final class ApplicationHandler implements Inflector<Request, Future<Respo
             Path path = Resource.getPath(c);
             if (path != null) { // root resource
                 try {
+                    final String pathValue = path.value();
                     final Resource.Builder builder = Resource.builder(c, resourceModelIssues);
-                    resourcesBuilders.add(builder);
-                    pathToResourceBuilderMap.put(path.value(), builder);
+
+                    Resource.Builder existing = pathToResourceBuilderMap.get(pathValue);
+                    if (existing != null) {
+                        existing.mergeWith(builder);
+                    } else {
+                        resourcesBuilders.add(builder);
+                        pathToResourceBuilderMap.put(pathValue, builder);
+                    }
                 } catch (IllegalArgumentException ex) {
                     LOGGER.warning(ex.getMessage());
                 }
