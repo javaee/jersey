@@ -45,6 +45,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
@@ -54,6 +56,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -111,6 +114,13 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
         final Object entity = request.getEntity();
         if (entity != null) {
             uc.setDoOutput(true);
+
+            if(request.getMethod().equalsIgnoreCase("GET")) {
+                final Logger logger = Logger.getLogger(HttpUrlConnector.class.getName());
+                if(logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, LocalizationMessages.HTTPURLCONNECTION_REPLACES_GET_WITH_ENTITY());
+                }
+            }
 
             writeRequestEntity(request, new RequestEntityWriterListener() {
                 @Override
