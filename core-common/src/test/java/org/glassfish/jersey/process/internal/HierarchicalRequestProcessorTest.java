@@ -47,12 +47,10 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-
 import static org.glassfish.jersey.process.internal.Stages.acceptingTree;
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
@@ -62,56 +60,50 @@ import org.glassfish.hk2.Services;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Optional;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class HierarchicalRequestProcessorTest {
 
-    public static class Module extends AbstractModule {
+    public static RequestProcessor createProcessor() {
 
-        @Override
-        protected void configure() {
-            final TreeAcceptor inflectingStage = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+        final TreeAcceptor inflectingStage = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
 
-                @Override
-                public Response apply(Request data) {
-                    try {
-                        return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
-                    } catch (NumberFormatException ex) {
-                        throw new MappableException(ex);
-                    }
+            @Override
+            public Response apply(Request data) {
+                try {
+                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                } catch (NumberFormatException ex) {
+                    throw new MappableException(ex);
                 }
-            });
+            }
+        });
 
-            /**
-             * Tree:
-             * 1 - 2 - 3
-             *  \
-             *   - 4 - 5 - Inflector
-             *      \
-             *       - 6
-             */
-            TreeAcceptor root =
-                    acceptingTree(append("1")).child(acceptingTree(append("2")).child(acceptingTree(append("3")).build())
-                                                             .build())
-                                     .child(acceptingTree(append("4")).child(acceptingTree(append("5")).child(inflectingStage)
-                                                                                     .build())
-                                                             .child(acceptingTree(append("6")).build())
-                                                             .build())
-                                     .build();
+        /**
+         * Tree:
+         * 1 - 2 - 3
+         *  \
+         *   - 4 - 5 - Inflector
+         *      \
+         *       - 6
+         */
+        TreeAcceptor root =
+                acceptingTree(append("1")).child(acceptingTree(append("2")).child(acceptingTree(append("3")).build())
+                        .build())
+                        .child(acceptingTree(append("4")).child(acceptingTree(append("5")).child(inflectingStage)
+                                .build())
+                                .child(acceptingTree(append("6")).build())
+                                .build())
+                        .build();
 
-            bind(TreeAcceptor.class).annotatedWith(Stage.Root.class).toInstance(root);
-
-            bind(RequestProcessor.class).to(HierarchicalRequestProcessor.class);
-        }
+        return new HierarchicalRequestProcessor(root);
     }
+
     private RequestProcessor processor;
     private RequestScope requestScope;
 
@@ -121,11 +113,9 @@ public class HierarchicalRequestProcessorTest {
 
     @Before
     public void setUp() {
-        Services services = HK2.get().create(null,
-                new ProcessingTestModule(),
-                new Module());
+        Services services = HK2.get().create(null, new ProcessingTestModule());
 
-        processor = services.forContract(RequestProcessor.class).get();
+        processor = createProcessor();
         requestScope = services.forContract(RequestScope.class).get();
     }
 

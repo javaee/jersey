@@ -47,7 +47,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ServerModule;
-import org.glassfish.jersey.server.AcceptorRootModule;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
@@ -66,8 +65,7 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        final AcceptorRootModule appRootModule = new AcceptorRootModule();
-        Services services = HK2.get().create(null, new ServerModule(), appRootModule);
+        Services services = HK2.get().create(null, new ServerModule());
 
         rmdf = services.forContract(ResourceMethodDispatcherFactory.class).get();
         rmihf = services.forContract(ResourceMethodInvocationHandlerFactory.class).get();

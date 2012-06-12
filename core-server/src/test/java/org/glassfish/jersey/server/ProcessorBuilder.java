@@ -37,59 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server;
 
-import com.google.common.base.Optional;
+import org.glassfish.jersey.process.internal.LinearRequestProcessor;
+import org.glassfish.jersey.process.internal.RequestProcessor;
+import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.process.internal.TreeAcceptor;
+
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Stage applying context.
- * <p/>
- * Starting at a root, {@link Stage stages} are applied and the returned continuation
- * is resolved until a terminal stage, the one that does not return a continuation that
- * could be further followed, is reached. With each stage the registered staging
- * context callback methods are invoked
- * {@link #beforeStage(org.glassfish.jersey.process.internal.Stage, java.lang.Object) before}
- * and {@link #afterStage(org.glassfish.jersey.process.internal.Stage, java.lang.Object)  after}
- * a stage is {@link Stage#apply(java.lang.Object) applied}.
- *
- * @param <DATA> supported transformable data type.
+ * Test utility module for testing hierarchical request accepting (i.e. resource matching).
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @see LinearRequestProcessor
- * @see HierarchicalRequestProcessor
  */
-public interface StagingContext<DATA> {
+public class ProcessorBuilder {
+
+    @Inject
+    private Factory<ResourceMatchingStage.Builder> matchingStageFactory;
+    @Inject
+    private Factory<InflectorExtractingStage> inflectorExtractingStageFactory;
+    @Inject
+    private ReferencesInitializer referencesInitializer;
+
 
     /**
-     * Callback method invoked before each stage in the continuation of stages
-     * is {@link Stage#apply(java.lang.Object) applied}.
+     * Build a request processor using the resource matching acceptor
+     * for testing purposes.
      *
-     * @param stage the stage to be applied.
-     * @param data the data to be transformed by the stage.
+     * @param matchingRoot root resource matching acceptor.
      */
-    public void beforeStage(Stage<DATA, ?> stage, DATA data);
+    public RequestProcessor build(final TreeAcceptor matchingRoot) {
 
-    /**
-     * Callback method invoked after each stage in the continuation of stages
-     * is {@link Stage#apply(java.lang.Object) applied}.
-     *
-     * @param stage the stage recently applied.
-     * @param data the stage transformation result.
-     */
-    public void afterStage(Stage<DATA, ?> stage, DATA data);
-
-    /**
-     * Get the last stage applied in the current staging context. The returned
-     * stage can be {@link Optional#absent()} in case no stage has been applied yet.
-     *
-     * @return last stage applied in the current processing context.
-     */
-    public Optional<Stage<DATA, ?>> lastStage();
-
-    /**
-     * Get the processed data in the actual state in the current processing context.
-     *
-     * @return actual state of the processed data.
-     */
-    public Optional<DATA> data();
+        return new LinearRequestProcessor(Stages
+                .acceptingChain(referencesInitializer)
+                .to(matchingStageFactory.get().build(matchingRoot))
+                .build(inflectorExtractingStageFactory.get()));
+    }
 }

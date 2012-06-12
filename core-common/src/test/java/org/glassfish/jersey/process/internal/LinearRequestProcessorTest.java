@@ -47,12 +47,10 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
 import org.glassfish.hk2.HK2;
@@ -61,51 +59,42 @@ import org.glassfish.hk2.Services;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Optional;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class LinearRequestProcessorTest {
 
-    public static class Module extends AbstractModule {
+    public static RequestProcessor createProcessor() {
 
-        @Override
-        @SuppressWarnings("unchecked")
-        protected void configure() {
-            final LinearAcceptor inflectingStage = Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+        final LinearAcceptor inflectingStage = Stages.asLinearAcceptor(new Inflector<Request, Response>() {
 
-                @Override
-                public Response apply(Request data) {
-                    try {
-                        return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
-                    } catch (NumberFormatException ex) {
-                        throw new MappableException(ex);
-                    }
+            @Override
+            public Response apply(Request data) {
+                try {
+                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                } catch (NumberFormatException ex) {
+                    throw new MappableException(ex);
                 }
-            });
+            }
+        });
 
-            bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toInstance(
-                    Stages.acceptingChain(append("1")).to(append("2")).to(append("3")).build(inflectingStage));
-
-            bind(RequestProcessor.class).to(LinearRequestProcessor.class);
-        }
+        return new LinearRequestProcessor(
+                Stages.acceptingChain(append("1")).to(append("2")).to(append("3")).build(inflectingStage));
     }
+
     private RequestProcessor processor;
     private RequestScope requestScope;
 
     @Before
     public void setUp() {
-        Services services = HK2.get().create(null,
-                new ProcessingTestModule(),
-                new Module());
-        processor = services.forContract(RequestProcessor.class).get();
+        Services services = HK2.get().create(null, new ProcessingTestModule());
         requestScope = services.forContract(RequestScope.class).get();
+        processor = createProcessor();
     }
 
     @After
@@ -129,8 +118,6 @@ public class LinearRequestProcessorTest {
             }
         });
     }
-
-
 
 
     @Test

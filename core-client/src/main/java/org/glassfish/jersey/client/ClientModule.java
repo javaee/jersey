@@ -40,8 +40,6 @@
 package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -55,8 +53,9 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.process.internal.*;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.process.internal.FilterModule;
+import org.glassfish.jersey.process.internal.ProcessingModule;
+import org.glassfish.jersey.process.internal.RequestScope;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
@@ -69,24 +68,13 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ClientModule extends AbstractModule {
+class ClientModule extends AbstractModule {
 
     private static class ConfigurationInjectionFactory extends ReferencingFactory<JerseyConfiguration> {
 
         public ConfigurationInjectionFactory(@Inject Factory<Ref<JerseyConfiguration>> referenceFactory) {
             super(referenceFactory);
         }
-    }
-    //
-    private final Factory<LinearAcceptor> rootAcceptorFactory;
-
-    /**
-     * Creates {@link ClientModule} with custom root acceptor.
-     *
-     * @param rootAcceptorFactory root of the request processing chain. Must not be {@code null}.
-     */
-    public ClientModule(Factory<LinearAcceptor> rootAcceptorFactory) {
-        this.rootAcceptorFactory = rootAcceptorFactory;
     }
 
     @Override
@@ -102,25 +90,6 @@ public class ClientModule extends AbstractModule {
                 new JaxrsProviders.Module(),
                 new FilterModule(),
                 new ExceptionWrapperInterceptor.Module());
-
-        // Request/Response staging contexts
-        bind(new TypeLiteral<StagingContext<Request>>() {}).to(new TypeLiteral<DefaultStagingContext<Request>>() {})
-                .in(RequestScope.class);
-
-        bind(new TypeLiteral<StagingContext<Response>>() {}).to(new TypeLiteral<DefaultStagingContext<Response>>() {})
-                .in(RequestScope.class);
-
-
-        // Request processor
-        bind(LinearAcceptor.class).annotatedWith(Stage.Root.class).toFactory(rootAcceptorFactory);
-
-        bind(RequestProcessor.class).to(LinearRequestProcessor.class);
-        // Request invoker
-        bind(RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
-
-        bind().to(ResponseProcessor.Builder.class);
-
-        bind().to(RequestInvoker.class);
 
         bind(javax.ws.rs.client.Configuration.class)
                 .toFactory(ConfigurationInjectionFactory.class)

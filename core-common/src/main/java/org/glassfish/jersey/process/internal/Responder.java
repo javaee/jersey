@@ -54,7 +54,7 @@ import com.google.common.base.Optional;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface Responder extends Stage<Response, Optional<Responder>> {
+public interface Responder  {
 
     /**
      * Linear acceptor chain builder.
@@ -98,6 +98,5 @@ public interface Responder extends Stage<Response, Optional<Responder>> {
      * {@link Optional#absent() absence} of a continuation indicates that the
      * unidirectional response transformation passed its final stage.
      */
-    @Override
     public Pair<Response, Optional<Responder>> apply(Response data);
 }

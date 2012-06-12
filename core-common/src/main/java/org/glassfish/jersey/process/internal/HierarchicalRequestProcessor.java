@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey.process.Inflector;
 import java.util.Iterator;
 
 import javax.ws.rs.core.Request;
@@ -47,17 +46,14 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Tuples;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Optional;
 
 /**
  * A composite {@link TreeAcceptor hierarchical} request processor.
  * <p/>
- * When {@link #apply(java.lang.Object) invoked}, the supplied request is continuously
+ * When {@link #apply(javax.ws.rs.core.Request) invoked}, the supplied request is continuously
  * transformed by the nested {@link TreeAcceptor acceptor hierarchy} using a depth-first
  * transformation strategy until a request-to-response inflector is
  * {@link Inflecting found on a leaf stage node}, in which case the hierarchical
@@ -70,20 +66,14 @@ import com.google.common.base.Optional;
 public class HierarchicalRequestProcessor implements RequestProcessor {
 
     private final TreeAcceptor rootStage;
-    private final Factory<StagingContext<Request>> contextProvider;
 
     /**
      * Construct a {@link TreeAcceptor hierarchical} request processor.
      *
      * @param rootStage head of the nested stage hierarchy to be applied.
-     * @param contextProvider staging context to be invoked before and after each
-     *     stage is applied.
      */
-    public HierarchicalRequestProcessor(
-            @Inject @Stage.Root TreeAcceptor rootStage,
-            @Inject Factory<StagingContext<Request>> contextProvider) {
+    public HierarchicalRequestProcessor(TreeAcceptor rootStage) {
         this.rootStage = rootStage;
-        this.contextProvider = contextProvider;
     }
 
     /**
@@ -98,20 +88,17 @@ public class HierarchicalRequestProcessor implements RequestProcessor {
      */
     @Override
     public Pair<Request, Optional<Inflector<Request, Response>>> apply(Request request) {
-        return _apply(request, rootStage, contextProvider.get());
+        return _apply(request, rootStage);
     }
 
     @SuppressWarnings("unchecked")
-    private Pair<Request, Optional<Inflector<Request, Response>>> _apply(final Request request, final TreeAcceptor acceptor, final StagingContext<Request> context) {
-        context.beforeStage(acceptor, request);
+    private Pair<Request, Optional<Inflector<Request, Response>>> _apply(final Request request, final TreeAcceptor acceptor) {
         final Pair<Request, Iterator<TreeAcceptor>> continuation = acceptor.apply(request);
-
-        context.afterStage(acceptor, continuation.left());
 
         final Iterator<TreeAcceptor> children = continuation.right();
         while (children.hasNext()) {
             final TreeAcceptor child = children.next();
-            Pair<Request, Optional<Inflector<Request, Response>>> result = _apply(continuation.left(), child, context);
+            Pair<Request, Optional<Inflector<Request, Response>>> result = _apply(continuation.left(), child);
 
             if (result.right().isPresent()) {
                 // we're done

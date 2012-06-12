@@ -53,7 +53,7 @@ import com.google.common.base.Optional;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class DefaultRespondingContext implements ResponseProcessor.RespondingContext {
+class DefaultRespondingContext implements ResponseProcessor.RespondingContext {
 
     Deque<Function<Response, Response>> transformationStack = new LinkedList<Function<Response, Response>>();
 

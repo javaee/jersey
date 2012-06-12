@@ -42,7 +42,6 @@ package org.glassfish.jersey.process.internal;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -62,7 +61,6 @@ import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.hk2.inject.Injector;
 import org.glassfish.hk2.scopes.Singleton;
 
@@ -137,14 +135,5 @@ public class ProcessingTestModule extends AbstractModule {
                 throw new RuntimeException(exception);
             }
         });
-
-        // staging contexts
-        bind(new TypeLiteral<StagingContext<Request>>() {})
-                .to(new TypeLiteral<DefaultStagingContext<Request>>() {}).in(RequestScope.class);
-
-        bind(new TypeLiteral<StagingContext<Response>>() {})
-                .to(new TypeLiteral<DefaultStagingContext<Response>>() {}).in(RequestScope.class);
-
-        bind(ResponseProcessor.RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
     }
 }

@@ -60,13 +60,14 @@ import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.ProcessorBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-import org.glassfish.jersey.server.AcceptorRootModule;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -153,10 +154,7 @@ public class PatternRoutingAsyncInflectorTest {
 
     @Before
     public void setupApplication() {
-        final AcceptorRootModule appRootModule = new AcceptorRootModule();
-        Services services = HK2.get().create(null,
-                new ServerModule(),
-                appRootModule);
+        Services services = HK2.get().create(null, new ServerModule());
 
         final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
@@ -168,14 +166,15 @@ public class PatternRoutingAsyncInflectorTest {
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        appRootModule.setMatchingRoot(routeBuilder.root(routeBuilder
+        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
+        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(routeBuilder
                 .route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                 .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector))))
                         .to(routeBuilder.route("d(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector)))))
                 .build()));
 
-        this.invoker = injector.inject(RequestInvoker.class);
+        this.invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         this.requestScope = injector.inject(RequestScope.class);
     }
 

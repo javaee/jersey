@@ -43,9 +43,10 @@ import org.glassfish.jersey.process.Inflector;
 
 /**
  * Interface that is used to indicate that the instance provides an {@link Inflector}.
- * <p />
- * A typical use case is a terminal (leaf) request processing {@link Stage stage}
+ * <p>
+ * A typical use case is a terminal (leaf) request processing stage
  * node that transforms a request into a response.
+ * </p>
  *
  * @param <DATA> data type transformable by the provided inflector.
  * @param <RESULT> type of a result produced by the provided inflector on success.
