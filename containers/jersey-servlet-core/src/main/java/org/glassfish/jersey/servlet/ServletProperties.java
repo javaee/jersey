@@ -68,8 +68,7 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO: implement support.
-    public static final String FILTER_STATIC_CONTENT_REGEXP = "jersey.config.servlet.filter.staticContentPath";
+    public static final String FILTER_STATIC_CONTENT_REGEX = "jersey.config.servlet.filter.staticContentRegex";
 
     /**
      * If set to {@code true} and a 404 response with no entity body is returned
@@ -78,7 +77,7 @@ public final class ServletProperties {
      * or the underlying servlet engine to process the request. Before the request
      * is forwarded the response status is set to 200.
      * <p>
-     * This property is an alternative to setting a {@link #FILTER_STATIC_CONTENT_REGEXP
+     * This property is an alternative to setting a {@link #FILTER_STATIC_CONTENT_REGEX
      * static content regular expression} and requires less configuration. However,
      * application code, such as methods corresponding to sub-resource locators,
      * may be invoked when this feature is enabled.
@@ -94,8 +93,8 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO: implement support.
-    public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOnNotFound";
+    public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOn404";
+
     /**
      * If set, indicates the URL pattern of the Jersey servlet filter context path.
      * <p>
@@ -117,8 +116,8 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO: implement support.
     public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
+
     /**
      * Application configuration initialization property whose value is a fully
      * qualified class name of a class that implements {@link javax.ws.rs.core.Application}.

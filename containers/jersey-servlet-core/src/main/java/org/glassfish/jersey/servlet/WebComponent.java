@@ -189,6 +189,7 @@ public class WebComponent {
     //
     final ApplicationHandler appHandler;
     final WebConfig webConfig;
+    final boolean forwardOn404;
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
 
     public WebComponent(final WebConfig webConfig, ResourceConfig resourceConfig) throws ServletException {
@@ -199,6 +200,8 @@ public class WebComponent {
         resourceConfig.addModules(new WebComponentModule());
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
+        this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
+                resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
     }
 
     /**
@@ -227,7 +230,7 @@ public class WebComponent {
         final Request jaxRsRequest = requestBuilder.build();
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(false, request, response,
+            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, request, response,
                     asyncExtensionDelegate.createDelegate(request, response));
 
             ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,

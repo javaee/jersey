@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -61,6 +62,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ConfigHelper;
@@ -121,10 +123,9 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private static final long serialVersionUID = 3932047066686065219L;
     private transient FilterConfig filterConfig;
     private transient WebComponent webComponent;
-    private ResourceConfig resourceConfig;
-    // TODO
+    private transient ResourceConfig resourceConfig;
     private transient Pattern staticContentPattern;
-    private String filterContextPath = null;
+    private transient String filterContextPath;
     private ContainerLifecycleListener containerListener;
 
     private static final ExtendedLogger logger =
@@ -342,6 +343,31 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     public void init(FilterConfig filterConfig) throws ServletException {
         this.filterConfig = filterConfig;
         init(new WebFilterConfig(filterConfig));
+
+        String regex = (String) getConfiguration().getProperty(ServletProperties.FILTER_STATIC_CONTENT_REGEX);
+        if (regex != null && regex.length() > 0) {
+            try {
+                staticContentPattern = Pattern.compile(regex);
+            } catch (PatternSyntaxException ex) {
+                throw new ContainerException(
+                        "The syntax is invalid for the regular expression, " + regex +
+                                ", associated with the initialization parameter " + ServletProperties.FILTER_STATIC_CONTENT_REGEX, ex);
+            }
+        }
+
+        this.filterContextPath = filterConfig.getInitParameter(ServletProperties.FILTER_CONTEXT_PATH);
+        if (filterContextPath != null) {
+            if (filterContextPath.isEmpty()) {
+                filterContextPath = null;
+            } else {
+                if (!filterContextPath.startsWith("/")) {
+                    filterContextPath = '/' + filterContextPath;
+                }
+                if (filterContextPath.endsWith("/")) {
+                    filterContextPath = filterContextPath.substring(0, filterContextPath.length() - 1);
+                }
+            }
+        }
     }
 
     @Override
@@ -373,7 +399,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * {@link #service(URI, URI, HttpServletRequest, HttpServletResponse)} method.
      * <p />
      * If the servlet path matches the regular expression declared by the
-     * property {@link ServletProperties#FILTER_STATIC_CONTENT_REGEXP} then the
+     * property {@link ServletProperties#FILTER_STATIC_CONTENT_REGEX} then the
      * request is forwarded to the next filter in the filter chain so that the
      * underlying servlet engine can process the request otherwise Jersey
      * will process the request.
@@ -426,12 +452,10 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
 
         if (filterContextPath != null) {
             if (!servletPath.startsWith(filterContextPath)) {
-                // TODO
-//                throw new ContainerException("The servlet path, \"" + servletPath +
-//                        "\", does not start with the filter context path, \"" + filterContextPath + "\"");
-            } else if (servletPath.length() == filterContextPath.length()) {
-                // Path does not end in a slash, may need to redirect\
-                // TODO
+                throw new ContainerException(LocalizationMessages.SERVLET_PATH_MISMATCH(servletPath, filterContextPath));
+              //TODO:
+//            } else if (servletPath.length() == filterContextPath.length()) {
+//                // Path does not end in a slash, may need to redirect
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
 //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
 //                            path("/").
@@ -466,9 +490,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
 
         // If forwarding is configured and response is a 404 with no entity
         // body then call the next filter in the chain
-        // TODO
-//        if (forwardOn404 && status == 404 && !response.isCommitted()) {
-        if (status == 404 && !response.isCommitted()) {
+        if (webComponent.forwardOn404 && status == 404 && !response.isCommitted()) {
             // lets clear the response to OK before we forward to the next in the chain
             // as OK is the default set by servlet containers before filters/servlets do any wor
             // so lets hide our footsteps and pretend we were never in the chain at all and let the
@@ -486,7 +508,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * Get the static content path pattern.
      *
      * @return the {@link Pattern} compiled from a regular expression that is
-     * the property value of {@link ServletProperties#FILTER_STATIC_CONTENT_REGEXP}.
+     * the property value of {@link ServletProperties#FILTER_STATIC_CONTENT_REGEX}.
      * A {@code null} value will be returned if the property is not set or is
      * an empty String.
      */
