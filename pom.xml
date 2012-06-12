@@ -604,6 +604,31 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>xdk</id>
+            <activation>
+                <property>
+                    <name>xdk</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${xdk.absolute.path}</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <classpathDependencyExcludes>
+                                <classpathDependencyExcludes>xerces:xercesImpl</classpathDependencyExcludes>
+                            </classpathDependencyExcludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <modules>
@@ -786,5 +811,7 @@
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
 
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
+
+        <xdk.absolute.path></xdk.absolute.path>
     </properties>
 </project>

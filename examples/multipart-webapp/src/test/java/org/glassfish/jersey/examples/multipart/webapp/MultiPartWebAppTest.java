@@ -57,6 +57,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartClientModule;
@@ -100,7 +101,10 @@ public class MultiPartWebAppTest extends JerseyTest {
         final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
         bf.setNamespaceAware(true);
         bf.setValidating(false);
-        bf.setXIncludeAware(false);
+
+        if (!SaxHelper.isXdkDocumentBuilderFactory(bf)) {
+            bf.setXIncludeAware(false);
+        }
 
         final DocumentBuilder b = bf.newDocumentBuilder();
         final Document d = b.parse(tmpFile);
