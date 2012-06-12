@@ -357,7 +357,7 @@ final class HttpHelper {
     }
 
     public static Map<String, NewCookie> getNewCookies(final Headers headers) {
-        List<String> cookies = headers.headerValues(HttpHeaders.COOKIE);
+        List<String> cookies = headers.headerValues(HttpHeaders.SET_COOKIE);
         if (cookies == null || cookies.isEmpty()) {
             return Collections.emptyMap();
         }
