@@ -161,8 +161,8 @@ public class JaxrsResponseHeadersViewTest {
     @Test
     public void testCookies() throws URISyntaxException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
-        mr.header(HttpHeaders.COOKIE, "oreo=chocolate");
-        mr.header(HttpHeaders.COOKIE, "nilla=vanilla");
+        mr.header(HttpHeaders.SET_COOKIE, "oreo=chocolate");
+        mr.header(HttpHeaders.SET_COOKIE, "nilla=vanilla");
         ResponseHeaders r = mr.getJaxrsHeaders();
         assertEquals(r.getCookies().size(), 2);
         assertTrue(r.getCookies().containsKey("oreo"));
