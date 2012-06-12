@@ -87,6 +87,7 @@ import org.xml.sax.SAXException;
 public class SourceEntityProviderTest extends JerseyTest {
 
     private static final String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    private static final String xdkPrefix = "<?xml version = '1.0' encoding = 'UTF-8'?>";
     private static final String entity = prefix + "<test><aaa/></test>";
 
     @Override
@@ -149,7 +150,7 @@ public class SourceEntityProviderTest extends JerseyTest {
         Response response = target().path("test").path("source").request().get();
         assertEquals(Status.OK.getStatusCode(), response.getStatus());
         String content = extractContent(response.readEntity(Source.class));
-        assertTrue(content.startsWith(prefix));
+        assertTrue(content.startsWith(prefix) || content.startsWith(xdkPrefix));
     }
 
     @Test
@@ -157,7 +158,7 @@ public class SourceEntityProviderTest extends JerseyTest {
         Response response = target().path("test").path("stream").request().get();
         assertEquals(Status.OK.getStatusCode(), response.getStatus());
         String content = extractContent(response.readEntity(StreamSource.class));
-        assertTrue(content.startsWith(prefix));
+        assertTrue(content.startsWith(prefix) || content.startsWith(xdkPrefix));
     }
 
     // TODO: following two tests do not work (therefore @Ignore). readEntity fails as it is not executed in the request scope
