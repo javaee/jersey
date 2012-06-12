@@ -79,7 +79,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getMediaType(), MediaType.TEXT_HTML_TYPE);
+        assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
     }
 
     @Test
@@ -87,7 +87,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_LENGTH, "1024");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getLength(), 1024);
+        assertEquals(1024, r.getLength());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_LANGUAGE, "en");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getLanguage(), Locale.ENGLISH);
+        assertEquals(Locale.ENGLISH, r.getLanguage());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class JaxrsResponseHeadersViewTest {
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("application/xml"));
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("text/plain"));
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("application/json"));
-        assertEquals(r.getHeader("FOO").length(), 0);
+        assertEquals(0, r.getHeader("FOO").length());
         assertNull(r.getHeader("BAR"));
     }
 
@@ -143,15 +143,16 @@ public class JaxrsResponseHeadersViewTest {
         ResponseHeaders r = mr.getJaxrsHeaders();
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
-        assertEquals(r.getDate(), date);
+        assertEquals(date, r.getDate());
     }
 
+    @Test
     public void testAllowedMethods() throws URISyntaxException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header("Allow", "GET, PUT");
         mr.header("Allow", "POST");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getAllowedMethods().size(), 3);
+        assertEquals(3, r.getAllowedMethods().size());
         assertTrue(r.getAllowedMethods().contains("GET"));
         assertTrue(r.getAllowedMethods().contains("PUT"));
         assertTrue(r.getAllowedMethods().contains("POST"));
@@ -164,7 +165,7 @@ public class JaxrsResponseHeadersViewTest {
         mr.header(HttpHeaders.COOKIE, "oreo=chocolate");
         mr.header(HttpHeaders.COOKIE, "nilla=vanilla");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getCookies().size(), 2);
+        assertEquals(2, r.getCookies().size());
         assertTrue(r.getCookies().containsKey("oreo"));
         assertTrue(r.getCookies().containsKey("nilla"));
     }
@@ -174,7 +175,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.ETAG, "\"tag\"");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getEntityTag(), EntityTag.valueOf("\"tag\""));
+        assertEquals(EntityTag.valueOf("\"tag\""), r.getEntityTag());
     }
 
     @Test
@@ -184,7 +185,7 @@ public class JaxrsResponseHeadersViewTest {
         ResponseHeaders r = mr.getJaxrsHeaders();
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
-        assertEquals(r.getLastModified(), date);
+        assertEquals(date, r.getLastModified());
     }
 
     @Test
@@ -192,7 +193,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.LOCATION, "http://example.org/app");
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getLocation(), URI.create("http://example.org/app"));
+        assertEquals(URI.create("http://example.org/app"), r.getLocation());
     }
 
     @Test
@@ -203,7 +204,7 @@ public class JaxrsResponseHeadersViewTest {
         mr.header("Link", link1.toString());
         mr.header("Link", link2.toString());
         ResponseHeaders r = mr.getJaxrsHeaders();
-        assertEquals(r.getLinks().size(), 2);
+        assertEquals(2, r.getLinks().size());
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
     }
