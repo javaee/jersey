@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -65,10 +64,31 @@ import com.google.common.util.concurrent.Monitor;
  * a {@link ListenableFuture listenable response future} instead of a plain response
  * object.
  *
+ * @param <REQUEST>  request processing data type.
+ * @param <RESPONSE> response processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class AsyncInflectorAdapter extends AbstractFuture<Response>
-        implements Inflector<Request, ListenableFuture<Response>>, InvocationContext {
+public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractFuture<RESPONSE>
+        implements Inflector<REQUEST, ListenableFuture<RESPONSE>>, InvocationContext {
+
+    /**
+     * Asynchronous inflector adapter factory.
+     *
+     * @param <REQUEST>  request processing data type.
+     * @param <RESPONSE> response processing data type.
+     */
+    public static interface Builder<REQUEST, RESPONSE> {
+
+        /**
+         * Create a new asynchronous inflector adapter for an inflector.
+         *
+         * @param wrapped  wrapped inflector.
+         * @param callback invocation callback.
+         * @return new asynchronous inflector adapter for an inflector.
+         */
+        public AsyncInflectorAdapter<REQUEST, RESPONSE> create(
+                Inflector<REQUEST, RESPONSE> wrapped, InvocationCallback<RESPONSE> callback);
+    }
 
     private static final Logger LOGGER = Logger.getLogger(AsyncInflectorAdapter.class.getName());
     /*
@@ -105,25 +125,26 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
     //
     private long defaultTimeout = Suspend.NEVER;
     private TimeUnit defaultTimeoutUnit = TimeUnit.MILLISECONDS;
+    //
     private AtomicReference<Response> defaultResponse = new AtomicReference<Response>();
     //
-    private final Inflector<Request, Response> wrapped;
-    private final InvocationCallback callback;
+    private final Inflector<REQUEST, RESPONSE> wrapped;
+    private final InvocationCallback<RESPONSE> callback;
 
     /**
-     * Create a new asynchronous inflector adapter for an inflector.
+     * Construct and initialize asynchronous inflector adapter for an inflector.
      *
-     * @param wrapped wrapped inflector.
+     * @param wrapped  wrapped inflector.
      * @param callback invocation callback.
      */
-    AsyncInflectorAdapter(final Inflector<Request, Response> wrapped, final InvocationCallback callback) {
+    protected AsyncInflectorAdapter(final Inflector<REQUEST, RESPONSE> wrapped, final InvocationCallback<RESPONSE> callback) {
         this.wrapped = wrapped;
         this.callback = callback;
     }
 
     @Override
-    public ListenableFuture<Response> apply(Request request) {
-        final Response response;
+    public ListenableFuture<RESPONSE> apply(REQUEST request) {
+        final RESPONSE response;
 
         try {
             response = wrapped.apply(request);
@@ -158,16 +179,11 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
     }
 
     @Override
-    public Future<Response> getInflectedResponse() {
-        return this;
-    }
-
-    @Override
     public void resume(final Object response) {
         resume(new Runnable() {
             @Override
             public void run() {
-                set(toJaxrsResponse(response));
+                set(convertResponse(toJaxrsResponse(response)));
             }
         });
     }
@@ -309,6 +325,15 @@ class AsyncInflectorAdapter extends AbstractFuture<Response>
             return Response.ok(response).build();
         }
     }
+
+    /**
+     * Convert the JAX-RS {@link Response response} to supported response data type.
+     *
+     * @param response JAX-RS response.
+     * @return JAX-RS {@link Response response} converted to supported response data
+     *         type.
+     */
+    protected abstract RESPONSE convertResponse(Response response);
 
     @Override
     public String toString() {

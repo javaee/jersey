@@ -54,6 +54,6 @@ public class FilterModule extends AbstractModule {
 
         bind().to(RequestFilterProcessor.class);
         bind().to(ResponseFilterProcessor.class);
-        bind().to(FilteringAcceptor.class);
+        bind().to(FilteringStage.class);
     }
 }

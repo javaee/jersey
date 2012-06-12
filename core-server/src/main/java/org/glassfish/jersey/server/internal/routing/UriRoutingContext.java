@@ -54,10 +54,12 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -74,7 +76,7 @@ import com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo {
+class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
@@ -85,7 +87,13 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
     private Optional<MediaType> effectiveMediaType = Optional.fromNullable(null);
     private Optional<Type> responseMethodType = Optional.fromNullable(null);
     private Optional<Annotation[]> responseMethodAnnotations = Optional.fromNullable(null);
+    private Inflector<Request, Response> inflector = null;
 
+    /**
+     * Injection constructor.
+     *
+     * @param request request reference.
+     */
     UriRoutingContext(@Inject Ref<Request> request) {
         this.request = request;
     }
@@ -197,6 +205,16 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
         return responseMethodAnnotations.orNull();
     }
 
+    @Override
+    public void setInflector(final Inflector<Request, Response> inflector) {
+        this.inflector = inflector;
+    }
+
+    @Override
+    public Inflector<Request, Response> getInflector() {
+        return inflector;
+    }
+
     // UriInfo
     private Ref<Request> request;
 
@@ -278,11 +296,11 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
                         // we need to keep the ability to add new entries
                         new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
 
-                    @Override
-                    public String apply(String input) {
-                        return UriComponent.decode(input, UriComponent.Type.PATH);
-                    }
-                })));
+                            @Override
+                            public String apply(String input) {
+                                return UriComponent.decode(input, UriComponent.Type.PATH);
+                            }
+                        })));
             }
 
             return decodedTemplateValues;
@@ -319,6 +337,7 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
     public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
         return UriComponent.decodeQuery(getRequestUri(), true);
     }
+
     @Override
     public URI getRequestUri() {
         return request.get().getUri();
@@ -391,8 +410,7 @@ class UriRoutingContext implements RouterModule.RoutingContext, ExtendedUriInfo 
                     segmentIndex += mr.group().length() - pathLength;
                     pathLength = mr.group().length();
                 }
-                int[] bounds = {segmentIndex - groupLength, segmentIndex};
-                return bounds;
+                return new int[]{segmentIndex - groupLength, segmentIndex};
             }
         }
         return null;

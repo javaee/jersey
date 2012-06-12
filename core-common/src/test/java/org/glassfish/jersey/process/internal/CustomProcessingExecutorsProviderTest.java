@@ -76,6 +76,9 @@ public class CustomProcessingExecutorsProviderTest {
     private static final String REQ_THREAD_NAME = "custom-requesting-thread";
     private static final String RESP_THREAD_NAME = "custom-responding-thread";
 
+    /**
+     * Test constructor.
+     */
     public CustomProcessingExecutorsProviderTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
@@ -107,16 +110,14 @@ public class CustomProcessingExecutorsProviderTest {
     public void testCustomProcessingExecutors() throws Exception {
         final Services services = init();
 
-        final LinearRequestProcessor requestProcessor =
-                new LinearRequestProcessor(Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(Stages.asStage(new Inflector<Request, Response>() {
 
                     @Override
                     public Response apply(Request data) {
                         return Response.ok(Thread.currentThread().getName()).build();
                     }
                 }));
-
-        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get().build(requestProcessor);
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -127,7 +128,7 @@ public class CustomProcessingExecutorsProviderTest {
             @Override
             public void run() {
                 invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback() {
+                        new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {

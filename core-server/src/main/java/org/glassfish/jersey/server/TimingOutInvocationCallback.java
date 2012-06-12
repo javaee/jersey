@@ -39,23 +39,26 @@
  */
 package org.glassfish.jersey.server;
 
-import com.google.common.util.concurrent.AbstractFuture;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
+
+import com.google.common.util.concurrent.AbstractFuture;
 
 /**
  * Callback implementation with a simple timeout support.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class TimingOutInvocationCallback extends AbstractFuture<Response> implements InvocationCallback {
+abstract class TimingOutInvocationCallback extends AbstractFuture<Response> implements InvocationCallback<Response> {
 
     private static final Logger logger = Logger.getLogger(TimingOutInvocationCallback.class.getName());
     private static final Timer TIMER = new Timer("Jersey application request timer");
@@ -133,6 +136,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     /**
      * Provide a timeout {@link Response}.
      *
+     * @param context invocation context that has timed out.
      * @return timeout response.
      */
     protected abstract Response handleTimeout(final InvocationContext context);

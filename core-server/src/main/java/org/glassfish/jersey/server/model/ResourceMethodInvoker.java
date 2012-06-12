@@ -44,8 +44,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
@@ -70,7 +69,7 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
     public static class Builder {
 
         @Inject
-        private Factory<RouterModule.RoutingContext> routingContextFactory;
+        private Factory<RoutingContext> routingContextFactory;
         @Inject
         private Factory<InvocationContext> invocationContextFactory;
         @Inject
@@ -93,13 +92,14 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
                     method);
         }
     }
-    private final Factory<RouterModule.RoutingContext> routingContextFactory;
+
+    private final Factory<RoutingContext> routingContextFactory;
     private final Factory<InvocationContext> invocationContextFactory;
     private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
 
     private ResourceMethodInvoker(
-            Factory<RouterModule.RoutingContext> routingContextFactory,
+            Factory<RoutingContext> routingContextFactory,
             Factory<InvocationContext> invocationContextFactory,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,

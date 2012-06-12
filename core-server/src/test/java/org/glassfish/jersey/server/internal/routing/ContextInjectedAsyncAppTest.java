@@ -61,14 +61,10 @@ import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.ProcessorBuilder;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
@@ -80,10 +76,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Context injected async app test.
+ *
  * @author Paul Sandoz
  */
 @RunWith(Parameterized.class)
@@ -94,13 +91,14 @@ public class ContextInjectedAsyncAppTest {
     @Parameterized.Parameters
     public static List<String[]> testUriSuffixes() {
         return Arrays.asList(new String[][]{
-                    {"a/b/c", "B-c-b-a"},
-                    {"a/b/d/", "B-d-b-a"}
-                });
+                {"a/b/c", "B-c-b-a"},
+                {"a/b/d/", "B-d-b-a"}
+        });
     }
+
     @Context
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker invoker; // will be manually injected in the setupApplication()
+    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
     private RequestScope requestScope; // will be manually injected in the setupApplication()
     private final String uriSuffix;
     private final String expectedResponse;
@@ -114,10 +112,6 @@ public class ContextInjectedAsyncAppTest {
 
         @Context
         private InvocationContext invocationContext;
-        @Context
-        private RespondingContext respondingCtx;
-        @Context
-        private RoutingContext routingCtx;
         @Context
         Services services;
         private final Injector i;
@@ -155,25 +149,26 @@ public class ContextInjectedAsyncAppTest {
     public void setupApplication() {
         Services services = HK2.get().create(null, new ServerModule());
 
-        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
+        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>() {
+        }).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
+        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
+        }).get();
         workers.set(new MessageBodyFactory(providers.get()));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
+        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>() {
+        }).get();
         mappers.set(new ExceptionMapperFactory(providers.get()));
 
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
-        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(routeBuilder
+        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        this.invoker = invokerBuilder.build(routeBuilder.root(routeBuilder
                 .route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                 .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
-                        .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector))))
-                        .to(routeBuilder.route("d(/)?").to(LastPathSegmentTracingFilter.class).to(Stages.asTreeAcceptor(new AsyncInflector(injector)))))
+                        .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(Routers.asTreeAcceptor(new AsyncInflector(injector))))
+                        .to(routeBuilder.route("d(/)?").to(LastPathSegmentTracingFilter.class).to(Routers.asTreeAcceptor(new AsyncInflector(injector)))))
                 .build()));
-
-        this.invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         this.requestScope = injector.inject(RequestScope.class);
     }
 

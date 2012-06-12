@@ -53,10 +53,7 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.ProcessorBuilder;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 
@@ -74,7 +71,7 @@ import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests synchronous application implementation
+ * Redirecting filter test.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -88,16 +85,17 @@ public class RedirectingFilterTest {
     @Parameterized.Parameters
     public static List<String[]> testUriSuffixes() {
         return Arrays.asList(new String[][]{
-                    {"a/b/c", "B-c-b-a"}, //                    {"a/b/c/", "B-c-b-a"},
+                {"a/b/c", "B-c-b-a"}, //                    {"a/b/c/", "B-c-b-a"},
                 //                    {"a/d/e", "B-e-d-a"},
                 //                    {"a/d/e/", "B-e-d-a"}
-                });
+        });
     }
+
     @Inject
     private RootRouteBuilder<Pattern> routeBuilder;
     @Inject
-    private RedirectingAcceptor.Builder redirectorFactory;
-    private RequestInvoker invoker; // will be manually injected in the setupApplication()
+    private RedirectingRouter.Builder redirectorFactory;
+    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
     private final String uriSuffix;
     private final String expectedResponse;
 
@@ -113,8 +111,8 @@ public class RedirectingFilterTest {
 
         injector.inject(this);
 
-        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
-        TreeAcceptor inflection = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        Router inflection = Routers.asTreeAcceptor(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(final Request req) {
@@ -122,15 +120,13 @@ public class RedirectingFilterTest {
                 return Responses.from(200, req).entity("B").build();
             }
         });
-        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(
+        this.invoker = invokerBuilder.build(routeBuilder.root(
                 routeBuilder.route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, true)).to(inflection)))
                         .to(routeBuilder.route("d(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("e").to(LastPathSegmentTracingFilter.class).to(redirectorFactory.build(true, false)).to(inflection)))
                         .build()));
-
-        invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
     }
 
     @Test

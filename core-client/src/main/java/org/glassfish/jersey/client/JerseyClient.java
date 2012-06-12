@@ -65,11 +65,10 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.FilteringAcceptor;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.LinearRequestProcessor;
 import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -181,7 +180,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag;
     private Inflector<Request, Response> connector;
     private Injector injector;
-    private RequestInvoker invoker;
+    private RequestInvoker<Request, Response> invoker;
     //
     @Inject
     private RequestScope requestScope;
@@ -230,14 +229,14 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         this.injector = services.forContract(Injector.class).get();
 
         final MessageBodyWorkersInitializer workersInitializationStage = injector.inject(MessageBodyWorkersInitializer.class);
-        final FilteringAcceptor filteringStage = injector.inject(FilteringAcceptor.class);
+        final FilteringStage filteringStage = injector.inject(FilteringStage.class);
 
-        LinearAcceptor rootAcceptor = Stages
-                .acceptingChain(workersInitializationStage)
+        Stage<Request> rootStage = Stages
+                .chain(workersInitializationStage)
                 .to(filteringStage)
-                .build(Stages.asLinearAcceptor(connector));
+                .build(Stages.asStage(connector));
 
-        this.invoker = injector.inject(RequestInvoker.Builder.class).build(new LinearRequestProcessor(rootAcceptor));
+        this.invoker = injector.inject(RequestInvoker.Builder.class).build(rootStage);
 
         this.injector.inject(this);
     }
@@ -246,12 +245,12 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * Submit a configured invocation for processing.
      *
      * @param invocation invocation to be processed (invoked).
-     * @param callback callback receiving invocation processing notifications.
+     * @param callback   callback receiving invocation processing notifications.
      * @return response future.
      */
     /*package*/ ListenableFuture<Response> submit(
             final JerseyInvocation invocation,
-            final javax.ws.rs.client.InvocationCallback<? super javax.ws.rs.core.Response> callback) {
+            final javax.ws.rs.client.InvocationCallback<Response> callback) {
         return requestScope.runInScope(
                 new RequestScope.Producer<ListenableFuture<Response>>() {
 
@@ -282,7 +281,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                         request.getProperties().putAll(properties);
                         /////
 
-                        return invoker.apply(request, new InvocationCallback() {
+                        return invoker.apply(request, new InvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {

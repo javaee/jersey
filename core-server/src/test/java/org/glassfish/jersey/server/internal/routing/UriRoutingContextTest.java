@@ -47,7 +47,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.message.internal.Requests;
 
 import org.junit.*;
@@ -80,12 +80,12 @@ public class UriRoutingContextTest {
 
     private UriRoutingContext createContext(String requestUri, String method) {
         return new UriRoutingContext(
-                Tuples.<Request>of(Requests.from(requestUri, method).build()));
+                Refs.<Request>of(Requests.from(requestUri, method).build()));
     }
 
     private UriRoutingContext createContext(String appBaseUri, String requestUri, String method) {
         return new UriRoutingContext(
-                Tuples.<Request>of(Requests.from(appBaseUri, requestUri, method).build()));
+                Refs.<Request>of(Requests.from(appBaseUri, requestUri, method).build()));
     }
 
     @Test

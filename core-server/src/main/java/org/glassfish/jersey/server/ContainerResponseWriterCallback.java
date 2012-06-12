@@ -51,7 +51,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class ContainerResponseWriterCallback implements InvocationCallback {
+abstract class ContainerResponseWriterCallback implements InvocationCallback<Response> {
 
     private boolean suspended;
     private boolean autosuspend;
@@ -60,7 +60,13 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback {
     private InvocationContext invocationContext;
     private final Object stateUpdateLock;
     //
+    /**
+     * Container response writer.
+     */
     protected final ContainerResponseWriter writer;
+    /**
+     * Request data.
+     */
     protected final Request request;
 
     /**

@@ -57,11 +57,8 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.ProcessorBuilder;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -78,10 +75,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import static org.junit.Assert.assertEquals;
 
 /**
+ * PathPattern routing test.
+ *
  * @author Paul Sandoz
  */
 @RunWith(Parameterized.class)
@@ -92,23 +90,24 @@ public class PathPatternRoutingTest {
     @Parameterized.Parameters
     public static List<String[]> testUriSuffixes() {
         return Arrays.asList(new String[][]{
-                    {"a/b/c", "B-c-b-a"},
-                    {"a/b/c/", "B-c-b-a"},
-                    {"a/d/e", "B-e-d-a"},
-                    {"a/d/e/", "B-e-d-a"},
+                {"a/b/c", "B-c-b-a"},
+                {"a/b/c/", "B-c-b-a"},
+                {"a/d/e", "B-e-d-a"},
+                {"a/d/e/", "B-e-d-a"},
 
-                    {"a/d", "B--d-a"},
-                    {"a/d/", "B--d-a"},
+                {"a/d", "B--d-a"},
+                {"a/d/", "B--d-a"},
 
-                    {"m/b/n", "B-n-b-m"},
-                    {"m/b/n/", "B-n-b-m"},
-                    {"x/d/y", "B-y-d-x"},
-                    {"x/d/y/", "B-y-d-x"}
-                });
+                {"m/b/n", "B-n-b-m"},
+                {"m/b/n/", "B-n-b-m"},
+                {"x/d/y", "B-y-d-x"},
+                {"x/d/y/", "B-y-d-x"}
+        });
     }
+
     @Inject
     private RootRouteBuilder<PathPattern> routeBuilder;
-    private RequestInvoker invoker; // will be manually injected in the setupApplication()
+    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
     private RequestScope requestScope; // will be manually injected in the setupApplication()
     private final String uriSuffix;
     private final String expectedResponse;
@@ -122,18 +121,21 @@ public class PathPatternRoutingTest {
     public void setupApplication() {
         Services services = HK2.get().create(null, new ServerModule());
 
-        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
+        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>() {
+        }).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
+        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
+        }).get();
         workers.set(new MessageBodyFactory(providers.get()));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
+        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>() {
+        }).get();
         mappers.set(new ExceptionMapperFactory(providers.get()));
 
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
-        TreeAcceptor inflection = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        Router inflection = Routers.asTreeAcceptor(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(final Request req) {
@@ -141,7 +143,7 @@ public class PathPatternRoutingTest {
                 return Responses.from(200, req).entity("B").build();
             }
         });
-        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(
+        this.invoker = invokerBuilder.build(routeBuilder.root(
                 routeBuilder.route("{p1}").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("b").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route(new PathPattern("{p2}", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
@@ -152,7 +154,6 @@ public class PathPatternRoutingTest {
                                 .to(routeBuilder.route(new PathPattern("/", PathPattern.RightHandPath.capturingZeroSegments)).to(LastPathSegmentTracingFilter.class).to(inflection)))
                         .build()));
 
-        this.invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         this.requestScope = injector.inject(RequestScope.class);
     }
 

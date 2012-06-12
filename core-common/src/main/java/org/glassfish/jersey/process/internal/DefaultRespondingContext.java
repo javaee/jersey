@@ -42,37 +42,35 @@ package org.glassfish.jersey.process.internal;
 import java.util.Deque;
 import java.util.LinkedList;
 
-import javax.ws.rs.core.Response;
-
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 
 /**
  * Default implementation of the request-scoped
  * {@link ResponseProcessor.RespondingContext responding context}.
  *
+ * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class DefaultRespondingContext implements ResponseProcessor.RespondingContext {
+class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
 
-    Deque<Function<Response, Response>> transformationStack = new LinkedList<Function<Response, Response>>();
+    private Deque<Function<DATA, DATA>> transformationStack = new LinkedList<Function<DATA, DATA>>();
 
     @Override
-    public void push(Function<Response, Response> responseTransformation) {
+    public void push(Function<DATA, DATA> responseTransformation) {
         transformationStack.push(responseTransformation);
     }
 
     @Override
-    public Optional<Responder> createStageChain() {
+    public Stage<DATA> createResponderRoot() {
         if (transformationStack.isEmpty()) {
-            return Optional.absent();
+            return null;
         }
 
-        final Responder.Builder chainBuilder = Stages.respondingChain(transformationStack.pop());
+        final Stage.Builder<DATA> chainBuilder = Stages.chain(transformationStack.pop());
         while (!transformationStack.isEmpty()) {
             chainBuilder.to(transformationStack.pop());
         }
 
-        return Optional.of(chainBuilder.build());
+        return chainBuilder.build();
     }
 }

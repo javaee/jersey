@@ -39,100 +39,85 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.MatchResult;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.collect.Iterators;
-
 /**
+ * Matches the un-matched right-hand request path to a configured
+ * {@link PathPattern path pattern}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class PathPatternRouteAcceptor implements TreeAcceptor {
+class PathPatternRouter implements Router {
 
     /**
-     * "Assisted injection" factory interface for {@link PathPatternRouteAcceptor}.
+     * "Assisted injection" factory interface for {@link PathPatternRouter}.
      *
      * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
      * assisted injection in Guice</a>.
      */
-    public class Builder {
+    public static class Builder {
 
-        private final Factory<RoutingContext> contextProvider;
+        @Inject
+        private Factory<RoutingContext> contextProvider;
 
-        public Builder(@Inject Factory<RoutingContext> contextProvider) {
-            this.contextProvider = contextProvider;
-        }
-
-        public PathPatternRouteAcceptor build(List<Pair<PathPattern, List<Factory<TreeAcceptor>>>> routes) {
-            return new PathPatternRouteAcceptor(contextProvider, routes);
+        /**
+         * Build a path pattern request router.
+         *
+         * @param routes next-level request pre-processing stages to be returned in case the request
+         *               matching in the built router is successful.
+         * @return a path pattern request router.
+         */
+        public PathPatternRouter build(final List<Route<PathPattern>> routes) {
+            return new PathPatternRouter(contextProvider, routes);
         }
     }
+
     private final Factory<RoutingContext> contextProvider;
-    private final List<Pair<PathPattern, List<Factory<TreeAcceptor>>>> acceptedRoutes;
+    private final List<Route<PathPattern>> acceptedRoutes;
 
     /**
      * Constructs route methodAcceptorPair that uses {@link PathPattern} instances for
      * patch matching.
      *
-     * @param provider {@link RoutingContext} injection provider
-     * @param routes
+     * @param provider {@link RoutingContext} injection provider.
+     * @param routes   next-level request routers to be returned in case the router matching
+     *                 the built router is successful.
      */
-    private PathPatternRouteAcceptor(final Factory<RoutingContext> provider,
-            final List<Pair<PathPattern, List<Factory<TreeAcceptor>>>> routes) {
+    private PathPatternRouter(final Factory<RoutingContext> provider,
+                              final List<Route<PathPattern>> routes) {
 
         this.contextProvider = provider;
         this.acceptedRoutes = routes;
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
+    public Router.Continuation apply(final Request request) {
         final RoutingContext rc = contextProvider.get();
         // Peek at matching information to obtain path to match
         String path = rc.getFinalMatchingGroup();
 
-        for (final Pair<PathPattern, List<Factory<TreeAcceptor>>> acceptedRoute : acceptedRoutes) {
-            final MatchResult m = acceptedRoute.left().match(path);
+        for (final Route<PathPattern> acceptedRoute : acceptedRoutes) {
+            final MatchResult m = acceptedRoute.routingPattern().match(path);
             if (m != null) {
                 // Push match result information and rest of path to match
                 rc.pushMatchResult(m);
-                rc.pushTemplate(acceptedRoute.left().getTemplate());
+                rc.pushTemplate(acceptedRoute.routingPattern().getTemplate());
 
-                final Iterator<TreeAcceptor> acceptors;
-
-                final List<Factory<TreeAcceptor>> acceptorProviders = acceptedRoute.right();
-                if (acceptorProviders.isEmpty()) {
-                    acceptors = Iterators.emptyIterator();
-                } else if (acceptorProviders.size() == 1) {
-                    acceptors = Iterators.transform(
-                            Iterators.singletonIterator(acceptorProviders.iterator().next()),
-                            RouterModule.FACTORY_TO_ACCEPTOR_TRANSFORMATION);
-                } else {
-                    acceptors = Iterators.transform(
-                            acceptorProviders.iterator(),
-                            RouterModule.FACTORY_TO_ACCEPTOR_TRANSFORMATION);
-                }
-
-                return Tuples.of(request, acceptors);
+                return Router.Continuation.of(request, acceptedRoute.next());
             }
         }
 
         // No match
-        return Stages.terminalTreeContinuation(request);
+        return Router.Continuation.of(request);
     }
 }

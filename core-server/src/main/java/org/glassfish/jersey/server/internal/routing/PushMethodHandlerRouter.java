@@ -37,63 +37,70 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.internal.routing;
 
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.HierarchicalRequestProcessor;
-import org.glassfish.jersey.process.internal.RequestProcessor;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
+import org.glassfish.jersey.server.model.MethodHandler;
 
 import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-
 /**
- * Linear request accepting stage that encapsulates hierarchical resource matching.
+ * Terminal router that pushes the matched method's handler instance to the stack
+ * returned by {@link javax.ws.rs.core.UriInfo#getMatchedResources()} method.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ResourceMatchingStage implements Function<Request, Request> {
+class PushMethodHandlerRouter implements Router {
+
     /**
-     * Injectable {@link ResourceMatchingStage resource matching stage} builder.
+     * An injectable factory of {@link PushMethodHandlerRouter} instances.
      */
     static class Builder {
+
         @Inject
-        private Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
+        private Factory<RoutingContext> routingContextFactory;
+        @Inject
+        private Injector injector;
 
         /**
-         * Build a properly injected resource matching acceptor.
+         * Build a new {@link PushMethodHandlerRouter} instance.
          *
-         * @param rootAcceptor root matching acceptor.
-         * @return properly injected resource matching acceptor.
+         * @param methodHandler method handler model providing the method handler
+         *                      instance.
+         * @param next          next router to be invoked after the this one.
+         * @return new {@code PushMethodHandlerRouter} instance.
          */
-        public ResourceMatchingStage build(final TreeAcceptor rootAcceptor) {
-            return new ResourceMatchingStage(new HierarchicalRequestProcessor(rootAcceptor), acceptingContextFactory);
+        public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next) {
+            return new PushMethodHandlerRouter(injector, routingContextFactory, methodHandler, next);
         }
+
     }
 
-    private final HierarchicalRequestProcessor processor;
-    private final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory;
+    private final Injector injector;
+    private final Factory<RoutingContext> routingContextFactory;
+    private final MethodHandler methodHandler;
+    private final Router next;
 
-    private ResourceMatchingStage(final HierarchicalRequestProcessor processor,
-                                  final Factory<RequestProcessor.AcceptingContext> acceptingContextFactory) {
-        this.processor = processor;
-        this.acceptingContextFactory = acceptingContextFactory;
+    private PushMethodHandlerRouter(
+            final Injector injector,
+            final Factory<RoutingContext> routingContextFactory,
+            final MethodHandler methodHandler,
+            final Router next) {
+        this.injector = injector;
+        this.routingContextFactory = routingContextFactory;
+        this.methodHandler = methodHandler;
+        this.next = next;
     }
 
     @Override
-    public Request apply(Request request) {
-        final Pair<Request, Optional<Inflector<Request,Response>>> result = processor.apply(request);
+    public Continuation apply(final Request request) {
+        Object handlerInstance = methodHandler.getInstance(injector);
+        routingContextFactory.get().pushMatchedResource(handlerInstance);
 
-        acceptingContextFactory.get().setInflector(result.right());
-
-        return result.left();
+        return Continuation.of(request, next);
     }
 }

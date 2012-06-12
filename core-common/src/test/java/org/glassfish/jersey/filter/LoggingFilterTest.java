@@ -51,9 +51,8 @@ import javax.ws.rs.ext.ResponseFilter;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.FilteringAcceptor;
-import org.glassfish.jersey.process.internal.LinearAcceptor;
-import org.glassfish.jersey.process.internal.LinearRequestProcessor;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.ProcessingTestModule;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -75,7 +74,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public class LoggingFilterTest {
 
-    private RequestInvoker invoker;
+    private RequestInvoker<Request, Response> invoker;
     private RequestScope requestScope;
     private CustomLoggingFilter loggingFilter;
 
@@ -118,8 +117,8 @@ public class LoggingFilterTest {
 
         ProcessingTestModule.initProviders(services);
 
-        FilteringAcceptor filteringAcceptor = services.forContract(FilteringAcceptor.class).get();
-        final LinearAcceptor rootAcceptor = Stages.acceptingChain(filteringAcceptor).build(Stages.asLinearAcceptor(
+        FilteringStage filteringAcceptor = services.forContract(FilteringStage.class).get();
+        final Stage<Request> rootStage = Stages.chain(filteringAcceptor).build(Stages.asStage(
                 new Inflector<Request, Response>() {
 
                     @Override
@@ -128,7 +127,7 @@ public class LoggingFilterTest {
                     }
                 }));
 
-        invoker = services.forContract(RequestInvoker.Builder.class).get().build(new LinearRequestProcessor(rootAcceptor));
+        invoker = services.forContract(RequestInvoker.Builder.class).get().build(rootStage);
         requestScope = services.forContract(RequestScope.class).get();
 
     }

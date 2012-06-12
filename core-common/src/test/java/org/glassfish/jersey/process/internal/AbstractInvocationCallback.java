@@ -41,15 +41,15 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.Response;
 
 /**
  * Helper abstract invocation callback class that provides empty implementations
  * for all invocation callback methods.
  *
+ * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractInvocationCallback implements InvocationCallback {
+abstract class AbstractInvocationCallback<DATA> implements InvocationCallback<DATA> {
 
     @Override
     public void cancelled() {
@@ -60,7 +60,7 @@ abstract class AbstractInvocationCallback implements InvocationCallback {
     }
 
     @Override
-    public void result(Response response) {
+    public void result(DATA response) {
     }
 
     @Override

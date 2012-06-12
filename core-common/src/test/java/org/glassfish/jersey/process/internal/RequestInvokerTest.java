@@ -40,20 +40,28 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.process.Inflector;
+import static org.glassfish.jersey.process.internal.StringAppender.append;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+
+import com.google.common.base.Function;
 
 /**
  * Basic request invoker test.
@@ -62,6 +70,9 @@ import static org.junit.Assert.fail;
  */
 public class RequestInvokerTest {
 
+    /**
+     * Create a test instance.
+     */
     public RequestInvokerTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
@@ -75,10 +86,10 @@ public class RequestInvokerTest {
     }
 
     @Test
-    public void testLinear() throws Exception {
+    public void testInvocation() throws Exception {
         final Services services = init();
-        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(LinearRequestProcessorTest.createProcessor());
+        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(createProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
@@ -87,7 +98,7 @@ public class RequestInvokerTest {
             public void run() {
 
                 invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback() {
+                        new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {
@@ -118,7 +129,7 @@ public class RequestInvokerTest {
             @Override
             public void run() {
                 invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                        new AbstractInvocationCallback() {
+                        new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {
@@ -146,22 +157,23 @@ public class RequestInvokerTest {
     }
 
     @Test
-    public void testHiearchical() throws Exception {
+    public void testWaeThrownInRequestPreProcessingChain() throws Exception {
         final Services services = init();
-        final RequestInvoker invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(HierarchicalRequestProcessorTest.createProcessor());
+        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(createWaeThrowingProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
 
             @Override
             public void run() {
+
                 invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback() {
+                        new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {
-                                assertEquals(145, response.readEntity(Integer.class).intValue());
+                                assertEquals("1", response.readEntity(String.class));
                             }
 
                             @Override
@@ -169,7 +181,6 @@ public class RequestInvokerTest {
                                 fail(exception.getMessage());
                             }
                         });
-
             }
         });
 
@@ -179,41 +190,121 @@ public class RequestInvokerTest {
             public Object call() throws Exception {
                 Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
                         .build());
-                assertEquals(145, result.get().readEntity(Integer.class).intValue());
+                assertEquals("1", result.get().readEntity(String.class));
                 return null;
             }
         });
+    }
+
+    @Test
+    public void testArbitraryExceptionThrownInRequestPreProcessingChain() throws Exception {
+        final Services services = init();
+        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
+                .build(createArbitraryExceptionThrowingProcessingRoot());
+        final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
 
             @Override
             public void run() {
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                        new AbstractInvocationCallback() {
+
+                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
+                        new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {
-                                assertEquals(-1, response.readEntity(Integer.class).intValue());
+                                fail("Failure callback method expected to be invoked.");
                             }
 
                             @Override
                             public void failure(Throwable exception) {
-                                fail(exception.getMessage());
+                                // unwinding ProcessingTestModule exception mapper's exception
+                                assertTrue("Unexpected exception type", "test".equals(exception.getCause().getMessage()));
                             }
                         });
-
             }
         });
 
         requestScope.runInScope(new Callable<Object>() {
+
             @Override
             public Object call() throws Exception {
-                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text")
+                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
                         .build());
-                assertEquals(-1, result.get().readEntity(Integer.class).intValue());
+                try {
+                    result.get();
+                    fail("ExecutionException expected to be raised.");
+                } catch (ExecutionException ex) {
+                    // unwinding ExecutionException and ProcessingTestModule exception mapper's exception
+                    assertTrue("Unexpected exception type", "test".equals(ex.getCause().getCause().getMessage()));
+                } catch (Exception ex) {
+                    fail("ExecutionException expected to be raised.");
+                }
+
                 return null;
             }
         });
+    }
 
+    private static Stage<Request> createProcessingRoot() {
+
+        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+
+            @Override
+            public Response apply(Request data) {
+                try {
+                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                } catch (NumberFormatException ex) {
+                    throw new MappableException(ex);
+                }
+            }
+        });
+
+        return Stages.chain(append("1")).to(append("2")).to(append("3")).build(inflectingStage);
+    }
+
+    private static Stage<Request> createWaeThrowingProcessingRoot() {
+
+        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+
+            @Override
+            public Response apply(Request data) {
+                try {
+                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                } catch (NumberFormatException ex) {
+                    throw new MappableException(ex);
+                }
+            }
+        });
+
+        return Stages.chain(append("1")).to(new Function<Request, Request>() {
+                    @Override
+                    public Request apply(Request data) {
+                        throw new WebApplicationException(
+                                Responses.from(200, data).entity(data.readEntity(String.class)).build());
+                    }
+                }).to(append("3")).build(inflectingStage);
+    }
+
+    private static Stage<Request> createArbitraryExceptionThrowingProcessingRoot() {
+
+        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+
+            @Override
+            public Response apply(Request data) {
+                try {
+                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                } catch (NumberFormatException ex) {
+                    throw new MappableException(ex);
+                }
+            }
+        });
+
+        return Stages.chain(append("1")).to(new Function<Request, Request>() {
+                    @Override
+                    public Request apply(Request data) {
+                        throw new RuntimeException("test");
+                    }
+                }).to(append("3")).build(inflectingStage);
     }
 }

@@ -58,9 +58,8 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.server.ProcessorBuilder;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -72,10 +71,11 @@ import org.glassfish.hk2.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Runtime model builder test.
+ *
  * @author Jakub Podlesak
  */
 public class RMBuilderTest {
@@ -104,7 +104,7 @@ public class RMBuilderTest {
             return "another";
         }
     }
-    private RequestInvoker invoker; // will be manually injected in the setupApplication()
+    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
     private RequestScope requestScope; // will be manually injected in the setupApplication()
 
     @Before
@@ -123,11 +123,10 @@ public class RMBuilderTest {
 
         final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
         runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build());
-        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
-        final RequestProcessor requestProcessor = processorBuilder.build(runtimeModelBuilder.buildModel());
+        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
 
-        invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
-        requestScope = injector.inject(RequestScope.class);
+        this.invoker = invokerBuilder.build(runtimeModelBuilder.buildModel());
+        this.requestScope = injector.inject(RequestScope.class);
     }
 
     @Test

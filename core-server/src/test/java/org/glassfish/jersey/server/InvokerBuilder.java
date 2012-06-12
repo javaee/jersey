@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,35 +37,50 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
+import org.glassfish.jersey.server.internal.routing.Router;
+import org.glassfish.jersey.server.internal.routing.RoutingStage;
 
-import com.google.common.base.Optional;
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Default implementation of request accepting context.
+ * Test utility module for testing hierarchical request accepting (i.e. resource matching).
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class DefaultAcceptingContext implements RequestProcessor.AcceptingContext {
-    private Optional<Inflector<Request, Response>> inflector = Optional.absent();
+public class InvokerBuilder {
 
-    @Override
-    public void setInflector(Inflector<Request, Response> inflector) {
-        this.inflector = Optional.of(inflector);
-    }
+    @Inject
+    private Factory<RoutingStage.Builder> matchingStageFactory;
+    @Inject
+    private Factory<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
+    @Inject
+    private ReferencesInitializer referencesInitializer;
+    @Inject
+    private RequestInvoker.Builder invokerBuilder;
 
-    @Override
-    public void setInflector(Optional<Inflector<Request, Response>> inflector) {
-        this.inflector = inflector;
-    }
 
-    @Override
-    public Optional<Inflector<Request, Response>> getInflector() {
-        return inflector;
+    /**
+     * Build a request processor using the resource matching acceptor
+     * for testing purposes.
+     *
+     * @param matchingRoot root resource matching acceptor.
+     * @return request processor.
+     */
+    public RequestInvoker<Request, Response> build(final Router matchingRoot) {
+
+        return invokerBuilder.build(Stages
+                .chain(referencesInitializer)
+                .to(matchingStageFactory.get().build(matchingRoot))
+                .build(inflectorExtractingStageFactory.get()));
     }
 }

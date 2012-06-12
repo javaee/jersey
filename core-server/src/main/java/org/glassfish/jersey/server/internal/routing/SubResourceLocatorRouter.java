@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.routing;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,11 +51,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
@@ -75,7 +70,7 @@ import org.glassfish.hk2.inject.Injector;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-class SubResourceLocatorAcceptor implements TreeAcceptor {
+class SubResourceLocatorRouter implements Router {
 
     private final Services services;
     private final Injector injector;
@@ -83,7 +78,15 @@ class SubResourceLocatorAcceptor implements TreeAcceptor {
     private final List<Factory<?>> valueProviders;
     private final RuntimeModelBuilder runtimeModelBuilder;
 
-    public SubResourceLocatorAcceptor(
+    /**
+     * Create a new sub-resource locator router.
+     *
+     * @param injector     HK2 injector.
+     * @param services     HK2 services.
+     * @param workers      message body workers.
+     * @param locatorModel resource locator method model.
+     */
+    public SubResourceLocatorRouter(
             final Injector injector,
             final Services services,
             final MessageBodyWorkers workers,
@@ -99,7 +102,7 @@ class SubResourceLocatorAcceptor implements TreeAcceptor {
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
+    public Continuation apply(final Request request) {
         final RoutingContext routingCtx = injector.inject(RoutingContext.class);
 
         Object subResource = getResource(routingCtx);
@@ -116,8 +119,8 @@ class SubResourceLocatorAcceptor implements TreeAcceptor {
 
         // TODO: implement generated sub-resource methodAcceptorPair caching
         routingCtx.pushMatchedResource(subResource);
-        TreeAcceptor subResourceAcceptor = runtimeModelBuilder.buildModel();
-        return Stages.singletonTreeContinuation(request, subResourceAcceptor);
+        Router subResourceAcceptor = runtimeModelBuilder.buildModel();
+        return Continuation.of(request, subResourceAcceptor);
     }
 
     private Object getResource(RoutingContext routingCtx) {

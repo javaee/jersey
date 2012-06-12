@@ -42,10 +42,7 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.List;
 
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.process.internal.TreeAcceptor.Builder;
+import org.glassfish.jersey.server.internal.routing.Router.Builder;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
@@ -53,57 +50,84 @@ import org.glassfish.hk2.Services;
 import com.google.common.collect.Lists;
 
 /**
+ * Abstract request routing hierarchy builder.
  *
+ * @param <T> routing pattern type.
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPathBuilder<T> {
 
     private final Services services;
-    private final List<Pair<T, List<Factory<TreeAcceptor>>>> acceptedRoutes = Lists.newLinkedList();
-    private List<Factory<TreeAcceptor>> currentAcceptors;
+    private final List<Route<T>> acceptedRoutes = Lists.newLinkedList();
+    private List<Factory<Router>> currentRouters;
 
+    /**
+     * Initialize the abstract {@link RouterModule.RouteToPathBuilder route to path builder}.
+     *
+     * @param services HK2 services.
+     * @param pattern  request path routing pattern.
+     */
     protected AbstractRouteToPathBuilder(Services services, T pattern) {
         this.services = services;
         _route(pattern);
     }
 
+    /**
+     * Complete the currently built sub-route and start building a new one.
+     *
+     * The completed route is added to the list of the accepted routes.
+     *
+     * @param pattern routing pattern for the new sub-route.
+     * @return updated builder.
+     */
     protected final RouterModule.RouteToBuilder<T> _route(T pattern) {
-        currentAcceptors = Lists.newLinkedList();
-        acceptedRoutes.add(Tuples.of(pattern, currentAcceptors));
+        currentRouters = Lists.newLinkedList();
+        acceptedRoutes.add(Route.of(pattern, currentRouters));
         return this;
     }
 
+    /**
+     * Add new stage to the currently built sub-route.
+     *
+     * @param pa stage provider.
+     * @return updated builder.
+     */
     @SuppressWarnings("unchecked")
-    protected final RouterModule.RouteToPathBuilder<T> _to(Factory<? extends TreeAcceptor> pa) {
-        currentAcceptors.add((Factory<TreeAcceptor>) pa);
+    protected final RouterModule.RouteToPathBuilder<T> _to(Factory<? extends Router> pa) {
+        currentRouters.add((Factory<Router>) pa);
         return this;
     }
 
-    protected List<Pair<T, List<Factory<TreeAcceptor>>>> acceptedRoutes() {
+    /**
+     * Get the list of the registered sub-routes.
+     *
+     * @return list of the registered sub-routes.
+     */
+    protected List<Route<T>> acceptedRoutes() {
         return acceptedRoutes;
     }
 
     // RouteToBuilder<T>
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(TreeAcceptor.Builder ab) {
+    public final RouterModule.RouteToPathBuilder<T> to(Router.Builder ab) {
         return to(ab.build());
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(final TreeAcceptor a) {
+    public final RouterModule.RouteToPathBuilder<T> to(final Router a) {
         // TODO    return to(Providers.of(a));
 
         return to(Providers.factoryOf(a));
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(Class<? extends TreeAcceptor> ca) {
+    public final RouterModule.RouteToPathBuilder<T> to(Class<? extends Router> ca) {
         return to(Providers.asFactory(services.forContract(ca).getProvider()));
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(Factory<? extends TreeAcceptor> pa) {
+    public final RouterModule.RouteToPathBuilder<T> to(Factory<? extends Router> pa) {
         return _to(pa);
     }
 
@@ -116,12 +140,12 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
         return _route(pattern);
     }
 
-    // TreeAcceptor.Builder
+    // Router.Builder
     @Override
-    public Builder child(TreeAcceptor child) {
+    public Builder child(Router child) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public abstract TreeAcceptor build();
+    public abstract Router build();
 }

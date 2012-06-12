@@ -58,11 +58,8 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestProcessor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.ProcessorBuilder;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -78,11 +75,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests synchronous application implementation
+ * Tests synchronous application implementation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -95,15 +91,16 @@ public class PatternRoutingTest {
     @Parameterized.Parameters
     public static List<String[]> testUriSuffixes() {
         return Arrays.asList(new String[][]{
-                    {"a/b/c", "B-c-b-a"},
-                    {"a/b/c/", "B-c-b-a"},
-                    {"a/d/e", "B-e-d-a"},
-                    {"a/d/e/", "B-e-d-a"}
-                });
+                {"a/b/c", "B-c-b-a"},
+                {"a/b/c/", "B-c-b-a"},
+                {"a/d/e", "B-e-d-a"},
+                {"a/d/e/", "B-e-d-a"}
+        });
     }
+
     @Inject
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker invoker; // will be manually injected in the setupApplication()
+    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
     private RequestScope requestScope; // will be manually injected in the setupApplication()
     private final String uriSuffix;
     private final String expectedResponse;
@@ -117,18 +114,21 @@ public class PatternRoutingTest {
     public void setupApplication() {
         Services services = HK2.get().create(null, new ServerModule());
 
-        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
+        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>() {
+        }).get();
         providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
+        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>() {
+        }).get();
         workers.set(new MessageBodyFactory(providers.get()));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
+        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>() {
+        }).get();
         mappers.set(new ExceptionMapperFactory(providers.get()));
 
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);
 
-        final ProcessorBuilder processorBuilder = injector.inject(ProcessorBuilder.class);
-        TreeAcceptor inflection = Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        Router inflection = Routers.asTreeAcceptor(new Inflector<Request, Response>() {
 
             @Override
             public Response apply(final Request req) {
@@ -136,15 +136,13 @@ public class PatternRoutingTest {
                 return Responses.from(200, req).entity("B").build();
             }
         });
-        final RequestProcessor requestProcessor = processorBuilder.build(routeBuilder.root(
+        this.invoker = invokerBuilder.build(routeBuilder.root(
                 routeBuilder.route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("c(/)?").to(LastPathSegmentTracingFilter.class).to(inflection)))
                         .to(routeBuilder.route("d(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("e(/)?").to(LastPathSegmentTracingFilter.class).to(inflection)))
                         .build()));
-
-        invoker = injector.inject(RequestInvoker.Builder.class).build(requestProcessor);
         requestScope = injector.inject(RequestScope.class);
     }
 

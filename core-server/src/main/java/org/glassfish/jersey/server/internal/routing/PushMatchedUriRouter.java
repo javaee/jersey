@@ -39,33 +39,27 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Iterator;
-
 import javax.ws.rs.core.Request;
-
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
 
 import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Terminal acceptor that pushes the URI matched so far to the stack returned
+ * Terminal router that pushes the URI matched so far to the stack returned
  * by {@link javax.ws.rs.core.UriInfo#getMatchedURIs()} method.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class PushMatchedUriAcceptor implements TreeAcceptor {
+class PushMatchedUriRouter implements Router {
 
     @Inject
-    private Factory<RouterModule.RoutingContext> routingContextFactory;
+    private Factory<RoutingContext> routingContextFactory;
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request data) {
+    public Continuation apply(final Request data) {
         routingContextFactory.get().pushLeftHandPath();
 
-        return Stages.terminalTreeContinuation(data);
+        return Continuation.of(data);
     }
 }

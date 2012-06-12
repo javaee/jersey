@@ -42,107 +42,15 @@ package org.glassfish.jersey.internal.util.collection;
 import com.google.common.base.Objects;
 
 /**
- * Utility class with methods for working with tuples, such as {@link Pair} and
- * {@link Ref}.
+ * Utility class with methods for working with references.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class Tuples {
+public final class Refs {
 
-    private Tuples() {
+    private Refs() {
         // preventing istantiation
-    }
-
-    /**
-     * Default {@link Pair} implementation.
-     */
-    private static final class PairImpl<L, R> implements Pair<L, R> {
-
-        private final L left;
-        private final R right;
-
-        public PairImpl(final L left, final R right) {
-            this.left = left;
-            this.right = right;
-        }
-
-        @Override
-        public L left() {
-            return left;
-        }
-
-        @Override
-        public R right() {
-            return right;
-        }
-
-        @Override
-        public String toString() {
-            return Objects.toStringHelper(this).
-                    add("left", left).
-                    add("right", right).toString();
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            @SuppressWarnings("unchecked")
-            final PairImpl<L, R> other = (PairImpl<L, R>) obj;
-            if (this.left != other.left && (this.left == null || !this.left.equals(other.left))) {
-                return false;
-            }
-            if (this.right != other.right && (this.right == null || !this.right.equals(other.right))) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 83 * hash + (this.left != null ? this.left.hashCode() : 0);
-            hash = 83 * hash + (this.right != null ? this.right.hashCode() : 0);
-            return hash;
-        }
-    }
-
-    /**
-     * Constructs {@link Pair} of the given values.
-     *
-     * @param <L> left-hand reference type
-     * @param <R> right-hand reference type
-     * @param left left-hand reference in the pair
-     * @param right right-hand reference in the pair
-     *
-     * @return {@link Pair} of input values
-     *
-     * @see #swap(Pair)
-     */
-    public static <L, R> Pair<L, R> of(final L left, final R right) {
-        return new PairImpl<L, R>(left, right);
-    }
-
-    /**
-     * Constructs a new {@link Pair} instance with values of the input pair instance
-     * swapped.
-     *
-     * @param <L> left-hand reference type
-     * @param <R> right-hand reference type
-     * @param pair instance whose values are to be swapped
-     *
-     * @return a new {@link Pair} instance with values of the input pair instance
-     *         swapped.
-     *
-     * @see #of(java.lang.Object, java.lang.Object)
-     */
-    public static <L, R> Pair<R, L> swap(final Pair<L, R> pair) {
-        return new PairImpl<R, L>(pair.right(), pair.left());
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,32 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util.collection;
+package org.glassfish.jersey.process.internal;
 
 /**
- * Represents a pair (tuple of 2) of values of two arbitrary types.
+ * Abstract chainable linear acceptor.
  *
- * @author Paul Sandoz
+ * Implements support for managing the default next stage value.
+ *
+ * @param <DATA> processed data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @param <L> type of the left value in the {@code Pair}
- * @param <R> type of the right value in the {@code Pair}
- *
- * @see Tuples
  */
-public interface Pair<L, R> {
+public abstract class AbstractChainableStage<DATA> implements ChainableStage<DATA> {
+
+    private Stage<DATA> nextStage;
 
     /**
-     * Left-hand instance in the {@code Pair}.
-     *
-     * @return left-hand instance in the {@code Pair}
+     * Create a new chainable acceptor with no next stage set.
      */
-    L left();
+    protected AbstractChainableStage() {
+        this(null);
+    }
 
     /**
-     * Right-hand instance in the {@code Pair}.
+     * Create a new chainable acceptor with an initialized default
+     * next stage value.
      *
-     * @return right-hand instance in the {@code Pair}
+     * @param nextStage default next stage.
      */
-    R right();
+    protected AbstractChainableStage(Stage<DATA> nextStage) {
+        this.nextStage = nextStage;
+    }
+
+    @Override
+    public final void setDefaultNext(Stage<DATA> next) {
+        this.nextStage = next;
+    }
+
+    /**
+     * Get the default next stage currently configured on the acceptor.
+     *
+     * @return default next stage currently configured on the acceptor.
+     */
+    public final Stage<DATA> getDefaultNext() {
+        return nextStage;
+    }
 }

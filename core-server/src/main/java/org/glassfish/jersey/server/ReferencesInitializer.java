@@ -73,7 +73,7 @@ class ReferencesInitializer implements Function<Request, Request> {
     @Inject
     private Factory<Ref<ResponseHeaders>> responseHeadersReference;
     @Inject
-    private Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
+    private Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
 
     /**
      * Initialize the request references using the incoming request and register

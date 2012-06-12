@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -58,21 +57,18 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -81,7 +77,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Sets;
 
 /**
- * A single acceptor responsible for selecting a single method from all the methods
+ * A single router responsible for selecting a single method from all the methods
  * bound to the same routed request path.
  *
  * The method selection algorithm selects the handling method based on the HTTP request
@@ -91,9 +87,9 @@ import com.google.common.collect.Sets;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class MethodSelectingAcceptor implements TreeAcceptor {
+final class MethodSelectingRouter implements Router {
 
-    private static final Logger LOGGER = Logger.getLogger(MethodSelectingAcceptor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MethodSelectingRouter.class.getName());
 
     /**
      * Represents a 1-1-1 relation between input and output media type and an methodAcceptorPair.
@@ -144,7 +140,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
 
         /**
          * Returns the {@link CombinedClientServerMediaType.EffectiveMediaType extended media type} which can be
-         * consumed by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor acceptor}.
+         * consumed by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor router}.
+         *
          * @return Consumed type.
          */
         public CombinedClientServerMediaType.EffectiveMediaType getConsumes() {
@@ -153,7 +150,8 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
 
         /**
          * Returns the {@link CombinedClientServerMediaType.EffectiveMediaType extended media type} which can be
-         * produced by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor acceptor}.
+         * produced by {@link ResourceMethod resource method} of this {@link ConsumesProducesAcceptor router}.
+         *
          * @return Produced type.
          */
         public CombinedClientServerMediaType.EffectiveMediaType getProduces() {
@@ -162,9 +160,10 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
 
 
         /**
-         * Determines whether this {@link ConsumesProducesAcceptor acceptor} can process the {@code request}.
+         * Determines whether this {@link ConsumesProducesAcceptor router} can process the {@code request}.
+         *
          * @param request The request to be tested.
-         * @return True if the {@code request} can be processed by this acceptor, false otherwise.
+         * @return True if the {@code request} can be processed by this router, false otherwise.
          */
         boolean isConsumable(Request request) {
             MediaType contentType = request.getHeaders().getMediaType();
@@ -251,7 +250,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
     }
 
     /**
-     * Injectable builder of a {@link MethodSelectingAcceptor} instance.
+     * Injectable builder of a {@link MethodSelectingRouter} instance.
      */
     static class Builder {
         @Inject
@@ -260,18 +259,18 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         private Injector injector;
 
         /**
-         * Create a new {@link MethodSelectingAcceptor} for all the methods on the same path.
+         * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
          *
-         * The acceptor selects the method that best matches the request based on
+         * The router selects the method that best matches the request based on
          * produce/consume information from the resource method models.
          *
-         * @param workers message body workers.
+         * @param workers             message body workers.
          * @param methodAcceptorPairs [method model, method methodAcceptorPair] pairs.
-         * @return new {@link MethodSelectingAcceptor}
+         * @return new {@link MethodSelectingRouter}
          */
-        public MethodSelectingAcceptor build(
+        public MethodSelectingRouter build(
                 final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
-            return new MethodSelectingAcceptor(services, injector, workers, methodAcceptorPairs);
+            return new MethodSelectingRouter(services, injector, workers, methodAcceptorPairs);
         }
 
     }
@@ -281,9 +280,9 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
-    private final TreeAcceptor acceptor;
+    private final Router router;
 
-    private MethodSelectingAcceptor(
+    private MethodSelectingRouter(
             Services services,
             Injector injector,
             MessageBodyWorkers msgWorkers,
@@ -304,28 +303,28 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         }
 
         if (!consumesProducesAcceptors.containsKey(HttpMethod.HEAD)) {
-            this.acceptor = createHeadEnrichedAcceptor();
+            this.router = createHeadEnrichedRouter();
         } else {
-            this.acceptor = createInternalAcceptor();
+            this.router = createInternalRouter();
         }
         if (!consumesProducesAcceptors.containsKey(HttpMethod.OPTIONS)) {
             addOptionsSupport();
         }
     }
 
-    private TreeAcceptor createInternalAcceptor() {
-        return new TreeAcceptor() {
+    private Router createInternalRouter() {
+        return new Router() {
 
             @Override
-            public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
-                return Stages.singletonTreeContinuation(request, getMethodAcceptor(request));
+            public Continuation apply(Request request) {
+                return Continuation.of(request, getMethodRouter(request));
             }
         };
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
-        return acceptor.apply(request);
+    public Continuation apply(Request request) {
+        return router.apply(request);
     }
 
     private void addAllConsumesProducesCombinations(List<ConsumesProducesAcceptor> list,
@@ -389,7 +388,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         }
     }
 
-    private TreeAcceptor getMethodAcceptor(final Request request) {
+    private Router getMethodRouter(final Request request) {
         List<ConsumesProducesAcceptor> acceptors = consumesProducesAcceptors.get(request.getMethod());
         if (acceptors == null) {
             throw new WebApplicationException(
@@ -443,14 +442,15 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
             // TODO: the effective media type in advance - see issue JERSEY-1187
             final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
             injector.inject(RoutingContext.class).setEffectiveAcceptableType(effectiveResponseType);
-            services.forContract(ResponseProcessor.RespondingContext.class).get().push(new Function<Response, Response>() {
+            services.forContract(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>(){
+            }).get().push(new Function<Response, Response>() {
                 @Override
                 public Response apply(final Response response) {
                     return typeNotSpecific(effectiveResponseType)
                             ? response : responseWithContentTypeHeader(effectiveResponseType, request, response);
                 }
             });
-            return selected.methodAcceptorPair.acceptor;
+            return selected.methodAcceptorPair.router;
         }
 
         throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
@@ -496,16 +496,16 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         consumesProducesAcceptors.put(HttpMethod.OPTIONS, optionsAcceptors);
     }
 
-    private TreeAcceptor createHeadEnrichedAcceptor() {
-        return new TreeAcceptor() {
+    private Router createHeadEnrichedRouter() {
+        return new Router() {
 
             @Override
-            public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
+            public Continuation apply(final Request request) {
                 if (HttpMethod.HEAD.equals(request.getMethod())) {
                     final Request getRequest = Requests.from(request).method(HttpMethod.GET).build();
-                    return Stages.singletonTreeContinuation(getRequest, getMethodAcceptor(getRequest));
+                    return Continuation.of(getRequest, getMethodRouter(getRequest));
                 } else {
-                    return Stages.singletonTreeContinuation(request, getMethodAcceptor(request));
+                    return Continuation.of(request, getMethodRouter(request));
                 }
             }
         };
@@ -519,7 +519,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         return new ConsumesProducesAcceptor(
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.TEXT_PLAIN_TYPE, false),
-                new MethodAcceptorPair(null, Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+                new MethodAcceptorPair(null, Routers.asTreeAcceptor(new Inflector<Request, Response>() {
 
                     @Override
                     public Response apply(Request data) {
@@ -535,7 +535,7 @@ final class MethodSelectingAcceptor implements TreeAcceptor {
         return new ConsumesProducesAcceptor(
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
-                new MethodAcceptorPair(null, Stages.asTreeAcceptor(new Inflector<Request, Response>() {
+                new MethodAcceptorPair(null, Routers.asTreeAcceptor(new Inflector<Request, Response>() {
 
                     @Override
                     public Response apply(Request data) {

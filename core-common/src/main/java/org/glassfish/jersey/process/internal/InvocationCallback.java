@@ -40,7 +40,6 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.Response;
 
 /**
  * Request transformation callback used by a {@link RequestInvoker request invoker}
@@ -49,9 +48,10 @@ import javax.ws.rs.core.Response;
  * The callback is invoked when the request transformation is suspended or completed
  * either successfully or by a failure.
  *
+ * @param <DATA> supported data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface InvocationCallback {
+public interface InvocationCallback<DATA> {
 
     /**
      * Request processing suspend event notification.
@@ -109,7 +109,7 @@ public interface InvocationCallback {
      *
      * @param response transformation result.
      */
-    public void result(final Response response);
+    public void result(final DATA response);
 
     /**
      * A request-to-response transformation failure event notification.

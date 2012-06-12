@@ -46,11 +46,10 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
@@ -58,7 +57,6 @@ import org.glassfish.hk2.Factory;
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AbstractFuture;
 
 /**
@@ -81,9 +79,10 @@ import com.google.common.util.concurrent.AbstractFuture;
  * In case the exception was not mapped to a response, the exception is presented
  * as the ultimate request-to-response transformation result.
  *
+ * @param <DATA> processed data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ResponseProcessor extends AbstractFuture<Response> implements Runnable {
+public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ResponseProcessor.class.getName());
 
@@ -91,90 +90,112 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
      * Injectable context that can be used during the data processing for
      * registering response processing functions that will be invoked during the
      * response processing.
+     *
+     * @param <DATA> processed data type.
      */
-    public static interface RespondingContext {
+    public static interface RespondingContext<DATA> {
 
         /**
          * Push response transformation function that should be applied.
          *
          * @param responseTransformation response transformation function.
          */
-        void push(Function<Response, Response> responseTransformation);
+        void push(Function<DATA, DATA> responseTransformation);
 
         /**
-         * Create an ({@link Optional optional} responder chain from all transformation
+         * (Optionally) create a responder chain from all transformations
          * previously pushed into the context.
          *
-         * @return created responder chain or {@link Optional#absent() absent value}
-         *         in case of no registered transformations.
+         * @return created responder chain root or {@code null} in case of no
+         *         registered transformations.
          */
-        Optional<Responder> createStageChain();
+        Stage<DATA> createResponderRoot();
     }
 
     /**
-     * Response processor builder that enables "assisted" injection of response
-     * processor.
+     * Response processor factory.
+     *
+     * @param <DATA> processed data type.
      */
-    public static class Builder {
+    public static interface Builder<DATA> {
 
+        /**
+         * Create a response processor for a given request scope instance
+         * and invocation callback.
+         *
+         * @param inflectedResponse inflected response data future.
+         * @param callback          the invocation callback to be invoked once the
+         *                          response processing has finished.
+         * @param scopeInstance     the instance of the request scope this processor
+         *                          belongs to.
+         * @return new response processor instance.
+         */
+        public ResponseProcessor<DATA> build(
+                final Future<DATA> inflectedResponse,
+                final InvocationCallback<DATA> callback,
+                final RequestScope.Instance scopeInstance);
+    }
+
+    /**
+     * Response processor builder for JAX-RS response data type.
+     */
+    public static class ResponseBuilder implements Builder<Response> {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private Factory<InvocationContext> invocationCtxProvider;
-        @Inject
-        private Factory<RespondingContext> respondingCtxProvider;
+        private Factory<RespondingContext<Response>> respondingCtxProvider;
         @Inject
         private Factory<ExceptionMappers> exceptionMappersProvider;
 
         /**
          * Default constructor meant to be used by injection framework.
          */
-        public Builder() {
+        public ResponseBuilder() {
             // Injection constructor
         }
 
-        /**
-         * Build a response processor for a given request scope instance
-         * and invocation callback.
-         *
-         * @param callback      the invocation callback to be invoked once the
-         *                      response processing has finished.
-         * @param scopeInstance the instance of the request scope this processor
-         *                      belongs to.
-         * @return new response processor instance.
-         */
-        public ResponseProcessor build(final InvocationCallback callback, final RequestScope.Instance scopeInstance) {
+        @Override
+        public ResponseProcessor<Response> build(
+                final Future<Response> inflectedResponse,
+                final InvocationCallback<Response> callback,
+                final RequestScope.Instance scopeInstance) {
 
-            return new ResponseProcessor(
-                    requestScope,
-                    scopeInstance,
+            return new ResponseProcessor<Response>(
                     callback,
-                    invocationCtxProvider,
+                    inflectedResponse,
                     respondingCtxProvider,
-                    exceptionMappersProvider);
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
+
+                @Override
+                protected Response convertResponse(Response exceptionResponse) {
+                    return exceptionResponse;
+                }
+            };
         }
     }
 
     //
     private final RequestScope requestScope;
     private volatile RequestScope.Instance scopeInstance;
-    private final InvocationCallback callback;
-    private final Factory<InvocationContext> invocationCtxProvider;
-    private final Factory<RespondingContext> respondingCtxProvider;
+    private final InvocationCallback<DATA> callback;
+    private final Future<DATA> inflectedResponse;
+    private final Factory<RespondingContext<DATA>> respondingCtxProvider;
     private final Factory<ExceptionMappers> exceptionMappersProvider;
 
     private ResponseProcessor(
-            RequestScope requestScope,
-            RequestScope.Instance scopeInstance,
-            InvocationCallback callback,
-            Factory<InvocationContext> invocationCtxProvider,
-            Factory<RespondingContext> respondingCtxProvider,
-            Factory<ExceptionMappers> exceptionMappersProvider) {
+            final InvocationCallback<DATA> callback,
+            final Future<DATA> inflectedResponse,
+            final Factory<RespondingContext<DATA>> respondingCtxProvider,
+            final RequestScope.Instance scopeInstance,
+            final RequestScope requestScope,
+            final Factory<ExceptionMappers> exceptionMappersProvider) {
         this.requestScope = requestScope;
         this.scopeInstance = scopeInstance;
         this.callback = callback;
+        this.inflectedResponse = inflectedResponse;
 
-        this.invocationCtxProvider = invocationCtxProvider;
         this.respondingCtxProvider = respondingCtxProvider;
         this.exceptionMappersProvider = exceptionMappersProvider;
     }
@@ -186,14 +207,13 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
 
                 @Override
                 public void run() {
-                    final Future<Response> inflectedResponse = invocationCtxProvider.get().getInflectedResponse();
                     if (inflectedResponse.isCancelled()) {
                         // the request processing has been cancelled; just cancel this future & return
                         ResponseProcessor.super.cancel(true);
                         return;
                     }
 
-                    Response response;
+                    DATA response;
                     try {
                         response = inflectedResponse.get();
                     } catch (Exception ex) {
@@ -202,7 +222,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
                                 "Request-to-response transformation finished with an exception.", unwrapped);
 
                         try {
-                            response = mapException(unwrapped);
+                            response = convertResponse(mapException(unwrapped));
                         } catch (Exception ex2) {
                             setResult(ex2);
                             return;
@@ -224,7 +244,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
                             if (i == 0) {
                                 // try to map the first responder exception
                                 try {
-                                    response = mapException(ex);
+                                    response = convertResponse(mapException(ex));
                                 } catch (Exception ex2) {
                                     setResult(ex2);
                                     return;
@@ -246,21 +266,30 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         }
     }
 
-    private Response runResponders(Response response) {
-        Optional<Responder> responder = respondingCtxProvider.get().createStageChain();
+    private DATA runResponders(DATA response) {
+        Stage<DATA> responder = respondingCtxProvider.get().createResponderRoot();
 
-        if (responder.isPresent()) {
-            Pair<Response, Optional<Responder>> continuation = Tuples.of(response, responder);
-            while (continuation.right().isPresent()) {
-                Responder next = continuation.right().get();
-                continuation = next.apply(continuation.left());
+        if (responder != null) {
+            Stage.Continuation<DATA> continuation = Stage.Continuation.of(response, responder);
+            while (continuation.hasNext()) {
+                continuation = continuation.next().apply(continuation.result());
             }
 
-            return continuation.left();
+            return continuation.result();
         }
 
         return response;
     }
+
+    /**
+     * Convert an exception-mapped JAX-RS {@link Response response} to supported
+     * processing data type.
+     *
+     * @param exceptionResponse a processing exception mapped to a JAX-RS response.
+     * @return JAX-RS exception-mapped response transformed to supported processing
+     *         data type.
+     */
+    protected abstract DATA convertResponse(Response exceptionResponse);
 
     @SuppressWarnings("unchecked")
     private Response mapException(Throwable exception) throws Exception {
@@ -275,7 +304,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         }
         final ExceptionMappers exceptionMappers = exceptionMappersProvider.get();
         if ((response == null || !response.hasEntity()) && exceptionMappers != null) {
-            javax.ws.rs.ext.ExceptionMapper mapper = exceptionMappers.find(exception.getClass());
+            ExceptionMapper mapper = exceptionMappers.find(exception.getClass());
             if (mapper != null) {
                 response = mapper.toResponse(exception); // may throw exception
             }
@@ -283,7 +312,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         return response;
     }
 
-    private void setResult(Response response) {
+    private void setResult(DATA response) {
         super.set(response);
         notifyCallback(response);
     }
@@ -293,7 +322,7 @@ public final class ResponseProcessor extends AbstractFuture<Response> implements
         notifyCallback(exception);
     }
 
-    private void notifyCallback(Response response) {
+    private void notifyCallback(DATA response) {
         try {
             callback.result(response);
         } catch (Exception ex) {

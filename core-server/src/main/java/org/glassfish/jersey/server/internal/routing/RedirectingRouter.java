@@ -40,33 +40,33 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.net.URI;
-import java.util.Iterator;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 
 import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * TODO javadoc.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class RedirectingAcceptor implements TreeAcceptor {
+class RedirectingRouter implements Router {
 
-    public class Builder {
+    /**
+     * "Assisted injection" factory interface for {@link RedirectingRouter}.
+     *
+     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
+     * assisted injection in Guice</a>.
+     */
+    public static class Builder {
 
         private final Factory<RoutingContext> contextProvider;
         private final Factory<UriInfo> uriInfoProvider;
@@ -76,17 +76,18 @@ class RedirectingAcceptor implements TreeAcceptor {
             this.uriInfoProvider = uriInfoProvider;
         }
 
-        public RedirectingAcceptor build(boolean redirect, boolean patternEndsInSlash) {
-            return new RedirectingAcceptor(contextProvider, uriInfoProvider, redirect, patternEndsInSlash);
+        public RedirectingRouter build(boolean redirect, boolean patternEndsInSlash) {
+            return new RedirectingRouter(contextProvider, uriInfoProvider, redirect, patternEndsInSlash);
         }
     }
+
     private final Factory<RoutingContext> contextProvider;
     private final Factory<UriInfo> uriInfoProvider;
     // TODO implement config injection
     private final boolean redirect;
     private final boolean patternEndsInSlash;
 
-    public RedirectingAcceptor(
+    private RedirectingRouter(
             final Factory<RoutingContext> contextProvider,
             final Factory<UriInfo> uriInfoProvider,
             final boolean redirect,
@@ -99,7 +100,7 @@ class RedirectingAcceptor implements TreeAcceptor {
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+    public Continuation apply(Request request) {
         String rhPath = getLastMatch();
 
         final int rhPathLength = rhPath.length();
@@ -114,7 +115,7 @@ class RedirectingAcceptor implements TreeAcceptor {
             // Path is '/';
             // no match if pattern does not end in a '/' and redirect is true
             if (!patternEndsInSlash && redirect) {
-                return Stages.terminalTreeContinuation(request);
+                return Continuation.of(request);
             }
 
             // Consume the '/'
@@ -129,7 +130,7 @@ class RedirectingAcceptor implements TreeAcceptor {
         }
 
         // Accept using the right hand path
-        return Stages.terminalTreeContinuation(request);
+        return Continuation.of(request);
     }
 
     /**
@@ -149,8 +150,8 @@ class RedirectingAcceptor implements TreeAcceptor {
      *
      * TODO use the complete URI.
      */
-    private Pair<Request, Iterator<TreeAcceptor>> redirect(Request request) {
-        return Tuples.<Request, Iterator<TreeAcceptor>>of(request, Iterators.singletonIterator(Stages.asTreeAcceptor(
+    private Continuation redirect(Request request) {
+        return Continuation.of(request, Lists.newArrayList(Routers.asTreeAcceptor(
                 new Inflector<Request, Response>() {
 
                     @Override

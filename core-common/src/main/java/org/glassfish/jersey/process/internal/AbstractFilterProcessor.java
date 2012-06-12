@@ -67,6 +67,9 @@ public abstract class AbstractFilterProcessor<T> {
 
     @Inject
     private Services services;
+    /**
+     * Filter context factory.
+     */
     @Inject
     protected Factory<JerseyFilterContext> filterContextFactory;
 

@@ -47,7 +47,7 @@ package org.glassfish.jersey.internal.util.collection;
  *
  * @param <T> referred value type
  *
- * @see Tuples
+ * @see Refs
  */
 public interface Ref<T> {
 

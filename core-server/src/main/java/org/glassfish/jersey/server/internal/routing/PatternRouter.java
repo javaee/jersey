@@ -39,62 +39,64 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
-
 import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.collect.Iterators;
-
 /**
+ * Matches the un-matched right-hand request path to a configured {@link Pattern pattern}.
  *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class PatternRouteAcceptor implements TreeAcceptor {
+class PatternRouter implements Router {
 
-    public class Builder {
+    /**
+     * "Assisted injection" factory interface for {@link PatternRouter}.
+     *
+     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
+     * assisted injection in Guice</a>.
+     */
+    public static class Builder {
 
-        private final Factory<RoutingContext> contextProvider;
+        @Inject
+        private Factory<RoutingContext> contextProvider;
 
-        public Builder(@Inject Factory<RoutingContext> contextProvider) {
-            this.contextProvider = contextProvider;
-        }
-
-        public PatternRouteAcceptor build(List<Pair<Pattern, List<Factory<TreeAcceptor>>>> routes) {
-            return new PatternRouteAcceptor(contextProvider, routes);
+        /**
+         * Build a pattern request router.
+         *
+         * @param routes next-level request pre-processing stages to be returned in case the request
+         *               matching in the built router is successful.
+         * @return a pattern request router.
+         */
+        public PatternRouter build(List<Route<Pattern>> routes) {
+            return new PatternRouter(contextProvider, routes);
         }
     }
-    private final Factory<RoutingContext> contextProvider;
-    private final List<Pair<Pattern, List<Factory<TreeAcceptor>>>> acceptedRoutes;
 
-    private PatternRouteAcceptor(Factory<RoutingContext> contextProvider,
-            List<Pair<Pattern, List<Factory<TreeAcceptor>>>> routes) {
+    private final Factory<RoutingContext> contextProvider;
+    private final List<Route<Pattern>> acceptedRoutes;
+
+    private PatternRouter(Factory<RoutingContext> contextProvider,
+                          List<Route<Pattern>> routes) {
 
         this.contextProvider = contextProvider;
         this.acceptedRoutes = routes;
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(final Request request) {
+    public Continuation apply(final Request request) {
         final RoutingContext rc = contextProvider.get();
         // Peek at matching information to obtain the remaining path to match
         String path = rc.getFinalMatchingGroup();
 
         /**
-         * TODO this is fragile. Dealing with '/' is always problematic!
-         *
          * For hierarchical matching Jersey modifies the regular
          * expressions generated from @Path as follows:
          * 1) prefix a '/' if one is not present.
@@ -102,42 +104,22 @@ public class PatternRouteAcceptor implements TreeAcceptor {
          *    '(/.*)?' or '(/)?' matching group
          * This "normalization" simplifies the matching algorithm
          * and enables the support of automatic redirection.
-         * These cover a lot of cases but there are cases where this does not
-         * apply, i suspect in these cases one breaks out of the hierarchical
-         * matching (and may potentially explicitly go into another separate
-         * hierarchical matching process).
-         *
          */
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
 
-        for (final Pair<Pattern, List<Factory<TreeAcceptor>>> acceptedRoute : acceptedRoutes) {
-            final Matcher m = acceptedRoute.left().matcher(path);
+        for (final Route<Pattern> acceptedRoute : acceptedRoutes) {
+            final Matcher m = acceptedRoute.routingPattern().matcher(path);
             if (m.matches()) {
                 // Push match result information and rest of path to match
                 rc.pushMatchResult(m.toMatchResult());
 
-                final Iterator<TreeAcceptor> acceptors;
-
-                final List<Factory<TreeAcceptor>> acceptorProviders = acceptedRoute.right();
-                if (acceptorProviders.isEmpty()) {
-                    acceptors = Iterators.emptyIterator();
-                } else if (acceptorProviders.size() == 1) {
-                    acceptors = Iterators.transform(
-                            Iterators.singletonIterator(acceptorProviders.iterator().next()),
-                            RouterModule.FACTORY_TO_ACCEPTOR_TRANSFORMATION);
-                } else {
-                    acceptors = Iterators.transform(
-                            acceptorProviders.iterator(),
-                            RouterModule.FACTORY_TO_ACCEPTOR_TRANSFORMATION);
-                }
-
-                return Tuples.of(request, acceptors);
+                return Continuation.of(request, acceptedRoute.next());
             }
         }
 
         // No match
-        return Stages.terminalTreeContinuation(request);
+        return Continuation.of(request);
     }
 }

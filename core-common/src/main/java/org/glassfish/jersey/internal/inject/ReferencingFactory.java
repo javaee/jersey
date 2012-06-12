@@ -40,7 +40,7 @@
 package org.glassfish.jersey.internal.inject;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Tuples;
+import org.glassfish.jersey.internal.util.collection.Refs;
 
 import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Factory;
@@ -57,7 +57,7 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
 
         @Override
         public Ref<T> get() throws ComponentException {
-            return Tuples.emptyRef();
+            return Refs.emptyRef();
         }
     }
 
@@ -71,7 +71,7 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
 
         @Override
         public Ref<T> get() throws ComponentException {
-            return Tuples.of(initialValue);
+            return Refs.of(initialValue);
         }
     }
 

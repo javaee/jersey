@@ -39,47 +39,32 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Optional;
-
 /**
- * Abstract chainable linear acceptor.
+ * Linear acceptor that can be composed into a chain.
  *
- * Implements support for managing the default next stage value.
+ * The acceptor exposes a method for setting a value of the
+ * {@link #setDefaultNext(Stage) next acceptor} in the chain that
+ * should be returned from the chain by default.
+ * <p>
+ * The typical use case for implementing the acceptor is a logic that usually
+ * needs to perform some logic, but unlike an {@link Stage.Builder#to(com.google.common.base.Function)
+ * acceptor created from a function} it also needs to be able to decide to override
+ * the default next acceptor and return a different acceptor, effectively branching
+ * away from the original linear acceptor chain. This technique can be e.g. used
+ * to break the accepting chain by returning a custom {@link Inflecting inflecting}
+ * acceptor, etc.
+ * </p>
  *
+ * @param <DATA> processed data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractChainableAcceptor implements ChainableAcceptor {
-
-    private Optional<LinearAcceptor> nextStage;
+public interface ChainableStage<DATA> extends Stage<DATA> {
 
     /**
-     * Create a new chainable acceptor with no next stage set.
-     */
-    protected AbstractChainableAcceptor() {
-        nextStage = Optional.absent();
-    }
-
-    /**
-     * Create a new chainable acceptor with an initialized default
-     * next stage value.
+     * Set the default next stage that should be returned from this
+     * stage after it has been invoked by default.
      *
-     * @param nextStage default next stage.
+     * @param next the next default stage in the chain.
      */
-    protected AbstractChainableAcceptor(LinearAcceptor nextStage) {
-        this.nextStage = Optional.of(nextStage);
-    }
-
-    @Override
-    public final void setDefaultNext(LinearAcceptor acceptor) {
-        this.nextStage = Optional.of(acceptor);
-    }
-
-    /**
-     * Get the default next stage currently configured on the acceptor.
-     *
-     * @return default next stage currently configured on the acceptor.
-     */
-    public final Optional<LinearAcceptor> getDefaultNext() {
-        return nextStage;
-    }
+    public void setDefaultNext(Stage<DATA> next);
 }

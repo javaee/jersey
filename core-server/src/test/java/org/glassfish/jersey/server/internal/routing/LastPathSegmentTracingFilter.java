@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Iterator;
 import java.util.regex.MatchResult;
 
 import javax.ws.rs.core.Request;
@@ -48,28 +47,24 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
 
 @RequestScoped
-class LastPathSegmentTracingFilter implements TreeAcceptor {
+class LastPathSegmentTracingFilter implements Router {
 
-    private final RespondingContext respondingContext;
+    private final RespondingContext<Response> respondingContext;
     private final RoutingContext routingContext;
 
-    public LastPathSegmentTracingFilter(@Inject RespondingContext respondingContext, @Inject RoutingContext routingContext) {
+    public LastPathSegmentTracingFilter(@Inject RespondingContext<Response> respondingContext, @Inject RoutingContext routingContext) {
         this.respondingContext = respondingContext;
         this.routingContext = routingContext;
     }
 
     @Override
-    public Pair<Request, Iterator<TreeAcceptor>> apply(Request request) {
+    public Router.Continuation apply(Request request) {
         final String wholePath = getWholeMatchedPath();
         final String lastMatch = getLastMatch();
         final String lastSegment = wholePath.isEmpty() ? wholePath : wholePath.substring(0, wholePath.length() - lastMatch.length());
@@ -81,7 +76,7 @@ class LastPathSegmentTracingFilter implements TreeAcceptor {
                 return Responses.toBuilder(response).entity(response.getEntity() + "-" + lastSegment).build();
             }
         });
-        return Stages.terminalTreeContinuation(request);
+        return Router.Continuation.of(request);
     }
 
     private String getWholeMatchedPath() {

@@ -39,26 +39,31 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
-* A pair of resource method model and a corresponding resource method acceptor.
-*
-* @author Marek Potociar (marek.potociar at oracle.com)
-*/
+ * A pair of resource method model and a corresponding resource method router.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
 final class MethodAcceptorPair {
+    /**
+     * Resource method model.
+     */
     final ResourceMethod model;
-    final TreeAcceptor acceptor;
+    /**
+     * Resource method router.
+     */
+    final Router router;
 
     /**
-     * Create a new [resource method model, resource method acceptor] pair.
+     * Create a new [resource method model, resource method router] pair.
      *
-     * @param model resource method model.
-     * @param acceptor resource method acceptor.
+     * @param model  resource method model.
+     * @param router resource method router.
      */
-    MethodAcceptorPair(ResourceMethod model, TreeAcceptor acceptor) {
+    MethodAcceptorPair(ResourceMethod model, Router router) {
         this.model = model;
-        this.acceptor = acceptor;
+        this.router = router;
     }
 }

@@ -54,10 +54,8 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
 import org.glassfish.jersey.server.model.Resource;
 
 import org.glassfish.hk2.Services;
@@ -99,10 +97,6 @@ public class ContextBasedInjectionTest {
 
         @Context
         private InvocationContext invocationContext;
-        @Context
-        private RespondingContext respondingCtx;
-        @Context
-        private RoutingContext routingCtx;
         @Context
         Services services;
         private final String responseContent;

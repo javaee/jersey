@@ -39,10 +39,9 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.core.ExecutionContext;
-import javax.ws.rs.core.Response;
 
 /**
  * Injectable invocation context that can be used to control various aspects
@@ -81,8 +80,8 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
          * Indicates the invocation running in the invocation context has been
          * resumed.
          *
-         * @see InvocationContext#resume(Response)
-         * @see InvocationContext#resume(Throwable)
+         * @see InvocationContext#resume(Object)
+         * @see InvocationContext#resume(Exception)
          */
         RESUMED
     }
@@ -106,15 +105,4 @@ public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
      * returns {@code false} otherwise.
      */
     public boolean trySuspend();
-
-    /**
-     * Return the response future that provides a response returned by an inflector.
-     *
-     * This method is used by the {@link ResponseProcessor} to retrieve the
-     * application-layer response information before the response processing is
-     * executed.
-     *
-     * @return inflected response future.
-     */
-    public Future<Response> getInflectedResponse();
 }

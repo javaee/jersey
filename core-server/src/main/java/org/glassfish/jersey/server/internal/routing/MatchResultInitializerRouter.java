@@ -37,66 +37,59 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
-
-import java.util.Iterator;
+package org.glassfish.jersey.server.internal.routing;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Hierarchical request acceptor.
- * <p/>
- * A continuation of a hierarchical acceptor is represented by an ordered collection
- * of next level of hierarchical acceptors resulting in a hierarchical depth-first
- * request transformation processing.
+ * Request matching bootstrapping stage that pushes the whole request path to the routing
+ * context as a right-hand path to be matched.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface TreeAcceptor {
+final class MatchResultInitializerRouter implements Router {
 
     /**
-     * A {@link TreeAcceptor} builder.
+     * "Assisted injection" factory interface for {@link MatchResultInitializerRouter}.
+     *
+     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
+     * assisted injection in Guice</a>.
      */
-    public static interface Builder {
+    public static class Builder {
+
+        @Inject
+        private Factory<RoutingContext> contextProvider;
 
         /**
-         * Add new child node into the {@link TreeAcceptor hierarchical request acceptor}
-         * being built.
+         * Build a match result initializer.
          *
-         * @param child new child node to be added.
-         * @return updated builder instance.
+         * @param rootRoute matching root.
+         * @return a match result initializer.
          */
-        public Builder child(TreeAcceptor child);
-
-        /**
-         * Build a {@link TreeAcceptor hierarchical acceptor} for the transformation of
-         * a given data type.
-         *
-         * @return hierarchical stage.
-         */
-        public TreeAcceptor build();
+        public MatchResultInitializerRouter build(Router rootRoute) {
+            return new MatchResultInitializerRouter(contextProvider, rootRoute);
+        }
     }
 
-    /**
-     * Transforms supplied data and returns transformed data together with
-     * a processing continuation in the form of a &lt;data,&nbsp;continuation&gt;
-     * {@link Pair pair}.
-     * <p>
-     * The returned continuation is an {@link Iterator iterator} over the next level
-     * of the tree acceptors that should be invoked. A non-empty iterator
-     * typically indicates that the processing is expected to continue further, while
-     * an empty iterator returned as a continuation indicates that the unidirectional
-     * hierarchical data transformation previously reached a leaf node and the depth-first
-     * processing algorithm needs to determine whether the processing is finished or
-     * whether it should back-up, move to a next branch and continue.
-     * </p>
-     *
-     * @param data data to be transformed.
-     * @return a {@link Pair pair} of transformed data and processing continuation;
-     *     the transformed data is on the left and the processing continuation on
-     *     the right side of the pair.
-     */
-    Pair<Request, Iterator<TreeAcceptor>> apply(Request data);
+    private final Factory<RoutingContext> contextProvider;
+    private final Router rootRouter;
+
+    private MatchResultInitializerRouter(Factory<RoutingContext> contextProvider, Router rootRouter) {
+        this.contextProvider = contextProvider;
+        this.rootRouter = rootRouter;
+    }
+
+    @Override
+    public Continuation apply(final Request request) {
+        final RoutingContext rc = contextProvider.get();
+        rc.pushMatchResult(new SingleMatchResult(Requests.relativePath(request, false)));
+
+        return Continuation.of(request, rootRouter);
+    }
 }

@@ -37,33 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server.internal.routing;
+
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
+
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Linear acceptor that can be composed into a chain.
+ * Request pre-processing stage that {@link RoutingContext#getInflector() extracts
+ * an inflector from a routing context} where it was previously stored by the
+ * {@link RoutingStage request to resource matching stage} and
+ * (if available) returns the inflector wrapped in a next terminal stage.
  *
- * The acceptor exposes a method for setting a value of the
- * {@link #setDefaultNext(LinearAcceptor) next acceptor} in the chain that
- * should be returned from the chain by default.
- * <p>
- * The typical use case for implementing the acceptor is a logic that usually
- * needs to perform some logic, but unlike an {@link LinearAcceptor.Builder#to(com.google.common.base.Function)
- * acceptor created from a function} it also needs to be able to decide to override
- * the default next acceptor and return a different acceptor, effectively branching
- * away from the original linear acceptor chain. This technique can be e.g. used
- * to break the accepting chain by returning a custom {@link Inflecting inflecting}
- * acceptor, etc.
- * </p>
+ * This request pre-processing stage should be a final stage in the request
+ * processing chain.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @see RoutingStage
  */
-public interface ChainableAcceptor extends LinearAcceptor {
+public class RoutedInflectorExtractorStage implements Stage<Request> {
+    private final Factory<RoutingContext> routingContextFactory;
 
     /**
-     * Set the default next acceptor that should be returned from the
-     * linear acceptor after it has been invoked by default.
+     * Create new inflector extracting acceptor.
      *
-     * @param acceptor the next default acceptor in the chain.
+     * @param routingContextFactory accepting context factory;
      */
-    public void setDefaultNext(LinearAcceptor acceptor);
+    public RoutedInflectorExtractorStage(@Inject Factory<RoutingContext> routingContextFactory) {
+        this.routingContextFactory = routingContextFactory;
+    }
+
+    @Override
+    public Continuation<Request> apply(final Request request) {
+        final Inflector<Request, Response> inflector = routingContextFactory.get().getInflector();
+
+        return inflector != null ? Continuation.of(request, Stages.asStage(inflector)) : Continuation.of(request);
+    }
 }

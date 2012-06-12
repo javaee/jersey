@@ -79,10 +79,20 @@ import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.FilteringStage;
+import org.glassfish.jersey.process.internal.InflectorNotFoundException;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RoutingContext;
+import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
+import org.glassfish.jersey.server.internal.routing.Router;
+import org.glassfish.jersey.server.internal.routing.RoutingContext;
+import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.BasicValidator;
 import org.glassfish.jersey.server.model.ModelValidationException;
@@ -199,7 +209,7 @@ public final class ApplicationHandler {
     @Inject
     private RequestScope requestScope;
     @Inject
-    private Factory<RouterModule.RoutingContext> routingContextFactory;
+    private Factory<RoutingContext> routingContextFactory;
     @Inject
     private Factory<Ref<SecurityContext>> securityContextRefFactory;
     @Inject
@@ -209,7 +219,7 @@ public final class ApplicationHandler {
     /**
      * Request invoker.
      */
-    private RequestInvoker invoker;
+    private RequestInvoker<Request, Response> invoker;
     private final ResourceConfig configuration;
     private References refs;
 
@@ -349,25 +359,26 @@ public final class ApplicationHandler {
          * Root hierarchical request matching acceptor.
          * Invoked in a single linear stage as part of the main linear accepting chain.
          */
-        final TreeAcceptor rootResourceMatchingAcceptor = runtimeModelBuilder.buildModel();
+        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel();
 
         final PreMatchRequestFilteringStage preMatchRequestFilteringStage = injector.inject(PreMatchRequestFilteringStage.class);
-        final ResourceMatchingStage resourceMatchingStage =
-                injector.inject(ResourceMatchingStage.Builder.class).build(rootResourceMatchingAcceptor);
-        final FilteringAcceptor resourceFilteringStage = injector.inject(FilteringAcceptor.class);
-        final InflectorExtractingStage inflectorExtractingStage = injector.inject(InflectorExtractingStage.class);
+        final RoutingStage routingStage =
+                injector.inject(RoutingStage.Builder.class).build(resourceRoutingRoot);
+        final FilteringStage resourceFilteringStage = injector.inject(FilteringStage.class);
+        final RoutedInflectorExtractorStage routedInflectorExtractorStage = injector.inject(RoutedInflectorExtractorStage.class);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
-        final LinearAcceptor rootStageAcceptor = Stages
-                .acceptingChain(injector.inject(ReferencesInitializer.class))
+        final Stage<Request> rootStage = Stages
+                .chain(injector.inject(ReferencesInitializer.class))
                 .to(injector.inject(MessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
-                .to(resourceMatchingStage)
+                .to(routingStage)
                 .to(resourceFilteringStage)
-                .build(inflectorExtractingStage);
+                .build(routedInflectorExtractorStage);
 
-        this.invoker = injector.inject(RequestInvoker.Builder.class).build(new LinearRequestProcessor(rootStageAcceptor));
+        this.invoker = injector.inject(RequestInvoker.Builder.class)
+                .build(rootStage);
 
         // inject self
         injector.inject(this);
@@ -594,7 +605,7 @@ public final class ApplicationHandler {
      * @param securityContext         custom security context.
      * @param requestScopeInitializer custom request-scoped initializer.
      */
-    private void apply(final Request request, final InvocationCallback callback, final SecurityContext securityContext,
+    private void apply(final Request request, final InvocationCallback<Response> callback, final SecurityContext securityContext,
                        final RequestScopedInitializer requestScopeInitializer) {
         requestScope.runInScope(new Runnable() {
 

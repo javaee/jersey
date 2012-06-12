@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
-import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToBuilder;
@@ -59,18 +58,12 @@ import org.jvnet.hk2.annotations.Inject;
  */
 class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
 
-    private final Services services;
-    private final PatternRouteAcceptor.Builder acceptorFactory;
-    private final MatchResultInitializerAcceptor.Builder initializerFactory;
-
-    PatternRouteBuilder(
-            @Inject Services services,
-            @Inject PatternRouteAcceptor.Builder acceptorFactory,
-            @Inject MatchResultInitializerAcceptor.Builder initializerFactory) {
-        this.services = services;
-        this.acceptorFactory = acceptorFactory;
-        this.initializerFactory = initializerFactory;
-    }
+    @Inject
+    private Services services;
+    @Inject
+    private PatternRouter.Builder acceptorFactory;
+    @Inject
+    private MatchResultInitializerRouter.Builder initializerFactory;
 
     @Override
     public RouteToBuilder<Pattern> route(String pattern) {
@@ -87,14 +80,14 @@ class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
             }
 
             @Override
-            public TreeAcceptor build() {
+            public Router build() {
                 return acceptorFactory.build(acceptedRoutes());
             }
         };
     }
 
     @Override
-    public TreeAcceptor root(TreeAcceptor routingRoot) {
+    public Router root(Router routingRoot) {
         return initializerFactory.build(routingRoot);
     }
 }

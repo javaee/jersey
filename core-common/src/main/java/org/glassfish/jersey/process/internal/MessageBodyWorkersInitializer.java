@@ -60,7 +60,7 @@ import com.google.common.base.Function;
  */
 public class MessageBodyWorkersInitializer implements Function<Request, Request> {
     private final Factory<MessageBodyWorkers> workersFactory;
-    private final Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
+    private final Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
 
     /**
      * Create new {@link MessageBodyWorkers} initialization function for requests
@@ -71,7 +71,7 @@ public class MessageBodyWorkersInitializer implements Function<Request, Request>
      */
     public MessageBodyWorkersInitializer(
             @Inject Factory<MessageBodyWorkers> workersFactory,
-            @Inject Factory<ResponseProcessor.RespondingContext> respondingContextFactory) {
+            @Inject Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory) {
         this.workersFactory = workersFactory;
         this.respondingContextFactory = respondingContextFactory;
     }

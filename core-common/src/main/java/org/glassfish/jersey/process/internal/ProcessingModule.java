@@ -40,6 +40,7 @@
 package org.glassfish.jersey.process.internal;
 
 import javax.ws.rs.core.ExecutionContext;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -48,6 +49,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.hk2.scopes.PerLookup;
+import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -74,16 +76,19 @@ public class ProcessingModule extends AbstractModule {
         bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {})
+        bind(new TypeLiteral<Ref<InvocationContext>>() {
+        })
                 .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
 
         // Processing executors
         bind().to(ProcessingExecutorsFactory.class);
 
-        // Accepting context
-        bind(RequestProcessor.AcceptingContext.class).to(DefaultAcceptingContext.class).in(RequestScope.class);
-
         // Responding context
-        bind(ResponseProcessor.RespondingContext.class).to(DefaultRespondingContext.class).in(RequestScope.class);
+        bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
+        }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
+        }).in(RequestScope.class);
+
+        bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
+        }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
     }
 }

@@ -42,18 +42,14 @@ package org.glassfish.jersey.process.internal;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.collection.Pair;
-import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.process.Inflector;
 
 import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Optional;
-
 /**
- * Filtering {@link ChainableAcceptor chainable acceptor} that runs
+ * Filtering {@link ChainableStage chainable acceptor} that runs
  * {@link RequestFilterProcessor request filter processor} on a request
  * and registers {@link ResponseFilterProcessor response filter processor}
  * to be run on a response.
@@ -65,12 +61,12 @@ import com.google.common.base.Optional;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class FilteringAcceptor extends AbstractChainableAcceptor {
+public class FilteringStage extends AbstractChainableStage<Request> {
 
     private final RequestFilterProcessor requestFilterProcessor;
     private final ResponseFilterProcessor responseFilterProcessor;
     private final Factory<JerseyFilterContext> filterContextFactory;
-    private final Factory<ResponseProcessor.RespondingContext> respondingContextFactory;
+    private final Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
 
     /**
      * Create a new filtering acceptor.
@@ -83,10 +79,10 @@ public class FilteringAcceptor extends AbstractChainableAcceptor {
      * @param respondingContextFactory factory providing request-scoped responding
      *                                 contexts.
      */
-    public FilteringAcceptor(@Inject RequestFilterProcessor requestFilterProcessor,
-                             @Inject ResponseFilterProcessor responseFilterProcessor,
-                             @Inject Factory<JerseyFilterContext> filterContextFactory,
-                             @Inject Factory<ResponseProcessor.RespondingContext> respondingContextFactory) {
+    public FilteringStage(@Inject RequestFilterProcessor requestFilterProcessor,
+                          @Inject ResponseFilterProcessor responseFilterProcessor,
+                          @Inject Factory<JerseyFilterContext> filterContextFactory,
+                          @Inject Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory) {
         this.requestFilterProcessor = requestFilterProcessor;
         this.responseFilterProcessor = responseFilterProcessor;
         this.filterContextFactory = filterContextFactory;
@@ -94,7 +90,7 @@ public class FilteringAcceptor extends AbstractChainableAcceptor {
     }
 
     @Override
-    public Pair<Request, Optional<LinearAcceptor>> apply(Request request) {
+    public Continuation<Request> apply(Request request) {
         JerseyFilterContext filterContext = filterContextFactory.get();
 
         respondingContextFactory.get().push(responseFilterProcessor);
@@ -105,15 +101,15 @@ public class FilteringAcceptor extends AbstractChainableAcceptor {
 
         if (filterContextResponse == null) {
             // continue accepting
-            return Tuples.of(filteredRequest, getDefaultNext());
+            return Continuation.of(filteredRequest, getDefaultNext());
         } else {
             // abort accepting & return response
-            return Tuples.of(filteredRequest, Optional.of(Stages.asLinearAcceptor(new Inflector<Request, Response>() {
+            return Continuation.of(filteredRequest, Stages.asStage(new Inflector<Request, Response>() {
                 @Override
                 public Response apply(Request request) {
                     return filterContextResponse;
                 }
-            })));
+            }));
         }
     }
 }

@@ -48,8 +48,6 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.process.internal.TreeAcceptor;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToPathBuilder;
@@ -84,9 +82,9 @@ public final class RuntimeModelBuilder {
     @Inject
     private Services services;
     @Inject
-    private PushMethodHandlerAcceptor.Builder pushHandlerAcceptorBuilder;
+    private PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder;
     @Inject
-    private MethodSelectingAcceptor.Builder methodSelectingAcceptorBuilder;
+    private MethodSelectingRouter.Builder methodSelectingAcceptorBuilder;
 
     private MessageBodyWorkers workers;
     private boolean subResourceMode;
@@ -217,15 +215,15 @@ public final class RuntimeModelBuilder {
         samePathMethodAcceptorPairs.add(new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel)));
     }
 
-    private TreeAcceptor createSingleMethodAcceptor(final ResourceMethod resourceMethod) {
-        TreeAcceptor methodAcceptor = null;
+    private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod) {
+        Router methodAcceptor = null;
         switch (resourceMethod.getType()) {
             case RESOURCE_METHOD:
             case SUB_RESOURCE_METHOD:
-                methodAcceptor = Stages.asTreeAcceptor(createInflector(resourceMethod));
+                methodAcceptor = Routers.asTreeAcceptor(createInflector(resourceMethod));
                 break;
             case SUB_RESOURCE_LOCATOR:
-                methodAcceptor = new SubResourceLocatorAcceptor(injector, services, workers, resourceMethod);
+                methodAcceptor = new SubResourceLocatorRouter(injector, services, workers, resourceMethod);
                 break;
         }
 
@@ -242,8 +240,8 @@ public final class RuntimeModelBuilder {
         return resourceMethodInvokerBuilder.build(method);
     }
 
-    private TreeAcceptor createRootTreeAcceptor(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
-        final TreeAcceptor routingRoot;
+    private Router createRootTreeAcceptor(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
+        final Router routingRoot;
         if (lastRoutedBuilder != null) {
             routingRoot = lastRoutedBuilder.build();
         } else {
@@ -252,7 +250,7 @@ public final class RuntimeModelBuilder {
              * anything and does not return any inflector. This will cause 404 being
              * returned for every request.
              */
-            routingRoot = Stages.acceptingTree(new Function<Request, Request>() {
+            routingRoot = Routers.acceptingTree(new Function<Request, Request>() {
 
                 @Override
                 public Request apply(Request input) {
@@ -272,12 +270,12 @@ public final class RuntimeModelBuilder {
     private RouteToPathBuilder<PathPattern> routeMethodAcceptor(
             final RouteToPathBuilder<PathPattern> lastRoutedBuilder,
             final PathPattern pathPattern,
-            final TreeAcceptor uriPushingAcceptor,
-            final TreeAcceptor methodAcceptor) {
+            final Router uriPushingAcceptor,
+            final Router methodAcceptor) {
 
         if (subResourceMode) {
             return routedBuilder(lastRoutedBuilder).route(pathPattern)
-                            .to(methodAcceptor);
+                    .to(methodAcceptor);
         } else {
             return routedBuilder(lastRoutedBuilder).route(pathPattern)
                     .to(uriPushingAcceptor)
@@ -288,10 +286,10 @@ public final class RuntimeModelBuilder {
     /**
      * Build a runtime model.
      *
-     * @return runtime request processing acceptor root.
+     * @return runtime request routing root.
      */
-    public TreeAcceptor buildModel() {
-        final PushMatchedUriAcceptor uriPushingAcceptor = injector.inject(PushMatchedUriAcceptor.class);
+    public Router buildModel() {
+        final PushMatchedUriRouter uriPushingRouter = injector.inject(PushMatchedUriRouter.class);
         RouteToPathBuilder<PathPattern> lastRoutedBuilder = null;
 
         // route resource method acceptors
@@ -303,7 +301,7 @@ public final class RuntimeModelBuilder {
                 lastRoutedBuilder = routeMethodAcceptor(
                         lastRoutedBuilder,
                         closedResourcePathPattern,
-                        uriPushingAcceptor,
+                        uriPushingRouter,
                         methodSelectingAcceptorBuilder.build(workers, methodAcceptorPairs));
             }
             rootAcceptors.clear();
@@ -333,17 +331,17 @@ public final class RuntimeModelBuilder {
                     if (!subResourceMethods.isEmpty()) {
                         final PathPattern subResourceMethodPath = PathPattern.asClosed(singlePathEntry.getKey());
                         srRoutedBuilder = routedBuilder(srRoutedBuilder).route(subResourceMethodPath)
-                                .to(uriPushingAcceptor)
+                                .to(uriPushingRouter)
                                 .to(methodSelectingAcceptorBuilder.build(workers, subResourceMethods));
                     }
                     if (locator != null) {
                         srRoutedBuilder = routedBuilder(srRoutedBuilder).route(singlePathEntry.getKey())
-                                .to(uriPushingAcceptor)
-                                .to(locator.acceptor);
+                                .to(uriPushingRouter)
+                                .to(locator.router);
                     }
                 }
                 lastRoutedBuilder = routeMethodAcceptor(
-                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingAcceptor, srRoutedBuilder.build());
+                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build());
             }
             subResourceAcceptors.clear();
         }

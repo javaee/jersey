@@ -43,15 +43,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.internal.util.collection.Pair;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Tuples;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
@@ -59,44 +56,45 @@ import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 
 /**
- * Request invoker is the main request to response processing entry point. It invokes
- * requests and returns a {@link ListenableFuture listenable response future}.
+ * Request invoker is the main request to response data processing entry point. It accepts
+ * request data and returns a {@link ListenableFuture listenable response data future}.
  * <p/>
- * Request invoker uses an (injectable) {@link RequestProcessor request processor}
- * to run each invoked request through the (injected) request processing stages (acceptors
+ * Request invoker runs the request data through the (injected) request data processing stages
  * until a terminal request processing stage {@link Inflecting referencing} an
- * {@link Inflector}&lt;{@link Request}, {@link Response}&gt; is reached.
+ * {@link Inflector} is reached.
  * The inflector referenced by the terminal request processing stage is then wrapped
  * into a {@link AsyncInflectorAdapter suspendable inflector} which is subsequently
- * invoked. Once a response from the inflector is available, it is processed by
+ * invoked. Once a response data from the inflector is available, it is processed by
  * a {@link ResponseProcessor response processor} before it is made available in the
  * response future returned by the request invoker. If a {@link InvocationCallback response callback}
  * is supplied, it is invoked at the end of the response processing chain.
  * <p/>
- * Request and response processing tasks are handled by a pair of dedicated customizable
+ * Request and response processing flows are executed in the context of dedicated customizable
  * {@link ExecutorService executors}, one for request and the other one for response
- * processing. By default, the request processing is executed on the caller thread.
+ * data processing. By default, the request processing is executed on the caller thread.
  * If the request processing is not {@link InvocationContext#suspend() suspended}
  * in the inflector, the response processing is by default executed synchronously
- * on the caller thread  too. In case the request processing is suspended, the response
+ * on the caller thread too. In case the request processing is suspended, the response
  * processing is resumed in the thread executing the code that resumed the response
  * processing.
  *
+ * @param <REQUEST> request processing data type.
+ * @param <RESPONSE> response processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class RequestInvoker {
+public class RequestInvoker<REQUEST, RESPONSE> {
 
     private static final InvocationCallback EMPTY_CALLBACK = new InvocationCallback() {
 
         @Override
-        public void result(final Response response) {
+        public void result(final Object response) {
         }
 
         @Override
@@ -127,7 +125,7 @@ public class RequestInvoker {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private ResponseProcessor.Builder responseProcessorBuilder;
+        private ResponseProcessor.Builder<Response> responseProcessorBuilder;
         @Inject
         private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
@@ -137,34 +135,55 @@ public class RequestInvoker {
          * Build a new {@link RequestInvoker request invoker} configured to use
          * the supplied request processor for processing requests.
          *
-         * @param requestProcessor custom request processor.
+         * @param rootStage root processing stage.
          * @return new request invoker instance.
          */
-        public RequestInvoker build(final RequestProcessor requestProcessor) {
-            return new RequestInvoker(
-                    requestProcessor,
+        public RequestInvoker<Request, Response> build(final Stage<Request> rootStage) {
+
+            final AsyncInflectorAdapter.Builder<Request,Response> asyncAdapterBuilder =
+                    new AsyncInflectorAdapter.Builder<Request, Response>() {
+                        @Override
+                        public AsyncInflectorAdapter<Request, Response> create(
+                                Inflector<Request, Response> wrapped, InvocationCallback<Response> callback) {
+                            return new AsyncInflectorAdapter<Request, Response>(wrapped, callback) {
+
+                                @Override
+                                protected Response convertResponse(Response response) {
+                                    return response;
+                                }
+                            };
+                        }
+                    };
+
+            return new RequestInvoker<Request, Response>(
+                    rootStage,
                     requestScope,
+                    asyncAdapterBuilder,
                     responseProcessorBuilder,
                     invocationContextReferenceFactory,
                     executorsFactory);
         }
+
     }
 
-    private final RequestProcessor requestProcessor;
+    private final Stage<REQUEST> rootStage;
     private final RequestScope requestScope;
-    private final ResponseProcessor.Builder responseProcessorBuilder;
+    private final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder;
+    private final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder;
     private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
     private final ProcessingExecutorsFactory executorsFactory;
 
     private RequestInvoker(
-            final RequestProcessor requestProcessor,
+            final Stage<REQUEST> rootStage,
             final RequestScope requestScope,
-            final ResponseProcessor.Builder responseProcessorBuilder,
+            final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder,
+            final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder,
             final Factory<Ref<InvocationContext>> invocationContextReferenceFactory,
             final ProcessingExecutorsFactory executorsFactory) {
 
         this.requestScope = requestScope;
-        this.requestProcessor = requestProcessor;
+        this.rootStage = rootStage;
+        this.asyncAdapterBuilder = asyncAdapterBuilder;
         this.responseProcessorBuilder = responseProcessorBuilder;
         this.invocationContextReferenceFactory = invocationContextReferenceFactory;
         this.executorsFactory = executorsFactory;
@@ -176,8 +195,9 @@ public class RequestInvoker {
      * @param request request data to be transformed into a response result.
      * @return future response.
      */
-    public ListenableFuture<Response> apply(final Request request) {
-        return apply(request, EMPTY_CALLBACK);
+    @SuppressWarnings("unchecked")
+    public ListenableFuture<RESPONSE> apply(final REQUEST request) {
+        return apply(request, (InvocationCallback<RESPONSE>) EMPTY_CALLBACK);
     }
 
     /**
@@ -193,23 +213,25 @@ public class RequestInvoker {
      *                 done. Must not be {@code null}.
      * @return future response.
      */
-    public ListenableFuture<Response> apply(final Request request, final InvocationCallback callback) {
+    public ListenableFuture<RESPONSE> apply(final REQUEST request, final InvocationCallback<RESPONSE> callback) {
         // FIXME: Executing request-scoped code.
         //        We should enter and exit request scope here, in the invoker.
         //        All code that needs to run in the scope should be converted
         //        into stages that are executed by the invoker
         //        (e.g. RequestExecutionInitStage).
         final Instance instance = requestScope.suspendCurrent();
-        final ResponseProcessor responseProcessor = responseProcessorBuilder.build(callback, instance);
+        final AsyncInflectorAdapter<REQUEST, RESPONSE> asyncInflector =
+                asyncAdapterBuilder.create(new AcceptingInvoker(), callback);
+        final ResponseProcessor<RESPONSE> responseProcessor =
+                responseProcessorBuilder.build(asyncInflector, callback, instance);
         final Runnable requester = new Runnable() {
 
             @Override
             public void run() {
-                final AsyncInflectorAdapter asyncInflector = new AsyncInflectorAdapter(new AcceptingInvoker(), callback);
 
                 invocationContextReferenceFactory.get().set(asyncInflector);
 
-                ListenableFuture<Response> response = asyncInflector.apply(request);
+                ListenableFuture<RESPONSE> response = asyncInflector.apply(request);
                 response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
             }
         };
@@ -229,7 +251,7 @@ public class RequestInvoker {
             }
         } catch (ProcessingException ex) {
             try {
-                SettableFuture<Response> failedResponse = SettableFuture.create();
+                SettableFuture<RESPONSE> failedResponse = SettableFuture.create();
                 failedResponse.setException(ex);
                 return failedResponse;
             } finally {
@@ -238,31 +260,29 @@ public class RequestInvoker {
         }
     }
 
-    private class AcceptingInvoker implements Inflector<Request, Response> {
+    private class AcceptingInvoker implements Inflector<REQUEST, RESPONSE> {
 
         @Override
-        public Response apply(Request request) {
-            Pair<Request, Optional<Inflector<Request, Response>>> result;
-            try {
-                result = requestProcessor.apply(request);
-                // MessageBodyProcessingException from Message Body Providers is propagated up and response is not returned
-            } catch (final WebApplicationException wae) {
-                result = Tuples.of(request,
-                        Optional.<Inflector<Request, Response>>of(new Inflector<Request, Response>() {
-
-                            @Override
-                            public Response apply(Request data) {
-                                return wae.getResponse();
-                            }
-                        }));
+        public RESPONSE apply(REQUEST request) {
+            Stage<REQUEST> lastStage = null;
+            Stage.Continuation<REQUEST> continuation = Stage.Continuation.of(request, rootStage);
+            Stage<REQUEST> currentStage;
+            while ((currentStage = continuation.next()) != null) {
+                lastStage = currentStage;
+                continuation = currentStage.apply(continuation.result());
             }
 
-            final Optional<Inflector<Request, Response>> inflector = result.right();
-            if (!inflector.isPresent()) {
+            Inflector<REQUEST, RESPONSE> inflector = Stages.extractInflector(lastStage);
+            REQUEST result = continuation.result();
+
+            Preconditions.checkState(lastStage != null,
+                    "No stage has been invoked as part of the processing.");
+
+            if (inflector == null) {
                 throw new InflectorNotFoundException("Terminal stage did not provide an inflector");
             }
 
-            return inflector.get().apply(result.left());
+            return inflector.apply(result);
         }
     }
 }
