@@ -293,7 +293,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                             public void failure(Throwable exception) {
                                 // TODO JAX-RS client callback interface as well as invocation exception
                                 // need to be fixed
-                                callback.failed(new InvocationException(exception.getMessage(), exception));
+                                callback.failed(exception instanceof InvocationException ?
+                                        (InvocationException) exception
+                                        : new InvocationException(exception.getMessage(), exception));
                             }
 
                             @Override
