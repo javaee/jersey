@@ -68,7 +68,6 @@
         <module>servlet-2.5-init-8</module>
         <module>servlet-3-init-1</module>
         <module>servlet-tests</module>
-        <module>form-consumption</module>
     </modules>
 
     <profiles>

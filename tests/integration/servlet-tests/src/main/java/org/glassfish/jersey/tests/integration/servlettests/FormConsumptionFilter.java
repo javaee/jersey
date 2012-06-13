@@ -37,48 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.formconsumption;
+package org.glassfish.jersey.tests.integration.servlettests;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Form;
+import java.io.IOException;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class FormConsumptionITCase extends JerseyTest {
+public class FormConsumptionFilter implements Filter {
     @Override
-    protected Application configure() {
-        return new ResourceConfig(MyResource.class);
+    public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        // consume entity
+        servletRequest.getParameter("text");
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 
-    @Test
-    public void testPut() {
-        Form form = new Form();
-        form.param("text", "this is a test");
-        String result = target("myresource").request().put(Entity.form(form), String.class);
-        assertEquals(form.asMap().getFirst("text"), result);
-    }
-
-    @Test
-    public void testPost() {
-        Form form = new Form();
-        form.param("text", "this is a test");
-        String result = target("myresource").request().post(Entity.form(form), String.class);
-        assertEquals(form.asMap().getFirst("text"), result);
+    @Override
+    public void destroy() {
     }
 }

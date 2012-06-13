@@ -37,32 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.formconsumption;
+package org.glassfish.jersey.tests.integration.servlettests;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Form;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
-@Path("myresource")
-public class MyResource {
-    @POST
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public String postIt(@FormParam("text") String text) {
-        return text;
+public class FormConsumptionITCase extends JerseyTest {
+    @Override
+    protected Application configure() {
+        // dummy resource config
+        return new ResourceConfig();
     }
 
-    @PUT
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public String putIt(@FormParam("text") String text) {
-        return text;
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
+
+    @Test
+    public void testPut() {
+        Form form = new Form();
+        form.param("text", "this is a test");
+        String result = target("form-consumption/form-consumption").request().put(Entity.form(form), String.class);
+        assertEquals(form.asMap().getFirst("text"), result);
+    }
+
+    @Test
+    public void testPost() {
+        Form form = new Form();
+        form.param("text", "this is a test");
+        String result = target("form-consumption/form-consumption").request().post(Entity.form(form), String.class);
+        assertEquals(form.asMap().getFirst("text"), result);
     }
 }

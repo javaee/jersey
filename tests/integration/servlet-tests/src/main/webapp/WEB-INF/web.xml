@@ -42,6 +42,8 @@
 -->
 
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <!-- servlet for generic use (has all resources) -->
     <servlet>
         <servlet-name>testServlet</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
@@ -55,6 +57,8 @@
         <servlet-name>testServlet</servlet-name>
         <url-pattern>/servlet/*</url-pattern>
     </servlet-mapping>
+
+    <!-- filter for generic use (has all resources) -->
     <filter>
         <filter-name>testFilter</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
@@ -67,12 +71,15 @@
         <filter-name>testFilter</filter-name>
         <url-pattern>/filter/*</url-pattern>
     </filter-mapping>
+
+    <!-- filter context path -->
     <filter>
         <filter-name>testFilter2</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
         <init-param>
-            <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>org.glassfish.jersey.tests.integration.servlettests</param-value>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlettests.FilterContextPathResource
+                org.glassfish.jersey.tests.integration.servlettests.FilterNoContextPathResource</param-value>
         </init-param>
         <init-param>
             <param-name>jersey.config.servlet.filter.contextPath</param-name>
@@ -83,12 +90,14 @@
         <filter-name>testFilter2</filter-name>
         <url-pattern>/contextPathFilter/*</url-pattern>
     </filter-mapping>
+
+    <!-- forward on 404 -->
     <filter>
         <filter-name>testFilter3</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
         <init-param>
-            <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>org.glassfish.jersey.tests.integration.servlettests</param-value>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlettests.FilterForwardOn404Resource</param-value>
         </init-param>
         <init-param>
             <param-name>jersey.config.servlet.filter.forwardOn404</param-name>
@@ -99,12 +108,14 @@
         <filter-name>testFilter3</filter-name>
         <url-pattern>/forwardingFilter/*</url-pattern>
     </filter-mapping>
+
+    <!-- static content regex -->
     <filter>
         <filter-name>testFilter4</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
         <init-param>
-            <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>org.glassfish.jersey.tests.integration.servlettests</param-value>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlettests.FilterStaticContentResource</param-value>
         </init-param>
         <init-param>
             <param-name>jersey.config.servlet.filter.staticContentRegex</param-name>
@@ -114,5 +125,28 @@
     <filter-mapping>
         <filter-name>testFilter4</filter-name>
         <url-pattern>/staticContentFilter/*</url-pattern>
+    </filter-mapping>
+
+    <!-- form consumption -->
+    <filter>
+        <filter-name>FormConsumptionFilter</filter-name>
+        <filter-class>org.glassfish.jersey.tests.integration.servlettests.FormConsumptionFilter</filter-class>
+    </filter>
+    <servlet>
+        <servlet-name>FormConsumptionServlet</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlettests.FormConsumptionResource</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FormConsumptionServlet</servlet-name>
+        <url-pattern>/form-consumption/*</url-pattern>
+    </servlet-mapping>
+    <filter-mapping>
+        <filter-name>FormConsumptionFilter</filter-name>
+        <url-pattern>/form-consumption/*</url-pattern>
     </filter-mapping>
 </web-app>
