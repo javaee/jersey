@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import org.glassfish.jersey.media.sse.Broadcaster;
-import org.glassfish.jersey.media.sse.EventChannel;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -50,10 +53,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import org.glassfish.jersey.media.sse.Broadcaster;
+import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.OutboundEvent;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -94,8 +97,8 @@ public class DomainResource {
 
         private static final AtomicInteger counter = new AtomicInteger(0);
 
-        int id;
-        Broadcaster broadcaster = new Broadcaster();
+        private final int id;
+        private final Broadcaster broadcaster = new Broadcaster();
 
         public Process() {
             id = counter.incrementAndGet();
@@ -111,20 +114,19 @@ public class DomainResource {
 
         public void run() {
             try {
+                // wait for all EventSources to be registered
                 Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "starting domain " + id + " ...", String.class);
-                Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "50%", String.class);
-                Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "60%", String.class);
-                Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "70%", String.class);
-                Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "99%", String.class);
-                Thread.sleep(1000);
-                broadcaster.broadcast("domain-progress", "done", String.class);
+
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...").build());
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "50%").build());
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "60%").build());
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "70%").build());
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "99%").build());
+                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "done").build());
                 broadcaster.close();
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

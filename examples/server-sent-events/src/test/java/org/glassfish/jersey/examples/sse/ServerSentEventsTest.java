@@ -39,18 +39,6 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import org.glassfish.jersey.media.sse.Event;
-import org.glassfish.jersey.media.sse.EventListener;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.EventChannelWriter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.Test;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
@@ -58,6 +46,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.media.sse.EventListener;
+import org.glassfish.jersey.media.sse.EventSource;
+import org.glassfish.jersey.media.sse.InboundEvent;
+import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -68,7 +69,7 @@ public class ServerSentEventsTest extends JerseyTest {
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, EventChannelWriter.class);
+        return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, OutboundEventWriter.class);
     }
 
     @Test
@@ -76,19 +77,18 @@ public class ServerSentEventsTest extends JerseyTest {
 
         new EventSource(target().path(App.ROOT_PATH), Executors.newCachedThreadPool()) {
             @Override
-            public void onEvent(Event event) {
+            public void onEvent(InboundEvent inboundEvent) {
                 try {
-                    System.out.println("# Received: " + event);
-                    System.out.println(event.getData(String.class));
+                    System.out.println("# Received: " + inboundEvent);
+                    System.out.println(inboundEvent.getData(String.class));
 
-                    assertEquals("message", event.getData());
+                    assertEquals("message", inboundEvent.getData());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         };
 
-        Thread.sleep(1000);
         target().path(App.ROOT_PATH).request().post(Entity.text("message"));
         target().path(App.ROOT_PATH).request().delete();
     }
@@ -98,43 +98,43 @@ public class ServerSentEventsTest extends JerseyTest {
 
         // I don't really care what data are there (don't want to add too much complexity for this sample)
         final Response response = target().path("domain/start").request().post(Entity.text("data"), Response.class);
-        final ExecutorService executorService = Executors.newCachedThreadPool();
+        final ExecutorService executorService = Executors.newFixedThreadPool(103);
 
         final AtomicInteger doneCount = new AtomicInteger(0);
 
-        new EventSource(target().path(response.getHeaders().getLocation().toString()), executorService) {
+        for(int i = 0; i < 25; i++) {
+            new EventSource(target().path(response.getHeaders().getLocation().toString()), executorService) {
 
-            int messageCount = 0;
+                int messageCount = 0;
 
-            @Override
-            public void onEvent(Event event) {
-                try {
-                    messageCount++;
+                @Override
+                public void onEvent(InboundEvent inboundEvent) {
+                    try {
+                        messageCount++;
 
-                    System.out.println("# Received: " + event);
-                    System.out.println(event.getData(String.class));
+                        System.out.println("# Received: " + inboundEvent);
 
-                    if(event.getData(String.class).equals("done")) {
-                        assertEquals(6, messageCount);
-                        doneCount.incrementAndGet();
+                        if(inboundEvent.getData(String.class).equals("done")) {
+                            assertEquals(6, messageCount);
+                            doneCount.incrementAndGet();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-            }
-        };
+            };
+        }
 
         final EventSource eventSource = new EventSource(target().path(response.getHeaders().getLocation().toString()), executorService) {
 
             int messageCount = 0;
 
             @Override
-            public void onEvent(Event event) {
+            public void onEvent(InboundEvent event) {
                 try {
                     messageCount++;
 
                     System.out.println("# Received: " + event);
-                    System.out.println(event.getData(String.class));
 
                     if (event.getData(String.class).equals("done")) {
                         assertEquals(6, messageCount);
@@ -151,14 +151,13 @@ public class ServerSentEventsTest extends JerseyTest {
             int messageCount = 0;
 
             @Override
-            public void onEvent(Event event) {
+            public void onEvent(InboundEvent inboundEvent) {
                 try {
                     messageCount++;
 
-                    System.out.println("# Received: " + event);
-                    System.out.println(event.getData(String.class));
+                    System.out.println("# Received: " + inboundEvent);
 
-                    if(event.getData(String.class).equals("done")) {
+                    if(inboundEvent.getData(String.class).equals("done")) {
                         assertEquals(6, messageCount);
                         doneCount.incrementAndGet();
                     }
@@ -173,14 +172,13 @@ public class ServerSentEventsTest extends JerseyTest {
             int messageCount = 0;
 
             @Override
-            public void onEvent(Event event) {
+            public void onEvent(InboundEvent inboundEvent) {
                 try {
                     messageCount++;
 
-                    System.out.println("# Received: " + event);
-                    System.out.println(event.getData(String.class));
+                    System.out.println("# Received: " + inboundEvent);
 
-                    if(event.getData(String.class).equals("done")) {
+                    if(inboundEvent.getData(String.class).equals("done")) {
                         assertEquals(6, messageCount);
                         doneCount.incrementAndGet();
                     }
@@ -190,7 +188,7 @@ public class ServerSentEventsTest extends JerseyTest {
             }
         });
 
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-        assertEquals(4, doneCount.get());
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
+        assertEquals(28, doneCount.get());
     }
 }

@@ -41,7 +41,6 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
 import java.security.Principal;
-import static junit.framework.Assert.assertEquals;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -60,6 +59,8 @@ import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * End to end test class for testing security context in the Filter and

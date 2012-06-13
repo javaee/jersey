@@ -39,17 +39,18 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import org.glassfish.jersey.server.ChunkedResponse;
-import org.glassfish.jersey.server.ChunkedResponseWriter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
+
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -58,7 +59,7 @@ public class ChunkedResponseTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
+        return new ResourceConfig(MyResource.class);
     }
 
     @Path("/test")
@@ -72,15 +73,13 @@ public class ChunkedResponseTest extends JerseyTest {
                 public void run() {
                     try {
                         response.write("test");
-                        Thread.sleep(1000);
                         response.write("test");
-                        Thread.sleep(1000);
                         response.write("test");
-                        Thread.sleep(1000);
                         response.close();
 
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
+                        fail();
                     }
 
                 }

@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.sse.EventChannelWriter;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Server sent event example.
@@ -63,7 +64,7 @@ public class App {
         try {
             System.out.println("\"Server-Sent Events\" Jersey Example App");
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ServerSentEventsResource.class, EventChannelWriter.class);
+            final ResourceConfig resourceConfig = new ResourceConfig(ServerSentEventsResource.class, OutboundEventWriter.class);
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
 

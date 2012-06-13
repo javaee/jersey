@@ -93,7 +93,9 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
 
                 @Override
                 public void onTimeout(AsyncEvent event) throws IOException {
-                    timeoutHandler.onTimeout(writer);
+                    if(timeoutHandler != null) {
+                        timeoutHandler.onTimeout(writer);
+                    }
                 }
 
                 @Override

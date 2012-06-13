@@ -44,6 +44,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.ResponseHeaders;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -154,5 +155,8 @@ public class ServerModule extends AbstractModule {
         bind(ResponseHeaders.class).toFactory(ResponseHeadersReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<ResponseHeaders>>() {
         }).toFactory(ReferencingFactory.<ResponseHeaders>referenceFactory()).in(RequestScope.class);
+
+        //ChunkedResposeWriter
+        bind(MessageBodyWriter.class).to(ChunkedResponseWriter.class).in(Singleton.class);
     }
 }

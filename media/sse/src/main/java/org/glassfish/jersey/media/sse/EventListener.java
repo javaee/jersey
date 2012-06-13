@@ -40,15 +40,15 @@
 package org.glassfish.jersey.media.sse;
 
 /**
- * Event listener.
+ * InboundEvent listener.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public interface EventListener {
     /**
-     * Called when {@link Event} is received.
+     * Called when {@link InboundEvent} is received.
      *
-     * @param event received event.
+     * @param inboundEvent received inboundEvent.
      */
-    void onEvent(Event event);
+    void onEvent(InboundEvent inboundEvent);
 }

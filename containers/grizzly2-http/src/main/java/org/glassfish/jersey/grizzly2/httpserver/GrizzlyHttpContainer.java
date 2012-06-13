@@ -56,20 +56,6 @@ import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
-import org.jvnet.hk2.annotations.Inject;
-
-import org.glassfish.grizzly.CompletionHandler;
-import org.glassfish.grizzly.http.server.HttpHandler;
-import org.glassfish.grizzly.http.server.Request;
-import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.utils.Charsets;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
@@ -86,6 +72,20 @@ import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.PerLookup;
+
+import org.jvnet.hk2.annotations.Inject;
+
+import org.glassfish.grizzly.CompletionHandler;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
+import org.glassfish.grizzly.utils.Charsets;
 
 /**
  * Grizzly 2 Jersey HTTP Container.
@@ -207,7 +207,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
                             @Override
                             public boolean onTimeout(Response response) {
-                                timeoutHandler.onTimeout(ResponseWriter.this);
+                                if(timeoutHandler != null) {
+                                    timeoutHandler.onTimeout(ResponseWriter.this);
+                                }
 
                                 // TODO should we return true ins some cases instead?
                                 // Returning false relies on the fact that the timeoutHandler

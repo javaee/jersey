@@ -39,11 +39,6 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import javax.annotation.Nullable;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -51,10 +46,17 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import javax.annotation.Nullable;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
+
 /**
  * Base functionality for {@link EventProcessor} and {@link EventProcessorReader}.
  *
- * Processes incoming stream and parses {@link Event}s.
+ * Processes incoming stream and parses {@link InboundEvent}s.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -78,35 +80,30 @@ import java.util.concurrent.LinkedBlockingQueue;
     private final MessageBodyWorkers messageBodyWorkers;
     private boolean closed = false;
 
-    private void processField(Event event, String name, byte[] value) {
-        if(name.equals("event")) {
-            event.setName(new String(value));
-        } else if(name.equals("data")) {
-            event.addData(value);
-            event.addData(new byte[]{'\n'});
-        } else if(name.equals("id")) {
-            String s = new String(value);
-            try {
-                // TODO: check the value [0-9]*
-                Integer.parseInt(new String(value));
-            } catch (NumberFormatException nfe) {
-                s = "";
-            }
-            event.setId(s);
-        } else if(name.equals("retry")) {
-            // TODO
-        } else {
-            // ignore
-        }
+    /**
+     * Constructor.
+     *
+     * @param inputStream raw entity input stream
+     * @param annotations to be passed to {@link InboundEvent} instance for use during {@link InboundEvent#getData(Class)} call
+     * @param mediaType to be passed to {@link InboundEvent} instance for use during {@link InboundEvent#getData(Class)} call
+     * @param headers to be passed to {@link InboundEvent} instance for use during {@link InboundEvent#getData(Class)} call
+     * @param messageBodyWorkers to be passed to {@link InboundEvent} instance for use during {@link InboundEvent#getData(Class)} call
+     */
+    EventReceiver(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
+        this.inputStream = inputStream;
+        this.annotations = annotations;
+        this.mediaType = mediaType;
+        this.headers = headers;
+        this.messageBodyWorkers = messageBodyWorkers;
     }
 
-    /* package */ void process(@Nullable final LinkedBlockingQueue<Event> eventQueue, @Nullable final EventSource eventSource) {
+    /* package */ void process(@Nullable final LinkedBlockingQueue<InboundEvent> inboundEventQueue, @Nullable final EventSource eventSource) {
         /**
          * http://dev.w3.org/html5/eventsource/
          * last editors draft from 13 March 2012
          */
 
-        Event event = new Event(messageBodyWorkers, annotations, mediaType, headers);
+        InboundEvent inboundEvent = new InboundEvent(messageBodyWorkers, annotations, mediaType, headers);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         State currentState = State.START;
@@ -125,20 +122,20 @@ import java.util.concurrent.LinkedBlockingQueue;
                             baos.write(data);
                             currentState = State.FIELD_NAME;
                         } else if(data == '\n') {
-                            if(!event.isEmpty()) {
+                            if(!inboundEvent.isEmpty()) {
                                 // fire!
-                                if(eventQueue != null) {
-                                    eventQueue.add(event);
+                                if(inboundEventQueue != null) {
+                                    inboundEventQueue.add(inboundEvent);
                                 }
 
                                 if(eventSource != null) {
-                                    eventSource.onReceivedEvent(event);
+                                    eventSource.onReceivedEvent(inboundEvent);
                                 }
 
                                 currentState = State.EVENT_FIRED;
                             }
 
-                            event = new Event(messageBodyWorkers, annotations, mediaType, headers);
+                            inboundEvent = new InboundEvent(messageBodyWorkers, annotations, mediaType, headers);
                         }
                         break;
                     case COMMENT:
@@ -152,7 +149,7 @@ import java.util.concurrent.LinkedBlockingQueue;
                             baos.reset();
                             currentState = State.FIELD_VALUE_FIRST;
                         } else if(data == '\n') {
-                            processField(event, baos.toString(), "".getBytes());
+                            processField(inboundEvent, baos.toString(), "".getBytes());
                             baos.reset();
                             currentState = State.START;
                         } else {
@@ -166,7 +163,7 @@ import java.util.concurrent.LinkedBlockingQueue;
                         }
 
                         if(data == '\n') {
-                            processField(event, fieldName, baos.toByteArray());
+                            processField(inboundEvent, fieldName, baos.toByteArray());
                             baos.reset();
                             currentState = State.START;
                             break;
@@ -176,7 +173,7 @@ import java.util.concurrent.LinkedBlockingQueue;
                         break;
                     case FIELD_VALUE:
                         if(data == '\n') {
-                            processField(event, fieldName, baos.toByteArray());
+                            processField(inboundEvent, fieldName, baos.toByteArray());
                             baos.reset();
                             currentState = State.START;
                         } else {
@@ -196,27 +193,32 @@ import java.util.concurrent.LinkedBlockingQueue;
 
     }
 
-    /**
-     * Constructor.
-     *
-     * @param inputStream raw entity input stream
-     * @param annotations to be passed to {@link Event} instance for use during {@link Event#getData(Class)} call
-     * @param mediaType to be passed to {@link Event} instance for use during {@link Event#getData(Class)} call
-     * @param headers to be passed to {@link Event} instance for use during {@link Event#getData(Class)} call
-     * @param messageBodyWorkers to be passed to {@link Event} instance for use during {@link Event#getData(Class)} call
-     */
-    EventReceiver(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
-        this.inputStream = inputStream;
-        this.annotations = annotations;
-        this.mediaType = mediaType;
-        this.headers = headers;
-        this.messageBodyWorkers = messageBodyWorkers;
+    private void processField(InboundEvent inboundEvent, String name, byte[] value) {
+        if(name.equals("event")) {
+            inboundEvent.setName(new String(value));
+        } else if(name.equals("data")) {
+            inboundEvent.addData(value);
+            inboundEvent.addData(new byte[]{'\n'});
+        } else if(name.equals("id")) {
+            String s = new String(value);
+            try {
+                // TODO: check the value [0-9]*
+                Integer.parseInt(new String(value));
+            } catch (NumberFormatException nfe) {
+                s = "";
+            }
+            inboundEvent.setId(s);
+        } else if(name.equals("retry")) {
+            // TODO
+        } else {
+            // ignore
+        }
     }
 
     /**
      * Get object state.
      *
-     * @return true if no new {@link Event} can be received, false otherwise.
+     * @return true if no new {@link InboundEvent} can be received, false otherwise.
      */
     boolean isClosed() {
         return closed;

@@ -39,65 +39,107 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
+
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
  * Used for sending messages in "typed" chunks.
  *
- * Useful for long running processes, which are able to produce partial responses.
+ * Useful for long running processes, which needs to produce partial responses.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ *
+ * TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
  */
-public class ChunkedResponse<T> {
-
+public class ChunkedResponse<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
-    private final Class<T> clazz;
-    private final long interval;
-    private final TimeUnit timeUnit;
+    private Class<T> clazz;
 
     private boolean closed = false;
+    private MessageBodyWorkers messageBodyWorkers = null;
+
+    private Annotation[] annotations;
+    private MediaType mediaType;
+    private MultivaluedMap<String, Object> httpHeaders;
+    private Map<String, Object> responseProperties;
+
+    private OutputStream outputStream;
+    private ContainerResponseWriter containerResponseWriter;
 
     /**
      * Create {@link ChunkedResponse} with specified type.
      *
-     * TODO: make EventChannel use this class as impl base
-     *
      * @param clazz chunk type
      */
     public ChunkedResponse(Class<T> clazz) {
-        this(clazz, null, null);
-    }
-
-    /**
-     * Create {@link ChunkedResponse} with specified type and polling interval. Polling interval is used when retrieving
-     * data - basically it specifies how often will be connection checked if it is closed from the client side.
-     *
-     * @param interval polling interval. Default value is {@code 5}.
-     * @param timeUnit polling interval {@link TimeUnit}. Default value is {@code TimeUnit.SECONDS}.
-     * @param clazz chunk type
-     */
-    public ChunkedResponse(Class<T> clazz, Long interval, TimeUnit timeUnit) {
         this.clazz = clazz;
-        this.interval = (interval == null ? 5 : interval);
-        this.timeUnit = (timeUnit == null ? TimeUnit.SECONDS : timeUnit);
     }
 
+    /**
+     * Used when you need to create descendant with specific chunk type.
+     *
+     * <p>When used, implementation is required to call {@link ChunkedResponse#setClazz(Class)} in its constructor.</p>
+     *
+     */
+    protected ChunkedResponse() {
+    }
 
     /**
-     * Write chunk.
+     * Set chunk type.
      *
-     * @param t chunk instance to be written.
-     * @throws IllegalStateException when {@link ChunkedResponse} is closed.
+     * @param clazz
      */
-    public void write(T t) {
+    protected void setClazz(Class<T> clazz) {
+        this.clazz = clazz;
+    }
+
+    /**
+     * Write a chunk.
+     *
+     * @param chunk a chunk instance to be written.
+     * @throws IllegalStateException when {@link ChunkedResponse} is closed.
+     * @throws IOException when encountered any problem during serializing or writing a chunk.
+     */
+    public void write(T chunk) throws IOException {
         if(closed) {
             throw new IllegalStateException();
         }
 
-        if(t != null) {
-            queue.add(t);
+        if(chunk != null) {
+            queue.add(chunk);
+        }
+
+        if(messageBodyWorkers != null) {
+            flushQueue();
+        }
+    }
+
+    private synchronized void flushQueue() throws IOException {
+        if(outputStream == null || messageBodyWorkers == null) {
+            return;
+        }
+
+        T t;
+        while((t = queue.poll()) != null) {
+            messageBodyWorkers.writeTo(t, GenericType.<Object>of(clazz, clazz), annotations, mediaType, httpHeaders, responseProperties, outputStream, null, true);
+        }
+
+        if(closed) {
+            outputStream.flush();
+            outputStream.close();
+            containerResponseWriter.commit();
         }
     }
 
@@ -106,8 +148,11 @@ public class ChunkedResponse<T> {
      * or made available for another response.
      *
      */
-    public void close() {
+    public void close() throws IOException {
         closed = true;
+        if(messageBodyWorkers != null) {
+            flushQueue();
+        }
     }
 
     /**
@@ -118,21 +163,38 @@ public class ChunkedResponse<T> {
      *
      * @return true when closed, false otherwise.
      */
-    boolean isClosed() {
+    public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Set arguments used for {@link javax.ws.rs.ext.MessageBodyWriter} selection and for writing chunks.
+     *
+     * @param outputStream used for writing chunks.
+     * @param containerResponseWriter container needs to be notified when {@link ChunkedResponse} is closed to release/close
+     *                                connection and internal structures.
+     * @param messageBodyWorkers used for writing chunks.
+     * @param annotations used for writing chunks.
+     * @param mediaType used for writing chunks.
+     * @param httpHeaders used for writing chunks.
+     * @param responseProperties used for writing chunks.
+     * @throws IOException when encountered any problem during serializing or writing a chunk.
+     */
+    void setWriterRelatedArgs(OutputStream outputStream,
+                              ContainerResponseWriter containerResponseWriter,
+                              MessageBodyWorkers messageBodyWorkers,
+                              Annotation[] annotations,
+                              MediaType mediaType,
+                              MultivaluedMap<String, Object> httpHeaders,
+                              Map<String, Object> responseProperties) throws IOException {
+        this.outputStream = outputStream;
+        this.containerResponseWriter = containerResponseWriter;
+        this.messageBodyWorkers = messageBodyWorkers;
+        this.annotations = annotations;
+        this.mediaType = mediaType;
+        this.httpHeaders = httpHeaders;
+        this.responseProperties = responseProperties;
 
-    protected Class<T> getChunkType() {
-        return clazz;
+        flushQueue();
     }
-
-    protected T getChunk() throws InterruptedException {
-        if(closed) {
-            return null;
-        }
-
-        return queue.poll(interval, timeUnit);
-    }
-
 }

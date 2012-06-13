@@ -41,15 +41,17 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 

@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.util.concurrent.ExecutorService;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Used for retrieving server-side events.
@@ -67,14 +67,12 @@ import java.util.concurrent.ExecutorService;
      *
      * @param eventSource {@link EventSource} instance
      * @see org.glassfish.jersey.media.sse.EventListener
-     * {@link Event}.
+     * {@link InboundEvent}.
      */
     public void process(final EventSource eventSource) {
         do {
             eventReceiver.process(null, eventSource);
         } while (!eventReceiver.isClosed());
-
-
     }
 
     @Override
