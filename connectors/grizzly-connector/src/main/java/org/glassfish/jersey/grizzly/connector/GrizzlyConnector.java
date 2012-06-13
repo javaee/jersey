@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.RequestBuilder;
-import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -53,14 +49,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.RequestWriter;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.process.Inflector;
+
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.RequestBuilder;
+import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 
 /**
  * The transport using the AsyncHttpClient.
@@ -117,7 +121,6 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
             com.ning.http.client.Request grizzlyRequest = this.getRequest(jerseyRequest);
             Future<com.ning.http.client.Response> respFuture = client.executeRequest(grizzlyRequest);
             ningResponse = respFuture.get();
-
         } catch (Exception ex) {
             Logger.getLogger(GrizzlyConnector.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -158,6 +161,9 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
         final URI uri = request.getUri();
 
         RequestBuilder builder = new RequestBuilder(strMethod).setUrl(uri.toString());
+
+        builder.setFollowRedirects(PropertiesHelper.getValue(request.getProperties(), ClientProperties.FOLLOW_REDIRECTS,
+                true));
 
         final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(request);
 

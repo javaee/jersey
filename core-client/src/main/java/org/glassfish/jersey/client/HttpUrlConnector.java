@@ -58,6 +58,7 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 
@@ -95,19 +96,18 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
         uc = (HttpURLConnection) request.getUri().toURL().openConnection();
         uc.setRequestMethod(request.getMethod());
 
+        uc.setInstanceFollowRedirects(PropertiesHelper.getValue(request.getProperties(),
+                ClientProperties.FOLLOW_REDIRECTS, true));
+
         if (uc instanceof HttpsURLConnection) {
-            if (request.getProperties().containsKey(ClientProperties.HOSTNAME_VERIFIER)) {
-                final Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);
-                if (o != null && (o instanceof HostnameVerifier)) {
-                    ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier) o);
-                }
+            Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);
+            if (o instanceof HostnameVerifier) {
+                ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier) o);
             }
 
-            if (request.getProperties().containsKey(ClientProperties.SSL_CONTEXT)) {
-                final Object o = request.getProperties().get(ClientProperties.SSL_CONTEXT);
-                if (o != null && (o instanceof SSLContext)) {
-                    ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
-                }
+            o = request.getProperties().get(ClientProperties.SSL_CONTEXT);
+            if (o instanceof SSLContext) {
+                ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
             }
         }
 

@@ -274,9 +274,13 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                         refs.contextResolvers.set(resolvers);
 
                         final Request request = injector.inject(invocation.request());
-                        Map<String, Object> properties = new HashMap<String, Object>(configuration().getProperties());
+
+                        // TODO: (MM) we should not mix config with request properties
+                        // TODO: config should be accessible to connectors by some other means
+                        Map<String, Object> properties = new HashMap<String, Object>(cfg.getProperties());
                         properties.putAll(request.getProperties());
                         request.getProperties().putAll(properties);
+                        /////
 
                         return invoker.apply(request, new InvocationCallback() {
 

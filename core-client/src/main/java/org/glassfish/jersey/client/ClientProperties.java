@@ -56,7 +56,6 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO add support (ported from Jersey 1.x).
     public static final String FOLLOW_REDIRECTS =
             "jersey.config.client.followRedirects";
 
