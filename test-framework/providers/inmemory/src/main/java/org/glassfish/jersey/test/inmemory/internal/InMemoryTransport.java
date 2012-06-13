@@ -51,6 +51,8 @@ import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
@@ -103,11 +105,14 @@ public class InMemoryTransport implements Inflector<Request, Response> {
 
         final Request request1 = requestBuilder.entity(request.getEntity()).build();
 
+        boolean followRedirects = PropertiesHelper.getValue(request.getProperties(), ClientProperties.FOLLOW_REDIRECTS,
+                true);
+
         responseListenableFuture = appHandler.apply(request1);
 
         try {
             if (responseListenableFuture != null) {
-                return responseListenableFuture.get();
+                return tryFollowRedirects(followRedirects, responseListenableFuture.get(), request1);
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryTransport.class.getName()).log(Level.SEVERE, null, e);
@@ -118,5 +123,25 @@ public class InMemoryTransport implements Inflector<Request, Response> {
         }
 
         throw new InvocationException("In-memory transport can't process incoming request");
+    }
+
+    private Response tryFollowRedirects(boolean followRedirects, Response response, Request request) {
+        if (!followRedirects || response.getStatus() < 302 || response.getStatus() > 307) {
+            return response;
+        }
+
+        Request.RequestBuilder rb = Requests.from(request);
+
+        switch (response.getStatus()) {
+            case 303:
+                rb.method("GET");
+                // intentionally no break
+            case 302:
+            case 307:
+                rb.redirect(response.getHeaders().getLocation());
+                return apply(rb.build());
+            default:
+                return response;
+        }
     }
 }
