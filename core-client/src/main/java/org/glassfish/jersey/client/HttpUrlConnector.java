@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -86,7 +87,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
         try {
             return _apply(request);
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new InvocationException(ex.getMessage(), ex);
         }
     }
 
@@ -98,6 +99,12 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
 
         uc.setInstanceFollowRedirects(PropertiesHelper.getValue(request.getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true));
+
+        uc.setConnectTimeout(PropertiesHelper.getValue(request.getProperties(),
+                ClientProperties.CONNECT_TIMEOUT, 0));
+
+        uc.setReadTimeout(PropertiesHelper.getValue(request.getProperties(),
+                ClientProperties.READ_TIMEOUT, 0));
 
         if (uc instanceof HttpsURLConnection) {
             Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);

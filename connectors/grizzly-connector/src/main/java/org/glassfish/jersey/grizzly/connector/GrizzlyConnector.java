@@ -44,6 +44,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -51,6 +52,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Configuration;
+import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -76,7 +78,6 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
     private AsyncHttpClient client;
     private AsyncHttpClientConfig config;
     private final ExecutorService executorService;
-    private static final int DEFAULT_TIMEOUT = 10000;
 
     /*
      * Constructs the new transport.
@@ -95,12 +96,11 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
 
             builder = builder.setExecutorService(this.executorService);
 
-            Integer timeout = (Integer) configuration.getProperties().get(ClientProperties.CONNECT_TIMEOUT);
-            if (timeout != null) {
-                builder = builder.setConnectionTimeoutInMs(timeout);
-            } else {
-                builder = builder.setConnectionTimeoutInMs(DEFAULT_TIMEOUT);
-            }
+            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
+                    ClientProperties.CONNECT_TIMEOUT, 0));
+
+            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
+                    ClientProperties.READ_TIMEOUT, 0));
         } else {
             this.executorService = Executors.newCachedThreadPool();
             builder.setExecutorService(this.executorService);
@@ -121,8 +121,11 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
             com.ning.http.client.Request grizzlyRequest = this.getRequest(jerseyRequest);
             Future<com.ning.http.client.Response> respFuture = client.executeRequest(grizzlyRequest);
             ningResponse = respFuture.get();
+        } catch (ExecutionException ex) {
+            Throwable e = ex.getCause() == null ? ex : ex.getCause();
+            throw new InvocationException(e.getMessage(), e);
         } catch (Exception ex) {
-            Logger.getLogger(GrizzlyConnector.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InvocationException(ex.getMessage(), ex);
         } finally {
             client.close();
         }

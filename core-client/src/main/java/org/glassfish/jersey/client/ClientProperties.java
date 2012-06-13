@@ -70,7 +70,6 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO add support (ported from Jersey 1.x).
     public static final String READ_TIMEOUT =
             "jersey.config.client.readTimeout";
 
@@ -84,7 +83,6 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
-    // TODO add support (ported from Jersey 1.x).
     public static final String CONNECT_TIMEOUT =
             "jersey.config.client.connectTimeout";
 
