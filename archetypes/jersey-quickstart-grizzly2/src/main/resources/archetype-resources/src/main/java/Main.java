@@ -1,8 +1,7 @@
 package $package;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.JerseyApplication;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
@@ -23,14 +22,17 @@ public class Main {
     public static HttpServer startServer() {
         // create a resource config that scans for JAX-RS resources and providers
         // in $package package
-        final ResourceConfig rc = ResourceConfig.builder().packages("$package").build();
+        final ResourceConfig rc = new ResourceConfig().packages("$package");
 
-        // create a new Jersey application from the resource config
-        JerseyApplication app = JerseyApplication.builder(rc).build();
+        // uncomment the following line if you want to enable
+        // support for JSON on the service (you also have to uncomment
+        // dependency on jersey-media-json module in pom.xml)
+        // --
+        // rc.addModule(org.glassfish.jersey.media.json.JsonJaxbModule);
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
-        return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), app);
+        return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
     }
 
     /**
