@@ -39,12 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ResourceFinder;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.uri.UriComponent;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.ReflectPermission;
@@ -54,6 +48,12 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * A scanner that recursively scans URI-based resources present in a set of

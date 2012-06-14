@@ -48,6 +48,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriBuilderException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -135,7 +136,6 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * Initiate the Web component.
      *
      * @param webConfig the Web configuration.
-     *
      * @throws javax.servlet.ServletException in case of an initialization failure
      */
     protected void init(WebConfig webConfig) throws ServletException {
@@ -144,34 +144,37 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         containerListener.onStartup(this);
     }
 
-    // HttpServlet
+    /**
+     * Create Jersey Servlet container.
+     */
     public ServletContainer() {
     }
 
-    public ServletContainer(ResourceConfig resourceConfig) throws ServletException {
+    /**
+     * Create Jersey Servlet container.
+     *
+     * @param resourceConfig container configuration.
+     */
+    public ServletContainer(ResourceConfig resourceConfig) {
         this.resourceConfig = resourceConfig;
     }
 
     /**
      * Dispatches client requests to the protected
-     * <code>service</code> method. There's no need to
+     * {@code service} method. There's no need to
      * override this method.
      *
-     * @param req   the {@link HttpServletRequest} object that
-     *                  contains the request the client made of
-     *                  the servlet
-     *
-     * @param res   the {@link HttpServletResponse} object that
-     *                  contains the response the servlet returns
-     *                  to the client
-     *
-     * @exception IOException   if an input or output error occurs
-     *                              while the servlet is handling the
-     *                              HTTP request
-     *
-     * @exception ServletException  if the HTTP request cannot
-     *                                  be handled
-     *
+     * @param req the {@link HttpServletRequest} object that
+     *            contains the request the client made of
+     *            the servlet
+     * @param res the {@link HttpServletResponse} object that
+     *            contains the response the servlet returns
+     *            to the client
+     * @throws IOException      if an input or output error occurs
+     *                          while the servlet is handling the
+     *                          HTTP request
+     * @throws ServletException if the HTTP request cannot
+     *                          be handled
      * @see javax.servlet.Servlet#service
      */
     @Override
@@ -191,28 +194,23 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     /**
-     * Receives standard HTTP requests from the public
-     * <code>service</code> method and dispatches
-     * them to the <code>do</code><i>XXX</i> methods defined in
+     * Receives standard HTTP requests from the public {@code service} method and dispatches
+     * them to the {@code do}<i>XXX</i> methods defined in
      * this class. This method is an HTTP-specific version of the
      * {@link javax.servlet.Servlet#service} method. There's no
      * need to override this method.
      *
-     * @param request   the {@link HttpServletRequest} object that
-     *                  contains the request the client made of
-     *                  the servlet
-     *
-     * @param response  the {@link HttpServletResponse} object that
-     *                  contains the response the servlet returns
-     *                  to the client
-     *
-     * @exception IOException   if an input or output error occurs
-     *                              while the servlet is handling the
-     *                              HTTP request
-     *
-     * @exception ServletException  if the HTTP request
-     *                                  cannot be handled
-     *
+     * @param request  the {@link HttpServletRequest} object that
+     *                 contains the request the client made of
+     *                 the servlet
+     * @param response the {@link HttpServletResponse} object that
+     *                 contains the response the servlet returns
+     *                 to the client
+     * @throws IOException      if an input or output error occurs
+     *                          while the servlet is handling the
+     *                          HTTP request
+     * @throws ServletException if the HTTP request
+     *                          cannot be handled
      * @see javax.servlet.Servlet#service
      */
     @Override
@@ -258,7 +256,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
          * The HttpServletRequest.getRequestURL() contains the complete URI
          * minus the query and fragment components.
          */
-        UriBuilder absoluteUriBuilder = null;
+        UriBuilder absoluteUriBuilder;
         try {
             absoluteUriBuilder = UriBuilder.fromUri(requestURL.toString());
         } catch (IllegalArgumentException iae) {
@@ -289,17 +287,25 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                     + "servlet path contain characters that are percent encoded");
         }
 
-        final URI baseUri = absoluteUriBuilder.replacePath(encodedBasePath).
-                build();
+        final URI baseUri;
+        final URI requestUri;
+        try {
+            baseUri = absoluteUriBuilder.replacePath(encodedBasePath).
+                    build();
 
-        String queryParameters = request.getQueryString();
-        if (queryParameters == null) {
-            queryParameters = "";
+            String queryParameters = request.getQueryString();
+            if (queryParameters == null) {
+                queryParameters = "";
+            }
+
+            requestUri = absoluteUriBuilder.replacePath(requestURI).
+                    replaceQuery(queryParameters).
+                    build();
+        } catch (UriBuilderException ex) {
+            final Response.Status badRequest = Response.Status.BAD_REQUEST;
+            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            return;
         }
-
-        final URI requestUri = absoluteUriBuilder.replacePath(requestURI).
-                replaceQuery(queryParameters).
-                build();
 
         service(baseUri, requestUri, request, response);
     }
@@ -318,20 +324,20 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     /**
      * Dispatch client requests to a resource class.
      *
-     * @param baseUri the base URI of the request.
+     * @param baseUri    the base URI of the request.
      * @param requestUri the URI of the request.
-     * @param request the {@link javax.servlet.http.HttpServletRequest} object that
-     *        contains the request the client made to
-     *	      the Web component.
-     * @param response the {@link javax.servlet.http.HttpServletResponse} object that
-     *        contains the response the Web component returns
-     *        to the client.
+     * @param request    the {@link javax.servlet.http.HttpServletRequest} object that
+     *                   contains the request the client made to
+     *                   the Web component.
+     * @param response   the {@link javax.servlet.http.HttpServletResponse} object that
+     *                   contains the response the Web component returns
+     *                   to the client.
      * @return the status code of the response.
-     * @exception IOException if an input or output error occurs
-     *            while the Web component is handling the
-     *            HTTP request.
-     * @exception ServletException if the HTTP request cannot
-     *            be handled.
+     * @throws IOException      if an input or output error occurs
+     *                          while the Web component is handling the
+     *                          HTTP request.
+     * @throws ServletException if the HTTP request cannot
+     *                          be handled.
      */
     public int service(URI baseUri, URI requestUri, final HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -404,15 +410,16 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * underlying servlet engine can process the request otherwise Jersey
      * will process the request.
      *
-     * @param request the {@link HttpServletRequest} object that
-     *        contains the request the client made to
-     *	      the servlet.
+     * @param request  the {@link HttpServletRequest} object that
+     *                 contains the request the client made to
+     *                 the servlet.
      * @param response the {@link HttpServletResponse} object that
-     *        contains the response the servlet returns
-     *        to the client.
-     * @param chain the chain of filters from which the next filter can be invoked.
-     * @throws java.io.IOException
-     * @throws javax.servlet.ServletException
+     *                 contains the response the servlet returns
+     *                 to the client.
+     * @param chain    the chain of filters from which the next filter can be invoked.
+     * @throws java.io.IOException            in case of an I/O error.
+     * @throws javax.servlet.ServletException in case of an error while executing the
+     *                                        filter chain.
      */
     public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (request.getAttribute("javax.servlet.include.request_uri") != null) {
@@ -441,7 +448,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
-            String requestURI, String servletPath, String queryString) throws IOException, ServletException {
+                          String requestURI, String servletPath, String queryString) throws IOException, ServletException {
         // if we match the static content regular expression lets delegate to
         // the filter chain to use the default container servlets & handlers
         final Pattern p = getStaticContentPattern();
@@ -453,7 +460,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         if (filterContextPath != null) {
             if (!servletPath.startsWith(filterContextPath)) {
                 throw new ContainerException(LocalizationMessages.SERVLET_PATH_MISMATCH(servletPath, filterContextPath));
-              //TODO:
+                //TODO:
 //            } else if (servletPath.length() == filterContextPath.length()) {
 //                // Path does not end in a slash, may need to redirect
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
@@ -508,9 +515,9 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * Get the static content path pattern.
      *
      * @return the {@link Pattern} compiled from a regular expression that is
-     * the property value of {@link ServletProperties#FILTER_STATIC_CONTENT_REGEX}.
-     * A {@code null} value will be returned if the property is not set or is
-     * an empty String.
+     *         the property value of {@link ServletProperties#FILTER_STATIC_CONTENT_REGEX}.
+     *         A {@code null} value will be returned if the property is not set or is
+     *         an empty String.
      */
     protected Pattern getStaticContentPattern() {
         return staticContentPattern;

@@ -42,9 +42,10 @@ package org.glassfish.jersey.message.internal;
 import java.net.URI;
 import java.util.Map;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
-
 import javax.ws.rs.core.Cookie;
+
+import org.glassfish.jersey._remove.RequestBuilder;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  *
@@ -81,7 +82,7 @@ interface Request extends Entity, Headers {
 
         public Request build();
 
-        public javax.ws.rs.core.Request.RequestBuilder toJaxrsRequestBuilder();
+        public RequestBuilder toJaxrsRequestBuilder();
     }
 
     // Common message methods
@@ -112,7 +113,7 @@ interface Request extends Entity, Headers {
 
     public javax.ws.rs.core.Request toJaxrsRequest();
 
-    public javax.ws.rs.core.RequestHeaders getJaxrsHeaders();
+    public JaxrsRequestHeadersView getJaxrsHeaders();
 
     public Builder toBuilder();
 }

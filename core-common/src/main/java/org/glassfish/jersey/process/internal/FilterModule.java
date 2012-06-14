@@ -42,6 +42,8 @@ package org.glassfish.jersey.process.internal;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 
+import org.glassfish.jersey._remove.FilterContext;
+
 /**
  * Configures injection of filtering artifacts.
  *
@@ -50,7 +52,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 public class FilterModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(javax.ws.rs.ext.FilterContext.class).to(JerseyFilterContext.class).in(RequestScope.class);
+        bind(FilterContext.class).to(JerseyFilterContext.class).in(RequestScope.class);
 
         bind().to(RequestFilterProcessor.class);
         bind().to(ResponseFilterProcessor.class);

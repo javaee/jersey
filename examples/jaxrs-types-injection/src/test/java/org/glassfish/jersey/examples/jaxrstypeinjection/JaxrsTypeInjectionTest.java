@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.jaxrstypeinjection;
 
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -106,8 +106,8 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
         "List<String> query param q2=[v2, v3]"
     };
 
-    private Target prepareTarget(String path) {
-        final Target target = target();
+    private WebTarget prepareTarget(String path) {
+        final WebTarget target = target();
         target.configuration().register(LoggingFilter.class);
         return target.path(path).pathParam("p1", "v1").pathParam("p2", "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
     }

@@ -51,7 +51,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
@@ -86,12 +86,12 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
     @Override
     protected void configureClient(Configuration config) {
-        config.enable(new JsonJacksonFeature());
+        config.register(new JsonJacksonFeature());
     }
 
     @Test
     public void testLongRunningResource() throws InterruptedException {
-        final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH);
+        final WebTarget resourceTarget = target().path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH);
         final String expectedResponse = SimpleJerseyExecutorManagedLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 50;
@@ -159,7 +159,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
     @Test
     public void testChatResource() throws InterruptedException {
-        final Target resourceTarget = target().path("chat");
+        final WebTarget resourceTarget = target().path("chat");
         final int MAX_MESSAGES = 1;
         final int LATCH_WAIT_TIMEOUT = 100000;
         final boolean debugMode = false;

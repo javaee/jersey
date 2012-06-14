@@ -39,28 +39,21 @@
  */
 package org.glassfish.jersey.client;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.client.Feature;
+import javax.ws.rs.ext.Provider;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import javax.ws.rs.client.Feature;
-import javax.ws.rs.ext.Provider;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -136,7 +129,7 @@ public class JerseyConfigurationTest {
     @Test
     public void testCustomProvidersFeature() {
         JerseyConfiguration instance = new JerseyConfiguration();
-        instance.enable(new CustomProvidersFeature(Arrays.asList(new Class<?>[]{MyProvider.class})));
+        instance.register(new CustomProvidersFeature(Arrays.asList(new Class<?>[]{MyProvider.class})));
 
         assertTrue(instance.getProviderClasses().contains(MyProvider.class));
     }
@@ -229,19 +222,7 @@ public class JerseyConfigurationTest {
         Feature feature = null;
         JerseyConfiguration instance = new JerseyConfiguration();
         JerseyConfiguration expResult = null;
-        JerseyConfiguration result = instance.enable(feature);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
-    public void testDisable() {
-        Class<? extends Feature> feature = null;
-        JerseyConfiguration instance = new JerseyConfiguration();
-        JerseyConfiguration expResult = null;
-        JerseyConfiguration result = instance.disable(feature);
+        JerseyConfiguration result = instance.register(feature);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }

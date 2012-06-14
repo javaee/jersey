@@ -44,7 +44,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -94,7 +93,7 @@ public class CsrfProtectionFilterTest {
     @Test
     public void testPutNoHeader() throws Exception {
         Response response = handler.apply(Requests.from("", "/resource", "PUT").build()).get();
-        assertEquals(Response.Status.BAD_REQUEST, response.getStatusEnum());
+        assertEquals(Response.Status.BAD_REQUEST, response.getStatusInfo());
     }
 
     @Test

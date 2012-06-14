@@ -43,6 +43,9 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
+
 /**
  * Request stringifier.
  *
@@ -53,11 +56,12 @@ public class Stringifier {
     private Stringifier() {
     }
 
-    public static String stringify(Request request) {
+    public static String stringify(Request _request) {
+        JaxrsRequestView request = Helper.unwrap(_request);
         StringBuilder buffer = new StringBuilder();
 
         printRequestLine(buffer, request);
-        printPrefixedHeaders(buffer, request.getHeaders().asMap());
+        printPrefixedHeaders(buffer, request.getHeaders().getRequestHeaders());
 
         if (request.hasEntity()) {
             buffer.append(request.readEntity(String.class)).append("\n");
@@ -66,7 +70,7 @@ public class Stringifier {
         return buffer.toString();
     }
 
-    private static void printRequestLine(StringBuilder buffer, Request request) {
+    private static void printRequestLine(StringBuilder buffer, JaxrsRequestView request) {
         buffer.append(request.getMethod()).append(" ").append(request.getUri().toASCIIString()).append("\n");
     }
 

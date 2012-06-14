@@ -52,7 +52,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -169,7 +169,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
     }
 
     private void _genericTest(Class resourceClass) {
-        Target target = target(resourceClass.getSimpleName());
+        WebTarget target = target(resourceClass.getSimpleName());
 
         _testPath(target, "type");
         _testPath(target, "genericEntity");
@@ -177,7 +177,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         _testPath(target, "response");
     }
 
-    private void _testPath(Target target, String path) {
+    private void _testPath(WebTarget target, String path) {
         assertEquals("1, 2, 3, 4", target.path(path).request().get(String.class));
     }
 }

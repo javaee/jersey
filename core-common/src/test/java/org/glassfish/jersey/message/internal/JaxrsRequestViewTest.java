@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.core.EntityTag;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -82,7 +83,7 @@ public class JaxrsRequestViewTest {
     public void testUri() throws URISyntaxException {
         MutableRequest r = new MutableRequest("", "http://example.org/app/resource", "GET");
         Request v = r.toJaxrsRequest();
-        assertEquals(v.getUri(), URI.create("http://example.org/app/resource"));
+        assertEquals(Helper.unwrap(v).getUri(), URI.create("http://example.org/app/resource"));
     }
 
     @Test

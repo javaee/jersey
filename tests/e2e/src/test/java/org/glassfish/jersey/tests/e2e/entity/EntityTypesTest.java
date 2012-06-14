@@ -69,7 +69,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
@@ -177,7 +177,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationError() {
-        Target target = target("JaxbBeanResource");
+        WebTarget target = target("JaxbBeanResource");
 
         String xml = "<root>foo</root>";
         Response cr = target.request().post(Entity.entity(xml, "application/xml"));
@@ -227,7 +227,7 @@ public class EntityTypesTest extends AbstractTypeTester {
         } : new GenericType<JAXBElement<String>[]>() {
         };
 
-        Target target = target(isList ? "JAXBElementListResource" : "JAXBElementArrayResource");
+        WebTarget target = target(isList ? "JAXBElementListResource" : "JAXBElementArrayResource");
         Object out = target.request(mt).post(Entity.entity(new GenericEntity(in, gt.getType()), mt), gt);
 
         List<JAXBElement<String>> inList = isList ? ((List<JAXBElement<String>>) in) : Arrays.asList((JAXBElement<String>[]) in);
@@ -282,7 +282,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationError() {
-        Target target = target("JAXBElementBeanResource");
+        WebTarget target = target("JAXBElementBeanResource");
 
         String xml = "<root><value>foo";
         Response cr = target.request().post(Entity.entity(xml, "application/xml"));
@@ -318,12 +318,12 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Override
     protected void configureClient(Configuration clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.enable(new JsonJaxbFeature());
+        clientConfig.register(new JsonJaxbFeature());
     }
 
     @Test
     public void testJAXBTypeRepresentation() {
-        Target target = target("JAXBTypeResource");
+        WebTarget target = target("JAXBTypeResource");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBeanType out = target.request().post(Entity.entity(in, "application/xml"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
@@ -337,7 +337,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBTypeRepresentationMediaType() {
-        Target target = target("JAXBTypeResourceMediaType");
+        WebTarget target = target("JAXBTypeResourceMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
@@ -369,7 +369,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBObjectRepresentation() {
-        Target target = target("JAXBObjectResource");
+        WebTarget target = target("JAXBObjectResource");
         Object in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/xml"), JaxbBean.class);
         assertEquals(in, out);
@@ -383,7 +383,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBObjectRepresentationMediaType() {
-        Target target = target("JAXBObjectResourceMediaType");
+        WebTarget target = target("JAXBObjectResourceMediaType");
         Object in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBean.class);
         assertEquals(in, out);
@@ -392,7 +392,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBObjectRepresentationError() {
-        Target target = target("JAXBObjectResource");
+        WebTarget target = target("JAXBObjectResource");
 
         String xml = "<root>foo</root>";
         Response cr = target.request().post(Entity.entity(xml, "application/xml"));
@@ -426,7 +426,7 @@ public class EntityTypesTest extends AbstractTypeTester {
         fp.param("service", "cl");
         fp.param("source", "Gulp-CalGul-1.05");
 
-        Target target = target("FormResource");
+        WebTarget target = target("FormResource");
         Form response = target.request().post(Entity.entity(fp, MediaType.APPLICATION_FORM_URLENCODED_TYPE), Form.class);
 
         assertEquals(fp.asMap().size(), response.asMap().size());
@@ -605,7 +605,7 @@ public class EntityTypesTest extends AbstractTypeTester {
         fp.add("source", "foo.java");
         fp.add("source", "bar.java");
 
-        Target target = target("FormMultivaluedMapResource");
+        WebTarget target = target("FormMultivaluedMapResource");
         MultivaluedMap _fp = target.request().post(Entity.entity(fp, "application/x-www-form-urlencoded"), MultivaluedMap.class);
         assertEquals(fp, _fp);
     }
@@ -624,7 +624,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testStreamingOutputRepresentation() throws Exception {
-        Target target = target("StreamingOutputResource");
+        WebTarget target = target("StreamingOutputResource");
         assertEquals("CONTENT", target.request().get(String.class));
     }
 
@@ -636,7 +636,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanJSONRepresentation() {
-        Target target = target("JAXBElementBeanJSONResource");
+        WebTarget target = target("JAXBElementBeanJSONResource");
 
         Response rib = target.request().post(
                 Entity.entity(new JAXBElement<String>(new QName("test"), String.class, "CONTENT"), "application/json"));
@@ -662,7 +662,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationJSON() {
-        Target target = target("JaxbBeanResourceJSON");
+        WebTarget target = target("JaxbBeanResourceJSON");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -676,7 +676,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationJSONMediaType() {
-        Target target = target("JaxbBeanResourceJSONMediaType");
+        WebTarget target = target("JaxbBeanResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -690,7 +690,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationJSON() {
-        Target target = target("JAXBElementBeanResourceJSON");
+        WebTarget target = target("JAXBElementBeanResourceJSON");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -704,7 +704,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationJSONMediaType() {
-        Target target = target("JAXBElementBeanResourceJSONMediaType");
+        WebTarget target = target("JAXBElementBeanResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -722,7 +722,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBTypeRepresentationJSON() {
-        Target target = target("JAXBTypeResourceJSON");
+        WebTarget target = target("JAXBTypeResourceJSON");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBeanType out = target.request().post(Entity.entity(in, "application/json"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
@@ -740,7 +740,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBTypeRepresentationJSONMediaType() {
-        Target target = target("JAXBTypeResourceJSONMediaType");
+        WebTarget target = target("JAXBTypeResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
@@ -755,7 +755,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Test
     @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJaxbBeanRepresentationFastInfoset() {
-        Target target = target("JaxbBeanResourceFastInfoset");
+        WebTarget target = target("JaxbBeanResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -770,7 +770,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Test
     @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBElementBeanRepresentationFastInfoset() {
-        Target target = target("JAXBElementBeanResourceFastInfoset");
+        WebTarget target = target("JAXBElementBeanResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
         assertEquals(in.value, out.value);
@@ -789,7 +789,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Test
     @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBTypeRepresentationFastInfoset() {
-        Target target = target("JAXBTypeResourceFastInfoset");
+        WebTarget target = target("JAXBTypeResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
         JaxbBeanType out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
@@ -878,7 +878,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBArrayRepresentation() {
-        Target target = target("JAXBArrayResource");
+        WebTarget target = target("JAXBArrayResource");
 
         JaxbBean[] a = target.request().get(JaxbBean[].class);
         JaxbBean[] b = target.request().post(Entity.entity(a, "application/xml"), JaxbBean[].class);
@@ -901,7 +901,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationMediaType() {
-        Target target = target("JAXBListResourceMediaType");
+        WebTarget target = target("JAXBListResourceMediaType");
 
 
         Collection<JaxbBean> a = target.request().get(
@@ -958,7 +958,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationError() {
-        Target target = target("JAXBListResource");
+        WebTarget target = target("JAXBListResource");
 
         String xml = "<root><value>foo";
         Response cr = target.request().post(Entity.entity(xml, "application/xml"));
@@ -977,7 +977,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Test
     @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBListRepresentationFastInfoset() {
-        Target target = target("JAXBListResourceFastInfoset");
+        WebTarget target = target("JAXBListResourceFastInfoset");
 
         Collection<JaxbBean> a = target.request().get(new GenericType<Collection<JaxbBean>>() {
         });
@@ -1038,7 +1038,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationJSON() throws Exception {
-        Target target = target("JAXBListResourceJSON");
+        WebTarget target = target("JAXBListResourceJSON");
 
         Collection<JaxbBean> a = target.request().get(
                 new GenericType<Collection<JaxbBean>>() {
@@ -1108,7 +1108,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationJSONMediaType() throws Exception {
-        Target target = target("JAXBListResourceJSONMediaType");
+        WebTarget target = target("JAXBListResourceJSONMediaType");
 
         Collection<JaxbBean> a = target.request().get(
                 new GenericType<Collection<JaxbBean>>() {

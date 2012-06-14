@@ -58,9 +58,11 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.RequestWriter;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.process.Inflector;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -159,7 +161,8 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
         return builder;
     }
 
-    private com.ning.http.client.Request getRequest(final Request request) {
+    private com.ning.http.client.Request getRequest(final Request _request) {
+        final JaxrsRequestView request = Helper.unwrap(_request);
         final String strMethod = request.getMethod();
         final URI uri = request.getUri();
 
@@ -174,7 +177,7 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
             builder = builder.setBody(entity);
         }
         com.ning.http.client.Request result = builder.build();
-        writeOutBoundHeaders( request.getHeaders().asMap(), result);
+        writeOutBoundHeaders( request.getHeaders().getRequestHeaders(), result);
 
         return result;
     }
@@ -198,7 +201,7 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<Request
     }
 
     private com.ning.http.client.Request.EntityWriter getHttpEntity(final Request jerseyRequest) {
-        final Object entity = jerseyRequest.getEntity();
+        final Object entity = Helper.unwrap(jerseyRequest).getEntity();
 
         if (entity == null) {
             return null;

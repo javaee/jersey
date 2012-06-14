@@ -50,7 +50,6 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**

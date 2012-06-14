@@ -52,18 +52,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
 import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.RequestFilter;
 
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.common.collect.Sets;
 
@@ -123,7 +121,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public Response get(@Context Request request, FormDataMultiPart multiPart) {
-            Object p = request.getProperties().get("filtered");
+            Object p = Helper.unwrap(request).getProperties().get("filtered");
             assertNotNull(p);
             assertEquals("true", p);
 

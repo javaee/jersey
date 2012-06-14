@@ -40,12 +40,19 @@
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
+import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MessageProcessingException;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.ResponseHeaders;
+import javax.ws.rs.core.NewCookie;
 
 /**
  * Adapter for {@link Response Jersey Response} to {@link javax.ws.rs.core.Response
@@ -55,7 +62,7 @@ import javax.ws.rs.core.ResponseHeaders;
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
 // TODO Methods in this class should cache results to improve performance
-final class JaxrsResponseView extends javax.ws.rs.core.Response {
+public final class JaxrsResponseView extends javax.ws.rs.core.Response {
 
     private final Response wrapped;
 
@@ -71,7 +78,6 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
         throw new IllegalArgumentException(String.format("Response class type '%s' not supported.", response.getClass().getName()));
     }
 
-    @Override
     public Map<String, Object> getProperties() {
         return wrapped.properties();
     }
@@ -82,13 +88,12 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public Status getStatusEnum() {
-        return Status.fromStatusCode(wrapped.status().getStatusCode());
+    public StatusType getStatusInfo() {
+        return wrapped.status();
     }
 
-    @Override
-    public ResponseHeaders getHeaders() {
-        return wrapped.getJaxrsHeaders();
+    public MultivaluedMap<String, String> getHeaders() {
+        return wrapped.headers();
     }
 
     @Override
@@ -122,18 +127,84 @@ final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public boolean isEntityRetrievable() {
-        return wrapped.isEntityRetrievable();
-    }
-
-    @Override
-    public void bufferEntity() throws MessageProcessingException {
+    public boolean bufferEntity() throws MessageProcessingException {
         wrapped.bufferEntity();
+        // TODO
+        return false;
     }
 
     @Override
     public void close() throws MessageProcessingException {
         wrapped.close();
+    }
+
+    @Override
+    public String getHeader(String name) {
+        return wrapped.getJaxrsHeaders().getHeader(name);
+    }
+
+    @Override
+    public MediaType getMediaType() {
+        return wrapped.getJaxrsHeaders().getMediaType();
+    }
+
+    @Override
+    public Locale getLanguage() {
+        return wrapped.getJaxrsHeaders().getLanguage();
+    }
+
+    @Override
+    public int getLength() {
+        return wrapped.getJaxrsHeaders().getLength();
+    }
+
+    @Override
+    public Map<String, NewCookie> getCookies() {
+        return wrapped.getJaxrsHeaders().getCookies();
+    }
+
+    @Override
+    public EntityTag getEntityTag() {
+        return wrapped.getJaxrsHeaders().getEntityTag();
+    }
+
+    @Override
+    public Date getDate() {
+        return wrapped.getJaxrsHeaders().getDate();
+    }
+
+    @Override
+    public Date getLastModified() {
+        return wrapped.getJaxrsHeaders().getLastModified();
+    }
+
+    public Set<String> getAllowedMethods() {
+        return wrapped.getJaxrsHeaders().getAllowedMethods();
+    }
+
+    @Override
+    public URI getLocation() {
+        return wrapped.getJaxrsHeaders().getLocation();
+    }
+
+    @Override
+    public Set<Link> getLinks() {
+        return wrapped.getJaxrsHeaders().getLinks();
+    }
+
+    @Override
+    public boolean hasLink(String relation) {
+        return wrapped.getJaxrsHeaders().hasLink(relation);
+    }
+
+    @Override
+    public Link getLink(String relation) {
+        return wrapped.getJaxrsHeaders().getLink(relation);
+    }
+
+    @Override
+    public Link.Builder getLinkBuilder(String relation) {
+        return wrapped.getJaxrsHeaders().getLinkBuilder(relation);
     }
 
     @Override

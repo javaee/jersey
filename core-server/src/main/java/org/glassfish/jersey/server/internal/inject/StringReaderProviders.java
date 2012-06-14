@@ -51,8 +51,8 @@ import javax.ws.rs.WebApplicationException;
 
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
 

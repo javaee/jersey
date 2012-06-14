@@ -40,11 +40,12 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
-
-import com.sun.hk2.component.InjectionResolver;
-import org.glassfish.hk2.scopes.Singleton;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
+
+import org.glassfish.hk2.scopes.Singleton;
+
+import com.sun.hk2.component.InjectionResolver;
 
 /**
  * Module providing support for JAX-RS context injection. Namely, standard injection

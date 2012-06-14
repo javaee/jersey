@@ -40,12 +40,14 @@
 package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.process.internal.AbstractFilterProcessor;
 
 import com.google.common.base.Function;
+
+import org.glassfish.jersey._remove.FilterContext;
 
 /**
  * Function that executes pre-matching filters.
@@ -58,7 +60,7 @@ class PreMatchRequestFilteringStage extends AbstractFilterProcessor<PreMatchRequ
 
     @Override
     public Request apply(Request data) {
-        javax.ws.rs.ext.FilterContext filterContext = filterContextFactory.get();
+        FilterContext filterContext = filterContextFactory.get();
 
         // Initialize filter context
         filterContext.setRequest(data);

@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.MessageProcessingException;
+import javax.ws.rs.MessageProcessingException;
 
 /**
  * Jersey processing exception signaling that no appropriate MessageBodyReader or MessageBodyWriter was found.

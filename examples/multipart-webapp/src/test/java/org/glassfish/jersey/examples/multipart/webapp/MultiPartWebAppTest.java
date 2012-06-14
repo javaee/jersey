@@ -44,7 +44,7 @@ import java.util.Iterator;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
@@ -94,7 +94,7 @@ public class MultiPartWebAppTest extends JerseyTest {
     @Test
     @Ignore("wadl does not exist so far")
     public void testApplicationWadl() throws Exception {
-        final Target target = target().path("application.wadl");
+        final WebTarget target = target().path("application.wadl");
 
         final File tmpFile = target.request().get(File.class);
 
@@ -119,7 +119,7 @@ public class MultiPartWebAppTest extends JerseyTest {
 
     @Test
     public void testPart() {
-        final Target target = target().path("form/part");
+        final WebTarget target = target().path("form/part");
 
         final FormDataMultiPart mp = new FormDataMultiPart();
         final FormDataBodyPart p = new FormDataBodyPart(FormDataContentDisposition.name("part").build(), "CONTENT");
@@ -131,7 +131,7 @@ public class MultiPartWebAppTest extends JerseyTest {
 
     @Test
     public void testPartWithFileName() {
-        final Target target = target().path("form/part-file-name");
+        final WebTarget target = target().path("form/part-file-name");
 
         final FormDataMultiPart mp = new FormDataMultiPart();
         final FormDataBodyPart p = new FormDataBodyPart(FormDataContentDisposition.name("part").fileName("file").build(),
@@ -144,7 +144,7 @@ public class MultiPartWebAppTest extends JerseyTest {
 
     @Test
     public void testXmlJAXBPart() {
-        final Target target = target().path("form/xml-jaxb-part");
+        final WebTarget target = target().path("form/xml-jaxb-part");
 
         final FormDataMultiPart mp = new FormDataMultiPart();
         mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("bean").fileName("bean").build(),

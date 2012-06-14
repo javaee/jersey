@@ -43,6 +43,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Request;
+import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
@@ -71,7 +72,7 @@ public abstract class AbstractTest {
     }
 
     protected Response _test(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
-        Request.RequestBuilder requestBuilder = Requests.from(requestUri, "GET");
+        RequestBuilder requestBuilder = Requests.from(requestUri, "GET");
         if(accept != null) {
             requestBuilder = requestBuilder.accept(accept);
         }

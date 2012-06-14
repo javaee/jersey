@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.httptrace;
 
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.filter.LoggingFilter;
@@ -47,8 +47,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TraceSupportTest extends JerseyTest {
 
@@ -63,8 +62,8 @@ public class TraceSupportTest extends JerseyTest {
         "TRACE http://localhost:" + this.getPort() + "/tracing/annotated"
     };
 
-    private Target prepareTarget(String path) {
-        final Target target = target();
+    private WebTarget prepareTarget(String path) {
+        final WebTarget target = target();
         target.configuration().register(LoggingFilter.class);
         return target.path(path);
     }
@@ -73,7 +72,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testProgrammaticApp() throws Exception {
         Response response = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusEnum());
+        assertEquals(Response.Status.OK, response.getStatusInfo());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsProgrammatic) {
@@ -87,7 +86,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testAnnotatedApp() throws Exception {
         Response response = prepareTarget(App.ROOT_PATH_ANNOTATED).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusEnum());
+        assertEquals(Response.Status.OK, response.getStatusInfo());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsAnnotated) {

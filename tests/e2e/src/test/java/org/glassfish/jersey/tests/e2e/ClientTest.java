@@ -44,7 +44,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -80,7 +80,7 @@ public class ClientTest extends JerseyTest {
 
     @Test
     public void testAccesingHelloworldResource() {
-        Target resource = target().path("helloworld");
+        WebTarget resource = target().path("helloworld");
         Response r = resource.request().get();
         assertEquals(200, r.getStatus());
 
@@ -90,7 +90,7 @@ public class ClientTest extends JerseyTest {
 
     @Test
     public void testAccesingMissingResource() {
-        Target missingResource = target().path("missing");
+        WebTarget missingResource = target().path("missing");
         Response r = missingResource.request().get();
         assertEquals(404, r.getStatus());
 

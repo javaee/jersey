@@ -50,7 +50,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
@@ -144,7 +144,7 @@ public class CharsetTest extends AbstractTypeTester {
     @Override
     protected void configureClient(Configuration clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.enable(new JsonJaxbFeature());
+        clientConfig.register(new JsonJaxbFeature());
         clientConfig.getProviderClasses().add(MyJaxbContextResolver.class);
     }
 
@@ -152,7 +152,7 @@ public class CharsetTest extends AbstractTypeTester {
     public void testStringCharsetResource() {
         String in = "\u00A9 CONTENT \u00FF \u2200 \u22FF";
 
-        Target t = target().path("StringCharsetResource");
+        WebTarget t = target().path("StringCharsetResource");
 
         for (String charset : CHARSETS) {
             Response r = t.path(charset).request().post(Entity.entity(in, "text/plain;charset=" + charset));
@@ -269,7 +269,7 @@ public class CharsetTest extends AbstractTypeTester {
     @Test
     public void testJAXBBeanJSONRepresentationWithContextResolver() throws Exception {
         JaxbBean in = new JaxbBean(CONTENT);
-        Target t = target("/JAXBBeanResource");
+        WebTarget t = target("/JAXBBeanResource");
         for (String charset : CHARSETS) {
             Response rib = t.request().post(Entity.entity(in, "application/json;charset=" + charset));
             byte[] inBytes = requestEntity;
@@ -285,7 +285,7 @@ public class CharsetTest extends AbstractTypeTester {
     @Test
     @Ignore // TODO: Reader representation is not supported for now
     public void testReaderRepresentation() throws Exception {
-        Target t = target("/ReaderResource");
+        WebTarget t = target("/ReaderResource");
         for (String charset : CHARSETS) {
             Response rib = t.request().post(Entity.entity(new StringReader(CONTENT), "text/plain;charset=" + charset));
             byte[] inBytes = requestEntity;
@@ -301,7 +301,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Override
     public <T> void _test(T in, Class resource, MediaType m) {
-        Target t = target(resource.getSimpleName());
+        WebTarget t = target(resource.getSimpleName());
         for (String charset : CHARSETS) {
             Map<String, String> p = new HashMap<String, String>();
             p.put("charset", charset);

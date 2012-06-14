@@ -39,12 +39,14 @@
  */
 package org.glassfish.jersey.examples.helloworld.jaxrs;
 
-import com.sun.net.httpserver.HttpServer;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.ClientFactory;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+
+import com.sun.net.httpserver.HttpServer;
 
 /**
  * Simple test to confirm the server is running and serving our resource.
@@ -56,7 +58,7 @@ public class HelloWorldTest {
     public void testHelloWorld() throws Exception {
         HttpServer server = App.startServer();
 
-        Target target = ClientFactory.newClient().target(App.getBaseURI() + "helloworld");
+        WebTarget target = ClientFactory.newClient().target(App.getBaseURI() + "helloworld");
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, target.request(MediaType.TEXT_PLAIN).get(String.class));
 
         server.stop(0);

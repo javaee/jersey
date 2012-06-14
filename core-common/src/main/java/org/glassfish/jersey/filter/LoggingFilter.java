@@ -39,19 +39,22 @@
  */
 package org.glassfish.jersey.filter;
 
-import javax.ws.rs.BindingPriority;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.PreMatchRequestFilter;
-import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
+
+import javax.ws.rs.BindingPriority;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 
 /**
  * Universal logging filter.
@@ -124,13 +127,13 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         StringBuilder b = new StringBuilder();
 
         printRequestLine(b, id, request);
-        printPrefixedHeaders(b, id, REQUEST_PREFIX, request.getHeaders().asMap());
+        printPrefixedHeaders(b, id, REQUEST_PREFIX, Helper.unwrap(request).getHeaders().getRequestHeaders());
 
         // TODO define large entities logging threshold via configuration
         //      or add special handling for entity streams
-        if (printEntity && request.hasEntity()) {
-            request.bufferEntity();
-            b.append(request.readEntity(String.class)).append("\n");
+        if (printEntity && Helper.unwrap(request).hasEntity()) {
+            Helper.unwrap(request).bufferEntity();
+            b.append(Helper.unwrap(request).readEntity(String.class)).append("\n");
         }
 
         log(b);
@@ -142,7 +145,7 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         StringBuilder b = new StringBuilder();
 
         printResponseLine(b, id, response);
-        printPrefixedHeaders(b, id, RESPONSE_PREFIX, response.getHeaders().asMap());
+        printPrefixedHeaders(b, id, RESPONSE_PREFIX, Helper.unwrap(response).getHeaders());
 
         // TODO define large entities logging threshold via configuration
         //      or add special handling for entity streams
@@ -164,7 +167,7 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
     private void printRequestLine(StringBuilder b, long id, Request request) {
         prefixId(b, id).append(NOTIFICATION_PREFIX).append("LoggingFilter - Request received on thread ").append(Thread.currentThread().getName()).append("\n");
         prefixId(b, id).append(REQUEST_PREFIX).append(request.getMethod()).append(" ").
-                append(request.getUri().toASCIIString()).append("\n");
+                append(Helper.unwrap(request).getUri().toASCIIString()).append("\n");
     }
 
     private void printResponseLine(StringBuilder b, long id, Response response) {

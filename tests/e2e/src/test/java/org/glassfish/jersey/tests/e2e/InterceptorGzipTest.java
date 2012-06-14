@@ -58,7 +58,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -89,7 +89,7 @@ public class InterceptorGzipTest extends JerseyTest {
     @Test
     public void testGzipInterceptorOnlyOnServer() throws IOException {
         client().configuration().register(GZIPWriterTestInterceptor.class);
-        Target target = target().path("test");
+        WebTarget target = target().path("test");
         String entity = "hello, this is text entity";
         Response response = target.request().put(Entity.entity(entity, MediaType.TEXT_PLAIN_TYPE));
         InputStream is = response.readEntity(InputStream.class);
@@ -102,7 +102,7 @@ public class InterceptorGzipTest extends JerseyTest {
     @Test
     public void testGzipInterceptorOnServerandClient() throws IOException {
         client().configuration().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class);
-        Target target = target().path("test");
+        WebTarget target = target().path("test");
         String entity = "hello, this is text entity";
         Response response = target.request().put(Entity.entity(entity, MediaType.TEXT_PLAIN_TYPE));
         String str = response.readEntity(String.class);

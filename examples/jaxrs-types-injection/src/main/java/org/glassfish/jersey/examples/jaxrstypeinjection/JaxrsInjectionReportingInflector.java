@@ -43,7 +43,12 @@ import java.util.List;
 
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.process.Inflector;
 
@@ -58,8 +63,6 @@ class JaxrsInjectionReportingInflector implements Inflector<Request, Response> {
 
     @Inject
     HttpHeaders httpHeaders;
-    @Inject
-    RequestHeaders requestHeaders;
     @Inject
     UriInfo uriInfo;
     @PathParam(value = "p1")
@@ -78,7 +81,7 @@ class JaxrsInjectionReportingInflector implements Inflector<Request, Response> {
     @Override
     public Response apply(Request data) {
         StringBuilder sb = ReportBuilder.append(
-                new StringBuilder("Injected information:\n"), uriInfo, httpHeaders, requestHeaders);
+                new StringBuilder("Injected information:\n"), uriInfo, httpHeaders);
         sb.append("\n URI component injection:");
         sb.append("\n   String path param p1=").append(p1);
         sb.append("\n   PathSegment path param p2=").append(p2);

@@ -47,17 +47,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.FilterContext;
 import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
 
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.examples.exception.Exceptions.MyException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubSubException;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 
 /**
  * ExceptionResource class.
@@ -86,7 +86,7 @@ public class ExceptionResource {
         @Override
         public void preFilter(FilterContext context) throws IOException {
             System.out.println("WebApplicationExceptionFilter.preFilter() enter");
-            Request r = context.getRequest();
+            JaxrsRequestView r = context.getRequest();
             if (r.hasEntity() && r.readEntity(String.class).equals("Request Exception")) {
                 throw new WebApplicationException(Response.Status.OK);
             }

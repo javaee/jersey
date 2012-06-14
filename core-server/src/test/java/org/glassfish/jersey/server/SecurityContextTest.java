@@ -47,8 +47,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
@@ -84,7 +84,7 @@ public class SecurityContextTest {
             Assert.assertEquals(securityContextRef.get(), securityContext);
             Assert.assertTrue(securityContext.getUserPrincipal() == null);
 
-            String header = context.getRequest().getHeaders().getHeader(SKIP_FILTER);
+            String header = context.getRequest().getHeaders().getHeaderString(SKIP_FILTER);
             if ("true".equals(header)) {
                 return;
             }

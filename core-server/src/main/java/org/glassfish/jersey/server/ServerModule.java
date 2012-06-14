@@ -41,9 +41,7 @@ package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.ResponseHeaders;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -95,23 +93,9 @@ public class ServerModule extends AbstractModule {
         }
     }
 
-    private static class RequestHeadersReferencingFactory extends ReferencingFactory<RequestHeaders> {
-
-        public RequestHeadersReferencingFactory(@Inject Factory<Ref<RequestHeaders>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
     private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
 
         public HttpHeadersReferencingFactory(@Inject Factory<Ref<HttpHeaders>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    private static class ResponseHeadersReferencingFactory extends ReferencingFactory<ResponseHeaders> {
-
-        public ResponseHeadersReferencingFactory(@Inject Factory<Ref<ResponseHeaders>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -140,10 +124,6 @@ public class ServerModule extends AbstractModule {
         bind(new TypeLiteral<Ref<Request>>() {
         }).toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
 
-        bind(RequestHeaders.class).toFactory(RequestHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<RequestHeaders>>() {
-        }).toFactory(ReferencingFactory.<RequestHeaders>referenceFactory()).in(RequestScope.class);
-
         bind(HttpHeaders.class).toFactory(HttpHeadersReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<HttpHeaders>>() {
         }).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
@@ -151,10 +131,6 @@ public class ServerModule extends AbstractModule {
         bind(Response.class).toFactory(ResponseReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<Response>>() {
         }).toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
-
-        bind(ResponseHeaders.class).toFactory(ResponseHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<ResponseHeaders>>() {
-        }).toFactory(ReferencingFactory.<ResponseHeaders>referenceFactory()).in(RequestScope.class);
 
         //ChunkedResposeWriter
         bind(MessageBodyWriter.class).to(ChunkedResponseWriter.class).in(Singleton.class);

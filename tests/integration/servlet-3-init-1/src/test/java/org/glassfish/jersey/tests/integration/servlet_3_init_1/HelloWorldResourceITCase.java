@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_1;
 
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -49,10 +49,8 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -72,7 +70,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        Target t = target();
+        WebTarget t = target();
         t.configuration().register(new LoggingFilter());
         Response r = t.path("helloworld").request().get();
         System.out.println("Status: " + r.getStatus());

@@ -51,6 +51,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -114,14 +115,14 @@ public class OptionsTest {
 
         Response response = app.apply(Requests.from("/", "OPTIONS").build()).get();
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+        _checkAllowContent(response.getHeader("Allow").toString());
 
         final MediaType mediaType = MediaType.APPLICATION_XML_TYPE;
         response = app.apply(Requests.from("/", "OPTIONS").accept(mediaType).build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals(mediaType, response.getHeaders().getMediaType());
-        assertEquals(0, response.getHeaders().getLength());
-        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+        assertEquals(mediaType, response.getMediaType());
+        assertEquals(0, response.getLength());
+        _checkAllowContent(response.getHeader("Allow").toString());
     }
 
     private void _checkAllowContent(String allow) {
@@ -176,7 +177,7 @@ public class OptionsTest {
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeaders().getHeader("Allow").toString();
+        String allow = response.getHeader("Allow").toString();
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));
@@ -184,6 +185,6 @@ public class OptionsTest {
         assertTrue(allow.contains("DELETE"));
         assertTrue(allow.contains("PATCH"));
 
-        assertEquals("OVERRIDE", response.getHeaders().getHeader("X-TEST"));
+        assertEquals("OVERRIDE", response.getHeader("X-TEST"));
     }
 }

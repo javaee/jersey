@@ -52,12 +52,12 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import javax.xml.transform.Source;

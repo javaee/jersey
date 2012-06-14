@@ -49,18 +49,18 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request.RequestBuilder;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant;
 
+import org.glassfish.jersey._remove.RequestBuilder;
+
 /**
- * Adapter for {@link Request.Builder Jersey Request.Builder} to {@link javax.ws.rs.core.Request.RequestBuilder
+ * Adapter for {@link Request.Builder Jersey Request.Builder} to {@link org.glassfish.jersey._remove.RequestBuilder
  * JAX-RS Request.RequestBuilder}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestBuilder {
+final class JaxrsRequestBuilderView implements RequestBuilder {
 
     private Request.Builder wrapped;
 
@@ -68,7 +68,7 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
         this.wrapped = wrapped;
     }
 
-    static Request.Builder unwrap(javax.ws.rs.core.Request.RequestBuilder builder) {
+    static Request.Builder unwrap(RequestBuilder builder) {
         if (builder instanceof JaxrsRequestBuilderView) {
             return ((JaxrsRequestBuilderView) builder).wrapped;
         }
@@ -107,7 +107,7 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
     }
 
     @Override
-    public RequestBuilder entity(Object entity, Annotation[] annotations) {
+    public JaxrsRequestBuilderView entity(Object entity, Annotation[] annotations) {
         wrapped.writeAnnotations(annotations).content(entity);
         return this;
     }
@@ -191,11 +191,6 @@ final class JaxrsRequestBuilderView implements javax.ws.rs.core.Request.RequestB
             wrapped.remove(name);
         }
         return this;
-    }
-
-    @Override
-    public JaxrsRequestBuilderView replaceAll(RequestHeaders headers) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

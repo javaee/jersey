@@ -40,7 +40,7 @@
 package org.glassfish.jersey.examples.jackson;
 
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
@@ -69,47 +69,47 @@ public class JacksonTest extends JerseyTest {
 
     @Override
     protected void configureClient(Configuration config) {
-        config.enable(new JsonJacksonFeature()).register(MyObjectMapperProvider.class);
+        config.register(new JsonJacksonFeature()).register(MyObjectMapperProvider.class);
     }
 
     @Test
     public void testEmptyArrayPresent() {
-        Target target = target();
+        WebTarget target = target();
         String responseMsg = target.path("emptyArrayResource").request(MediaType.APPLICATION_JSON).get(String.class);
         assertTrue(responseMsg.replaceAll("[ \t]*", "").contains("[]"));
     }
 
     @Test
     public void testJSONPPresent() {
-        Target target = target();
+        WebTarget target = target();
         String responseMsg = target.path("nonJaxbResource").request("application/javascript").get(String.class);
         assertTrue(responseMsg.startsWith("callback("));
     }
 
     @Test
     public void testJSONDoesNotReflectJSONPWrapper() {
-        Target target = target();
+        WebTarget target = target();
         String responseMsg = target.path("nonJaxbResource").request("application/json").get(String.class);
         assertTrue(!responseMsg.contains("jsonSource"));
     }
 
     @Test
     public void testCombinedAnnotationResource() {
-        Target target = target();
+        WebTarget target = target();
         String responseMsg = target.path("combinedAnnotations").request("application/json").get(String.class);
         assertTrue(responseMsg.contains("account") && responseMsg.contains("value"));
     }
 
     @Test
     public void testEmptyArrayBean() {
-        Target target = target();
+        WebTarget target = target();
         EmptyArrayBean responseMsg = target.path("emptyArrayResource").request(MediaType.APPLICATION_JSON).get(EmptyArrayBean.class);
         assertNotNull(responseMsg);
     }
 
     @Test
     public void testCombinedAnnotationBean() {
-        Target target = target();
+        WebTarget target = target();
         CombinedAnnotationBean responseMsg = target.path("combinedAnnotations").request("application/json").get(CombinedAnnotationBean.class);
         assertNotNull(responseMsg);
     }
@@ -118,7 +118,7 @@ public class JacksonTest extends JerseyTest {
     @Ignore
     // TODO un-ignore once a JSON reader for "application/javascript" is supported
     public void testJSONPBean() {
-        Target target = target();
+        WebTarget target = target();
         NonJaxbBean responseMsg = target.path("nonJaxbResource").request("application/javascript").get(NonJaxbBean.class);
         assertNotNull(responseMsg);
     }
@@ -132,7 +132,7 @@ public class JacksonTest extends JerseyTest {
     @Test
     @Ignore
     public void testApplicationWadl() {
-        Target target = target();
+        WebTarget target = target();
         String serviceWadl = target.path("application.wadl").request(MediaTypes.WADL).get(String.class);
 
         assertTrue(serviceWadl.length() > 0);

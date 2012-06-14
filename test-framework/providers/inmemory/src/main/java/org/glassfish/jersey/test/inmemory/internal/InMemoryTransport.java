@@ -51,8 +51,11 @@ import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
@@ -85,19 +88,20 @@ public class InMemoryTransport implements Inflector<Request, Response> {
      * Transforms client-side request to server-side and invokes it on provided application ({@link RequestInvoker}
      * instance).
      *
-     * @param request client side request to be invoked.
+     * @param _request client side request to be invoked.
      */
     @Override
-    public Response apply(final Request request) {
+    public Response apply(final Request _request) {
         // TODO replace request building with a common request cloning functionality
         Future<Response> responseListenableFuture;
 
-        Request.RequestBuilder requestBuilder = Requests.from(
+        JaxrsRequestView request = Helper.unwrap(_request);
+        RequestBuilder requestBuilder = Requests.from(
                 baseUri,
                 request.getUri(),
                 request.getMethod());
 
-        for (Map.Entry<String, List<String>> entry : request.getHeaders().asMap().entrySet()) {
+        for (Map.Entry<String, List<String>> entry : request.getHeaders().getRequestHeaders().entrySet()) {
             for (String value : entry.getValue()) {
                 requestBuilder = requestBuilder.header(entry.getKey(), value);
             }
@@ -130,7 +134,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
             return response;
         }
 
-        Request.RequestBuilder rb = Requests.from(request);
+        RequestBuilder rb = Requests.from(request);
 
         switch (response.getStatus()) {
             case 303:
@@ -138,7 +142,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
                 // intentionally no break
             case 302:
             case 307:
-                rb.redirect(response.getHeaders().getLocation());
+                rb.redirect(response.getLocation());
                 return apply(rb.build());
             default:
                 return response;

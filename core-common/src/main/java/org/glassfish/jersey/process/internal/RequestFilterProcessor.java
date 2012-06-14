@@ -43,7 +43,7 @@ package org.glassfish.jersey.process.internal;
 import java.util.Map;
 
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.RequestFilter;
+import org.glassfish.jersey._remove.RequestFilter;
 
 import org.glassfish.jersey.internal.MappableException;
 

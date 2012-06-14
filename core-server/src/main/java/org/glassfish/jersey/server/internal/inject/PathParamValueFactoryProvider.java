@@ -39,17 +39,20 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.internal.ExtractorException;
-import org.glassfish.jersey.server.ParamException.PathParamException;
-import org.glassfish.jersey.server.model.Parameter;
-import org.jvnet.hk2.annotations.Inject;
-
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.PathSegment;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.PathSegment;
+
+import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.server.ParamException.PathParamException;
+import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  *

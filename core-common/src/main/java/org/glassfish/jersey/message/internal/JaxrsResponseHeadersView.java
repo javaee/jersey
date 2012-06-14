@@ -51,14 +51,13 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.ResponseHeaders;
 
 /**
- * Adapter for {@link Headers Jersey Headers} to JAX-RS {@link javax.ws.rs.core.ResponseHeaders}.
+ * Former adapter for {@link Headers Jersey Headers} to former JAX-RS {@code ResponseHeaders}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class JaxrsResponseHeadersView implements ResponseHeaders {
+class JaxrsResponseHeadersView {
 
     private Headers wrapped;
 
@@ -66,72 +65,58 @@ class JaxrsResponseHeadersView implements ResponseHeaders {
         this.wrapped = wrapped;
     }
 
-    @Override
     public Map<String, NewCookie> getCookies() {
         return HttpHelper.getNewCookies(wrapped);
     }
 
-    @Override
     public EntityTag getEntityTag() {
         return HttpHelper.getEntityTag(wrapped);
     }
 
-    @Override
     public Date getLastModified() {
         return HttpHelper.getLastModified(wrapped);
     }
 
-    @Override
     public URI getLocation() {
         return HttpHelper.getLocation(wrapped);
     }
 
-    @Override
     public Set<String> getAllowedMethods() {
         return HttpHelper.getAllowedMethods(wrapped);
     }
 
-    @Override
     public Date getDate() {
         return HttpHelper.getDate(wrapped);
     }
 
-    @Override
     public String getHeader(String name) {
         return wrapped.header(name);
     }
 
-    @Override
     public MultivaluedMap<String, String> asMap() {
         return wrapped.headers();
     }
 
-    @Override
     public List<String> getHeaderValues(String name) {
         return wrapped.headerValues(name);
     }
 
-    @Override
     public Locale getLanguage() {
         return HttpHelper.getContentLanguageAsLocale(wrapped);
     }
 
-    @Override
     public int getLength() {
         return HttpHelper.getContentLength(wrapped);
     }
 
-    @Override
     public MediaType getMediaType() {
         return HttpHelper.getContentType(wrapped);
     }
 
-    @Override
     public Set<Link> getLinks() {
         return HttpHelper.getLinks(wrapped);
     }
 
-    @Override
     public Link getLink(String relation) {
         for (Link l : HttpHelper.getLinks(wrapped)) {
             List<String> rels = l.getRel();
@@ -142,7 +127,6 @@ class JaxrsResponseHeadersView implements ResponseHeaders {
         return null;
     }
 
-    @Override
     public boolean hasLink(String relation) {
         for (Link l : HttpHelper.getLinks(wrapped)) {
             List<String> rels = l.getRel();
@@ -153,7 +137,6 @@ class JaxrsResponseHeadersView implements ResponseHeaders {
         return false;
     }
 
-    @Override
     public Link.Builder getLinkBuilder(String relation) {
         Link link = getLink(relation);
         if (link == null) {

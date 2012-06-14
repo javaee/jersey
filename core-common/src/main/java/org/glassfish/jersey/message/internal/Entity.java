@@ -42,8 +42,8 @@ package org.glassfish.jersey.message.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MessageProcessingException;
 
 /**
  * Jersey message entity internal contract.

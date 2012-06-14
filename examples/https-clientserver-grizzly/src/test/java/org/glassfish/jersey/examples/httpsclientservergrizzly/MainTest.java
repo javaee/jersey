@@ -40,26 +40,6 @@
 
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.After;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509KeyManager;
-import javax.net.ssl.X509TrustManager;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Target;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ClientFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.Socket;
@@ -70,6 +50,29 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509KeyManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.filter.LoggingFilter;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -122,7 +125,7 @@ public class MainTest {
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
-        Target target = client.target(Server.BASE_URI);
+        WebTarget target = client.target(Server.BASE_URI);
 
         final Response response = target.path("/").request().get(Response.class);
 
@@ -164,7 +167,7 @@ public class MainTest {
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
-        Target target = client.target(Server.BASE_URI);
+        WebTarget target = client.target(Server.BASE_URI);
         target.configuration().register(new LoggingFilter());
 
         Response response;
@@ -205,7 +208,7 @@ public class MainTest {
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
-        Target target = client.target(Server.BASE_URI);
+        WebTarget target = client.target(Server.BASE_URI);
         target.configuration().register(new LoggingFilter());
 
         boolean caught = false;

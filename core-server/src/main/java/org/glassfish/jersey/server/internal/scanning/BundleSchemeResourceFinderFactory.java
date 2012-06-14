@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -49,6 +47,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * Not used yet - preparations for OSGi support.

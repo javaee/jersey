@@ -225,7 +225,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             parameter.getParameterType().getType(),
                             parameter.getAnnotations(),
                             mediaType,
-                            context.getRequest().getHeaders().asMap(),
+                            context.getRequest().getHeaders().getRequestHeaders(),
                             in);
                 } catch (IOException e) {
                     throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
@@ -248,7 +248,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                                     String.class,
                                     parameter.getAnnotations(),
                                     mediaType,
-                                    context.getRequest().getHeaders().asMap(),
+                                    context.getRequest().getHeaders().getRequestHeaders(),
                                     ((BodyPartEntity) p.getEntity()).getInputStream());
 
                             map.add(parameter.getSourceName(), value);

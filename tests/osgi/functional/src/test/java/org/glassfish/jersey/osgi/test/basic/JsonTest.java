@@ -42,10 +42,10 @@ package org.glassfish.jersey.osgi.test.basic;
 import java.net.URI;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ClientFactory;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.json.JsonJacksonModule;
@@ -159,7 +159,7 @@ public class JsonTest {
         Client c = ClientFactory.newClient();
 
         // TODO: enable JSON on the client side once JERSEY-1083 gets resolved
-//        c.configuration().enable(new JsonJacksonFeature());
+//        c.configuration().register(new JsonJacksonFeature());
 
         final Response response = c.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).buildGet().invoke();
         String result = response.readEntity(String.class);

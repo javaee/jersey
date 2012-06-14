@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
@@ -48,6 +46,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * A utility class that scans entries in jar files.

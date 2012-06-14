@@ -116,17 +116,17 @@ public class UriConnegLanguageMediaTypeTest extends JerseyTest {
     private void _test(String ul, String um, String l, String m) {
         Response r = target().path("abc." + ul + "." + um).request().get();
         assertEquals(m + ", " + l, r.readEntity(String.class));
-        assertEquals(l, r.getHeaders().getLanguage().toString());
-        assertEquals(m, r.getHeaders().getMediaType().toString());
+        assertEquals(l, r.getLanguage().toString());
+        assertEquals(m, r.getMediaType().toString());
 
         r = target().path("abc." + um + "." + ul).request().get();
         assertEquals(m + ", " + l, r.readEntity(String.class));
-        assertEquals(l, r.getHeaders().getLanguage().toString());
-        assertEquals(m, r.getHeaders().getMediaType().toString());
+        assertEquals(l, r.getLanguage().toString());
+        assertEquals(m, r.getMediaType().toString());
 
         r = target().path("abc").request(m).header(HttpHeaders.ACCEPT_LANGUAGE, l).get();
         assertEquals(m + ", " + l, r.readEntity(String.class));
-        assertEquals(l, r.getHeaders().getLanguage().toString());
-        assertEquals(m, r.getHeaders().getMediaType().toString());
+        assertEquals(l, r.getLanguage().toString());
+        assertEquals(m, r.getMediaType().toString());
     }
 }

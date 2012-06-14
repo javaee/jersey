@@ -49,9 +49,9 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ClientFactory;
 
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
@@ -60,17 +60,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
-
-
-import static org.ops4j.pax.exam.CoreOptions.equinox;
-import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
-
 import static org.junit.Assert.assertEquals;
+import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
  *
@@ -202,7 +194,7 @@ public abstract class AbstractHttpServiceTest {
 
         Client c = ClientFactory.newClient();
 
-        final Target target = c.target(baseUri);
+        final WebTarget target = c.target(baseUri);
 
         String result;
 

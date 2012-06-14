@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.process.internal;
 
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.message.internal.Requests;
@@ -60,7 +61,7 @@ class StringAppender implements Function<Request, Request> {
 
     @Override
     public Request apply(Request data) {
-        String entity = data.readEntity(String.class);
+        String entity = Helper.unwrap(data).readEntity(String.class);
         return Requests.from(data).entity((entity == null ? "" : entity) + suffix).build();
     }
 

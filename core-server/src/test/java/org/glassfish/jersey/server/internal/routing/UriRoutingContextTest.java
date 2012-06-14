@@ -50,7 +50,11 @@ import javax.ws.rs.core.Request;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.message.internal.Requests;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**

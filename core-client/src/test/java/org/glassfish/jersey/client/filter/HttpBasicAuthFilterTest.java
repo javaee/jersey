@@ -45,6 +45,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.client.JerseyInvocation;
@@ -73,14 +74,14 @@ public class HttpBasicAuthFilterTest {
     @Test
     public void testGet() {
         Response r = invBuilder.get();
-        assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeaders().getHeader(HttpHeaders.AUTHORIZATION));
+        assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeader(HttpHeaders.AUTHORIZATION));
     }
 
     private static class TestTransport implements Inflector<Request, Response> {
         @Override
         public Response apply(Request request) {
             Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = request.getHeaders().getHeader(HttpHeaders.AUTHORIZATION);
+            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION);
             if (headerValue != null) {
                 rb.header(HttpHeaders.AUTHORIZATION, headerValue);
             }

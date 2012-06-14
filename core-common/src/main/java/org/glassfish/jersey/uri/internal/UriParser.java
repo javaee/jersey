@@ -45,6 +45,8 @@ package org.glassfish.jersey.uri.internal;
  * Example of parsed uri: {@code "http://user@{host}:{port}/a/{path}?query=1#fragment"}.
  * The parser is not thread safe.
  *
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class UriParser {
     private static final String ERROR_STATE = "The parser was not executed yet. Call the parse() method first.";
@@ -65,14 +67,11 @@ class UriParser {
 
     /**
      * Creates new parser initialized with {@code uri}.
+     *
      * @param uri String with URI to be parsed. May contain template parameters.
      */
     UriParser(String uri) {
         this.input = uri;
-    }
-
-    private String parseComponent(String delimiters) {
-        return parseComponent(delimiters, false);
     }
 
     private String parseComponentWithIP(String delimiters, boolean mayEnd) {
@@ -88,21 +87,21 @@ class UriParser {
      * Parses the URI component. Parsing starts at position of the first character of
      * component and ends with position of one of the delimiters. The string and current
      * position is taken from the {@link org.glassfish.jersey.uri.internal.CharacterIterator}.
+     *
      * @param delimiters String with delimiters which terminates the component.
-     * @param mayEnd True if component might be the last part of the URI.
-     * @param isIp True if the component might contain IPv6 address.
+     * @param mayEnd     True if component might be the last part of the URI.
+     * @param isIp       True if the component might contain IPv6 address.
      * @return Extracted component.
      */
     private String parseComponent(String delimiters, boolean mayEnd, boolean isIp) {
 
         int curlyBracketsCount = 0;
         int squareBracketsCount = 0;
-        Character c = null;
 
         StringBuilder sb = new StringBuilder();
 
         boolean endOfInput = false;
-        c = ci.current();
+        Character c = ci.current();
         while (!endOfInput) {
             if (c == '{') {
                 curlyBracketsCount++;
@@ -142,6 +141,9 @@ class UriParser {
     public void parse() {
         this.parserExecuted = true;
         this.ci = new CharacterIterator(input);
+        if (!ci.hasNext()) {
+            return;
+        }
         ci.next();
         String comp = parseComponent(":/?#", true);
 
@@ -174,7 +176,7 @@ class UriParser {
     }
 
     private void parseHierarchicalUri() {
-        if (ci.peek() == '/') {
+        if (ci.hasNext() && ci.peek() == '/') {
             // authority
             ci.next();
             ci.next();
@@ -182,10 +184,12 @@ class UriParser {
 
         }
         if (!ci.hasNext()) {
+            if (ci.current() == '/') {
+                path = "/";
+            }
             return;
         }
         parsePath();
-
     }
 
     private void parseAuthority() {
@@ -241,16 +245,9 @@ class UriParser {
         }
     }
 
-    private void assertCharacter(char expected, char c) {
-        if (c != expected) {
-            throw new IllegalArgumentException("Unexpected character '" + c + "' at position " + ci.pos()
-                    + ". Expected '" + expected + "'");
-        }
-    }
-
-
     /**
      * Returns parsed scheme specific part. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Scheme specific part.
      */
     public String getSsp() {
@@ -262,6 +259,7 @@ class UriParser {
 
     /**
      * Returns parsed scheme component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Scheme.
      */
     public String getScheme() {
@@ -273,6 +271,7 @@ class UriParser {
 
     /**
      * Returns parsed user info component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return User info.
      */
     public String getUserInfo() {
@@ -284,6 +283,7 @@ class UriParser {
 
     /**
      * Returns parsed host component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Host.
      */
     public String getHost() {
@@ -295,6 +295,7 @@ class UriParser {
 
     /**
      * Returns parsed port component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Port.
      */
     public String getPort() {
@@ -306,6 +307,7 @@ class UriParser {
 
     /**
      * Returns parsed query component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Query.
      */
     public String getQuery() {
@@ -317,6 +319,7 @@ class UriParser {
 
     /**
      * Returns parsed path component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Path.
      */
     public String getPath() {
@@ -328,6 +331,7 @@ class UriParser {
 
     /**
      * Returns parsed fragment component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Fragment.
      */
     public String getFragment() {
@@ -339,6 +343,7 @@ class UriParser {
 
     /**
      * Returns parsed authority component. The {@link #parse() method} must be called before executing this method.
+     *
      * @return Authority.
      */
     public String getAuthority() {
@@ -350,8 +355,8 @@ class UriParser {
 
     /**
      * Returns whether the input string URI is opaque. The {@link #parse() method} must be called before executing this method.
-     * @return True if the uri is opaque.
      *
+     * @return True if the uri is opaque.
      */
     public boolean isOpaque() {
         if (!parserExecuted) {

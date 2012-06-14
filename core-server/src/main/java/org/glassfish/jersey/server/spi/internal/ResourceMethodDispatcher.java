@@ -40,11 +40,12 @@
 package org.glassfish.jersey.server.spi.internal;
 
 import java.lang.reflect.InvocationHandler;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
-
 import org.glassfish.jersey.server.model.Invocable;
 
 /**

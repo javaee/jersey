@@ -120,7 +120,7 @@ public class ResourceConfigTest extends JerseyTest {
 
     @Override
     protected void configureClient(Configuration c) {
-        c.enable(new JsonJacksonFeature());
+        c.register(new JsonJacksonFeature());
     }
 
     /**

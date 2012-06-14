@@ -78,7 +78,7 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
      */
     @Test
     public void testUnsupportedMesageBodyReader() {
-        client().configuration().enable(new JsonJacksonFeature());
+        client().configuration().register(new JsonJacksonFeature());
         TestEntity entity = new TestEntity("testEntity");
         Response response = target().path("test").request("application/json").post(Entity.json(entity));
 

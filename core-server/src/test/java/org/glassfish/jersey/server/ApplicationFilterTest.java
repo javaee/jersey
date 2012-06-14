@@ -39,31 +39,34 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.server.model.Resource;
-import junit.framework.Assert;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.ws.rs.BindingPriority;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+
+import javax.annotation.Nullable;
+
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.filter.PreMatchRequestFilterModule;
 import org.glassfish.jersey.filter.RequestFilterModule;
 import org.glassfish.jersey.filter.ResponseFilterModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.model.Resource;
+
 import org.junit.Test;
-
-import javax.annotation.Nullable;
-import javax.ws.rs.BindingPriority;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.PreMatchRequestFilter;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import junit.framework.Assert;
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Test for JAX-RS filters.

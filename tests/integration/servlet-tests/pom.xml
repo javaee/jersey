@@ -51,7 +51,7 @@
 
     <artifactId>servlet-tests</artifactId>
     <packaging>war</packaging>
-    <name>jersey-tests-integration-servlet-2.5-init-2</name>
+    <name>jersey-tests-integration-servlet-tests</name>
 
     <description>Set of smaller unrelated servlet-specific tests.</description>
 

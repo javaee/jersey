@@ -50,14 +50,10 @@ import javax.ws.rs.client.Feature;
 public class JsonJaxbFeature implements Feature {
 
     @Override
-    public void onEnable(Configuration c) {
+    public boolean onEnable(Configuration c) {
         for (Class<?> provider : JsonJaxbModule.getProviders()) {
             c.register(provider);
         }
-    }
-
-    @Override
-    public void onDisable(Configuration c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return true;
     }
 }

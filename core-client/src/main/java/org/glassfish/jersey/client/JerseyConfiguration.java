@@ -180,7 +180,6 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             return featuresSetView;
         }
 
-        @Override
         public boolean isEnabled(final Class<? extends Feature> featureClass) {
             return features.containsKey(featureClass);
         }
@@ -214,7 +213,6 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             return state;
         }
 
-        @Override
         public State enable(final Feature feature) {
             final Class<? extends Feature> featureClass = feature.getClass();
             if (features.containsKey(featureClass)) {
@@ -224,19 +222,6 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             final State state = strategy.onChange(this);
             state.features.put(featureClass, feature);
             feature.onEnable(state);
-
-            return state;
-        }
-
-        @Override
-        public State disable(final Class<? extends Feature> featureClass) {
-            if (!features.containsKey(featureClass)) {
-                throw new IllegalStateException(String.format("Feature [%s] not enabled.", featureClass));
-            }
-
-            final State state = strategy.onChange(this);
-            final Feature feature = state.features.remove(featureClass);
-            feature.onDisable(state);
 
             return state;
         }
@@ -361,7 +346,6 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
         return state.getFeatures();
     }
 
-    @Override
     public boolean isEnabled(final Class<? extends Feature> feature) {
         return state.isEnabled(feature);
     }
@@ -384,25 +368,19 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
 
     @Override
     public JerseyConfiguration register(final Class<?> providerClass) {
+        // TODO features
         state = state.register(providerClass);
         return this;
     }
 
     @Override
     public JerseyConfiguration register(final Object provider) {
-        state = state.register(provider);
-        return this;
-    }
-
-    @Override
-    public JerseyConfiguration enable(final Feature feature) {
-        state = state.enable(feature);
-        return this;
-    }
-
-    @Override
-    public JerseyConfiguration disable(final Class<? extends Feature> feature) {
-        state = state.disable(feature);
+        // TODO features properly
+        if (provider instanceof Feature) {
+            state = state.enable((Feature) provider);
+        } else {
+            state = state.register(provider);
+        }
         return this;
     }
 

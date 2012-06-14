@@ -51,14 +51,15 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.message.internal.Requests;
 
+import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
 
+import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
@@ -119,12 +120,12 @@ public class OptionsSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+        _checkAllowContent(response.getHeader("Allow").toString());
 
         response = app.apply(Requests.from("/sub", "OPTIONS").accept(MediaType.TEXT_HTML).build()).get();
 
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeaders().getHeader("Allow").toString());
+        _checkAllowContent(response.getHeader("Allow").toString());
     }
 
     private void _checkAllowContent(final String allow) {
@@ -186,7 +187,7 @@ public class OptionsSubResourceMethodTest {
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeaders().getHeader("Allow").toString();
+        String allow = response.getHeader("Allow").toString();
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));
@@ -220,7 +221,7 @@ public class OptionsSubResourceMethodTest {
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeaders().getHeader("Allow").toString();
+        String allow = response.getHeader("Allow").toString();
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertFalse(allow.contains("PUT"));
@@ -229,7 +230,7 @@ public class OptionsSubResourceMethodTest {
 
         assertEquals(200, response.getStatus());
 
-        allow = response.getHeaders().getHeader("Allow").toString();
+        allow = response.getHeader("Allow").toString();
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("PUT"));
         assertFalse(allow.contains("GET"));

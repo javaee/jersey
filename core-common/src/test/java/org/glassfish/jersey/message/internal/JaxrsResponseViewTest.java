@@ -51,7 +51,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * JaxrsResponseViewTest class.
@@ -74,6 +74,6 @@ public class JaxrsResponseViewTest {
         mr.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
         Response r = mr.toJaxrsResponse();
         assertEquals(200, r.getStatus());
-        assertEquals(Response.Status.OK, r.getStatusEnum());
+        assertEquals(Response.Status.OK, r.getStatusInfo());
     }
 }

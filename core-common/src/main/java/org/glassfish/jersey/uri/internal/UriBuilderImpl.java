@@ -61,7 +61,6 @@ import org.glassfish.jersey.uri.UriTemplate;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class UriBuilderImpl extends UriBuilder {
 
@@ -78,6 +77,9 @@ public class UriBuilderImpl extends UriBuilder {
     private MultivaluedMap<String, String> queryParams;
     private String fragment;
 
+    /**
+     * Create new implementation of {@code UriBuilder}.
+     */
     public UriBuilderImpl() {
         path = new StringBuilder();
         query = new StringBuilder();
@@ -163,8 +165,12 @@ public class UriBuilderImpl extends UriBuilder {
         return this;
     }
 
-    // TODO: add override once the method is added to UriBuilder
+    @Override
     public UriBuilder uri(String uriTemplate) {
+        if (uriTemplate == null) {
+            throw new IllegalArgumentException("URI parameter is null");
+        }
+
         UriParser parser = new UriParser(uriTemplate);
         parser.parse();
 
@@ -241,9 +247,7 @@ public class UriBuilderImpl extends UriBuilder {
         if (scheme != null) {
             sb.append(scheme).append(':');
         }
-        if (ssp != null) {
-            sb.append(ssp);
-        }
+        sb.append(ssp);
         if (fragment != null && fragment.length() > 0) {
             sb.append('#').append(fragment);
         }
@@ -330,14 +334,13 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder path(Class resource) {
+    public UriBuilder path(Class<?> resource) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
         }
 
-        Class<?> c = resource;
-        Path p = c.getAnnotation(Path.class);
+        Path p = resource.getAnnotation(Path.class);
         if (p == null) {
             throw new IllegalArgumentException("The class, " + resource + " is not annotated with @Path");
         }
@@ -481,7 +484,7 @@ public class UriBuilderImpl extends UriBuilder {
             if (i != -1) {
                 i = 0;
             }
-            matrixParams = UriComponent.decodeMatrix((i != -1) ? path.substring(i) : "", false);
+            matrixParams = UriComponent.decodeMatrix((i != -1) ? path.substring(i) : path.toString(), false);
             i = path.indexOf(";", i);
             if (i != -1) {
                 path.setLength(i);
@@ -680,16 +683,16 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public URI buildFromMap(Map<String, ? extends Object> values) {
+    public URI buildFromMap(Map<String, ?> values) {
         return _buildFromMap(true, values);
     }
 
     @Override
-    public URI buildFromEncodedMap(Map<String, ? extends Object> values) throws IllegalArgumentException, UriBuilderException {
+    public URI buildFromEncodedMap(Map<String, ?> values) throws IllegalArgumentException, UriBuilderException {
         return _buildFromMap(false, values);
     }
 
-    private URI _buildFromMap(boolean encode, Map<String, ? extends Object> values) {
+    private URI _buildFromMap(boolean encode, Map<String, ?> values) {
         if (ssp != null) {
             throw new IllegalArgumentException("Schema specific part is opaque");
         }
@@ -746,7 +749,9 @@ public class UriBuilderImpl extends UriBuilder {
         if (ssp != null) {
             sb.append(ssp);
         } else {
+            boolean hasAuthority = false;
             if (userInfo != null || host != null || port != null) {
+                hasAuthority = true;
                 sb.append("//");
 
                 if (userInfo != null && userInfo.length() > 0) {
@@ -762,6 +767,7 @@ public class UriBuilderImpl extends UriBuilder {
                     sb.append(':').append(port);
                 }
             } else if (authority != null) {
+                hasAuthority = true;
                 sb.append("//").append(authority);
             }
 
@@ -770,6 +776,10 @@ public class UriBuilderImpl extends UriBuilder {
                     sb.append("/");
                 }
                 sb.append(path);
+            } else if (hasAuthority && (query.length() > 0 || (fragment != null && fragment.length() > 0))) {
+                // if has authority and query or fragment and no path value, we need to append root '/' to the path
+                // see URI RFC 3986 section 3.3
+                sb.append("/");
             }
 
             if (query.length() > 0) {

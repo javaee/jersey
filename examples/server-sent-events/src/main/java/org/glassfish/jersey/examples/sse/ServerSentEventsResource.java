@@ -85,15 +85,15 @@ public class ServerSentEventsResource {
             public void run() {
                 try {
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...").build());
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "50%").build());
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "60%").build());
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "70%").build());
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "99%").build());
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "done").build());
                     seq.close();
 

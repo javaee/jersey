@@ -52,10 +52,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request.RequestBuilder;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
@@ -238,13 +239,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 grizzlyResponse.setStatus(jaxrsResponse.getStatus());
                 grizzlyResponse.setContentLengthLong(contentLength);
 
-                for (final Map.Entry<String, List<String>> e : jaxrsResponse.getHeaders().asMap().entrySet()) {
+                for (final Map.Entry<String, List<String>> e : Helper.unwrap(jaxrsResponse).getHeaders().entrySet()) {
                     for (final String value : e.getValue()) {
                         grizzlyResponse.addHeader(e.getKey(), value);
                     }
                 }
 
-                final String contentType = jaxrsResponse.getHeaders().getHeader(HttpHeaders.CONTENT_TYPE);
+                final String contentType = jaxrsResponse.getHeader(HttpHeaders.CONTENT_TYPE);
                 if (contentLength > 0 && contentType != null) {
                     grizzlyResponse.setContentType(contentType);
                 }

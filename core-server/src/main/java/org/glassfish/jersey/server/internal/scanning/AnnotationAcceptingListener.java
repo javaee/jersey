@@ -40,7 +40,18 @@
 
 package org.glassfish.jersey.server.internal.scanning;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassReader;
@@ -48,15 +59,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * A scanner listener that processes Java class files (resource names

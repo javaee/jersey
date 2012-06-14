@@ -40,8 +40,10 @@
 package org.glassfish.jersey.server;
 
 import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;

@@ -45,8 +45,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestFilter;
 
 /**
  * Simple client-side filter that adds X-Requested-By headers to all state-changing
@@ -96,7 +97,8 @@ public class CsrfProtectionFilter implements RequestFilter {
     @Override
     public final void preFilter(final FilterContext fc) throws IOException {
         final Request request = fc.getRequest();
-        if (!METHODS_TO_IGNORE.contains(request.getMethod()) && (request.getHeaders().getHeader(HEADER_NAME) == null)) {
+        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
+                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
             fc.setRequest(fc.getRequestBuilder().header(HEADER_NAME, requestedBy).build());
         }
     }

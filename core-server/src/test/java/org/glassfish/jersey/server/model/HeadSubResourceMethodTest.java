@@ -43,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -51,8 +52,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Paul Sandoz
@@ -83,7 +84,7 @@ public class HeadSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
         assertFalse(response.hasEntity());
     }
 
@@ -139,13 +140,13 @@ public class HeadSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(foo, response.getHeaders().getMediaType());
+        assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
         response = app.apply(Requests.from("/sub", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(bar, response.getHeaders().getMediaType());
+        assertEquals(bar, response.getMediaType());
     }
 
     @Path("/")
@@ -188,14 +189,14 @@ public class HeadSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(foo, response.getHeaders().getMediaType());
+        assertEquals(foo, response.getMediaType());
         assertEquals("FOO-HEAD", response.getMetadata().getFirst("X-TEST").toString());
 
         MediaType bar = MediaType.valueOf("application/bar");
         response = app.apply(Requests.from("/sub", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(bar, response.getHeaders().getMediaType());
+        assertEquals(bar, response.getMediaType());
         assertEquals("BAR-HEAD", response.getMetadata().getFirst("X-TEST").toString());
     }
 
@@ -225,12 +226,12 @@ public class HeadSubResourceMethodTest {
         Response response = app.apply(Requests.from("/sub1", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(foo, response.getHeaders().getMediaType());
+        assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
         response = app.apply(Requests.from("/sub2", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(bar, response.getHeaders().getMediaType());
+        assertEquals(bar, response.getMediaType());
     }
 }

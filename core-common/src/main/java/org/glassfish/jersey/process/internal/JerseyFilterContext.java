@@ -39,14 +39,22 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Objects;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.glassfish.jersey._remove.Helper;
+import javax.ws.rs.core.Request;
+import org.glassfish.jersey._remove.RequestBuilder;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
+import org.glassfish.jersey.message.internal.JaxrsResponseView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.common.base.Objects;
+
+import org.glassfish.jersey._remove.FilterContext;
 
 /**
  * {@link javax.ws.rs.ext.JerseyFilterContext} default implementation.
@@ -55,7 +63,7 @@ import java.util.Map;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-class JerseyFilterContext implements javax.ws.rs.ext.FilterContext {
+class JerseyFilterContext implements FilterContext {
 
     private Map<String, Object> properties = null;
     private Request request = null;
@@ -83,13 +91,13 @@ class JerseyFilterContext implements javax.ws.rs.ext.FilterContext {
     }
 
     @Override
-    public Request getRequest() {
-        return request;
+    public JaxrsRequestView getRequest() {
+        return Helper.unwrap(request);
     }
 
     @Override
-    public Response getResponse() {
-        return response;
+    public JaxrsResponseView getResponse() {
+        return Helper.unwrap(response);
     }
 
     @Override
@@ -103,7 +111,7 @@ class JerseyFilterContext implements javax.ws.rs.ext.FilterContext {
     }
 
     @Override
-    public Request.RequestBuilder getRequestBuilder() {
+    public RequestBuilder getRequestBuilder() {
         return Requests.toBuilder(request);
     }
 

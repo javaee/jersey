@@ -44,7 +44,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
@@ -74,7 +73,7 @@ public class ApplicationHandlerTest {
     public static class Resource {
 
         @GET
-        public String doGetFoo(@Context RequestHeaders headers) {
+        public String doGetFoo(@Context HttpHeaders headers) {
 
             return Integer.toString(headers.getLength());
         }

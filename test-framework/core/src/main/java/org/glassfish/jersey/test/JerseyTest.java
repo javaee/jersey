@@ -47,11 +47,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ClientFactory;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderModule;
@@ -376,7 +376,7 @@ public abstract class JerseyTest {
      *
      * @return the created web resource
      */
-    public Target target() {
+    public WebTarget target() {
         return client.target(tc.getBaseUri());
     }
 
@@ -389,7 +389,7 @@ public abstract class JerseyTest {
      * @param path Relative path (from base URI) this target should point to.
      * @return the created web resource
      */
-    public Target target(String path) {
+    public WebTarget target(String path) {
         return target().path(path);
     }
 

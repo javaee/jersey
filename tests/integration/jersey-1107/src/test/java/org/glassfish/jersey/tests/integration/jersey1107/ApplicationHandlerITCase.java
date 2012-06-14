@@ -134,7 +134,7 @@ public class ApplicationHandlerITCase extends JerseyTest {
 
         // Response.
         final Response response = responseFuture.get();
-        assertEquals(expectedResponse, response.getStatusEnum());
+        assertEquals(expectedResponse, response.getStatusInfo());
     }
 
 }

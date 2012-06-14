@@ -41,8 +41,8 @@
 package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.ext.ClientFactory;
 
 /**
  * Jersey provider of {@link ClientFactory JAX-RS client factory}.

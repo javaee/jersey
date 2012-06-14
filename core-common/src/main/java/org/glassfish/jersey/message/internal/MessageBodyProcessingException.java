@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.MessageProcessingException;
+import javax.ws.rs.MessageProcessingException;
 
 /**
  * Jersey exception signaling that error occurred during reading or writing message body (entity).

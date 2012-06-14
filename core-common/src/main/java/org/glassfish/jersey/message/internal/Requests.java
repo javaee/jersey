@@ -44,7 +44,7 @@ import java.net.URI;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Request.RequestBuilder;
+import org.glassfish.jersey._remove.RequestBuilder;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -192,7 +192,7 @@ public final class Requests {
      * @return {@link HttpHeaders} instance for the headers of the request.
      */
     public static HttpHeaders httpHeaders(Request request) {
-        return JaxrsRequestHeadersView.unwrap(request.getHeaders());
+        return ((JaxrsRequestView)request).getHeaders();
     }
 
     /**

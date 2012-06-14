@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -340,12 +341,12 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getRequestUri() {
-        return request.get().getUri();
+        return Helper.unwrap(request.get()).getUri();
     }
 
     @Override
     public UriBuilder getRequestUriBuilder() {
-        return UriBuilder.fromUri(request.get().getUri());
+        return UriBuilder.fromUri(Helper.unwrap(request.get()).getUri());
     }
 
     // ExtendedUriInfo

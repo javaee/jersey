@@ -48,15 +48,17 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
 
@@ -87,7 +89,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
-        private final Request.RequestBuilder request;
+        private final RequestBuilder request;
         private JerseyConfiguration configuration;
         private JerseyClient client;
 
@@ -109,7 +111,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          *
          * @return mutable request to be invoked.
          */
-        Request.RequestBuilder request() {
+        RequestBuilder request() {
             return request;
         }
 
@@ -204,12 +206,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public Builder header(String name, Object value) {
             request.header(name, value);
-            return this;
-        }
-
-        @Override
-        public Builder headers(RequestHeaders headers) {
-            request.replaceAll(headers);
             return this;
         }
 
@@ -350,6 +346,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             request.method(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
+        }
+
+        @Override
+        public Invocation.Builder headers(MultivaluedMap<String, Object> headers) {
+            return null;  // TODO: implement method.
         }
     }
 

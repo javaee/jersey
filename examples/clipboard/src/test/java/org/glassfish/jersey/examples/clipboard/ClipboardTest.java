@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.clipboard;
 
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -76,7 +76,7 @@ public class ClipboardTest extends JerseyTest {
     }
 
     public void testDeclarativeClipboard(MediaType mediaType) throws Exception {
-        final Target clipboard = client().target(getBaseUri()).path(App.ROOT_PATH);
+        final WebTarget clipboard = client().target(getBaseUri()).path(App.ROOT_PATH);
 
         Response response;
 
@@ -112,7 +112,7 @@ public class ClipboardTest extends JerseyTest {
     }
 
     public void testProgrammaticEcho(MediaType mediaType) throws Exception {
-        final Target echo = client().target(getBaseUri()).path("echo");
+        final WebTarget echo = client().target(getBaseUri()).path("echo");
 
         Response response = echo.request(mediaType).post(Entity.entity(new ClipboardData("Hello"), mediaType));
         assertEquals("Hello", response.readEntity(ClipboardData.class).toString());

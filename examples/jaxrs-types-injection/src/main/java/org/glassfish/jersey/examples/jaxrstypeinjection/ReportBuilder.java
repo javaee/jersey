@@ -43,9 +43,9 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -59,7 +59,7 @@ class ReportBuilder {
     private ReportBuilder() {
     }
 
-    public static StringBuilder append(StringBuilder sb, UriInfo uriInfo, HttpHeaders httpHeaders, RequestHeaders requestHeaders) {
+    public static StringBuilder append(StringBuilder sb, UriInfo uriInfo, HttpHeaders httpHeaders) {
         sb.append("\n UriInfo:");
         sb.append("\n   Absolute path : ").append(uriInfo.getAbsolutePath());
         sb.append("\n   Base URI : ").append(uriInfo.getBaseUri());
@@ -74,8 +74,6 @@ class ReportBuilder {
         sb.append("   Request URI : ").append(uriInfo.getRequestUri());
         sb.append("\n\n HttpHeaders:\n");
         dumpMultivaluedMap(sb, httpHeaders.getRequestHeaders());
-        sb.append("\n RequestHeaders:\n");
-        dumpMultivaluedMap(sb, requestHeaders.asMap());
         return sb;
     }
 

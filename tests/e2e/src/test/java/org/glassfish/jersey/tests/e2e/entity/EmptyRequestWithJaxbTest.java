@@ -48,7 +48,7 @@ import java.util.Set;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ContextResolver;
@@ -122,7 +122,7 @@ public class EmptyRequestWithJaxbTest {
 
         @Test
         public void testEmptyXmlRequest() {
-            Target r = target();
+            WebTarget r = target();
 
             Response cr = r.request().post(Entity.entity(null, "application/xml"));
             assertEquals(400, cr.getStatus());
@@ -223,7 +223,7 @@ public class EmptyRequestWithJaxbTest {
         }
     }
 
-    public static void _test(Target target) {
+    public static void _test(WebTarget target) {
         Response cr = target.request().post(Entity.entity(null, "application/json"));
         assertEquals(400, cr.getStatus());
 

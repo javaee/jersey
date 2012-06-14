@@ -49,9 +49,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.ws.rs.client.Target;
-
-import javax.annotation.Nullable;
+import javax.ws.rs.client.WebTarget;
 
 /**
  * Client for reading and processing Server Sent {@link InboundEvent}s.
@@ -66,7 +64,7 @@ import javax.annotation.Nullable;
  */
 public class EventSource implements EventListener {
 
-    private final Target target;
+    private final WebTarget target;
 
     private final ConcurrentSkipListSet<EventListener> generalListeners = new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
         @Override
@@ -78,11 +76,12 @@ public class EventSource implements EventListener {
     private final ConcurrentSkipListMap<String, List<EventListener>> namedListeners = new ConcurrentSkipListMap<String, List<EventListener>>();
 
     /**
-     * Create new instance and start processing incoming {@link InboundEvent}s in newly created {@link ExecutorService} ({@link Executors#newCachedThreadPool()}.
+     * Create new instance and start processing incoming {@link InboundEvent}s in newly created {@link ExecutorService}
+     * ({@link Executors#newCachedThreadPool()}.
      *
-     * @param target JAX-RS {@link Target} instance which will be used to obtain {@link InboundEvent}s.
+     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
      */
-    public EventSource(Target target) {
+    public EventSource(WebTarget target) {
         this.target = target;
 
         Executors.newCachedThreadPool().execute(new Runnable() {
@@ -96,10 +95,10 @@ public class EventSource implements EventListener {
     /**
      * Create new instance and start processing incoming {@link InboundEvent}s in provided {@link ExecutorService}.
      *
-     * @param target JAX-RS {@link Target} instance which will be used to obtain {@link InboundEvent}s.
+     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
      * @param executorService used for processing events.
      */
-    public EventSource(Target target, ExecutorService executorService) {
+    public EventSource(WebTarget target, ExecutorService executorService) {
         this.target = target;
 
         executorService.execute(new Runnable() {
@@ -125,7 +124,7 @@ public class EventSource implements EventListener {
      * @param eventName {@link InboundEvent} name.
      * @param listener {@link EventListener} to add to current instance.
      */
-    public void addEventListener(@Nullable String eventName, EventListener listener) {
+    public void addEventListener(String eventName, EventListener listener) {
         if(eventName == null) {
             generalListeners.add(listener);
         } else {

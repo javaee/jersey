@@ -42,7 +42,7 @@ package org.glassfish.jersey.grizzly.connector;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -95,7 +95,7 @@ public class FollowRedirectsTest extends JerseyTest {
 
     @Test
     public void testDontFollow() {
-        Target t = target("test/redirect");
+        WebTarget t = target("test/redirect");
         t.configuration().setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
         assertEquals(302, t.request().get().getStatus());
     }

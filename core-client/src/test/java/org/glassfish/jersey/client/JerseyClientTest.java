@@ -41,20 +41,17 @@ package org.glassfish.jersey.client;
 
 import java.io.IOException;
 
-import javax.ws.rs.client.Target;
-import javax.ws.rs.ext.ClientFactory;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
+import javax.ws.rs.client.ClientFactory;
+
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -121,14 +118,14 @@ public class JerseyClientTest {
 
     @Test
     public void testTarget() {
-        final Target target = client.target("http://jersey.java.net/examples");
+        final WebTarget target = client.target("http://jersey.java.net/examples");
         assertNotNull(target);
         assertEquals(client.configuration(), target.configuration());
     }
 
     @Test
     public void testTargetConfigUpdate() {
-        final Target target = client.target("http://jersey.java.net/examples");
+        final WebTarget target = client.target("http://jersey.java.net/examples");
         target.configuration().register(new RequestFilter() {
 
             @Override

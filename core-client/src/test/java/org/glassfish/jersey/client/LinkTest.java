@@ -39,17 +39,16 @@
  */
 package org.glassfish.jersey.client;
 
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.ext.ClientFactory;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * LinkTest class.

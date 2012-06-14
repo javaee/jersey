@@ -66,6 +66,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.MappableException;
@@ -79,7 +80,6 @@ import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
@@ -87,6 +87,7 @@ import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
@@ -471,7 +472,7 @@ public final class ApplicationHandler {
             @Override
             public OutputStream writeResponseStatusAndHeaders(long contentLength, Response response) throws ContainerException {
                 if (contentLength >= 0) {
-                    response.getHeaders().asMap().putSingle("Content-Length", Long.toString(contentLength));
+                    Helper.unwrap(response).getHeaders().putSingle("Content-Length", Long.toString(contentLength));
                 }
 
                 // fake output stream - Response is not written (serialized) in this case.
@@ -538,7 +539,7 @@ public final class ApplicationHandler {
     private Response stripEntity(final Response originalResponse) {
         if (originalResponse.hasEntity()) {
             Response.ResponseBuilder result = Response.status(originalResponse.getStatus());
-            Responses.fillHeaders(result, originalResponse.getHeaders().asMap());
+            Responses.fillHeaders(result, Helper.unwrap(originalResponse).getHeaders());
             return result.build();
         } else {
             return originalResponse;
@@ -713,7 +714,7 @@ public final class ApplicationHandler {
 
             // TODO this is just a quick workaround for issue #JERSEY-1088
             //      which needs to be fixed by a common solution
-            if (response.getHeaders().getMediaType() == null) {
+            if (response.getMediaType() == null) {
                 response = Responses.toBuilder(response).type(outputMediaType).build();
             }
 
@@ -735,7 +736,7 @@ public final class ApplicationHandler {
 
             try {
                 Requests.getMessageWorkers(request).writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
-                        response.getMetadata(), response.getProperties(), committingOutput, messageBodySizeCallback,
+                        response.getMetadata(), Helper.unwrap(response).getProperties(), committingOutput, messageBodySizeCallback,
                         true, !request.getMethod().equals(HttpMethod.HEAD));
             } catch (IOException ex) {
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -752,7 +753,7 @@ public final class ApplicationHandler {
                                 outputAnnotations,
                                 outputMediaType,
                                 response.getMetadata(),
-                                response.getProperties()
+                                Helper.unwrap(response).getProperties()
                         );
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);

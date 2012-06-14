@@ -51,7 +51,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.ResponseHeaders;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
@@ -78,7 +77,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testMediaType() throws URISyntaxException, ParseException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r = mr.getJaxrsHeaders();
         assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
     }
 
@@ -86,7 +85,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testLength() throws URISyntaxException, ParseException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_LENGTH, "1024");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(1024, r.getLength());
     }
 
@@ -94,7 +93,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testContentLanguage() throws URISyntaxException, ParseException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.CONTENT_LANGUAGE, "en");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(Locale.ENGLISH, r.getLanguage());
     }
 
@@ -103,7 +102,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
         mr.header(HttpHeaders.ACCEPT, "application/json");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertTrue(r.getHeaderValues(HttpHeaders.ACCEPT).contains("application/xml, text/plain"));
         assertTrue(r.getHeaderValues(HttpHeaders.ACCEPT).contains("application/json"));
     }
@@ -115,7 +114,7 @@ public class JaxrsResponseHeadersViewTest {
         mr.header(HttpHeaders.ACCEPT, "application/json");
         mr.header("Allow", "GET, PUT");
         mr.header("Allow", "POST");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertTrue(r.asMap().containsKey(HttpHeaders.ACCEPT));
         assertTrue(r.asMap().containsKey("Allow"));
         assertTrue(r.asMap().get(HttpHeaders.ACCEPT).contains("application/json"));
@@ -128,7 +127,7 @@ public class JaxrsResponseHeadersViewTest {
         mr.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
         mr.header(HttpHeaders.ACCEPT, "application/json");
         mr.header("FOO", "");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("application/xml"));
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("text/plain"));
         assertTrue(r.getHeader(HttpHeaders.ACCEPT).contains("application/json"));
@@ -140,7 +139,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testDate() throws URISyntaxException, ParseException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(date, r.getDate());
@@ -151,7 +150,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header("Allow", "GET, PUT");
         mr.header("Allow", "POST");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(3, r.getAllowedMethods().size());
         assertTrue(r.getAllowedMethods().contains("GET"));
         assertTrue(r.getAllowedMethods().contains("PUT"));
@@ -164,7 +163,7 @@ public class JaxrsResponseHeadersViewTest {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.SET_COOKIE, "oreo=chocolate");
         mr.header(HttpHeaders.SET_COOKIE, "nilla=vanilla");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(2, r.getCookies().size());
         assertTrue(r.getCookies().containsKey("oreo"));
         assertTrue(r.getCookies().containsKey("nilla"));
@@ -174,7 +173,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testEntityTag() throws URISyntaxException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.ETAG, "\"tag\"");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(EntityTag.valueOf("\"tag\""), r.getEntityTag());
     }
 
@@ -182,7 +181,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testLastModified() throws URISyntaxException, ParseException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.LAST_MODIFIED, "Tue, 29 Jan 2002 22:14:02 -0500");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(date, r.getLastModified());
@@ -192,7 +191,7 @@ public class JaxrsResponseHeadersViewTest {
     public void testLocation() throws URISyntaxException {
         MutableResponse mr = new MutableResponse(Status.OK, request.workers());
         mr.header(HttpHeaders.LOCATION, "http://example.org/app");
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(URI.create("http://example.org/app"), r.getLocation());
     }
 
@@ -203,7 +202,7 @@ public class JaxrsResponseHeadersViewTest {
         Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "PUT").rel("self").build();
         mr.header("Link", link1.toString());
         mr.header("Link", link2.toString());
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertEquals(2, r.getLinks().size());
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
@@ -218,7 +217,7 @@ public class JaxrsResponseHeadersViewTest {
         mr.header("Link", link1.toString());
         mr.header("Link", link2.toString());
         mr.header("Link", link3.toString());
-        ResponseHeaders r = mr.getJaxrsHeaders();
+        JaxrsResponseHeadersView r =mr.getJaxrsHeaders();
         assertTrue(r.getLink("self").equals(link1));
         assertTrue(r.getLink("update").equals(link2) || r.getLink("update").equals(link3));
     }

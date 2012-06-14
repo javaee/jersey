@@ -62,13 +62,13 @@ public class CustomProvidersFeature implements Feature {
     }
 
     @Override
-    public void onEnable(Configuration c) {
+    public boolean onEnable(Configuration c) {
         for (Class<?> provider : providers) {
             c.register(provider);
         }
+        return true;
     }
 
-    @Override
     public void onDisable(Configuration c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }

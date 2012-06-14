@@ -58,6 +58,7 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ServiceProviders;
@@ -277,8 +278,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                         // TODO: (MM) we should not mix config with request properties
                         // TODO: config should be accessible to connectors by some other means
                         Map<String, Object> properties = new HashMap<String, Object>(cfg.getProperties());
-                        properties.putAll(request.getProperties());
-                        request.getProperties().putAll(properties);
+                        properties.putAll(Helper.unwrap(request).getProperties());
+                        Helper.unwrap(request).getProperties().putAll(properties);
                         /////
 
                         return invoker.apply(request, new InvocationCallback<Response>() {
@@ -353,27 +354,27 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public Target target(String uri) throws IllegalArgumentException, NullPointerException {
+    public WebTarget target(String uri) throws IllegalArgumentException, NullPointerException {
         checkClosed();
-        return new Target(uri, this);
+        return new WebTarget(uri, this);
     }
 
     @Override
-    public Target target(URI uri) throws NullPointerException {
+    public WebTarget target(URI uri) throws NullPointerException {
         checkClosed();
-        return new Target(uri, this);
+        return new WebTarget(uri, this);
     }
 
     @Override
-    public Target target(UriBuilder uriBuilder) throws NullPointerException {
+    public WebTarget target(UriBuilder uriBuilder) throws NullPointerException {
         checkClosed();
-        return new Target(uriBuilder, this);
+        return new WebTarget(uriBuilder, this);
     }
 
     @Override
-    public Target target(Link link) throws NullPointerException {
+    public WebTarget target(Link link) throws NullPointerException {
         checkClosed();
-        return new Target(link, this);
+        return new WebTarget(link, this);
     }
 
     @Override
@@ -386,7 +387,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         if (POST.equals(method) || PUT.equals(method)) {
             throw new IllegalArgumentException("Missing entity in invocation created from link " + link);
         }
-        Target t = new Target(link, this);
+        WebTarget t = new WebTarget(link, this);
         List<String> ps = link.getProduces();
         JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
         return ib.build(method);
@@ -410,7 +411,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         if (!isCompatible) {
             throw new IllegalArgumentException("Entity type incompatible with link produces parameter");
         }
-        Target t = new Target(link, this);
+        WebTarget t = new WebTarget(link, this);
         List<String> ps = link.getProduces();
         JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
         return ib.build(method, entity);

@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.clipboard;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -60,7 +60,7 @@ public class ClipboardTest extends JerseyTest {
     @Test
     public void testClipboard() throws Exception {
         final Client client = client();
-        final Target clipboard = client.target(getBaseUri()).path(App.ROOT_PATH);
+        final WebTarget clipboard = client.target(getBaseUri()).path(App.ROOT_PATH);
 
         Response response;
 

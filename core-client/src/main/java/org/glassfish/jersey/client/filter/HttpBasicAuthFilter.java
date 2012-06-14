@@ -43,8 +43,9 @@ import java.io.IOException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestFilter;
 
 import org.glassfish.jersey.internal.util.Base64;
 
@@ -72,8 +73,8 @@ public final class HttpBasicAuthFilter implements RequestFilter {
 
     @Override
     public final void preFilter(final FilterContext fc) throws IOException {
-        Request cr = fc.getRequest();
-        if (cr.getHeaders().getHeader(HttpHeaders.AUTHORIZATION) == null) {
+        Request request = fc.getRequest();
+        if (Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION) == null) {
             fc.setRequest(fc.getRequestBuilder().header(HttpHeaders.AUTHORIZATION, authentication).build());
         }
     }

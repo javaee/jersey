@@ -57,9 +57,11 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 
@@ -91,7 +93,8 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
         }
     }
 
-    private Response _apply(final Request request) throws IOException {
+    private Response _apply(final Request _request) throws IOException {
+        final JaxrsRequestView request = Helper.unwrap(_request);
         final HttpURLConnection uc;
         // TODO introduce & leverage optional connection factory to support customized connections
         uc = (HttpURLConnection) request.getUri().toURL().openConnection();
@@ -162,14 +165,14 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
 
                         @Override
                         public void commit() throws IOException {
-                            writeOutBoundHeaders(request.getHeaders().asMap(), uc);
+                            writeOutBoundHeaders(request.getHeaders().getRequestHeaders(), uc);
                         }
                     };
                 }
 
             });
         } else {
-            writeOutBoundHeaders(request.getHeaders().asMap(), uc);
+            writeOutBoundHeaders(request.getHeaders().getRequestHeaders(), uc);
         }
 
         Response.ResponseBuilder rb =

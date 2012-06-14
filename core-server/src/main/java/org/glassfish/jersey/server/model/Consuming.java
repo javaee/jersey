@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
+
 import javax.ws.rs.core.MediaType;
 
 /**

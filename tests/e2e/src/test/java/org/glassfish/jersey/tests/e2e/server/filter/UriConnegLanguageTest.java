@@ -72,9 +72,9 @@ public class UriConnegLanguageTest extends JerseyTest {
     @Path("/abc")
     public static class LanguageVariantResource {
         @GET
-        public Response doGet(@Context Request r) {
+        public Response doGet(@Context Request request, @Context HttpHeaders headers) {
 
-            assertEquals(1, r.getHeaders().getAcceptableLanguages().size());
+            assertEquals(1, headers.getAcceptableLanguages().size());
 
             List<Variant> vs = Variant.VariantListBuilder.newInstance().
                     languages(new Locale("zh")).
@@ -82,7 +82,7 @@ public class UriConnegLanguageTest extends JerseyTest {
                     languages(new Locale("en")).add().
                     build();
 
-            Variant v = r.selectVariant(vs);
+            Variant v = request.selectVariant(vs);
             if (v == null)
                 return Response.notAcceptable(vs).build();
             else
@@ -103,24 +103,24 @@ public class UriConnegLanguageTest extends JerseyTest {
 
     @Test
     public void testLanguages() {
-        Response r = target().path("abc.english").request().get();
-        assertEquals("en", r.readEntity(String.class));
-        assertEquals("en", r.getHeaders().getLanguage().toString());
+        Response response = target().path("abc.english").request().get();
+        assertEquals("en", response.readEntity(String.class));
+        assertEquals("en", response.getLanguage().toString());
 
-        r = target().path("abc.french").request().get();
-        assertEquals("fr", r.readEntity(String.class));
-        assertEquals("fr", r.getHeaders().getLanguage().toString());
+        response = target().path("abc.french").request().get();
+        assertEquals("fr", response.readEntity(String.class));
+        assertEquals("fr", response.getLanguage().toString());
 
-        r = target().path("abc.french").request().header(HttpHeaders.ACCEPT_LANGUAGE, "en").get();
-        assertEquals("fr", r.readEntity(String.class));
-        assertEquals("fr", r.getHeaders().getLanguage().toString());
+        response = target().path("abc.french").request().header(HttpHeaders.ACCEPT_LANGUAGE, "en").get();
+        assertEquals("fr", response.readEntity(String.class));
+        assertEquals("fr", response.getLanguage().toString());
 
-        r = target().path("abc").request().header(HttpHeaders.ACCEPT_LANGUAGE, "en").get();
-        assertEquals("en", r.readEntity(String.class));
-        assertEquals("en", r.getHeaders().getLanguage().toString());
+        response = target().path("abc").request().header(HttpHeaders.ACCEPT_LANGUAGE, "en").get();
+        assertEquals("en", response.readEntity(String.class));
+        assertEquals("en", response.getLanguage().toString());
 
-        r = target().path("abc").request().header(HttpHeaders.ACCEPT_LANGUAGE, "fr").get();
-        assertEquals("fr", r.readEntity(String.class));
-        assertEquals("fr", r.getHeaders().getLanguage().toString());
+        response = target().path("abc").request().header(HttpHeaders.ACCEPT_LANGUAGE, "fr").get();
+        assertEquals("fr", response.readEntity(String.class));
+        assertEquals("fr", response.getLanguage().toString());
     }
 }

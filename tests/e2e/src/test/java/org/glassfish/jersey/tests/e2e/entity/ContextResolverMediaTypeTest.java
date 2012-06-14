@@ -45,7 +45,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -155,7 +155,7 @@ public class ContextResolverMediaTypeTest {
         @Test
         public void testProduce() throws IOException {
 
-            Target target = target();
+            WebTarget target = target();
 
             assertEquals("text/plain", target.path("text/plain").request().get(String.class));
             assertEquals("text/*", target.path("text/*").request().get(String.class));
@@ -179,7 +179,7 @@ public class ContextResolverMediaTypeTest {
 
         @Test
         public void testProduces() throws IOException {
-            Target target = target();
+            WebTarget target = target();
 
             assertEquals("text/plain/html", target.path("text/plain").request().get(String.class));
             assertEquals("text/plain/html", target.path("text/html").request().get(String.class));
@@ -205,7 +205,7 @@ public class ContextResolverMediaTypeTest {
 
         @Test
         public void testProducesSeparate() throws IOException {
-            Target target = target();
+            WebTarget target = target();
 
             assertEquals("text/plain", target.path("text/plain").request().get(String.class));
             assertEquals("text/html", target.path("text/html").request().get(String.class));
@@ -229,7 +229,7 @@ public class ContextResolverMediaTypeTest {
 
         @Test
         public void testProducesXXX() throws IOException {
-            Target target = target();
+            WebTarget target = target();
 
             assertEquals("text/plain", target.path("text/plain").request().get(String.class));
             assertEquals("text/html", target.path("text/html").request().get(String.class));

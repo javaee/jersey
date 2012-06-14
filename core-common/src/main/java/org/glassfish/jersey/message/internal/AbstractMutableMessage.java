@@ -45,9 +45,9 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MessageProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;

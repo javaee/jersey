@@ -42,20 +42,21 @@ package org.glassfish.jersey.filter;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.ProcessingTestModule;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.HK2;
@@ -123,7 +124,7 @@ public class LoggingFilterTest {
 
                     @Override
                     public Response apply(Request data) {
-                        return Responses.from(200, data).entity(data.readEntity(String.class)).build();
+                        return Responses.from(200, data).entity(Helper.unwrap(data).readEntity(String.class)).build();
                     }
                 }));
 

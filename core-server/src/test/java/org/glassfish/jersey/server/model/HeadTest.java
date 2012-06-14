@@ -43,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -83,10 +84,10 @@ public class HeadTest {
         Response response = app.apply(Requests.from("/", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
-        String length = response.getHeaders().getHeader("Content-Length");
+        String length = response.getHeader("Content-Length");
         assertNotNull(length);
         assertEquals(3, Integer.parseInt(length));
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
         assertFalse(response.hasEntity());
     }
 
@@ -138,13 +139,13 @@ public class HeadTest {
         Response response = app.apply(Requests.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(foo, response.getHeaders().getMediaType());
+        assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
         response = app.apply(Requests.from("/", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(bar, response.getHeaders().getMediaType());
+        assertEquals(bar, response.getMediaType());
     }
 
     @Path("/")
@@ -183,14 +184,14 @@ public class HeadTest {
         Response response = app.apply(Requests.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(foo, response.getHeaders().getMediaType());
+        assertEquals(foo, response.getMediaType());
         assertEquals("FOO-HEAD", response.getMetadata().getFirst("X-TEST").toString());
 
         MediaType bar = MediaType.valueOf("application/bar");
         response = app.apply(Requests.from("/", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
-        assertEquals(bar, response.getHeaders().getMediaType());
+        assertEquals(bar, response.getMediaType());
         assertEquals("BAR-HEAD", response.getMetadata().getFirst("X-TEST").toString());
     }
 
@@ -209,10 +210,10 @@ public class HeadTest {
 
         Response response = app.apply(Requests.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
-        String length = response.getHeaders().getHeader("Content-Length");
+        String length = response.getHeader("Content-Length");
         assertNotNull(length);
         assertEquals(3, Integer.parseInt(length));
-        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, response.getMediaType());
         assertFalse(response.hasEntity());
     }
 
@@ -239,10 +240,10 @@ public class HeadTest {
 
         Response response = app.apply(Requests.from("/", "HEAD").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("text", response.getHeaders().getHeader("x-value"));
+        assertEquals("text", response.getHeader("x-value"));
 
         response = app.apply(Requests.from("/", "HEAD").accept("text/html").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("html", response.getHeaders().getHeader("x-value"));
+        assertEquals("html", response.getHeader("x-value"));
     }
 }

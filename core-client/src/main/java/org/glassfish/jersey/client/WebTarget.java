@@ -39,25 +39,27 @@
  */
 package org.glassfish.jersey.client;
 
-import com.google.common.collect.Maps;
-
-import javax.annotation.Nullable;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Maps;
+
 /**
- * Jersey implementation of {@link javax.ws.rs.client.Target JAX-RS client target}
+ * Jersey implementation of {@link javax.ws.rs.client.WebTarget JAX-RS client target}
  * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class Target implements javax.ws.rs.client.Target {
+public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     // TODO base URI support
     private final JerseyConfiguration configuration;
@@ -65,28 +67,28 @@ public class Target implements javax.ws.rs.client.Target {
     private final Map<String, Object> pathParams;
     private final JerseyClient client;
 
-    /*package*/ Target(String uri, JerseyClient parent) {
+    /*package*/ WebTarget(String uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(URI uri, JerseyClient parent) {
+    /*package*/ WebTarget(URI uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(UriBuilder uriBuilder, JerseyClient parent) {
+    /*package*/ WebTarget(UriBuilder uriBuilder, JerseyClient parent) {
         this(uriBuilder.clone(), null, parent.configuration().snapshot(), parent);
     }
 
-    /*package*/ Target(Link link, JerseyClient parent) {
+    /*package*/ WebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
         this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot(), parent);
     }
 
-    protected Target(UriBuilder targetUri, Target that) {
+    protected WebTarget(UriBuilder targetUri, WebTarget that) {
         this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
     }
 
-    protected Target(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
+    protected WebTarget(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
         this.targetUri = targetUri;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);
@@ -135,43 +137,43 @@ public class Target implements javax.ws.rs.client.Target {
     }
 
     @Override
-    public Target path(String path) throws NullPointerException {
-        return new Target(getUriBuilder().path(path), this);
+    public WebTarget path(String path) throws NullPointerException {
+        return new WebTarget(getUriBuilder().path(path), this);
     }
 
     @Override
-    public Target pathParam(String name, Object value) throws IllegalArgumentException, NullPointerException {
-        Target result = new Target(getUriBuilder(), this);
+    public WebTarget pathParam(String name, Object value) throws IllegalArgumentException, NullPointerException {
+        WebTarget result = new WebTarget(getUriBuilder(), this);
         result.setPathParam(name, value);
         return result;
     }
 
     @Override
-    public Target pathParams(Map<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
-        Target result = new Target(getUriBuilder(), this);
+    public WebTarget pathParams(Map<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
+        WebTarget result = new WebTarget(getUriBuilder(), this);
         result.replacePathParams(parameters);
         return result;
     }
 
     @Override
-    public Target matrixParam(String name, Object... values) throws NullPointerException {
-        return new Target(getUriBuilder().matrixParam(name, values), this);
+    public WebTarget matrixParam(String name, Object... values) throws NullPointerException {
+        return new WebTarget(getUriBuilder().matrixParam(name, values), this);
     }
 
     @Override
-    public Target queryParam(String name, Object... values) throws NullPointerException {
-        return new Target(getUriBuilder().queryParam(name, values), this);
+    public WebTarget queryParam(String name, Object... values) throws NullPointerException {
+        return new WebTarget(getUriBuilder().queryParam(name, values), this);
     }
 
     @Override
-    public Target queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
+    public WebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
         // TODO move the implementation to a proprietary Jersey uri builder or leave it here?
         UriBuilder ub = getUriBuilder(); // clone
         for (Entry<String, List<Object>> e : parameters.entrySet()) {
             ub.queryParam(e.getKey(), e.getValue().toArray());
         }
 
-        return new Target(ub, this);
+        return new WebTarget(ub, this);
     }
 
     @Override

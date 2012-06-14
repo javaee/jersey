@@ -98,7 +98,7 @@ public class InputStreamResponseTest extends JerseyTest {
         final Response response = target().path("responseWrappedInputStream").request().get();
 
         assertEquals(200, response.getStatus());
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
         assertEquals("Marie", response.readEntity(String.class));
     }
 }

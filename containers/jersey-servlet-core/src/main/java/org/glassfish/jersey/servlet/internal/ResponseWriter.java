@@ -56,6 +56,7 @@ import javax.ws.rs.core.Response;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -74,6 +75,7 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     private static final Logger LOGGER = Logger.getLogger(ResponseWriter.class.getName());
 
+    // TODO remove?
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final OutputStream out;
@@ -147,7 +149,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                 if (useSetStatusOn404 && status == 404) {
                     response.setStatus(status);
                 } else {
-                    final String reason = actualJerseyResponse.getStatusEnum().getReasonPhrase();
+                    final String reason = actualJerseyResponse.getStatusInfo().getReasonPhrase();
                     try {
                         if (reason == null || reason.isEmpty()) {
                             response.sendError(status);
@@ -192,7 +194,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         if (contentLength != -1 && contentLength < Integer.MAX_VALUE) {
             response.setContentLength((int) contentLength);
         }
-        MultivaluedMap<String, String> headers = getActualJerseyResponse().getHeaders().asMap();
+        MultivaluedMap<String, String> headers = Helper.unwrap(getActualJerseyResponse()).getHeaders();
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
             for (String v : e.getValue()) {
                 response.addHeader(e.getKey(), v);

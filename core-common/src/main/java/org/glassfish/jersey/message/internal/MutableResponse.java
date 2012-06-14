@@ -44,7 +44,6 @@ import java.io.InputStream;
 
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.StatusType;
-import javax.ws.rs.core.ResponseHeaders;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -58,7 +57,7 @@ class MutableResponse extends AbstractMutableMessage<MutableResponse> implements
 
     private transient javax.ws.rs.core.Response jaxrsView;
     private transient javax.ws.rs.core.Response.ResponseBuilder jaxrsBuilderView;
-    private transient javax.ws.rs.core.ResponseHeaders jaxrsHeadersView;
+    private transient JaxrsResponseHeadersView jaxrsHeadersView;
     private StatusType status;
 
     /**
@@ -156,7 +155,7 @@ class MutableResponse extends AbstractMutableMessage<MutableResponse> implements
     }
 
     @Override
-    public ResponseHeaders getJaxrsHeaders() {
+    public JaxrsResponseHeadersView getJaxrsHeaders() {
         if (jaxrsHeadersView == null) {
             jaxrsHeadersView = new JaxrsResponseHeadersView(this);
         }

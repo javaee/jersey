@@ -40,7 +40,7 @@
 package org.glassfish.jersey.examples.exception;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -48,10 +48,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import static org.glassfish.jersey.examples.exception.ExceptionResource.MyResponseFilter;
 import static org.glassfish.jersey.examples.exception.ExceptionResource.WebApplicationExceptionFilter;
-import static org.glassfish.jersey.examples.exception.Exceptions.MyExceptionMapper;
-import static org.glassfish.jersey.examples.exception.Exceptions.MySubExceptionMapper;
-import static org.glassfish.jersey.examples.exception.Exceptions.MySubSubException;
-import static org.glassfish.jersey.examples.exception.Exceptions.WebApplicationExceptionMapper;
+import static org.glassfish.jersey.examples.exception.Exceptions.*;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -87,7 +84,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionInRequestFilter() {
-        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("request_exception").build());
+        WebTarget t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("request_exception").build());
         Response r = t.request("text/plain").post(Entity.text("Request Exception"));
         assertEquals(200, r.getStatus());
         final String entity = r.readEntity(String.class);
@@ -97,7 +94,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
 
     @Test
     public void testWebApplicationExceptionInResponseFilter() {
-        Target t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("response_exception").build());
+        WebTarget t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("response_exception").build());
         Response r = t.request("text/plain").get();
         assertEquals(200, r.getStatus());
         final String entity = r.readEntity(String.class);

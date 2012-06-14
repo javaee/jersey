@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.examples.helloworld;
 
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;

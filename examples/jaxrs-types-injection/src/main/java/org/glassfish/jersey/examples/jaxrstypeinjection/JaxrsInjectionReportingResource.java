@@ -40,12 +40,16 @@
 package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriInfo;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -58,8 +62,6 @@ public class JaxrsInjectionReportingResource {
 
     @Context
     HttpHeaders httpHeaders;
-    @Inject
-    RequestHeaders requestHeaders;
     @Context
     UriInfo uriInfo;
     @PathParam(value = "p1")
@@ -79,14 +81,13 @@ public class JaxrsInjectionReportingResource {
     @Path("method/{p1}/{p2}")
     public String doGet(
             @Context HttpHeaders httpHeaders,
-            @Context RequestHeaders requestHeaders,
             @Inject UriInfo uriInfo,
             @PathParam(value = "p1") String p1,
             @PathParam(value = "p2") PathSegment p2,
             @QueryParam(value = "q1") int q1,
             @QueryParam(value = "q2") List<String> q2) {
         StringBuilder sb = ReportBuilder.append(
-                new StringBuilder("Injected information:\n"), uriInfo, httpHeaders, requestHeaders);
+                new StringBuilder("Injected information:\n"), uriInfo, httpHeaders);
         sb.append("\n URI component injection:");
         sb.append("\n   String path param p1=").append(p1);
         sb.append("\n   PathSegment path param p2=").append(p2);
@@ -98,6 +99,6 @@ public class JaxrsInjectionReportingResource {
     @GET
     @Path("instance/{p1}/{p2}")
     public String doGet() {
-        return doGet(httpHeaders, requestHeaders, uriInfo, p1, p2, q1, q2);
+        return doGet(httpHeaders, uriInfo, p1, p2, q1, q2);
     }
 }

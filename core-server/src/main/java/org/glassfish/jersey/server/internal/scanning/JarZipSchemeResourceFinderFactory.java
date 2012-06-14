@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-import org.glassfish.jersey.uri.UriComponent;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +50,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * A "jar" and "zip" scheme URI scanner that recursively jar files.

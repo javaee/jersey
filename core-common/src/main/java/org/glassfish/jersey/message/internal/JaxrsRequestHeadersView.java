@@ -44,35 +44,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.RequestHeaders;
 
 /**
- * Adapter for {@link Headers Jersey Headers} to JAX-RS {@link javax.ws.rs.core.RequestHeaders}
- * and {@link javax.ws.rs.core.HttpHeaders}.
+ * Adapter for {@link Headers Jersey Headers} to JAX-RS and {@link javax.ws.rs.core.HttpHeaders}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class JaxrsRequestHeadersView implements RequestHeaders, HttpHeaders {
+public class JaxrsRequestHeadersView implements HttpHeaders {
 
     private Headers wrapped;
 
     public JaxrsRequestHeadersView(Headers wrapped) {
         this.wrapped = wrapped;
-    }
-
-    static JaxrsRequestHeadersView unwrap(javax.ws.rs.core.RequestHeaders headers) {
-        if (headers instanceof JaxrsRequestHeadersView) {
-            return (JaxrsRequestHeadersView) headers;
-        }
-
-        throw new IllegalArgumentException(String.format("Request headers class type '%s' not supported.", headers.getClass().getName()));
     }
 
     @Override
@@ -100,19 +88,8 @@ class JaxrsRequestHeadersView implements RequestHeaders, HttpHeaders {
         return HttpHelper.getDate(wrapped);
     }
 
-    @Override
-    public String getHeader(String name) {
+    public String getHeaderString(String name) {
         return wrapped.header(name);
-    }
-
-    @Override
-    public MultivaluedMap<String, String> asMap() {
-        return wrapped.headers();
-    }
-
-    @Override
-    public List<String> getHeaderValues(String name) {
-        return wrapped.headerValues(name);
     }
 
     @Override
@@ -137,43 +114,6 @@ class JaxrsRequestHeadersView implements RequestHeaders, HttpHeaders {
 
     @Override
     public MultivaluedMap<String, String> getRequestHeaders() {
-        return asMap();
-    }
-
-    @Override
-    public Set<Link> getLinks() {
-        return HttpHelper.getLinks(wrapped);
-    }
-
-    @Override
-    public Link getLink(String relation) {
-        for (Link l : HttpHelper.getLinks(wrapped)) {
-            List<String> rels = l.getRel();
-            if (rels != null && rels.contains(relation)) {
-                return l;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public boolean hasLink(String relation) {
-        for (Link l : HttpHelper.getLinks(wrapped)) {
-            List<String> rels = l.getRel();
-            if (rels != null && rels.contains(relation)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public Link.Builder getLinkBuilder(String relation) {
-        Link link = getLink(relation);
-        if (link == null) {
-            return null;
-        }
-
-        return Link.fromLink(link);
+        return wrapped.headers();
     }
 }

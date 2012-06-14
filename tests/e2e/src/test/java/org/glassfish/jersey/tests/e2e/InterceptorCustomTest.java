@@ -52,15 +52,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.FilterContext;
+import org.glassfish.jersey._remove.FilterContext;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
-import javax.ws.rs.ext.RequestFilter;
-import javax.ws.rs.ext.ResponseFilter;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
@@ -91,7 +91,7 @@ public class InterceptorCustomTest extends JerseyTest {
 
         client().configuration().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class)
                 .register(PlusOneWriterInterceptor.class).register(MinusOneReaderInterceptor.class).register(TestFilter.class);
-        Target target = target().path("test");
+        WebTarget target = target().path("test");
 
         Response response = target.request().put(Entity.entity(ENTITY, MediaType.TEXT_PLAIN_TYPE));
         String str = response.readEntity(String.class);

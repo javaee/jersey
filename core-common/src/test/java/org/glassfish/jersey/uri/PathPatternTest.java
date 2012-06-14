@@ -39,13 +39,7 @@
  */
 package org.glassfish.jersey.uri;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.regex.MatchResult;
-
-import javax.ws.rs.core.Request;
-
-import org.glassfish.jersey.message.internal.Requests;
 
 import org.junit.Assert;
 import org.junit.Test;

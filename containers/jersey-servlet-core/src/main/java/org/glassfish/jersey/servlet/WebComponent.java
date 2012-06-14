@@ -65,10 +65,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -235,7 +238,7 @@ public class WebComponent {
     public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
 
-        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
+        RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
         requestBuilder = addRequestHeaders(request, requestBuilder);
 
         final Request jaxRsRequest = requestBuilder.build();
@@ -330,7 +333,7 @@ public class WebComponent {
         }
     }
 
-    private Request.RequestBuilder addRequestHeaders(HttpServletRequest request, Request.RequestBuilder builder) {
+    private RequestBuilder addRequestHeaders(HttpServletRequest request, RequestBuilder builder) {
         for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements();) {
             String name = names.nextElement();
             List<String> valueList = new LinkedList<String>();
@@ -396,7 +399,8 @@ public class WebComponent {
         }
     }
 
-    private void filterFormParameters(HttpServletRequest hsr, Request request) throws IOException {
+    private void filterFormParameters(HttpServletRequest hsr, Request _request) throws IOException {
+        JaxrsRequestView request = Helper.unwrap(_request);
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getHeaders().getMediaType())
                 && !request.hasEntity()) {
 

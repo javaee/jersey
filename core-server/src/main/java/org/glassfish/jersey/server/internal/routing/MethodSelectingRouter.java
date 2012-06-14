@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericType;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -166,7 +167,7 @@ final class MethodSelectingRouter implements Router {
          * @return True if the {@code request} can be processed by this router, false otherwise.
          */
         boolean isConsumable(Request request) {
-            MediaType contentType = request.getHeaders().getMediaType();
+            MediaType contentType = Helper.unwrap(request).getHeaders().getMediaType();
             return contentType == null || consumes.getMediaType().isCompatible(contentType);
         }
 
@@ -407,7 +408,7 @@ final class MethodSelectingRouter implements Router {
         // TODO: remove try/catch clauses based on JERSEY-913 resolution
         List<MediaType> acceptableMediaTypes;
         try {
-            acceptableMediaTypes = request.getHeaders().getAcceptableMediaTypes();
+            acceptableMediaTypes = Helper.unwrap(request).getHeaders().getAcceptableMediaTypes();
         } catch (RuntimeException re) {
             throw new WebApplicationException(Response.status(400).entity(re.getMessage()).build());
         }
@@ -418,7 +419,7 @@ final class MethodSelectingRouter implements Router {
             for (final ConsumesProducesAcceptor satisfiable : satisfyingAcceptors) {
                 if (satisfiable.produces.getMediaType().isCompatible(acceptableMediaType)) {
 
-                    final MediaType requestContentType = request.getHeaders().getMediaType();
+                    final MediaType requestContentType = Helper.unwrap(request).getHeaders().getMediaType();
                     final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE :
                             requestContentType;
 
@@ -542,7 +543,7 @@ final class MethodSelectingRouter implements Router {
                         return Response.ok()
                                 .allow(allowedMethods)
                                 .header(HttpHeaders.CONTENT_LENGTH, "0")
-                                .type(data.getHeaders().getAcceptableMediaTypes().get(0))
+                                .type(Helper.unwrap(data).getHeaders().getAcceptableMediaTypes().get(0))
                                 .build();
                     }
                 })));

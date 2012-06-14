@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 
 import javax.ws.rs.core.GenericType;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.server.model.Parameter;
@@ -79,7 +80,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
             final Class<?> rawType = parameterType.getRawType();
             return Request.class.isAssignableFrom(rawType) && rawType.isInstance(request)
                     ? request
-                    : request.readEntity(parameterType, parameter.getAnnotations());
+                    : Helper.unwrap(request).readEntity(parameterType, parameter.getAnnotations());
         }
     }
 

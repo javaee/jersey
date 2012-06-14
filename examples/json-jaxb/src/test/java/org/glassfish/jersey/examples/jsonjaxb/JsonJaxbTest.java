@@ -72,7 +72,7 @@ public class JsonJaxbTest extends JerseyTest {
 
     @Override
     protected void configureClient(Configuration config) {
-        config.enable(new JsonJaxbFeature()).register(JaxbContextResolver.class);
+        config.register(new JsonJaxbFeature()).register(JaxbContextResolver.class);
     }
 
     @Before

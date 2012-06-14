@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ResourceFinder;
-import org.glassfish.jersey.server.ServerProperties;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -50,6 +46,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Stack;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
  * A scanner that recursively scans directories and jar files.

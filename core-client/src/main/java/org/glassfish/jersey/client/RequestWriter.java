@@ -58,6 +58,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
 import org.glassfish.jersey.message.internal.Requests;
@@ -138,7 +139,7 @@ public class RequestWriter {
         public RequestEntityWriterImpl(Request request) {
             this.request = request;
 
-            final Object e = request.getEntity();
+            final Object e = Helper.unwrap(request).getEntity();
             if (e == null) {
                 throw new IllegalArgumentException("The entity of the client request is null");
             }
@@ -155,7 +156,7 @@ public class RequestWriter {
             final Class<?> entityClass = entity.getClass();
 
             request = RequestWriter.this.ensureMediaType(entityClass, entityType, request);
-            this.mediaType = request.getHeaders().getMediaType();
+            this.mediaType = Helper.unwrap(request).getHeaders().getMediaType();
 
             final MessageBodyWorkers workers = Requests.getMessageWorkers(request);
             this.writer = workers.getMessageBodyWriter(entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
@@ -172,7 +173,7 @@ public class RequestWriter {
                 throw new ClientException(message);
             }
 
-            final MultivaluedMap<String, String> headers = request.getHeaders().asMap();
+            final MultivaluedMap<String, String> headers = Helper.unwrap(request).getHeaders().getRequestHeaders();
             this.size = headers.containsKey(HttpHeaders.CONTENT_ENCODING)
                     ? -1
                     : writer.getSize(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
@@ -193,8 +194,12 @@ public class RequestWriter {
         public void writeRequestEntity(OutputStream out) throws IOException {
             // TODO handlers?
             try {
-                writer.writeTo(entity, entity.getClass(), entityType,
-                        EMPTY_ANNOTATIONS, mediaType, request.getHeaders().asMap(),
+                writer.writeTo(entity,
+                        entity.getClass(),
+                        entityType,
+                        EMPTY_ANNOTATIONS,
+                        mediaType,
+                        Helper.unwrap(request).getHeaders().getRequestHeaders(),
                         out);
                 out.flush();
             } finally {
@@ -228,7 +233,7 @@ public class RequestWriter {
      */
     @SuppressWarnings("unchecked")
     protected void writeRequestEntity(Request request, final RequestEntityWriterListener listener) throws IOException {
-        Object entity = request.getEntity();
+        Object entity = Helper.unwrap(request).getEntity();
         if (entity == null) {
             return;
         }
@@ -244,8 +249,8 @@ public class RequestWriter {
         final Class<?> entityClass = entity.getClass();
 
         request = ensureMediaType(entityClass, entityType, request);
-        final MediaType mediaType = request.getHeaders().getMediaType();
-        final MultivaluedMap<String, String> headers = request.getHeaders().asMap();
+        final MediaType mediaType = Helper.unwrap(request).getHeaders().getMediaType();
+        final MultivaluedMap<String, String> headers = Helper.unwrap(request).getHeaders().getRequestHeaders();
 
         MessageBodyWorkers.MessageBodySizeCallback sizeCallback = null;
         if (headers.containsKey(HttpHeaders.CONTENT_ENCODING)) {
@@ -258,7 +263,7 @@ public class RequestWriter {
         final OutputStream out = listener.onGetOutputStream();
         try {
             workers.writeTo(entity, GenericType.of(entityClass, entityType), EMPTY_ANNOTATIONS, mediaType,
-                    (MultivaluedMap) headers, request.getProperties(), out, sizeCallback, true);
+                    (MultivaluedMap) headers, Helper.unwrap(request).getProperties(), out, sizeCallback, true);
 
         } catch (IOException ex) {
             try {
@@ -278,7 +283,7 @@ public class RequestWriter {
     }
 
     private Request ensureMediaType(Class<?> entityClass, Type entityType, Request request) {
-        if (request.getHeaders().getMediaType() != null) {
+        if (Helper.unwrap(request).getHeaders().getMediaType() != null) {
             return request;
         } else {
             // Content-Type is not present choose a default type

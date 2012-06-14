@@ -42,7 +42,7 @@ package org.glassfish.jersey.filter;
 import org.glassfish.hk2.BinderFactory;
 import org.glassfish.hk2.Module;
 
-import javax.ws.rs.ext.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 import java.util.List;
 
 /**

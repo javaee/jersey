@@ -40,9 +40,12 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
+
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
 import org.glassfish.hk2.ComponentException;
@@ -76,8 +79,8 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
             }
 
             @Override
-            public Request getRequest() {
-                return request.get();
+            public JaxrsRequestView getRequest() {
+                return Helper.unwrap(request.get());
             }
 
             @Override
@@ -88,7 +91,7 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
             @Override
             public Map<String, Object> getProperties() {
                 final Request request = getRequest();
-                return request == null ? null : request.getProperties();
+                return request == null ? null : Helper.unwrap(request).getProperties();
             }
         });
     }

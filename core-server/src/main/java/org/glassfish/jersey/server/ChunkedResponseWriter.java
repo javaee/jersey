@@ -53,8 +53,8 @@ import javax.ws.rs.ext.Provider;
 /**
  * Used for writing {@link ChunkedResponse}.
  *
- * @see MessageBodyWriter
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @see MessageBodyWriter
  */
 @Provider
 public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<?>> {

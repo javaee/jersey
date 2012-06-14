@@ -41,6 +41,8 @@ package org.glassfish.jersey.tests.integration.jersey780;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.core.Response;
 
@@ -70,18 +72,25 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testInvalidUrl() throws Exception {
+        List<Integer> expectedCodes = Arrays.asList(
+                Response.Status.BAD_REQUEST.getStatusCode(), Response.Status.NOT_FOUND.getStatusCode());
+        List<String> expectedPhrases = Arrays.asList(
+                Response.Status.BAD_REQUEST.getReasonPhrase(), Response.Status.NOT_FOUND.getReasonPhrase());
+
         final URL url = new URL(getBaseUri().toString() + "^");
         final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
 
         connection.connect();
 
-        final int responseCode = connection.getResponseCode();
-        final String responseMessage = connection.getResponseMessage();
+        final int statusCode = connection.getResponseCode();
+        final String statusMessage = connection.getResponseMessage();
 
         connection.disconnect();
 
-        assertTrue(responseCode == Response.Status.BAD_REQUEST.getStatusCode());
-        assertTrue(Response.Status.BAD_REQUEST.getReasonPhrase().equals(responseMessage));
+        assertTrue("Wrong response status code: " + statusCode,
+                expectedCodes.contains(statusCode));
+        assertTrue("Wrong response status reason: " + statusMessage,
+                expectedPhrases.contains(statusMessage));
     }
 }

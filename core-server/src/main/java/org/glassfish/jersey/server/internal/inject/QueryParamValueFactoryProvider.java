@@ -39,13 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.inject.Injector;
+import javax.ws.rs.QueryParam;
+
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-import org.jvnet.hk2.annotations.Inject;
 
-import javax.ws.rs.QueryParam;
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link QueryParam} injection annotation.

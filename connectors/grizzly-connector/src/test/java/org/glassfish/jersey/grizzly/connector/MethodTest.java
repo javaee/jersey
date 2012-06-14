@@ -41,19 +41,25 @@
 package org.glassfish.jersey.grizzly.connector;
 
 import java.net.URI;
-import javax.ws.rs.*;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -97,7 +103,7 @@ public class MethodTest extends JerseyTest{
     public void testGet() {
         final URI u = target().getUri();
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        Target t = client.target(u);
+        WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().get();
         assertEquals("GET", response.getEntity());
@@ -107,7 +113,7 @@ public class MethodTest extends JerseyTest{
     public void testPost() {
         final URI u = target().getUri();
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        Target t = client.target(u);
+        WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().post(Entity.entity("POST", MediaType.WILDCARD_TYPE));
         assertEquals("POST", response.getEntity());
@@ -117,7 +123,7 @@ public class MethodTest extends JerseyTest{
     public void testPut() {
         final URI u = target().getUri();
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        Target t = client.target(u);
+        WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().put(Entity.entity("PUT", MediaType.WILDCARD_TYPE));
         assertEquals("PUT", response.getEntity());
@@ -127,7 +133,7 @@ public class MethodTest extends JerseyTest{
     public void testDelete() {
         final URI u = target().getUri();
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        Target t = client.target(u);
+        WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().delete();
         assertEquals("DELETE", response.getEntity());

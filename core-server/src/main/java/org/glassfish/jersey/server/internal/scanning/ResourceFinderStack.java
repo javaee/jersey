@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
 import java.io.InputStream;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Stack;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * {@link Stack} of {@link ResourceFinder} instances.

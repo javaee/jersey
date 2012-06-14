@@ -41,14 +41,15 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.Form;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.internal.ExtractorException;
 
 import org.glassfish.hk2.inject.Injector;
 
@@ -62,8 +63,14 @@ import org.jvnet.hk2.annotations.Inject;
  */
 final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<FormParam> {
 
+    /**
+     * {@link FormParam} injection resolver.
+     */
     static final class InjectionResolver extends ParamInjectionResolver<FormParam> {
 
+        /**
+         * Create new FormParam injection resolver.
+         */
         public InjectionResolver() {
             super(FormParam.class, FormParamValueFactoryProvider.class);
         }
@@ -74,7 +81,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
 
         private final MultivaluedParameterExtractor<?> extractor;
 
-        FormParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        FormParamValueFactory(MultivaluedParameterExtractor<?> extractor) {
             this.extractor = extractor;
         }
 
@@ -115,7 +122,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
                         LocalizationMessages.FORM_PARAM_METHOD_ERROR());
             }
 
-            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getHeaders().getMediaType())) {
+            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, Helper.unwrap(request).getHeaders().getMediaType())) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
             }
@@ -123,9 +130,9 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private Form getFormParameters(Request request) {
-            if (request.getHeaders().getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
-                request.bufferEntity();
-                Form f = request.readEntity(Form.class);
+            if (Helper.unwrap(request).getHeaders().getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+                Helper.unwrap(request).bufferEntity();
+                Form f = Helper.unwrap(request).readEntity(Form.class);
                 return (f == null ? new Form() : f);
             } else {
                 return new Form();
@@ -133,6 +140,12 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep extractor provider.
+     * @param injector injector.
+     */
     public FormParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
         super(mpep, injector, Parameter.Source.FORM);
     }
@@ -150,6 +163,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         if (e == null) {
             return null;
         }
-        return new FormParamValueFactory(e, !parameter.isEncoded());
+        return new FormParamValueFactory(e);
     }
 }

@@ -41,8 +41,8 @@ package org.glassfish.jersey.message.internal;
 
 import java.util.Map;
 
-
 import javax.ws.rs.core.Response.StatusType;
+
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
@@ -90,7 +90,7 @@ interface Response extends Entity, Headers {
 
     public javax.ws.rs.core.Response toJaxrsResponse();
 
-    public javax.ws.rs.core.ResponseHeaders getJaxrsHeaders();
+    public JaxrsResponseHeadersView getJaxrsHeaders();
 
     public Builder toBuilder();
 }

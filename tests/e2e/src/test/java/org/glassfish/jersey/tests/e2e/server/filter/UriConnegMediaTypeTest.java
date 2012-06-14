@@ -47,7 +47,7 @@ import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -209,7 +209,7 @@ public class UriConnegMediaTypeTest extends JerseyTest {
     }
 
     private void _test(String base, String path, String terminate) {
-        Target r = target().path(base);
+        WebTarget r = target().path(base);
 
         String s = r.path(path + ".foo" + terminate).request().get(String.class);
         assertEquals("foo", s);

@@ -39,20 +39,21 @@
  */
 package org.glassfish.jersey.tests.api;
 
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
-import javax.annotation.Nullable;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 
+import javax.annotation.Nullable;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -102,7 +103,7 @@ public class ResponseTest {
      * verify that correct status code is returned
      */
     @Test
-    public void cloneTest() {
+    public void cloneTest() throws CloneNotSupportedException {
         StringBuilder sb = new StringBuilder();
         boolean pass = true;
 

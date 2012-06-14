@@ -58,12 +58,16 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
@@ -73,8 +77,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsExchange;
-import org.glassfish.jersey.server.internal.ConfigHelper;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 /**
  * Container adapter between {@link HttpServer JDK HttpServer} and {@link ApplicationHandler Jersey application}.
@@ -155,7 +157,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
         final URI requestUri = baseUri.resolve(exchangeUri);
 
-        Request.RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
+        RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
                 exchange.getRequestBody());
 
         /**
@@ -241,7 +243,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, Response jaxRsResponse)
                 throws ContainerException {
-            final MultivaluedMap<String, String> jaxRsHeaders = jaxRsResponse.getHeaders().asMap();
+            final MultivaluedMap<String, String> jaxRsHeaders = Helper.unwrap(jaxRsResponse).getHeaders();
             final Headers serverHeaders = exchange.getResponseHeaders();
             for (final Map.Entry<String, List<String>> e : jaxRsHeaders.entrySet()) {
                 for (String value : e.getValue()) {

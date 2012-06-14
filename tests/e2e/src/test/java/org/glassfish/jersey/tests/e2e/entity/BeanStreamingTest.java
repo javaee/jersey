@@ -56,7 +56,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -97,7 +97,7 @@ public class BeanStreamingTest extends JerseyTest {
 
         // the following should work using BeanProvider which
         // supports Bean.class for type application/bean
-        Target r = target().path("/bean");
+        WebTarget r = target().path("/bean");
         r.request().post(Entity.entity(b, "application/bean"), Bean.class);
 
         try {

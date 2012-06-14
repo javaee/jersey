@@ -41,9 +41,7 @@ package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.ResponseHeaders;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
@@ -65,13 +63,9 @@ class ReferencesInitializer implements Function<Request, Request> {
     @Inject
     private Factory<Ref<Request>> requestReference;
     @Inject
-    private Factory<Ref<RequestHeaders>> requestHeadersReference;
-    @Inject
     private Factory<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
     private Factory<Ref<Response>> responseReference;
-    @Inject
-    private Factory<Ref<ResponseHeaders>> responseHeadersReference;
     @Inject
     private Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
 
@@ -87,14 +81,12 @@ class ReferencesInitializer implements Function<Request, Request> {
     @Override
     public Request apply(final Request request) {
         requestReference.get().set(request);
-        requestHeadersReference.get().set(request.getHeaders());
         httpHeadersReference.get().set(Requests.httpHeaders(request));
 
         respondingContextFactory.get().push(new Function<Response, Response>() {
             @Override
             public Response apply(final Response response) {
                 responseReference.get().set(response);
-                responseHeadersReference.get().set((response != null) ? response.getHeaders() : null);
 
                 return response;
             }

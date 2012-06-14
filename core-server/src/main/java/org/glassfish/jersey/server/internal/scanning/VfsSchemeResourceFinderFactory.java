@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
-import javax.ws.rs.core.UriBuilder;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +47,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * A JBoss-based "vfsfile", "vfs" and "vfszip" scheme URI scanner.

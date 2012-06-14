@@ -51,14 +51,15 @@ import java.util.Set;
 
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.StatusType;
-import javax.ws.rs.core.ResponseHeaders;
 import javax.ws.rs.core.Variant;
 
 /**
@@ -67,7 +68,7 @@ import javax.ws.rs.core.Variant;
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
+public final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
 
     private org.glassfish.jersey.message.internal.Response.Builder wrapped;
 
@@ -339,7 +340,12 @@ final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
     }
 
     @Override
-    public ResponseBuilder replaceAll(ResponseHeaders headers) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public <T> ResponseBuilder entity(T entity, GenericType<? super T> declaredType, Annotation[] annotations) {
+        return null;  // TODO: implement method.
+    }
+
+    @Override
+    public ResponseBuilder replaceAll(MultivaluedMap<String, Object> headers) {
+        return null;  // TODO: implement method.
     }
 }

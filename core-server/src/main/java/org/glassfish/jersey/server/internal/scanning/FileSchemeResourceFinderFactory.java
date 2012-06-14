@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -50,6 +48,8 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * A "file" scheme URI scanner that recursively scans directories.

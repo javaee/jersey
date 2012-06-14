@@ -39,15 +39,18 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.internal.ExtractorException;
-import org.glassfish.jersey.server.ParamException;
-import org.glassfish.jersey.server.model.Parameter;
-import org.jvnet.hk2.annotations.Inject;
+import java.util.List;
 
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.core.PathSegment;
-import java.util.List;
+
+import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.server.ParamException;
+import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link MatrixParam} injection annotation.

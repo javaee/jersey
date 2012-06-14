@@ -50,14 +50,15 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -84,7 +85,7 @@ public class AsyncResourceTest extends JerseyTest {
         executeChatTest(target().path(App.ASYNC_MESSAGING_BLOCKING_PATH), BlockingPostChatResource.POST_NOTIFICATION_RESPONSE);
     }
 
-    private void executeChatTest(final Target resourceTarget, final String expectedPostResponse) throws InterruptedException {
+    private void executeChatTest(final WebTarget resourceTarget, final String expectedPostResponse) throws InterruptedException {
         final int MAX_MESSAGES = 10;
         final int LATCH_WAIT_TIMEOUT = 10;
         final boolean debugMode = false;
@@ -192,7 +193,7 @@ public class AsyncResourceTest extends JerseyTest {
 
     @Test
     public void testLongRunningResource() throws InterruptedException {
-        final Target resourceTarget = target().path(App.ASYNC_LONG_RUNNING_OP_PATH);
+        final WebTarget resourceTarget = target().path(App.ASYNC_LONG_RUNNING_OP_PATH);
         final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 50;

@@ -51,7 +51,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -129,7 +129,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
     }
 
     protected <T> void _test(T in, Class resource, MediaType m, boolean verify) {
-        Target target = target(resource.getSimpleName());
+        WebTarget target = target(resource.getSimpleName());
 
         Response response = target.request().post(Entity.entity(in, m));
 

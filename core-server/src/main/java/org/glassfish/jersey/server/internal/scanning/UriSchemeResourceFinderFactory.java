@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-
 import java.net.URI;
 import java.util.Set;
+
+import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * An interface for scanning URI-based resources and reporting those resources

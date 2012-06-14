@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.WebApplicationException;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
@@ -253,7 +254,7 @@ public class RequestInvokerTest {
             @Override
             public Response apply(Request data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }
@@ -270,7 +271,7 @@ public class RequestInvokerTest {
             @Override
             public Response apply(Request data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }
@@ -281,7 +282,7 @@ public class RequestInvokerTest {
                     @Override
                     public Request apply(Request data) {
                         throw new WebApplicationException(
-                                Responses.from(200, data).entity(data.readEntity(String.class)).build());
+                                Responses.from(200, data).entity(Helper.unwrap(data).readEntity(String.class)).build());
                     }
                 }).to(append("3")).build(inflectingStage);
     }
@@ -293,7 +294,7 @@ public class RequestInvokerTest {
             @Override
             public Response apply(Request data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(data.readEntity(String.class))).build();
+                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }

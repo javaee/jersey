@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jsonp;
 import java.util.List;
 
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -79,7 +79,7 @@ public class JsonpTest extends JerseyTest {
     @Ignore
     // TODO un-igonre
     public void testApplicationWadl() {
-        Target target = target();
+        WebTarget target = target();
         String applicationWadl = target.path("application.wadl").request().get(String.class);
         assertTrue("Something wrong. Returned wadl length is not > 0",
                 applicationWadl.length() > 0);
@@ -92,7 +92,7 @@ public class JsonpTest extends JerseyTest {
     @Ignore
     // TODO un-igonre
     public void testGetOnChangesJSONFormat() {
-        Target target = target();
+        WebTarget target = target();
         GenericType<List<ChangeRecordBean>> genericType =
                 new GenericType<List<ChangeRecordBean>>() {
                 };
@@ -109,7 +109,7 @@ public class JsonpTest extends JerseyTest {
     @Ignore
     // TODO un-igonre
     public void testGetOnLatestChangeXMLFormat() {
-        Target target = target();
+        WebTarget target = target();
         ChangeRecordBean lastChange = target.path("changes/latest").request("application/xml").get(ChangeRecordBean.class);
         assertEquals(1, lastChange.linesChanged);
     }
@@ -119,7 +119,7 @@ public class JsonpTest extends JerseyTest {
      */
     @Test
     public void testGetOnLatestChangeJavasriptFormat() {
-        Target target = target();
+        WebTarget target = target();
         String js = target.path("changes").request("application/x-javascript").get(String.class);
         assertTrue(js.startsWith("callback"));
     }

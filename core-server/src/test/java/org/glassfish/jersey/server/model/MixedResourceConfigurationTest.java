@@ -48,6 +48,7 @@ import javax.ws.rs.core.Response;
 
 import javax.annotation.Nullable;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -84,7 +85,7 @@ public class MixedResourceConfigurationTest {
 
             @Override
             public Response apply(@Nullable Request request) {
-                name = request.readEntity(String.class);
+                name = Helper.unwrap(request).readEntity(String.class);
                 return Responses.empty().status(200).build();
             }
         });

@@ -43,18 +43,21 @@ import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the parallel execution of multiple requests.
@@ -94,11 +97,11 @@ public class ParallelTest extends JerseyTest {
 
     private class ResourceThread extends Thread {
 
-        private Target target;
+        private WebTarget target;
         private String path;
         private Method method;
 
-        public ResourceThread(Target target, String path, Method method) {
+        public ResourceThread(WebTarget target, String path, Method method) {
             this.target = target;
             this.path = path;
             this.method = method;
@@ -123,7 +126,7 @@ public class ParallelTest extends JerseyTest {
     public void testParallel() {
         final URI u = target().getUri();
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        Target t = client.target(u);
+        WebTarget t = client.target(u);
 
         for (int i = 1; i <= numberOfThreads; i++) {
             ResourceThread rt = new ResourceThread(t, PATH, Method.GET);

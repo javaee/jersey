@@ -43,20 +43,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ClientFactory;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -68,7 +68,7 @@ public class HelloWorldTest extends JerseyTest {
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
+//        register(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(HelloWorldResource.class);
     }
 
@@ -104,26 +104,26 @@ public class HelloWorldTest extends JerseyTest {
     public void testHead() {
         Response response = target().path(App.ROOT_PATH).request().head();
         assertEquals(200, response.getStatus());
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
     }
 
     @Test
     public void testFooBarOptions() {
         Response response = target().path(App.ROOT_PATH).request().header("Accept", "foo/bar").options();
         assertEquals(200, response.getStatus());
-        final String allowHeader = response.getHeaders().getHeader("Allow");
+        final String allowHeader = response.getHeader("Allow");
         _checkAllowContent(allowHeader);
-        assertEquals("foo/bar", response.getHeaders().getMediaType().toString());
-        assertEquals(0, response.getHeaders().getLength());
+        assertEquals("foo/bar", response.getMediaType().toString());
+        assertEquals(0, response.getLength());
     }
 
     @Test
     public void testTextPlainOptions() {
         Response response = target().path(App.ROOT_PATH).request().header("Accept", MediaType.TEXT_PLAIN).options();
         assertEquals(200, response.getStatus());
-        final String allowHeader = response.getHeaders().getHeader("Allow");
+        final String allowHeader = response.getHeader("Allow");
         _checkAllowContent(allowHeader);
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getHeaders().getMediaType());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
         final String responseBody = response.readEntity(String.class);
         _checkAllowContent(responseBody);
     }
@@ -169,7 +169,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testLoggingFilterTargetClass() {
-        Target target = target().path(App.ROOT_PATH);
+        WebTarget target = target().path(App.ROOT_PATH);
         target.configuration().register(CustomLoggingFilter.class).setProperty("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target.request().get(String.class);
@@ -180,7 +180,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testLoggingFilterTargetInstance() {
-        Target target = target().path(App.ROOT_PATH);
+        WebTarget target = target().path(App.ROOT_PATH);
         target.configuration().register(new CustomLoggingFilter()).setProperty("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target.request().get(String.class);

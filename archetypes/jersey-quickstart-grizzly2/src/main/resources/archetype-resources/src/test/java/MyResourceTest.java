@@ -1,9 +1,11 @@
 package $package;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Target;
-import javax.ws.rs.ext.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.ClientFactory;
+
 import org.glassfish.grizzly.http.server.HttpServer;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 public class MyResourceTest {
 
     private HttpServer server;
-    private Target target;
+    private WebTarget target;
 
     @Before
     public void setUp() throws Exception {

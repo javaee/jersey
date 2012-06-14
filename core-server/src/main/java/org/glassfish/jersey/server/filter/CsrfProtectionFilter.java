@@ -45,10 +45,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
+import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.FilterContext;
-import javax.ws.rs.ext.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 
 /**
  * Simple server-side request filter that implements CSRF protection as per the
@@ -82,7 +83,8 @@ public class CsrfProtectionFilter implements PreMatchRequestFilter {
     @Override
     public final void preMatchFilter(final FilterContext fc) throws IOException {
         Request request = fc.getRequest();
-        if (!METHODS_TO_IGNORE.contains(request.getMethod()) && (request.getHeaders().getHeader(HEADER_NAME) == null)) {
+        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
+                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
     }

@@ -47,10 +47,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MessageProcessingException;
-import javax.ws.rs.core.RequestHeaders;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
@@ -63,7 +62,7 @@ import javax.ws.rs.core.Variant;
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
 // TODO Methods in this class should cache results to improve performance.
-final class JaxrsRequestView implements javax.ws.rs.core.Request {
+public final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     private Request wrapped;
 
@@ -84,57 +83,42 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return wrapped.method();
     }
 
-    @Override
     public URI getUri() {
         return wrapped.uri();
     }
 
-    @Override
-    public RequestHeaders getHeaders() {
+    public JaxrsRequestHeadersView getHeaders() {
         return wrapped.getJaxrsHeaders();
     }
 
-    @Override
     public Object getEntity() {
         return wrapped.content();
     }
 
-    @Override
     public <T> T readEntity(Class<T> type) throws MessageProcessingException {
         return wrapped.content(type);
     }
 
-    @Override
     public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
         return wrapped.content(entityType);
     }
 
-    @Override
     public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(type, annotations);
     }
 
-    @Override
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
         return wrapped.content(entityType, annotations);
     }
 
-    @Override
     public boolean hasEntity() {
         return !wrapped.isEmpty();
     }
 
-    @Override
-    public boolean isEntityRetrievable() {
-        return wrapped.isEntityRetrievable();
-    }
-
-    @Override
     public void bufferEntity() throws MessageProcessingException {
         wrapped.bufferEntity();
     }
 
-    @Override
     public void close() throws MessageProcessingException {
         wrapped.close();
     }
@@ -348,7 +332,6 @@ final class JaxrsRequestView implements javax.ws.rs.core.Request {
         return time - time % 1000;
     }
 
-    @Override
     public Map<String, Object> getProperties() {
         return wrapped.properties();
     }

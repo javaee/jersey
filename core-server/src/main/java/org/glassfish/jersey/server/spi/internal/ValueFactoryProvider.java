@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
-import org.glassfish.hk2.Factory;
 import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.Factory;
 
 /**
  * Parameter value factory SPI.

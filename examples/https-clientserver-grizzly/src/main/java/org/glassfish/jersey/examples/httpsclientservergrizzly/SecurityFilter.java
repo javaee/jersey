@@ -39,20 +39,23 @@
  */
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
-import org.glassfish.jersey.internal.util.Base64;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.jvnet.hk2.annotations.Inject;
-
 import java.io.IOException;
 import java.security.Principal;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.FilterContext;
 import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.RequestFilter;
+
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey.internal.util.Base64;
+import org.glassfish.jersey.internal.util.collection.Ref;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Simple authentication filter.
@@ -80,7 +83,7 @@ public class SecurityFilter implements RequestFilter {
 
     private User authenticate(Request request) {
         // Extract authentication credentials
-        String authentication = request.getHeaders().getHeader(HttpHeaders.AUTHORIZATION);
+        String authentication = Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authentication == null) {
             throw new AuthenticationException("Authentication credentials are required", REALM);
         }

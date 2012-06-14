@@ -39,12 +39,6 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceBuilder;
-import static junit.framework.Assert.assertEquals;
-
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -53,8 +47,12 @@ import javax.annotation.Nullable;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Test of programmatic resource method additions.

@@ -43,6 +43,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.client.JerseyInvocation;
@@ -71,20 +72,20 @@ public class CsrfProtectionFilterTest {
     @Test
     public void testGet() {
         Response r = invBuilder.get();
-        assertNull(r.getHeaders().getHeader(CsrfProtectionFilter.HEADER_NAME));
+        assertNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
     @Test
     public void testPut() {
         Response r = invBuilder.put(null);
-        assertNotNull(r.getHeaders().getHeader(CsrfProtectionFilter.HEADER_NAME));
+        assertNotNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
     private static class TestTransport implements Inflector<Request, Response> {
         @Override
         public Response apply(Request request) {
             Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = request.getHeaders().getHeader(CsrfProtectionFilter.HEADER_NAME);
+            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(CsrfProtectionFilter.HEADER_NAME);
             if (headerValue != null) {
                 rb.header(CsrfProtectionFilter.HEADER_NAME, headerValue);
             }

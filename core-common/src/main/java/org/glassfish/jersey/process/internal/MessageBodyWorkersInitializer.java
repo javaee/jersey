@@ -40,6 +40,7 @@
 package org.glassfish.jersey.process.internal;
 
 import javax.ws.rs.core.Request;
+import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -79,7 +80,7 @@ public class MessageBodyWorkersInitializer implements Function<Request, Request>
 
     @Override
     public Request apply(Request request) {
-        final Request.RequestBuilder requestBuilder = Requests.toBuilder(request);
+        final RequestBuilder requestBuilder = Requests.toBuilder(request);
         final MessageBodyWorkers workers = workersFactory.get();
         Requests.setMessageWorkers(requestBuilder, workers);
 

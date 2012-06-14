@@ -47,7 +47,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Target;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.transform.stream.StreamSource;
@@ -75,7 +75,7 @@ public class MessageBodyExceptionWrappingTest extends JerseyTest {
      */
     @Test
     public void testWrapping() {
-        Target resource = target().path("test");
+        WebTarget resource = target().path("test");
         StreamSource source = new StreamSource() {
             @Override
             public InputStream getInputStream() {
