@@ -606,7 +606,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 }
 
                 if (response.getStatus() < 300) {
-                    responseFuture.set(response.readEntity(responseType));
+                    try {
+                        T entity = response.readEntity(responseType);
+                        responseFuture.set(entity);
+                    } catch (Exception e) {
+                        failed(e instanceof InvocationException ? (InvocationException) e
+                                : new InvocationException(e.getMessage(), e));
+                    }
                 } else {
                     failed(convertToException(response));
                 }
