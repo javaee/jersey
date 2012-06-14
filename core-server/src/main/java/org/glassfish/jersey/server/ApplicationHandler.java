@@ -691,14 +691,14 @@ public final class ApplicationHandler {
                 final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
                 Type entityType = routingContext.getResponseMethodType();
 
-                // TODO this is just a quick workaround for issue #JERSEY-1089
-                //      which needs to be fixed by a common solution
-                if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
-                    entityType = entity instanceof GenericEntity ? ((GenericEntity) entity).getType() : entity.getClass();
-                }
-
                 if (entity instanceof GenericEntity) {
-                    entity = ((GenericEntity) entity).getEntity();
+                    GenericEntity genericEntity = (GenericEntity) entity;
+                    entity = genericEntity.getEntity();
+                    entityType = genericEntity.getType();
+                } else if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
+                    // TODO this is just a quick workaround for issue #JERSEY-1089
+                    //      which needs to be fixed by a common solution
+                    entityType = entity.getClass();
                 }
 
                 // TODO this is just a quick workaround for issue #JERSEY-1088

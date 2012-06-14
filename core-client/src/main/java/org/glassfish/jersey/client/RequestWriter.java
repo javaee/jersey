@@ -243,7 +243,6 @@ public class RequestWriter {
         }
         final Class<?> entityClass = entity.getClass();
 
-
         request = ensureMediaType(entityClass, entityType, request);
         final MediaType mediaType = request.getHeaders().getMediaType();
         final MultivaluedMap<String, String> headers = request.getHeaders().asMap();

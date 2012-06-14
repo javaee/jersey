@@ -77,7 +77,6 @@ import static junit.framework.Assert.assertEquals;
 @Ignore // TODO: all tests are failing - filed JERSEY-1188
 public class EmptyRequestWithJaxbTest {
     @Path("/")
-    @Ignore
     public static class Resource {
         @POST
         public void bean(JaxbBean b) {

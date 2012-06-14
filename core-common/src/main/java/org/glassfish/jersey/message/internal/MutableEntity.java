@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -226,6 +225,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
     // contains entity and its type
     private GenericEntity<?> genericEntity;
+    // indicates if the type of the entity was set explicitly
+    private boolean forceType;
     // reference to enclosing message
     private AbstractMutableMessage<?> message;
     // writer annotations
@@ -247,17 +248,6 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     /**
-     * Creates new instance initialized with mutable message, instance and its type.
-     *
-     * @param message {@link AbstractMutableMessage} to which this entity belongs to.
-     * @param genericEntity entity instance and type.
-     */
-    public MutableEntity(AbstractMutableMessage<?> message, final GenericEntity<?> genericEntity) {
-        this.message = message;
-        this.genericEntity = genericEntity;
-    }
-
-    /**
      * Creates new instance created from {@link MutableEntity other MutableEntity instance} initialized with mutable message.
      * @param message {@link AbstractMutableMessage} to which this entity belongs to.
      * @param that {@link MutableEntity other MutableEntity instance} from which this instance will be initialized.
@@ -265,6 +255,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public MutableEntity(AbstractMutableMessage<?> message, final MutableEntity that) {
         this.message = message;
         this.genericEntity = that.genericEntity;
+        this.forceType = that.forceType;
         this.workers = that.workers; // TODO should we copy workers?
     }
 
@@ -289,12 +280,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
             // TODO: might be better to return the content stream
             return null;
         }
-        return isGESignficant() ? genericEntity : genericEntity.getEntity();
-    }
-
-    private boolean isGESignficant() {
-        return genericEntity.getType() instanceof ParameterizedType ||
-                genericEntity.getType() instanceof GenericArrayType;
+        return forceType ? genericEntity : genericEntity.getEntity();
     }
 
     @Override
@@ -360,6 +346,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
             genericEntity = new GenericEntity<T>(t) {
             };
+            forceType = true;
             return t;
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Error reading entity from input stream", ex);
@@ -395,14 +382,17 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
         if (content != null) {
             if (content instanceof GenericEntity) {
+                forceType = true;
                 this.genericEntity = (GenericEntity<?>) content;
             } else {
+                forceType = false;
                 this.genericEntity = new GenericEntity(content, extractType(content));
                 if (content instanceof InputStream) {
                     contentStream.setNewContentStream(InputStream.class.cast(content));
                 }
             }
         } else {
+            forceType = false;
             genericEntity = null;
         }
 
@@ -412,14 +402,17 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public void rawEntityStream(InputStream inputStream) {
         contentStream.setExternalContentStream(inputStream);
         genericEntity = null;
+        forceType = false;
     }
 
     @Override
     public <T> MutableEntity content(T content, Type type) {
         contentStream.invalidateContentStream();
         if (content != null) {
+            forceType = true;
             this.genericEntity = new GenericEntity(content, type);
         } else {
+            forceType = false;
             this.genericEntity = null;
         }
         return this;
@@ -429,8 +422,10 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     public <T> MutableEntity content(T content, GenericType<T> type) {
         contentStream.invalidateContentStream();
         if (content != null) {
+            forceType = true;
             this.genericEntity = new GenericEntity(content, type.getType());
         } else {
+            forceType = false;
             this.genericEntity = null;
         }
         return this;

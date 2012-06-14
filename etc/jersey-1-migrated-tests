@@ -83,6 +83,8 @@ tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/CharsetTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/ContextResolverMediaTypeTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/EmptyRequestWithJaxbTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/EntityTypesTest.java
+core-common/src/test/java/org/glassfish/jersey/message/internal/StringBuilderUtilsTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/GenericTypeAndEntityTest.java
 
 TODO:
 
@@ -233,8 +235,6 @@ jersey-client/src/test/java/com/sun/jersey/impl/client/CopyOnWriteHashMapTest.ja
 jersey-client/src/test/java/com/sun/jersey/impl/client/filter/FilterTest.java
 jersey-client/src/test/java/com/sun/jersey/impl/client/inject/IoCComponentProcessorTest.java
 jersey-client/src/test/java/com/sun/jersey/impl/client/RuntimeDelegateTest.java
-jersey-core/src/test/java/com/sun/jersey/api/uri/UriBuilderImplTest.java
-jersey-core/src/test/java/com/sun/jersey/core/impl/provider/header/WriterUtilTest.java
 jersey-core/src/test/java/com/sun/jersey/core/spi/factory/ResponseImplTest.java
 jersey-core/src/test/java/com/sun/jersey/core/util/AbstractKeyComparatorHashMapTest.java
 jersey-core/src/test/java/com/sun/jersey/core/util/Base64Test.java
@@ -395,7 +395,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/VoidPostTest
 jersey-tests/src/test/java/com/sun/jersey/impl/container/ResourceConfiguratorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/servlet/ThreadLocalInvokerTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/EntityHolderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/GenericTypeAndEntityTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/InjectedProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/InvalidFormTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/entity/JAXBContextResolverTest.java
