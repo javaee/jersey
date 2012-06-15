@@ -50,6 +50,8 @@ import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Class used for {@link ApplicationHandler} initialization and for executing {@link Request}s.
  *
@@ -67,11 +69,11 @@ public abstract class AbstractTest {
         return app.apply(request).get();
     }
 
-    protected Response _test(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {
-        return _test(requestUri, null, cookies);
+    protected Response getResponse(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {
+        return getResponse(requestUri, null, cookies);
     }
 
-    protected Response _test(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
+    protected Response getResponse(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
         RequestBuilder requestBuilder = Requests.from(requestUri, "GET");
         if(accept != null) {
             requestBuilder = requestBuilder.accept(accept);
@@ -84,4 +86,11 @@ public abstract class AbstractTest {
         return apply(requestBuilder.build());
     }
 
+    protected void _test(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
+        assertEquals("content", getResponse(requestUri, accept, cookies).readEntity(String.class));
+    }
+
+    protected void _test(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {
+        _test(requestUri, null, cookies);
+    }
 }

@@ -225,7 +225,7 @@ public class MatrixParamStringConstructorTest extends AbstractTest {
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = _test("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
+        final Response response = getResponse("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
 
         assertEquals(404, response.getStatus());
     }

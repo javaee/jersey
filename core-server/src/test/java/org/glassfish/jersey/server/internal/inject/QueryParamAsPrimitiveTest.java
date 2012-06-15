@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Test;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -49,9 +49,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -914,21 +915,21 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final Response response = super._test("/?int=abcdef", "application/int");
+        final Response response = super.getResponse("/?int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final Response response = super._test("/wrappers?int=abcdef", "application/int");
+        final Response response = super.getResponse("/wrappers?int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final Response response = super._test("/list?int=abcdef&int=abcdef", "application/int");
+        final Response response = super.getResponse("/list?int=abcdef&int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }

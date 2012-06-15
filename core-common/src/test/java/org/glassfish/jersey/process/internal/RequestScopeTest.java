@@ -49,7 +49,6 @@ import org.glassfish.hk2.ComponentException;
 import org.glassfish.hk2.Provider;
 
 import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 /**

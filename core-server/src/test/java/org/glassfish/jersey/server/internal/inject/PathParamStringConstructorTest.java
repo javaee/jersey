@@ -40,16 +40,16 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -82,7 +82,7 @@ public class PathParamStringConstructorTest extends AbstractTest {
 
     @Test
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
-        final Response response = _test("/ABCDE/ABCDE");
+        final Response response = getResponse("/ABCDE/ABCDE");
 
         assertEquals(404, response.getStatus());
     }

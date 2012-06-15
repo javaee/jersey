@@ -40,16 +40,16 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import java.math.BigDecimal;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

@@ -40,17 +40,18 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Test;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -122,8 +123,8 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testDuplicate() throws ExecutionException, InterruptedException {
         initiateWebApplication(Duplicate.class);
 
-        assertEquals("foo", _test("/foo").readEntity(String.class));
-        assertEquals("bar", _test("/foo/bar").readEntity(String.class));
+        assertEquals("foo", getResponse("/foo").readEntity(String.class));
+        assertEquals("bar", getResponse("/foo/bar").readEntity(String.class));
     }
 
     @Path("/{id}")
@@ -145,7 +146,7 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testDuplicateList() throws ExecutionException, InterruptedException {
         initiateWebApplication(DuplicateList.class);
 
-        assertEquals("foo", _test("/foo").readEntity(String.class));
-        assertEquals("barfoo", _test("/foo/bar").readEntity(String.class));
+        assertEquals("foo", getResponse("/foo").readEntity(String.class));
+        assertEquals("barfoo", getResponse("/foo/bar").readEntity(String.class));
     }
 }

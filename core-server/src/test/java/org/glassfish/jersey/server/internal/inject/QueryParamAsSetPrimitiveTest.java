@@ -40,7 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.junit.Test;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -48,9 +49,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -282,16 +282,16 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
     void _test(String type, String value) throws ExecutionException, InterruptedException {
         String param = type + "=" + value;
 
-        super._test("/Set?" + param + "&" + param + "&" + param, "application/" + type);
+        super.getResponse("/Set?" + param + "&" + param + "&" + param, "application/" + type);
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        super._test(base + "default/null", "application/" + type);
+        super.getResponse(base + "default/null", "application/" + type);
 
-        super._test(base + "default", "application/" + type);
+        super.getResponse(base + "default", "application/" + type);
 
         String param = type + "=" + value;
-        super._test(base + "default/override?" + param, "application/" + type);
+        super.getResponse(base + "default/override?" + param, "application/" + type);
     }
 
     void _testSetDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -370,7 +370,7 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveSetValue() throws ExecutionException, InterruptedException {
-        final Response response = super._test("/Set?int=abcdef&int=abcdef", "application/int");
+        final Response response = super.getResponse("/Set?int=abcdef&int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }

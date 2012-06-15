@@ -40,14 +40,17 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.concurrent.ExecutionException;
+
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import java.util.concurrent.ExecutionException;
 
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -56,6 +59,7 @@ import static org.junit.Assert.assertEquals;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @SuppressWarnings("unchecked")
+@Ignore // TODO: blocked by JERSEY-1224
 public class EncodedParamsTest extends AbstractTest {
 
     @Encoded
@@ -82,6 +86,7 @@ public class EncodedParamsTest extends AbstractTest {
         }
     }
 
+    @Test
     public void testEncodedOnClass() throws ExecutionException, InterruptedException {
         initiateWebApplication(EncodedOnClass.class);
 
@@ -113,6 +118,7 @@ public class EncodedParamsTest extends AbstractTest {
         }
     }
 
+    @Test
     public void testEncodedOnAccessibleObject() throws ExecutionException, InterruptedException {
         initiateWebApplication(EncodedOnAccessibleObject.class);
 
@@ -142,6 +148,7 @@ public class EncodedParamsTest extends AbstractTest {
         }
     }
 
+    @Test
     public void testEncodedOnParameters() throws ExecutionException, InterruptedException {
         initiateWebApplication(EncodedOnParameters.class);
 
@@ -183,6 +190,7 @@ public class EncodedParamsTest extends AbstractTest {
         }
     }
 
+    @Test
     public void testMixedEncodedOnParameters() throws ExecutionException, InterruptedException {
         initiateWebApplication(MixedEncodedOnParameters.class);
 
