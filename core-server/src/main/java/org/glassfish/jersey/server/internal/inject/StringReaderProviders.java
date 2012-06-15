@@ -75,6 +75,10 @@ class StringReaderProviders {
             try {
                 return _fromString(value);
             } catch (InvocationTargetException ex) {
+                // if the value is an empty string, return null
+                if (value.length() == 0) {
+                    return null;
+                }
                 Throwable target = ex.getTargetException();
                 if (target instanceof WebApplicationException) {
                     throw (WebApplicationException) target;

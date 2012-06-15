@@ -73,7 +73,7 @@ abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> i
         final Collection<T> valueList = getInstance();
         if (stringList != null) {
             for (String v : stringList) {
-                valueList.add((v.length() == 0) ? null : fromString(v));
+                valueList.add(fromString(v));
             }
         } else if (isDefaultValueRegistered()) {
             valueList.add(defaultValue());

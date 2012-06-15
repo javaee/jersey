@@ -89,7 +89,11 @@ abstract class AbstractStringReaderExtractor<T> {
     }
 
     protected final T fromString(String value) {
-        return valueReader.fromString(value);
+        T result = valueReader.fromString(value);
+        if (result == null) {
+            return defaultValue();
+        }
+        return result;
     }
 
     protected final boolean isDefaultValueRegistered() {

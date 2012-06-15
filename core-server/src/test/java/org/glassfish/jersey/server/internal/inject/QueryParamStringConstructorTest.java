@@ -100,6 +100,18 @@ public class QueryParamStringConstructorTest extends AbstractTest {
     }
 
     @Path("/")
+    public static class ResourceStringNull {
+        @GET
+        public String doGet(
+                @QueryParam("arg1") BigDecimal arg1,
+                @QueryParam("arg2") BigInteger arg2) {
+            assertEquals(null, arg1);
+            assertEquals(null, arg2);
+            return "content";
+        }
+    }
+
+    @Path("/")
     public static class ResourceStringNullDefault {
         @GET
         public String doGet(
@@ -177,6 +189,13 @@ public class QueryParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         _test("/?args&args&args", "application/stringlist");
+    }
+
+    @Test
+    public void testStringConstructorNullGet() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ResourceStringNull.class);
+
+        _test("/?arg1=&arg2=");
     }
 
     @Test

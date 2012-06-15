@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -66,6 +67,11 @@ public class QueryParamFromStringTest extends AbstractTest {
         public static Parameter fromString(String s) {
             return new Parameter(s + "fromString");
         }
+
+        @Override
+        public String toString() {
+            return s;
+        }
     }
 
     @Path("/")
@@ -76,6 +82,22 @@ public class QueryParamFromStringTest extends AbstractTest {
             assertEquals("3.145fromString", p.s);
             return "content";
         }
+
+        @GET
+        @Path("list")
+        public String doGet(@QueryParam("arg") List<Parameter> p) {
+            System.err.println(p.toString());
+            assertEquals("[afromString, fromString, bfromString]", p.toString());
+            return "content";
+        }
+
+        @GET
+        @Path("empty")
+        public String doGetEmpty(
+                @QueryParam("arg1") Parameter p) {
+            assertEquals("fromString", p.s);
+            return "content";
+        }
     }
 
     @Test
@@ -83,5 +105,19 @@ public class QueryParamFromStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         _test("/?arg1=3.145");
+    }
+
+    @Test
+    public void testListFromStringGet() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ResourceString.class);
+
+        _test("/list/?arg=a&arg=&arg=b");
+    }
+
+    @Test
+    public void testFromEmptyStringGet() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ResourceString.class);
+
+        _test("/empty/?arg1=");
     }
 }

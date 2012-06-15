@@ -52,7 +52,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Extract parameter value as a specific {@code String} Java collection type.
  * <p />
- * This class can be seen as a special, optimized, case of {@link CollectionStringReaderExtractor}.
+ * This class can be seen as a special, optimized, case of {@link CollectionExtractor}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
