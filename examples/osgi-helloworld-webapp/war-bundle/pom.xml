@@ -43,9 +43,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>net.java</groupId>
-      <artifactId>jvnet-parent</artifactId>
-      <version>1</version>
+        <groupId>net.java</groupId>
+        <artifactId>jvnet-parent</artifactId>
+        <version>1</version>
     </parent>
     <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
     <artifactId>war-bundle</artifactId>
@@ -56,7 +56,7 @@
     <packaging>war</packaging>
 
     <profiles>
-       <profile>
+        <profile>
             <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -70,7 +70,7 @@
                 </dependency>
             </dependencies>
         </profile>
-   </profiles>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -150,48 +150,47 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.1-alpha-2</version>
                 <configuration>
                     <attachClasses>true</attachClasses>
                     <archive>
                         <manifestFile>${project.build.directory}/META-INF/MANIFEST.MF</manifestFile>
                         <manifestEntries>
-                          <Bundle-ClassPath>WEB-INF/classes</Bundle-ClassPath>
+                            <Bundle-ClassPath>WEB-INF/classes</Bundle-ClassPath>
                         </manifestEntries>
-                   </archive>
-		</configuration>
+                    </archive>
+                </configuration>
             </plugin>
 
             <!-- TODO: the following is just a temporary workaround to fix copyright check until JERSEY-1112 gets resolved -->
-             <plugin>
-                 <groupId>org.glassfish.copyright</groupId>
-                 <artifactId>glassfish-copyright-maven-plugin</artifactId>
-                 <version>1.28</version>
-                 <configuration>
-                     <excludeFile>etc/config/copyright-exclude</excludeFile>
-                     <!--svn|mercurial|git - defaults to svn-->
-                     <scm>git</scm>
-                     <!-- turn on/off debugging -->
-                     <debug>false</debug>
-                     <!-- skip files not under SCM-->
-                     <scmOnly>true</scmOnly>
-                     <!-- turn off warnings -->
-                     <warn>true</warn>
-                     <!-- for use with repair -->
-                     <update>false</update>
-                     <!-- check that year is correct -->
-                     <ignoreYear>false</ignoreYear>
-                     <templateFile>etc/config/copyright.txt</templateFile>
-                 </configuration>
-             </plugin>
-             <!-- end of the temporary workaround -->
+            <plugin>
+                <groupId>org.glassfish.copyright</groupId>
+                <artifactId>glassfish-copyright-maven-plugin</artifactId>
+                <version>1.28</version>
+                <configuration>
+                    <excludeFile>etc/config/copyright-exclude</excludeFile>
+                    <!--svn|mercurial|git - defaults to svn-->
+                    <scm>git</scm>
+                    <!-- turn on/off debugging -->
+                    <debug>false</debug>
+                    <!-- skip files not under SCM-->
+                    <scmOnly>true</scmOnly>
+                    <!-- turn off warnings -->
+                    <warn>true</warn>
+                    <!-- for use with repair -->
+                    <update>false</update>
+                    <!-- check that year is correct -->
+                    <ignoreYear>false</ignoreYear>
+                    <templateFile>etc/config/copyright.txt</templateFile>
+                </configuration>
+            </plugin>
+            <!-- end of the temporary workaround -->
 
         </plugins>
     </build>
 
     <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
     <properties>
-      <osgi.version>4.2.0</osgi.version>
+        <osgi.version>4.2.0</osgi.version>
     </properties>
     <!-- end of the workaround -->
 
