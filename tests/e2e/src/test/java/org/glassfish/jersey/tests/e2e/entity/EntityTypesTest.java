@@ -82,10 +82,6 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import javax.activation.DataSource;
-import javax.mail.internet.InternetHeaders;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -146,13 +142,6 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Path("DataSourceResource")
     public static class DataSourceResource extends AResource<DataSource> {
-    }
-
-    @Test
-    public void testDataSource() throws Exception {
-        ByteArrayInputStream bais = new ByteArrayInputStream("CONTENT".getBytes());
-        ByteArrayDataSource ds = new ByteArrayDataSource(bais, "text/plain");
-        _test(ds, DataSourceResource.class);
     }
 
     @Path("ByteArrayResource")
@@ -421,42 +410,6 @@ public class EntityTypesTest extends AbstractTypeTester {
                 new ByteArrayInputStream("CONTENT".getBytes()));
 
         _test(in, FileResource.class);
-    }
-
-    @Path("MimeMultipartBeanResource")
-    public static class MimeMultipartBeanResource extends AResource<MimeMultipart> {
-    }
-
-    @Test
-    public void testMimeMultipartRepresentation() throws Exception {
-        InternetHeaders headers = new InternetHeaders();
-        headers.addHeader("content-disposition", "form-data; name=\"field1\"");
-        MimeMultipart mmIn = new MimeMultipart();
-        MimeBodyPart bp = new MimeBodyPart(headers, "Joe Blow".getBytes());
-        mmIn.addBodyPart(bp);
-
-        InternetHeaders headers2 = new InternetHeaders();
-        headers2.addHeader("content-disposition", "form-data; name=\"field2\"");
-        bp = new MimeBodyPart(headers2, "Jane Doe".getBytes());
-        mmIn.addBodyPart(bp);
-
-        InternetHeaders headers3 = new InternetHeaders();
-        headers3.addHeader("content-disposition", "form-data; name=\"pic\"; filename=\"duke_rocket.gif\"");
-        headers3.addHeader("Content-type", "image/gif");
-        headers3.addHeader("Content-Transfer-Encoding", "binary");
-
-        InputStream fs = this.getClass().getResourceAsStream("duke_rocket.gif");
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[2048];
-        int l;
-        while ((l = fs.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, l);
-        }
-        outputStream.close();
-
-        bp = new MimeBodyPart(headers3, outputStream.toByteArray());
-        mmIn.addBodyPart(bp);
-        _test(mmIn, MimeMultipartBeanResource.class, false);
     }
 
     @Produces("application/x-www-form-urlencoded")

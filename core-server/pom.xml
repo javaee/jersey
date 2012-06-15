@@ -75,7 +75,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>javax.mail.*;resolution:=optional, *</Import-Package>
                         <Export-Package>org.glassfish.jersey.server.*;version=${project.version}</Export-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>

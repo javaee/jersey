@@ -39,11 +39,11 @@
 */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
-import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -57,11 +57,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -328,23 +329,6 @@ public class FormParamTest extends AbstractTest {
 
         String s = response.readEntity(String.class);
         assertEquals("", s);
-    }
-
-    @Path("/")
-    public static class MultipartFormResourceX {
-        @POST
-        @Consumes({"multipart/form-data", MediaType.APPLICATION_FORM_URLENCODED})
-        public String post(
-                @FormParam("a") String a,
-                @FormParam("b") String b,
-                @FormParam("c") JAXBBean c,
-                @FormParam("c") FormDataContentDisposition cdc,
-                MimeMultipart m,
-                @Context UriInfo ui,
-                @QueryParam("a") String qa) throws Exception {
-            assertEquals(3, m.getCount());
-            return a + b + cdc.getFileName();
-        }
     }
 
     @Path("/")

@@ -75,7 +75,6 @@ public class MessagingModules {
             bindSingletonWorker(FormMultivaluedMapProvider.class);
             bindSingletonWorker(FormProvider.class);
             bindSingletonWorker(InputStreamProvider.class);
-            bindSingletonWorker(MimeMultipartProvider.class);
             bindSingletonWorker(ReaderProvider.class);
             bindSingletonWorker(RenderedImageProvider.class);
             bindSingletonWorker(StringMessageProvider.class);
