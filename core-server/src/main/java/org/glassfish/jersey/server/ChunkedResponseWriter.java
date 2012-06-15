@@ -39,21 +39,16 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.jvnet.hk2.annotations.Inject;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 /**
  * Used for writing {@link ChunkedResponse}.
@@ -64,25 +59,9 @@ import java.lang.reflect.Type;
 @Provider
 public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<?>> {
 
-    private static final class References {
-        @Inject
-        private Ref<MessageBodyWorkers> messageBodyWorkers;
-    }
-
-    private final Services services;
-
-    /**
-     * Constructor.
-     *
-     * @param services injected {@link Services} instance. Used for obtaining {@link MessageBodyWorkers}.
-     */
-    public ChunkedResponseWriter(@Inject Services services) {
-        this.services = services;
-    }
-
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type.equals(ChunkedResponse.class);
+        return ChunkedResponse.class.isAssignableFrom(type);
     }
 
     @Override
@@ -90,36 +69,8 @@ public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<
         return -1;
     }
 
-    // TODO:
-    //  something like prequel/sequel - usable for EventChannelWriter and XML related writers
-    @SuppressWarnings("unchecked")
     @Override
     public void writeTo(ChunkedResponse<?> chunkedResponse, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        final References references = services.forContract(Injector.class).get().inject(References.class);
-        final Class<?> chunkType = chunkedResponse.getChunkType();
-
-        final MessageBodyWorkers messageBodyWorkers = references.messageBodyWorkers.get();
-        final MessageBodyWriter messageBodyWriter = messageBodyWorkers.getMessageBodyWriter(chunkType,
-                null, annotations, mediaType);
-
-        do {
-            Object chunk;
-            try {
-                chunk = chunkedResponse.getChunk();
-            } catch (InterruptedException e) {
-                chunk = null;
-            }
-
-            if(chunk != null) {
-                try {
-                    messageBodyWriter.writeTo(chunk, chunkType, null, annotations, mediaType, httpHeaders, entityStream);
-                } catch (IOException e) {
-                    chunkedResponse.close();
-                    throw e;
-                }
-
-            }
-
-        } while (!chunkedResponse.isClosed());
+        // do nothing.
     }
 }

@@ -39,22 +39,25 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.MessageBodyReader;
+
+import javax.annotation.Nullable;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Incoming event.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class Event {
+public class InboundEvent {
     private String name = null;
     private String id = null;
     private ByteArrayOutputStream data = null;
@@ -72,7 +75,7 @@ public class Event {
      * @param mediaType media type negotiated for corresponding resource method. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
      * @param headers response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
      */
-    Event(MessageBodyWorkers messageBodyWorkers, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers) {
+    InboundEvent(MessageBodyWorkers messageBodyWorkers, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers) {
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
         this.mediaType = mediaType;
@@ -80,7 +83,7 @@ public class Event {
     }
 
     /**
-     * Set {@link Event} name.
+     * Set {@link InboundEvent} name.
      *
      * @param name event name.
      */
@@ -89,7 +92,7 @@ public class Event {
     }
 
     /**
-     * Set {@link Event} id.
+     * Set {@link InboundEvent} id.
      *
      * @param id event id.
      */
@@ -115,7 +118,7 @@ public class Event {
     }
 
     /**
-     * Get info about {@link Event} state.
+     * Get info about {@link InboundEvent} state.
      *
      * @return {@code true} if current instance does not contain data. {@code false} otherwise.
      */
@@ -151,7 +154,7 @@ public class Event {
      * @return object of given type.
      * @throws IOException when provided type can't be read.
      */
-    public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
+    public <T> T getData(Class<T> messageType, @Nullable MediaType mediaType) throws IOException {
         final MessageBodyReader<T> messageBodyReader = messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
         return messageBodyReader.readFrom(messageType, null, annotations, (mediaType == null ? this.mediaType : mediaType),
                 headers, new ByteArrayInputStream(stripLastLineBreak(data.toByteArray())));
@@ -169,7 +172,7 @@ public class Event {
 
     @Override
     public String toString() {
-        String s = null;
+        String s;
 
         try {
             s = getData();
@@ -177,7 +180,7 @@ public class Event {
             s = "";
         }
 
-        return "Event{" +
+        return "InboundEvent{" +
                 "name='" + name + '\'' +
                 ", id='" + id + '\'' +
                 ", data=" + s +

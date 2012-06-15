@@ -39,34 +39,31 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import javax.inject.Qualifier;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.HashSet;
-import java.util.Set;
 
+import javax.inject.Qualifier;
+
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.BinderFactory;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.scopes.Singleton;
+
+import org.jvnet.hk2.annotations.Inject;
+import org.jvnet.hk2.annotations.Scoped;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)

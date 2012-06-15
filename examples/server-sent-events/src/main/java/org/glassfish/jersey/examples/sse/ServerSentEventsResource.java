@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import org.glassfish.jersey.media.sse.EventChannel;
+import java.io.IOException;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -47,6 +47,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+
+import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.OutboundEvent;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -63,12 +66,12 @@ public class ServerSentEventsResource {
     }
 
     @POST
-    public void addMessage(String message) {
-        eventChannel.write("custom-message", message, String.class);
+    public void addMessage(String message) throws IOException {
+        eventChannel.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
     }
 
     @DELETE
-    public void close() {
+    public void close() throws IOException {
         eventChannel.close();
     }
 
@@ -81,23 +84,24 @@ public class ServerSentEventsResource {
         new Thread() {
             public void run() {
                 try {
-                    seq.write("domain-progress", "starting domain " + id + " ...", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...").build());
                     Thread.sleep(1000);
-                    seq.write("domain-progress", "50%", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "50%").build());
                     Thread.sleep(1000);
-                    seq.write("domain-progress", "60%", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "60%").build());
                     Thread.sleep(1000);
-                    seq.write("domain-progress", "70%", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "70%").build());
                     Thread.sleep(1000);
-                    seq.write("domain-progress", "99%", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "99%").build());
                     Thread.sleep(1000);
-                    seq.write("domain-progress", "done", String.class);
+                    seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "done").build());
                     seq.close();
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
             }
         }.start();
 

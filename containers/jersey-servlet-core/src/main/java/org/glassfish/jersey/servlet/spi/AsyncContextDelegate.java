@@ -75,7 +75,7 @@ public interface AsyncContextDelegate {
      *
      * @param timeOut new time-out value.
      * @param timeUnit new time-out time unit.
-     * @throws IllegalStateException.
+     * @throws IllegalStateException
      *
      * @see ContainerResponseWriter#setSuspendTimeout(long, java.util.concurrent.TimeUnit)
      */

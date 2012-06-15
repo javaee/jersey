@@ -306,7 +306,7 @@ public interface MessageBodyWorkers {
      * parameter {@code intercept} is true then {@link WriterInterceptor writer
      * interceptors} are excecuted before calling the {@link MessageBodyWriter message
      * body writer}. The appropriate {@link MessageBodyWriter message body writer} is
-     * choosen after the interceptor execution based on parameter passed to this method
+     * chosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
      * @param entity Entity to be written to the entityStream

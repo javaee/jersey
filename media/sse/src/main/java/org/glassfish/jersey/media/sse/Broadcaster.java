@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -68,59 +68,18 @@ public class Broadcaster {
     }
 
     /**
-     * Broadcast a message with given parameters to all registered {@link EventChannel} instances.
+     * Broadcast an {@link OutboundEvent} to all registered {@link EventChannel} instances.
      *
-     * @param eventName event name.
-     * @param eventId event id.
-     * @param dataType {@link Class} which will be used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     *          MUST NOT be {@code null}.
-     * @param data actual data. MUST NOT be {@code null}.
-     * @throws IllegalStateException when trying to write message to closed {@link EventChannel}.
-     * @throws IllegalArgumentException when dataType or data is null.
+     * @param outboundEvent event to be sent.
+     * @throws java.io.IOException when
      */
-    public void broadcast(String eventName, String eventId, Class dataType, Object data)
-            throws IllegalStateException, IllegalArgumentException {
-        _broadcast(eventName, eventId, dataType, data);
-    }
-
-    /**
-     * Broadcast a message with given parameters to all registered {@link EventChannel} instances.
-     *
-     * @param eventName event name.
-     * @param dataType {@link Class} which will be used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     *          MUST NOT be {@code null}.
-     * @param data actual data. MUST NOT be {@code null}.
-     * @throws IllegalStateException when trying to write message to closed {@link EventChannel}.
-     * @throws IllegalArgumentException when dataType or data is null.
-     */
-    public void broadcast(String eventName, Object data, Class<?> dataType)
-            throws IllegalStateException, IllegalArgumentException {
-        _broadcast(eventName, null, dataType, data);
-    }
-
-    /**
-     * Broadcast a message with given parameters to all registered {@link EventChannel} instances.
-     *
-     * @param dataType {@link Class} which will be used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     *          MUST NOT be {@code null}.
-     * @param data actual data. MUST NOT be {@code null}.
-     * @throws IllegalStateException when trying to write message to closed {@link EventChannel}.
-     * @throws IllegalArgumentException when dataType or data is null.
-     */
-    public void broadcast(Object data, Class<?> dataType) throws IllegalStateException, IllegalArgumentException {
-        _broadcast(null, null, dataType, data);
-    }
-
-
-    private void _broadcast(@Nullable String eventName,
-                            @Nullable String eventId,
-                            Class<?> dataType, Object data) throws IllegalStateException, IllegalArgumentException {
+    public void broadcast(OutboundEvent outboundEvent) throws IOException {
         for (Iterator<EventChannel> iterator = eventChannelSet.iterator(); iterator.hasNext();) {
             EventChannel eventChannel = iterator.next();
             if(eventChannel.isClosed()) {
                 iterator.remove();
             } else {
-                eventChannel.write(eventName, eventId, data, dataType);
+                eventChannel.write(outboundEvent);
             }
         }
     }
@@ -128,7 +87,7 @@ public class Broadcaster {
     /**
      * Close all registered {@link EventChannel} instances.
      */
-    public void close() {
+    public void close() throws IOException {
         for(EventChannel eventChannel : eventChannelSet) {
             eventChannel.close();
         }

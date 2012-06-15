@@ -317,10 +317,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                                 // TODO implement client-side resume event logic
                             }
                         });
-
                     }
                 });
-
     }
 
     @Override

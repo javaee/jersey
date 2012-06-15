@@ -39,21 +39,22 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import org.glassfish.jersey.media.sse.EventChannel;
-import org.glassfish.jersey.media.sse.EventChannelWriter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import static junit.framework.Assert.assertEquals;
+import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -63,7 +64,7 @@ public class EventChannelTest extends JerseyTest {
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        return new ResourceConfig(MyResource.class, EventChannelWriter.class);
+        return new ResourceConfig(MyResource.class, OutboundEventWriter.class);
     }
 
     @Path("/test")
@@ -77,12 +78,11 @@ public class EventChannelTest extends JerseyTest {
             new Thread() {
                 public void run() {
                     try {
-                        Thread.sleep(1000);
-                        eventChannel.write("test", String.class);
-                        Thread.sleep(1000);
+                        eventChannel.write(new OutboundEvent.Builder().data(String.class, "test").build());
                         eventChannel.close();
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
+                        fail();
                     }
                 }
             }.start();

@@ -580,6 +580,7 @@ public final class ApplicationHandler {
                         ApplicationHandler.prepareTimeoutResponse(context));
             }
         };
+
         apply(containerContext.getRequest(), callback, containerContext.getSecurityContext(),
                 containerContext.getRequestScopedInitializer());
 
@@ -685,66 +686,86 @@ public final class ApplicationHandler {
         CommittingOutputStream committingOutput = null;
         final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
-        try {
-            final boolean entityExists = response.hasEntity();
+        final boolean entityExists = response.hasEntity();
 
-            final MessageBodyWorkers workers = Requests.getMessageWorkers(request);
-            if (entityExists) {
-                Object entity = response.getEntity();
-                final RoutingContext routingContext = routingContextFactory.get();
+        if (entityExists) {
+            Object entity = response.getEntity();
+            final RoutingContext routingContext = routingContextFactory.get();
 
-                // fix for issue JERSEY-1187
-                // media type set in the response takes precedence over any 'effective' media type
-                final MediaType outputMediaType = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE) ?
-                        MediaType.valueOf(response.getMetadata().get(HttpHeaders.CONTENT_TYPE).get(0).toString())
-                        : routingContext.getEffectiveAcceptableType();
+            // fix for issue JERSEY-1187
+            // media type set in the response takes precedence over any 'effective' media type
+            final MediaType outputMediaType = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE) ?
+                    MediaType.valueOf(response.getMetadata().get(HttpHeaders.CONTENT_TYPE).get(0).toString())
+                    : routingContext.getEffectiveAcceptableType();
 
-                final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
-                Type entityType = routingContext.getResponseMethodType();
+            final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
+            Type entityType = routingContext.getResponseMethodType();
 
-                if (entity instanceof GenericEntity) {
-                    GenericEntity genericEntity = (GenericEntity) entity;
-                    entity = genericEntity.getEntity();
-                    entityType = genericEntity.getType();
-                } else if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
-                    // TODO this is just a quick workaround for issue #JERSEY-1089
-                    //      which needs to be fixed by a common solution
-                    entityType = entity.getClass();
-                }
-
-                // TODO this is just a quick workaround for issue #JERSEY-1088
+            if (entity instanceof GenericEntity) {
+                GenericEntity genericEntity = (GenericEntity) entity;
+                entity = genericEntity.getEntity();
+                entityType = genericEntity.getType();
+            } else if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
+                // TODO this is just a quick workaround for issue #JERSEY-1089
                 //      which needs to be fixed by a common solution
-                if (response.getHeaders().getMediaType() == null) {
-                    response = Responses.toBuilder(response).type(outputMediaType).build();
+                entityType = entity.getClass();
+            }
+
+            // TODO this is just a quick workaround for issue #JERSEY-1088
+            //      which needs to be fixed by a common solution
+            if (response.getHeaders().getMediaType() == null) {
+                response = Responses.toBuilder(response).type(outputMediaType).build();
+            }
+
+            final Response outResponse = response;
+            committingOutput = new CommittingOutputStream() {
+
+                private OutputStream output;
+
+                @Override
+                protected void commit() throws IOException {
+                    output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), outResponse);
                 }
 
-                final Response outResponse = response;
-                committingOutput = new CommittingOutputStream() {
+                @Override
+                protected OutputStream getOutputStream() throws IOException {
+                    return output;
+                }
+            };
 
-                    private OutputStream output;
-
-                    @Override
-                    protected void commit() throws IOException {
-                        output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), outResponse);
-                    }
-
-                    @Override
-                    protected OutputStream getOutputStream() throws IOException {
-                        return output;
-                    }
-                };
-
-                workers.writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
+            try {
+                Requests.getMessageWorkers(request).writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
                         response.getMetadata(), response.getProperties(), committingOutput, messageBodySizeCallback,
                         true, !request.getMethod().equals(HttpMethod.HEAD));
-            } else {
-                writer.writeResponseStatusAndHeaders(0, response);
+            } catch (IOException ex) {
+                Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
+                throw new MappableException(ex);
+            } finally {
+                commitOutputStream(committingOutput);
+
+                if(ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
+                    try {
+                        ((ChunkedResponse)entity).setWriterRelatedArgs(
+                                committingOutput,
+                                writer,
+                                Requests.getMessageWorkers(request),
+                                outputAnnotations,
+                                outputMediaType,
+                                response.getMetadata(),
+                                response.getProperties()
+                        );
+                    } catch (IOException ex) {
+                        Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new MappableException(ex);
+                    }
+                    writer.suspend(0, TimeUnit.SECONDS, null);
+                } else {
+                    writer.commit();
+                }
             }
-        } catch (IOException ex) {
-            Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
-            throw new MappableException(ex);
-        } finally {
-            commitOutputStream(committingOutput);
+
+        } else {
+            writer.writeResponseStatusAndHeaders(0, response);
             writer.commit();
         }
     }

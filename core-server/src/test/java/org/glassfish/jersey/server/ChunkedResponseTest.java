@@ -39,14 +39,18 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.junit.Test;
+import java.io.IOException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.Requests;
+
+import org.junit.Test;
+
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -64,15 +68,13 @@ public class ChunkedResponseTest {
                 public void run() {
                     try {
                         response.write("test");
-                        Thread.sleep(1000);
                         response.write("test");
-                        Thread.sleep(1000);
                         response.write("test");
-                        Thread.sleep(1000);
                         response.close();
 
-                    } catch (InterruptedException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
+                        fail();
                     }
 
                 }
