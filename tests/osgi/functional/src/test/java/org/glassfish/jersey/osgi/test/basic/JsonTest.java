@@ -110,9 +110,6 @@ public class JsonTest {
                 // Google Guava
                 mavenBundle().groupId("com.googlecode.guava-osgi").artifactId("guava-osgi").versionAsInProject(),
 
-                wrappedBundle(mavenBundle().groupId("javax.mail").artifactId("mail").versionAsInProject()),
-                wrappedBundle(mavenBundle().groupId("javax.activation").artifactId("activation").versionAsInProject()),
-
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
