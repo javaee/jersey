@@ -37,9 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
-
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -48,7 +46,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -73,7 +70,7 @@ public class AcceptQsTest {
 
         @Override
         public Response apply(Request data) {
-                return Response.ok(entity).build();
+            return Response.ok(entity).build();
         }
     }
 
@@ -126,39 +123,35 @@ public class AcceptQsTest {
 
     private void runTestAcceptGet(ApplicationHandler app) throws Exception {
 
-        String s = app.apply(Requests.from("/","GET").accept("application/foo").build()).get().readEntity(String.class);
+        String s = app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class);
         assertEquals("foo", s);
 
-        s = app.apply(getRequest().accept("application/foo;q=0.1").build()).get().readEntity(String.class);
+        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.1").build()).get().readEntity(String.class);
         assertEquals("foo", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
                 .get().readEntity(String.class);
         assertEquals("foo", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo;q=0.4", "application/bar;q=0.4", "application/baz;q=0.2").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.4", "application/baz;q=0.2").build())
                 .get().readEntity(String.class);
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo", "application/bar", "application/baz;q=0.6").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo", "application/bar", "application/baz;q=0.6").build())
                 .get().readEntity(String.class);
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
                 .get().readEntity(String.class);
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
                 .get().readEntity(String.class);
         assertEquals("baz", s);
 
-        s = app.apply(Requests.from("/","GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz;q=0.4").build())
+        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz;q=0.4").build())
                 .get().readEntity(String.class);
         assertEquals("baz", s);
-    }
-
-    private RequestBuilder getRequest() {
-        return Requests.from("/","GET");
     }
 
     @Path("/")
@@ -190,32 +183,32 @@ public class AcceptQsTest {
         MediaType foo = MediaType.valueOf("application/foo");
         MediaType bar = MediaType.valueOf("application/bar");
 
-        Response response = app.apply(Requests.from("/","GET").accept(foo).build()).get();
+        Response response = app.apply(Requests.from("/", "GET").accept(foo).build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(foo, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept(bar).build()).get();
+        response = app.apply(Requests.from("/", "GET").accept(bar).build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(bar, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("*/*").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("*/*").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(bar, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/*").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/*").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(bar, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/foo;q=0.1","application/bar").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.1", "application/bar").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(bar, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/foo;q=0.5","application/bar;q=0.1").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.5", "application/bar;q=0.1").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(foo, response.getMediaType());
@@ -262,42 +255,42 @@ public class AcceptQsTest {
 
     private void runTestAcceptSubType(ApplicationHandler app) throws Exception {
 
-        Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
+        Response response = app.apply(Requests.from("/", "GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.4").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("image/png, text/plain;q=0.4").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5, text/html").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain;q=0.5, text/html").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("html", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain, text/html;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain, text/html;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/html;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/html;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("html", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/*;q=0.5, text/plain;q=0.6").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/*;q=0.5, text/plain;q=0.6").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5, text/gaga;q=0.6").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain;q=0.5, text/gaga;q=0.6").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/gaga"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/gaga, text/plain").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/gaga, text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/plain"), response.getMediaType());
@@ -344,52 +337,52 @@ public class AcceptQsTest {
 
     private void runTestAcceptSubTypeNotIntuitive(ApplicationHandler app) throws Exception {
 
-        Response response = app.apply(Requests.from("/","GET").accept("text/plain").build()).get();
+        Response response = app.apply(Requests.from("/", "GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("image/png, text/plain").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("image/png, text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5, text/html").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain;q=0.5, text/html").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain, text/html;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain, text/html;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/html;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/html;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/*;q=0.5, text/plain;q=0.6").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/*;q=0.5, text/plain;q=0.6").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5, text/gaga;q=0.6").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain;q=0.5, text/gaga;q=0.6").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/gaga"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/gaga, text/plain").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/gaga, text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("*", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/gaga"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/*").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/*").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/*;q=0.5, text/html;q=0.1").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/*;q=0.5, text/html;q=0.1").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("plain", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
@@ -421,12 +414,12 @@ public class AcceptQsTest {
     private void runTestAcceptNoProduces(ApplicationHandler app) throws Exception {
 
         // media type order in the accept header does not impose output media type!
-        Response response = app.apply(Requests.from("/","GET").accept("image/png, text/plain;q=0.9").build()).get();
+        Response response = app.apply(Requests.from("/", "GET").accept("image/png, text/plain;q=0.9").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(MediaType.valueOf("image/png"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("text/plain;q=0.5, text/html").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("text/plain;q=0.5, text/html").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.readEntity(String.class));
         assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
@@ -450,7 +443,7 @@ public class AcceptQsTest {
     public void testProducesOneMethodFooBarResourceProgrammatic() throws Exception {
         final Resource.Builder rb = Resource.builder("/");
         rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
-                    .handledBy(stringResponse("FOOBAR"));
+                .handledBy(stringResponse("FOOBAR"));
         ResourceConfig rc = new ResourceConfig();
         rc.addResources(rb.build());
         runTestFooBar(new ApplicationHandler(rc), "FOOBAR", "FOOBAR");
@@ -522,22 +515,22 @@ public class AcceptQsTest {
 
     private void runTestFooBar(ApplicationHandler app, String fooContent, String barContent) throws Exception {
 
-        Response response = app.apply(Requests.from("/","GET").accept("application/foo").build()).get();
+        Response response = app.apply(Requests.from("/", "GET").accept("application/foo").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals(fooContent, response.readEntity(String.class));
         assertEquals(MediaType.valueOf("application/foo"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/bar").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/bar").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals(barContent, response.readEntity(String.class));
         assertEquals(MediaType.valueOf("application/bar"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/foo", "application/bar;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/foo", "application/bar;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals(fooContent, response.readEntity(String.class));
         assertEquals(MediaType.valueOf("application/foo"), response.getMediaType());
 
-        response = app.apply(Requests.from("/","GET").accept("application/bar", "application/foo;q=0.5").build()).get();
+        response = app.apply(Requests.from("/", "GET").accept("application/bar", "application/foo;q=0.5").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals(barContent, response.readEntity(String.class));
         assertEquals(MediaType.valueOf("application/bar"), response.getMediaType());

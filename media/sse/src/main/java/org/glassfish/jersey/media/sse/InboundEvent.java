@@ -48,8 +48,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
@@ -154,7 +152,7 @@ public class InboundEvent {
      * @return object of given type.
      * @throws IOException when provided type can't be read.
      */
-    public <T> T getData(Class<T> messageType, @Nullable MediaType mediaType) throws IOException {
+    public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
         final MessageBodyReader<T> messageBodyReader = messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
         return messageBodyReader.readFrom(messageType, null, annotations, (mediaType == null ? this.mediaType : mediaType),
                 headers, new ByteArrayInputStream(stripLastLineBreak(data.toByteArray())));

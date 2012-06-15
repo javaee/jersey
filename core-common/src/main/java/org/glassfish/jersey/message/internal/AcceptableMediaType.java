@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class AcceptableMediaType extends MediaType implements QualityFactor {
+public class AcceptableMediaType extends MediaType implements QualityFactor {
 
     private final int q;
 

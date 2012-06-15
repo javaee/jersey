@@ -56,11 +56,11 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -68,10 +68,10 @@ import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.Factory;
@@ -283,7 +283,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
-            ContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(toJaxrsRequest(request), responseWriter,
+            ContainerInvocationContext containerInvocationContext = new JerseyContainerInvocationContext(toJaxrsRequest(request), responseWriter,
                     getSecurityContext(request), new RequestScopedInitializer() {
 
                     @Override
@@ -292,7 +292,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                         services.forContract(new TypeLiteral<Ref<Response>>() {}).get().set(response);
                     }
                 });
-            appHandler.apply(containerRequestContext);
+            appHandler.apply(containerInvocationContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
             logger.debugLog("GrizzlyHttpContaner.service(...) finished");
@@ -386,7 +386,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         final String method = grizzlyRequest.getMethod().getMethodString();
 
-        RequestBuilder rb = Requests.from(baseUri, requestUri, method, grizzlyRequest.getInputStream());
+        JaxrsRequestBuilderView rb = Requests.from(baseUri, requestUri, method, grizzlyRequest.getInputStream());
 
         for (String name : grizzlyRequest.getHeaderNames()) {
             for (String value : grizzlyRequest.getHeaders(name)) {

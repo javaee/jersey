@@ -44,7 +44,6 @@ import java.net.URI;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.RequestBuilder;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -65,7 +64,7 @@ public final class Requests {
      * @param method request method.
      * @return new request builder.
      */
-    public static RequestBuilder from(URI baseUri, URI requestUri, String method) {
+    public static JaxrsRequestBuilderView from(URI baseUri, URI requestUri, String method) {
         return new MutableRequest(baseUri, requestUri, method).toJaxrsRequestBuilder();
     }
 
@@ -80,7 +79,7 @@ public final class Requests {
      *            "from wire" and is not intercepted yet.
      * @return new request builder.
      */
-    public static RequestBuilder from(URI baseUri, URI requestUri, String method, InputStream externalInputStream) {
+    public static JaxrsRequestBuilderView from(URI baseUri, URI requestUri, String method, InputStream externalInputStream) {
         return new MutableRequest(baseUri, requestUri, method, externalInputStream).toJaxrsRequestBuilder();
     }
 
@@ -91,7 +90,7 @@ public final class Requests {
      * @param method request method.
      * @return new request builder.
      */
-    public static RequestBuilder from(URI requestUri, String method) {
+    public static JaxrsRequestBuilderView from(URI requestUri, String method) {
         return new MutableRequest(null, requestUri, method).toJaxrsRequestBuilder();
     }
 
@@ -104,7 +103,7 @@ public final class Requests {
      * @param method request method.
      * @return new request builder.
      */
-    public static RequestBuilder from(String baseUri, String requestUri, String method) {
+    public static JaxrsRequestBuilderView from(String baseUri, String requestUri, String method) {
         return new MutableRequest(baseUri, requestUri, method).toJaxrsRequestBuilder();
     }
 
@@ -115,7 +114,7 @@ public final class Requests {
      * @param method request method.
      * @return new request builder.
      */
-    public static RequestBuilder from(String requestUri, String method) {
+    public static JaxrsRequestBuilderView from(String requestUri, String method) {
         return new MutableRequest(null, requestUri, method).toJaxrsRequestBuilder();
     }
 
@@ -126,7 +125,7 @@ public final class Requests {
      *     the instance is represented by an internal Jersey request type.
      * @return copy of an existing request instance.
      */
-    public static RequestBuilder from(Request request) {
+    public static JaxrsRequestBuilderView from(Request request) {
         return new MutableRequest(JaxrsRequestView.unwrap(request)).toJaxrsRequestBuilder();
     }
 
@@ -137,7 +136,7 @@ public final class Requests {
      *     by an internal Jersey request type.
      * @return request builder initialized from the request.
      */
-    public static RequestBuilder toBuilder(Request request) {
+    public static JaxrsRequestBuilderView toBuilder(Request request) {
         return JaxrsRequestView.unwrap(request).toBuilder().toJaxrsRequestBuilder();
     }
 
@@ -202,7 +201,7 @@ public final class Requests {
      *            represented by an internal Jersey request builder type.
      * @param workers message body readers and writers lookup factory.
      */
-    public static void setMessageWorkers(RequestBuilder requestBuilder, MessageBodyWorkers workers) {
+    public static void setMessageWorkers(JaxrsRequestBuilderView requestBuilder, MessageBodyWorkers workers) {
         JaxrsRequestBuilderView.unwrap(requestBuilder).workers(workers);
     }
 

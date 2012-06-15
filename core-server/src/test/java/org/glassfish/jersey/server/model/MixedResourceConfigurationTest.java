@@ -46,8 +46,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
@@ -84,7 +82,7 @@ public class MixedResourceConfigurationTest {
         resourceBuilder.addMethod("PUT").handledBy(new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 name = Helper.unwrap(request).readEntity(String.class);
                 return Responses.empty().status(200).build();
             }

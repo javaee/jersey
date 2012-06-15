@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,52 +37,79 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.client;
 
-import java.text.ParseException;
-import java.util.Collections;
-import java.util.Set;
-import javax.ws.rs.core.EntityTag;
+import java.util.Map;
+
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.message.internal.InboundMessageContext;
+import org.glassfish.jersey.message.internal.Statuses;
 
 /**
- * A matching entity tag.
- * <p>
- * Note that this type and it's super type cannot be used to create request
- * header values for <code>If-Match</code> and <code>If-None-Match</code>
- * of the form <code>If-Match: *</code> or <code>If-None-Match: *</code> as
- * <code>*</code> is not a valid entity tag.
+ * Jersey client response context.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MatchingEntityTag extends EntityTag {
+public class JerseyClientResponseContext extends InboundMessageContext implements ClientResponseContext {
+    private Response.StatusType status;
+    private final JerseyClientRequestContext requestContext;
 
     /**
-     * An empty set that corresponds to <code>If-Match: *</code> or
-     * <code>If-None-Match: *</code>.
+     * Create a new Jersey client response context.
+     *
+     * @param status response status.
+     * @param requestContext associated client request context.
      */
-    public static final Set<MatchingEntityTag> ANY_MATCH = Collections.emptySet();
-
-    private MatchingEntityTag(String value) {
-        super(value, false);
+    public JerseyClientResponseContext(Response.StatusType status, JerseyClientRequestContext requestContext) {
+        this.status = status;
+        this.requestContext = requestContext;
     }
 
-    private MatchingEntityTag(String value, boolean weak) {
-        super(value, weak);
+    @Override
+    public int getStatusCode() {
+        return status.getStatusCode();
     }
 
-    public static MatchingEntityTag valueOf(HttpHeaderReader reader) throws ParseException {
-        HttpHeaderReader.Event e = reader.next(false);
-        if (e == HttpHeaderReader.Event.QuotedString) {
-            return new MatchingEntityTag(reader.getEventValue());
-        } else if (e == HttpHeaderReader.Event.Token) {
-            String v = reader.getEventValue();
-            if (v.equals("W")) {
-                reader.nextSeparator('/');
-                return new MatchingEntityTag(reader.nextQuotedString(), true);
-            }
+    @Override
+    public void setStatusCode(int code) {
+        this.status = Statuses.from(code);
+    }
+
+    /**
+     * Set response status.
+     *
+     * @param status response status.
+     */
+    public void setStatus(Response.StatusType status) {
+        if (status == null) {
+            throw new NullPointerException("Response status must not be 'null'");
         }
+        this.status = status;
+    }
 
-        throw new ParseException("Error parsing entity tag", reader.getIndex());
+    /**
+     * Get the response status.
+     *
+     * @return response status.
+     */
+    public Response.StatusType getStatus() {
+        return status;
+    }
+
+    /**
+     * Get the associated client request context paired with this response context.
+     *
+     * @return associated client request context.
+     */
+    public JerseyClientRequestContext getRequestContext() {
+        return requestContext;
+    }
+
+    @Override
+    public Map<String, NewCookie> getCookies() {
+        return super.getResponseCookies();
     }
 }

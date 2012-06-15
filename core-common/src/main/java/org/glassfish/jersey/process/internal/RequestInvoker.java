@@ -173,7 +173,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
     private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
     private final ProcessingExecutorsFactory executorsFactory;
 
-    private RequestInvoker(
+    public RequestInvoker(
             final Stage<REQUEST> rootStage,
             final RequestScope requestScope,
             final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder,

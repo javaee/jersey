@@ -65,6 +65,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -606,29 +607,29 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> Object readFrom(GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders, Map<String, Object> properties, InputStream entityStream,
+            MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
             boolean intercept) throws WebApplicationException, IOException {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(genericType, annotations, mediaType,
-                httpHeaders, properties, entityStream, this, intercept);
+                httpHeaders, propertiesDelegate, entityStream, this, intercept);
         return executor.proceed();
     }
 
     @Override
     public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
 
-        writeTo(t, genericType, annotations, mediaType, httpHeaders, properties, entityStream, sizeCallback, intercept, true);
+        writeTo(t, genericType, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
     }
 
     @Override
     public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, genericType, annotations, mediaType,
-                httpHeaders, properties, entityStream, this, sizeCallback, intercept, writeEntity);
+                httpHeaders, propertiesDelegate, entityStream, this, sizeCallback, intercept, writeEntity);
         executor.proceed();
     }
 }

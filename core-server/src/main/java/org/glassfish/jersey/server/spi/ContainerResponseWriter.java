@@ -51,7 +51,7 @@ import org.glassfish.jersey.server.ContainerException;
  * A suspendable, request-scoped container response writer.
  *
  * Container sends a new instance of the response writer with every request as part
- * of the call to the Jersey application {@link ApplicationHandler#apply(ContainerRequestContext) apply(...)}
+ * of the call to the Jersey application {@link ApplicationHandler#apply(ContainerInvocationContext) apply(...)}
  * method. Each container response writer represents an open connection to the client
  * (waiting for a response).
  * <p />

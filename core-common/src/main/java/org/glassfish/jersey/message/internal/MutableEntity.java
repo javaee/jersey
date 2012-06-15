@@ -63,6 +63,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -227,15 +228,15 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     private GenericEntity<?> genericEntity;
     // indicates if the type of the entity was set explicitly
     private boolean forceType;
-    // reference to enclosing message
-    private AbstractMutableMessage<?> message;
     // writer annotations
     private Annotation[] writeAnnotations = EMPTY_ANNOTATIONS;
     // message body workers to read and write entities
     @Inject
     protected MessageBodyWorkers workers;
-
+    // Entity/Content stream
     private ContentStream contentStream;
+    // reference to enclosing message
+    private AbstractMutableMessage<?> message;
 
     /**
      * Creates new instance initialized with mutable message and input stream.
@@ -334,8 +335,14 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         final MediaType mediaType = getMsgContentType();
 
         try {
-            T t = (T) workers.readFrom(GenericType.<T> of(rawType, type), readAnnotations, mediaType, message.headers(),
-                    message.properties(), contentStream.getInputStream(), contentStream.getType().intercept());
+            T t = (T) workers.readFrom(
+                    GenericType.<T> of(rawType, type),
+                    readAnnotations,
+                    mediaType,
+                    message.headers(),
+                    new MapPropertiesDelegate(message.properties()),
+                    contentStream.getInputStream(),
+                    contentStream.getType().intercept());
 
             if (contentStream.getType() == ContentStream.Type.BUFFERED
                     || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
@@ -470,7 +477,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         final MediaType mediaType = getMsgContentType();
         try {
             workers.writeTo(myInstance, GenericType.of(genericEntity.getRawType(), genericEntity.getType()), writeAnnotations,
-                    mediaType, (MultivaluedMap) message.headers(), message.properties(), baos, null, false);
+                    mediaType, (MultivaluedMap) message.headers(), new MapPropertiesDelegate(message.properties()), baos, null, false);
             baos.close();
         } catch (IOException ex) {
             Logger.getLogger(MutableEntity.class.getName()).log(Level.SEVERE, null, ex);

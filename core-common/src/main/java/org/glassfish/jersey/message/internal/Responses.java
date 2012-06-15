@@ -260,6 +260,17 @@ public final class Responses {
     }
 
     /**
+     * Create a response builder with a supplied status type.
+     *
+     * @param status response status type.
+     * @param workers message body workers associated with the request context.
+     * @return response builder instance.
+     */
+    public static ResponseBuilder responseBuilder(StatusType status, MessageBodyWorkers workers) {
+        return new MutableResponse(status, workers).toJaxrsResponseBuilder();
+    }
+
+    /**
      * Set the {@link MessageBodyWorkers} to the response builder.
      *
      * @param responseBuilder JAX-RS response builder. It is assumed that the instance

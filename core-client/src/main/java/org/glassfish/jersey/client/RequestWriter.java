@@ -59,6 +59,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
 import org.glassfish.jersey.message.internal.Requests;
@@ -192,7 +193,7 @@ public class RequestWriter {
         @Override
         @SuppressWarnings("unchecked")
         public void writeRequestEntity(OutputStream out) throws IOException {
-            // TODO handlers?
+            // TODO interceptors?
             try {
                 writer.writeTo(entity,
                         entity.getClass(),
@@ -263,7 +264,7 @@ public class RequestWriter {
         final OutputStream out = listener.onGetOutputStream();
         try {
             workers.writeTo(entity, GenericType.of(entityClass, entityType), EMPTY_ANNOTATIONS, mediaType,
-                    (MultivaluedMap) headers, Helper.unwrap(request).getProperties(), out, sizeCallback, true);
+                    (MultivaluedMap) headers, new MapPropertiesDelegate(Helper.unwrap(request).getProperties()), out, sizeCallback, true);
 
         } catch (IOException ex) {
             try {

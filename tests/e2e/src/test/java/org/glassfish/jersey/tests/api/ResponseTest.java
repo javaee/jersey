@@ -274,9 +274,9 @@ public class ResponseTest {
     private static final String indent = "    ";
     private static final String newline = System.getProperty("line.separator");
 
-    private String verifyResponse(Response resp, @Nullable String content, int status,
-                                  List<String> encoding, List<String> language, @Nullable List<String> type,
-                                  @Nullable List<String> var, @Nullable List<String> ccl, @Nullable List<String> cookies)
+    private String verifyResponse(Response resp, String content, int status,
+                                  List<String> encoding, List<String> language, List<String> type,
+                                  List<String> var, List<String> ccl, List<String> cookies)
     {
         boolean pass = true;
         StringBuilder sb = new StringBuilder();

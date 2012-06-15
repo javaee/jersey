@@ -42,9 +42,9 @@ package org.glassfish.jersey._remove;
 import java.util.Map;
 
 import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.JaxrsResponseView;
 
@@ -65,8 +65,8 @@ public interface FilterContext {
      * MUST never be {@code null}. In the scope of a single request/response processing,
      * a same property map instance is shared by the following methods:
      * <ul>
-     *     <li>{@link javax.ws.rs.core.Request#getProperties() }</li>
-     *     <li>{@link javax.ws.rs.core.Response#getProperties() }</li>
+     *     <li>{@code javax.ws.rs.core.Request#getProperties() }</li>
+     *     <li>{@code javax.ws.rs.core.Response#getProperties() }</li>
      *     <li>{@link FilterContext#getProperties() }</li>
      *     <li>{@link javax.ws.rs.ext.InterceptorContext#getProperties() }</li>
      * </ul>
@@ -131,7 +131,7 @@ public interface FilterContext {
      *
      * @return request builder object.
      */
-    RequestBuilder getRequestBuilder();
+    JaxrsRequestBuilderView getRequestBuilder();
 
     /**
      * Get a builder for the response object. May return {@code null} if a

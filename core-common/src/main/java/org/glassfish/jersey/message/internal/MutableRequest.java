@@ -42,7 +42,6 @@ package org.glassfish.jersey.message.internal;
 import java.io.InputStream;
 import java.net.URI;
 
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.uri.UriComponent;
 
@@ -56,7 +55,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     private static URI DEFAULT_BASE_URI = URI.create("/");
 
     private transient javax.ws.rs.core.Request jaxrsView;
-    private transient RequestBuilder jaxrsBuilderView;
+    private transient JaxrsRequestBuilderView jaxrsBuilderView;
     private transient JaxrsRequestHeadersView jaxrsHeadersView;
     // Absolute application root URI (base URI)
     private URI baseUri;
@@ -242,7 +241,7 @@ class MutableRequest extends AbstractMutableMessage<MutableRequest> implements R
     }
 
     @Override
-    public RequestBuilder toJaxrsRequestBuilder() {
+    public JaxrsRequestBuilderView toJaxrsRequestBuilder() {
         if (jaxrsBuilderView == null) {
             jaxrsBuilderView = new JaxrsRequestBuilderView(this);
         }

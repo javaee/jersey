@@ -51,7 +51,7 @@ import com.google.common.base.Function;
  * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
+public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
 
     private Deque<Function<DATA, DATA>> transformationStack = new LinkedList<Function<DATA, DATA>>();
 

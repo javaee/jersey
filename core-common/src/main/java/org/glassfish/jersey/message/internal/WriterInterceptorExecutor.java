@@ -46,26 +46,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 
 /**
- * Entry point of the writer interceptor chain. It contstructs the chain of wrapped
+ * Entry point of the writer interceptor chain. It constructs the chain of wrapped
  * interceptor and invokes it. At the end of the chain the {@link MessageBodyWriter}
  * is invoked which writes the entity to the output stream. The
  * {@link ExceptionWrapperInterceptor} is always invoked on the client as a first
@@ -90,11 +89,10 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
-     *            <code>Method.getParameterAnnotations</code>.
+     *            {@code Method.getParameterAnnotations}.
      * @param mediaType the media type of the HTTP entity.
      * @param headers the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link javax.ws.rs.core.Request#getProperties() request-scoped
-     *            properties}.
+     * @param propertiesDelegate a request-scoped properties depegate.
      * @param entityStream the {@link java.io.InputStream} of the HTTP entity. The stream is not
      *            closed after reading the entity.
      * @param workers {@link MessageBodyWorkers Message body workers}.
@@ -104,16 +102,12 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      *            be executed in the client.
      * @param writeEntity true if the entity should be written. Otherwise only headers will
      *            be written to underlying {@link OutputStream}.
-     * @return the type that was read from the {@code entityStream}.
-     * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
-     *             reader} fails.
-     * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public WriterInterceptorExecutor(Object entity, GenericType genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> headers, Map<String, Object> properties, OutputStream entityStream,
+            MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) {
 
-        super(genericType, annotations, mediaType, properties);
+        super(genericType, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;

@@ -43,9 +43,9 @@ import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -74,7 +74,7 @@ public abstract class AbstractTest {
     }
 
     protected Response getResponse(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
-        RequestBuilder requestBuilder = Requests.from(requestUri, "GET");
+        JaxrsRequestBuilderView requestBuilder = Requests.from(requestUri, "GET");
         if(accept != null) {
             requestBuilder = requestBuilder.accept(accept);
         }

@@ -59,18 +59,18 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.ContainerRequestContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -157,7 +157,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
         final URI requestUri = baseUri.resolve(exchangeUri);
 
-        RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
+        JaxrsRequestBuilderView requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
                 exchange.getRequestBody());
 
         /**
@@ -173,10 +173,10 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
         Request jaxRsRequest = requestBuilder.build();
         final ResponseWriter responseWriter = new ResponseWriter(exchange);
-        ContainerRequestContext containerRequestCtx = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
+        ContainerInvocationContext containerInvocationCtx = new JerseyContainerInvocationContext(jaxRsRequest, responseWriter,
                 getSecurityContext(exchange.getPrincipal(), isSecure), null);
         try {
-            appHandler.apply(containerRequestCtx);
+            appHandler.apply(containerInvocationCtx);
         } finally {
             // if the response was not commited yet by the JerseyApplication
             // then commit it and log warning

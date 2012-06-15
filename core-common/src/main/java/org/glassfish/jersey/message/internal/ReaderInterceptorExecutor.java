@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericType;
@@ -59,13 +58,14 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 
 /**
  * Entry point of the reader interceptor chain. It contstructs the chain of wrapped
- * interceptor and invokes it. At the end of the chain {@link the MessageBodyWriter MBW}
+ * interceptor and invokes it. At the end of the chain {@link MessageBodyWriter MBW}
  * is invoked which writes the entity to the output stream. The
  * {@link ExceptionWrapperInterceptor} is always invoked on the client as a first
  * interceptor.
@@ -74,7 +74,6 @@ import org.glassfish.jersey.process.internal.PriorityComparator.Order;
  */
 @SuppressWarnings("rawtypes")
 public class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
-    private final List<ReaderInterceptor> interceptors;
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
     private Iterator<ReaderInterceptor> iterator;
@@ -87,30 +86,24 @@ public class ReaderInterceptorExecutor extends InterceptorExecutor implements Re
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
-     *            <code>Method.getParameterAnnotations</code>.
+     *            {@code Method.getParameterAnnotations}.
      * @param mediaType the media type of the HTTP entity.
-     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link Request#getProperties() request-scoped
-     *            properties}.
-     * @param entityStream the {@link InputStream} of the HTTP entity. The stream is not
-     *            closed after reading the entity.
+     * @param headers mutable message headers.
+     * @param propertiesDelegate a request-scoped properties delegate.
+     * @param inputStream entity stream.
      * @param workers {@link MessageBodyWorkers Message body workers}.
      * @param intercept true if the user interceptors should be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed in the client.
-     * @return the type that was read from the {@code entityStream}.
-     * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
-     *             reader} fails.
-     * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public ReaderInterceptorExecutor(GenericType genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> headers, Map<String, Object> properties, InputStream inputStream,
+            MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
             MessageBodyWorkers workers, boolean intercept) {
-        super(genericType, annotations, mediaType, properties);
+        super(genericType, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
 
-        interceptors = new ArrayList<ReaderInterceptor>();
+        List<ReaderInterceptor> interceptors = new ArrayList<ReaderInterceptor>();
         for (ReaderInterceptor interceptor : workers.getReaderInterceptors()) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
                 interceptors.add(interceptor);

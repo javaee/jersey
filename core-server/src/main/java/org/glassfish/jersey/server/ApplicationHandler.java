@@ -69,6 +69,7 @@ import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceProviders;
@@ -100,7 +101,7 @@ import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
-import org.glassfish.jersey.server.spi.ContainerRequestContext;
+import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.spi.CloseableService;
@@ -550,15 +551,15 @@ public final class ApplicationHandler {
      * The main request/response processing entry point for Jersey container implementations.
      * <p/>
      * The method invokes the request processing of the provided {@link Request jax-rs request} from the
-     * {@link ContainerRequestContext container request context} and uses the {@link ContainerResponseWriter container response
-     * writer} from the provided {@link ContainerRequestContext container request context} to suspend & resume the processing as
-     * well as write the response back to the container. If the {@link ContainerRequestContext container request context} contains
+     * {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} and uses the {@link ContainerResponseWriter container response
+     * writer} from the provided {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} to suspend & resume the processing as
+     * well as write the response back to the container. If the {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} contains
      * {@link SecurityContext security context} it will be registered for further request processing.
      * {@link RequestScopedInitializer Custom scope injections} will be initialized into the request scope.
      *
      * @param containerContext container request context of the current request.
      */
-    public void apply(final ContainerRequestContext containerContext) {
+    public void apply(final ContainerInvocationContext containerContext) {
         checkContainerRequestContext(containerContext);
 
         final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(containerContext.getRequest(),
@@ -588,7 +589,7 @@ public final class ApplicationHandler {
         callback.suspendWriterIfRunning();
     }
 
-    private void checkContainerRequestContext(final ContainerRequestContext containerContext) {
+    private void checkContainerRequestContext(final ContainerInvocationContext containerContext) {
         if (containerContext.getSecurityContext() == null) {
             throw new IllegalArgumentException("SecurityContext from ContainerRequestContext must not be null.");
         } else if (containerContext.getRequest() == null) {
@@ -736,7 +737,7 @@ public final class ApplicationHandler {
 
             try {
                 Requests.getMessageWorkers(request).writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
-                        response.getMetadata(), Helper.unwrap(response).getProperties(), committingOutput, messageBodySizeCallback,
+                        response.getMetadata(), new MapPropertiesDelegate(Helper.unwrap(response).getProperties()), committingOutput, messageBodySizeCallback,
                         true, !request.getMethod().equals(HttpMethod.HEAD));
             } catch (IOException ex) {
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);

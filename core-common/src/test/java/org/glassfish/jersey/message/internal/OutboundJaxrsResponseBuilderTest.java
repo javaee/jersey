@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,80 +39,40 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import java.net.URI;
-import java.util.Map;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.RuntimeDelegate;
 
-import javax.ws.rs.core.Cookie;
+import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
-import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
+ * JaxrsResponseViewTest class.
  *
- * @author Paul Sandoz
+ * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-interface Request extends Entity, Headers {
-
-    interface Builder extends Request, Entity.Builder<Request.Builder>, Headers.Builder<Request.Builder> {
-        // Common message methods
-
-        public Builder properties(Map<String, Object> properties);
-
-        public Builder property(String name, Object value);
-
-        public Builder clearProperties();
-
-        // Request-specific methods
-        public Builder uri(String uri);
-
-        public Builder uri(URI uri);
-
-        public Builder uris(String applicationRootUri, String requestUri);
-
-        public Builder uris(URI applicationRootUri, URI requestUri);
-
-        public Builder method(String method);
-
-        public Builder workers(MessageBodyWorkers workers);
-
-        public Builder cookie(Cookie cookie);
-
-        @Override
-        public Builder clone();
-
-        public Request build();
-
-        public JaxrsRequestBuilderView toJaxrsRequestBuilder();
-    }
-
-    // Common message methods
-    public Map<String, Object> properties();
-
-    public void close();
-
-    // Request-specific methods
-    public Request clone();
-
-    public URI baseUri();
+public class OutboundJaxrsResponseBuilderTest {
 
     /**
-     * Get the path of the current request relative to the application root (base)
-     * URI as a string.
-     *
-     * @param decode controls whether sequences of escaped octets are decoded
-     *     ({@code true}) or not ({@code false}).
-     * @return relative request path.
+     * Create test class.
      */
-    public String relativePath(boolean decode);
+    public OutboundJaxrsResponseBuilderTest() {
+        RuntimeDelegate.setInstance(new TestRuntimeDelegate());
+    }
 
-    public URI uri();
-
-    public String method();
-
-    public MessageBodyWorkers workers();
-
-    public javax.ws.rs.core.Request toJaxrsRequest();
-
-    public JaxrsRequestHeadersView getJaxrsHeaders();
-
-    public Builder toBuilder();
+    /**
+     * Test media type header setting, retrieval.
+     */
+    @Test
+    public void testMediaType() {
+        Response r = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext())
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML)
+                .build();
+        assertEquals(200, r.getStatus());
+        assertEquals(Response.Status.OK, r.getStatusInfo());
+    }
 }

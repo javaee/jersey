@@ -68,6 +68,7 @@ import javax.ws.rs.core.Variant;
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+// TODO remove or make package-private
 public final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
 
     private org.glassfish.jersey.message.internal.Response.Builder wrapped;
@@ -288,11 +289,11 @@ public final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
         return header(name, value, false);
     }
 
-    public Response.ResponseBuilder headerSingle(String name, Object value) {
+    private Response.ResponseBuilder headerSingle(String name, Object value) {
         return header(name, value, true);
     }
 
-    public Response.ResponseBuilder header(String name, Object value, boolean single) {
+    private Response.ResponseBuilder header(String name, Object value, boolean single) {
         if (value != null) {
             if (single) {
                 wrapped.replace(name, Collections.singleton(value));
@@ -327,7 +328,7 @@ public final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
 
     @Override
     public ResponseBuilder allow(String... methods) {
-        return allow(new HashSet(Arrays.asList(methods)));
+        return allow(new HashSet<String>(Arrays.asList(methods)));
     }
 
     @Override

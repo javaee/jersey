@@ -43,13 +43,13 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 
 /**
- * Immutable implementation of {@link ContainerRequestContext Container Request Context}
+ * Immutable implementation of {@link ContainerInvocationContext Container Request Context}
  * interface.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-public class JerseyContainerRequestContext implements ContainerRequestContext {
+public class JerseyContainerInvocationContext implements ContainerInvocationContext {
 
     private final ContainerResponseWriter responseWriter;
     private final Request jaxRsRequest;
@@ -67,8 +67,8 @@ public class JerseyContainerRequestContext implements ContainerRequestContext {
      * @param requestScopedInitializer Initializer which initializes HK2
      * injections into the request scope. Can be null.
      */
-    public JerseyContainerRequestContext(final Request jaxRsRequest, final ContainerResponseWriter responseWriter,
-            final SecurityContext securityContext, final RequestScopedInitializer requestScopedInitializer) {
+    public JerseyContainerInvocationContext(final Request jaxRsRequest, final ContainerResponseWriter responseWriter,
+                                            final SecurityContext securityContext, final RequestScopedInitializer requestScopedInitializer) {
         this.responseWriter = responseWriter;
         this.jaxRsRequest = jaxRsRequest;
         this.securityContext = securityContext;
@@ -84,7 +84,7 @@ public class JerseyContainerRequestContext implements ContainerRequestContext {
      * @param securityContext {@link SecurityContext Security context} which
      * should be initialized into request scope. Must not be null.
      */
-    public JerseyContainerRequestContext(final Request jaxRsRequest, final ContainerResponseWriter responseWriter, final SecurityContext securityContext) {
+    public JerseyContainerInvocationContext(final Request jaxRsRequest, final ContainerResponseWriter responseWriter, final SecurityContext securityContext) {
         this.responseWriter = responseWriter;
         this.jaxRsRequest = jaxRsRequest;
         this.securityContext = securityContext;

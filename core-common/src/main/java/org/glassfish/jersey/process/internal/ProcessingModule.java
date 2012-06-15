@@ -84,6 +84,7 @@ public class ProcessingModule extends AbstractModule {
         bind().to(ProcessingExecutorsFactory.class);
 
         // Responding context
+        // TODO remove this
         bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
         }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
         }).in(RequestScope.class);

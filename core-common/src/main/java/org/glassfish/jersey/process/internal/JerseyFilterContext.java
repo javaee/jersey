@@ -42,11 +42,12 @@ package org.glassfish.jersey.process.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.JaxrsResponseView;
 import org.glassfish.jersey.message.internal.Requests;
@@ -54,10 +55,8 @@ import org.glassfish.jersey.message.internal.Responses;
 
 import com.google.common.base.Objects;
 
-import org.glassfish.jersey._remove.FilterContext;
-
 /**
- * {@link javax.ws.rs.ext.JerseyFilterContext} default implementation.
+ * {@code javax.ws.rs.ext.FilterContext} default implementation.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -111,7 +110,7 @@ class JerseyFilterContext implements FilterContext {
     }
 
     @Override
-    public RequestBuilder getRequestBuilder() {
+    public JaxrsRequestBuilderView getRequestBuilder() {
         return Requests.toBuilder(request);
     }
 

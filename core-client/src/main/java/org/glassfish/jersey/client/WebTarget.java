@@ -49,8 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Maps;
 
 /**
@@ -88,7 +86,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
         this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
     }
 
-    protected WebTarget(UriBuilder targetUri, @Nullable Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
+    protected WebTarget(UriBuilder targetUri, Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
         this.targetUri = targetUri;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);

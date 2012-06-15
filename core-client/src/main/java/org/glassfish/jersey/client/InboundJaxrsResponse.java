@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.client;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
@@ -53,165 +53,158 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
 /**
- * Adapter for {@link Response Jersey Response} to {@link javax.ws.rs.core.Response
- * JAX-RS Response}.
+ * Implementation of an inbound JAX-RS response message.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-// TODO Methods in this class should cache results to improve performance
-// TODO remove or make package-private
-public final class JaxrsResponseView extends javax.ws.rs.core.Response {
+class InboundJaxrsResponse extends Response {
 
-    private final Response wrapped;
+    private final JerseyClientResponseContext context;
 
-    public JaxrsResponseView(Response wrapped) {
-        this.wrapped = wrapped;
-    }
-
-    static Response unwrap(javax.ws.rs.core.Response response) {
-        if (response instanceof JaxrsResponseView) {
-            return ((JaxrsResponseView) response).wrapped;
-        }
-
-        throw new IllegalArgumentException(String.format("Response class type '%s' not supported.", response.getClass().getName()));
-    }
-
-    public Map<String, Object> getProperties() {
-        return wrapped.properties();
+    /**
+     * Create new inbound JAX-RS response message.
+     *
+     * @param context jersey client response context.
+     */
+    public InboundJaxrsResponse(JerseyClientResponseContext context) {
+        this.context = context;
     }
 
     @Override
     public int getStatus() {
-        return wrapped.status().getStatusCode();
+        return context.getStatusCode();
     }
 
     @Override
     public StatusType getStatusInfo() {
-        return wrapped.status();
-    }
-
-    public MultivaluedMap<String, String> getHeaders() {
-        return wrapped.headers();
+        return context.getStatus();
     }
 
     @Override
-    public Object getEntity() {
-        return wrapped.content();
+    public Object getEntity() throws IllegalStateException {
+        // TODO implement some advanced caching support?
+        return context.getEntityStream();
     }
 
     @Override
-    public <T> T readEntity(Class<T> type) throws MessageProcessingException {
-        return wrapped.content(type);
+    public <T> T readEntity(Class<T> entityType) throws MessageProcessingException, IllegalStateException {
+        return context.readEntity(entityType, context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
-    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
-        return wrapped.content(entityType);
+    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException, IllegalStateException {
+        return context.readEntity(
+                entityType.getRawType(),
+                entityType.getType(),
+                context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
-    public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
-        return wrapped.content(type, annotations);
+    public <T> T readEntity(Class<T> entityType, Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+        return context.readEntity(entityType, annotations, context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
-    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
-        return wrapped.content(entityType, annotations);
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+        return context.readEntity(
+                entityType.getRawType(),
+                entityType.getType(),
+                annotations,
+                context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
     public boolean hasEntity() {
-        return !wrapped.isEmpty();
+        return context.hasEntity();
     }
 
     @Override
     public boolean bufferEntity() throws MessageProcessingException {
-        wrapped.bufferEntity();
-        // TODO
-        return false;
+        return context.bufferEntity();
     }
 
     @Override
     public void close() throws MessageProcessingException {
-        wrapped.close();
+        // TODO: implement method.
     }
-
     @Override
     public String getHeader(String name) {
-        return wrapped.getJaxrsHeaders().getHeader(name);
+        return context.getHeaderString(name);
     }
 
     @Override
     public MediaType getMediaType() {
-        return wrapped.getJaxrsHeaders().getMediaType();
+        return context.getMediaType();
     }
 
     @Override
     public Locale getLanguage() {
-        return wrapped.getJaxrsHeaders().getLanguage();
+        return context.getLanguage();
     }
 
     @Override
     public int getLength() {
-        return wrapped.getJaxrsHeaders().getLength();
+        return context.getLength();
     }
 
     @Override
     public Map<String, NewCookie> getCookies() {
-        return wrapped.getJaxrsHeaders().getCookies();
+        return context.getResponseCookies();
     }
 
     @Override
     public EntityTag getEntityTag() {
-        return wrapped.getJaxrsHeaders().getEntityTag();
+        return context.getEntityTag();
     }
 
     @Override
     public Date getDate() {
-        return wrapped.getJaxrsHeaders().getDate();
+        return context.getDate();
     }
 
     @Override
     public Date getLastModified() {
-        return wrapped.getJaxrsHeaders().getLastModified();
+        return context.getLastModified();
     }
 
+    @Override
     public Set<String> getAllowedMethods() {
-        return wrapped.getJaxrsHeaders().getAllowedMethods();
+        return context.getAllowedMethods();
     }
 
     @Override
     public URI getLocation() {
-        return wrapped.getJaxrsHeaders().getLocation();
+        return context.getLocation();
     }
 
     @Override
     public Set<Link> getLinks() {
-        return wrapped.getJaxrsHeaders().getLinks();
+        return context.getLinks();
     }
 
     @Override
     public boolean hasLink(String relation) {
-        return wrapped.getJaxrsHeaders().hasLink(relation);
+        return context.hasLink(relation);
     }
 
     @Override
     public Link getLink(String relation) {
-        return wrapped.getJaxrsHeaders().getLink(relation);
+        return context.getLink(relation);
     }
 
     @Override
     public Link.Builder getLinkBuilder(String relation) {
-        return wrapped.getJaxrsHeaders().getLinkBuilder(relation);
+        return context.getLinkBuilder(relation);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public MultivaluedMap<String, Object> getMetadata() {
-        final MultivaluedMap<String, ?> headers = wrapped.headers();
+        final MultivaluedMap<String, ?> headers = context.getHeaders();
         return (MultivaluedMap<String, Object>) headers;
     }
+
 }

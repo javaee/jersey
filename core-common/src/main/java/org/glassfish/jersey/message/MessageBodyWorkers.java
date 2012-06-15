@@ -57,6 +57,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 
 /**
@@ -252,8 +253,7 @@ public interface MessageBodyWorkers {
      *            <code>Method.getParameterAnnotations</code>.
      * @param mediaType the media type of the HTTP entity.
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link Request#getProperties() request-scoped
-     *            properties}.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link InputStream} of the HTTP entity. The stream is not
      *            closed after reading the entity.
      * @param intercept true if the user interceptors should be executed. Otherwise only
@@ -265,7 +265,7 @@ public interface MessageBodyWorkers {
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> Object readFrom(GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders, Map<String, Object> properties, InputStream entityStream,
+            MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
             boolean intercept) throws WebApplicationException, IOException;
 
     /**
@@ -282,8 +282,7 @@ public interface MessageBodyWorkers {
      *            the object.
      * @param mediaType the media type of the HTTP entity.
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link Request#getProperties() request-scoped
-     *            properties}.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link OutputStream} for the HTTP entity.
      * @param sizeCallback the {@link MessageBodySizeCallback} which will be invoked to
      *            pass the size of the written entity. The callback will be invoked before
@@ -296,7 +295,7 @@ public interface MessageBodyWorkers {
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> void writeTo(Object entity, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
 
@@ -314,8 +313,7 @@ public interface MessageBodyWorkers {
      *            the object.
      * @param mediaType the media type of the HTTP entity.
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
-     * @param properties the mutable map of {@link Request#getProperties() request-scoped
-     *            properties}.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link OutputStream} for the HTTP entity.
      * @param sizeCallback the {@link MessageBodySizeCallback} which will be invoked to
      *            pass the size of the written entity. The callback will be invoked before
@@ -330,7 +328,7 @@ public interface MessageBodyWorkers {
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> void writeTo(Object entity, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, Map<String, Object> properties, OutputStream entityStream,
+            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
 
@@ -340,7 +338,7 @@ public interface MessageBodyWorkers {
      * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
      * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean)} and
      * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
-     * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean, boolean)}
+     * MultivaluedMap, PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean, boolean)}
      * after selection of the {@link MessageBodyWriter message body writer} and before
      * writing to the output stream.
      */

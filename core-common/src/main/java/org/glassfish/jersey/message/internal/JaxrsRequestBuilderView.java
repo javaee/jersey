@@ -49,18 +49,18 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant;
-
-import org.glassfish.jersey._remove.RequestBuilder;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 /**
- * Adapter for {@link Request.Builder Jersey Request.Builder} to {@link org.glassfish.jersey._remove.RequestBuilder
- * JAX-RS Request.RequestBuilder}.
+ * Adapter for {@link Request.Builder Jersey Request.Builder}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class JaxrsRequestBuilderView implements RequestBuilder {
+// TODO remove or make package-private
+public final class JaxrsRequestBuilderView {
 
     private Request.Builder wrapped;
 
@@ -68,110 +68,94 @@ final class JaxrsRequestBuilderView implements RequestBuilder {
         this.wrapped = wrapped;
     }
 
-    static Request.Builder unwrap(RequestBuilder builder) {
-        if (builder instanceof JaxrsRequestBuilderView) {
-            return ((JaxrsRequestBuilderView) builder).wrapped;
-        }
-
-        throw new IllegalArgumentException(String.format("Request builder class type '%s' not supported.", builder.getClass().getName()));
+    static Request.Builder unwrap(JaxrsRequestBuilderView builder) {
+        return builder.wrapped;
     }
 
-    @Override
     public JaxrsRequestBuilderView redirect(String uri) {
         wrapped.uri(uri);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView redirect(URI uri) {
         wrapped.uri(uri);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView redirect(UriBuilder uri) {
         wrapped.uri(uri.build());
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView method(String httpMethod) {
         wrapped.method(httpMethod);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView entity(Object entity) {
         wrapped.content(entity);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView entity(Object entity, Annotation[] annotations) {
         wrapped.writeAnnotations(annotations).content(entity);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView clone() {
         return new JaxrsRequestBuilderView(wrapped.clone());
     }
 
-    @Override
     public javax.ws.rs.core.Request build() {
         return wrapped.build().toJaxrsRequest();
     }
 
-    @Override
     public JaxrsRequestBuilderView accept(MediaType... types) {
         wrapped.headers(HttpHeaders.ACCEPT, (Object[]) types);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView accept(String... types) {
         wrapped.headers(HttpHeaders.ACCEPT, types);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView acceptLanguage(Locale... locales) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
     public JaxrsRequestBuilderView acceptLanguage(String... locales) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
     public JaxrsRequestBuilderView cookie(Cookie cookie) {
         wrapped.cookie(cookie);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView allow(String... methods) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
     public JaxrsRequestBuilderView allow(Set<String> methods) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
     public JaxrsRequestBuilderView cacheControl(CacheControl cacheControl) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    @Override
     public JaxrsRequestBuilderView encoding(String encoding) {
         headerSingle(HttpHeaders.CONTENT_ENCODING, encoding);
         return this;
     }
 
-    @Override
+    public JaxrsRequestBuilderView replaceHeaders(MultivaluedMap<String, Object> map) {
+        // TODO this is horrible, need to replace it.
+        wrapped.replaceAll(HeadersFactory.toString(map, RuntimeDelegate.getInstance()));
+        return this;
+    }
+
     public JaxrsRequestBuilderView header(String name, Object value) {
         return header(name, value, false);
     }
@@ -193,30 +177,25 @@ final class JaxrsRequestBuilderView implements RequestBuilder {
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView language(String language) {
         headerSingle(HttpHeaders.CONTENT_LANGUAGE, language);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView language(Locale language) {
         headerSingle(HttpHeaders.CONTENT_LANGUAGE, language);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView type(MediaType type) {
         headerSingle(HttpHeaders.CONTENT_TYPE, type);
         return this;
     }
 
-    @Override
     public JaxrsRequestBuilderView type(String type) {
         return type(type == null ? null : MediaType.valueOf(type));
     }
 
-    @Override
     public JaxrsRequestBuilderView variant(Variant variant) {
         if (variant == null) {
             type((MediaType) null);

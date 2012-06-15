@@ -184,7 +184,7 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
     private final Factory<RespondingContext<DATA>> respondingCtxProvider;
     private final Factory<ExceptionMappers> exceptionMappersProvider;
 
-    private ResponseProcessor(
+    protected ResponseProcessor(
             final InvocationCallback<DATA> callback,
             final Future<DATA> inflectedResponse,
             final Factory<RespondingContext<DATA>> respondingCtxProvider,

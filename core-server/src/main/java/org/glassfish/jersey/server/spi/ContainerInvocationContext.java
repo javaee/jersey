@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.server.spi;
 
-import java.net.URISyntaxException;
-import java.text.ParseException;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.RuntimeDelegate;
-
-import org.glassfish.jersey.internal.TestRuntimeDelegate;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
- * JaxrsResponseViewTest class.
+ * Request context passed by the container to the {@link ApplicationHandler}
+ * for each request.
  *
- * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JaxrsResponseViewTest {
+public interface ContainerInvocationContext {
 
-    private final MutableRequest request;
+    /**
+     * Get the processed request.
+     *
+     * @return current request. Must not be {@code null}.
+     */
+    public Request getRequest();
 
-    public JaxrsResponseViewTest() {
-        RuntimeDelegate.setInstance(new TestRuntimeDelegate());
-        request = new MutableRequest("http://example.org/app/",
-                "http://example.org/app/resource?foo1=bar1&foo2=bar2", "GET");
-    }
+    /**
+     * Get the container response writer for the current request.
+     *
+     * @return container response writer. Must not be {@code null}.
+     */
+    public ContainerResponseWriter getResponseWriter();
 
-    @Test
-    public void testMediaType() throws URISyntaxException, ParseException {
-        MutableResponse mr = new MutableResponse(Status.OK, request.workers());
-        mr.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML);
-        Response r = mr.toJaxrsResponse();
-        assertEquals(200, r.getStatus());
-        assertEquals(Response.Status.OK, r.getStatusInfo());
-    }
+    /**
+     * Get the security context of the current request.
+     *
+     * The {@link SecurityContext#getUserPrincipal()} must return {@code null}
+     * if the current request has not been authenticated by the container.
+     *
+     * @return security context. Must not be {@code null}.
+     */
+    public SecurityContext getSecurityContext();
+
+    /**
+     * Custom container extensions initializer for the current request.
+     *
+     * The initializer is guaranteed to be run from within the request scope of
+     * the current request.
+     *
+     * @return custom container extensions initializer or {@code null} if not
+     *     available.
+     */
+    public RequestScopedInitializer getRequestScopedInitializer();
 }

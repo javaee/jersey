@@ -47,7 +47,7 @@ import java.text.ParseException;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class AcceptableLanguageTag extends LanguageTag implements QualityFactor {
+public class AcceptableLanguageTag extends LanguageTag implements QualityFactor {
 
     private final int quality;
 

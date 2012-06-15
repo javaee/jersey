@@ -66,11 +66,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.Requests;
@@ -78,10 +78,10 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
-import org.glassfish.jersey.server.spi.ContainerRequestContext;
+import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
-import org.glassfish.jersey.server.spi.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
@@ -238,7 +238,7 @@ public class WebComponent {
     public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
 
-        RequestBuilder requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
+        JaxrsRequestBuilderView requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
         requestBuilder = addRequestHeaders(request, requestBuilder);
 
         final Request jaxRsRequest = requestBuilder.build();
@@ -252,7 +252,7 @@ public class WebComponent {
             final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, request, response,
                     asyncExtensionDelegate.createDelegate(request, response));
 
-            ContainerRequestContext containerContext = new JerseyContainerRequestContext(jaxRsRequest, responseWriter,
+            ContainerInvocationContext containerContext = new JerseyContainerInvocationContext(jaxRsRequest, responseWriter,
                     getSecurityContext(request), new RequestScopedInitializer() {
                 @Override
                 public void initialize(Services services) {
@@ -333,7 +333,7 @@ public class WebComponent {
         }
     }
 
-    private RequestBuilder addRequestHeaders(HttpServletRequest request, RequestBuilder builder) {
+    private JaxrsRequestBuilderView addRequestHeaders(HttpServletRequest request, JaxrsRequestBuilderView builder) {
         for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements();) {
             String name = names.nextElement();
             List<String> valueList = new LinkedList<String>();

@@ -52,9 +52,9 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestBuilder;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
@@ -96,7 +96,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
         Future<Response> responseListenableFuture;
 
         JaxrsRequestView request = Helper.unwrap(_request);
-        RequestBuilder requestBuilder = Requests.from(
+        JaxrsRequestBuilderView requestBuilder = Requests.from(
                 baseUri,
                 request.getUri(),
                 request.getMethod());
@@ -134,7 +134,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
             return response;
         }
 
-        RequestBuilder rb = Requests.from(request);
+        JaxrsRequestBuilderView rb = Requests.from(request);
 
         switch (response.getStatus()) {
             case 303:

@@ -60,7 +60,7 @@ import javax.ws.rs.core.NewCookie;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-/*package*/ abstract class HttpHeaderReader {
+public abstract class HttpHeaderReader {
 
     public enum Event {
 

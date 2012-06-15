@@ -49,11 +49,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
-import org.glassfish.jersey._remove.RequestBuilder;
 import javax.ws.rs.core.UriInfo;
+
 import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.PreMatchRequestFilter;
-
+import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.LanguageTag;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -184,7 +184,7 @@ public class UriConnegFilter implements PreMatchRequestFilter {
         // Get the suffixes
         final String[] suffixes = segment.getPath().split("\\.");
 
-        RequestBuilder requestBuilder = null;
+        JaxrsRequestBuilderView requestBuilder = null;
 
         for (int i = suffixes.length - 1; i >= 1; i--) {
             final String suffix = suffixes[i];

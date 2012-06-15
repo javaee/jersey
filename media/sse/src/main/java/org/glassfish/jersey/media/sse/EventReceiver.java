@@ -49,8 +49,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
@@ -97,7 +95,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
         this.messageBodyWorkers = messageBodyWorkers;
     }
 
-    /* package */ void process(@Nullable final LinkedBlockingQueue<InboundEvent> inboundEventQueue, @Nullable final EventSource eventSource) {
+    /* package */ void process(final LinkedBlockingQueue<InboundEvent> inboundEventQueue, final EventSource eventSource) {
         /**
          * http://dev.w3.org/html5/eventsource/
          * last editors draft from 13 March 2012

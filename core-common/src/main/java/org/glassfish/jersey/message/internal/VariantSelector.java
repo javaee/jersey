@@ -50,13 +50,15 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Variant;
 
+import org.glassfish.jersey.internal.util.collection.Ref;
+
 /**
  * Utility for selecting variant that best matches request from a list of variants.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class VariantSelector {
+public final class VariantSelector {
 
     private VariantSelector() {
     }
@@ -64,40 +66,43 @@ final class VariantSelector {
     /**
      * Interface to get a dimension value from a variant and check if an
      * acceptable dimension value is compatible with a dimension value.
-     *
-     * @param T the acceptable dimension value type
-     * @param U the dimension value type
      */
     private static interface DimensionChecker<T, U> {
 
         /**
-         * Get the dimension value from the variant
+         * Get the dimension value from the variant.
          *
-         * @param v the variant
-         * @return the dimension value
+         * @param v the variant.
+         * @return the dimension value.
          */
         U getDimension(VariantHolder v);
 
         /**
-         * Get the quality source of the dimension
+         * Get the quality source of the dimension.
          *
-         * @return
+         * @return quality source.
          */
         int getQualitySource(VariantHolder v, U u);
 
         /**
          * Ascertain if the acceptable dimension value is compatible with
-         * the dimension value
+         * the dimension value.
          *
-         * @param t the acceptable dimension value
-         * @param u the dimension value
-         * @return true if the acceptable dimension value is compatible with
-         *         the dimension value
+         * @param t the acceptable dimension value.
+         * @param u the dimension value.
+         * @return {@code true} if the acceptable dimension value is compatible with
+         *         the dimension value.
          */
         boolean isCompatible(T t, U u);
 
+        /**
+         * Get the value of the Vary header.
+         *
+         * @return the value of the Vary header.
+         */
         String getVaryHeaderValue();
     }
+
     private static final DimensionChecker<AcceptableMediaType, MediaType> MEDIA_TYPE_DC =
             new DimensionChecker<AcceptableMediaType, MediaType>() {
 
@@ -195,17 +200,17 @@ final class VariantSelector {
     /**
      * Select variants for a given dimension.
      *
-     * @param the collection of variants.
-     *
-     * @param as the list of acceptable dimension values, ordered by the quality
-     *        parameter, with the highest quality dimension value occurring
-     *        first.
-     * @param dc the dimension checker
+     * @param variantHolders   collection of variants.
+     * @param acceptableValues the list of acceptable dimension values, ordered by the quality
+     *                         parameter, with the highest quality dimension value occurring
+     *                         first.
+     * @param dimensionChecker the dimension checker
+     * @param vary             output list of generated vary headers.
      */
     private static <T extends QualityFactor, U> LinkedList<VariantHolder> selectVariants(
-            LinkedList<VariantHolder> vs,
-            List<T> as,
-            DimensionChecker<T, U> dc,
+            List<VariantHolder> variantHolders,
+            List<T> acceptableValues,
+            DimensionChecker<T, U> dimensionChecker,
             Set<String> vary) {
         int cq = QualityFactor.MINUMUM_QUALITY;
         int cqs = QualityFactor.MINUMUM_QUALITY;
@@ -214,22 +219,22 @@ final class VariantSelector {
 
         // Iterate over the acceptable entries
         // This assumes the entries are ordered by the quality
-        for (final T a : as) {
+        for (final T a : acceptableValues) {
             final int q = a.getQuality();
 
-            final Iterator<VariantHolder> iv = vs.iterator();
+            final Iterator<VariantHolder> iv = variantHolders.iterator();
             while (iv.hasNext()) {
                 final VariantHolder v = iv.next();
 
                 // Get the dimension  value of the variant to check
-                final U d = dc.getDimension(v);
+                final U d = dimensionChecker.getDimension(v);
 
                 if (d != null) {
-                    vary.add(dc.getVaryHeaderValue());
+                    vary.add(dimensionChecker.getVaryHeaderValue());
                     // Check if the acceptable entry is compatable with
                     // the dimension value
-                    final int qs = dc.getQualitySource(v, d);
-                    if (qs >= cqs && dc.isCompatible(a, d)) {
+                    final int qs = dimensionChecker.getQualitySource(v, d);
+                    if (qs >= cqs && dimensionChecker.isCompatible(a, d)) {
                         if (qs > cqs) {
                             cqs = qs;
                             cq = q;
@@ -253,8 +258,8 @@ final class VariantSelector {
 
         // Add all variants that are not compatible with this dimension
         // to the end
-        for (VariantHolder v : vs) {
-            if (dc.getDimension(v) == null) {
+        for (VariantHolder v : variantHolders) {
+            if (dimensionChecker.getDimension(v) == null) {
                 selected.add(v);
             }
         }
@@ -300,9 +305,9 @@ final class VariantSelector {
      * Select the representation variant that best matches the request. More explicit
      * variants are chosen ahead of less explicit ones.
      *
-     * @param request
-     * @param variants
-     * @return
+     * @param request  request data.
+     * @param variants list of possible variants.
+     * @return selected variant.
      */
     public static Variant selectVariant(Request request, List<Variant> variants) {
         LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
@@ -323,6 +328,43 @@ final class VariantSelector {
                 }
                 varyHeader.append(v);
                 // TODO should somehow return vary header & update method javadoc.
+            }
+            return vhs.iterator().next().v;
+        }
+    }
+
+    /**
+     * Select the representation variant that best matches the request. More explicit
+     * variants are chosen ahead of less explicit ones.
+     *
+     * @param context          inbound message context.
+     * @param variants         list of possible variants.
+     * @param varyHeaderValue an output reference of vary header value that should be put
+     *                         into the response Vary header.
+     * @return selected variant.
+     */
+    public static Variant selectVariant(InboundMessageContext context, List<Variant> variants, Ref<String> varyHeaderValue) {
+        LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
+
+        Set<String> vary = new HashSet<String>();
+        vhs = selectVariants(vhs, context.getQualifiedAcceptableMediaTypes(), MEDIA_TYPE_DC, vary);
+        vhs = selectVariants(vhs, context.getQualifiedAcceptableLanguages(), LANGUAGE_TAG_DC, vary);
+        vhs = selectVariants(vhs, context.getQualifiedAcceptCharset(), CHARSET_DC, vary);
+        vhs = selectVariants(vhs, context.getQualifiedAcceptEncoding(), ENCODING_DC, vary);
+
+        if (vhs.isEmpty()) {
+            return null;
+        } else {
+            StringBuilder varyHeader = new StringBuilder();
+            for (String v : vary) {
+                if (varyHeader.length() > 0) {
+                    varyHeader.append(',');
+                }
+                varyHeader.append(v);
+            }
+            String varyValue = varyHeader.toString();
+            if (!varyValue.isEmpty()) {
+                varyHeaderValue.set(varyValue);
             }
             return vhs.iterator().next().v;
         }

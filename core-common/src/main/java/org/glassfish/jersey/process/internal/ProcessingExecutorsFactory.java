@@ -62,7 +62,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Scoped(Singleton.class)
-class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
+public class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessingExecutorsFactory.class.getName());
     //

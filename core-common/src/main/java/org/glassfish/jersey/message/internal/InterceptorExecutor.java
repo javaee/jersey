@@ -41,13 +41,15 @@ package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Map;
+import java.util.Enumeration;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.InterceptorContext;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import org.glassfish.jersey.internal.PropertiesDelegate;
 
 /**
  * Abstract class with implementation of {@link InterceptorContext} which is common for {@link ReaderInterceptorContext}
@@ -57,7 +59,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
  */
 @SuppressWarnings("rawtypes")
 abstract class InterceptorExecutor implements InterceptorContext {
-    private final Map<String, Object> properties;
+    private final PropertiesDelegate propertiesDelegate;
     private Annotation[] annotations;
     private Class type;
     private Type genericType;
@@ -71,21 +73,36 @@ abstract class InterceptorExecutor implements InterceptorContext {
      *  method parameter that is the target of the message body
      *  conversion. See {@link InterceptorContext#getAnnotations()}.
      * @param mediaType MediaType of HTTP entity. See {@link InterceptorContext#getMediaType()}.
-     * @param properties Get a mutable map of request-scoped properties. See {@link InterceptorContext#getProperties()}.
+     * @param propertiesDelegate request-scoped properties delegate.
      */
     public InterceptorExecutor(GenericType genericType, Annotation[] annotations, MediaType mediaType,
-            Map<String, Object> properties) {
+                               PropertiesDelegate propertiesDelegate) {
         super();
         this.type = genericType.getRawType();
         this.genericType = genericType.getType();
         this.annotations = annotations;
         this.mediaType = mediaType;
-        this.properties = properties;
+        this.propertiesDelegate = propertiesDelegate;
     }
 
     @Override
-    public Map<String, Object> getProperties() {
-        return properties;
+    public Object getProperty(String name) {
+        return propertiesDelegate.getProperty(name);
+    }
+
+    @Override
+    public Enumeration<String> getPropertyNames() {
+        return propertiesDelegate.getPropertyNames();
+    }
+
+    @Override
+    public void setProperty(String name, Object object) {
+        propertiesDelegate.setProperty(name, object);
+    }
+
+    @Override
+    public void removeProperty(String name) {
+        propertiesDelegate.removeProperty(name);
     }
 
     @Override

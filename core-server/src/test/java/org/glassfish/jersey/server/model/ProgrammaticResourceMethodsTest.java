@@ -42,8 +42,6 @@ package org.glassfish.jersey.server.model;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -86,7 +84,7 @@ public class ProgrammaticResourceMethodsTest {
         resourceBuilder.addMethod("HEAD").handledBy(new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(200).build();
             }
         });
@@ -103,7 +101,7 @@ public class ProgrammaticResourceMethodsTest {
         resourceBuilder.addMethod("OPTIONS").handledBy(new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(200).build();
             }
         });
@@ -118,7 +116,7 @@ public class ProgrammaticResourceMethodsTest {
         Inflector<Request, Response> inflector = new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(200).build();
             }
         };
@@ -145,14 +143,14 @@ public class ProgrammaticResourceMethodsTest {
         resourceBuilder.addMethod("GET").path("test1").handledBy(new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(201).build();
             }
         });
         Inflector<Request, Response> inflector1 = new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(202).build();
             }
         };
@@ -161,7 +159,7 @@ public class ProgrammaticResourceMethodsTest {
         Inflector<Request, Response> inflector2 = new Inflector<Request, Response>() {
 
             @Override
-            public Response apply(@Nullable Request request) {
+            public Response apply(Request request) {
                 return Responses.empty().status(203).build();
             }
         };

@@ -37,53 +37,72 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.internal;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-
-import org.glassfish.jersey.server.ApplicationHandler;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Request context passed by the container to the {@link ApplicationHandler}
- * for each request.
+ * Properties delegate backed by a {@code Map}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ContainerRequestContext {
+public final class MapPropertiesDelegate implements PropertiesDelegate {
+
+    private final Map<String, Object> store;
 
     /**
-     * Get the processed request.
-     *
-     * @return current request. Must not be {@code null}.
+     * Create new map-based properties delegate.
      */
-    public Request getRequest();
+    public MapPropertiesDelegate() {
+        this.store = new HashMap<String, Object>();
+    }
 
     /**
-     * Get the container response writer for the current request.
+     * Create new map-based properties delegate.
      *
-     * @return container response writer. Must not be {@code null}.
+     * @param store backing property store.
      */
-    public ContainerResponseWriter getResponseWriter();
+    public MapPropertiesDelegate(Map<String, Object> store) {
+        this.store = store;
+    }
 
     /**
-     * Get the security context of the current request.
+     * Initialize new map-based properties delegate from another
+     * delegate.
      *
-     * The {@link SecurityContext#getUserPrincipal()} must return {@code null}
-     * if the current request has not been authenticated by the container.
-     *
-     * @return security context. Must not be {@code null}.
+     * @param that original properties delegate.
      */
-    public SecurityContext getSecurityContext();
+    public MapPropertiesDelegate(PropertiesDelegate that) {
+        if (that instanceof MapPropertiesDelegate) {
+            this.store = new HashMap<String, Object>(((MapPropertiesDelegate) that).store);
+        } else {
+            this.store = new HashMap<String, Object>();
+            for (String name : Collections.list(that.getPropertyNames())) {
+                this.store.put(name, that.getProperty(name));
+            }
+        }
+    }
 
-    /**
-     * Custom container extensions initializer for the current request.
-     *
-     * The initializer is guaranteed to be run from within the request scope of
-     * the current request.
-     *
-     * @return custom container extensions initializer or {@code null} if not
-     *     available.
-     */
-    public RequestScopedInitializer getRequestScopedInitializer();
+    @Override
+    public Object getProperty(String name) {
+        return store.get(name);
+    }
+
+    @Override
+    public Enumeration<String> getPropertyNames() {
+        return Collections.enumeration(store.keySet());
+    }
+
+    @Override
+    public void setProperty(String name, Object value) {
+        store.put(name, value);
+    }
+
+    @Override
+    public void removeProperty(String name) {
+        store.remove(name);
+    }
 }

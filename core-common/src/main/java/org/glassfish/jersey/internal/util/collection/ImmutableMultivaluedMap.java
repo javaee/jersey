@@ -78,64 +78,93 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
         this.delegate = delegate;
     }
 
+    @Override
     public void putSingle(K key, V value) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void add(K key, V value) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public V getFirst(K key) {
         return delegate.getFirst(key);
     }
 
+    @Override
+    public void addAll(K key, V... newValues) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addAll(K key, List<V> valueList) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addFirst(K key, V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int size() {
         return delegate.size();
     }
 
+    @Override
     public boolean isEmpty() {
         return delegate.isEmpty();
     }
 
+    @Override
     public boolean containsKey(Object key) {
         return delegate.containsKey(key);
     }
 
+    @Override
     public boolean containsValue(Object value) {
         return delegate.containsValue(value);
     }
 
+    @Override
     public List<V> get(Object key) {
         return delegate.get(key);
     }
 
+    @Override
     public List<V> put(K key, List<V> value) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public List<V> remove(Object key) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void putAll(Map<? extends K, ? extends List<V>> m) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void clear() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Set<K> keySet() {
         return Collections.unmodifiableSet(delegate.keySet());
     }
 
+    @Override
     public Collection<List<V>> values() {
         return Collections.unmodifiableCollection(delegate.values());
     }
 
+    @Override
     public Set<Entry<K, List<V>>> entrySet() {
         return Collections.unmodifiableSet(delegate.entrySet());
     }
-
 }

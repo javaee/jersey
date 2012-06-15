@@ -159,7 +159,6 @@ final class HttpHelper {
         } catch (ParseException e) {
             throw exception("Date", date, e);
         }
-
     }
 
     public static Set<MatchingEntityTag> getIfMatch(final Headers headers) {

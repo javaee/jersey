@@ -64,6 +64,6 @@ public class EventChannel extends ChunkedResponse<OutboundEvent> {
     public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
 
     public EventChannel() {
-        setClazz(OutboundEvent.class);
+        setRawChunkType(OutboundEvent.class);
     }
 }

@@ -51,21 +51,21 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
- * Used for sending messages in "typed" chunks.
+ * Used for sending messages in "typed" chunks. Useful for long running processes,
+ * which needs to produce partial responses.
  *
- * Useful for long running processes, which needs to produce partial responses.
- *
+ * @param <T> chunk type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- *
- * TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
  */
+// TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedResponse<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
-    private Class<T> clazz;
+    private Class<T> rawChunkType;
 
     private boolean closed = false;
     private MessageBodyWorkers messageBodyWorkers = null;
@@ -81,17 +81,17 @@ public class ChunkedResponse<T> implements Closeable {
     /**
      * Create {@link ChunkedResponse} with specified type.
      *
-     * @param clazz chunk type
+     * @param rawChunkType chunk type
      */
-    public ChunkedResponse(Class<T> clazz) {
-        this.clazz = clazz;
+    public ChunkedResponse(Class<T> rawChunkType) {
+        this.rawChunkType = rawChunkType;
     }
 
     /**
      * Used when you need to create descendant with specific chunk type.
      *
-     * <p>When used, implementation is required to call {@link ChunkedResponse#setClazz(Class)} in its constructor.</p>
-     *
+     * <p>When used, implementation is required to call {@link ChunkedResponse#setRawChunkType(Class)}
+     * in its constructor.</p>
      */
     protected ChunkedResponse() {
     }
@@ -99,10 +99,10 @@ public class ChunkedResponse<T> implements Closeable {
     /**
      * Set chunk type.
      *
-     * @param clazz
+     * @param rawType chunk type.
      */
-    protected void setClazz(Class<T> clazz) {
-        this.clazz = clazz;
+    protected void setRawChunkType(Class<T> rawType) {
+        this.rawChunkType = rawType;
     }
 
     /**
@@ -110,33 +110,42 @@ public class ChunkedResponse<T> implements Closeable {
      *
      * @param chunk a chunk instance to be written.
      * @throws IllegalStateException when {@link ChunkedResponse} is closed.
-     * @throws IOException when encountered any problem during serializing or writing a chunk.
+     * @throws IOException           when encountered any problem during serializing or writing a chunk.
      */
     public void write(T chunk) throws IOException {
-        if(closed) {
+        if (closed) {
             throw new IllegalStateException();
         }
 
-        if(chunk != null) {
+        if (chunk != null) {
             queue.add(chunk);
         }
 
-        if(messageBodyWorkers != null) {
+        if (messageBodyWorkers != null) {
             flushQueue();
         }
     }
 
     private synchronized void flushQueue() throws IOException {
-        if(outputStream == null || messageBodyWorkers == null) {
+        if (outputStream == null || messageBodyWorkers == null) {
             return;
         }
 
         T t;
-        while((t = queue.poll()) != null) {
-            messageBodyWorkers.writeTo(t, GenericType.<Object>of(clazz, clazz), annotations, mediaType, httpHeaders, responseProperties, outputStream, null, true);
+        while ((t = queue.poll()) != null) {
+            messageBodyWorkers.writeTo(
+                    t,
+                    GenericType.<Object>of(rawChunkType, rawChunkType),
+                    annotations,
+                    mediaType,
+                    httpHeaders,
+                    new MapPropertiesDelegate(responseProperties),
+                    outputStream,
+                    null,
+                    true);
         }
 
-        if(closed) {
+        if (closed) {
             outputStream.flush();
             outputStream.close();
             containerResponseWriter.commit();
@@ -146,11 +155,11 @@ public class ChunkedResponse<T> implements Closeable {
     /**
      * Close this response - it will be finalized and underlying connections will be closed
      * or made available for another response.
-     *
      */
+    @Override
     public void close() throws IOException {
         closed = true;
-        if(messageBodyWorkers != null) {
+        if (messageBodyWorkers != null) {
             flushQueue();
         }
     }
@@ -170,14 +179,14 @@ public class ChunkedResponse<T> implements Closeable {
     /**
      * Set arguments used for {@link javax.ws.rs.ext.MessageBodyWriter} selection and for writing chunks.
      *
-     * @param outputStream used for writing chunks.
+     * @param outputStream            used for writing chunks.
      * @param containerResponseWriter container needs to be notified when {@link ChunkedResponse} is closed to release/close
      *                                connection and internal structures.
-     * @param messageBodyWorkers used for writing chunks.
-     * @param annotations used for writing chunks.
-     * @param mediaType used for writing chunks.
-     * @param httpHeaders used for writing chunks.
-     * @param responseProperties used for writing chunks.
+     * @param messageBodyWorkers      used for writing chunks.
+     * @param annotations             used for writing chunks.
+     * @param mediaType               used for writing chunks.
+     * @param httpHeaders             used for writing chunks.
+     * @param responseProperties      used for writing chunks.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setWriterRelatedArgs(OutputStream outputStream,

@@ -62,6 +62,7 @@ import javax.ws.rs.core.Variant;
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
 // TODO Methods in this class should cache results to improve performance.
+// TODO remove or make package-private
 public final class JaxrsRequestView implements javax.ws.rs.core.Request {
 
     private Request wrapped;
