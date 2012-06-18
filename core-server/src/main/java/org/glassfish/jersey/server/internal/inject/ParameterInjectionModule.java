@@ -99,12 +99,7 @@ public class ParameterInjectionModule extends AbstractModule {
     @Override
     public void configure() {
         // String reader providers
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.TypeFromStringEnum.class).in(Singleton.class);
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.TypeValueOf.class).in(Singleton.class);
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.TypeFromString.class).in(Singleton.class);
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.StringConstructor.class).in(Singleton.class);
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.DateProvider.class).in(Singleton.class);
-        bind(StringValueReaderProvider.class).to(JaxbStringReaderProvider.RootElementProvider.class);
+        bind(StringValueReaderProvider.class).to(StringReaderProviders.AggregatedProvider.class).in(Singleton.class);
         bind().to(StringReaderFactory.class).in(Singleton.class);
 
         // Parameter injection value extractor providers

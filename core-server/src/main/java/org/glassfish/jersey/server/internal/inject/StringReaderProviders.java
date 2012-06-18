@@ -48,7 +48,9 @@ import java.text.ParseException;
 import java.util.Date;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 
+import org.glassfish.hk2.inject.Injector;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -180,6 +182,33 @@ class StringReaderProviders {
                     }
                 }
             };
+        }
+    }
+
+    public static class AggregatedProvider implements StringValueReaderProvider {
+
+        final StringValueReaderProvider[] providers;
+
+        public AggregatedProvider(@Context Injector injector) {
+            providers = new StringValueReaderProvider[]{
+                injector.inject(TypeFromStringEnum.class),
+                injector.inject(TypeValueOf.class),
+                injector.inject(TypeFromString.class),
+                injector.inject(StringConstructor.class),
+                injector.inject(DateProvider.class),
+                injector.inject(JaxbStringReaderProvider.RootElementProvider.class)
+            };
+        }
+
+        @Override
+        public <T> StringValueReader<T> getStringReader(Class<T> type, Type genericType, Annotation[] annotations) {
+            for (StringValueReaderProvider p : providers) {
+                final StringValueReader<T> reader = p.getStringReader(type, genericType, annotations);
+                if (reader != null) {
+                    return reader;
+                }
+            }
+            return null;
         }
     }
 }
