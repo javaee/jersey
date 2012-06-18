@@ -62,7 +62,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-//@Ignore
 public class AsyncResourceTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(AsyncResourceTest.class.getName());
 

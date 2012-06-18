@@ -53,7 +53,6 @@ import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.process.Inflector;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -62,15 +61,13 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-// TODO re-enable filter tests.
-@Ignore
 public class HttpBasicAuthFilterTest {
     private JerseyInvocation.Builder invBuilder;
 
     @Before
     public void setUp() {
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(new HttpBasicAuthFilter_Old("Uzivatelske jmeno", "Heslo"));
+        client.configuration().register(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"));
         invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
     }
 

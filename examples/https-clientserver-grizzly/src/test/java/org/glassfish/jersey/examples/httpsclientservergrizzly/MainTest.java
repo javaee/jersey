@@ -65,13 +65,11 @@ import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter_Old;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.filter.LoggingFilter;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -96,8 +94,6 @@ public class MainTest {
      * Test to see that the correct Http status is returned.
      */
     @Test
-    // TODO re-enable filter tests.
-    @Ignore
     public void testSSLWithAuth() {
 
         TrustManager mytm[] = null;
@@ -125,7 +121,7 @@ public class MainTest {
         client.configuration().setProperty(ClientProperties.SSL_CONTEXT, context);
 
         // client basic auth demonstration
-        client.configuration().register(new HttpBasicAuthFilter_Old("user", "password"));
+        client.configuration().register(new HttpBasicAuthFilter("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -142,8 +138,6 @@ public class MainTest {
      * proper credentials.
      */
     @Test
-    // TODO re-enable filter tests.
-    @Ignore
     public void testHTTPBasicAuth1() {
 
         TrustManager mytm[] = null;
@@ -174,7 +168,7 @@ public class MainTest {
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter_Old());
+        target.configuration().register(new LoggingFilter());
 
         Response response;
 
@@ -215,7 +209,7 @@ public class MainTest {
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter_Old());
+        target.configuration().register(new LoggingFilter());
 
         boolean caught = false;
 

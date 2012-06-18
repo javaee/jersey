@@ -50,7 +50,6 @@ import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.process.Inflector;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -60,28 +59,26 @@ import static org.junit.Assert.assertNull;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-// TODO re-enable filter tests.
-@Ignore
 public class CsrfProtectionFilterTest {
     private JerseyInvocation.Builder invBuilder;
 
     @Before
     public void setUp() {
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(CsrfProtectionFilter_Old.class);
+        client.configuration().register(CsrfProtectionFilter.class);
         invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
     }
 
     @Test
     public void testGet() {
         Response r = invBuilder.get();
-        assertNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
+        assertNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
     @Test
     public void testPut() {
         Response r = invBuilder.put(null);
-        assertNotNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
+        assertNotNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
     private static class TestTransport implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {

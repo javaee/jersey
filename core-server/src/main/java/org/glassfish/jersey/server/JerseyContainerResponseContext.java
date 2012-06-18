@@ -83,33 +83,25 @@ class JerseyContainerResponseContext extends OutboundMessageContext implements C
     }
 
     @Override
-    public int getStatusCode() {
+    public int getStatus() {
         return status.getStatusCode();
     }
 
     @Override
-    public void setStatusCode(int code) {
+    public void setStatus(int code) {
         this.status = Statuses.from(code);
     }
 
-    /**
-     * Set response status.
-     *
-     * @param status response status.
-     */
-    public void setStatus(Response.StatusType status) {
+    @Override
+    public void setStatusInfo(Response.StatusType status) {
         if (status == null) {
             throw new NullPointerException("Response status must not be 'null'");
         }
         this.status = status;
     }
 
-    /**
-     * Get the response status.
-     *
-     * @return response status.
-     */
-    public Response.StatusType getStatus() {
+    @Override
+    public Response.StatusType getStatusInfo() {
         return status;
     }
 

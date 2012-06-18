@@ -220,19 +220,20 @@ public class RequestInvoker<REQUEST, RESPONSE> {
         //        into stages that are executed by the invoker
         //        (e.g. RequestExecutionInitStage).
         final Instance instance = requestScope.suspendCurrent();
-        final AsyncInflectorAdapter<REQUEST, RESPONSE> asyncInflector =
+        final AsyncInflectorAdapter<REQUEST, RESPONSE> asyncAdapter =
                 asyncAdapterBuilder.create(new AcceptingInvoker(), callback);
         final ResponseProcessor<RESPONSE> responseProcessor =
-                responseProcessorBuilder.build(asyncInflector, callback, instance);
+                responseProcessorBuilder.build(asyncAdapter, callback, instance);
         final Runnable requester = new Runnable() {
 
             @Override
             public void run() {
-
-                invocationContextReferenceFactory.get().set(asyncInflector);
-
-                ListenableFuture<RESPONSE> response = asyncInflector.apply(request);
-                response.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
+                invocationContextReferenceFactory.get().set(asyncAdapter);
+                try {
+                    asyncAdapter.apply(request);
+                } finally {
+                    asyncAdapter.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
+                }
             }
         };
 

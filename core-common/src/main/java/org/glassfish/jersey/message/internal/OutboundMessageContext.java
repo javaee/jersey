@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
@@ -85,17 +85,46 @@ public class OutboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
     private final MultivaluedMap<String, Object> headers;
+    private final CommittingOutputStream rootStream;
 
     private Object entity;
-    private Class<?> entityRawType;
-    private Type entityType;
+    private GenericType<?> entityType;
     private Annotation[] entityAnnotations = EMPTY_ANNOTATIONS;
+    private OutputStream entityStream;
+
+    /**
+     * Output stream provider.
+     */
+    public static interface StreamProvider {
+        /**
+         * Get the output stream.
+         *
+         * The method is called once as part of a "commit" operation immediately after
+         * the {@link #commit()} method has been invoked.
+         *
+         * @return the adapted output stream.
+         * @throws java.io.IOException in case of an IO error.
+         */
+        public OutputStream getOutputStream() throws IOException;
+
+        /**
+         * Perform the commit functionality.
+         *
+         * The method is called once as part of a "commit" operation before the first byte
+         * is written to the provider stream.
+         *
+         * @throws java.io.IOException in case of an IO error.
+         */
+        public void commit() throws IOException;
+    }
 
     /**
      * Create new outbound message context.
      */
     public OutboundMessageContext() {
         this.headers = HeadersFactory.createOutbound();
+        this.rootStream = new CommittingOutputStream();
+        this.entityStream = rootStream;
     }
 
     /**
@@ -107,10 +136,11 @@ public class OutboundMessageContext {
     public OutboundMessageContext(OutboundMessageContext original) {
         this.headers = HeadersFactory.createOutbound();
         this.headers.putAll(original.headers);
+        this.rootStream = new CommittingOutputStream();
+        this.entityStream = rootStream;
 
         this.entity = original.entity;
         this.entityType = original.entityType;
-        this.entityRawType = original.entityRawType;
         this.entityAnnotations = original.entityAnnotations;
     }
 
@@ -717,41 +747,32 @@ public class OutboundMessageContext {
     /**
      * Set a new message message entity.
      *
-     * @param <T>    entity Java type.
      * @param entity entity object.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(T entity) {
+    public void setEntity(Object entity) {
         setEntityAndType(entity);
     }
 
-    private <T> void setEntityAndType(T entity) {
-            if (entity instanceof GenericEntity) {
-                final GenericEntity genericEntity = (GenericEntity) entity;
-                setEntity(genericEntity.getEntity(), genericEntity.getType());
-            } else {
-                setEntity(entity, extractType(entity));
-            }
-    }
-
-    private Type extractType(Object fromObject) {
-        if (fromObject == null) {
-            return null;
+    private void setEntityAndType(Object entity) {
+        final GenericType genericType;
+        if (entity instanceof GenericEntity) {
+            genericType = new GenericType(((GenericEntity) entity).getType());
+        } else {
+            genericType = new GenericType(entity.getClass());
         }
-        final Class<?> rawType = fromObject.getClass();
-        final Type genericSuperclass = rawType.getGenericSuperclass();
-        return (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType;
+
+        setEntity(entity, genericType);
     }
 
     /**
      * Set a new message message entity.
      *
-     * @param <T>         entity Java type.
      * @param entity      entity object.
      * @param annotations annotations attached to the entity.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(T entity, Annotation[] annotations) {
+    public void setEntity(Object entity, Annotation[] annotations) {
         setEntityAndType(entity);
         this.entityAnnotations = annotations;
     }
@@ -759,81 +780,58 @@ public class OutboundMessageContext {
     /**
      * Set a new message message entity.
      *
-     * @param <T>    entity Java type.
      * @param entity entity object.
      * @param type   entity generic type information.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(T entity, Type type) {
-        this.entity = entity;
-        this.entityRawType = (entity == null) ? null : entity.getClass();
+    private void setEntity(Object entity, GenericType<?> type) {
+        if (entity instanceof GenericEntity) {
+            this.entity = ((GenericEntity) entity).getEntity();
+        } else {
+            this.entity = entity;
+        }
+        // ignoring overridden generic entity type information
         this.entityType = type;
     }
 
     /**
      * Set a new message message entity.
      *
-     * @param <T>         entity Java type.
      * @param entity      entity object.
      * @param type        declared entity class.
      * @param annotations annotations attached to the entity.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(T entity, Type type, Annotation[] annotations) {
-        setEntity(entity, type);
+    public void setEntity(Object entity, Type type, Annotation[] annotations) {
+        setEntity(entity, new GenericType(type));
         this.entityAnnotations = annotations;
     }
 
     /**
      * Set a new message message entity.
      *
-     * @param <T>         entity Java type.
-     * @param type        declared entity class.
+     * @param entity      entity object.
      * @param annotations annotations attached to the entity.
      * @param mediaType   entity media type.
-     * @param entity      entity object.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(Class<T> type, Annotation[] annotations, MediaType mediaType, T entity) {
-        this.entity = entity;
-        this.entityRawType = type;
-        this.entityType = extractType(entity);
-        this.entityAnnotations = annotations;
-        this.setMediaType(mediaType);
+    public void setEntity(Object entity, Annotation[] annotations, MediaType mediaType) {
+        setEntity(entity, annotations);
+        setMediaType(mediaType);
     }
 
     /**
      * Set a new message message entity.
      *
-     * @param <T>         entity Java type.
-     * @param type        declared generic entity type.
-     * @param annotations annotations attached to the entity.
      * @param entity      entity object.
-     * @see javax.ws.rs.ext.MessageBodyWriter
-     */
-    public <T> void setEntity(GenericType<T> type, Annotation[] annotations, T entity) {
-        this.entity = entity;
-        this.entityRawType = type.getRawType();
-        this.entityType = type.getType();
-        this.entityAnnotations = annotations;
-    }
-
-    /**
-     * Set a new message message entity.
-     *
-     * @param <T>         entity Java type.
      * @param type        declared generic entity type.
      * @param annotations annotations attached to the entity.
      * @param mediaType   entity media type.
-     * @param entity      entity object.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(GenericType<T> type, Annotation[] annotations, MediaType mediaType, T entity) {
-        this.entity = entity;
-        this.entityRawType = type.getRawType();
-        this.entityType = type.getType();
-        this.entityAnnotations = annotations;
-        this.setMediaType(mediaType);
+    public void setEntity(Object entity, Type type, Annotation[] annotations, MediaType mediaType) {
+        setEntity(entity, type, annotations);
+        setMediaType(mediaType);
     }
 
     /**
@@ -848,7 +846,7 @@ public class OutboundMessageContext {
     /**
      * Get the declared generic message entity type information.
      *
-     * NOTE: DO NOT USE - USE the {@link #getEntityRawType()} and {@link #getEntityType()}
+     * NOTE: DO NOT USE - USE the {@link #getEntityClass} and {@link #getEntityType()}
      * instead.
      *
      * @return declared generic message entity type.
@@ -863,8 +861,8 @@ public class OutboundMessageContext {
      *
      * @return raw message entity type information.
      */
-    public Class<?> getEntityRawType() {
-        return entityRawType;
+    public Class<?> getEntityClass() {
+        return entityType.getRawType();
     }
 
     /**
@@ -873,7 +871,7 @@ public class OutboundMessageContext {
      * @return generic message entity type.
      */
     public Type getEntityType() {
-        return entityType;
+        return entityType.getType();
     }
 
     /**
@@ -900,15 +898,24 @@ public class OutboundMessageContext {
      * @return entity output stream.
      */
     public OutputStream getEntityStream() {
-        return null;  // TODO: implement client request context & container response context method.
+        return entityStream;
     }
 
     /**
      * Set a new entity output stream.
      *
-     * @param input new entity output stream.
+     * @param outputStream new entity output stream.
      */
-    public void setEntityStream(OutputStream input) {
-        // TODO: implement client request context & container response context method.
+    public void setEntityStream(OutputStream outputStream) {
+        this.entityStream = outputStream;
+    }
+
+    /**
+     * Set the output stream provider.
+     *
+     * @param streamProvider output stream provider.
+     */
+    public void setStreamProvider(StreamProvider streamProvider) {
+        this.rootStream.setStreamProvider(streamProvider);
     }
 }

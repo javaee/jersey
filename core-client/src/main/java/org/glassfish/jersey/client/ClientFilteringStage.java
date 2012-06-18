@@ -92,17 +92,22 @@ class ClientFilteringStage extends AbstractFilteringStage<JerseyClientRequestCon
     public Continuation<JerseyClientRequestContext> apply(JerseyClientRequestContext requestContext) {
         final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
-        final List<ClientRequestFilter> requestFilters = serviceProviders.getAll(
-                ClientRequestFilter.class, new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
-        RequestFilterProcessor requestFilterProcessor = new RequestFilterProcessor(requestFilters.iterator(), getDefaultNext());
-
         final List<ClientResponseFilter> responseFilters = serviceProviders.getAll(
                 ClientResponseFilter.class, new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
-        ResponseFilterProcessor responseFilterProcessor = new ResponseFilterProcessor(responseFilters.iterator());
+        if (!responseFilters.isEmpty()) {
+            ResponseFilterProcessor responseFilterProcessor = new ResponseFilterProcessor(responseFilters.iterator());
+            respondingContextFactory.get().push(responseFilterProcessor);
+        }
 
-        respondingContextFactory.get().push(responseFilterProcessor);
 
-        return requestFilterProcessor.continuation(requestContext);
+        final List<ClientRequestFilter> requestFilters = serviceProviders.getAll(
+                ClientRequestFilter.class, new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
+        if (requestFilters.isEmpty()) {
+            return Continuation.of(requestContext, getDefaultNext());
+        } else {
+            RequestFilterProcessor requestFilterProcessor = new RequestFilterProcessor(requestFilters.iterator(), getDefaultNext());
+            return requestFilterProcessor.continuation(requestContext);
+        }
     }
 
     private static class RequestFilterProcessor extends AbstractChainableStage<JerseyClientRequestContext> {

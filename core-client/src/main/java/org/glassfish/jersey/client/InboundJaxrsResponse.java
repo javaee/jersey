@@ -75,12 +75,12 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public int getStatus() {
-        return context.getStatusCode();
+        return context.getStatus();
     }
 
     @Override
     public StatusType getStatusInfo() {
-        return context.getStatus();
+        return context.getStatusInfo();
     }
 
     @Override

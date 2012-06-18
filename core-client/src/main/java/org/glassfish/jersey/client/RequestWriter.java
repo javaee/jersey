@@ -57,6 +57,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
 /**
  * A request writer for writing header values and a request entity.
@@ -76,16 +77,16 @@ public class RequestWriter {
     /**
      * A listener for listening to events when writing a request entity.
      */
-    // TODO how to register/obtain the listenerin a generic way?
+    // TODO how to register/obtain the listener in a generic way?
     protected interface RequestEntityWriterListener extends MessageBodySizeCallback {
 
         /**
          * Called when the output stream is required to write the request entity.
          *
-         * @return the output stream to write the request entity.
+         * @return the output stream provider for writing the request entity.
          * @throws java.io.IOException in case of an error while opening the output stream.
          */
-        OutputStream onGetOutputStream() throws IOException;
+        OutboundMessageContext.StreamProvider onGetStreamProvider() throws IOException;
     }
 
     /**
@@ -139,7 +140,7 @@ public class RequestWriter {
             final MessageBodyWorkers workers = requestContext.getWorkers();
             final MediaType mediaType = requestContext.getMediaType();
             final Annotation[] entityAnnotations = requestContext.getEntityAnnotations();
-            final Class<?> entityRawType = requestContext.getEntityRawType();
+            final Class<?> entityRawType = requestContext.getEntityClass();
             final Type entityType = requestContext.getEntityType();
             this.writer = workers.getMessageBodyWriter(
                     entityRawType,
@@ -210,7 +211,7 @@ public class RequestWriter {
      * <p>
      * The method {@link RequestEntityWriterListener#onRequestEntitySize(long) } will be invoked
      * with the size of the request entity to be serialized.
-     * The method {@link RequestEntityWriterListener#onGetOutputStream() } will be invoked
+     * The method {@link RequestEntityWriterListener#onGetStreamProvider } will be invoked
      * when the output stream is required to write the request entity.
      *
      * @param requestContext the client request context containing the request entity. If the
@@ -233,24 +234,28 @@ public class RequestWriter {
         }
 
         final MessageBodyWorkers workers = requestContext.getWorkers();
-        final OutputStream out = listener.onGetOutputStream();
+        requestContext.setStreamProvider(listener.onGetStreamProvider());
+        OutputStream entityStream = null;
         try {
+            entityStream = requestContext.getEntityStream();
             workers.writeTo(
                     requestContext.getEntity(),
-                    requestContext.getEntityRawType(),
+                    requestContext.getEntityClass(),
                     requestContext.getEntityType(),
                     requestContext.getEntityAnnotations(),
                     requestContext.getMediaType(),
                     headers,
                     requestContext.getPropertiesDelegate(),
-                    out,
+                    entityStream,
                     sizeCallback,
                     true);
         } finally {
-            try {
-                out.close();
-            } catch (IOException ex) {
-                LOGGER.log(Level.FINE, "Error closing output stream", ex);
+            if (entityStream != null) {
+                try {
+                    entityStream.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.FINE, "Error closing output stream", ex);
+                }
             }
         }
     }

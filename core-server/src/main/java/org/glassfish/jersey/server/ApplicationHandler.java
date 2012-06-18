@@ -73,11 +73,12 @@ import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.internal.FilteringStage;
@@ -684,7 +685,6 @@ public final class ApplicationHandler {
     }
 
     private void writeResponse(final ContainerResponseWriter writer, final Request request, Response response) {
-        CommittingOutputStream committingOutput = null;
         final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
         final boolean entityExists = response.hasEntity();
@@ -719,20 +719,20 @@ public final class ApplicationHandler {
             }
 
             final Response outResponse = response;
-            committingOutput = new CommittingOutputStream() {
-
+            final CommittingOutputStream committingOutput = new CommittingOutputStream();
+            committingOutput.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                 private OutputStream output;
 
                 @Override
-                protected void commit() throws IOException {
+                public void commit() throws IOException {
                     output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), outResponse);
                 }
 
                 @Override
-                protected OutputStream getOutputStream() throws IOException {
+                public OutputStream getOutputStream() throws IOException {
                     return output;
                 }
-            };
+            });
 
             try {
                 Requests.getMessageWorkers(request).writeTo(entity, entity.getClass(), entityType, outputAnnotations, outputMediaType,
@@ -744,9 +744,9 @@ public final class ApplicationHandler {
             } finally {
                 commitOutputStream(committingOutput);
 
-                if(ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
+                if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
                     try {
-                        ((ChunkedResponse)entity).setWriterRelatedArgs(
+                        ((ChunkedResponse) entity).setWriterRelatedArgs(
                                 committingOutput,
                                 writer,
                                 Requests.getMessageWorkers(request),

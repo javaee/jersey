@@ -142,29 +142,33 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
         this.callback = callback;
     }
 
-    @Override
+    /**
+     * Invoke request on the wrapped inflector. The adapter itself serves as a
+     * {@link ListenableFuture listenable response future}.
+     *
+     * @param request request data to be processed.
+     */
     public ListenableFuture<RESPONSE> apply(REQUEST request) {
         originatingRequest.set(request);
         final RESPONSE response;
 
         try {
             response = wrapped.apply(request);
-        } catch (Exception ex) {
-            resume(ex); // resume with exception (if not resumed by an external event already)
-            return this;
-        }
 
-        if (executionStateMonitor.enterIf(runningState)) {
-            // The context was not suspended during the call to the wrapped inflector's apply(...) method;
-            // mark as resumed & don't invoke callback.resume() since we are resuming synchronously
-            try {
-                executionState = State.RESUMED;
-                set(response);
-            } finally {
-                executionStateMonitor.leave();
+            if (executionStateMonitor.enterIf(runningState)) {
+                // The context was not suspended during the call to the wrapped inflector's apply(...) method;
+                // mark as resumed & don't invoke callback.resume() since we are resuming synchronously
+                try {
+                    executionState = State.RESUMED;
+                    set(response);
+                } finally {
+                    executionStateMonitor.leave();
+                }
+            } else if (response != null) {
+                LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_SUSPENDED_RESPONSE_IGNORED(response));
             }
-        } else if (response != null) {
-            LOGGER.log(Level.FINE, LocalizationMessages.REQUEST_SUSPENDED_RESPONSE_IGNORED(response));
+        } catch (Throwable t) {
+            resume(t); // resume with throwable (if not resumed by an external event already)
         }
         return this;
     }
@@ -190,11 +194,30 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     }
 
     @Override
-    public void resume(final Exception response) {
+    public void resume(final Throwable response) throws IllegalStateException {
         resume(new Runnable() {
             @Override
             public void run() {
-                setException(response);
+                if (response instanceof Error) {
+                    try {
+                        setException(response);
+                    } catch (Error error) {
+                        /**
+                         * Do nothing - we need to catch the response error rethrown by
+                         * the setException(response) method. The error will be properly
+                         * handled by the response processor listening on this future.
+                         *
+                         * This fix was needed to make sure that e.g. unit test assertion
+                         * errors in the request processing chain (filter, resource...)
+                         * do not cause deadlock situations when the response is not
+                         * propagated back to the official response future and callbacks
+                         * are not notified due to the termination of the expected code
+                         * path.
+                         */
+                    }
+                } else {
+                    setException(response);
+                }
             }
         });
     }
@@ -208,9 +231,12 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
             } finally {
                 executionStateMonitor.leave();
             }
-            resumeHandler.run();
-            if (invokeCallback) {
-                callback.resumed();
+            try {
+                resumeHandler.run();
+            } finally {
+                if (invokeCallback) {
+                    callback.resumed();
+                }
             }
         } else {
             throw new IllegalStateException(LocalizationMessages.ILLEGAL_INVOCATION_CONTEXT_STATE(executionState, "resume"));
@@ -331,7 +357,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
      * Convert the JAX-RS {@link Response response} to supported response data type.
      *
      * @param originatingRequest originating request data.
-     * @param response JAX-RS response.
+     * @param response           JAX-RS response.
      * @return JAX-RS {@link Response response} converted to supported response data
      *         type.
      */

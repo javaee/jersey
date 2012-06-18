@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,7 +52,6 @@ import java.util.Set;
 
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
@@ -341,7 +341,7 @@ public final class JaxrsResponseBuilderView extends Response.ResponseBuilder {
     }
 
     @Override
-    public <T> ResponseBuilder entity(T entity, GenericType<? super T> declaredType, Annotation[] annotations) {
+    public ResponseBuilder entity(Object entity, Type genericType, Annotation[] annotations) {
         return null;  // TODO: implement method.
     }
 

@@ -57,9 +57,10 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
+import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 import org.glassfish.jersey.process.Inflector;
 
@@ -154,10 +155,10 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyC
                 }
 
                 @Override
-                public OutputStream onGetOutputStream() throws IOException {
-                    return new CommittingOutputStream() {
+                public OutboundMessageContext.StreamProvider onGetStreamProvider() throws IOException {
+                    return new OutboundMessageContext.StreamProvider() {
                         @Override
-                        protected OutputStream getOutputStream() throws IOException {
+                        public OutputStream getOutputStream() throws IOException {
                             return uc.getOutputStream();
                         }
 

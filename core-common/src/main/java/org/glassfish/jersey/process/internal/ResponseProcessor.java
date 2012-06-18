@@ -223,14 +223,14 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
                     DATA response;
                     try {
                         response = inflectedResponse.get();
-                    } catch (Exception ex) {
+                    } catch (Throwable ex) {
                         final Throwable unwrapped = (ex instanceof ExecutionException) ? ex.getCause() : ex;
                         LOGGER.log(Level.FINE,
                                 "Request-to-response transformation finished with an exception.", unwrapped);
 
                         try {
                             response = convertResponse(mapException(unwrapped));
-                        } catch (Exception ex2) {
+                        } catch (Throwable ex2) {
                             setResult(ex2);
                             return;
                         }
@@ -245,14 +245,14 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
                         try {
                             response = runResponders(response);
                             break;
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                             LOGGER.log(Level.FINE,
                                     "Responder chain execution finished with an exception.", ex);
                             if (i == 0) {
                                 // try to map the first responder exception
                                 try {
                                     response = convertResponse(mapException(ex));
-                                } catch (Exception ex2) {
+                                } catch (Throwable ex2) {
                                     setResult(ex2);
                                     return;
                                 }
@@ -320,13 +320,19 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
     }
 
     private void setResult(DATA response) {
-        super.set(response);
-        notifyCallback(response);
+        try {
+            super.set(response);
+        } finally {
+            notifyCallback(response);
+        }
     }
 
     private void setResult(Throwable exception) {
-        super.setException(exception);
-        notifyCallback(exception);
+        try {
+            super.setException(exception);
+        } finally {
+            notifyCallback(exception);
+        }
     }
 
     private void notifyCallback(DATA response) {

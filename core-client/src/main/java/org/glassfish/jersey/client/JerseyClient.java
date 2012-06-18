@@ -225,12 +225,11 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         this.injector = services.forContract(Injector.class).get();
 
         final ClientMessageBodyWorkersInitializer workersInitializationStage = injector.inject(ClientMessageBodyWorkersInitializer.class);
-//        final FilteringStage filteringStage = injector.inject(FilteringStage.class);
+        final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
 
         Stage<JerseyClientRequestContext> rootStage = Stages
                 .chain(workersInitializationStage)
-// TODO re-enable filters
-//                .to(filteringStage)
+                .to(filteringStage)
                 .build(Stages.asStage(connector));
 
         this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);

@@ -57,7 +57,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.internal.util.CommittingOutputStream;
+import org.glassfish.jersey.message.internal.CommittingOutputStream;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
@@ -78,7 +79,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     // TODO remove?
     private final HttpServletRequest request;
     private final HttpServletResponse response;
-    private final OutputStream out;
+    private final CommittingOutputStream out;
     private final boolean useSetStatusOn404;
     private final SettableFuture<Response> jerseyResponse;
     private long contentLength;
@@ -89,26 +90,27 @@ public class ResponseWriter implements ContainerResponseWriter {
      * Creates a new instance to write a single Jersey response.
      *
      * @param useSetStatusOn404 true if status should be written explicitly when 404 is returned
-     * @param request original HttpServletRequest
-     * @param response original HttpResponseRequest
-     * @param asyncExt delegate to use for async features implementation
+     * @param request           original HttpServletRequest
+     * @param response          original HttpResponseRequest
+     * @param asyncExt          delegate to use for async features implementation
      */
     public ResponseWriter(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response, AsyncContextDelegate asyncExt) {
         this.useSetStatusOn404 = useSetStatusOn404;
         this.request = request;
         this.response = response;
-        this.out = new CommittingOutputStream() {
+        this.out = new CommittingOutputStream();
+        this.out.setStreamProvider(new OutboundMessageContext.StreamProvider() {
 
             @Override
-            protected void commit() throws IOException {
+            public void commit() throws IOException {
                 ResponseWriter.this.writeStatusAndHeaders();
             }
 
             @Override
-            protected OutputStream getOutputStream() throws IOException {
+            public OutputStream getOutputStream() throws IOException {
                 return ResponseWriter.this.response.getOutputStream();
             }
-        };
+        });
         this.statusAndHeadersWritten = new AtomicBoolean(false);
         this.asyncExt = asyncExt;
         this.jerseyResponse = SettableFuture.create();

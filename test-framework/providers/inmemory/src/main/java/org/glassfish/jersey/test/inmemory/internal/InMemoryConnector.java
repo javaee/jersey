@@ -147,11 +147,12 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
     }
 
     private JerseyClientResponseContext tryFollowRedirects(boolean followRedirects, JerseyClientResponseContext response, JerseyClientRequestContext request) {
-        if (!followRedirects || response.getStatusCode() < 302 || response.getStatusCode() > 307) {
+        final int statusCode = response.getStatus();
+        if (!followRedirects || statusCode < 302 || statusCode > 307) {
             return response;
         }
 
-        switch (response.getStatusCode()) {
+        switch (statusCode) {
             case 303:
                 request.setMethod("GET");
                 // intentionally no break

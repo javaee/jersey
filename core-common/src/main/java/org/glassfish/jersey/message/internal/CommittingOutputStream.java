@@ -37,14 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
+package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * An abstract committing output stream adapter that performs a {@link #commit()
- * commit} before the first byte is written to the adapted {@link OutputStream}.
+ * An abstract committing output stream adapter that performs a {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#commit()
+ * commit} and then retrieves the {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
+ * before the first byte is written to the provided stream.
  *
  * Concrete implementations of the class typically override the commit operation
  * to perform any initialization on the adapted output stream.
@@ -52,7 +53,8 @@ import java.io.OutputStream;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class CommittingOutputStream extends OutputStream {
+// TODO make package-private
+public final class CommittingOutputStream extends OutputStream {
 
     /**
      * Adapted output stream.
@@ -62,39 +64,25 @@ public abstract class CommittingOutputStream extends OutputStream {
      * Determines whether the stream was already committed or not.
      */
     private boolean isCommitted = false;
+    /**
+     * Stream provider
+     */
+    private OutboundMessageContext.StreamProvider streamProvider;
 
     /**
      * Construct a new committing output stream using a deferred initialization
-     * of the adapted output stream.
-     * <p />
-     * When this constructor is utilized to construct a committing output stream
-     * instance, the method {@link #getOutputStream()} MUST be overridden to return
-     * the adapted output stream.
-     *
-     * @see #CommittingOutputStream(OutputStream) adapting constructor
+     * of the adapted output stream via {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider stream provider}.
      */
     public CommittingOutputStream() {
     }
 
     /**
-     * Construct a new committing output stream using an eager initialization of
-     * the adapted output stream.
-     * <p />
-     * When this constructor is utilized to construct a committing output stream
-     * instance, the method {@link #getOutputStream()} will be ignored and never
-     * invoked to retrieve the adapted output stream.
+     * Set the output stream provider.
      *
-     * @param out the adapted output stream.
-     * @throws IllegalArgumentException if supplied output stream is {@code null}.
-     *
-     * @see #CommittingOutputStream(OutputStream) deferred initialization constructor
+     * @param streamProvider output stream provider.
      */
-    public CommittingOutputStream(OutputStream out) {
-        if (out == null) {
-            throw new IllegalArgumentException();
-        }
-
-        this.adaptedOutput = out;
+    public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
+        this.streamProvider = streamProvider;
     }
 
     /**
@@ -144,37 +132,11 @@ public abstract class CommittingOutputStream extends OutputStream {
         if (!isCommitted) {
             isCommitted = true;
 
-            commit();
+            streamProvider.commit();
 
             if (adaptedOutput == null) {
-                adaptedOutput = getOutputStream();
+                adaptedOutput = streamProvider.getOutputStream();
             }
         }
     }
-
-    /**
-     * Get the adapted output stream.
-     *
-     * The method is called at most once (in case the internal adapted output stream
-     * has not been initialized via {@link #CommittingOutputStream(java.io.OutputStream)
-     * adapting constructor}) as part of the commit operation immediately after
-     * the {@link #commit()} method has been invoked.
-     * <p>
-     * This method MUST be overridden if the empty {@link #CommittingOutputStream()
-     * deferred initialization constructor} is utilized to construct an instance
-     * of this class.
-     *
-     * @return the adapted output stream.
-     * @throws java.io.IOException
-     */
-    protected OutputStream getOutputStream() throws IOException {
-        throw new IllegalStateException();
-    }
-
-    /**
-     * Perform the commit functionality.
-     *
-     * @throws java.io.IOException
-     */
-    protected abstract void commit() throws IOException;
 }

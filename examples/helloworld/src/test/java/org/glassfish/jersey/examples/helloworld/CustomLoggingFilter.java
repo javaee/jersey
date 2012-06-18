@@ -66,14 +66,14 @@ public class CustomLoggingFilter implements ContainerRequestFilter, ContainerRes
     @Override
     public void filter(ClientRequestContext context) throws IOException {
         System.out.println("CustomLoggingFilter.preFilter called");
-        assertEquals(context.getProperty("foo"), "bar");
+        assertEquals(context.getConfiguration().getProperty("foo"), "bar");
         preFilterCalled++;
     }
 
     @Override
     public void filter(ClientRequestContext context, ClientResponseContext clientResponseContext) throws IOException {
         System.out.println("CustomLoggingFilter.postFilter called");
-        assertEquals(context.getProperty("foo"), "bar");
+        assertEquals(context.getConfiguration().getProperty("foo"), "bar");
         postFilterCalled++;
     }
 

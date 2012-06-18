@@ -214,7 +214,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printResponseLine(b, id, responseContext.getStatusCode());
+        printResponseLine(b, id, responseContext.getStatus());
         printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getHeaders());
 
         if (printEntity && responseContext.hasEntity()) {
@@ -244,7 +244,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printResponseLine(b, id, responseContext.getStatusCode());
+        printResponseLine(b, id, responseContext.getStatus());
         printPrefixedHeaders(b, id, RESPONSE_PREFIX, HeadersFactory.getStringHeaders(responseContext.getHeaders()));
 
         if (printEntity && responseContext.hasEntity()) {

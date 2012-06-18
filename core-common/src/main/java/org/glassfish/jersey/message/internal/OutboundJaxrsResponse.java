@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
@@ -50,7 +51,15 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.MessageProcessingException;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Variant;
 
 /**
  * An outbound JAX-RS response message.
@@ -508,9 +517,8 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         }
 
         @Override
-        public <T> ResponseBuilder entity(T entity, GenericType<? super T> declaredType, Annotation[] annotations) {
-            context.setEntity(declaredType, annotations, entity);
-
+        public ResponseBuilder entity(Object entity, Type genericType, Annotation[] annotations) {
+            context.setEntity(entity,  genericType, annotations);
             return this;
         }
 
