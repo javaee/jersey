@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -135,7 +134,8 @@ public class ChunkedResponse<T> implements Closeable {
         while ((t = queue.poll()) != null) {
             messageBodyWorkers.writeTo(
                     t,
-                    GenericType.<Object>of(rawChunkType, rawChunkType),
+                    rawChunkType,
+                    rawChunkType,
                     annotations,
                     mediaType,
                     httpHeaders,

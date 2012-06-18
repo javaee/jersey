@@ -125,7 +125,7 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
 
         final Invocable invocable = method.getInvocable();
         final RoutingContext routingCtx = routingContextFactory.get();
-        routingCtx.setResponseMethodType(invocable.getResponseType().getType());
+        routingCtx.setResponseMethodType(invocable.getResponseType());
         routingCtx.setResponseMethodAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
 
         if (method.isSuspendDeclared()) {

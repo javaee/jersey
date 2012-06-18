@@ -42,13 +42,13 @@ package org.glassfish.jersey.message.internal;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -72,7 +72,6 @@ import org.glassfish.jersey.process.internal.PriorityComparator.Order;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@SuppressWarnings("rawtypes")
 public class WriterInterceptorExecutor extends InterceptorExecutor implements WriterInterceptorContext {
     private Iterator<WriterInterceptor> iterator;
 
@@ -84,7 +83,8 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      * Reads a type from the {@link java.io.InputStream entityStream} using interceptors.
      *
      * @param entity entity object to be processed.
-     * @param genericType the generic type that is to be read from the input stream.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
@@ -103,11 +103,11 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
      * @param writeEntity true if the entity should be written. Otherwise only headers will
      *            be written to underlying {@link OutputStream}.
      */
-    public WriterInterceptorExecutor(Object entity, GenericType genericType, Annotation[] annotations, MediaType mediaType,
+    public WriterInterceptorExecutor(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) {
 
-        super(genericType, annotations, mediaType, propertiesDelegate);
+        super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;

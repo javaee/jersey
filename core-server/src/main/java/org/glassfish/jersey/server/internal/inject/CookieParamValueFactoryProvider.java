@@ -132,7 +132,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
             return null;
         }
 
-        if (parameter.getParameterType().getRawType() == Cookie.class) {
+        if (parameter.getRawType() == Cookie.class) {
             return new CookieTypeParamValueFactory(parameterName);
         } else {
             MultivaluedParameterExtractor e = get(parameter);

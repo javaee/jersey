@@ -50,14 +50,13 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
@@ -370,10 +369,9 @@ final class MethodSelectingRouter implements Router {
     }
 
     private void fillOutputParameters(List<MediaType> effectiveOutputTypes, Invocable invocableMethod) {
-        final GenericType<?> responseType = invocableMethod.getResponseType();
         final List<MediaType> messageBodyWriterMediaTypes = workers.getMessageBodyWriterMediaTypes(
-                responseType.getRawType(),
-                responseType.getType(),
+                invocableMethod.getRawResponseType(),
+                invocableMethod.getResponseType(),
                 invocableMethod.getHandlingMethod().getDeclaredAnnotations());
         effectiveOutputTypes.addAll(messageBodyWriterMediaTypes);
     }
@@ -381,9 +379,8 @@ final class MethodSelectingRouter implements Router {
     private void fillInputTypesFromWorkers(List<MediaType> effectiveInputTypes, Invocable invocableMethod) {
         for (Parameter p : invocableMethod.getParameters()) {
             if (p.getSource() == Parameter.Source.ENTITY) {
-                final GenericType<?> paramType = p.getParameterType();
                 final List<MediaType> messageBodyReaderMediaTypes = workers.getMessageBodyReaderMediaTypes(
-                        paramType.getRawType(), paramType.getType(), p.getDeclaredAnnotations());
+                        p.getRawType(), p.getType(), p.getDeclaredAnnotations());
                 effectiveInputTypes.addAll(messageBodyReaderMediaTypes);
             }
         }

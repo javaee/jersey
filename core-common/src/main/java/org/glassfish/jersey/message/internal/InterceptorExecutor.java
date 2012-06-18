@@ -43,7 +43,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Enumeration;
 
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.InterceptorContext;
 import javax.ws.rs.ext.ReaderInterceptorContext;
@@ -57,29 +56,29 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-@SuppressWarnings("rawtypes")
 abstract class InterceptorExecutor implements InterceptorContext {
     private final PropertiesDelegate propertiesDelegate;
     private Annotation[] annotations;
-    private Class type;
+    private Class<?> type;
     private Type genericType;
     private MediaType mediaType;
 
     /**
      * Constructor initializes common properties of this abstract class.
      *
-     * @param genericType Generic Type (to be read or written to). See {@link InterceptorContext#getGenericType()}
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations Annotations on the formal declaration of the resource
      *  method parameter that is the target of the message body
      *  conversion. See {@link InterceptorContext#getAnnotations()}.
      * @param mediaType MediaType of HTTP entity. See {@link InterceptorContext#getMediaType()}.
      * @param propertiesDelegate request-scoped properties delegate.
      */
-    public InterceptorExecutor(GenericType genericType, Annotation[] annotations, MediaType mediaType,
+    public InterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                PropertiesDelegate propertiesDelegate) {
         super();
-        this.type = genericType.getRawType();
-        this.genericType = genericType.getType();
+        this.type = rawType;
+        this.genericType = type;
         this.annotations = annotations;
         this.mediaType = mediaType;
         this.propertiesDelegate = propertiesDelegate;

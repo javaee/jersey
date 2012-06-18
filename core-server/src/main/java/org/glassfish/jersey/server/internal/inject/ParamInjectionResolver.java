@@ -44,8 +44,6 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.Set;
 
-import javax.ws.rs.core.GenericType;
-
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
@@ -119,7 +117,8 @@ public abstract class ParamInjectionResolver<A extends Annotation> extends Injec
                 component.getClass(),
                 component.getClass(),
                 false,
-                GenericType.of(targetType, targetGenericType),
+                targetType,
+                targetGenericType,
                 annotated.getDeclaredAnnotations());
 
         final Factory<?> valueFactory = valueFactoryProvider.getValueFactory(parameter);

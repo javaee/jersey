@@ -660,8 +660,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
-        Type callbackType = Types.getTypeArgument(callback.getClass(), 0);
-        final GenericType<T> resultGenericType = GenericType.of(Types.erasure(callbackType), callbackType);
+        final Type callbackType = Types.getTypeArgument(callback.getClass(), 0);
+        final Class<T> rawType = Types.erasure(callbackType);
 
         client.submit(this, new InvocationCallback<Response>() {
 
@@ -669,10 +669,10 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             public void completed(Response response) {
                 if (response.getStatus() < 300) {
                     final T result;
-                    if (resultGenericType.getRawType() == Response.class) {
-                        result = resultGenericType.getRawType().cast(response);
+                    if (rawType == Response.class) {
+                        result = rawType.cast(response);
                     } else {
-                        result = response.readEntity(resultGenericType);
+                        result = response.readEntity(new GenericType<T>(callbackType));
                     }
                     responseFuture.set(result);
                     callback.completed(result);

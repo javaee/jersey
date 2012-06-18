@@ -59,7 +59,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -205,7 +204,7 @@ public class BasicValidator extends ResourceModelValidator {
                     invocable.getHandlingMethod(), httpMethodAnnotations.toString()));
         }
 
-        final Type responseType = invocable.getResponseType().getType();
+        final Type responseType = invocable.getResponseType();
         if (!isConcreteType(responseType)) {
             addMinorIssue(invocable.getHandlingMethod(),
                     LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE(
@@ -227,7 +226,7 @@ public class BasicValidator extends ResourceModelValidator {
         checkParameters(locator);
 
         final Invocable invocable = locator.getInvocable();
-        if (void.class == invocable.getResponseType().getRawType()) {
+        if (void.class == invocable.getRawResponseType()) {
             addFatalIssue(locator, LocalizationMessages.SUBRES_LOC_RETURNS_VOID(invocable.getHandlingMethod()));
         }
         if ((null == locator.getPath()) || (null == locator.getPath()) || (locator.getPath().length() == 0)) {
@@ -278,7 +277,7 @@ public class BasicValidator extends ResourceModelValidator {
             }
         }
 
-        final Type paramType = parameter.getParameterType().getType();
+        final Type paramType = parameter.getType();
         if (!isConcreteType(paramType)) {
             issueList.add(new ResourceModelIssue(
                     source,
@@ -431,9 +430,8 @@ public class BasicValidator extends ResourceModelValidator {
         if (workers != null) {
             for (Parameter p : resourceMethod.getInvocable().getParameters()) {
                 if (p.getSource() == Parameter.Source.ENTITY) {
-                    final GenericType<?> paramType = p.getParameterType();
                     result.addAll(workers.getMessageBodyReaderMediaTypes(
-                            paramType.getRawType(), paramType.getType(), p.getDeclaredAnnotations()));
+                            p.getRawType(), p.getType(), p.getDeclaredAnnotations()));
                 }
             }
         }
@@ -448,8 +446,8 @@ public class BasicValidator extends ResourceModelValidator {
         if (workers != null) {
             final Invocable invocable = resourceMethod.getInvocable();
             result.addAll(workers.getMessageBodyWriterMediaTypes(
-                    invocable.getResponseType().getRawType(),
-                    invocable.getResponseType().getType(),
+                    invocable.getRawResponseType(),
+                    invocable.getResponseType(),
                     invocable.getHandlingMethod().getDeclaredAnnotations()));
         }
         return result.isEmpty() ? StarTypeList : result;

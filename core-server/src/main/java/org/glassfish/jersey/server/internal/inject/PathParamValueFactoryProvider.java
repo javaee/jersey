@@ -135,11 +135,11 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<P
             return null;
         }
 
-        final Class<?> rawParameterType = parameter.getParameterType().getRawType();
+        final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == PathSegment.class) {
             return new PathParamPathSegmentValueFactory(parameterName, !parameter.isEncoded());
-        } else if (rawParameterType == List.class && parameter.getParameterType().getType() instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) parameter.getParameterType().getType();
+        } else if (rawParameterType == List.class && parameter.getType() instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) parameter.getType();
             Type[] targs = pt.getActualTypeArguments();
             if (targs.length == 1 && targs[0] == PathSegment.class) {
                 return new PathParamListPathSegmentValueFactory(

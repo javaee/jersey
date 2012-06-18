@@ -66,7 +66,6 @@ import java.util.logging.Logger;
 import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
@@ -88,6 +87,7 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// TODO revise - remove unused methods, fix warnings etc.
 public class InboundMessageContext {
     private static final Logger LOGGER = Logger.getLogger(InboundMessageContext.class.getName());
     private static final InputStream EMPTY = new InputStream() {
@@ -102,6 +102,7 @@ public class InboundMessageContext {
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
      * is used to control the execution of interceptors.
+     *
      */
     private static class ContentStream {
         private InputStream contentStream;
@@ -903,7 +904,9 @@ public class InboundMessageContext {
         }
 
         try {
-            T t = (T) workers.readFrom(GenericType.<T>of(rawType, type),
+            T t = (T) workers.readFrom(
+                    rawType,
+                    type,
                     annotations,
                     getMediaType(),
                     headers,

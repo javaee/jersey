@@ -40,11 +40,11 @@
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -125,7 +125,8 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     private final MethodHandler handler;
     private final Method handlingMethod;
     private final List<Parameter> parameters;
-    private final GenericType<?> responseType;
+    private final Class<?> rawResponseType;
+    private final Type responseType;
 
     private Invocable(MethodHandler handler, Method handlingMethod, boolean encodedParameters) {
         this.handler = handler;
@@ -137,7 +138,8 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
                 handlingMethod.getDeclaringClass(),
                 handlingMethod.getReturnType(),
                 handlingMethod.getGenericReturnType());
-        this.responseType = GenericType.of(ctPair.rawClass(), ctPair.type());
+        this.rawResponseType = ctPair.rawClass();
+        this.responseType = ctPair.type();
 
         this.parameters = Collections.unmodifiableList(Parameter.create(
                 handlerClass, handlingMethod.getDeclaringClass(), handlingMethod, encodedParameters));
@@ -163,16 +165,28 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     }
 
     /**
-     * Get the resource method response type.
-     * <p/>
-     * The returned value provides information about the raw Java class as well
-     * as the Type information that contains additional generic declaration
-     * information for generic Java class types.
+     * Get the resource method generic response type information.
+     * <p>
+     * The returned value provides the Type information that contains additional
+     * generic declaration information for generic Java class types.
+     * </p>
      *
-     * @return resource method response type information.
+     * @return resource method generic response type information.
      */
-    public GenericType<?> getResponseType() {
+    public Type getResponseType() {
         return responseType;
+    }
+
+    /**
+     * Get the resource method raw response type.
+     * <p>
+     * The returned value provides information about the raw Java class.
+     * </p>
+     *
+     * @return resource method raw response type information.
+     */
+    public Class<?> getRawResponseType() {
+        return rawResponseType;
     }
 
     /**

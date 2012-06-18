@@ -263,7 +263,7 @@ public class RequestWriter {
         MessageBodyWorkers workers = Requests.getMessageWorkers(request);
         final OutputStream out = listener.onGetOutputStream();
         try {
-            workers.writeTo(entity, GenericType.of(entityClass, entityType), EMPTY_ANNOTATIONS, mediaType,
+            workers.writeTo(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType,
                     (MultivaluedMap) headers, new MapPropertiesDelegate(Helper.unwrap(request).getProperties()), out, sizeCallback, true);
 
         } catch (IOException ex) {

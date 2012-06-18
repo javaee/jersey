@@ -166,16 +166,16 @@ abstract class AbstractMutableMessage<M extends AbstractMutableMessage> {
         return entity.content();
     }
 
-    public <T> T content(GenericType<T> type) {
-        return entity.content(type);
+    public <T> T content(Class<T> rawEntityType, Type entityType) {
+        return entity.content(rawEntityType,  entityType);
     }
 
     public <T> T content(Class<T> type) {
         return entity.content(type);
     }
 
-    public <T> T content(GenericType<T> type, Annotation[] annotations) {
-        return entity.content(type, annotations);
+    public <T> T content(Class<T> rawEntityType, Type entityType, Annotation[] annotations) {
+        return entity.content(rawEntityType,  entityType, annotations);
     }
 
     public <T> T content(Class<T> type, Annotation[] annotations) {

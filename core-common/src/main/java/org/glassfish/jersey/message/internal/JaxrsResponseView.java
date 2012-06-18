@@ -108,8 +108,9 @@ public final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
-        return wrapped.content(entityType);
+        return (T) wrapped.content(entityType.getRawType(), entityType.getType());
     }
 
     @Override
@@ -118,8 +119,9 @@ public final class JaxrsResponseView extends javax.ws.rs.core.Response {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
-        return wrapped.content(entityType, annotations);
+        return (T) wrapped.content(entityType.getRawType(), entityType.getType(), annotations);
     }
 
     @Override

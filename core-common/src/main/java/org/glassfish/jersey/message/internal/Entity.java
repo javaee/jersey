@@ -69,11 +69,11 @@ public interface Entity {
 
     public <T> T content(Class<T> type);
 
-    public <T> T content(GenericType<T> type);
+    public <T> T content(Class<T> rawEntityType, Type entityType);
 
     public <T> T content(Class<T> type, Annotation[] annotations);
 
-    public <T> T content(GenericType<T> type, Annotation[] annotations);
+    public <T> T content(Class<T> rawEntityType, Type entityType, Annotation[] annotations);
 
     public void bufferEntity() throws MessageProcessingException;
 

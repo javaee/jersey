@@ -200,8 +200,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             MessageBodyWorkers messageBodyWorkers = Requests.getMessageWorkers(context.getRequest());
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
-                    parameter.getParameterType().getRawType(),
-                    parameter.getParameterType().getType(),
+                    parameter.getRawType(),
+                    parameter.getType(),
                     parameter.getAnnotations(),
                     mediaType);
 
@@ -221,8 +221,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
                 try {
                     return reader.readFrom(
-                            parameter.getParameterType().getRawType(),
-                            parameter.getParameterType().getType(),
+                            parameter.getRawType(),
+                            parameter.getType(),
                             parameter.getAnnotations(),
                             mediaType,
                             context.getRequest().getHeaders().getRequestHeaders(),
@@ -281,7 +281,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     @Override
     protected Factory<?> createValueFactory(Parameter parameter) {
-        Class<?> parameterRawType = parameter.getParameterType().getRawType();
+        Class<?> parameterRawType = parameter.getRawType();
         if (Parameter.Source.ENTITY == parameter.getSource()) {
             if (FormDataMultiPart.class.isAssignableFrom(parameterRawType)) {
                 return new FormDataMultiPartValueFactory();
@@ -298,7 +298,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             final MultivaluedParameterExtractor<?> extractor = get(parameter);
 
             if (Collection.class == parameterRawType || List.class == parameterRawType) {
-                Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getParameterType().getType()).get(0);
+                Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getType()).get(0);
                 if (FormDataBodyPart.class == c) {
                     return new ListFormDataBodyPartValueFactory(parameter.getSourceName());
                 } else if (FormDataContentDisposition.class == c) {

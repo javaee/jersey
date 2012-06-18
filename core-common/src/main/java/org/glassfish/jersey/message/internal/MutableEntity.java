@@ -290,8 +290,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
     }
 
     @Override
-    public <T> T content(GenericType<T> type) {
-        return content(type.getRawType(), type.getType(), EMPTY_ANNOTATIONS);
+    public <T> T content(Class<T> rawType, Type genericType) {
+        return (T) content(rawType, genericType, EMPTY_ANNOTATIONS);
     }
 
     @Override
@@ -299,13 +299,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
         return content(rawType, extractType(rawType), annotations);
     }
 
-    @Override
-    public <T> T content(GenericType<T> type, Annotation[] annotations) {
-        return content(type.getRawType(), type.getType(), annotations);
-    }
-
     @SuppressWarnings("unchecked")
-    private <T> T content(Class<T> rawType, Type type, Annotation[] readAnnotations) {
+    public <T> T content(Class<T> rawType, Type type, Annotation[] readAnnotations) {
         if (isEmpty()) {
             return null;
         }
@@ -336,7 +331,8 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
         try {
             T t = (T) workers.readFrom(
-                    GenericType.<T> of(rawType, type),
+                    rawType,
+                    type,
                     readAnnotations,
                     mediaType,
                     message.headers(),
@@ -351,8 +347,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
                 contentStream.invalidateContentStream();
             }
 
-            genericEntity = new GenericEntity<T>(t) {
-            };
+            genericEntity = new GenericEntity(t, type);
             forceType = true;
             return t;
         } catch (IOException ex) {
@@ -476,7 +471,7 @@ class MutableEntity implements Entity, Entity.Builder<MutableEntity> {
 
         final MediaType mediaType = getMsgContentType();
         try {
-            workers.writeTo(myInstance, GenericType.of(genericEntity.getRawType(), genericEntity.getType()), writeAnnotations,
+            workers.writeTo(myInstance, genericEntity.getRawType(), genericEntity.getType(), writeAnnotations,
                     mediaType, (MultivaluedMap) message.headers(), new MapPropertiesDelegate(message.properties()), baos, null, false);
             baos.close();
         } catch (IOException ex) {

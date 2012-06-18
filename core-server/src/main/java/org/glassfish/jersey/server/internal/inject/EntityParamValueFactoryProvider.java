@@ -41,10 +41,9 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 
-import javax.ws.rs.core.GenericType;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.Factory;
@@ -76,11 +75,10 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
         protected Object get(HttpContext context) {
             final Request request = context.getRequest();
 
-            final GenericType<?> parameterType = parameter.getParameterType();
-            final Class<?> rawType = parameterType.getRawType();
+            final Class<?> rawType = parameter.getRawType();
             return Request.class.isAssignableFrom(rawType) && rawType.isInstance(request)
                     ? request
-                    : Helper.unwrap(request).readEntity(parameterType, parameter.getAnnotations());
+                    : Helper.unwrap(request).readEntity(rawType, parameter.getType(), parameter.getAnnotations());
         }
     }
 

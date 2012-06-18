@@ -174,7 +174,8 @@ final class IntrospectionModeller {
                     handlerClass,
                     method.getMethod().getDeclaringClass(),
                     encodedFlag,
-                    GenericType.of(method.getParameterTypes()[0], method.getGenericParameterTypes()[0]),
+                    method.getParameterTypes()[0],
+                    method.getGenericParameterTypes()[0],
                     method.getAnnotations());
             if (null != p) {
                 BasicValidator.validateParameter(issueList, p, method.getMethod(), method.getMethod().toGenericString(), "1");
@@ -189,7 +190,8 @@ final class IntrospectionModeller {
                         handlerClass,
                         field.getDeclaringClass(),
                         encodedFlag,
-                        GenericType.of(field.getType(), field.getGenericType()),
+                        field.getType(),
+                        field.getGenericType(),
                         field.getAnnotations());
                 if (null != p) {
                     BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName());

@@ -42,13 +42,13 @@ package org.glassfish.jersey.message.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -72,7 +72,6 @@ import org.glassfish.jersey.process.internal.PriorityComparator.Order;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@SuppressWarnings("rawtypes")
 public class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
@@ -81,7 +80,8 @@ public class ReaderInterceptorExecutor extends InterceptorExecutor implements Re
     /**
      * Reads a type from the {@link InputStream entityStream} using interceptors.
      *
-     * @param genericType the generic type that is to be read from the input stream.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
@@ -96,10 +96,10 @@ public class ReaderInterceptorExecutor extends InterceptorExecutor implements Re
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed in the client.
      */
-    public ReaderInterceptorExecutor(GenericType genericType, Annotation[] annotations, MediaType mediaType,
+    public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
             MessageBodyWorkers workers, boolean intercept) {
-        super(genericType, annotations, mediaType, propertiesDelegate);
+        super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
 

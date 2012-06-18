@@ -95,8 +95,9 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException, IllegalStateException {
-        return context.readEntity(
+        return (T) context.readEntity(
                 entityType.getRawType(),
                 entityType.getType(),
                 context.getRequestContext().getPropertiesDelegate());
@@ -108,8 +109,9 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
-        return context.readEntity(
+        return (T) context.readEntity(
                 entityType.getRawType(),
                 entityType.getType(),
                 annotations,

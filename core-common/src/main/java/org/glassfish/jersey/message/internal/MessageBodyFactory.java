@@ -606,29 +606,29 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
-    public <T> Object readFrom(GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
             boolean intercept) throws WebApplicationException, IOException {
 
-        ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(genericType, annotations, mediaType,
+        ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, intercept);
         return executor.proceed();
     }
 
     @Override
-    public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
 
-        writeTo(t, genericType, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
+        writeTo(t, rawType, type, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
     }
 
     @Override
-    public <T> void writeTo(Object t, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
 
-        WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, genericType, annotations, mediaType,
+        WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, sizeCallback, intercept, writeEntity);
         executor.proceed();
     }

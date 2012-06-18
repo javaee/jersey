@@ -87,8 +87,8 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
                             null,
                             null,
                             parameter,
-                            parameter.getParameterType().getType(),
-                            parameter.getParameterType().getRawType());
+                            parameter.getType(),
+                            parameter.getRawType());
                 }
             };
         }

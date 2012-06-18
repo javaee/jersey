@@ -49,7 +49,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -114,13 +113,13 @@ public interface MessageBodyWorkers {
      * @param genericType the type of object to be produced. E.g. if the message body is
      *            to be converted into a method parameter, this will be the formal type of
      *            the method parameter as returned by
-     *            <code>Class.getGenericParameterTypes</code>.
+     *            {@code Class.getGenericParameterTypes}.
      *
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
-     *            <code>Class.getParameterAnnotations</code>.
+     *            {@code Class.getParameterAnnotations}.
      *
      * @param mediaType the media type of the data that will be read, this will be
      *            compared to the values of {@link javax.ws.rs.Consumes} for each
@@ -140,12 +139,12 @@ public interface MessageBodyWorkers {
      *
      * @param genericType the type of object to be written. E.g. if the message body is to
      *            be produced from a field, this will be the declared type of the field as
-     *            returned by <code>Field.getGenericType</code>.
+     *            returned by {@code Field.getGenericType}.
      *
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be written. E.g. if the message body is to be produced from a
      *            field, this will be the annotations on that field returned by
-     *            <code>Field.getDeclaredAnnotations</code>.
+     *            {@code Field.getDeclaredAnnotations}.
      *
      * @param mediaType the media type of the data that will be written, this will be
      *            compared to the values of {@link javax.ws.rs.Produces} for each
@@ -165,12 +164,12 @@ public interface MessageBodyWorkers {
      *
      * @param genericType the type of object to be read. E.g. if the message body is to be
      *            read as a method parameter, this will be the declared type of the
-     *            parameter as returned by <code>Method.getGenericParameterTypes</code>.
+     *            parameter as returned by {@code Method.getGenericParameterTypes}.
      *
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be read. E.g. if the message body is to be consumed as a
      *            method parameter, this will be the annotations on that parameter
-     *            returned by <code>Method.getParameterAnnotations</code>.
+     *            returned by {@code Method.getParameterAnnotations}.
      *
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
@@ -186,12 +185,12 @@ public interface MessageBodyWorkers {
      *
      * @param genericType the type of object to be written. E.g. if the message body is to
      *            be produced from a field, this will be the declared type of the field as
-     *            returned by <code>Field.getGenericType</code>.
+     *            returned by {@code Field.getGenericType}.
      *
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be written. E.g. if the message body is to be produced from a
      *            field, this will be the annotations on that field returned by
-     *            <code>Field.getDeclaredAnnotations</code>.
+     *            {@code Field.getDeclaredAnnotations}.
      *
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
@@ -208,12 +207,12 @@ public interface MessageBodyWorkers {
      *
      * @param genericType the type of object to be written. E.g. if the message body is to
      *            be produced from a field, this will be the declared type of the field as
-     *            returned by <code>Field.getGenericType</code>.
+     *            returned by {@code Field.getGenericType}.
      *
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be written. E.g. if the message body is to be produced from a
      *            field, this will be the annotations on that field returned by
-     *            <code>Field.getDeclaredAnnotations</code>.
+     *            {@code Field.getDeclaredAnnotations}.
      *
      * @param acceptableMediaTypes the list of acceptable media types, sorted according to
      *            the quality with the media type of highest quality occurring first
@@ -245,12 +244,13 @@ public interface MessageBodyWorkers {
      * choosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
-     * @param genericType the generic type that is to be read from the input stream.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations an array of the annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
-     *            <code>Method.getParameterAnnotations</code>.
+     *            {@code Method.getParameterAnnotations}.
      * @param mediaType the media type of the HTTP entity.
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
      * @param propertiesDelegate request-scoped properties delegate.
@@ -264,7 +264,7 @@ public interface MessageBodyWorkers {
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> Object readFrom(GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
             boolean intercept) throws WebApplicationException, IOException;
 
@@ -277,7 +277,8 @@ public interface MessageBodyWorkers {
      * and modified by the interceptors.
      *
      * @param entity Entity to be written to the entityStream
-     * @param genericType the generic type to be written into the {@code entityStream}.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations an array of the annotations on the resource method that returns
      *            the object.
      * @param mediaType the media type of the HTTP entity.
@@ -294,7 +295,7 @@ public interface MessageBodyWorkers {
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> void writeTo(Object entity, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> void writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
@@ -308,7 +309,8 @@ public interface MessageBodyWorkers {
      * and modified by the interceptors.
      *
      * @param entity Entity to be written to the entityStream
-     * @param genericType the generic type to be written into the {@code entityStream}.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
      * @param annotations an array of the annotations on the resource method that returns
      *            the object.
      * @param mediaType the media type of the HTTP entity.
@@ -327,7 +329,7 @@ public interface MessageBodyWorkers {
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> void writeTo(Object entity, GenericType<T> genericType, Annotation[] annotations, MediaType mediaType,
+    public <T> void writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
@@ -335,10 +337,10 @@ public interface MessageBodyWorkers {
     /**
      * Callback which will be used to pass back the size of the entity. It will be invoked
      * in method
-     * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
-     * MultivaluedMap, Map, OutputStream, MessageBodySizeCallback, boolean)} and
-     * {@link MessageBodyWorkers#writeTo(Object, GenericType, Annotation[], MediaType,
-     * MultivaluedMap, PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean, boolean)}
+     * {@link MessageBodyWorkers#writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap,
+     * PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean)} and
+     * {@link MessageBodyWorkers#writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap,
+     * PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean, boolean)} and
      * after selection of the {@link MessageBodyWriter message body writer} and before
      * writing to the output stream.
      */

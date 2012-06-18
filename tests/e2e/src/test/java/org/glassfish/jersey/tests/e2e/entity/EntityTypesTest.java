@@ -258,13 +258,11 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore // TODO: blocked by JAX_RS_SPEC-202
     public void testJAXBElementArrayXMLRepresentation() {
         _testListOrArray(false, MediaType.APPLICATION_XML_TYPE);
     }
 
     @Test
-    @Ignore // TODO: blocked by JAX_RS_SPEC-202
     public void testJAXBElementArrayJSONRepresentation() {
         _testListOrArray(false, MediaType.APPLICATION_JSON_TYPE);
     }

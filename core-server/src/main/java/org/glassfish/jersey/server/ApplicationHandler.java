@@ -58,7 +58,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -736,7 +735,7 @@ public final class ApplicationHandler {
             };
 
             try {
-                Requests.getMessageWorkers(request).writeTo(entity, GenericType.of(entity.getClass(), entityType), outputAnnotations, outputMediaType,
+                Requests.getMessageWorkers(request).writeTo(entity, entity.getClass(), entityType, outputAnnotations, outputMediaType,
                         response.getMetadata(), new MapPropertiesDelegate(Helper.unwrap(response).getProperties()), committingOutput, messageBodySizeCallback,
                         true, !request.getMethod().equals(HttpMethod.HEAD));
             } catch (IOException ex) {

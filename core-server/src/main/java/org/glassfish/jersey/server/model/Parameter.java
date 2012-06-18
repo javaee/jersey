@@ -61,20 +61,59 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 
 /**
- * Abstraction for a method parameter
+ * Method parameter model.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Parameter implements AnnotatedElement {
     private static final Logger LOGGER = Logger.getLogger(Parameter.class.getName());
 
+    /**
+     * Parameter injection sources type.
+     */
     public static enum Source {
 
-        ENTITY, QUERY, MATRIX, PATH, COOKIE, HEADER, CONTEXT, FORM, UNKNOWN
+        /**
+         * Entity parameter injection source.
+         */
+        ENTITY,
+        /**
+         * Query parameter injection source.
+         */
+        QUERY,
+        /**
+         * Matrix parameter injection source.
+         */
+        MATRIX,
+        /**
+         * Path parameter injection source.
+         */
+        PATH,
+        /**
+         * Cookie parameter injection source.
+         */
+        COOKIE,
+        /**
+         * Header parameter injection source.
+         */
+        HEADER,
+        /**
+         * Context parameter injection source.
+         */
+        CONTEXT,
+        /**
+         * Form parameter injection source.
+         */
+        FORM,
+        /**
+         * Unknown parameter injection source.
+         */
+        UNKNOWN
     }
 
     private static interface ParamAnnotationHelper<T extends Annotation> {
@@ -181,7 +220,8 @@ public class Parameter implements AnnotatedElement {
      * @param declaringClass declaring class of the method the parameter belongs to.
      * @param keepEncoded set to {@code true} to disable automatic decoding
      *     of all the constructor parameters. (See {@link Encoded}.
-     * @param paramType generic parameter type information.
+     * @param rawType     raw Java parameter type.
+     * @param type        generic Java parameter type.
      * @param annotations parameter annotations.
      * @return new parameter model.
      */
@@ -190,7 +230,8 @@ public class Parameter implements AnnotatedElement {
             Class concreteClass,
             Class declaringClass,
             boolean keepEncoded,
-            GenericType<?> paramType,
+            Class<?> rawType,
+            Type type,
             Annotation[] annotations) {
 
         if (null == annotations) {
@@ -231,13 +272,14 @@ public class Parameter implements AnnotatedElement {
         }
 
         ClassTypePair ct = ReflectionHelper.resolveGenericType(
-                concreteClass, declaringClass, paramType.getRawType(), paramType.getType());
+                concreteClass, declaringClass, rawType, type);
 
         return new Parameter(
                 annotations, paramAnnotation,
                 paramSource,
                 paramName,
-                GenericType.of(ct.rawClass(), ct.type()),
+                ct.rawClass(),
+                ct.type(),
                 paramEncoded,
                 paramDefault);
     }
@@ -257,7 +299,8 @@ public class Parameter implements AnnotatedElement {
                     concreteClass,
                     declaringClass,
                     keepEncoded,
-                    GenericType.of(parameterTypes[i], genericParameterTypes[i]),
+                    parameterTypes[i],
+                    genericParameterTypes[i],
                     parameterAnnotations[i]);
             if (null != parameter) {
                 parameters.add(parameter);
@@ -335,6 +378,14 @@ public class Parameter implements AnnotatedElement {
                 method.getParameterAnnotations());
     }
 
+    /**
+     * Create new parameter model by overriding {@link Parameter.Source source}
+     * of the original parameter model.
+     *
+     * @param original original parameter model.
+     * @param source new overriding parameter source.
+     * @return source-overridden copy of the original parameter.
+     */
     public static Parameter overrideSource(Parameter original, Parameter.Source source) {
 
         return new Parameter(
@@ -342,6 +393,7 @@ public class Parameter implements AnnotatedElement {
                     original.annotation,
                     source,
                     source.name(),
+                    original.rawType,
                     original.type,
                     original.encoded,
                     original.defaultValue);
@@ -369,20 +421,23 @@ public class Parameter implements AnnotatedElement {
     private final String sourceName;
     private final boolean encoded;
     private final String defaultValue;
-    private final GenericType<?> type;
+    private final Class<?> rawType;
+    private final Type type;
 
     private Parameter(
             Annotation[] markers,
             Annotation marker,
             Source source,
             String sourceName,
-            GenericType<?> type,
+            Class<?> rawType,
+            Type type,
             boolean encoded,
             String defaultValue) {
         this.annotations = markers;
         this.annotation = marker;
         this.source = source;
         this.sourceName = sourceName;
+        this.rawType = rawType;
         this.type = type;
         this.encoded = encoded;
         this.defaultValue = defaultValue;
@@ -446,11 +501,20 @@ public class Parameter implements AnnotatedElement {
     }
 
     /**
+     * Get raw type information for the parameter.
+     *
+     * @return raw parameter type information.
+     */
+    public Class<?> getRawType() {
+        return rawType;
+    }
+
+    /**
      * Get generic type information for the parameter.
      *
      * @return generic parameter type information.
      */
-    public GenericType<?> getParameterType() {
+    public Type getType() {
         return type;
     }
 

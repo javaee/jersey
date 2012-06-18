@@ -41,8 +41,6 @@ package org.glassfish.jersey.message.internal;
 
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -80,6 +78,7 @@ import com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// TODO revise - remove unused methods, fix warnings etc.
 public class OutboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
@@ -740,10 +739,11 @@ public class OutboundMessageContext {
         if (entity instanceof GenericEntity) {
             GenericEntity genericEntity = (GenericEntity) entity;
             this.entity = genericEntity.getEntity();
-            this.entityType = GenericType.of(genericEntity.getRawType(), genericEntity.getType());
+            this.entityType = new GenericType(genericEntity.getType());
         } else {
             this.entity = entity;
-            this.entityType = GenericType.of(entity.getClass(), extractGenericType(entity));
+            // TODO is this ok?
+            this.entityType = new GenericType<T>(entity.getClass());
         }
     }
 
@@ -786,16 +786,7 @@ public class OutboundMessageContext {
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
     public <T> void setEntity(Class<T> type, Annotation[] annotations, MediaType mediaType, T entity) {
-        Type genericType = extractGenericType(entity);
-
-        setEntity(GenericType.of(type, genericType), annotations, mediaType, entity);
-    }
-
-    private Type extractGenericType(Object entity) {
-        Class<?> type = entity.getClass();
-        Type genericType = type.getGenericSuperclass();
-        genericType = (genericType instanceof ParameterizedType) ? genericType : type;
-        return genericType;
+        setEntity(new GenericType<T>(type), annotations, mediaType, entity);
     }
 
     /**
