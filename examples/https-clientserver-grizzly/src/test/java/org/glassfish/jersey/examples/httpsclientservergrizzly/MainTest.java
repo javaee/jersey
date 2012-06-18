@@ -65,8 +65,9 @@ import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
 
 import org.junit.After;
 import org.junit.Before;
@@ -121,7 +122,7 @@ public class MainTest {
         client.configuration().setProperty(ClientProperties.SSL_CONTEXT, context);
 
         // client basic auth demonstration
-        client.configuration().register(new HttpBasicAuthFilter("user", "password"));
+        client.configuration().register(new HttpBasicAuthFilter_Old("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -168,7 +169,7 @@ public class MainTest {
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter());
+        target.configuration().register(new LoggingFilter_Old());
 
         Response response;
 
@@ -209,7 +210,7 @@ public class MainTest {
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter());
+        target.configuration().register(new LoggingFilter_Old());
 
         boolean caught = false;
 

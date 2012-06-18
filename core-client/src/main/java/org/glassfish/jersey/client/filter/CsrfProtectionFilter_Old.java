@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,53 +39,67 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
+import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.internal.util.Base64;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.glassfish.jersey._remove.RequestFilter;
 
 /**
+ * Simple client-side filter that adds X-Requested-By headers to all state-changing
+ * request (i.e. request for methods other than GET, HEAD and OPTIONS).
+ * This is to satisfy the requirements of the {@link org.glassfish.jersey.server.filter.CsrfProtectionFilter}
+ * on the server side.
+ *
+ * @see org.glassfish.jersey.server.filter.CsrfProtectionFilter
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class HttpBasicAuthFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+public class CsrfProtectionFilter_Old implements RequestFilter {
 
-    @Before
-    public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(new HttpBasicAuthFilter_Old("Uzivatelske jmeno", "Heslo"));
-        invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
+    /**
+     * Name of the header this filter will attach to the request.
+     */
+    public static final String HEADER_NAME = "X-Requested-By";
+
+    private static final Set<String> METHODS_TO_IGNORE;
+    static {
+        HashSet<String> mti = new HashSet<String>();
+        mti.add("GET");
+        mti.add("OPTIONS");
+        mti.add("HEAD");
+        METHODS_TO_IGNORE = Collections.unmodifiableSet(mti);
     }
 
-    @Test
-    public void testGet() {
-        Response r = invBuilder.get();
-        assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeader(HttpHeaders.AUTHORIZATION));
+    private final String requestedBy;
+
+    /**
+     * Creates a new instance of the filter with X-Requested-By header value set to empty string.
+     */
+    public CsrfProtectionFilter_Old() {
+        this("");
     }
 
-    private static class TestTransport implements Inflector<Request, Response> {
-        @Override
-        public Response apply(Request request) {
-            Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION);
-            if (headerValue != null) {
-                rb.header(HttpHeaders.AUTHORIZATION, headerValue);
-            }
-            return rb.build();
+    /**
+     * Initialized the filter with a desired value of the X-Requested-By header.
+     *
+     * @param requestedBy Desired value of X-Requested-By header the filter
+     * will be adding for all potentially state changing requests.
+     */
+    public CsrfProtectionFilter_Old(final String requestedBy) {
+        this.requestedBy = requestedBy;
+    }
+
+    @Override
+    public final void preFilter(final FilterContext fc) throws IOException {
+        final Request request = fc.getRequest();
+        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
+                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
+            fc.setRequest(fc.getRequestBuilder().header(HEADER_NAME, requestedBy).build());
         }
     }
 }

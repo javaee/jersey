@@ -200,4 +200,19 @@ public final class HeadersFactory {
      */
     private HeadersFactory() {
     }
+
+    /**
+     * Get detached stringified copy of the message headers.
+     *
+     * @return detached stringified copy of the message headers.
+     * @param headers
+     */
+    public static MultivaluedMap<String, String> getStringHeaders(MultivaluedMap<String, Object> headers) {
+        final MultivaluedMap<String, String> stringHeaders = createInbound();
+        if (!headers.isEmpty()) {
+            stringHeaders.putAll(toString(headers, RuntimeDelegate.getInstance()));
+        }
+
+        return stringHeaders;
+    }
 }

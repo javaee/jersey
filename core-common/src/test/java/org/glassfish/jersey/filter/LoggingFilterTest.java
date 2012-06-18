@@ -42,13 +42,13 @@ package org.glassfish.jersey.filter;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey._remove.ResponseFilter;
-
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -73,13 +73,15 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+
+// TODO: does not add much value - should be removed or rewritten
 public class LoggingFilterTest {
 
     private RequestInvoker<Request, Response> invoker;
     private RequestScope requestScope;
-    private CustomLoggingFilter loggingFilter;
+    private CustomLoggingFilter_Old loggingFilter;
 
-    private class CustomLoggingFilter extends LoggingFilter {
+    private class CustomLoggingFilter_Old extends LoggingFilter_Old {
 
         public boolean preMatchRequestLogged = false;
         public boolean requestLogged = false;
@@ -107,7 +109,7 @@ public class LoggingFilterTest {
 
     @Before
     public void setUp() {
-        this.loggingFilter = new CustomLoggingFilter();
+        this.loggingFilter = new CustomLoggingFilter_Old();
         RequestFilterModule requestFilterModule = new RequestFilterModule(Lists.<RequestFilter>newArrayList(loggingFilter));
         ResponseFilterModule responseFilterModule = new ResponseFilterModule(Lists.<ResponseFilter>newArrayList(loggingFilter));
 
@@ -139,7 +141,7 @@ public class LoggingFilterTest {
 
     @Test
     public void testLoggingFilter() throws Exception {
-        final CustomLoggingFilter logFilter = loggingFilter;
+        final CustomLoggingFilter_Old logFilter = loggingFilter;
         requestScope.runInScope(new Callable<Object>() {
 
             @Override

@@ -44,12 +44,14 @@ import java.security.Principal;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+
 import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.PreMatchRequestFilter;
-
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
 
@@ -57,6 +59,7 @@ import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Assert;
 import org.junit.Test;
+
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -70,7 +73,7 @@ public class SecurityContextTest {
     private static final String SKIP_FILTER = "skipFilter";
     private static final String PRINCIPAL_IS_NULL = "principalIsNull";
 
-    private static class SecurityContextFilter implements PreMatchRequestFilter {
+    private static class SecurityContextFilter_Old implements PreMatchRequestFilter {
 
         @Inject
         Ref<SecurityContext> securityContextRef;
@@ -124,6 +127,59 @@ public class SecurityContextTest {
         }
     }
 
+    private static class SecurityContextFilter implements ContainerRequestFilter {
+
+        @Inject
+        Ref<SecurityContext> securityContextRef;
+        @Context
+        SecurityContext securityContext;
+
+        @Override
+        public void filter(ContainerRequestContext rc) throws IOException {
+            // test injections
+            Assert.assertNotNull(securityContext);
+            Assert.assertEquals(securityContextRef.get(), securityContext);
+            Assert.assertTrue(securityContext.getUserPrincipal() == null);
+
+            String header = rc.getHeaders().getFirst(SKIP_FILTER);
+            if ("true".equals(header)) {
+                return;
+            }
+
+
+
+            // set new Security Context
+            securityContextRef.set(new SecurityContext() {
+
+                @Override
+                public boolean isUserInRole(String role) {
+                    return false;
+                }
+
+                @Override
+                public boolean isSecure() {
+                    return false;
+                }
+
+                @Override
+                public Principal getUserPrincipal() {
+                    return new Principal() {
+
+                        @Override
+                        public String getName() {
+                            return PRINCIPAL_NAME;
+                        }
+                    };
+                }
+
+                @Override
+                public String getAuthenticationScheme() {
+                    return null;
+                }
+            });
+        }
+    }
+
     /**
      * Tests SecurityContext in filter.
      *
@@ -131,7 +187,7 @@ public class SecurityContextTest {
      */
     @Test
     public void testSecurityContextInjectionFilter() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter_Old.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Response response = application.apply(Requests.from("/test", "GET").build()).get();
@@ -147,7 +203,7 @@ public class SecurityContextTest {
      */
     @Test
     public void testDefaultSecurityContext() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter_Old.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         Response response = application.apply(Requests.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();

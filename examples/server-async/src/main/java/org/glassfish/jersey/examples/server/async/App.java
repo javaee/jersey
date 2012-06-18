@@ -44,7 +44,8 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -88,7 +89,7 @@ public class App {
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
+                .addSingletons(new LoggingFilter_Old(Logger.getLogger(App.class.getName()), true));
 
         return resourceConfig;
     }

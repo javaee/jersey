@@ -853,6 +853,7 @@ public class InboundMessageContext {
      *
      * @param <T>         entity Java object type.
      * @param rawType     raw Java entity type.
+     * @param propertiesDelegate TODO: add javadoc
      * @return entity read from a context entity input stream.
      */
     public <T> T readEntity(Class<T> rawType, PropertiesDelegate propertiesDelegate) {

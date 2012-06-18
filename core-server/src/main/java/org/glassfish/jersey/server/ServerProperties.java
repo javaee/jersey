@@ -120,7 +120,7 @@ public final class ServerProperties {
 
     /**
      * Defines mapping of URI extensions to media types.
-     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
+     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter_Old}. See it's javadoc for more
      * information on media type mappings.
      * <p>
      * The property value MUST be an instance of {@link String}, {@code String[]} or {@code Map&lt;String, MediaType&gt;}.
@@ -140,7 +140,7 @@ public final class ServerProperties {
 
     /**
      * Defines mapping of URI extensions to languages.
-     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
+     * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter_Old}. See it's javadoc for more
      * information on language mappings.
      * <p>
      * The property value MUST be an instance of {@link String}, {@code String[]} or {@code Map&lt;String, String&gt;}.

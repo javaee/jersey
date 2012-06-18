@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,22 +51,27 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey._remove.FilterContext;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPReaderTestInterceptor;
 import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPWriterTestInterceptor;
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests interceptors.
@@ -90,14 +93,12 @@ public class InterceptorCustomTest extends JerseyTest {
     public void testMoreInterceptorsAndFilter() throws IOException {
 
         client().configuration().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class)
-                .register(PlusOneWriterInterceptor.class).register(MinusOneReaderInterceptor.class).register(TestFilter.class);
+                .register(PlusOneWriterInterceptor.class).register(MinusOneReaderInterceptor.class);
         WebTarget target = target().path("test");
 
         Response response = target.request().put(Entity.entity(ENTITY, MediaType.TEXT_PLAIN_TYPE));
         String str = response.readEntity(String.class);
         assertEquals(ENTITY + FROM_RESOURCE, str);
-        assertEquals(ENTITY + FROM_RESOURCE, TestFilter.postEntity);
-        assertEquals(ENTITY, TestFilter.preEntity);
     }
 
     @Path("test")
@@ -110,28 +111,6 @@ public class InterceptorCustomTest extends JerseyTest {
             System.out.println("resource: " + str);
             return str + FROM_RESOURCE;
         }
-    }
-
-    @Provider
-    public static class TestFilter implements RequestFilter, ResponseFilter {
-        public static String preEntity;
-        public static String postEntity;
-
-        @Override
-        public void preFilter(FilterContext context) throws IOException {
-            String str = context.getRequest().readEntity(String.class);
-            System.out.println("request filter - entity: " + str);
-            preEntity = str;
-        }
-
-        @Override
-        public void postFilter(FilterContext context) throws IOException {
-            String str = context.getResponse().readEntity(String.class);
-            System.out.println("response filter - entity: " + str);
-            assertEquals(ENTITY + FROM_RESOURCE, str);
-            postEntity = str;
-        }
-
     }
 
     /**

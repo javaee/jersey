@@ -319,20 +319,6 @@ public class OutboundMessageContext {
     }
 
     /**
-     * Get detached stringified copy of the message headers.
-     *
-     * @return detached stringified copy of the message headers.
-     */
-    public MultivaluedMap<String, String> getStringHeaders() {
-        final MultivaluedMap<String, String> stringHeaders = HeadersFactory.createInbound();
-        if (!headers.isEmpty()) {
-            stringHeaders.putAll(HeadersFactory.toString(headers, RuntimeDelegate.getInstance()));
-        }
-
-        return stringHeaders;
-    }
-
-    /**
      * Get message date.
      *
      * @return the message date, otherwise {@code null} if not present.

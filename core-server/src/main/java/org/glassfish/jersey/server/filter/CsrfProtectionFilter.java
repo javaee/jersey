@@ -45,11 +45,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
-import org.glassfish.jersey._remove.Helper;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
+
 import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
+import org.glassfish.jersey._remove.Helper;
 
 /**
  * Simple server-side request filter that implements CSRF protection as per the
@@ -64,7 +66,7 @@ import org.glassfish.jersey._remove.PreMatchRequestFilter;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class CsrfProtectionFilter implements PreMatchRequestFilter {
+public class CsrfProtectionFilter implements ContainerRequestFilter {
 
     /**
      * Name of the header this filter will attach to the request.
@@ -81,10 +83,8 @@ public class CsrfProtectionFilter implements PreMatchRequestFilter {
     }
 
     @Override
-    public final void preMatchFilter(final FilterContext fc) throws IOException {
-        Request request = fc.getRequest();
-        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
-                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
+    public void filter(ContainerRequestContext rc) throws IOException {
+        if (!METHODS_TO_IGNORE.contains(rc.getMethod()) && !rc.getHeaders().containsKey(HEADER_NAME)) {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
     }

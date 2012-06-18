@@ -43,14 +43,13 @@ import java.io.IOException;
 import java.security.Principal;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey.internal.util.Base64;
@@ -67,7 +66,7 @@ import org.jvnet.hk2.annotations.Inject;
  * @see RequestFilter
  */
 @Provider
-public class SecurityFilter implements ContainerRequestFilter {
+public class SecurityFilter_Old implements RequestFilter {
 
     @Inject
     UriInfo uriInfo;
@@ -77,7 +76,7 @@ public class SecurityFilter implements ContainerRequestFilter {
     Ref<SecurityContext> securityContextRef;
 
     @Override
-    public void filter(ContainerRequestContext filterContext) throws IOException {
+    public void preFilter(FilterContext filterContext) throws IOException {
         User user = authenticate(filterContext.getRequest());
         securityContextRef.set(new Authorizer(user));
     }

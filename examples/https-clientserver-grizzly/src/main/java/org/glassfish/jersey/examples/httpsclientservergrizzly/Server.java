@@ -88,7 +88,7 @@ public class Server {
         sslContext.setTrustStorePass("asdfgh");
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
+        rc.addClasses(RootResource.class, SecurityFilter_Old.class, AuthenticationExceptionMapper.class);
 
         try {
 

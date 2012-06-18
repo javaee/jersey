@@ -39,22 +39,32 @@
  */
 package org.glassfish.jersey.filter;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import javax.ws.rs.BindingPriority;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
+import org.glassfish.jersey.message.internal.HeadersFactory;
 
 /**
  * Universal logging filter.
@@ -62,26 +72,29 @@ import org.glassfish.jersey._remove.ResponseFilter;
  * Can be used on client or server side. Has the highest priority.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-@Provider
 @BindingPriority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
-public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, ResponseFilter {
+public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,
+        ClientResponseFilter, WriterInterceptor {
 
     private static final Logger LOGGER = Logger.getLogger(LoggingFilter.class.getName());
     private static final String NOTIFICATION_PREFIX = "* ";
     private static final String REQUEST_PREFIX = "> ";
     private static final String RESPONSE_PREFIX = "< ";
+    private static final String ENTITY_LOGGER_PROPERTY = LoggingFilter.class.getName() + ".entityLogger";
     //
     @SuppressWarnings("NonConstantLogger")
     private final Logger logger;
     private final AtomicLong _id = new AtomicLong(0);
-    private boolean printEntity = true;
+    private final boolean printEntity;
+    private final int maxEntitySize;
 
     /**
      * Create a logging filter logging the request and response to a default JDK
      * logger, named as the fully qualified class name of this class. Entity
-     * logging is turned on.
+     * logging is turned off by default.
      */
     public LoggingFilter() {
         this(LOGGER, false);
@@ -92,29 +105,27 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
      * logging.
      *
      * @param logger the logger to log requests and responses.
-     * @param printEntity if true, entity will be logged as well.
+     * @param printEntity if true, entity will be logged as well up to the default maxEntitySize, which is 10KB
      */
     public LoggingFilter(Logger logger, boolean printEntity) {
         this.logger = logger;
         this.printEntity = printEntity;
+        this.maxEntitySize = 10 * 1024;
     }
 
-    @Override
-    public void preMatchFilter(FilterContext context) throws IOException {
-        long id = this._id.incrementAndGet();
-        context.setRequest(logRequest(id, context.getRequest()));
-    }
-
-    @Override
-    public void postFilter(FilterContext context) throws IOException {
-        long id = this._id.incrementAndGet();
-        context.setResponse(logResponse(id, context.getResponse()));
-    }
-
-    @Override
-    public void preFilter(FilterContext context) throws IOException {
-        long id = this._id.incrementAndGet();
-        context.setRequest(logRequest(id, context.getRequest()));
+    /**
+     * Creates a logging filter with custom logger and entity logging turned on, but potentially limiting the size
+     * of entity to be buffered and logged.
+     *
+     * @param logger the logger to log requests and responses.
+     * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
+     *                      logging filter will print (and buffer in memory) only the specified number of bytes
+     *                      and print "...more..." string at the end.
+     */
+    public LoggingFilter(Logger logger, int maxEntitySize) {
+        this.logger = logger;
+        this.printEntity = true;
+        this.maxEntitySize = maxEntitySize;
     }
 
     private void log(StringBuilder b) {
@@ -123,64 +134,28 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
         }
     }
 
-    private Request logRequest(long id, Request request) throws IOException {
-        StringBuilder b = new StringBuilder();
-
-        printRequestLine(b, id, request);
-        printPrefixedHeaders(b, id, REQUEST_PREFIX, Helper.unwrap(request).getHeaders().getRequestHeaders());
-
-        // TODO define large entities logging threshold via configuration
-        //      or add special handling for entity streams
-        if (printEntity && Helper.unwrap(request).hasEntity()) {
-            Helper.unwrap(request).bufferEntity();
-            b.append(Helper.unwrap(request).readEntity(String.class)).append("\n");
-        }
-
-        log(b);
-
-        return request;
-    }
-
-    private Response logResponse(long id, Response response) throws IOException {
-        StringBuilder b = new StringBuilder();
-
-        printResponseLine(b, id, response);
-        printPrefixedHeaders(b, id, RESPONSE_PREFIX, Helper.unwrap(response).getHeaders());
-
-        // TODO define large entities logging threshold via configuration
-        //      or add special handling for entity streams
-        if (printEntity && response.hasEntity()) {
-            response.bufferEntity();
-            b.append(response.readEntity(String.class)).append("\n");
-        }
-
-        log(b);
-
-        return response;
-    }
-
     private StringBuilder prefixId(StringBuilder b, long id) {
         b.append(Long.toString(id)).append(" ");
         return b;
     }
 
-    private void printRequestLine(StringBuilder b, long id, Request request) {
+    private void printRequestLine(StringBuilder b, long id, String method, URI uri) {
         prefixId(b, id).append(NOTIFICATION_PREFIX).append("LoggingFilter - Request received on thread ").append(Thread.currentThread().getName()).append("\n");
-        prefixId(b, id).append(REQUEST_PREFIX).append(request.getMethod()).append(" ").
-                append(Helper.unwrap(request).getUri().toASCIIString()).append("\n");
+        prefixId(b, id).append(REQUEST_PREFIX).append(method).append(" ").
+                append(uri.toASCIIString()).append("\n");
     }
 
-    private void printResponseLine(StringBuilder b, long id, Response response) {
+    private void printResponseLine(StringBuilder b, long id, int status) {
         prefixId(b, id).append(NOTIFICATION_PREFIX).
                 append("LoggingFilter - Response received on thread ").append(Thread.currentThread().getName()).append("\n");
         prefixId(b, id).append(RESPONSE_PREFIX).
-                append(Integer.toString(response.getStatus())).
+                append(Integer.toString(status)).
                 append("\n");
     }
 
-    private void printPrefixedHeaders(StringBuilder b, long id, final String prefix, Map<String, List<String>> headers) {
+    private void printPrefixedHeaders(StringBuilder b, long id, final String prefix, MultivaluedMap<String, String> headers) {
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
-            List<String> val = e.getValue();
+            List<?> val = e.getValue();
             String header = e.getKey();
 
             if (val.size() == 1) {
@@ -188,7 +163,7 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
             } else {
                 StringBuilder sb = new StringBuilder();
                 boolean add = false;
-                for (String s : val) {
+                for (Object s : val) {
                     if (add) {
                         sb.append(',');
                     }
@@ -197,6 +172,129 @@ public class LoggingFilter implements PreMatchRequestFilter, RequestFilter, Resp
                 }
                 prefixId(b, id).append(prefix).append(header).append(": ").append(sb.toString()).append("\n");
             }
+        }
+    }
+
+    private InputStream logInboundEntity(StringBuilder b, InputStream stream) throws IOException {
+        if (!stream.markSupported()) {
+            stream = new BufferedInputStream(stream);
+        }
+        stream.mark(maxEntitySize + 1);
+        byte[] entity = new byte[maxEntitySize + 1];
+        int entitySize = stream.read(entity);
+        b.append(new String(entity, 0, Math.min(entitySize, maxEntitySize)));
+        if (entitySize > maxEntitySize) {
+            b.append("...more...");
+        }
+        b.append('\n');
+        stream.reset();
+        return stream;
+    }
+
+    @Override
+    public void filter(ClientRequestContext context) throws IOException {
+        long id = this._id.incrementAndGet();
+        StringBuilder b = new StringBuilder();
+
+        printRequestLine(b, id, context.getMethod(), context.getUri());
+        printPrefixedHeaders(b, id, REQUEST_PREFIX, HeadersFactory.getStringHeaders(context.getHeaders()));
+
+        if (printEntity && context.hasEntity()) {
+            OutputStream stream = new LoggingStream(b, context.getEntityStream());
+            context.setEntityStream(stream);
+            context.setProperty(ENTITY_LOGGER_PROPERTY, stream);
+            // not calling log(b) here - it will be called by the interceptor
+        } else {
+            log(b);
+        }
+    }
+
+    @Override
+    public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
+        long id = this._id.incrementAndGet();
+        StringBuilder b = new StringBuilder();
+
+        printResponseLine(b, id, responseContext.getStatusCode());
+        printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getHeaders());
+
+        if (printEntity && responseContext.hasEntity()) {
+            responseContext.setEntityStream(logInboundEntity(b, responseContext.getEntityStream()));
+        }
+
+        log(b);
+    }
+
+    @Override
+    public void filter(ContainerRequestContext context) throws IOException {
+        long id = this._id.incrementAndGet();
+        StringBuilder b = new StringBuilder();
+
+        printRequestLine(b, id, context.getMethod(), context.getUriInfo().getRequestUri());
+        printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getHeaders());
+
+        if (printEntity && context.hasEntity()) {
+            context.setEntityStream(logInboundEntity(b, context.getEntityStream()));
+        }
+
+        log(b);
+    }
+
+    @Override
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        long id = this._id.incrementAndGet();
+        StringBuilder b = new StringBuilder();
+
+        printResponseLine(b, id, responseContext.getStatusCode());
+        printPrefixedHeaders(b, id, RESPONSE_PREFIX, HeadersFactory.getStringHeaders(responseContext.getHeaders()));
+
+        if (printEntity && responseContext.hasEntity()) {
+            OutputStream stream = new LoggingStream(b, responseContext.getEntityStream());
+            responseContext.setEntityStream(stream);
+            requestContext.setProperty(ENTITY_LOGGER_PROPERTY, stream);
+            // not calling log(b) here - it will be called by the interceptor
+        } else {
+            log(b);
+        }
+    }
+
+    @Override
+    public void aroundWriteTo(WriterInterceptorContext writerInterceptorContext) throws IOException, WebApplicationException {
+        LoggingStream stream = (LoggingStream) writerInterceptorContext.getProperty(ENTITY_LOGGER_PROPERTY);
+        if (stream != null) {
+            writerInterceptorContext.proceed();
+            log(stream.getStringBuilder());
+        }
+    }
+
+    private class LoggingStream extends OutputStream {
+        private final StringBuilder b;
+        private final OutputStream inner;
+        private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        LoggingStream(StringBuilder b, OutputStream inner) {
+            this.b = b;
+            this.inner = inner;
+        }
+
+        StringBuilder getStringBuilder() {
+            // write entity to the builder
+            byte[] entity = baos.toByteArray();
+
+            b.append(new String(entity, 0, Math.min(entity.length, maxEntitySize)));
+            if (entity.length > maxEntitySize) {
+                b.append("...more...");
+            }
+            b.append('\n');
+
+            return b;
+        }
+
+        @Override
+        public void write(int i) throws IOException {
+            if (baos.size() <= maxEntitySize) {
+                baos.write(i);
+            }
+            inner.write(i);
         }
     }
 }

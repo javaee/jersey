@@ -37,59 +37,38 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.filter;
+package org.glassfish.jersey.examples.helloworld;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.RequestFilter;
+import org.glassfish.jersey._remove.ResponseFilter;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
 
 /**
+ * Custom logging filter.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class CsrfProtectionFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+public class CustomLoggingFilter_Old implements RequestFilter, ResponseFilter {
 
-    @Before
-    public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(CsrfProtectionFilter_Old.class);
-        invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-    }
+        static int preFilterCalled = 0;
+        static int postFilterCalled = 0;
 
-    @Test
-    public void testGet() {
-        Response r = invBuilder.get();
-        assertNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    @Test
-    public void testPut() {
-        Response r = invBuilder.put(null);
-        assertNotNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    private static class TestTransport implements Inflector<Request, Response> {
         @Override
-        public Response apply(Request request) {
-            Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(CsrfProtectionFilter_Old.HEADER_NAME);
-            if (headerValue != null) {
-                rb.header(CsrfProtectionFilter_Old.HEADER_NAME, headerValue);
-            }
-            return rb.build();
+        public void preFilter(FilterContext context) throws IOException {
+            System.out.println("CustomLoggingFilter.preFilter called");
+            assertEquals(context.getProperties().get("foo"), "bar");
+            preFilterCalled++;
+        }
+
+        @Override
+        public void postFilter(FilterContext context) throws IOException {
+            System.out.println("CustomLoggingFilter.postFilter called");
+            assertEquals(context.getProperties().get("foo"), "bar");
+            postFilterCalled++;
         }
     }
-}
+

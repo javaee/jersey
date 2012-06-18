@@ -44,6 +44,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Request;
 import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
@@ -59,7 +61,7 @@ import org.glassfish.jersey._remove.RequestFilter;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class CsrfProtectionFilter implements RequestFilter {
+public class CsrfProtectionFilter implements ClientRequestFilter {
 
     /**
      * Name of the header this filter will attach to the request.
@@ -95,11 +97,9 @@ public class CsrfProtectionFilter implements RequestFilter {
     }
 
     @Override
-    public final void preFilter(final FilterContext fc) throws IOException {
-        final Request request = fc.getRequest();
-        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
-                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
-            fc.setRequest(fc.getRequestBuilder().header(HEADER_NAME, requestedBy).build());
+    public void filter(ClientRequestContext rc) throws IOException {
+        if (!METHODS_TO_IGNORE.contains(rc.getMethod()) && !rc.getHeaders().containsKey(HEADER_NAME)) {
+            rc.getHeaders().add(HEADER_NAME, requestedBy);
         }
     }
 }

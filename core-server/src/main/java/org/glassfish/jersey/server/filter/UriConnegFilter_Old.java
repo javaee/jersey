@@ -45,14 +45,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
 import org.glassfish.jersey.message.internal.LanguageTag;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -95,10 +95,12 @@ import com.google.common.collect.Maps;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class UriConnegFilter implements ContainerRequestFilter {
+public class UriConnegFilter_Old implements PreMatchRequestFilter {
 
     protected final Map<String, MediaType> mediaTypeMappings;
     protected final Map<String, String> languageMappings;
+
+    protected @Context UriInfo uriInfo;
 
     /**
      * Registers this filter into the passed {@link ResourceConfig} instance and
@@ -109,7 +111,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      * @param languageMappings the suffix to language mappings.
      */
     public static void enableFor(ResourceConfig rc, Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
-        rc.addClasses(UriConnegFilter.class);
+        rc.addClasses(UriConnegFilter_Old.class);
         setIfNull(rc, ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypeMappings);
         setIfNull(rc, ServerProperties.LANGUAGE_MAPPINGS, languageMappings);
     }
@@ -127,7 +129,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      *
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
-    public UriConnegFilter(@Context ResourceConfig rc) {
+    public UriConnegFilter_Old(@Context ResourceConfig rc) {
         this(extractMediaTypeMappings(rc.getProperty(ServerProperties.MEDIA_TYPE_MAPPINGS)),
                 extractLanguageMappings(rc.getProperty(ServerProperties.LANGUAGE_MAPPINGS)));
     }
@@ -139,7 +141,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      * @param mediaTypeMappings the suffix to media type mappings.
      * @param languageMappings the suffix to language mappings.
      */
-    public UriConnegFilter(Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
+    public UriConnegFilter_Old(Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
         if (mediaTypeMappings == null) {
             mediaTypeMappings = Collections.emptyMap();
         }
@@ -152,11 +154,8 @@ public class UriConnegFilter implements ContainerRequestFilter {
         this.languageMappings = languageMappings;
     }
 
-
     @Override
-    public void filter(ContainerRequestContext rc) throws IOException {
-        UriInfo uriInfo = rc.getUriInfo();
-
+    public void preMatchFilter(FilterContext fc) throws IOException {
         // Quick check for a '.' character
         String path = uriInfo.getRequestUri().getRawPath();
         if (path.indexOf('.') == -1) {
@@ -185,6 +184,8 @@ public class UriConnegFilter implements ContainerRequestFilter {
         // Get the suffixes
         final String[] suffixes = segment.getPath().split("\\.");
 
+        JaxrsRequestBuilderView requestBuilder = null;
+
         for (int i = suffixes.length - 1; i >= 1; i--) {
             final String suffix = suffixes[i];
             if (suffix.length() == 0) {
@@ -194,7 +195,10 @@ public class UriConnegFilter implements ContainerRequestFilter {
             final MediaType accept = mediaTypeMappings.get(suffix);
 
             if (accept != null) {
-                rc.getHeaders().putSingle(HttpHeaders.ACCEPT, accept.toString());
+                requestBuilder = fc.getRequestBuilder();
+
+                requestBuilder.header(HttpHeaders.ACCEPT, null);
+                requestBuilder.header(HttpHeaders.ACCEPT, accept.toString());
 
                 final int index = path.lastIndexOf('.' + suffix);
                 path = new StringBuilder(path).delete(index, index + suffix.length() + 1).toString();
@@ -210,7 +214,12 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
             final String acceptLanguage = languageMappings.get(suffix);
             if (acceptLanguage != null) {
-                rc.getHeaders().putSingle(HttpHeaders.ACCEPT_LANGUAGE, acceptLanguage);
+                if (requestBuilder == null) {
+                    requestBuilder = fc.getRequestBuilder();
+                }
+
+                requestBuilder.header(HttpHeaders.ACCEPT_LANGUAGE, null);
+                requestBuilder.header(HttpHeaders.ACCEPT_LANGUAGE, acceptLanguage);
 
                 final int index = path.lastIndexOf('.' + suffix);
                 path = new StringBuilder(path).delete(index, index + suffix.length() + 1).toString();
@@ -219,8 +228,9 @@ public class UriConnegFilter implements ContainerRequestFilter {
             }
         }
 
-        if (length != path.length()) {
-            rc.setRequestUri(uriInfo.getRequestUriBuilder().replacePath(path).build());
+        if (requestBuilder != null) {
+            requestBuilder.redirect(uriInfo.getRequestUriBuilder().replacePath(path).build());
+            fc.setRequest(requestBuilder.build());
         }
     }
 
@@ -237,19 +247,19 @@ public class UriConnegFilter implements ContainerRequestFilter {
     private static Map<String, MediaType> extractMediaTypeMappings(Object mappings) {
         // parse and validate mediaTypeMappings set through MEDIA_TYPE_MAPPINGS property
         return parseAndValidateMappings(ServerProperties.MEDIA_TYPE_MAPPINGS, mappings, new TypeParser<MediaType>() {
-            public MediaType valueOf(String value) {
-                return MediaType.valueOf(value);
-            }
-        });
+                public MediaType valueOf(String value) {
+                    return MediaType.valueOf(value);
+                }
+            });
     }
 
     private static Map<String, String> extractLanguageMappings(Object mappings) {
         // parse and validate languageMappings set through LANGUAGE_MAPPINGS property
         return parseAndValidateMappings(ServerProperties.LANGUAGE_MAPPINGS, mappings, new TypeParser<String>() {
-            public String valueOf(String value) {
-                return LanguageTag.valueOf(value).toString();
-            }
-        });
+                public String valueOf(String value) {
+                    return LanguageTag.valueOf(value).toString();
+                }
+            });
     }
 
     private static <T> Map<String, T> parseAndValidateMappings(String property, Object mappings, TypeParser<T> parser) {
@@ -280,24 +290,24 @@ public class UriConnegFilter implements ContainerRequestFilter {
     }
 
     private static <T> void parseMappings(String property, String mappings,
-                                          Map<String, T> mappingsMap, TypeParser<T> parser) {
+                                   Map<String, T> mappingsMap, TypeParser<T> parser) {
         if (mappings == null)
             return;
 
         String[] records = mappings.split(",");
 
-        for (String record : records) {
-            String[] mapping = record.split(":");
-            if (mapping.length != 2)
+        for(int i = 0; i < records.length; i++) {
+            String[] record = records[i].split(":");
+            if (record.length != 2)
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_FORMAT(property, mappings));
 
-            String trimmedSegment = mapping[0].trim();
-            String trimmedValue = mapping[1].trim();
+            String trimmedSegment = record[0].trim();
+            String trimmedValue = record[1].trim();
 
             if (trimmedSegment.length() == 0)
-                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_KEY_EMPTY(property, record));
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_KEY_EMPTY(property, records[i]));
             if (trimmedValue.length() == 0)
-                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_VALUE_EMPTY(property, record));
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_VALUE_EMPTY(property, records[i]));
 
             mappingsMap.put(trimmedSegment, parser.valueOf(trimmedValue));
         }

@@ -43,7 +43,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -71,7 +72,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
     @Test
     public void testHelloWorld() throws Exception {
         WebTarget t = target();
-        t.configuration().register(new LoggingFilter());
+        t.configuration().register(new LoggingFilter_Old());
         Response r = t.path("helloworld").request().get();
         System.out.println("Status: " + r.getStatus());
         System.out.println(r.readEntity(String.class));

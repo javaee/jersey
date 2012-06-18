@@ -47,7 +47,6 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import static org.glassfish.jersey.examples.exception.ExceptionResource.MyResponseFilter;
-import static org.glassfish.jersey.examples.exception.ExceptionResource.WebApplicationExceptionFilter;
 import static org.glassfish.jersey.examples.exception.Exceptions.*;
 
 import org.junit.Test;
@@ -69,7 +68,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
         final ResourceConfig resourceConfig = new ResourceConfig(
                 ExceptionResource.class,
                 MyResponseFilter.class,
-                WebApplicationExceptionFilter.class,
+                ExceptionResource.WebApplicationExceptionFilter_Old.class,
                 MyExceptionMapper.class,
                 MySubExceptionMapper.class,
                 MySubSubException.class,

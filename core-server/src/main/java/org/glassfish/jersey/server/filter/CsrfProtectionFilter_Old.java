@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,59 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.filter;
+package org.glassfish.jersey.server.filter;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.ws.rs.WebApplicationException;
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response.Status;
+import org.glassfish.jersey._remove.FilterContext;
+import org.glassfish.jersey._remove.PreMatchRequestFilter;
 
 /**
+ * Simple server-side request filter that implements CSRF protection as per the
+ * <a href="http://www.nsa.gov/ia/_files/support/guidelines_implementation_rest.pdf">Guidelines for Implementation of REST</a>
+ * by NSA (section IV.F) and
+ * section 4.3 of <a href="http://seclab.stanford.edu/websec/csrf/csrf.pdf">this paper</a>.
+ * If you add it to the request filters of your application, it will check for X-Requested-By header in each
+ * request except for those that don't change state (GET, OPTIONS, HEAD). If the header is not found,
+ * it returns {@link Status#BAD_REQUEST} response back to the client.
+ *
+ * @see org.glassfish.jersey.client.filter.CsrfProtectionFilter
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class CsrfProtectionFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+public class CsrfProtectionFilter_Old implements PreMatchRequestFilter {
 
-    @Before
-    public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(CsrfProtectionFilter_Old.class);
-        invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
+    /**
+     * Name of the header this filter will attach to the request.
+     */
+    public static final String HEADER_NAME = "X-Requested-By";
+
+    private static final Set<String> METHODS_TO_IGNORE;
+    static {
+        HashSet<String> mti = new HashSet<String>();
+        mti.add("GET");
+        mti.add("OPTIONS");
+        mti.add("HEAD");
+        METHODS_TO_IGNORE = Collections.unmodifiableSet(mti);
     }
 
-    @Test
-    public void testGet() {
-        Response r = invBuilder.get();
-        assertNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    @Test
-    public void testPut() {
-        Response r = invBuilder.put(null);
-        assertNotNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    private static class TestTransport implements Inflector<Request, Response> {
-        @Override
-        public Response apply(Request request) {
-            Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(CsrfProtectionFilter_Old.HEADER_NAME);
-            if (headerValue != null) {
-                rb.header(CsrfProtectionFilter_Old.HEADER_NAME, headerValue);
-            }
-            return rb.build();
+    @Override
+    public final void preMatchFilter(final FilterContext fc) throws IOException {
+        Request request = fc.getRequest();
+        if (!METHODS_TO_IGNORE.contains(request.getMethod()) &&
+                (Helper.unwrap(request).getHeaders().getRequestHeader(HEADER_NAME) == null)) {
+            throw new WebApplicationException(Status.BAD_REQUEST);
         }
     }
 }

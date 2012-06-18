@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.filter.UriConnegFilter;
+import org.glassfish.jersey.server.filter.UriConnegFilter_Old;
 
 import com.google.common.collect.Maps;
 
@@ -68,7 +68,7 @@ public class UriConnegMappingFromProperty extends UriConnegLanguageMediaTypeTest
         rc.setProperty(ServerProperties.MEDIA_TYPE_MAPPINGS, "foo : application/foo, bar : application/bar");
         rc.setProperty(ServerProperties.LANGUAGE_MAPPINGS, "english : en, french : fr");
         // testing that the properties won't get overridden by new values
-        UriConnegFilter.enableFor(rc, "foo : application/bar", "english : fr");
+        UriConnegFilter_Old.enableFor(rc, "foo : application/bar", "english : fr");
         return rc;
     }
 }

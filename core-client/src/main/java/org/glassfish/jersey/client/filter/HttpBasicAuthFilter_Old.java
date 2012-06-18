@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,57 +39,43 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import java.io.IOException;
+
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
+import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey._remove.RequestFilter;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.glassfish.jersey.internal.util.Base64;
 
 /**
+ * Client filter adding HTTP Basic Authentication header to the HTTP request,
+ * if no such header is already present.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Craig McClanahan
  */
-public class CsrfProtectionFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+public final class HttpBasicAuthFilter_Old implements RequestFilter {
 
-    @Before
-    public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(CsrfProtectionFilter_Old.class);
-        invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
+    private final String authentication;
+
+    /**
+     * Creates a new HTTP Basic Authentication filter using provided username
+     * and password credentials.
+     *
+     * @param username user name
+     * @param password password
+     */
+    public HttpBasicAuthFilter_Old(final String username, final String password) {
+        authentication = "Basic " + Base64.encodeAsString(username + ":" + password);
     }
 
-    @Test
-    public void testGet() {
-        Response r = invBuilder.get();
-        assertNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    @Test
-    public void testPut() {
-        Response r = invBuilder.put(null);
-        assertNotNull(r.getHeader(CsrfProtectionFilter_Old.HEADER_NAME));
-    }
-
-    private static class TestTransport implements Inflector<Request, Response> {
-        @Override
-        public Response apply(Request request) {
-            Response.ResponseBuilder rb = Responses.from(Response.Status.OK, request);
-            final String headerValue = Helper.unwrap(request).getHeaders().getHeaderString(CsrfProtectionFilter_Old.HEADER_NAME);
-            if (headerValue != null) {
-                rb.header(CsrfProtectionFilter_Old.HEADER_NAME, headerValue);
-            }
-            return rb.build();
+    @Override
+    public final void preFilter(final FilterContext fc) throws IOException {
+        Request request = fc.getRequest();
+        if (Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION) == null) {
+            fc.setRequest(fc.getRequestBuilder().header(HttpHeaders.AUTHORIZATION, authentication).build());
         }
     }
 }

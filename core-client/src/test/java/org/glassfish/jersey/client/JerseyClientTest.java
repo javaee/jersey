@@ -126,6 +126,7 @@ public class JerseyClientTest {
     @Test
     public void testTargetConfigUpdate() {
         final WebTarget target = client.target("http://jersey.java.net/examples");
+
         target.configuration().register(new RequestFilter() {
 
             @Override
@@ -133,6 +134,14 @@ public class JerseyClientTest {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
         });
+        // TODO: delete the code above and uncomment the code below:
+//        target.configuration().register(new ClientRequestFilter() {
+//            @Override
+//            public void filter(ClientRequestContext clientRequestContext) throws IOException {
+//                throw new UnsupportedOperationException("Not supported yet");
+//            }
+//        });
+
         assertEquals(1, target.configuration().getProviderInstances().size());
     }
 }

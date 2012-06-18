@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.BindingPriority;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -176,7 +178,20 @@ public class ApplicationFilterTest {
         Assert.assertTrue(called.intValue() >= 1);
     }
 
-    public abstract class CommonFilter implements RequestFilter {
+    public abstract class CommonFilter implements ContainerRequestFilter {
+
+        public boolean called = false;
+
+        @Override
+        public void filter(ContainerRequestContext context) throws IOException {
+            verify();
+            called = true;
+        }
+
+        protected abstract void verify();
+    }
+
+    public abstract class CommonFilter_Old implements RequestFilter {
 
         public boolean called = false;
 
@@ -190,7 +205,7 @@ public class ApplicationFilterTest {
     }
 
     @BindingPriority(1)
-    public class Filter1 extends CommonFilter {
+    public class Filter1 extends CommonFilter_Old {
 
         private Filter10 filter10;
         private Filter100 filter100;
@@ -208,7 +223,7 @@ public class ApplicationFilterTest {
     }
 
     @BindingPriority(10)
-    public class Filter10 extends CommonFilter {
+    public class Filter10 extends CommonFilter_Old {
 
         private Filter1 filter1;
         private Filter100 filter100;
@@ -226,7 +241,7 @@ public class ApplicationFilterTest {
     }
 
     @BindingPriority(100)
-    public class Filter100 extends CommonFilter {
+    public class Filter100 extends CommonFilter_Old {
 
         private Filter1 filter1;
         private Filter10 filter10;

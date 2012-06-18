@@ -39,10 +39,16 @@
  */
 package org.glassfish.jersey.examples.helloworld;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
 import java.io.IOException;
+
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,23 +57,38 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
-public class CustomLoggingFilter implements RequestFilter, ResponseFilter {
+public class CustomLoggingFilter implements ContainerRequestFilter, ContainerResponseFilter,
+        ClientRequestFilter, ClientResponseFilter {
 
-        static int preFilterCalled = 0;
-        static int postFilterCalled = 0;
+    static int preFilterCalled = 0;
+    static int postFilterCalled = 0;
 
-        @Override
-        public void preFilter(FilterContext context) throws IOException {
-            System.out.println("CustomLoggingFilter.preFilter called");
-            assertEquals(context.getProperties().get("foo"), "bar");
-            preFilterCalled++;
-        }
-
-        @Override
-        public void postFilter(FilterContext context) throws IOException {
-            System.out.println("CustomLoggingFilter.postFilter called");
-            assertEquals(context.getProperties().get("foo"), "bar");
-            postFilterCalled++;
-        }
+    @Override
+    public void filter(ClientRequestContext context) throws IOException {
+        System.out.println("CustomLoggingFilter.preFilter called");
+        assertEquals(context.getProperty("foo"), "bar");
+        preFilterCalled++;
     }
+
+    @Override
+    public void filter(ClientRequestContext context, ClientResponseContext clientResponseContext) throws IOException {
+        System.out.println("CustomLoggingFilter.postFilter called");
+        assertEquals(context.getProperty("foo"), "bar");
+        postFilterCalled++;
+    }
+
+    @Override
+    public void filter(ContainerRequestContext context) throws IOException {
+        System.out.println("CustomLoggingFilter.preFilter called");
+        assertEquals(context.getProperty("foo"), "bar");
+        preFilterCalled++;
+    }
+
+    @Override
+    public void filter(ContainerRequestContext context, ContainerResponseContext containerResponseContext) throws IOException {
+        System.out.println("CustomLoggingFilter.postFilter called");
+        assertEquals(context.getProperty("foo"), "bar");
+        postFilterCalled++;
+    }
+}
 

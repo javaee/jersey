@@ -44,10 +44,11 @@ import java.security.Principal;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.PreMatchRequestFilter;
@@ -76,11 +77,10 @@ public class SecurityContextFilterTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(SecurityContextFilter.class, Resource.class);
+        return new ResourceConfig(SecurityContextFilter_Old.class, Resource.class);
     }
 
-    @Provider
-    public static class SecurityContextFilter implements PreMatchRequestFilter {
+    public static class SecurityContextFilter_Old implements PreMatchRequestFilter {
 
         @Inject
         Ref<SecurityContext> securityContextRef;
@@ -95,6 +95,61 @@ public class SecurityContextFilterTest extends JerseyTest {
 
 
             String header = context.getRequest().getHeaders().getHeaderString(SKIP_FILTER);
+            if ("true".equals(header)) {
+                return;
+            }
+
+            // test injections
+            Assert.assertNotNull(securityContext);
+            Assert.assertEquals(securityContextRef.get(), securityContext);
+
+            // set new Security Context
+            securityContextRef.set(new SecurityContext() {
+
+                @Override
+                public boolean isUserInRole(String role) {
+                    return false;
+                }
+
+                @Override
+                public boolean isSecure() {
+                    return false;
+                }
+
+                @Override
+                public Principal getUserPrincipal() {
+                    return new Principal() {
+
+                        @Override
+                        public String getName() {
+                            return PRINCIPAL_NAME;
+                        }
+                    };
+                }
+
+                @Override
+                public String getAuthenticationScheme() {
+                    return null;
+                }
+            });
+        }
+    }
+
+    public static class SecurityContextFilter implements ContainerRequestFilter {
+
+        @Inject
+        Ref<SecurityContext> securityContextRef;
+        @Context
+        SecurityContext securityContext;
+
+        @Override
+        public void filter(ContainerRequestContext context) {
+            // test injections
+            Assert.assertNotNull(securityContext);
+            Assert.assertEquals(securityContextRef.get(), securityContext);
+
+
+            String header = context.getHeaders().getFirst(SKIP_FILTER);
             if ("true".equals(header)) {
                 return;
             }

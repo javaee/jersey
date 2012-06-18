@@ -47,6 +47,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -58,6 +60,7 @@ import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -76,7 +79,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addSingletons(new MyFilter());
+        return ((ResourceConfig) super.configure()).addSingletons(new MyFilter_Old());
     }
 
     @Override
@@ -85,7 +88,32 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
     }
 
     @Provider
-    public static class MyFilter implements RequestFilter {
+    public static class MyFilter implements ContainerRequestFilter {
+
+        @Override
+        public void filter(ContainerRequestContext context) throws IOException {
+            ((JerseyContainerRequestContext) context).bufferEntity();
+
+            // Read entity
+            FormDataMultiPart multiPart = ((JerseyContainerRequestContext) context).readEntity(FormDataMultiPart.class);
+
+            assertEquals(3, multiPart.getBodyParts().size());
+            assertNotNull(multiPart.getField("foo"));
+            assertEquals("bar", multiPart.getField("foo").getValue());
+            assertNotNull(multiPart.getField("baz"));
+            assertEquals("bop", multiPart.getField("baz").getValue());
+
+            assertNotNull(multiPart.getField("bean"));
+            MultiPartBean bean = multiPart.getField("bean").getValueAs(MultiPartBean.class);
+            assertEquals("myname", bean.getName());
+            assertEquals("myvalue", bean.getValue());
+
+            context.setProperty("filtered", "true");
+        }
+    }
+
+    @Provider
+    public static class MyFilter_Old implements RequestFilter {
 
         private void filter(FilterContext context) throws IOException {
             context.getRequest().bufferEntity();

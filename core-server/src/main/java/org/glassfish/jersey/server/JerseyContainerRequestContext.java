@@ -137,6 +137,17 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
         this.propertiesDelegate = propertiesDelegate;
     }
 
+    /**
+     * Read entity from a context entity input stream.
+     *
+     * @param <T>         entity Java object type.
+     * @param rawType     raw Java entity type.
+     * @return entity read from a context entity input stream.
+     */
+    public <T> T readEntity(Class<T> rawType) {
+        return readEntity(rawType, propertiesDelegate);
+    }
+
     @Override
     public Object getProperty(String name) {
         return propertiesDelegate.getProperty(name);

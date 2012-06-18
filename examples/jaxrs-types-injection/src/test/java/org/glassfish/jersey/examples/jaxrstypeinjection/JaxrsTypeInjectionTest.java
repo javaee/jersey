@@ -41,7 +41,8 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import javax.ws.rs.client.WebTarget;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -108,7 +109,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.configuration().register(LoggingFilter.class);
+        target.configuration().register(LoggingFilter_Old.class);
         return target.path(path).pathParam("p1", "v1").pathParam("p2", "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
     }
 

@@ -41,11 +41,9 @@ package org.glassfish.jersey.client.filter;
 
 import java.io.IOException;
 
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestFilter;
 
 import org.glassfish.jersey.internal.util.Base64;
 
@@ -56,7 +54,7 @@ import org.glassfish.jersey.internal.util.Base64;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Craig McClanahan
  */
-public final class HttpBasicAuthFilter implements RequestFilter {
+public final class HttpBasicAuthFilter implements ClientRequestFilter {
 
     private final String authentication;
 
@@ -72,10 +70,9 @@ public final class HttpBasicAuthFilter implements RequestFilter {
     }
 
     @Override
-    public final void preFilter(final FilterContext fc) throws IOException {
-        Request request = fc.getRequest();
-        if (Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION) == null) {
-            fc.setRequest(fc.getRequestBuilder().header(HttpHeaders.AUTHORIZATION, authentication).build());
+    public void filter(ClientRequestContext rc) throws IOException {
+        if (!rc.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+            rc.getHeaders().add(HttpHeaders.AUTHORIZATION, authentication);
         }
     }
 }

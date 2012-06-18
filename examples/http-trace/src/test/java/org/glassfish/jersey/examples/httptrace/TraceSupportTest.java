@@ -42,7 +42,8 @@ package org.glassfish.jersey.examples.httptrace;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter_Old;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -64,7 +65,7 @@ public class TraceSupportTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.configuration().register(LoggingFilter.class);
+        target.configuration().register(LoggingFilter_Old.class);
         return target.path(path);
     }
 

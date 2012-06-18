@@ -52,7 +52,6 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -88,7 +87,7 @@ public class UriConnegFilterTest {
         mediaTypes.put("bar", MediaType.valueOf("application/bar"));
 
         ResourceConfig rc = new ResourceConfig(Resource.class);
-        UriConnegFilter.enableFor(rc, mediaTypes, null);
+        UriConnegFilter_Old.enableFor(rc, mediaTypes, null);
         handler = new ApplicationHandler(rc);
     }
 

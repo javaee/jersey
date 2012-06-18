@@ -45,7 +45,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.UriConnegFilter;
+import org.glassfish.jersey.server.filter.UriConnegFilter_Old;
 
 import com.google.common.collect.Maps;
 
@@ -64,7 +64,7 @@ public class UriConnegMappingFromStringTest extends UriConnegLanguageMediaTypeTe
         languages.put("french", "fr");
 
         ResourceConfig rc = new ResourceConfig(LanguageVariantResource.class);
-        UriConnegFilter.enableFor(rc, "foo : application/foo, bar : application/bar", "english : en, french : fr");
+        UriConnegFilter_Old.enableFor(rc, "foo : application/foo, bar : application/bar", "english : en, french : fr");
         return rc;
     }
 }
