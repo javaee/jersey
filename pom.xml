@@ -787,6 +787,18 @@
             </dependency>
 
             <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>org.eclipse.persistence.moxy</artifactId>
+                <version>${moxy.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>org.eclipse.persistence.antlr</artifactId>
+                <version>2.3.2</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
                 <version>${jackson.version}</version>
@@ -845,7 +857,7 @@
         <jaxb.api.version>2.1</jaxb.api.version>
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>
 
-        <moxy.version>2.3.2</moxy.version>
+        <moxy.version>2.4.0</moxy.version>
 
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>

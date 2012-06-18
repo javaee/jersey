@@ -70,6 +70,7 @@
         <module>jaxrs-types-injection</module>
         <module>json-jackson</module>
         <module>json-jaxb</module>
+        <module>json-moxy</module>
         <module>json-with-padding</module>
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
