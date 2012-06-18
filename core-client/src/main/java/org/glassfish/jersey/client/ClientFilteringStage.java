@@ -40,7 +40,6 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -55,7 +54,6 @@ import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.AbstractFilteringStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.Factory;
@@ -95,91 +93,57 @@ class ClientFilteringStage extends AbstractFilteringStage<JerseyClientRequestCon
         final List<ClientResponseFilter> responseFilters = serviceProviders.getAll(
                 ClientResponseFilter.class, new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
         if (!responseFilters.isEmpty()) {
-            ResponseFilterProcessor responseFilterProcessor = new ResponseFilterProcessor(responseFilters.iterator());
-            respondingContextFactory.get().push(responseFilterProcessor);
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
-
 
         final List<ClientRequestFilter> requestFilters = serviceProviders.getAll(
                 ClientRequestFilter.class, new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
-        if (requestFilters.isEmpty()) {
-            return Continuation.of(requestContext, getDefaultNext());
-        } else {
-            RequestFilterProcessor requestFilterProcessor = new RequestFilterProcessor(requestFilters.iterator(), getDefaultNext());
-            return requestFilterProcessor.continuation(requestContext);
-        }
-    }
-
-    private static class RequestFilterProcessor extends AbstractChainableStage<JerseyClientRequestContext> {
-        private final Iterator<ClientRequestFilter> filterIterator;
-
-        private RequestFilterProcessor(
-                Iterator<ClientRequestFilter> filterIterator, Stage<JerseyClientRequestContext> defaultNext) {
-            super(defaultNext);
-            this.filterIterator = filterIterator;
-        }
-
-        @Override
-        public Continuation<JerseyClientRequestContext> apply(JerseyClientRequestContext requestContext) {
-            try {
-                filterIterator.next().filter(requestContext);
-            } catch (IOException ex) {
-                final Response abortResponse = requestContext.getAbortResponse();
-                if (abortResponse == null) {
-                    throw new WebApplicationException(ex);
-                } else {
-                    throw new WebApplicationException(ex, abortResponse);
+        if (!requestFilters.isEmpty()) {
+            for (ClientRequestFilter filter : requestFilters) {
+                try {
+                    filter.filter(requestContext);
+                    final Response abortResponse = requestContext.getAbortResponse();
+                    if (abortResponse != null) {
+                        // abort accepting & return response
+                        return Continuation.of(requestContext,
+                                Stages.asStage(new Inflector<JerseyClientRequestContext, JerseyClientResponseContext>() {
+                                    @Override
+                                    public JerseyClientResponseContext apply(final JerseyClientRequestContext requestContext) {
+                                        return JerseyClientResponseContext.initFrom(requestContext, abortResponse);
+                                    }
+                                }));
+                    }
+                } catch (IOException ex) {
+                    final Response abortResponse = requestContext.getAbortResponse();
+                    if (abortResponse == null) {
+                        throw new WebApplicationException(ex);
+                    } else {
+                        throw new WebApplicationException(ex, abortResponse);
+                    }
                 }
             }
-
-            final Response abortResponse = requestContext.getAbortResponse();
-            if (abortResponse != null) {
-                // abort accepting & return response
-                return Continuation.of(requestContext,
-                        Stages.asStage(new Inflector<JerseyClientRequestContext, JerseyClientResponseContext>() {
-                            @Override
-                            public JerseyClientResponseContext apply(final JerseyClientRequestContext requestContext) {
-                                return JerseyClientResponseContext.initFrom(requestContext, abortResponse);
-                            }
-                        }));
-            }
-
-            return continuation(requestContext);
         }
-
-        private Continuation<JerseyClientRequestContext> continuation(final JerseyClientRequestContext requestContext) {
-            if (filterIterator.hasNext()) {
-                return Continuation.of(requestContext, this);
-            } else {
-                return Continuation.of(requestContext, getDefaultNext());
-            }
-        }
+        return Continuation.of(requestContext, getDefaultNext());
     }
 
-    private static class ResponseFilterProcessor extends AbstractChainableStage<JerseyClientResponseContext> {
-        private final Iterator<ClientResponseFilter> filterIterator;
+    private static class ResponseFilterStage extends AbstractChainableStage<JerseyClientResponseContext> {
+        private final List<ClientResponseFilter> filters;
 
-        private ResponseFilterProcessor(Iterator<ClientResponseFilter> filterIterator) {
-            this.filterIterator = filterIterator;
+        private ResponseFilterStage(List<ClientResponseFilter> filters) {
+            this.filters = filters;
         }
 
         @Override
         public Continuation<JerseyClientResponseContext> apply(JerseyClientResponseContext responseContext) {
             try {
-                filterIterator.next().filter(responseContext.getRequestContext(), responseContext);
+                for (ClientResponseFilter filter : filters) {
+                    filter.filter(responseContext.getRequestContext(), responseContext);
+                }
             } catch (IOException ex) {
                 throw new WebApplicationException(ex);
             }
 
-            return continuation(responseContext);
-        }
-
-        private Continuation<JerseyClientResponseContext> continuation(final JerseyClientResponseContext responseContext) {
-            if (filterIterator.hasNext()) {
-                return Continuation.of(responseContext, this);
-            } else {
-                return Continuation.of(responseContext, getDefaultNext());
-            }
+            return Continuation.of(responseContext, getDefaultNext());
         }
     }
 
