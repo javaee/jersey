@@ -42,7 +42,6 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -50,19 +49,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
-import org.glassfish.jersey.message.internal.Requests;
 
 /**
  * A request writer for writing header values and a request entity.
@@ -72,8 +66,10 @@ import org.glassfish.jersey.message.internal.Requests;
 public class RequestWriter {
 
     private static final Logger LOGGER = Logger.getLogger(RequestWriter.class.getName());
-    protected static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
+    /**
+     * Create new request writer.
+     */
     public RequestWriter() {
     }
 
@@ -87,7 +83,7 @@ public class RequestWriter {
          * Called when the output stream is required to write the request entity.
          *
          * @return the output stream to write the request entity.
-         * @throws java.io.IOException
+         * @throws java.io.IOException in case of an error while opening the output stream.
          */
         OutputStream onGetOutputStream() throws IOException;
     }
@@ -99,6 +95,8 @@ public class RequestWriter {
     protected interface RequestEntityWriter {
 
         /**
+         * Get the size, in bytes, of the request entity, otherwise -1
+         * if the size cannot be determined before serialization.
          *
          * @return size the size, in bytes, of the request entity, otherwise -1
          *         if the size cannot be determined before serialization.
@@ -106,16 +104,10 @@ public class RequestWriter {
         long getSize();
 
         /**
-         *
-         * @return the media type of the request entity.
-         */
-        MediaType getMediaType();
-
-        /**
          * Write the request entity.
          *
          * @param out the output stream to write the request entity.
-         * @throws java.io.IOException
+         * @throws java.io.IOException in case of IO error.
          */
         void writeRequestEntity(OutputStream out) throws IOException;
     }
@@ -123,46 +115,39 @@ public class RequestWriter {
     /**
      * Default {@link RequestEntityWriter} implementation.
      */
-    private final class RequestEntityWriterImpl implements RequestEntityWriter {
+    private final class DefaultRequestEntityWriter implements RequestEntityWriter {
 
-        private final Request request;
-        private final Object entity;
-        private final Type entityType;
-        private final MediaType mediaType;
+        private final JerseyClientRequestContext requestContext;
         private final long size;
         private final MessageBodyWriter writer;
 
         /**
+         * Create new default request entity writer.
          *
-         * @param request
+         * @param requestContext Jersey client request context.
          */
         @SuppressWarnings("unchecked")
-        public RequestEntityWriterImpl(Request request) {
-            this.request = request;
+        public DefaultRequestEntityWriter(JerseyClientRequestContext requestContext) {
+            this.requestContext = requestContext;
 
-            final Object e = Helper.unwrap(request).getEntity();
-            if (e == null) {
+            if (!requestContext.hasEntity()) {
                 throw new IllegalArgumentException("The entity of the client request is null");
             }
 
-            if (e instanceof GenericEntity) {
-                final GenericEntity ge = (GenericEntity) e;
-                this.entity = ge.getEntity();
-                this.entityType = ge.getType();
-            } else {
-                this.entity = e;
-                final Type genericSuperclass = entity.getClass().getGenericSuperclass();
-                this.entityType = (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : entity.getClass();
-            }
-            final Class<?> entityClass = entity.getClass();
+            RequestWriter.this.ensureMediaType(requestContext);
 
-            request = RequestWriter.this.ensureMediaType(entityClass, entityType, request);
-            this.mediaType = Helper.unwrap(request).getHeaders().getMediaType();
-
-            final MessageBodyWorkers workers = Requests.getMessageWorkers(request);
-            this.writer = workers.getMessageBodyWriter(entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
+            final MessageBodyWorkers workers = requestContext.getWorkers();
+            final MediaType mediaType = requestContext.getMediaType();
+            final Annotation[] entityAnnotations = requestContext.getEntityAnnotations();
+            final Class<?> entityRawType = requestContext.getEntityRawType();
+            final Type entityType = requestContext.getEntityType();
+            this.writer = workers.getMessageBodyWriter(
+                    entityRawType,
+                    entityType,
+                    entityAnnotations,
+                    mediaType);
             if (writer == null) {
-                String message = "A message body writer for Java class " + entityClass.getName()
+                String message = "A message body writer for Java class " + entityRawType.getName()
                         + ", and Java type " + entityType
                         + ", and MIME media type " + mediaType + " was not found";
                 LOGGER.severe(message);
@@ -174,10 +159,14 @@ public class RequestWriter {
                 throw new ClientException(message);
             }
 
-            final MultivaluedMap<String, String> headers = Helper.unwrap(request).getHeaders().getRequestHeaders();
-            this.size = headers.containsKey(HttpHeaders.CONTENT_ENCODING)
+            this.size = requestContext.getHeaders().containsKey(HttpHeaders.CONTENT_ENCODING)
                     ? -1
-                    : writer.getSize(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType);
+                    : writer.getSize(
+                    requestContext.getEntity(),
+                    entityRawType,
+                    entityType,
+                    entityAnnotations,
+                    mediaType);
         }
 
         @Override
@@ -186,21 +175,18 @@ public class RequestWriter {
         }
 
         @Override
-        public MediaType getMediaType() {
-            return mediaType;
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
         public void writeRequestEntity(OutputStream out) throws IOException {
             // TODO interceptors?
             try {
-                writer.writeTo(entity,
-                        entity.getClass(),
-                        entityType,
-                        EMPTY_ANNOTATIONS,
-                        mediaType,
-                        Helper.unwrap(request).getHeaders().getRequestHeaders(),
+                final GenericType<?> entityType = new GenericType(requestContext.getEntityType());
+                writer.writeTo(
+                        requestContext.getEntity(),
+                        entityType.getRawType(),
+                        entityType.getType(),
+                        requestContext.getEntityAnnotations(),
+                        requestContext.getMediaType(),
+                        requestContext.getHeaders(),
                         out);
                 out.flush();
             } finally {
@@ -215,8 +201,8 @@ public class RequestWriter {
      * @param request the client request.
      * @return the request entity writer.
      */
-    protected RequestEntityWriter getRequestEntityWriter(final Request request) {
-        return new RequestEntityWriterImpl(request);
+    protected RequestEntityWriter getRequestEntityWriter(final JerseyClientRequestContext request) {
+        return new DefaultRequestEntityWriter(request);
     }
 
     /**
@@ -227,31 +213,17 @@ public class RequestWriter {
      * The method {@link RequestEntityWriterListener#onGetOutputStream() } will be invoked
      * when the output stream is required to write the request entity.
      *
-     * @param request the client request containing the request entity. If the
-     *        request entity is null then the method will not write any entity.
-     * @param listener the request entity listener.
-     * @throws java.io.IOException
+     * @param requestContext the client request context containing the request entity. If the
+     *                       request entity is null then the method will not write any entity.
+     * @param listener       the request entity listener.
+     * @throws IOException in case of an IO error.
      */
     @SuppressWarnings("unchecked")
-    protected void writeRequestEntity(Request request, final RequestEntityWriterListener listener) throws IOException {
-        Object entity = Helper.unwrap(request).getEntity();
-        if (entity == null) {
-            return;
-        }
+    protected void writeRequestEntity(JerseyClientRequestContext requestContext, final RequestEntityWriterListener listener)
+            throws IOException {
 
-        Type entityType;
-        if (entity instanceof GenericEntity) {
-            final GenericEntity ge = (GenericEntity) entity;
-            entity = ge.getEntity();
-            entityType = ge.getType();
-        } else {
-            entityType = entity.getClass();
-        }
-        final Class<?> entityClass = entity.getClass();
-
-        request = ensureMediaType(entityClass, entityType, request);
-        final MediaType mediaType = Helper.unwrap(request).getHeaders().getMediaType();
-        final MultivaluedMap<String, String> headers = Helper.unwrap(request).getHeaders().getRequestHeaders();
+        ensureMediaType(requestContext);
+        final MultivaluedMap<String, Object> headers = requestContext.getHeaders();
 
         MessageBodyWorkers.MessageBodySizeCallback sizeCallback = null;
         if (headers.containsKey(HttpHeaders.CONTENT_ENCODING)) {
@@ -260,39 +232,37 @@ public class RequestWriter {
             sizeCallback = listener;
         }
 
-        MessageBodyWorkers workers = Requests.getMessageWorkers(request);
+        final MessageBodyWorkers workers = requestContext.getWorkers();
         final OutputStream out = listener.onGetOutputStream();
         try {
-            workers.writeTo(entity, entityClass, entityType, EMPTY_ANNOTATIONS, mediaType,
-                    (MultivaluedMap) headers, new MapPropertiesDelegate(Helper.unwrap(request).getProperties()), out, sizeCallback, true);
-
-        } catch (IOException ex) {
+            workers.writeTo(
+                    requestContext.getEntity(),
+                    requestContext.getEntityRawType(),
+                    requestContext.getEntityType(),
+                    requestContext.getEntityAnnotations(),
+                    requestContext.getMediaType(),
+                    headers,
+                    requestContext.getPropertiesDelegate(),
+                    out,
+                    sizeCallback,
+                    true);
+        } finally {
             try {
                 out.close();
-            } catch (Exception e) {
+            } catch (IOException ex) {
+                LOGGER.log(Level.FINE, "Error closing output stream", ex);
             }
-            throw ex;
-        } catch (RuntimeException ex) {
-            try {
-                out.close();
-            } catch (Exception e) {
-            }
-            throw ex;
         }
-
-        out.close();
     }
 
-    private Request ensureMediaType(Class<?> entityClass, Type entityType, Request request) {
-        if (Helper.unwrap(request).getHeaders().getMediaType() != null) {
-            return request;
-        } else {
+    private void ensureMediaType(final JerseyClientRequestContext requestContext) {
+        if (requestContext.getMediaType() == null) {
             // Content-Type is not present choose a default type
-            final List<MediaType> mediaTypes = Requests.getMessageWorkers(request)
-                    .getMessageBodyWriterMediaTypes(entityClass, entityType, EMPTY_ANNOTATIONS);
+            final GenericType<?> entityType = new GenericType(requestContext.getEntityType());
+            final List<MediaType> mediaTypes = requestContext.getWorkers().getMessageBodyWriterMediaTypes(
+                    entityType.getRawType(), entityType.getType(), requestContext.getEntityAnnotations());
 
-            final MediaType mediaType = getMediaType(mediaTypes);
-            return Requests.from(request).type(mediaType).build();
+            requestContext.setMediaType(getMediaType(mediaTypes));
         }
     }
 

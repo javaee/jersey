@@ -45,8 +45,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.message.internal.JaxrsResponseView;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -108,7 +106,7 @@ public class OptionsTest extends JerseyTest {
      */
     @Test
     public void OptionSubTest() {
-        final JaxrsResponseView response = Helper.unwrap(target().path("/OptionsTest/sub").request(MediaType.TEXT_HTML_TYPE).options());
+        final Response response = target().path("/OptionsTest/sub").request(MediaType.TEXT_HTML_TYPE).options();
 
         assertTrue(response.getAllowedMethods().contains("GET"));
         assertTrue(response.getAllowedMethods().contains("HEAD"));

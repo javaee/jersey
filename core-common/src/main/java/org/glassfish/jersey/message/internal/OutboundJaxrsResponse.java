@@ -509,7 +509,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public <T> ResponseBuilder entity(T entity, GenericType<? super T> declaredType, Annotation[] annotations) {
-            context.setEntity(entity, declaredType, annotations);
+            context.setEntity(declaredType, annotations, entity);
 
             return this;
         }

@@ -41,6 +41,8 @@ package org.glassfish.jersey.message.internal;
 
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -85,7 +87,8 @@ public class OutboundMessageContext {
     private final MultivaluedMap<String, Object> headers;
 
     private Object entity;
-    private GenericType<?> entityType;
+    private Class<?> entityRawType;
+    private Type entityType;
     private Annotation[] entityAnnotations = EMPTY_ANNOTATIONS;
 
     /**
@@ -107,6 +110,7 @@ public class OutboundMessageContext {
 
         this.entity = original.entity;
         this.entityType = original.entityType;
+        this.entityRawType = original.entityRawType;
         this.entityAnnotations = original.entityAnnotations;
     }
 
@@ -695,7 +699,7 @@ public class OutboundMessageContext {
      *         {@code false} otherwise.
      */
     public boolean hasEntity() {
-        return entity == null;
+        return entity != null;
     }
 
     /**
@@ -722,15 +726,21 @@ public class OutboundMessageContext {
     }
 
     private <T> void setEntityAndType(T entity) {
-        if (entity instanceof GenericEntity) {
-            GenericEntity genericEntity = (GenericEntity) entity;
-            this.entity = genericEntity.getEntity();
-            this.entityType = new GenericType(genericEntity.getType());
-        } else {
-            this.entity = entity;
-            // TODO is this ok?
-            this.entityType = new GenericType<T>(entity.getClass());
+            if (entity instanceof GenericEntity) {
+                final GenericEntity genericEntity = (GenericEntity) entity;
+                setEntity(genericEntity.getEntity(), genericEntity.getType());
+            } else {
+                setEntity(entity, extractType(entity));
+            }
+    }
+
+    private Type extractType(Object fromObject) {
+        if (fromObject == null) {
+            return null;
         }
+        final Class<?> rawType = fromObject.getClass();
+        final Type genericSuperclass = rawType.getGenericSuperclass();
+        return (genericSuperclass instanceof ParameterizedType) ? genericSuperclass : rawType;
     }
 
     /**
@@ -749,15 +759,28 @@ public class OutboundMessageContext {
     /**
      * Set a new message message entity.
      *
+     * @param <T>    entity Java type.
+     * @param entity entity object.
+     * @param type   entity generic type information.
+     * @see javax.ws.rs.ext.MessageBodyWriter
+     */
+    public <T> void setEntity(T entity, Type type) {
+        this.entity = entity;
+        this.entityRawType = (entity == null) ? null : entity.getClass();
+        this.entityType = type;
+    }
+
+    /**
+     * Set a new message message entity.
+     *
      * @param <T>         entity Java type.
      * @param entity      entity object.
      * @param type        declared entity class.
      * @param annotations annotations attached to the entity.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public <T> void setEntity(T entity, GenericType<? super T> type, Annotation[] annotations) {
-        this.entity = entity;
-        this.entityType = type;
+    public <T> void setEntity(T entity, Type type, Annotation[] annotations) {
+        setEntity(entity, type);
         this.entityAnnotations = annotations;
     }
 
@@ -772,7 +795,27 @@ public class OutboundMessageContext {
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
     public <T> void setEntity(Class<T> type, Annotation[] annotations, MediaType mediaType, T entity) {
-        setEntity(new GenericType<T>(type), annotations, mediaType, entity);
+        this.entity = entity;
+        this.entityRawType = type;
+        this.entityType = extractType(entity);
+        this.entityAnnotations = annotations;
+        this.setMediaType(mediaType);
+    }
+
+    /**
+     * Set a new message message entity.
+     *
+     * @param <T>         entity Java type.
+     * @param type        declared generic entity type.
+     * @param annotations annotations attached to the entity.
+     * @param entity      entity object.
+     * @see javax.ws.rs.ext.MessageBodyWriter
+     */
+    public <T> void setEntity(GenericType<T> type, Annotation[] annotations, T entity) {
+        this.entity = entity;
+        this.entityRawType = type.getRawType();
+        this.entityType = type.getType();
+        this.entityAnnotations = annotations;
     }
 
     /**
@@ -787,10 +830,10 @@ public class OutboundMessageContext {
      */
     public <T> void setEntity(GenericType<T> type, Annotation[] annotations, MediaType mediaType, T entity) {
         this.entity = entity;
-        this.entityType = type;
+        this.entityRawType = type.getRawType();
+        this.entityType = type.getType();
         this.entityAnnotations = annotations;
-
-        setMediaType(mediaType);
+        this.setMediaType(mediaType);
     }
 
     /**
@@ -802,13 +845,34 @@ public class OutboundMessageContext {
         this.headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
     }
 
-
     /**
      * Get the declared generic message entity type information.
+     *
+     * NOTE: DO NOT USE - USE the {@link #getEntityRawType()} and {@link #getEntityType()}
+     * instead.
      *
      * @return declared generic message entity type.
      */
     public GenericType<?> getDeclaredEntityType() {
+        // TODO replace in the API?
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Get the raw message entity type information.
+     *
+     * @return raw message entity type information.
+     */
+    public Class<?> getEntityRawType() {
+        return entityRawType;
+    }
+
+    /**
+     * Get the generic message entity type information.
+     *
+     * @return generic message entity type.
+     */
+    public Type getEntityType() {
         return entityType;
     }
 

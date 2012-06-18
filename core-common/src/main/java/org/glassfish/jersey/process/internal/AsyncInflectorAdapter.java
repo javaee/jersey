@@ -57,7 +57,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Monitor;
 
 /**
- * Suspendable, asynchronous {@link Request} to {@link Response} inflector adapter
+ * Suspendable, asynchronous {@link Inflector inflector} adapter
  * that provides implementation of the request suspend/resume capabilities of the
  * {@link InvocationContext invocation context} and returns
  * a {@link ListenableFuture listenable response future} instead of a plain response
@@ -126,6 +126,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     private TimeUnit defaultTimeoutUnit = TimeUnit.MILLISECONDS;
     //
     private AtomicReference<Response> defaultResponse = new AtomicReference<Response>();
+    private AtomicReference<REQUEST> originatingRequest = new AtomicReference<REQUEST>();
     //
     private final Inflector<REQUEST, RESPONSE> wrapped;
     private final InvocationCallback<RESPONSE> callback;
@@ -143,6 +144,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
 
     @Override
     public ListenableFuture<RESPONSE> apply(REQUEST request) {
+        originatingRequest.set(request);
         final RESPONSE response;
 
         try {
@@ -182,7 +184,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
         resume(new Runnable() {
             @Override
             public void run() {
-                set(convertResponse(toJaxrsResponse(response)));
+                set(convertResponse(originatingRequest.get(), toJaxrsResponse(response)));
             }
         });
     }
@@ -328,11 +330,12 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     /**
      * Convert the JAX-RS {@link Response response} to supported response data type.
      *
+     * @param originatingRequest originating request data.
      * @param response JAX-RS response.
      * @return JAX-RS {@link Response response} converted to supported response data
      *         type.
      */
-    protected abstract RESPONSE convertResponse(Response response);
+    protected abstract RESPONSE convertResponse(REQUEST originatingRequest, Response response);
 
     @Override
     public String toString() {

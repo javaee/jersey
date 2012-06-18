@@ -39,7 +39,10 @@
  */
 package org.glassfish.jersey.client;
 
+import java.util.concurrent.Future;
+
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -53,12 +56,22 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.process.internal.FilterModule;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
+import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingExecutorsFactory;
 import org.glassfish.jersey.process.internal.ProcessingModule;
+import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -77,6 +90,110 @@ class ClientModule extends AbstractModule {
         }
     }
 
+    private static class RequestContextInjectionFactory extends ReferencingFactory<JerseyClientRequestContext> {
+
+        public RequestContextInjectionFactory(@Inject Factory<Ref<JerseyClientRequestContext>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
+     * Injection-enabled client side {@link RequestInvoker} instance builder.
+     */
+    static final class RequestInvokerBuilder {
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        private ResponseProcessor.Builder<JerseyClientResponseContext> responseProcessorBuilder;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        /**
+         * Build a new {@link RequestInvoker request invoker} configured to use
+         * the supplied request processor for processing requests.
+         *
+         * @param rootStage root processing stage.
+         * @return new request invoker instance.
+         */
+        public RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext> build(
+                final Stage<JerseyClientRequestContext> rootStage) {
+
+            final AsyncInflectorAdapter.Builder<JerseyClientRequestContext,JerseyClientResponseContext> asyncAdapterBuilder =
+                    new AsyncInflectorAdapter.Builder<JerseyClientRequestContext, JerseyClientResponseContext>() {
+                        @Override
+                        public AsyncInflectorAdapter<JerseyClientRequestContext, JerseyClientResponseContext> create(
+                                Inflector<JerseyClientRequestContext, JerseyClientResponseContext> wrapped, InvocationCallback<JerseyClientResponseContext> callback) {
+                            return new AsyncInflectorAdapter<JerseyClientRequestContext, JerseyClientResponseContext>(
+                                    wrapped, callback) {
+
+                                @Override
+                                protected JerseyClientResponseContext convertResponse(
+                                        JerseyClientRequestContext requestContext, Response response) {
+                                    // TODO get rid of this code on the client side
+                                    return JerseyClientResponseContext.initFrom(requestContext, response);
+                                }
+                            };
+                        }
+                    };
+
+            return new RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext>(
+                    rootStage,
+                    requestScope,
+                    asyncAdapterBuilder,
+                    responseProcessorBuilder,
+                    invocationContextReferenceFactory,
+                    executorsFactory);
+        }
+
+    }
+
+
+    /**
+     * Response processor builder for client side.
+     */
+    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<JerseyClientResponseContext> {
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        private Factory<ResponseProcessor.RespondingContext<JerseyClientResponseContext>> respondingCtxProvider;
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
+        @Inject
+        private Factory<JerseyClientRequestContext> requestContextFactory;
+
+        /**
+         * Default constructor meant to be used by injection framework.
+         */
+        public ResponseProcessorBuilder() {
+            // Injection constructor
+        }
+
+        @Override
+        public ResponseProcessor<JerseyClientResponseContext> build(
+                final Future<JerseyClientResponseContext> inflectedResponse,
+                final InvocationCallback<JerseyClientResponseContext> callback,
+                final RequestScope.Instance scopeInstance) {
+
+            return new ResponseProcessor<JerseyClientResponseContext>(
+                    callback,
+                    inflectedResponse,
+                    respondingCtxProvider,
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
+
+                @Override
+                protected JerseyClientResponseContext convertResponse(Response exceptionResponse) {
+                    return (exceptionResponse == null) ? null : new JerseyClientResponseContext(
+                            exceptionResponse.getStatusInfo(),
+                            requestContextFactory.get());
+                }
+            };
+        }
+    }
+
     @Override
     protected void configure() {
         install(new RequestScope.Module(), // must go first as it registers the request scope instance.
@@ -88,7 +205,7 @@ class ClientModule extends AbstractModule {
                 new ExceptionMapperFactory.Module(RequestScope.class),
                 new ContextResolverFactory.Module(RequestScope.class),
                 new JaxrsProviders.Module(),
-                new FilterModule(),
+                new ClientFilteringStage.Module(),
                 new ExceptionWrapperInterceptor.Module());
 
         bind(javax.ws.rs.client.Configuration.class)
@@ -97,9 +214,28 @@ class ClientModule extends AbstractModule {
         bind(FeaturesAndProperties.class)
                 .toFactory(ConfigurationInjectionFactory.class)
                 .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<JerseyConfiguration>>() {})
+        bind(new TypeLiteral<Ref<JerseyConfiguration>>() {
+        })
                 .toFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory())
                 .in(RequestScope.class);
+
+
+        // Client-side processing chain
+        bind(JerseyClientRequestContext.class)
+                .toFactory(RequestContextInjectionFactory.class)
+                .in(RequestScope.class);
+        bind(new TypeLiteral<Ref<JerseyClientRequestContext>>() {
+        })
+                .toFactory(ReferencingFactory.<JerseyClientRequestContext>referenceFactory())
+                .in(RequestScope.class);
+
+        bind(new TypeLiteral<ResponseProcessor.RespondingContext<JerseyClientResponseContext>>() {
+        }).to(new TypeLiteral<DefaultRespondingContext<JerseyClientResponseContext>>() {
+        }).in(RequestScope.class);
+
+        bind(new TypeLiteral<ResponseProcessor.Builder<JerseyClientResponseContext>>() {
+        }).to(ResponseProcessorBuilder.class).in(Singleton.class);
+
 
     }
 }

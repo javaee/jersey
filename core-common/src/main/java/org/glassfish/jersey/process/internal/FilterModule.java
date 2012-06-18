@@ -49,6 +49,7 @@ import org.glassfish.jersey._remove.FilterContext;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+// TODO remove
 public class FilterModule extends AbstractModule {
     @Override
     protected void configure() {

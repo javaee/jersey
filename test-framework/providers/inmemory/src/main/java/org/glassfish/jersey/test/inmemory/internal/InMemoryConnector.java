@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.test.inmemory.internal;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -51,22 +52,22 @@ import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.JerseyClientRequestContext;
+import org.glassfish.jersey.client.JerseyClientResponseContext;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.server.ApplicationHandler;
 
 /**
- * In-memory client transport.
+ * In-memory client connector.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class InMemoryTransport implements Inflector<Request, Response> {
+public class InMemoryConnector implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
 
     private final ApplicationHandler appHandler;
     private final URI baseUri;
@@ -77,7 +78,7 @@ public class InMemoryTransport implements Inflector<Request, Response> {
      * @param baseUri application base URI.
      * @param application RequestInvoker instance which represents application.
      */
-    public InMemoryTransport(final URI baseUri, final ApplicationHandler application) {
+    public InMemoryConnector(final URI baseUri, final ApplicationHandler application) {
         this.baseUri = baseUri;
         this.appHandler = application;
     }
@@ -88,62 +89,77 @@ public class InMemoryTransport implements Inflector<Request, Response> {
      * Transforms client-side request to server-side and invokes it on provided application ({@link RequestInvoker}
      * instance).
      *
-     * @param _request client side request to be invoked.
+     * @param clientRequestContext client side request to be invoked.
      */
     @Override
-    public Response apply(final Request _request) {
+    public JerseyClientResponseContext apply(final JerseyClientRequestContext clientRequestContext) {
         // TODO replace request building with a common request cloning functionality
         Future<Response> responseListenableFuture;
 
-        JaxrsRequestView request = Helper.unwrap(_request);
         JaxrsRequestBuilderView requestBuilder = Requests.from(
                 baseUri,
-                request.getUri(),
-                request.getMethod());
+                clientRequestContext.getUri(),
+                clientRequestContext.getMethod());
 
-        for (Map.Entry<String, List<String>> entry : request.getHeaders().getRequestHeaders().entrySet()) {
-            for (String value : entry.getValue()) {
+        for (Map.Entry<String, List<Object>> entry : clientRequestContext.getHeaders().entrySet()) {
+            for (Object value : entry.getValue()) {
                 requestBuilder = requestBuilder.header(entry.getKey(), value);
             }
         }
 
-        final Request request1 = requestBuilder.entity(request.getEntity()).build();
+        final Request request = requestBuilder.entity(clientRequestContext.getEntity()).build();
 
-        boolean followRedirects = PropertiesHelper.getValue(request.getProperties(), ClientProperties.FOLLOW_REDIRECTS,
+        boolean followRedirects = PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
                 true);
 
-        responseListenableFuture = appHandler.apply(request1);
+        responseListenableFuture = appHandler.apply(request);
 
         try {
             if (responseListenableFuture != null) {
-                return tryFollowRedirects(followRedirects, responseListenableFuture.get(), request1);
+                return tryFollowRedirects(followRedirects, createClientResponseContext(clientRequestContext, responseListenableFuture.get()), clientRequestContext);
             }
         } catch (InterruptedException e) {
-            Logger.getLogger(InMemoryTransport.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
             throw new InvocationException("In-memory transport can't process incoming request", e);
         } catch (ExecutionException e) {
-            Logger.getLogger(InMemoryTransport.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
             throw new InvocationException("In-memory transport can't process incoming request", e);
         }
 
         throw new InvocationException("In-memory transport can't process incoming request");
     }
 
-    private Response tryFollowRedirects(boolean followRedirects, Response response, Request request) {
-        if (!followRedirects || response.getStatus() < 302 || response.getStatus() > 307) {
+    private JerseyClientResponseContext createClientResponseContext(JerseyClientRequestContext clientRequestContext, Response response) {
+
+        final JerseyClientResponseContext clientResponseContext = new JerseyClientResponseContext(response.getStatusInfo(), clientRequestContext);
+
+        for (Map.Entry<String, List<Object>> entry : response.getMetadata().entrySet()) {
+            for (Object value : entry.getValue()) {
+                // TODO value.toString?
+                clientResponseContext.getHeaders().add(entry.getKey(), value.toString());
+            }
+        }
+
+        response.bufferEntity();
+        clientResponseContext.setEntityStream(response.readEntity(InputStream.class));
+
+        return clientResponseContext;
+    }
+
+    private JerseyClientResponseContext tryFollowRedirects(boolean followRedirects, JerseyClientResponseContext response, JerseyClientRequestContext request) {
+        if (!followRedirects || response.getStatusCode() < 302 || response.getStatusCode() > 307) {
             return response;
         }
 
-        JaxrsRequestBuilderView rb = Requests.from(request);
-
-        switch (response.getStatus()) {
+        switch (response.getStatusCode()) {
             case 303:
-                rb.method("GET");
+                request.setMethod("GET");
                 // intentionally no break
             case 302:
             case 307:
-                rb.redirect(response.getLocation());
-                return apply(rb.build());
+                request.setUri(response.getLocation());
+
+                return apply(request);
             default:
                 return response;
         }

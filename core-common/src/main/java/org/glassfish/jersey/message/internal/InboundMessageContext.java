@@ -252,7 +252,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext header(String name, Object value) {
-        headers.add(name, HeadersFactory.toString(value, RuntimeDelegate.getInstance()));
+        this.headers.add(name, HeadersFactory.toString(value, RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -264,7 +264,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(String name, Object... values) {
-        headers.addAll(name, HeadersFactory.toString(Arrays.asList(values), RuntimeDelegate.getInstance()));
+        this.headers.addAll(name, HeadersFactory.toString(Arrays.asList(values), RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -276,7 +276,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(String name, Iterable<?> values) {
-        headers.addAll(name, iterableToList(values));
+        this.headers.addAll(name, iterableToList(values));
         return this;
     }
 
@@ -287,7 +287,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(MultivaluedMap<String, String> headers) {
-        headers.putAll(headers);
+        this.headers.putAll(headers);
         return this;
     }
 
@@ -298,7 +298,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(Map<String, List<String>> headers) {
-        headers.putAll(HeadersFactory.createInbound(headers));
+        this.headers.putAll(HeadersFactory.createInbound(headers));
         return this;
     }
 
@@ -309,7 +309,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext remove(String name) {
-        headers.remove(name);
+        this.headers.remove(name);
         return this;
     }
 
@@ -321,8 +321,8 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext replace(String name, Iterable<?> values) {
-        headers.remove(name);
-        headers.put(name, iterableToList(values));
+        this.headers.remove(name);
+        this.headers.put(name, iterableToList(values));
         return this;
     }
 
@@ -333,14 +333,14 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext replaceAll(MultivaluedMap<String, String> headers) {
-        headers.clear();
-        headers.putAll(headers);
+        this.headers.clear();
+        this.headers.putAll(headers);
 
         return this;
     }
 
 
-    private List<String> iterableToList(final Iterable<?> values) {
+    private static List<String> iterableToList(final Iterable<?> values) {
         final LinkedList<String> linkedList = new LinkedList<String>();
 
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
@@ -368,7 +368,7 @@ public class InboundMessageContext {
      *         character.
      */
     public String getHeaderString(String name) {
-        return toHeaderString(headers.get(name));
+        return toHeaderString(this.headers.get(name));
     }
 
     private String toHeaderString(List<String> values) {
@@ -398,7 +398,7 @@ public class InboundMessageContext {
      * @return value of the header, or {@code null} if not present.
      */
     private <T> T singleHeader(String name, Function<String, T> converter) {
-        final List<String> values = headers.get(name);
+        final List<String> values = this.headers.get(name);
 
         if (values == null || values.isEmpty()) {
             return null;
@@ -429,7 +429,7 @@ public class InboundMessageContext {
      * @return mutable multivalued map of response headers.
      */
     public MultivaluedMap<String, String> getHeaders() {
-        return headers;
+        return this.headers;
     }
 
     /**
@@ -620,7 +620,7 @@ public class InboundMessageContext {
      * @return a read-only map of cookie name (String) to {@link javax.ws.rs.core.Cookie}.
      */
     public Map<String, Cookie> getRequestCookies() {
-        List<String> cookies = headers.get(HttpHeaders.COOKIE);
+        List<String> cookies = this.headers.get(HttpHeaders.COOKIE);
         if (cookies == null || cookies.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -658,7 +658,7 @@ public class InboundMessageContext {
      * @return a read-only map of cookie name (String) to a {@link javax.ws.rs.core.NewCookie new cookie}.
      */
     public Map<String, NewCookie> getResponseCookies() {
-        List<String> cookies = headers.get(HttpHeaders.SET_COOKIE);
+        List<String> cookies = this.headers.get(HttpHeaders.SET_COOKIE);
         if (cookies == null || cookies.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -730,7 +730,7 @@ public class InboundMessageContext {
      *         returns {@code null}.
      */
     public Set<Link> getLinks() {
-        List<String> links = headers.get(HttpHeaders.LINK);
+        List<String> links = this.headers.get(HttpHeaders.LINK);
         if (links == null || links.isEmpty()) {
             return Collections.emptySet();
         }

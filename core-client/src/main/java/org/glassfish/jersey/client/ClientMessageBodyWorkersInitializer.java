@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,39 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.client;
+
+import org.glassfish.jersey.message.MessageBodyWorkers;
+
+import org.glassfish.hk2.Factory;
+
+import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
 
 /**
- * Default implementation of the request-scoped
- * {@link ResponseProcessor.RespondingContext responding context}.
+ * Function that can be put to an acceptor chain to properly initialize
+ * {@link org.glassfish.jersey.message.MessageBodyWorkers} instance on a current request and response.
  *
- * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
+public class ClientMessageBodyWorkersInitializer implements Function<JerseyClientRequestContext, JerseyClientRequestContext> {
+    private final Factory<MessageBodyWorkers> workersFactory;
 
-    private Stage<DATA> rootStage;
-
-    @Override
-    public void push(Function<DATA, DATA> responseTransformation) {
-        rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<DATA>(responseTransformation)
-                : new Stages.LinkedStage<DATA>(responseTransformation, rootStage);
+    /**
+     * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function for requests
+     * and responses.
+     *
+     * @param workersFactory {@code MessageBodyWorkers} factory.
+     */
+    public ClientMessageBodyWorkersInitializer(
+            @Inject Factory<MessageBodyWorkers> workersFactory) {
+        this.workersFactory = workersFactory;
     }
 
-    @Override
-    public void push(final ChainableStage<DATA> stage) {
-        if (rootStage != null) {
-            stage.setDefaultNext(rootStage);
-        }
-
-        rootStage = stage;
-    }
 
     @Override
-    public Stage<DATA> createResponderRoot() {
-        return rootStage;
+    public JerseyClientRequestContext apply(JerseyClientRequestContext requestContext) {
+        requestContext.setWorkers(workersFactory.get());
+
+        return requestContext;
     }
 }

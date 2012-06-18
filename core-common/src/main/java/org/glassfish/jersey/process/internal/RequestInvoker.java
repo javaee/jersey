@@ -148,7 +148,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
                             return new AsyncInflectorAdapter<Request, Response>(wrapped, callback) {
 
                                 @Override
-                                protected Response convertResponse(Response response) {
+                                protected Response convertResponse(Request request, Response response) {
                                     return response;
                                 }
                             };

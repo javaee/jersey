@@ -39,37 +39,60 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import com.google.common.base.Function;
+import java.util.List;
+
+import org.glassfish.jersey.internal.ServiceProviders;
+import org.glassfish.jersey.process.internal.PriorityComparator.Order;
+
+import org.glassfish.hk2.Services;
+
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Default implementation of the request-scoped
- * {@link ResponseProcessor.RespondingContext responding context}.
+ * Abstract filter processor.
  *
- * @param <DATA> supported processing data type.
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @param <CONTEXT> Parameter representing the filter type
+ *
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
+ * @author MArek Potociar (marek.potociar at oracle.com)
  */
-public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
+public abstract class AbstractFilteringStage<CONTEXT> extends AbstractChainableStage<CONTEXT>{
 
-    private Stage<DATA> rootStage;
+    private Order order;
 
-    @Override
-    public void push(Function<DATA, DATA> responseTransformation) {
-        rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<DATA>(responseTransformation)
-                : new Stages.LinkedStage<DATA>(responseTransformation, rootStage);
+    @Inject
+    private Services services;
+
+    /**
+     * Initialize filter ordering to a default value, i.e.
+     * {@link org.glassfish.jersey.process.internal.PriorityComparator.Order#ASCENDING}
+     */
+    protected AbstractFilteringStage() {
+        this.order = Order.ASCENDING;
     }
 
-    @Override
-    public void push(final ChainableStage<DATA> stage) {
-        if (rootStage != null) {
-            stage.setDefaultNext(rootStage);
-        }
-
-        rootStage = stage;
+    /**
+     * Initialize filter ordering to a custom value. The value can be either
+     * {@link org.glassfish.jersey.process.internal.PriorityComparator.Order#ASCENDING} or
+     * {@link org.glassfish.jersey.process.internal.PriorityComparator.Order#DESCENDING}.
+     *
+     * @param order Order defining how filters should be sorted.
+     */
+    protected AbstractFilteringStage(Order order) {
+        this.order = order;
     }
 
-    @Override
-    public Stage<DATA> createResponderRoot() {
-        return rootStage;
+    /**
+     * Get the filter providers for the specific filter contract, sorted by their
+     * {@link javax.ws.rs.BindingPriority binding priority}. The filter ordering is determined
+     * by the order defined in this instance.
+     *
+     * @param filterContract filter contract.
+     * @return sorted list of filter contract providers.
+     */
+    protected final List<CONTEXT> getFilters(final Class<CONTEXT> filterContract) {
+        ServiceProviders serviceProviders = services.forContract(ServiceProviders.class).get();
+        return serviceProviders.getAll(filterContract, new PriorityComparator<CONTEXT>(order));
     }
 }

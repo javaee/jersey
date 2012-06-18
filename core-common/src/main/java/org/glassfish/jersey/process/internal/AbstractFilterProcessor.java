@@ -61,6 +61,7 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  */
+// TODO remove
 public abstract class AbstractFilterProcessor<T> {
 
     private PriorityComparator.Order order;

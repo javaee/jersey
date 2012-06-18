@@ -40,8 +40,6 @@
 package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.process.Inflector;
@@ -54,10 +52,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class CustomTransportTest {
 
-    public static class NullTransport implements Inflector<Request, Response> {
+    public static class NullTransport implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
 
         @Override
-        public Response apply(Request request) {
+        public JerseyClientResponseContext apply(JerseyClientRequestContext request) {
             throw new RuntimeException("test");
         }
     }

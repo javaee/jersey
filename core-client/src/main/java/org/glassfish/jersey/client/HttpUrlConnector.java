@@ -45,24 +45,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
-import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.Statuses;
 import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Predicates;
@@ -73,7 +71,7 @@ import com.google.common.collect.Maps;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpUrlConnector extends RequestWriter implements Inflector<Request, Response> {
+public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
 
     private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
         if (uc.getResponseCode() < 300) {
@@ -85,7 +83,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
     }
 
     @Override
-    public Response apply(Request request) {
+    public JerseyClientResponseContext apply(JerseyClientRequestContext request) {
         try {
             return _apply(request);
         } catch (IOException ex) {
@@ -93,46 +91,46 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
         }
     }
 
-    private Response _apply(final Request _request) throws IOException {
-        final JaxrsRequestView request = Helper.unwrap(_request);
+    private JerseyClientResponseContext _apply(final JerseyClientRequestContext requestContext) throws IOException {
         final HttpURLConnection uc;
         // TODO introduce & leverage optional connection factory to support customized connections
-        uc = (HttpURLConnection) request.getUri().toURL().openConnection();
-        uc.setRequestMethod(request.getMethod());
+        uc = (HttpURLConnection) requestContext.getUri().toURL().openConnection();
+        uc.setRequestMethod(requestContext.getMethod());
 
-        uc.setInstanceFollowRedirects(PropertiesHelper.getValue(request.getProperties(),
+        final Map<String,Object> configurationProperties = requestContext.getConfiguration().getProperties();
+        uc.setInstanceFollowRedirects(PropertiesHelper.getValue(configurationProperties,
                 ClientProperties.FOLLOW_REDIRECTS, true));
 
-        uc.setConnectTimeout(PropertiesHelper.getValue(request.getProperties(),
+        uc.setConnectTimeout(PropertiesHelper.getValue(configurationProperties,
                 ClientProperties.CONNECT_TIMEOUT, 0));
 
-        uc.setReadTimeout(PropertiesHelper.getValue(request.getProperties(),
+        uc.setReadTimeout(PropertiesHelper.getValue(configurationProperties,
                 ClientProperties.READ_TIMEOUT, 0));
 
         if (uc instanceof HttpsURLConnection) {
-            Object o = request.getProperties().get(ClientProperties.HOSTNAME_VERIFIER);
+            Object o = configurationProperties.get(ClientProperties.HOSTNAME_VERIFIER);
             if (o instanceof HostnameVerifier) {
                 ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier) o);
             }
 
-            o = request.getProperties().get(ClientProperties.SSL_CONTEXT);
+            o = configurationProperties.get(ClientProperties.SSL_CONTEXT);
             if (o instanceof SSLContext) {
                 ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
             }
         }
 
-        final Object entity = request.getEntity();
+        final Object entity = requestContext.getEntity();
         if (entity != null) {
             uc.setDoOutput(true);
 
-            if(request.getMethod().equalsIgnoreCase("GET")) {
+            if(requestContext.getMethod().equalsIgnoreCase("GET")) {
                 final Logger logger = Logger.getLogger(HttpUrlConnector.class.getName());
                 if(logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, LocalizationMessages.HTTPURLCONNECTION_REPLACES_GET_WITH_ENTITY());
                 }
             }
 
-            writeRequestEntity(request, new RequestEntityWriterListener() {
+            writeRequestEntity(requestContext, new RequestEntityWriterListener() {
                 @Override
                 public void onRequestEntitySize(long size) {
                     if (size != -1 && size < Integer.MAX_VALUE) {
@@ -165,21 +163,22 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<Request
 
                         @Override
                         public void commit() throws IOException {
-                            writeOutBoundHeaders(request.getHeaders().getRequestHeaders(), uc);
+                            writeOutBoundHeaders(HeadersFactory.getStringHeaders(requestContext.getHeaders()), uc);
                         }
                     };
                 }
 
             });
         } else {
-            writeOutBoundHeaders(request.getHeaders().getRequestHeaders(), uc);
+            writeOutBoundHeaders(HeadersFactory.getStringHeaders(requestContext.getHeaders()), uc);
         }
 
-        Response.ResponseBuilder rb =
-                Responses.from(uc.getResponseCode(), request, getInputStream(uc));
-        Responses.fillHeaders(rb, Maps.filterKeys(uc.getHeaderFields(), Predicates.notNull()));
+        JerseyClientResponseContext responseContext = new JerseyClientResponseContext(
+                Statuses.from(uc.getResponseCode()), requestContext);
+        responseContext.setEntityStream(getInputStream(uc));
+        responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
 
-        return rb.build();
+        return responseContext;
     }
 
     private void writeOutBoundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {

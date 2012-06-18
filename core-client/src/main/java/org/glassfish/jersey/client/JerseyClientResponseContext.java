@@ -58,6 +58,18 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
     private final JerseyClientRequestContext requestContext;
 
     /**
+     * Create new Jersey client response context initialized from a JAX-RS {@link Response response}.
+     *
+     * @param requestContext associated request context.
+     * @param response JAX-RS response to be used to initialize the response context.
+     * @return new Jersey client response context
+     */
+    public static JerseyClientResponseContext initFrom(final JerseyClientRequestContext requestContext, final Response response) {
+        // TODO properly implement
+        return new JerseyClientResponseContext(response.getStatusInfo(), requestContext);
+    }
+
+    /**
      * Create a new Jersey client response context.
      *
      * @param status response status.
@@ -66,6 +78,7 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
     public JerseyClientResponseContext(Response.StatusType status, JerseyClientRequestContext requestContext) {
         this.status = status;
         this.requestContext = requestContext;
+        setWorkers(requestContext.getWorkers());
     }
 
     @Override

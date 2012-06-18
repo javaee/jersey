@@ -55,12 +55,10 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 
 import org.jvnet.tiger_types.Types;
 
@@ -74,14 +72,10 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
-    private final Request request;
-    private final JerseyConfiguration configuration;
-    private final JerseyClient client;
+    private final JerseyClientRequestContext requestContext;
 
     private JerseyInvocation(Builder builder) {
-        this.request = builder.request.build();
-        this.configuration = builder.configuration.snapshot();
-        this.client = builder.client;
+        this.requestContext = new JerseyClientRequestContext(builder.requestContext);
     }
 
     /**
@@ -89,9 +83,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
-        private final JaxrsRequestBuilderView request;
-        private JerseyConfiguration configuration;
-        private JerseyClient client;
+        private final JerseyClientRequestContext requestContext;
 
         /**
          * Create new Jersey-specific client invocation builder.
@@ -101,63 +93,60 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * @param client Jersey client that will process the invocation.
          */
         protected Builder(URI uri, JerseyConfiguration configuration, JerseyClient client) {
-            this.request = Requests.from(uri, uri, "");
-            this.configuration = configuration;
-            this.client = client;
+            this.requestContext = new JerseyClientRequestContext(uri, client, configuration, new MapPropertiesDelegate());
         }
 
         /**
-         * Returns a reference to the mutable request to be invoked.
+         * Returns a reference to the mutable request context to be invoked.
          *
-         * @return mutable request to be invoked.
+         * @return mutable request context to be invoked.
          */
-        JaxrsRequestBuilderView request() {
-            return request;
+        JerseyClientRequestContext request() {
+            return requestContext;
         }
 
         private void storeEntity(Entity<?> entity) {
-            // TODO implement handlers here?
             if (entity != null) {
-                request.variant(entity.getVariant());
-                request.entity(entity.getEntity());
+                requestContext.variant(entity.getVariant());
+                requestContext.setEntity(entity.getEntity());
             }
         }
 
         @Override
         public JerseyInvocation build(String method) {
-            request.method(method);
+            requestContext.setMethod(method);
             return new JerseyInvocation(this);
         }
 
         @Override
         public JerseyInvocation build(String method, Entity<?> entity) {
-            request.method(method);
+            requestContext.setMethod(method);
             storeEntity(entity);
             return new JerseyInvocation(this);
         }
 
         @Override
         public JerseyInvocation buildGet() {
-            request.method("GET");
+            requestContext.setMethod("GET");
             return new JerseyInvocation(this);
         }
 
         @Override
         public JerseyInvocation buildDelete() {
-            request.method("DELETE");
+            requestContext.setMethod("DELETE");
             return new JerseyInvocation(this);
         }
 
         @Override
         public JerseyInvocation buildPost(Entity<?> entity) {
-            request.method("POST");
+            requestContext.setMethod("POST");
             storeEntity(entity);
             return new JerseyInvocation(this);
         }
 
         @Override
         public JerseyInvocation buildPut(Entity<?> entity) {
-            request.method("PUT");
+            requestContext.setMethod("PUT");
             storeEntity(entity);
             return new JerseyInvocation(this);
         }
@@ -169,55 +158,55 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Builder acceptLanguage(Locale... locales) {
-            request.acceptLanguage(locales);
+            requestContext.acceptLanguage(locales);
             return this;
         }
 
         @Override
         public Builder acceptLanguage(String... locales) {
-            request.acceptLanguage(locales);
+            requestContext.acceptLanguage(locales);
             return this;
         }
 
         @Override
         public Builder cookie(Cookie cookie) {
-            request.cookie(cookie);
+            requestContext.cookie(cookie);
             return this;
         }
 
         @Override
         public Builder allow(String... methods) {
-            request.allow(methods);
+            requestContext.allow(methods);
             return this;
         }
 
         @Override
         public Builder allow(Set<String> methods) {
-            request.allow(methods);
+            requestContext.allow(methods);
             return this;
         }
 
         @Override
         public Builder cacheControl(CacheControl cacheControl) {
-            request.cacheControl(cacheControl);
+            requestContext.cacheControl(cacheControl);
             return this;
         }
 
         @Override
         public Builder header(String name, Object value) {
-            request.header(name, value);
+            requestContext.header(name, value);
             return this;
         }
 
         @Override
         public Invocation.Builder headers(MultivaluedMap<String, Object> headers) {
-            request.replaceHeaders(headers);
+            requestContext.replaceHeaders(headers);
             return this;
         }
 
         @Override
         public JerseyConfiguration configuration() {
-            return configuration;
+            return requestContext.getConfiguration();
         }
 
         @Override
@@ -317,39 +306,39 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Response method(String name) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
         public <T> T method(String name, Class<T> responseType) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public <T> T method(String name, GenericType<T> responseType) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public Response method(String name, Entity<?> entity) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
         public <T> T method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public <T> T method(String name, Entity<?> entity, GenericType<T> responseType) throws InvocationException {
-            request.method(name);
+            requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
         }
@@ -495,52 +484,52 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Future<Response> method(String name) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
         public <T> Future<T> method(String name, Class<T> responseType) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, GenericType<T> responseType) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, InvocationCallback<T> callback) {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(callback);
         }
 
         @Override
         public Future<Response> method(String name, Entity<?> entity) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, GenericType<T> responseType) throws InvocationException {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, InvocationCallback<T> callback) {
-            builder.request.method(name);
+            builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(callback);
         }
@@ -579,7 +568,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        client.submit(this, new InvocationCallback<Response>() {
+        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -598,7 +587,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        client.submit(this, new InvocationCallback<Response>() {
+        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -632,7 +621,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        client.submit(this, new InvocationCallback<Response>() {
+        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -663,7 +652,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         final Type callbackType = Types.getTypeArgument(callback.getClass(), 0);
         final Class<T> rawType = Types.erasure(callbackType);
 
-        client.submit(this, new InvocationCallback<Response>() {
+        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -701,15 +690,15 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public JerseyConfiguration configuration() {
-        return configuration;
+        return requestContext.getConfiguration();
     }
 
     /**
-     * Returns a reference to the mutable request to be invoked.
+     * Returns a reference to the mutable request context to be invoked.
      *
-     * @return mutable request to be invoked.
+     * @return mutable request context to be invoked.
      */
-    Request request() {
-        return request;
+    JerseyClientRequestContext request() {
+        return requestContext;
     }
 }

@@ -41,12 +41,20 @@ package org.glassfish.jersey.client;
 
 import java.net.URI;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Variant;
 
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -56,6 +64,7 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// TODO complete javadoc on class
 public class JerseyClientRequestContext extends OutboundMessageContext implements ClientRequestContext {
     // Executing client instance
     private final JerseyClient client;
@@ -80,10 +89,26 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
      * @param propertiesDelegate properties delegate.
      */
     public JerseyClientRequestContext(
-            JerseyClient client, JerseyConfiguration configuration, PropertiesDelegate propertiesDelegate) {
+            URI requestUri, JerseyClient client, JerseyConfiguration configuration, PropertiesDelegate propertiesDelegate) {
+        this.requestUri = requestUri;
         this.client = client;
         this.configuration = configuration;
         this.propertiesDelegate = propertiesDelegate;
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param original original instance.
+     */
+    public JerseyClientRequestContext(JerseyClientRequestContext original) {
+        super(original);
+        this.requestUri = original.requestUri;
+        this.httpMethod = original.httpMethod;
+        this.client = original.client;
+        this.configuration = original.configuration.snapshot();
+
+        this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);
     }
 
     @Override
@@ -182,5 +207,79 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
     public void setWorkers(MessageBodyWorkers workers) {
         // TODO use this initializer method in the request processing
         this.workers = workers;
+    }
+
+    public void accept(MediaType... types) {
+        headers(HttpHeaders.ACCEPT, (Object[]) types);
+    }
+
+    public void accept(String... types) {
+        headers(HttpHeaders.ACCEPT, types);
+    }
+
+    public void acceptLanguage(Locale... locales) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void acceptLanguage(String... locales) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void cookie(Cookie cookie) {
+        header(HttpHeaders.COOKIE, cookie);
+    }
+
+    public void allow(String... methods) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void allow(Set<String> methods) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void cacheControl(CacheControl cacheControl) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void encoding(String encoding) {
+        replace(HttpHeaders.CONTENT_ENCODING, encoding);
+    }
+
+    public void replaceHeaders(MultivaluedMap<String, Object> map) {
+        replaceAll(map);
+    }
+
+    public void language(String language) {
+        replace(HttpHeaders.CONTENT_LANGUAGE, language);
+    }
+
+    public void language(Locale language) {
+        replace(HttpHeaders.CONTENT_LANGUAGE, language);
+    }
+
+    public void type(MediaType type) {
+        setMediaType(type);
+    }
+
+    public void type(String type) {
+        type(type == null ? null : MediaType.valueOf(type));
+    }
+
+    public void variant(Variant variant) {
+        if (variant == null) {
+            type((MediaType) null);
+            language((String) null);
+            encoding(null);
+        }
+
+        type(variant.getMediaType());
+        language(variant.getLanguage());
+        encoding(variant.getEncoding());
+        // TODO set charset
     }
 }

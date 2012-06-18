@@ -46,7 +46,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.inmemory.internal.InMemoryTransport;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -88,7 +87,7 @@ public class InMemoryContainerTest extends JerseyTest {
     }
 
     /**
-     * Tests {@link InMemoryTransport In-Memory Client Transport}.
+     * Tests {@link org.glassfish.jersey.test.inmemory.internal.InMemoryConnector In-Memory Client Transport}.
      */
     @Test
     public void testInMemoryContainerClient() {

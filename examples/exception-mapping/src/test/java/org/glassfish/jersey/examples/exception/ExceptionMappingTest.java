@@ -93,8 +93,9 @@ public class ExceptionMappingTest extends JerseyTest {
         WebTarget t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("webapplication_entity").build());
         Response r = t.request("text/plain").post(Entity.text("Code:200"));
         assertEquals(200, r.getStatus());
-        assertTrue(r.readEntity(String.class).contains("Code:200"));
-        assertTrue(r.readEntity(String.class).contains(MyResponseFilter.class.getSimpleName()));
+        final String entity = r.readEntity(String.class);
+        assertTrue(entity.contains("Code:200"));
+        assertTrue(entity.contains(MyResponseFilter.class.getSimpleName()));
     }
 
     /**
@@ -106,8 +107,9 @@ public class ExceptionMappingTest extends JerseyTest {
         WebTarget t = client().target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).path("webapplication_entity").build());
         Response r = t.request("text/plain").post(Entity.text("Code:400"));
         assertEquals(400, r.getStatus());
-        assertTrue(r.readEntity(String.class).contains("Code:400"));
-        assertTrue(r.readEntity(String.class).contains(MyResponseFilter.class.getSimpleName()));
+        final String entity = r.readEntity(String.class);
+        assertTrue(entity.contains("Code:400"));
+        assertTrue(entity.contains(MyResponseFilter.class.getSimpleName()));
     }
 
     /**

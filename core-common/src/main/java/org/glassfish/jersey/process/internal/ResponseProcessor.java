@@ -103,6 +103,13 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
         void push(Function<DATA, DATA> responseTransformation);
 
         /**
+         * Push chainable response transformation stage that should be applied.
+         *
+         * @param stage response transformation chainable stage.
+         */
+        void push(ChainableStage<DATA> stage);
+
+        /**
          * (Optionally) create a responder chain from all transformations
          * previously pushed into the context.
          *

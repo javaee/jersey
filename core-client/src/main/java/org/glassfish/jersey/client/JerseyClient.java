@@ -41,10 +41,8 @@ package org.glassfish.jersey.client;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -52,13 +50,11 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ServiceProviders;
@@ -66,13 +62,11 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -84,7 +78,6 @@ import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -109,6 +102,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         private Ref<MessageBodyWorkers> messageBodyWorkers;
         @Inject
         private Ref<ContextResolvers> contextResolvers;
+        @Inject
+        Ref<JerseyClientRequestContext> requestContextRef;
     }
 
     /**
@@ -116,7 +111,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     public static class Builder {
 
-        private Inflector<Request, Response> connector;
+        private Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector;
         private final List<Module> customModules = new LinkedList<Module>();
 
         /**
@@ -132,7 +127,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
          * @param connector client transport connector.
          * @return updated Jersey client builder.
          */
-        public Builder transport(Inflector<Request, Response> connector) {
+        public Builder transport(Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector) {
             this.connector = connector;
             return this;
         }
@@ -179,9 +174,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
     private final JerseyConfiguration configuration;
     private final AtomicBoolean closedFlag;
-    private Inflector<Request, Response> connector;
+    private Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector;
     private Injector injector;
-    private RequestInvoker<Request, Response> invoker;
+    private RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext> invoker;
     //
     @Inject
     private RequestScope requestScope;
@@ -196,7 +191,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     protected JerseyClient(
             final JerseyConfiguration configuration,
-            final Inflector<Request, Response> connector,
+            final Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector,
             final List<Module> customModules) {
         this.configuration = configuration;
         this.closedFlag = new AtomicBoolean(false);
@@ -229,15 +224,16 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         }
         this.injector = services.forContract(Injector.class).get();
 
-        final MessageBodyWorkersInitializer workersInitializationStage = injector.inject(MessageBodyWorkersInitializer.class);
-        final FilteringStage filteringStage = injector.inject(FilteringStage.class);
+        final ClientMessageBodyWorkersInitializer workersInitializationStage = injector.inject(ClientMessageBodyWorkersInitializer.class);
+//        final FilteringStage filteringStage = injector.inject(FilteringStage.class);
 
-        Stage<Request> rootStage = Stages
+        Stage<JerseyClientRequestContext> rootStage = Stages
                 .chain(workersInitializationStage)
-                .to(filteringStage)
+// TODO re-enable filters
+//                .to(filteringStage)
                 .build(Stages.asStage(connector));
 
-        this.invoker = injector.inject(RequestInvoker.Builder.class).build(rootStage);
+        this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);
 
         this.injector.inject(this);
     }
@@ -245,21 +241,20 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     /**
      * Submit a configured invocation for processing.
      *
-     * @param invocation invocation to be processed (invoked).
-     * @param callback   callback receiving invocation processing notifications.
-     * @return response future.
+     * @param requestContext request context to be processed (invoked).
+     * @param callback       callback receiving invocation processing notifications.
      */
-    /*package*/ ListenableFuture<Response> submit(
-            final JerseyInvocation invocation,
-            final javax.ws.rs.client.InvocationCallback<Response> callback) {
-        return requestScope.runInScope(
-                new RequestScope.Producer<ListenableFuture<Response>>() {
+    /*package*/ void submit(final JerseyClientRequestContext requestContext,
+                            final javax.ws.rs.client.InvocationCallback<Response> callback) {
+
+        requestScope.runInScope(
+                new Runnable() {
 
                     @Override
-                    public ListenableFuture<Response> call() {
+                    public void run() {
                         References refs = injector.inject(References.class);
 
-                        final JerseyConfiguration cfg = invocation.configuration();
+                        final JerseyConfiguration cfg = requestContext.getConfiguration();
                         final ServiceProviders providers = refs.serviceProvidersBuilder
                                 .setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances())
                                 .build();
@@ -272,26 +267,25 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                         refs.exceptionMappers.set(mappers);
                         refs.messageBodyWorkers.set(workers);
                         refs.contextResolvers.set(resolvers);
-
-                        final Request request = injector.inject(invocation.request());
+                        refs.requestContextRef.set(requestContext);
 
                         // TODO: (MM) we should not mix config with request properties
                         // TODO: config should be accessible to connectors by some other means
-                        Map<String, Object> properties = new HashMap<String, Object>(cfg.getProperties());
-                        properties.putAll(Helper.unwrap(request).getProperties());
-                        Helper.unwrap(request).getProperties().putAll(properties);
+//                        Map<String, Object> properties = new HashMap<String, Object>(cfg.getProperties());
+//                        properties.putAll(Helper.unwrap(requestContext).getProperties());
+//                        Helper.unwrap(requestContext).getProperties().putAll(properties);
                         /////
 
-                        return invoker.apply(request, new InvocationCallback<Response>() {
+                        invoker.apply(requestContext, new InvocationCallback<JerseyClientResponseContext>() {
 
                             @Override
-                            public void result(Response response) {
-                                callback.completed(response);
+                            public void result(JerseyClientResponseContext responseContext) {
+                                final InboundJaxrsResponse jaxrsResponse = new InboundJaxrsResponse(responseContext);
+                                callback.completed(jaxrsResponse);
                             }
 
                             @Override
                             public void failure(Throwable exception) {
-                                // TODO JAX-RS client callback interface as well as invocation exception
                                 // need to be fixed
                                 callback.failed(exception instanceof InvocationException ?
                                         (InvocationException) exception
@@ -300,7 +294,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
                             @Override
                             public void cancelled() {
-                                // TODO implement client-side cancel event logic
+                                // TODO implement client-side suspend event logic
                             }
 
                             @Override

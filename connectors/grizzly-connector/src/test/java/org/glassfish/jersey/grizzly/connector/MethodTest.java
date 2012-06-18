@@ -106,7 +106,7 @@ public class MethodTest extends JerseyTest{
         WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().get();
-        assertEquals("GET", response.getEntity());
+        assertEquals("GET", response.readEntity(String.class));
     }
 
     @Ignore
@@ -115,8 +115,8 @@ public class MethodTest extends JerseyTest{
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
         WebTarget t = client.target(u);
 
-        Response response = t.path(PATH).request().post(Entity.entity("POST", MediaType.WILDCARD_TYPE));
-        assertEquals("POST", response.getEntity());
+        Response response = t.path(PATH).request().post(Entity.entity("POST",MediaType.TEXT_PLAIN));
+        assertEquals("POST", response.readEntity(String.class));
     }
 
     @Test
@@ -125,8 +125,8 @@ public class MethodTest extends JerseyTest{
         JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
         WebTarget t = client.target(u);
 
-        Response response = t.path(PATH).request().put(Entity.entity("PUT", MediaType.WILDCARD_TYPE));
-        assertEquals("PUT", response.getEntity());
+        Response response = t.path(PATH).request().put(Entity.entity("PUT", MediaType.TEXT_PLAIN));
+        assertEquals("PUT", response.readEntity(String.class));
     }
 
     @Test
@@ -136,6 +136,6 @@ public class MethodTest extends JerseyTest{
         WebTarget t = client.target(u);
 
         Response response = t.path(PATH).request().delete();
-        assertEquals("DELETE", response.getEntity());
+        assertEquals("DELETE", response.readEntity(String.class));
     }
 }

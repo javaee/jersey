@@ -145,6 +145,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterClientClass() {
         Client client = client();
         client.configuration().register(CustomLoggingFilter_Old.class).setProperty("foo", "bar");
@@ -156,6 +158,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterClientInstance() {
         Client client = client();
         client.configuration().register(new CustomLoggingFilter_Old()).setProperty("foo", "bar");
@@ -167,6 +171,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterTargetClass() {
         WebTarget target = target().path(App.ROOT_PATH);
         target.configuration().register(CustomLoggingFilter_Old.class).setProperty("foo", "bar");
@@ -178,6 +184,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterTargetInstance() {
         WebTarget target = target().path(App.ROOT_PATH);
         target.configuration().register(new CustomLoggingFilter_Old()).setProperty("foo", "bar");
@@ -189,6 +197,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterInvocationClass() {
         Invocation.Builder inv = target().path(App.ROOT_PATH).request();
         inv.configuration().register(CustomLoggingFilter_Old.class).setProperty("foo", "bar");
@@ -200,6 +210,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    // TODO re-enable filter tests.
+    @Ignore
     public void testLoggingFilterInvocationInstance() {
         Invocation.Builder inv = target().path(App.ROOT_PATH).request();
         inv.configuration().register(new CustomLoggingFilter_Old()).setProperty("foo", "bar");
