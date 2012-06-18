@@ -60,4 +60,17 @@
         <module>jax-rs-ri</module>
         <module>glassfish</module>
     </modules>
-</project>
+
+    <profiles>
+      <profile>
+        <id>attach-src-and-docs</id>
+        <activation>
+            <activeByDefault>false</activeByDefault>
+        </activation>
+        <modules>
+            <module>apidocs</module>
+        </modules>
+      </profile>
+    </profiles>
+
+ </project>

@@ -58,12 +58,19 @@
             <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>multipart-webapp</artifactId>
             <version>${project.version}</version>
             <classifier>gf-project-src</classifier>
             <type>zip</type>
+        </dependency>
+         <dependency>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>apidocs</artifactId>
+            <version>${project.version}</version>
+            <classifier>javadoc</classifier>
+            <type>jar</type>
         </dependency>
   </dependencies>
     <build>
@@ -82,6 +89,18 @@
                           <stripVersion>true</stripVersion>
                           <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
                           <outputDirectory>${project.build.directory}/dependency/examples</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack-apidocs</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                          <stripVersion>true</stripVersion>
+                          <includeGroupIds>org.glassfish.jersey.bundles</includeGroupIds>
+                          <outputDirectory>${project.build.directory}/dependency/apidocs</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
