@@ -44,6 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -180,7 +181,12 @@ public class RequestContextBuilder {
     }
 
     public RequestContextBuilder cookie(Cookie cookie) {
-        result.getCookies().put(cookie.getName(), cookie);
+        putHeader(HttpHeaders.COOKIE, cookie);
+        return this;
+    }
+
+    public RequestContextBuilder cookies(Cookie... cookies) {
+        putHeaders(HttpHeaders.COOKIE, cookies);
         return this;
     }
 
@@ -197,7 +203,7 @@ public class RequestContextBuilder {
             result.getHeaders().remove(name);
             return;
         }
-        putHeaders(name, HeadersFactory.toString(values, rd));
+        result.getHeaders().addAll(name, HeadersFactory.toString(Arrays.asList(values), rd));
     }
 
     private void putHeaders(String name, String... values) {

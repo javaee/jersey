@@ -99,6 +99,10 @@ public class InboundMessageContext {
     };
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
+    private final MultivaluedMap<String, String> headers;
+    private final ContentStream contentStream;
+    private MessageBodyWorkers workers;
+
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
      * is used to control the execution of interceptors.
@@ -227,11 +231,6 @@ public class InboundMessageContext {
             }
         }
     }
-
-
-    private final MultivaluedMap<String, String> headers;
-    private final ContentStream contentStream;
-    private MessageBodyWorkers workers;
 
     /**
      * Create new inbound message context.

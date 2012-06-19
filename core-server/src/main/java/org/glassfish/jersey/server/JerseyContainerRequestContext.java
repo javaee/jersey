@@ -51,21 +51,11 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.core.Variant;
+import javax.ws.rs.core.*;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
-import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.AcceptableLanguageTag;
 import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
@@ -116,8 +106,6 @@ public class JerseyContainerRequestContext extends InboundMessageContext
     private String varyValue;
     // UriInfo reference
     private UriInfo uriInfo;
-    // Entity providers
-    private MessageBodyWorkers workers;
     // Custom Jersey container request scoped initializer
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
@@ -418,24 +406,6 @@ public class JerseyContainerRequestContext extends InboundMessageContext
                 return input.getAsLocale();
             }
         });
-    }
-
-    /**
-     * Get the message body workers associated with the request.
-     *
-     * @return message body workers.
-     */
-    public MessageBodyWorkers getWorkers() {
-        return workers;
-    }
-
-    /**
-     * Set the message body workers associated with the request.
-     *
-     * @param workers message body workers.
-     */
-    public void setWorkers(MessageBodyWorkers workers) {
-        this.workers = workers;
     }
 
     // JAX-RS request

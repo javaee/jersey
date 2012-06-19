@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -85,7 +84,7 @@ public abstract class AbstractTest {
         if (accept != null) {
             requestBuilder = requestBuilder.accept(accept);
         }
-        requestBuilder = requestBuilder.header(HttpHeaders.COOKIE, cookies);
+        requestBuilder = requestBuilder.cookies(cookies);
 
         return apply(requestBuilder.build());
     }
