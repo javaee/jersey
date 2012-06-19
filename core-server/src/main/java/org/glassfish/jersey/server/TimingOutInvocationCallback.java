@@ -69,9 +69,13 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     private TimerTask timeoutTask = null;
 
     @Override
-    public void result(final JerseyContainerResponseContext response) {
+    public void result(JerseyContainerResponseContext response) {
         if (done.compareAndSet(false, true)) {
-            set(handleResponse(response));
+            try {
+                set(handleResponse(response));
+            } catch (Throwable t) {
+                setException(t);
+            }
         }
     }
 
@@ -84,9 +88,13 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     protected abstract JerseyContainerResponseContext handleResponse(final JerseyContainerResponseContext response);
 
     @Override
-    public void failure(final Throwable exception) {
+    public void failure(final Throwable failure) {
         if (done.compareAndSet(false, true)) {
-            set(handleFailure(exception));
+            try {
+                set(handleFailure(failure));
+            } catch (Throwable t) {
+                setException(t);
+            }
         }
     }
 
@@ -112,7 +120,11 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
             @Override
             public void run() {
                 if (done.compareAndSet(false, true)) {
-                    set(handleTimeout(invocationCtx));
+                    try {
+                        set(handleTimeout(invocationCtx));
+                    } catch (Throwable t) {
+                        setException(t);
+                    }
                 }
             }
         };
@@ -150,7 +162,11 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
                 @Override
                 public void run() {
                     if (done.compareAndSet(false, true)) {
-                        set(handleTimeout(invocationCtx));
+                        try {
+                            set(handleTimeout(invocationCtx));
+                        } catch (Throwable t) {
+                            setException(t);
+                        }
                     }
                 }
             };

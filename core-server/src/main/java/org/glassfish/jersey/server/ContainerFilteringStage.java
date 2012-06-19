@@ -187,30 +187,28 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
             requestFilters = com.google.common.collect.Iterables.filter(requestFilters, POST_MATCH_FILTER_PREDICATE);
         }
 
-        if (!requestFilters.iterator().hasNext()) {
-            for (ContainerRequestFilter filter : requestFilters) {
-                try {
-                    filter.filter(requestContext);
-                    final Response abortResponse = requestContext.getAbortResponse();
-                    if (abortResponse != null) {
-                        // abort accepting & return response
-                        return Continuation.of(requestContext, Stages.asStage(
-                                new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
-                                    @Override
-                                    public JerseyContainerResponseContext apply(
-                                            final JerseyContainerRequestContext requestContext) {
+        for (ContainerRequestFilter filter : requestFilters) {
+            try {
+                filter.filter(requestContext);
+                final Response abortResponse = requestContext.getAbortResponse();
+                if (abortResponse != null) {
+                    // abort accepting & return response
+                    return Continuation.of(requestContext, Stages.asStage(
+                            new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                                @Override
+                                public JerseyContainerResponseContext apply(
+                                        final JerseyContainerRequestContext requestContext) {
 
-                                        return new JerseyContainerResponseContext(requestContext, abortResponse);
-                                    }
-                                }));
-                    }
-                } catch (IOException ex) {
-                    final Response abortResponse = requestContext.getAbortResponse();
-                    if (abortResponse == null) {
-                        throw new WebApplicationException(ex);
-                    } else {
-                        throw new WebApplicationException(ex, abortResponse);
-                    }
+                                    return new JerseyContainerResponseContext(requestContext, abortResponse);
+                                }
+                            }));
+                }
+            } catch (IOException ex) {
+                final Response abortResponse = requestContext.getAbortResponse();
+                if (abortResponse == null) {
+                    throw new WebApplicationException(ex);
+                } else {
+                    throw new WebApplicationException(ex, abortResponse);
                 }
             }
         }
