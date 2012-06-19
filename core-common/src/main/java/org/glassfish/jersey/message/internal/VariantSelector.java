@@ -305,38 +305,6 @@ public final class VariantSelector {
      * Select the representation variant that best matches the request. More explicit
      * variants are chosen ahead of less explicit ones.
      *
-     * @param request  request data.
-     * @param variants list of possible variants.
-     * @return selected variant.
-     */
-    public static Variant selectVariant(Request request, List<Variant> variants) {
-        LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
-
-        Set<String> vary = new HashSet<String>();
-        vhs = selectVariants(vhs, HttpHelper.getAccept(request), MEDIA_TYPE_DC, vary);
-        vhs = selectVariants(vhs, HttpHelper.getAcceptLanguage(request), LANGUAGE_TAG_DC, vary);
-        vhs = selectVariants(vhs, HttpHelper.getAcceptCharset(request), CHARSET_DC, vary);
-        vhs = selectVariants(vhs, HttpHelper.getAcceptEncoding(request), ENCODING_DC, vary);
-
-        if (vhs.isEmpty()) {
-            return null;
-        } else {
-            StringBuilder varyHeader = new StringBuilder();
-            for (String v : vary) {
-                if (varyHeader.length() > 0) {
-                    varyHeader.append(',');
-                }
-                varyHeader.append(v);
-                // TODO should somehow return vary header & update method javadoc.
-            }
-            return vhs.iterator().next().v;
-        }
-    }
-
-    /**
-     * Select the representation variant that best matches the request. More explicit
-     * variants are chosen ahead of less explicit ones.
-     *
      * @param context          inbound message context.
      * @param variants         list of possible variants.
      * @param varyHeaderValue an output reference of vary header value that should be put
