@@ -56,9 +56,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -79,7 +76,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addSingletons(new MyFilter_Old());
+        return ((ResourceConfig) super.configure()).addSingletons(new MyFilter());
     }
 
     @Override
@@ -112,36 +109,6 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
         }
     }
 
-    @Provider
-    public static class MyFilter_Old implements RequestFilter {
-
-        private void filter(FilterContext context) throws IOException {
-            context.getRequest().bufferEntity();
-
-            // Read entity
-            FormDataMultiPart multiPart = context.getRequest().readEntity(FormDataMultiPart.class);
-
-            assertEquals(3, multiPart.getBodyParts().size());
-            assertNotNull(multiPart.getField("foo"));
-            assertEquals("bar", multiPart.getField("foo").getValue());
-            assertNotNull(multiPart.getField("baz"));
-            assertEquals("bop", multiPart.getField("baz").getValue());
-
-            assertNotNull(multiPart.getField("bean"));
-            MultiPartBean bean = multiPart.getField("bean").getValueAs(MultiPartBean.class);
-            assertEquals("myname", bean.getName());
-            assertEquals("myvalue", bean.getValue());
-
-            context.getRequest().getProperties().put("filtered", "true");
-        }
-
-        @Override
-        public void preFilter(FilterContext context) throws IOException {
-            filter(context);
-        }
-
-    }
-
     @Path("/ConsumesFormDataResource")
     public static class ConsumesFormDataResource {
 
@@ -149,7 +116,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public Response get(@Context Request request, FormDataMultiPart multiPart) {
-            Object p = Helper.unwrap(request).getProperties().get("filtered");
+            Object p = ((JerseyContainerRequestContext)request).getProperty("filtered");
             assertNotNull(p);
             assertEquals("true", p);
 

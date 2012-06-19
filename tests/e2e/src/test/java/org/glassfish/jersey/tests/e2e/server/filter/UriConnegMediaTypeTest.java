@@ -54,7 +54,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.UriConnegFilter_Old;
+import org.glassfish.jersey.server.filter.UriConnegFilter;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class UriConnegMediaTypeTest extends JerseyTest {
         }
 
         ResourceConfig rc = new ResourceConfig(classes);
-        UriConnegFilter_Old.enableFor(rc, mediaTypes, null);
+        UriConnegFilter.enableFor(rc, mediaTypes, null);
         return rc;
     }
 

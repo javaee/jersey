@@ -48,7 +48,6 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -56,13 +55,14 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.InvokerBuilder;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -98,8 +98,8 @@ public class ContextInjectedAsyncAppTest {
 
     @Context
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
-    private RequestScope requestScope; // will be manually injected in the setupApplication()
+    private RequestScope requestScope;
+    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
     private final String uriSuffix;
     private final String expectedResponse;
 
@@ -108,7 +108,7 @@ public class ContextInjectedAsyncAppTest {
         this.expectedResponse = expectedResponse;
     }
 
-    private static class AsyncInflector implements Inflector<Request, Response> {
+    private static class AsyncInflector implements Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> {
 
         @Context
         private InvocationContext invocationContext;
@@ -121,7 +121,7 @@ public class ContextInjectedAsyncAppTest {
         }
 
         @Override
-        public Response apply(final Request req) {
+        public JerseyContainerResponseContext apply(final JerseyContainerRequestContext req) {
             i.inject(this);
             // Suspend current request
             invocationContext.suspend();
@@ -137,7 +137,7 @@ public class ContextInjectedAsyncAppTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Responses.from(200, req).entity("B").build());
+                    invocationContext.resume(Response.ok().entity("B").build());
                 }
             });
 
@@ -174,15 +174,17 @@ public class ContextInjectedAsyncAppTest {
 
     @Test
     public void testAsyncApp() throws Exception {
-        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+        final JerseyContainerRequestContext req =
+                RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
+        Future<JerseyContainerResponseContext> res =
+                requestScope.runInScope(new Callable<Future<JerseyContainerResponseContext>>() {
 
-            @Override
-            public Future<Response> call() throws Exception {
-                return invoker.apply(req);
-            }
-        });
+                    @Override
+                    public Future<JerseyContainerResponseContext> call() throws Exception {
+                        return invoker.apply(req);
+                    }
+                });
         assertEquals(expectedResponse, res.get().getEntity());
 
     }

@@ -47,11 +47,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
 import org.glassfish.jersey.internal.util.collection.Ref;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -71,60 +68,6 @@ public class SecurityContextTest {
     private static final String PRINCIPAL_NAME = "SetByFilter";
     private static final String SKIP_FILTER = "skipFilter";
     private static final String PRINCIPAL_IS_NULL = "principalIsNull";
-
-    private static class SecurityContextFilter_Old implements PreMatchRequestFilter {
-
-        @Inject
-        Ref<SecurityContext> securityContextRef;
-        @Context
-        SecurityContext securityContext;
-
-        @Override
-        public void preMatchFilter(FilterContext context) throws IOException {
-            // test injections
-            Assert.assertNotNull(securityContext);
-            Assert.assertEquals(securityContextRef.get(), securityContext);
-            Assert.assertTrue(securityContext.getUserPrincipal() == null);
-
-            String header = context.getRequest().getHeaders().getHeaderString(SKIP_FILTER);
-            if ("true".equals(header)) {
-                return;
-            }
-
-
-
-            // set new Security Context
-            securityContextRef.set(new SecurityContext() {
-
-                @Override
-                public boolean isUserInRole(String role) {
-                    return false;
-                }
-
-                @Override
-                public boolean isSecure() {
-                    return false;
-                }
-
-                @Override
-                public Principal getUserPrincipal() {
-                    return new Principal() {
-
-                        @Override
-                        public String getName() {
-                            return PRINCIPAL_NAME;
-                        }
-                    };
-                }
-
-                @Override
-                public String getAuthenticationScheme() {
-                    return null;
-                }
-            });
-
-        }
-    }
 
     private static class SecurityContextFilter implements ContainerRequestFilter {
 
@@ -186,10 +129,10 @@ public class SecurityContextTest {
      */
     @Test
     public void testSecurityContextInjectionFilter() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter_Old.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Response response = application.apply(RequestContextBuilder.from("/test", "GET").build()).get();
+        JerseyContainerResponseContext response = application.apply(RequestContextBuilder.from("/test", "GET").build()).get();
         assertEquals(response.getStatus(), 200);
         assertEquals(response.getEntity(), PRINCIPAL_NAME);
     }
@@ -202,13 +145,14 @@ public class SecurityContextTest {
      */
     @Test
     public void testDefaultSecurityContext() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter_Old.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Response response = application.apply(RequestContextBuilder.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();
+        JerseyContainerResponseContext response =
+                application.apply(RequestContextBuilder.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();
         assertEquals(200, response.getStatus());
-        String entity = response.readEntity(String.class);
-        Assert.assertTrue(!entity.equals(PRINCIPAL_NAME));
+        Object entity = response.getEntity();
+        Assert.assertTrue(!PRINCIPAL_NAME.equals(entity));
     }
 
     @Path("test")

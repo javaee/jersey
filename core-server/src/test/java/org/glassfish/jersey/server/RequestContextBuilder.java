@@ -123,8 +123,20 @@ public class RequestContextBuilder {
         return new RequestContextBuilder(baseUri, requestUri, method);
     }
 
+    public static RequestContextBuilder from(URI requestUri, String method) {
+        return from(null, requestUri, method);
+    }
+
+    public static RequestContextBuilder from(URI baseUri, URI requestUri, String method) {
+        return new RequestContextBuilder(baseUri, requestUri, method);
+    }
+
     private RequestContextBuilder(String baseUri, String requestUri, String method) {
-        result = new JerseyTestContainerRequestContext(URI.create(baseUri), URI.create(requestUri), method, null,
+        this(URI.create(baseUri), URI.create(requestUri), method);
+    }
+
+    private RequestContextBuilder(URI baseUri, URI requestUri, String method) {
+        result = new JerseyTestContainerRequestContext(baseUri, requestUri, method, null,
                 new MapPropertiesDelegate());
     }
 

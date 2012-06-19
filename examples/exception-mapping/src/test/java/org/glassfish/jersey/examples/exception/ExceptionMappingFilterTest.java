@@ -68,7 +68,7 @@ public class ExceptionMappingFilterTest extends JerseyTest {
         final ResourceConfig resourceConfig = new ResourceConfig(
                 ExceptionResource.class,
                 MyResponseFilter.class,
-                ExceptionResource.WebApplicationExceptionFilter_Old.class,
+                ExceptionResource.WebApplicationExceptionFilter.class,
                 MyExceptionMapper.class,
                 MySubExceptionMapper.class,
                 MySubSubException.class,

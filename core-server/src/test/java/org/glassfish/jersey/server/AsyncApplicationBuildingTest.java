@@ -63,7 +63,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.model.Resource;
@@ -120,7 +119,7 @@ public class AsyncApplicationBuildingTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Responses.from(200, req).entity(responseContent).build());
+                    invocationContext.resume(Response.ok().entity(responseContent).build());
                 }
             });
 

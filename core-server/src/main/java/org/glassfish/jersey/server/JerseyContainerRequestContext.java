@@ -71,7 +71,6 @@ import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
@@ -543,7 +542,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
 
         // Since the resource does not exist the method must not be
         // perform and 412 Precondition Failed is returned
-        return Responses.responseBuilder(Response.Status.PRECONDITION_FAILED, workers);
+        return Response.status(Response.Status.PRECONDITION_FAILED);
     }
 
     // Private methods
@@ -557,12 +556,12 @@ public class JerseyContainerRequestContext extends InboundMessageContext
         // tags. Thus if the entity tag of the entity is weak then matching
         // of entity tags in the If-Match header should fail.
         if (eTag.isWeak()) {
-            return Responses.responseBuilder(Response.Status.PRECONDITION_FAILED, workers);
+            return Response.status(Response.Status.PRECONDITION_FAILED);
         }
 
         if (matchingTags != MatchingEntityTag.ANY_MATCH && !matchingTags.contains(eTag)) {
             // 412 Precondition Failed
-            return Responses.responseBuilder(Response.Status.PRECONDITION_FAILED, workers);
+            return Response.status(Response.Status.PRECONDITION_FAILED);
         }
 
         return null;
@@ -583,17 +582,13 @@ public class JerseyContainerRequestContext extends InboundMessageContext
         if (isGetOrHead) {
             if (matchingTags == MatchingEntityTag.ANY_MATCH) {
                 // 304 Not modified
-                final Response.ResponseBuilder responseBuilder = Responses.responseBuilder(Response.Status.NOT_MODIFIED, workers);
-                responseBuilder.tag(eTag);
-                return responseBuilder;
+                return Response.notModified(eTag);
             }
 
             // The weak comparison function may be used to compare entity tags
             if (matchingTags.contains(eTag) || matchingTags.contains(new EntityTag(eTag.getValue(), !eTag.isWeak()))) {
                 // 304 Not modified
-                final Response.ResponseBuilder responseBuilder = Responses.responseBuilder(Response.Status.NOT_MODIFIED, workers);
-                responseBuilder.tag(eTag);
-                return responseBuilder;
+                return Response.notModified(eTag);
             }
         } else {
             // The strong comparison function must be used to compare the entity
@@ -606,7 +601,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
 
             if (matchingTags == MatchingEntityTag.ANY_MATCH || matchingTags.contains(eTag)) {
                 // 412 Precondition Failed
-                return Responses.responseBuilder(Response.Status.PRECONDITION_FAILED, workers);
+                return Response.status(Response.Status.PRECONDITION_FAILED);
             }
         }
 
@@ -620,7 +615,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
                 long ifUnmodifiedSince = HttpHeaderReader.readDate(ifUnmodifiedSinceHeader).getTime();
                 if (roundDown(lastModified) > ifUnmodifiedSince) {
                     // 412 Precondition Failed
-                    return Responses.responseBuilder(Response.Status.PRECONDITION_FAILED, workers);
+                    return Response.status(Response.Status.PRECONDITION_FAILED);
                 }
             } catch (ParseException ex) {
                 // Ignore the header if parsing error
@@ -649,7 +644,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
             long ifModifiedSince = HttpHeaderReader.readDate(ifModifiedSinceHeader).getTime();
             if (roundDown(lastModified) <= ifModifiedSince) {
                 // 304 Not modified
-                return Responses.responseBuilder(Response.Status.NOT_MODIFIED, workers);
+                return Response.notModified();
             }
         } catch (ParseException ex) {
             // Ignore the header if parsing error

@@ -41,12 +41,10 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -55,25 +53,29 @@ import com.google.common.base.Function;
 @RequestScoped
 class LastPathSegmentTracingFilter implements Router {
 
-    private final RespondingContext<Response> respondingContext;
+    private final RespondingContext<JerseyContainerResponseContext> respondingContext;
     private final RoutingContext routingContext;
 
-    public LastPathSegmentTracingFilter(@Inject RespondingContext<Response> respondingContext, @Inject RoutingContext routingContext) {
+    public LastPathSegmentTracingFilter(
+            @Inject RespondingContext<JerseyContainerResponseContext> respondingContext,
+            @Inject RoutingContext routingContext) {
+
         this.respondingContext = respondingContext;
         this.routingContext = routingContext;
     }
 
     @Override
-    public Router.Continuation apply(Request request) {
+    public Router.Continuation apply(JerseyContainerRequestContext request) {
         final String wholePath = getWholeMatchedPath();
         final String lastMatch = getLastMatch();
         final String lastSegment = wholePath.isEmpty() ? wholePath : wholePath.substring(0, wholePath.length() - lastMatch.length());
 
-        respondingContext.push(new Function<Response, Response>() {
+        respondingContext.push(new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
 
             @Override
-            public Response apply(Response response) {
-                return Responses.toBuilder(response).entity(response.getEntity() + "-" + lastSegment).build();
+            public JerseyContainerResponseContext apply(JerseyContainerResponseContext response) {
+                response.setEntity(response.getEntity() + "-" + lastSegment);
+                return response;
             }
         });
         return Router.Continuation.of(request);

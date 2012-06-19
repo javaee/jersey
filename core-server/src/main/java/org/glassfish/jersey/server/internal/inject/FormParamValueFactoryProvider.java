@@ -42,11 +42,10 @@ package org.glassfish.jersey.server.internal.inject;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
@@ -104,35 +103,35 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private void cacheForm(final HttpContext context, final Form form) {
-            context.getProperties().put(HttpContext.FORM_PROPERTY, form);
+            context.getRequestContext().setProperty(HttpContext.FORM_PROPERTY, form);
         }
 
         private Form getForm(HttpContext context) {
-            final Request request = ensureValidRequest(context.getRequestContext());
-            return getFormParameters(request);
+            return getFormParameters(ensureValidRequest(context.getRequestContext()));
         }
 
         private Form getCachedForm(final HttpContext context) {
-            return (Form) context.getProperties().get(HttpContext.FORM_PROPERTY);
+            return (Form) context.getRequestContext().getProperty(HttpContext.FORM_PROPERTY);
         }
 
-        private Request ensureValidRequest(final Request request) throws IllegalStateException {
-            if (request.getMethod().equals("GET")) {
+        private JerseyContainerRequestContext ensureValidRequest(
+                final JerseyContainerRequestContext requestContext) throws IllegalStateException {
+            if (requestContext.getMethod().equals("GET")) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_METHOD_ERROR());
             }
 
-            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, Helper.unwrap(request).getHeaders().getMediaType())) {
+            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, requestContext.getMediaType())) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
             }
-            return request;
+            return requestContext;
         }
 
-        private Form getFormParameters(Request request) {
-            if (Helper.unwrap(request).getHeaders().getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
-                Helper.unwrap(request).bufferEntity();
-                Form f = Helper.unwrap(request).readEntity(Form.class);
+        private Form getFormParameters(JerseyContainerRequestContext requestContext) {
+            if (requestContext.getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+                requestContext.bufferEntity();
+                Form f = requestContext.readEntity(Form.class);
                 return (f == null ? new Form() : f);
             } else {
                 return new Form();

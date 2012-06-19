@@ -51,9 +51,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
@@ -62,9 +59,6 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPReaderTestInterceptor;
@@ -77,7 +71,6 @@ import static org.junit.Assert.assertEquals;
  * Tests interceptors.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class InterceptorCustomTest extends JerseyTest {
     private static final String FROM_RESOURCE = "-from_resource";
@@ -117,8 +110,6 @@ public class InterceptorCustomTest extends JerseyTest {
      * Interceptor which adds +1 to each byte written into the stream.
      *
      * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
-     *
-     * @param <T>
      */
     @Provider
     @BindingPriority(300)
@@ -151,8 +142,6 @@ public class InterceptorCustomTest extends JerseyTest {
      * Interceptor which adds +1 to each byte read from the stream.
      *
      * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
-     *
-     * @param <T>
      */
     @Provider
     @BindingPriority(300)

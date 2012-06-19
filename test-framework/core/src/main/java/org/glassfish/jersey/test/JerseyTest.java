@@ -53,8 +53,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.filter.LoggingFilter_Old;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -457,7 +456,7 @@ public abstract class JerseyTest {
 
         //check if logging is required
         if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            c.configuration().register(new LoggingFilter_Old(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
+            c.configuration().register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
         }
 
         configureClient(c.configuration());

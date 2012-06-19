@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.io.Closeable;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,7 +77,7 @@ public class CloseableServiceModule extends AbstractModule {
 
             if (closeableSet == null) {
                 closeableSet = new HashSet<Closeable>();
-                context.getProperties().put(CloseableServiceFactory.class.getName(), closeableSet);
+                context.getRequestContext().setProperty(CloseableServiceFactory.class.getName(), closeableSet);
             }
 
             closeableSet.add(c);
@@ -99,9 +98,9 @@ public class CloseableServiceModule extends AbstractModule {
             }
         }
 
+        @SuppressWarnings("unchecked")
         private Set<Closeable> getCloseables() {
-            final Map<String, Object> properties = context.getProperties();
-            return properties == null ? null : (Set<Closeable>) properties.get(HttpContextCloseableService.class.getName());
+            return (Set<Closeable>) context.getRequestContext().getProperty(HttpContextCloseableService.class.getName());
         }
 
     }

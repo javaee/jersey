@@ -46,9 +46,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -83,7 +83,7 @@ public class MixedResourceConfigurationTest {
 
             @Override
             public Response apply(Request request) {
-                name = Helper.unwrap(request).readEntity(String.class);
+                name = ((JerseyContainerRequestContext) request).readEntity(String.class);
                 return Response.ok().build();
             }
         });

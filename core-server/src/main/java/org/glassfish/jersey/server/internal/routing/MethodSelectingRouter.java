@@ -55,7 +55,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
@@ -160,11 +159,11 @@ final class MethodSelectingRouter implements Router {
         /**
          * Determines whether this {@link ConsumesProducesAcceptor router} can process the {@code request}.
          *
-         * @param request The request to be tested.
+         * @param requestContext The request to be tested.
          * @return True if the {@code request} can be processed by this router, false otherwise.
          */
-        boolean isConsumable(JerseyContainerRequestContext request) {
-            MediaType contentType = Helper.unwrap(request).getHeaders().getMediaType();
+        boolean isConsumable(JerseyContainerRequestContext requestContext) {
+            MediaType contentType = requestContext.getMediaType();
             return contentType == null || consumes.getMediaType().isCompatible(contentType);
         }
 
@@ -402,7 +401,7 @@ final class MethodSelectingRouter implements Router {
             for (final ConsumesProducesAcceptor satisfiable : satisfyingAcceptors) {
                 if (satisfiable.produces.getMediaType().isCompatible(acceptableMediaType)) {
 
-                    final MediaType requestContentType = Helper.unwrap(requestContext).getHeaders().getMediaType();
+                    final MediaType requestContentType = requestContext.getMediaType();
                     final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE :
                             requestContentType;
 
@@ -527,7 +526,7 @@ final class MethodSelectingRouter implements Router {
                                 final Response response = Response.ok()
                                         .allow(allowedMethods)
                                         .header(HttpHeaders.CONTENT_LENGTH, "0")
-                                        .type(Helper.unwrap(requestContext).getHeaders().getAcceptableMediaTypes().get(0))
+                                        .type(requestContext.getAcceptableMediaTypes().get(0))
                                         .build();
                                 return new JerseyContainerResponseContext(requestContext, response);
                             }

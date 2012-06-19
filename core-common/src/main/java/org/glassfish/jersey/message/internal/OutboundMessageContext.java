@@ -774,7 +774,7 @@ public class OutboundMessageContext {
      */
     public void setEntity(Object entity, Annotation[] annotations) {
         setEntityAndType(entity);
-        this.entityAnnotations = annotations;
+        setEntityAnnotations(annotations);
     }
 
     /**
@@ -804,7 +804,7 @@ public class OutboundMessageContext {
      */
     public void setEntity(Object entity, Type type, Annotation[] annotations) {
         setEntity(entity, new GenericType(type));
-        this.entityAnnotations = annotations;
+        setEntityAnnotations(annotations);
     }
 
     /**
@@ -887,7 +887,7 @@ public class OutboundMessageContext {
      * @param annotations entity annotations.
      */
     public void setEntityAnnotations(Annotation[] annotations) {
-        this.entityAnnotations = annotations;
+        this.entityAnnotations = (annotations == null) ? EMPTY_ANNOTATIONS : annotations;
     }
 
     /**

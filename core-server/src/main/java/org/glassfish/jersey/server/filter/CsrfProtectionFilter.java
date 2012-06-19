@@ -47,11 +47,7 @@ import java.util.Set;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
-
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.Helper;
 
 /**
  * Simple server-side request filter that implements CSRF protection as per the

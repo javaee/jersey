@@ -42,9 +42,8 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 
 import javax.ws.rs.client.ClientFactory;
-
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.RequestFilter;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -127,20 +126,12 @@ public class JerseyClientTest {
     public void testTargetConfigUpdate() {
         final WebTarget target = client.target("http://jersey.java.net/examples");
 
-        target.configuration().register(new RequestFilter() {
-
+        target.configuration().register(new ClientRequestFilter() {
             @Override
-            public void preFilter(FilterContext context) throws IOException {
-                throw new UnsupportedOperationException("Not supported yet.");
+            public void filter(ClientRequestContext clientRequestContext) throws IOException {
+                throw new UnsupportedOperationException("Not supported yet");
             }
         });
-        // TODO: delete the code above and uncomment the code below:
-//        target.configuration().register(new ClientRequestFilter() {
-//            @Override
-//            public void filter(ClientRequestContext clientRequestContext) throws IOException {
-//                throw new UnsupportedOperationException("Not supported yet");
-//            }
-//        });
 
         assertEquals(1, target.configuration().getProviderInstances().size());
     }

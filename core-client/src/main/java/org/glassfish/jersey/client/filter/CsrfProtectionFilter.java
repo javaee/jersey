@@ -46,10 +46,6 @@ import java.util.Set;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.Request;
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestFilter;
 
 /**
  * Simple client-side filter that adds X-Requested-By headers to all state-changing
@@ -57,9 +53,8 @@ import org.glassfish.jersey._remove.RequestFilter;
  * This is to satisfy the requirements of the {@link org.glassfish.jersey.server.filter.CsrfProtectionFilter}
  * on the server side.
  *
- * @see org.glassfish.jersey.server.filter.CsrfProtectionFilter
- *
  * @author Martin Matula (martin.matula at oracle.com)
+ * @see org.glassfish.jersey.server.filter.CsrfProtectionFilter
  */
 public class CsrfProtectionFilter implements ClientRequestFilter {
 
@@ -69,6 +64,7 @@ public class CsrfProtectionFilter implements ClientRequestFilter {
     public static final String HEADER_NAME = "X-Requested-By";
 
     private static final Set<String> METHODS_TO_IGNORE;
+
     static {
         HashSet<String> mti = new HashSet<String>();
         mti.add("GET");
@@ -90,7 +86,7 @@ public class CsrfProtectionFilter implements ClientRequestFilter {
      * Initialized the filter with a desired value of the X-Requested-By header.
      *
      * @param requestedBy Desired value of X-Requested-By header the filter
-     * will be adding for all potentially state changing requests.
+     *                    will be adding for all potentially state changing requests.
      */
     public CsrfProtectionFilter(final String requestedBy) {
         this.requestedBy = requestedBy;

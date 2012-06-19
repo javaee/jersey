@@ -46,7 +46,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -54,12 +53,13 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.InvokerBuilder;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -100,8 +100,8 @@ public class PatternRoutingTest {
 
     @Inject
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
-    private RequestScope requestScope; // will be manually injected in the setupApplication()
+    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
+    private RequestScope requestScope;
     private final String uriSuffix;
     private final String expectedResponse;
 
@@ -128,14 +128,14 @@ public class PatternRoutingTest {
         injector.inject(this);
 
         final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
-        Router inflection = Routers.asTreeAcceptor(new Inflector<Request, Response>() {
+        Router inflection = Routers.asTreeAcceptor(
+                new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
 
-            @Override
-            public Response apply(final Request req) {
-                // System.out.println("Inflector");
-                return Responses.from(200, req).entity("B").build();
-            }
-        });
+                    @Override
+                    public JerseyContainerResponseContext apply(final JerseyContainerRequestContext req) {
+                        return new JerseyContainerResponseContext(req, Response.ok("B").build());
+                    }
+                });
         this.invoker = invokerBuilder.build(routeBuilder.root(
                 routeBuilder.route("a(/.*)?").to(LastPathSegmentTracingFilter.class)
                         .to(routeBuilder.route("b(/.*)?").to(LastPathSegmentTracingFilter.class)
@@ -148,16 +148,18 @@ public class PatternRoutingTest {
 
     @Test
     public void testPatternRouting() throws Exception {
-        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+        final JerseyContainerRequestContext req =
+                RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
+        Future<JerseyContainerResponseContext> res = requestScope.runInScope(
+                new Callable<Future<JerseyContainerResponseContext>>() {
 
-            @Override
-            public Future<Response> call() throws Exception {
-                return invoker.apply(req);
-            }
+                    @Override
+                    public Future<JerseyContainerResponseContext> call() throws Exception {
+                        return invoker.apply(req);
+                    }
 
-        });
+                });
 
         assertEquals(expectedResponse, res.get().getEntity());
     }

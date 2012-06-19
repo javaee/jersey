@@ -54,7 +54,6 @@ import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -103,7 +102,7 @@ public class ServerSentEventsTest extends JerseyTest {
 
         final AtomicInteger doneCount = new AtomicInteger(0);
 
-        for(int i = 0; i < 25; i++) {
+        for (int i = 0; i < 25; i++) {
             new EventSource(target().path(response.getLocation().toString()), executorService) {
 
                 int messageCount = 0;
@@ -115,7 +114,7 @@ public class ServerSentEventsTest extends JerseyTest {
 
                         System.out.println("# Received: " + inboundEvent);
 
-                        if(inboundEvent.getData(String.class).equals("done")) {
+                        if (inboundEvent.getData(String.class).equals("done")) {
                             assertEquals(6, messageCount);
                             doneCount.incrementAndGet();
                         }
@@ -158,7 +157,7 @@ public class ServerSentEventsTest extends JerseyTest {
 
                     System.out.println("# Received: " + inboundEvent);
 
-                    if(inboundEvent.getData(String.class).equals("done")) {
+                    if (inboundEvent.getData(String.class).equals("done")) {
                         assertEquals(6, messageCount);
                         doneCount.incrementAndGet();
                     }
@@ -179,7 +178,7 @@ public class ServerSentEventsTest extends JerseyTest {
 
                     System.out.println("# Received: " + inboundEvent);
 
-                    if(inboundEvent.getData(String.class).equals("done")) {
+                    if (inboundEvent.getData(String.class).equals("done")) {
                         assertEquals(6, messageCount);
                         doneCount.incrementAndGet();
                     }

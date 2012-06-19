@@ -48,8 +48,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartClientModule;
 import org.glassfish.jersey.media.multipart.MultiPartModule;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -91,7 +90,7 @@ abstract class MultiPartJerseyTest extends JerseyTest {
 
         // check if logging is required
         if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            configuration.register(new LoggingFilter_Old(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
+            configuration.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
         }
 
         return client;

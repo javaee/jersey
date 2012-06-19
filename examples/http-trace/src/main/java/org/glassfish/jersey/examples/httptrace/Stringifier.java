@@ -41,10 +41,10 @@ package org.glassfish.jersey.examples.httptrace;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 
 /**
  * Request stringifier.
@@ -57,11 +57,11 @@ public class Stringifier {
     }
 
     public static String stringify(Request _request) {
-        JaxrsRequestView request = Helper.unwrap(_request);
+        JerseyContainerRequestContext request = (JerseyContainerRequestContext) _request;
         StringBuilder buffer = new StringBuilder();
 
         printRequestLine(buffer, request);
-        printPrefixedHeaders(buffer, request.getHeaders().getRequestHeaders());
+        printPrefixedHeaders(buffer, request.getHeaders());
 
         if (request.hasEntity()) {
             buffer.append(request.readEntity(String.class)).append("\n");
@@ -70,8 +70,8 @@ public class Stringifier {
         return buffer.toString();
     }
 
-    private static void printRequestLine(StringBuilder buffer, JaxrsRequestView request) {
-        buffer.append(request.getMethod()).append(" ").append(request.getUri().toASCIIString()).append("\n");
+    private static void printRequestLine(StringBuilder buffer, JerseyContainerRequestContext request) {
+        buffer.append(request.getMethod()).append(" ").append(request.getUriInfo().getRequestUri().toASCIIString()).append("\n");
     }
 
     private static void printPrefixedHeaders(StringBuilder buffer, Map<String, List<String>> headers) {

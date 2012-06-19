@@ -42,13 +42,13 @@ package org.glassfish.jersey.examples.httptrace;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter_Old;
-import org.glassfish.jersey.filter.LoggingFilter_Old;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TraceSupportTest extends JerseyTest {
 
@@ -65,7 +65,7 @@ public class TraceSupportTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.configuration().register(LoggingFilter_Old.class);
+        target.configuration().register(LoggingFilter.class);
         return target.path(path);
     }
 

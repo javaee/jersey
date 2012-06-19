@@ -106,10 +106,10 @@ public class ResourceConfigTest {
 
         assertSame(resourceConfig, ah.getServices().forContract(Application.class).get());
 
-        Response r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
+        JerseyContainerResponseContext r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
         assertEquals("Injected application instance not same as used for building the Jersey handler.",
-                "true", r.readEntity(String.class));
+                "true", r.getEntity());
     }
 
     @Test

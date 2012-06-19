@@ -39,13 +39,15 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.net.URI;
+
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -68,7 +70,7 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         rc.addResources(resourceBuilder.build());
@@ -85,7 +87,7 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         rc.addResources(resourceBuilder.build());
@@ -102,7 +104,7 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         rc.addResources(resourceBuilder.build());
@@ -117,7 +119,7 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         };
 
@@ -144,14 +146,14 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(201).build();
+                return Response.created(URI.create("/foo")).build();
             }
         });
         Inflector<Request, Response> inflector1 = new Inflector<Request, Response>() {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(202).build();
+                return Response.accepted().build();
             }
         };
         resourceBuilder.addMethod("GET").path("test2").handledBy(inflector1);
@@ -160,7 +162,7 @@ public class ProgrammaticResourceMethodsTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(203).build();
+                return Response.status(203).build();
             }
         };
         resourceBuilder.addMethod("OPTIONS").path("test1").handledBy(inflector2);
@@ -177,11 +179,12 @@ public class ProgrammaticResourceMethodsTest {
 //        checkReturnedStatusEquals(202, Requests.from("/test2", "OPTIONS").build(), application);
     }
 
-    private void checkReturnedStatus(Request req, ApplicationHandler app) throws Exception {
+    private void checkReturnedStatus(JerseyContainerRequestContext req, ApplicationHandler app) throws Exception {
         checkReturnedStatusEquals(200, req, app);
     }
 
-    private void checkReturnedStatusEquals(int expectedStatus, Request req, ApplicationHandler app) throws Exception {
+    private void checkReturnedStatusEquals(int expectedStatus, JerseyContainerRequestContext req, ApplicationHandler app)
+            throws Exception {
         final int responseStatus = app.apply(req).get().getStatus();
         assertEquals(expectedStatus, responseStatus);
     }

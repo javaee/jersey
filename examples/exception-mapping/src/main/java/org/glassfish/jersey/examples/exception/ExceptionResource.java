@@ -51,17 +51,14 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.examples.exception.Exceptions.MyException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubSubException;
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 
 /**
@@ -73,40 +70,14 @@ import org.glassfish.jersey.server.JerseyContainerRequestContext;
 public class ExceptionResource {
 
     @Provider
-    static class MyResponseFilter implements ResponseFilter {
+    static class MyResponseFilter implements ContainerResponseFilter {
 
         @Override
-        public void postFilter(FilterContext context) throws IOException {
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             System.out.println("MyResponseFilter.postFilter() enter");
-            Response response = context.getResponseBuilder().entity(
-                    context.getResponse().readEntity(String.class) + ":" + getClass().getSimpleName()).build();
-            context.setResponse(response);
+            responseContext.setEntity(
+                    responseContext.getEntity() + ":" + getClass().getSimpleName(), null, MediaType.TEXT_PLAIN_TYPE);
             System.out.println("MyResponseFilter.postFilter() exit");
-        }
-    }
-
-    @Provider
-    static class WebApplicationExceptionFilter_Old implements RequestFilter, ResponseFilter {
-
-        @Override
-        public void preFilter(FilterContext context) throws IOException {
-            System.out.println("WebApplicationExceptionFilter.preFilter() enter");
-            JaxrsRequestView r = context.getRequest();
-            if (r.hasEntity() && r.readEntity(String.class).equals("Request Exception")) {
-                throw new WebApplicationException(Response.Status.OK);
-            }
-            System.out.println("WebApplicationExceptionFilter.preFilter() exit");
-
-        }
-
-        @Override
-        public void postFilter(FilterContext context) throws IOException {
-            System.out.println("WebApplicationExceptionFilter.postFilter() enter");
-            Response r = context.getResponse();
-            if (r.hasEntity() && r.readEntity(String.class).equals("Response Exception")) {
-                throw new WebApplicationException(Response.Status.OK);
-            }
-            System.out.println("WebApplicationExceptionFilter.postFilter() exit");
         }
     }
 

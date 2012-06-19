@@ -48,8 +48,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -724,19 +724,19 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from("/?" + param, "GET")
                         .accept("application/" + type)
                         .build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/wrappers?" + param, "GET")
                         .accept("application/" + type)
                         .build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/list?" + param + "&" + param + "&" + param, "GET")
                         .accept("application/" + type)
                         .build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
@@ -744,13 +744,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         String param = type + "=" + value;
 
@@ -758,7 +758,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from(base + "default/override?" + param, "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -915,21 +915,21 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final Response response = super.getResponse("/?int=abcdef", "application/int");
+        final JerseyContainerResponseContext response = super.getResponse("/?int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final Response response = super.getResponse("/wrappers?int=abcdef", "application/int");
+        final JerseyContainerResponseContext response = super.getResponse("/wrappers?int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final Response response = super.getResponse("/list?int=abcdef&int=abcdef", "application/int");
+        final JerseyContainerResponseContext response = super.getResponse("/list?int=abcdef&int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }

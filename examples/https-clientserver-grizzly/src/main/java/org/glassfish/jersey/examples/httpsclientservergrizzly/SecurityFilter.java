@@ -51,10 +51,9 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -64,7 +63,7 @@ import org.jvnet.hk2.annotations.Inject;
  * Returns response with http status 401 when proper authentication is not provided in incoming request.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @see RequestFilter
+ * @see ContainerRequestFilter
  */
 @Provider
 public class SecurityFilter implements ContainerRequestFilter {
@@ -84,7 +83,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     private User authenticate(Request request) {
         // Extract authentication credentials
-        String authentication = Helper.unwrap(request).getHeaders().getHeaderString(HttpHeaders.AUTHORIZATION);
+        String authentication = ((JerseyContainerRequestContext)request).getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authentication == null) {
             throw new AuthenticationException("Authentication credentials are required", REALM);
         }

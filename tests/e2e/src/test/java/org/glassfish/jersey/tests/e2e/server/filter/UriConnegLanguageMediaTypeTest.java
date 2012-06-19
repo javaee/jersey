@@ -55,7 +55,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.UriConnegFilter_Old;
+import org.glassfish.jersey.server.filter.UriConnegFilter;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -100,7 +100,7 @@ public class UriConnegLanguageMediaTypeTest extends JerseyTest {
         languages.put("french", "fr");
 
         ResourceConfig rc = new ResourceConfig(LanguageVariantResource.class);
-        UriConnegFilter_Old.enableFor(rc, mediaTypes, languages);
+        UriConnegFilter.enableFor(rc, mediaTypes, languages);
         return rc;
     }
 

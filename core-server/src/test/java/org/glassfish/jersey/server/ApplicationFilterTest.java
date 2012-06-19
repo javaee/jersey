@@ -52,7 +52,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -93,7 +92,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         resourceConfig.addResources(rb.build());
@@ -126,7 +125,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         resourceConfig.addResources(rb.build());
@@ -229,7 +228,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         resourceConfig.addResources(rb.build());
@@ -259,7 +258,7 @@ public class ApplicationFilterTest {
 
             @Override
             public Response apply(Request request) {
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         resourceConfig.addResources(rb.build());

@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import java.io.IOException;
 import java.security.Principal;
 
 import javax.ws.rs.GET;
@@ -50,8 +49,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -77,62 +74,7 @@ public class SecurityContextFilterTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(SecurityContextFilter_Old.class, Resource.class);
-    }
-
-    public static class SecurityContextFilter_Old implements PreMatchRequestFilter {
-
-        @Inject
-        Ref<SecurityContext> securityContextRef;
-        @Context
-        SecurityContext securityContext;
-
-        @Override
-        public void preMatchFilter(FilterContext context) throws IOException {
-            // test injections
-            Assert.assertNotNull(securityContext);
-            Assert.assertEquals(securityContextRef.get(), securityContext);
-
-
-            String header = context.getRequest().getHeaders().getHeaderString(SKIP_FILTER);
-            if ("true".equals(header)) {
-                return;
-            }
-
-            // test injections
-            Assert.assertNotNull(securityContext);
-            Assert.assertEquals(securityContextRef.get(), securityContext);
-
-            // set new Security Context
-            securityContextRef.set(new SecurityContext() {
-
-                @Override
-                public boolean isUserInRole(String role) {
-                    return false;
-                }
-
-                @Override
-                public boolean isSecure() {
-                    return false;
-                }
-
-                @Override
-                public Principal getUserPrincipal() {
-                    return new Principal() {
-
-                        @Override
-                        public String getName() {
-                            return PRINCIPAL_NAME;
-                        }
-                    };
-                }
-
-                @Override
-                public String getAuthenticationScheme() {
-                    return null;
-                }
-            });
-        }
+        return new ResourceConfig(SecurityContextFilter.class, Resource.class);
     }
 
     public static class SecurityContextFilter implements ContainerRequestFilter {
@@ -194,7 +136,7 @@ public class SecurityContextFilterTest extends JerseyTest {
      * Tests SecurityContext in filter.
      *
      * @throws Exception Thrown when request processing fails in the
-     * application.
+     *                   application.
      */
     @Test
     public void testSecurityContextInjectionFilter() throws Exception {
@@ -208,7 +150,7 @@ public class SecurityContextFilterTest extends JerseyTest {
      * Tests SecurityContext in filter.
      *
      * @throws Exception Thrown when request processing fails in the
-     * application.
+     *                   application.
      */
     @Test
     public void testContainerSecurityContext() throws Exception {

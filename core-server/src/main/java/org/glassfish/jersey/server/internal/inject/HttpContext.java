@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.Map;
-
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
@@ -72,14 +70,4 @@ public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
      * @return the HTTP request information
      */
     JerseyContainerRequestContext getRequestContext();
-
-    /**
-     * Get the mutable properties.
-     * <p>
-     * Care should be taken not to clear the properties or remove properties
-     * that are unknown otherwise unspecified behavior may result.
-     *
-     * @return the properties.
-     */
-    Map<String, Object> getProperties();
 }

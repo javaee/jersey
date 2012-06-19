@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -60,6 +59,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
@@ -322,14 +322,13 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
      * @return a form data multi part entity.
      */
     private FormDataMultiPart getEntity(final HttpContext context) {
-        final Map<String,Object> properties = context.getProperties();
-
-        if (properties.get(FormDataMultiPart.class.getName()) == null) {
-            FormDataMultiPart formDataMultiPart = context.getRequestContext().readEntity(FormDataMultiPart.class);
-            properties.put(FormDataMultiPart.class.getName(), formDataMultiPart);
+        final JerseyContainerRequestContext requestContext = context.getRequestContext();
+        if (requestContext.getProperty(FormDataMultiPart.class.getName()) == null) {
+            FormDataMultiPart formDataMultiPart = requestContext.readEntity(FormDataMultiPart.class);
+            requestContext.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);
         }
 
-        return (FormDataMultiPart) properties.get(FormDataMultiPart.class.getName());
+        return (FormDataMultiPart) requestContext.getProperty(FormDataMultiPart.class.getName());
     }
 
     @Override

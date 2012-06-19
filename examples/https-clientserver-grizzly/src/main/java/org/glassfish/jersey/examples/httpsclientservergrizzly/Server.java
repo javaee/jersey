@@ -40,15 +40,17 @@
 
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
+import java.io.IOException;
+import java.net.URI;
+
+import javax.ws.rs.core.UriBuilder;
+
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.net.URI;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 
 /**
  *
@@ -88,7 +90,7 @@ public class Server {
         sslContext.setTrustStorePass("asdfgh");
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addClasses(RootResource.class, SecurityFilter_Old.class, AuthenticationExceptionMapper.class);
+        rc.addClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         try {
 

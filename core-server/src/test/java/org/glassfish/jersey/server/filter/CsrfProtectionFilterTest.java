@@ -75,7 +75,7 @@ public class CsrfProtectionFilterTest {
 
     @Before
     public void setUp() {
-        ResourceConfig rc = new ResourceConfig(Resource.class, CsrfProtectionFilter_Old.class);
+        ResourceConfig rc = new ResourceConfig(Resource.class, CsrfProtectionFilter.class);
         handler = new ApplicationHandler(rc);
     }
 
@@ -87,7 +87,7 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testGetWithHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
         assertEquals("GET", response.getEntity());
     }
 
@@ -99,7 +99,7 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testPutWithHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
         assertEquals("PUT", response.getEntity());
     }
 }

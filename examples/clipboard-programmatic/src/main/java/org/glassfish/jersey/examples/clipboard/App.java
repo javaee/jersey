@@ -47,9 +47,9 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -120,7 +120,7 @@ public class App {
             @Override
             public Response apply(Request data) {
                 if (data != null) {
-                    clipboard.setContent(Helper.unwrap(data).readEntity(String.class));
+                    clipboard.setContent(((JerseyContainerRequestContext) data).readEntity(String.class));
                 }
                 return Response.noContent().build();
             }
@@ -130,7 +130,8 @@ public class App {
 
             @Override
             public Response apply(Request data) {
-                String newContent = (data != null) ? clipboard.append(Helper.unwrap(data).readEntity(String.class)) : "";
+                String newContent = (data != null)
+                        ? clipboard.append(((JerseyContainerRequestContext) data).readEntity(String.class)) : "";
                 return Response.ok(newContent).build();
             }
         });

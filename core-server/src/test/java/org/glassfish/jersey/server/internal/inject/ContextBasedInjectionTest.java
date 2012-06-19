@@ -50,11 +50,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -125,7 +126,7 @@ public class ContextBasedInjectionTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Responses.from(200, req).entity(responseContent).build());
+                    invocationContext.resume(Response.ok().entity(responseContent).build());
                 }
             });
 
@@ -153,9 +154,10 @@ public class ContextBasedInjectionTest {
 
     @Test
     public void testAsyncApp() throws InterruptedException, ExecutionException {
-        Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+        JerseyContainerRequestContext req =
+                RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<Response> res = app.apply(req);
+        Future<JerseyContainerResponseContext> res = app.apply(req);
 
         assertEquals(expectedResponse, res.get().getEntity());
     }

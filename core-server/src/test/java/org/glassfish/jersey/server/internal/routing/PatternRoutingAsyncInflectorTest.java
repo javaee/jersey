@@ -47,7 +47,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -55,8 +54,9 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
@@ -80,6 +80,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 /**
  * Pattern routing test.
  *
@@ -100,8 +102,8 @@ public class PatternRoutingAsyncInflectorTest {
 
     @Inject
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker<Request, Response> invoker; // will be manually injected in the setupApplication()
-    private RequestScope requestScope; // will be manually injected in the setupApplication()
+    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
+    private RequestScope requestScope;
     private final String uriSuffix;
     private final String expectedResponse;
 
@@ -110,12 +112,12 @@ public class PatternRoutingAsyncInflectorTest {
         this.expectedResponse = expectedResponse;
     }
 
-    private static class AsyncInflector implements Inflector<Request, Response> {
+    private static class AsyncInflector implements Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> {
 
         @Inject
         private InvocationContext invocationContext;
         @Inject
-        private RespondingContext<Response> respondingCtx;
+        private RespondingContext<JerseyContainerResponseContext> respondingCtx;
         @Inject
         private RoutingContext routingCtx;
         @Inject
@@ -127,7 +129,7 @@ public class PatternRoutingAsyncInflectorTest {
         }
 
         @Override
-        public Response apply(final Request req) {
+        public JerseyContainerResponseContext apply(final JerseyContainerRequestContext req) {
             i.inject(this);
             // Suspend current request
             invocationContext.suspend();
@@ -143,7 +145,7 @@ public class PatternRoutingAsyncInflectorTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Responses.from(200, req).entity("B").build());
+                    invocationContext.resume(Response.ok().entity("B").build());
                 }
             });
 
@@ -180,16 +182,18 @@ public class PatternRoutingAsyncInflectorTest {
 
     @Test
     public void testAsyncApp() throws Exception {
-        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+        final JerseyContainerRequestContext req =
+                RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
+        Future<JerseyContainerResponseContext> res = requestScope.runInScope(
+                new Callable<ListenableFuture<JerseyContainerResponseContext>>() {
 
-            @Override
-            public Future<Response> call() throws Exception {
-                return invoker.apply(req);
-            }
+                    @Override
+                    public ListenableFuture<JerseyContainerResponseContext> call() throws Exception {
+                        return invoker.apply(req);
+                    }
 
-        });
+                });
         assertEquals(expectedResponse, res.get().getEntity());
     }
 }

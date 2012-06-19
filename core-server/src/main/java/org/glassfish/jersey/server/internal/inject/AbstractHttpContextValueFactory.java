@@ -39,11 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.Map;
-
-import javax.ws.rs.core.Request;
-
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
@@ -78,12 +73,6 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
             @Override
             public JerseyContainerRequestContext getRequestContext() {
                 return request.get();
-            }
-
-            @Override
-            public Map<String, Object> getProperties() {
-                final Request request = getRequestContext();
-                return request == null ? null : Helper.unwrap(request).getProperties();
             }
         });
     }

@@ -52,7 +52,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
@@ -303,12 +302,12 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getRequestUri() {
-        return Helper.unwrap(requestContext.get()).getUri();
+        return requestContext.get().getRequestUri();
     }
 
     @Override
     public UriBuilder getRequestUriBuilder() {
-        return UriBuilder.fromUri(Helper.unwrap(requestContext.get()).getUri());
+        return UriBuilder.fromUri(getRequestUri());
     }
 
     // ExtendedUriInfo
