@@ -117,23 +117,24 @@ public class ApplicationHandlerTest {
     public void testReturnBadRequestOnIllHeaderValue() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        Response response = app.apply(Requests.from("/", "GET").header(HttpHeaders.CONTENT_LENGTH, "text").build()).get();
-        assertEquals(400, response.getStatus());
+        assertEquals(400,
+                app.apply(RequestContextBuilder.from("/", "GET").header(HttpHeaders.CONTENT_LENGTH, "text").build())
+                        .get().getStatus());
     }
 
     @Test
     public void testMergedResources() throws Exception {
         ApplicationHandler app = createApplication(MergedA.class, MergedB.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
-        response = app.apply(Requests.from("/merged", "GET").build()).get();
+        response = app.apply(RequestContextBuilder.from("/merged", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals(MergedA.RESPONSE, response.readEntity(String.class));
+        assertEquals(MergedA.RESPONSE, response.getEntity());
 
-        response = app.apply(Requests.from("/merged", "POST").build()).get();
+        response = app.apply(RequestContextBuilder.from("/merged", "POST").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals(MergedB.RESPONSE, response.readEntity(String.class));
+        assertEquals(MergedB.RESPONSE, response.getEntity());
     }
 
     /**

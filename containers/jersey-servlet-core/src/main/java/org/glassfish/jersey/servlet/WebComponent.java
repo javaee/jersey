@@ -247,7 +247,7 @@ public class WebComponent {
         filterFormParameters(request, jaxRsRequest);
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, request, response,
+            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, response,
                     asyncExtensionDelegate.createDelegate(request, response));
 
             JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,

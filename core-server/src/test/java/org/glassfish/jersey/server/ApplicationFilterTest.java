@@ -40,28 +40,26 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey._remove.FilterContext;
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
-import org.glassfish.jersey._remove.RequestFilter;
-import org.glassfish.jersey._remove.ResponseFilter;
 import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.Resource;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.collect.Lists;
 
 import junit.framework.Assert;
 import static junit.framework.Assert.assertEquals;
@@ -75,55 +73,20 @@ import static junit.framework.Assert.assertEquals;
 public class ApplicationFilterTest {
 
     @Test
-    public void testSinglePreMatchRequestFilter() throws Exception {
-
-        final AtomicInteger called = new AtomicInteger(0);
-
-        List<PreMatchRequestFilter> preMatchRequestFilters = new ArrayList<PreMatchRequestFilter>();
-        preMatchRequestFilters.add(new PreMatchRequestFilter() {
-
-            @Override
-            public void preMatchFilter(FilterContext context) throws IOException {
-                called.incrementAndGet();
-            }
-        });
-
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<PreMatchRequestFilter>(preMatchRequestFilters, PreMatchRequestFilter.class));
-
-        Resource.Builder rb = Resource.builder("test");
-        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
-
-            @Override
-            public Response apply(Request request) {
-                return Responses.empty().status(200).build();
-            }
-        });
-        resourceConfig.addResources(rb.build());
-        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
-
-        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
-
-        // should be "1"; current value is "2" because of HK2 issue
-        Assert.assertTrue(called.intValue() >= 1);
-    }
-
-    @Test
     public void testSingleRequestFilter() throws Exception {
 
         final AtomicInteger called = new AtomicInteger(0);
 
-        List<RequestFilter> requestFilterList = new ArrayList<RequestFilter>();
-        requestFilterList.add(new RequestFilter() {
-
+        List<ContainerRequestFilter> requestFilters = Lists.newArrayList();
+        requestFilters.add(new ContainerRequestFilter() {
             @Override
-            public void preFilter(FilterContext context) throws IOException {
+            public void filter(ContainerRequestContext context) throws IOException {
                 called.incrementAndGet();
             }
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
+                .addModules(new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -136,9 +99,9 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
+        assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
 
-        // should be "1"; current value is "2" because of HK2 issue
+        // TODO: should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
     }
 
@@ -147,17 +110,16 @@ public class ApplicationFilterTest {
 
         final AtomicInteger called = new AtomicInteger(0);
 
-        List<ResponseFilter> responseFilterList = new ArrayList<ResponseFilter>();
-        responseFilterList.add(new ResponseFilter() {
-
+        List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
+        responseFilterList.add(new ContainerResponseFilter() {
             @Override
-            public void postFilter(FilterContext context) throws IOException {
+            public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
                 called.incrementAndGet();
             }
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<ResponseFilter>(responseFilterList, ResponseFilter.class));
+                .addModules(new ProviderInstanceBindingModule<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -170,9 +132,9 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
+        assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
 
-        // should be "1"; current value is "2" because of HK2 issue
+        // TODO: should be "1"; current value is "2" because of HK2 issue
         Assert.assertTrue(called.intValue() >= 1);
     }
 
@@ -189,21 +151,8 @@ public class ApplicationFilterTest {
         protected abstract void verify();
     }
 
-    public abstract class CommonFilter_Old implements RequestFilter {
-
-        public boolean called = false;
-
-        @Override
-        public void preFilter(FilterContext context) throws IOException {
-            verify();
-            called = true;
-        }
-
-        protected abstract void verify();
-    }
-
     @BindingPriority(1)
-    public class Filter1 extends CommonFilter_Old {
+    public class Filter1 extends CommonFilter {
 
         private Filter10 filter10;
         private Filter100 filter100;
@@ -221,7 +170,7 @@ public class ApplicationFilterTest {
     }
 
     @BindingPriority(10)
-    public class Filter10 extends CommonFilter_Old {
+    public class Filter10 extends CommonFilter {
 
         private Filter1 filter1;
         private Filter100 filter100;
@@ -239,7 +188,7 @@ public class ApplicationFilterTest {
     }
 
     @BindingPriority(100)
-    public class Filter100 extends CommonFilter_Old {
+    public class Filter100 extends CommonFilter {
 
         private Filter1 filter1;
         private Filter10 filter10;
@@ -267,13 +216,13 @@ public class ApplicationFilterTest {
         filter10.setFilters(filter1, filter100);
         filter100.setFilters(filter1, filter10);
 
-        List<RequestFilter> requestFilterList = new ArrayList<RequestFilter>();
+        List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(filter100);
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig().addModules(
+                new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -286,13 +235,12 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(200, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
+        assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
     }
 
-    public class ExceptionFilter implements RequestFilter {
-
+    public class ExceptionFilter implements ContainerRequestFilter {
         @Override
-        public void preFilter(FilterContext context) throws IOException {
+        public void filter(ContainerRequestContext context) throws IOException {
             throw new IOException("test");
         }
     }
@@ -300,11 +248,11 @@ public class ApplicationFilterTest {
     @Test
     public void testFilterExceptionHandling() throws Exception {
 
-        List<RequestFilter> requestFilterList = new ArrayList<RequestFilter>();
+        List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig().addModules(
+                new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -317,6 +265,6 @@ public class ApplicationFilterTest {
         resourceConfig.addResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        assertEquals(500, application.apply(Requests.from("/test", "GET").build()).get().getStatus());
+        assertEquals(500, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
     }
 }

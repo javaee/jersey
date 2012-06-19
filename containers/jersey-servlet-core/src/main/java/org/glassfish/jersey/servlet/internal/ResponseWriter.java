@@ -51,15 +51,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.message.internal.CommittingOutputStream;
+import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 
@@ -76,12 +75,10 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     private static final Logger LOGGER = Logger.getLogger(ResponseWriter.class.getName());
 
-    // TODO remove?
-    private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final CommittingOutputStream out;
     private final boolean useSetStatusOn404;
-    private final SettableFuture<Response> jerseyResponse;
+    private final SettableFuture<JerseyContainerResponseContext> responseContext;
     private long contentLength;
     private final AtomicBoolean statusAndHeadersWritten;
     private final AsyncContextDelegate asyncExt;
@@ -90,13 +87,11 @@ public class ResponseWriter implements ContainerResponseWriter {
      * Creates a new instance to write a single Jersey response.
      *
      * @param useSetStatusOn404 true if status should be written explicitly when 404 is returned
-     * @param request           original HttpServletRequest
      * @param response          original HttpResponseRequest
      * @param asyncExt          delegate to use for async features implementation
      */
-    public ResponseWriter(final boolean useSetStatusOn404, final HttpServletRequest request, final HttpServletResponse response, AsyncContextDelegate asyncExt) {
+    public ResponseWriter(final boolean useSetStatusOn404, final HttpServletResponse response, AsyncContextDelegate asyncExt) {
         this.useSetStatusOn404 = useSetStatusOn404;
-        this.request = request;
         this.response = response;
         this.out = new CommittingOutputStream();
         this.out.setStreamProvider(new OutboundMessageContext.StreamProvider() {
@@ -113,7 +108,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         });
         this.statusAndHeadersWritten = new AtomicBoolean(false);
         this.asyncExt = asyncExt;
-        this.jerseyResponse = SettableFuture.create();
+        this.responseContext = SettableFuture.create();
     }
 
     @Override
@@ -127,9 +122,9 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, Response jerseyResponse) throws ContainerException {
+    public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext) throws ContainerException {
         this.contentLength = contentLength;
-        this.jerseyResponse.set(jerseyResponse);
+        this.responseContext.set(responseContext);
         this.statusAndHeadersWritten.set(false);
         return out;
     }
@@ -145,13 +140,13 @@ public class ResponseWriter implements ContainerResponseWriter {
             // modification of the response headers will have no effect
             // after the invocation of sendError.
             writeHeaders();
-            final Response actualJerseyResponse = getActualJerseyResponse();
-            final int status = actualJerseyResponse.getStatus();
+            final JerseyContainerResponseContext responseContext = getResponseContext();
+            final int status = responseContext.getStatus();
             if (status >= 400) {
                 if (useSetStatusOn404 && status == 404) {
                     response.setStatus(status);
                 } else {
-                    final String reason = actualJerseyResponse.getStatusInfo().getReasonPhrase();
+                    final String reason = responseContext.getStatusInfo().getReasonPhrase();
                     try {
                         if (reason == null || reason.isEmpty()) {
                             response.sendError(status);
@@ -189,14 +184,14 @@ public class ResponseWriter implements ContainerResponseWriter {
             return;
         }
         writeHeaders();
-        response.setStatus(getActualJerseyResponse().getStatus());
+        response.setStatus(getResponseContext().getStatus());
     }
 
     private void writeHeaders() {
         if (contentLength != -1 && contentLength < Integer.MAX_VALUE) {
             response.setContentLength((int) contentLength);
         }
-        MultivaluedMap<String, String> headers = Helper.unwrap(getActualJerseyResponse()).getHeaders();
+        MultivaluedMap<String, String> headers = HeadersFactory.getStringHeaders(getResponseContext().getHeaders());
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
             for (String v : e.getValue()) {
                 response.addHeader(e.getKey(), v);
@@ -205,18 +200,18 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     /**
-     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, javax.ws.rs.core.Response)} has been invoked.
+     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.JerseyContainerResponseContext)} has been invoked.
      * The method will block if the write method has not been called yet.
      *
      * @return response status
      */
     public int getResponseStatus() {
-        return getActualJerseyResponse().getStatus();
+        return getResponseContext().getStatus();
     }
 
-    private Response getActualJerseyResponse() {
+    private JerseyContainerResponseContext getResponseContext() {
         try {
-            return jerseyResponse.get();
+            return responseContext.get();
         } catch (InterruptedException ex) {
             throw new ContainerException(ex);
         } catch (ExecutionException ex) {

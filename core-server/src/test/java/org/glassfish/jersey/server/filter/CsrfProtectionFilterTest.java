@@ -44,9 +44,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Before;
@@ -81,25 +81,25 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testGetNoHeader() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource", "GET").build()).get();
-        assertEquals("GET", response.readEntity(String.class));
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").build()).get();
+        assertEquals("GET", response.getEntity());
     }
 
     @Test
     public void testGetWithHeader() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource", "GET").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
-        assertEquals("GET", response.readEntity(String.class));
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
+        assertEquals("GET", response.getEntity());
     }
 
     @Test
     public void testPutNoHeader() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource", "PUT").build()).get();
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").build()).get();
         assertEquals(Response.Status.BAD_REQUEST, response.getStatusInfo());
     }
 
     @Test
     public void testPutWithHeader() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource", "PUT").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
-        assertEquals("PUT", response.readEntity(String.class));
+        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter_Old.HEADER_NAME, "").build()).get();
+        assertEquals("PUT", response.getEntity());
     }
 }

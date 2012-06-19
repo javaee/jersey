@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -56,6 +55,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -63,7 +63,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -74,6 +73,7 @@ import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -86,7 +86,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class AsyncApplicationBuildingTest {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
+    private static final String BASE_URI = "http://localhost:8080/base/";
 
     private static class AsyncInflector implements Inflector<Request, Response> {
 
@@ -144,20 +144,24 @@ public class AsyncApplicationBuildingTest {
         return new ApplicationHandler(rc);
     }
 
-//    @Test
+    @Test
+    @Ignore // TODO: why ignored?
     public void testAsyncApp1() throws InterruptedException, ExecutionException {
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "a/b/c"), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(
+                BASE_URI, BASE_URI + "a/b/c", "GET").build();
 
-        Future<Response> res = setupApplication1().apply(req);
+        Future<JerseyContainerResponseContext> res = setupApplication1().apply(req);
 
         assertEquals("A-B-C", res.get().getEntity());
     }
 
-//    @Test
+    @Test
+    @Ignore // TODO: why ignored?
     public void testAsyncApp2() throws InterruptedException, ExecutionException {
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "a/b/d"), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(
+                BASE_URI, BASE_URI + "a/b/d", "GET").build();
 
-        Future<Response> res = setupApplication1().apply(req);
+        Future<JerseyContainerResponseContext> res = setupApplication1().apply(req);
 
         assertEquals("A-B-D", res.get().getEntity());
     }
@@ -176,7 +180,7 @@ public class AsyncApplicationBuildingTest {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }
@@ -186,17 +190,14 @@ public class AsyncApplicationBuildingTest {
         final ResourceConfig resourceConfig = new ResourceConfig();
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals(404, application.apply(req).get().getStatus());
     }
 
     @Test
-//    @Ignore
-    public void testappBuilderJaxRsApplication() throws InterruptedException, ExecutionException {
-
-        javax.ws.rs.core.Application jaxRsApplication = new javax.ws.rs.core.Application() {
-
+    public void testAppBuilderJaxRsApplication() throws InterruptedException, ExecutionException {
+        Application jaxRsApplication = new Application() {
             @Override
             public Set<Class<?>> getClasses() {
                 HashSet<Class<?>> set = new HashSet<Class<?>>();
@@ -212,7 +213,7 @@ public class AsyncApplicationBuildingTest {
 
         final ApplicationHandler application = new ApplicationHandler(jaxRsApplication);
 
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }
@@ -255,7 +256,7 @@ public class AsyncApplicationBuildingTest {
 
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath()), "GET").build();
+        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }
@@ -278,7 +279,6 @@ public class AsyncApplicationBuildingTest {
     }
 
     @Test
-//    @Ignore
     public void testDeploymentFailsForAmbiguousResource() {
         final ResourceConfig resourceConfig = new ResourceConfig(ErrornousResource.class);
         try {
