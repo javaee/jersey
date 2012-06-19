@@ -40,6 +40,7 @@
 package org.glassfish.jersey.filter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 import javax.ws.rs.core.Request;
@@ -49,6 +50,7 @@ import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey._remove.ResponseFilter;
+import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -67,7 +69,6 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -110,8 +111,10 @@ public class LoggingFilterTest {
     @Before
     public void setUp() {
         this.loggingFilter = new CustomLoggingFilter_Old();
-        RequestFilterModule requestFilterModule = new RequestFilterModule(Lists.<RequestFilter>newArrayList(loggingFilter));
-        ResponseFilterModule responseFilterModule = new ResponseFilterModule(Lists.<ResponseFilter>newArrayList(loggingFilter));
+        ProviderInstanceBindingModule<RequestFilter> requestFilterModule =
+                new ProviderInstanceBindingModule<RequestFilter>(Collections.singletonList(loggingFilter), RequestFilter.class);
+        ProviderInstanceBindingModule<ResponseFilter> responseFilterModule =
+                new ProviderInstanceBindingModule<ResponseFilter>(Collections.singletonList(loggingFilter), ResponseFilter.class);
 
         final Services services = HK2.get().create(null,
                 new ProcessingTestModule(),

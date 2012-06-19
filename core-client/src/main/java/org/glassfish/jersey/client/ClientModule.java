@@ -149,9 +149,8 @@ class ClientModule extends AbstractModule {
 
     }
 
-
     /**
-     * Response processor builder for client side.
+     * Injection-enabled client side {@link ResponseProcessor} instance builder.
      */
     static class ResponseProcessorBuilder implements ResponseProcessor.Builder<JerseyClientResponseContext> {
         @Inject
@@ -220,7 +219,6 @@ class ClientModule extends AbstractModule {
                 .toFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory())
                 .in(RequestScope.class);
 
-
         // Client-side processing chain
         bind(JerseyClientRequestContext.class)
                 .toFactory(RequestContextInjectionFactory.class)
@@ -236,7 +234,5 @@ class ClientModule extends AbstractModule {
 
         bind(new TypeLiteral<ResponseProcessor.Builder<JerseyClientResponseContext>>() {
         }).to(ResponseProcessorBuilder.class).in(Singleton.class);
-
-
     }
 }

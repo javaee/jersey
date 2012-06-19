@@ -40,7 +40,8 @@
 package org.glassfish.jersey.server.spi;
 
 /**
- * Convenience class to allow implementing only a subset of {@link ContainerLifecycleListener container liefecycle listener}
+ * Convenience class to allow implementing only a subset of
+ * {@link ContainerLifecycleListener container liefecycle listener}
  * callback method(s).
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)

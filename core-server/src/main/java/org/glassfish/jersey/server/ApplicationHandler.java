@@ -41,8 +41,6 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -57,35 +55,25 @@ import java.util.logging.Logger;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.FeaturesAndProperties;
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
-import org.glassfish.jersey.process.internal.FilteringStage;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.MessageBodyWorkersInitializer;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -101,7 +89,6 @@ import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
-import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.spi.CloseableService;
@@ -128,8 +115,8 @@ import com.google.common.collect.Sets;
  * Jersey server-side application handler.
  * <p/>
  * Container implementations use the {@code ApplicationHandler} API to process requests
- * by invoking the {@link #apply(Request) apply(request)} method on a configured application
- * handler instance.
+ * by invoking the {@link #handle(JerseyContainerRequestContext) handle(requestContext)}
+ * method on a configured application  handler instance.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -221,7 +208,7 @@ public final class ApplicationHandler {
     /**
      * Request invoker.
      */
-    private RequestInvoker<Request, Response> invoker;
+    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
     private final ResourceConfig configuration;
     private References refs;
 
@@ -363,23 +350,25 @@ public final class ApplicationHandler {
          */
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel();
 
-        final PreMatchRequestFilteringStage preMatchRequestFilteringStage = injector.inject(PreMatchRequestFilteringStage.class);
+        final ContainerFilteringStage preMatchRequestFilteringStage =
+                injector.inject(ContainerFilteringStage.Builder.class).build(true);
         final RoutingStage routingStage =
                 injector.inject(RoutingStage.Builder.class).build(resourceRoutingRoot);
-        final FilteringStage resourceFilteringStage = injector.inject(FilteringStage.class);
+        final ContainerFilteringStage resourceFilteringStage =
+                injector.inject(ContainerFilteringStage.Builder.class).build(false);
         final RoutedInflectorExtractorStage routedInflectorExtractorStage = injector.inject(RoutedInflectorExtractorStage.class);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
-        final Stage<Request> rootStage = Stages
+        final Stage<JerseyContainerRequestContext> rootStage = Stages
                 .chain(injector.inject(ReferencesInitializer.class))
-                .to(injector.inject(MessageBodyWorkersInitializer.class))
+                .to(injector.inject(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
 
-        this.invoker = injector.inject(RequestInvoker.Builder.class)
+        this.invoker = injector.inject(ServerModule.RequestInvokerBuilder.class)
                 .build(rootStage);
 
         // inject self
@@ -464,16 +453,19 @@ public final class ApplicationHandler {
     /**
      * Invokes a request and returns the {@link Future response future}.
      *
-     * @param request request data.
+     * @param requestContext request data.
      * @return response future.
      */
-    public Future<Response> apply(final Request request) {
+    public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext) {
+        requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
 
         final ContainerResponseWriter containerResponseWriter = new ContainerResponseWriter() {
             @Override
-            public OutputStream writeResponseStatusAndHeaders(long contentLength, Response response) throws ContainerException {
+            public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext)
+                    throws ContainerException {
+
                 if (contentLength >= 0) {
-                    Helper.unwrap(response).getHeaders().putSingle("Content-Length", Long.toString(contentLength));
+                    responseContext.getHeaders().putSingle("Content-Length", Long.toString(contentLength));
                 }
 
                 // fake output stream - Response is not written (serialized) in this case.
@@ -504,29 +496,28 @@ public final class ApplicationHandler {
         final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
 
             @Override
-            protected Response handleResponse(Response response) {
-                ApplicationHandler.this.writeResponse(containerResponseWriter, request, response);
-                return (request.getMethod().equals(HttpMethod.HEAD) ? stripEntity(response) : response);
+            protected JerseyContainerResponseContext handleResponse(JerseyContainerResponseContext responseContext) {
+                ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, responseContext);
+                return (requestContext.getMethod().equals(HttpMethod.HEAD) ? stripEntity(responseContext) : responseContext);
             }
 
             @Override
-            protected Response handleFailure(Throwable exception) {
-                final Response response = ApplicationHandler.handleFailure(exception);
-                ApplicationHandler.this.writeResponse(containerResponseWriter, request,
-                        response);
+            protected JerseyContainerResponseContext handleFailure(Throwable exception) {
+                final JerseyContainerResponseContext response = ApplicationHandler.handleFailure(exception, requestContext);
+                ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, response);
                 return response;
             }
 
             @Override
-            protected Response handleTimeout(InvocationContext context) {
-                final Response response = ApplicationHandler.prepareTimeoutResponse(context);
-                ApplicationHandler.this.writeResponse(containerResponseWriter, request,
-                        response);
+            protected JerseyContainerResponseContext handleTimeout(InvocationContext context) {
+                final JerseyContainerResponseContext response =
+                        ApplicationHandler.prepareTimeoutResponse(context, requestContext);
+                ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, response);
                 return response;
             }
         };
 
-        apply(request, callback, DEFAULT_SECURITY_CONTEXT, null);
+        apply(requestContext, callback);
 
         return callback;
     }
@@ -534,67 +525,68 @@ public final class ApplicationHandler {
     /**
      * Strips entity if present.
      *
-     * @param originalResponse processed response.
+     * @param responseContext processed response context.
      * @return original response without entity.
      */
-    private Response stripEntity(final Response originalResponse) {
-        if (originalResponse.hasEntity()) {
-            Response.ResponseBuilder result = Response.status(originalResponse.getStatus());
-            Responses.fillHeaders(result, Helper.unwrap(originalResponse).getHeaders());
-            return result.build();
-        } else {
-            return originalResponse;
+    private JerseyContainerResponseContext stripEntity(final JerseyContainerResponseContext responseContext) {
+        if (responseContext.hasEntity()) {
+            responseContext.setEntity(null);
         }
+
+        return responseContext;
     }
 
     /**
      * The main request/response processing entry point for Jersey container implementations.
-     * <p/>
-     * The method invokes the request processing of the provided {@link Request jax-rs request} from the
-     * {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} and uses the {@link ContainerResponseWriter container response
-     * writer} from the provided {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} to suspend & resume the processing as
-     * well as write the response back to the container. If the {@link org.glassfish.jersey.server.spi.ContainerInvocationContext container request context} contains
-     * {@link SecurityContext security context} it will be registered for further request processing.
-     * {@link RequestScopedInitializer Custom scope injections} will be initialized into the request scope.
+     * <p>
+     * The method invokes the request processing of the provided
+     * {@link JerseyContainerRequestContext container request context} and uses the
+     * {@link ContainerResponseWriter container response writer} to suspend & resume the processing
+     * as well as write the response back to the container.
+     * </p>
+     * <p>
+     * The the {@link SecurityContext security context} stored in the container request context
+     * is bound as an injectable instance in the scope of the processed request context.
+     * Also, any {@link RequestScopedInitializer cCustom scope injections} are initialized in the
+     * current request scope.
+     * </p>
      *
-     * @param containerContext container request context of the current request.
+     * @param requestContext container request context of the current request.
      */
-    public void apply(final ContainerInvocationContext containerContext) {
-        checkContainerRequestContext(containerContext);
+    public void handle(final JerseyContainerRequestContext requestContext) {
+        checkContainerRequestContext(requestContext);
 
-        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(containerContext.getRequest(),
-                containerContext.getResponseWriter()) {
+        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(requestContext) {
 
             @Override
-            protected void writeResponse(Response response) {
-                ApplicationHandler.this.writeResponse(containerContext.getResponseWriter(), request, response);
+            protected void writeResponse(JerseyContainerResponseContext response) {
+                ApplicationHandler.this.writeResponse(requestContext.getResponseWriter(), requestContext, response);
             }
 
             @Override
             protected void writeResponse(Throwable exception) {
-                ApplicationHandler.this.writeResponse(containerContext.getResponseWriter(), request,
-                        ApplicationHandler.handleFailure(exception));
+                ApplicationHandler.this.writeResponse(requestContext.getResponseWriter(), requestContext,
+                        ApplicationHandler.handleFailure(exception, requestContext));
             }
 
             @Override
             protected void writeTimeoutResponse(InvocationContext context) {
-                ApplicationHandler.this.writeResponse(containerContext.getResponseWriter(), request,
-                        ApplicationHandler.prepareTimeoutResponse(context));
+                ApplicationHandler.this.writeResponse(requestContext.getResponseWriter(), requestContext,
+                        ApplicationHandler.prepareTimeoutResponse(context, requestContext));
             }
         };
 
-        apply(containerContext.getRequest(), callback, containerContext.getSecurityContext(),
-                containerContext.getRequestScopedInitializer());
+        apply(requestContext, callback);
 
         callback.suspendWriterIfRunning();
     }
 
-    private void checkContainerRequestContext(final ContainerInvocationContext containerContext) {
-        if (containerContext.getSecurityContext() == null) {
+    private void checkContainerRequestContext(final JerseyContainerRequestContext requestContext) {
+        if (requestContext.getSecurityContext() == null) {
             throw new IllegalArgumentException("SecurityContext from ContainerRequestContext must not be null.");
-        } else if (containerContext.getRequest() == null) {
+        } else if (requestContext.getRequest() == null) {
             throw new IllegalArgumentException("Request from ContainerRequestContext must not be null.");
-        } else if (containerContext.getResponseWriter() == null) {
+        } else if (requestContext.getResponseWriter() == null) {
             throw new IllegalArgumentException("ResponseWriter from ContainerRequestContext must not be null.");
         }
     }
@@ -602,23 +594,20 @@ public final class ApplicationHandler {
     /**
      * Invokes a request. Supplied callback is notified about the invocation result.
      *
-     * @param request                 request data.
-     * @param callback                request invocation callback called when the request
-     *                                transformation is done, suspended, resumed etc. Must not be {@code null}.
-     * @param securityContext         custom security context.
-     * @param requestScopeInitializer custom request-scoped initializer.
+     * @param requestContext request data.
+     * @param callback       request invocation callback called when the request
+     *                       transformation is done, suspended, resumed etc. Must not be {@code null}.
      */
-    private void apply(final Request request, final InvocationCallback<Response> callback, final SecurityContext securityContext,
-                       final RequestScopedInitializer requestScopeInitializer) {
+    private void apply(
+            final JerseyContainerRequestContext requestContext,
+            final InvocationCallback<JerseyContainerResponseContext> callback) {
+
         requestScope.runInScope(new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    // TODO move to initialization stage
-                    initRequestScopeInjections(securityContext, requestScopeInitializer);
-
-                    invoker.apply(request, callback);
+                    invoker.apply(requestContext, callback);
                 } finally {
                     closeableServiceFactory.get().close();
                 }
@@ -626,24 +615,17 @@ public final class ApplicationHandler {
         });
     }
 
-    private void initRequestScopeInjections(SecurityContext securityContext, RequestScopedInitializer requestScopeInitializer) {
-        final Ref<SecurityContext> secReference = securityContextRefFactory.get();
-        secReference.set(securityContext);
+    private static JerseyContainerResponseContext prepareTimeoutResponse(
+            final InvocationContext context, JerseyContainerRequestContext requestContext) {
 
-        if (requestScopeInitializer != null) {
-            requestScopeInitializer.initialize(services);
-        }
-    }
-
-    private static Response prepareTimeoutResponse(final InvocationContext context) {
         Response response = context.getResponse();
         if (response == null) {
             response = Response.serverError().entity("Request processing has timed out.").type(MediaType.TEXT_PLAIN).build();
         }
-        return response;
+        return new JerseyContainerResponseContext(requestContext, response);
     }
 
-    private static Response handleFailure(Throwable failure) {
+    private static JerseyContainerResponseContext handleFailure(Throwable failure, JerseyContainerRequestContext requestContext) {
         Response.StatusType statusCode = Response.Status.INTERNAL_SERVER_ERROR;
         String message = failure.getMessage();
 
@@ -665,7 +647,9 @@ public final class ApplicationHandler {
             LOGGER.log(Level.FINE, message, failure);
         }
 
-        return Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build();
+        return new JerseyContainerResponseContext(
+                requestContext,
+                Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build());
     }
 
     /**
@@ -684,48 +668,21 @@ public final class ApplicationHandler {
         }
     }
 
-    private void writeResponse(final ContainerResponseWriter writer, final Request request, Response response) {
+    private void writeResponse(
+            final ContainerResponseWriter writer,
+            final JerseyContainerRequestContext requestContext,
+            final JerseyContainerResponseContext responseContext) {
         final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
-        final boolean entityExists = response.hasEntity();
+        final boolean entityExists = responseContext.hasEntity();
 
         if (entityExists) {
-            Object entity = response.getEntity();
-            final RoutingContext routingContext = routingContextFactory.get();
-
-            // fix for issue JERSEY-1187
-            // media type set in the response takes precedence over any 'effective' media type
-            final MediaType outputMediaType = response.getMetadata().containsKey(HttpHeaders.CONTENT_TYPE) ?
-                    MediaType.valueOf(response.getMetadata().get(HttpHeaders.CONTENT_TYPE).get(0).toString())
-                    : routingContext.getEffectiveAcceptableType();
-
-            final Annotation[] outputAnnotations = routingContext.getResponseMethodAnnotations();
-            Type entityType = routingContext.getResponseMethodType();
-
-            if (entity instanceof GenericEntity) {
-                GenericEntity genericEntity = (GenericEntity) entity;
-                entity = genericEntity.getEntity();
-                entityType = genericEntity.getType();
-            } else if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
-                // TODO this is just a quick workaround for issue #JERSEY-1089
-                //      which needs to be fixed by a common solution
-                entityType = entity.getClass();
-            }
-
-            // TODO this is just a quick workaround for issue #JERSEY-1088
-            //      which needs to be fixed by a common solution
-            if (response.getMediaType() == null) {
-                response = Responses.toBuilder(response).type(outputMediaType).build();
-            }
-
-            final Response outResponse = response;
-            final CommittingOutputStream committingOutput = new CommittingOutputStream();
-            committingOutput.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+            responseContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                 private OutputStream output;
 
                 @Override
                 public void commit() throws IOException {
-                    output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), outResponse);
+                    output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), responseContext);
                 }
 
                 @Override
@@ -734,29 +691,32 @@ public final class ApplicationHandler {
                 }
             });
 
+            final Object entity = responseContext.getEntity();
             try {
-                Requests.getMessageWorkers(request).writeTo(entity, entity.getClass(), entityType, outputAnnotations, outputMediaType,
-                        response.getMetadata(), new MapPropertiesDelegate(Helper.unwrap(response).getProperties()), committingOutput, messageBodySizeCallback,
-                        true, !request.getMethod().equals(HttpMethod.HEAD));
+                requestContext.getWorkers().writeTo(
+                        entity,
+                        responseContext.getEntityClass(),
+                        responseContext.getEntityType(),
+                        responseContext.getEntityAnnotations(),
+                        responseContext.getMediaType(),
+                        responseContext.getHeaders(),
+                        requestContext.getPropertiesDelegate(),
+                        responseContext.getEntityStream(),
+                        messageBodySizeCallback,
+                        true,
+                        !requestContext.getMethod().equals(HttpMethod.HEAD));
             } catch (IOException ex) {
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
                 throw new MappableException(ex);
             } finally {
-                commitOutputStream(committingOutput);
+                responseContext.commitStream();
 
                 if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
                     try {
-                        ((ChunkedResponse) entity).setWriterRelatedArgs(
-                                committingOutput,
-                                writer,
-                                Requests.getMessageWorkers(request),
-                                outputAnnotations,
-                                outputMediaType,
-                                response.getMetadata(),
-                                Helper.unwrap(response).getProperties()
-                        );
+                        ((ChunkedResponse) entity).setContext(requestContext, responseContext);
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
+                        //noinspection ThrowFromFinallyBlock
                         throw new MappableException(ex);
                     }
                     writer.suspend(0, TimeUnit.SECONDS, null);
@@ -764,30 +724,9 @@ public final class ApplicationHandler {
                     writer.commit();
                 }
             }
-
         } else {
-            writer.writeResponseStatusAndHeaders(0, response);
+            writer.writeResponseStatusAndHeaders(0, responseContext);
             writer.commit();
-        }
-    }
-
-    /**
-     * Commits the {@link CommittingOutputStream} if it wasn't already committed.
-     *
-     * @param committingOutput the {@code CommittingOutputStream} to commit.
-     */
-    private void commitOutputStream(final CommittingOutputStream committingOutput) {
-        if (committingOutput == null) {
-            return;
-        }
-
-        if (!committingOutput.isCommitted()) {
-            try {
-                // Commit the OutputStream.
-                committingOutput.flush();
-            } catch (Exception ioe) {
-                // Do nothing - we are already handling an exception.
-            }
         }
     }
 

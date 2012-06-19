@@ -37,29 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.grizzly2.httpserver;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import java.util.Collections;
+import java.util.Enumeration;
 
-import org.glassfish.hk2.Factory;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.grizzly.http.server.Request;
 
 /**
- * Terminal router that pushes the URI matched so far to the stack returned
- * by {@link javax.ws.rs.core.UriInfo#getMatchedURIs()} method.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-class PushMatchedUriRouter implements Router {
+class GrizzlyRequestPropertiesDelegate implements PropertiesDelegate {
+    private final Request request;
 
-    @Inject
-    private Factory<RoutingContext> routingContextFactory;
+    GrizzlyRequestPropertiesDelegate(Request request) {
+        this.request = request;
+    }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext data) {
-        routingContextFactory.get().pushLeftHandPath();
+    public Object getProperty(String name) {
+        return request.getAttribute(name);
+    }
 
-        return Continuation.of(data);
+    @Override
+    public Enumeration<String> getPropertyNames() {
+        return Collections.enumeration(request.getAttributeNames());
+    }
+
+    @Override
+    public void setProperty(String name, Object value) {
+        request.setAttribute(name, value);
+    }
+
+    @Override
+    public void removeProperty(String name) {
+        request.removeAttribute(name);
     }
 }

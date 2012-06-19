@@ -37,53 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spi;
+package org.glassfish.jersey.servlet;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
+import java.util.Enumeration;
 
-import org.glassfish.jersey.server.ApplicationHandler;
+import javax.servlet.http.HttpServletRequest;
+
+import org.glassfish.jersey.internal.PropertiesDelegate;
 
 /**
- * Request context passed by the container to the {@link ApplicationHandler}
- * for each request.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public interface ContainerInvocationContext {
+class ServletPropertiesDelegate implements PropertiesDelegate {
+    private final HttpServletRequest request;
 
-    /**
-     * Get the processed request.
-     *
-     * @return current request. Must not be {@code null}.
-     */
-    public Request getRequest();
+    public ServletPropertiesDelegate(HttpServletRequest request) {
+        this.request = request;
+    }
 
-    /**
-     * Get the container response writer for the current request.
-     *
-     * @return container response writer. Must not be {@code null}.
-     */
-    public ContainerResponseWriter getResponseWriter();
+    @Override
+    public Object getProperty(String name) {
+        return request.getAttribute(name);
+    }
 
-    /**
-     * Get the security context of the current request.
-     *
-     * The {@link SecurityContext#getUserPrincipal()} must return {@code null}
-     * if the current request has not been authenticated by the container.
-     *
-     * @return security context. Must not be {@code null}.
-     */
-    public SecurityContext getSecurityContext();
+    @Override
+    public Enumeration<String> getPropertyNames() {
+        return request.getAttributeNames();
+    }
 
-    /**
-     * Custom container extensions initializer for the current request.
-     *
-     * The initializer is guaranteed to be run from within the request scope of
-     * the current request.
-     *
-     * @return custom container extensions initializer or {@code null} if not
-     *     available.
-     */
-    public RequestScopedInitializer getRequestScopedInitializer();
+    @Override
+    public void setProperty(String name, Object object) {
+        request.setAttribute(name, object);
+    }
+
+    @Override
+    public void removeProperty(String name) {
+        request.removeAttribute(name);
+    }
 }

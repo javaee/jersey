@@ -43,11 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToPathBuilder;
@@ -111,32 +110,6 @@ public final class RuntimeModelBuilder {
      */
     private TreeMap<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> subResourceAcceptors =
             Maps.newTreeMap(PathPattern.COMPARATOR);
-
-    /**
-     * Create a new runtime model builder.
-     */
-    public RuntimeModelBuilder() {
-        this(null, false);
-    }
-
-    /**
-     * Create a new runtime model builder.
-     *
-     * @param subResourceMode if {@code true}, all the resources will be processed as a
-     *                        sub-resources.
-     */
-    public RuntimeModelBuilder(boolean subResourceMode) {
-        this(null, subResourceMode);
-    }
-
-    /**
-     * Create a new runtime model builder.
-     *
-     * @param workers message body workers.
-     */
-    public RuntimeModelBuilder(MessageBodyWorkers workers) {
-        this(workers, false);
-    }
 
     /**
      * Create a new runtime model builder.
@@ -236,7 +209,9 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private Inflector<Request, Response> createInflector(final ResourceMethod method) {
+    private Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> createInflector(
+            final ResourceMethod method) {
+
         return resourceMethodInvokerBuilder.build(method);
     }
 
@@ -250,10 +225,10 @@ public final class RuntimeModelBuilder {
              * anything and does not return any inflector. This will cause 404 being
              * returned for every request.
              */
-            routingRoot = Routers.acceptingTree(new Function<Request, Request>() {
+            routingRoot = Routers.acceptingTree(new Function<JerseyContainerRequestContext, JerseyContainerRequestContext>() {
 
                 @Override
-                public Request apply(Request input) {
+                public JerseyContainerRequestContext apply(JerseyContainerRequestContext input) {
                     return input;
                 }
 
@@ -340,6 +315,7 @@ public final class RuntimeModelBuilder {
                                 .to(locator.router);
                     }
                 }
+                assert srRoutedBuilder != null;
                 lastRoutedBuilder = routeMethodAcceptor(
                         lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build());
             }

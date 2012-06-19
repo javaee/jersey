@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Before;

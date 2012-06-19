@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.concurrent.Future;
+
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -55,15 +57,14 @@ import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.process.internal.FilterModule;
-import org.glassfish.jersey.process.internal.ProcessingModule;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.SecurityContextModule;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
 import org.glassfish.jersey.server.model.ResourceModelModule;
 import org.glassfish.jersey.server.spi.ContainerProvider;
+import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
@@ -86,17 +87,112 @@ public class ServerModule extends AbstractModule {
         }
     }
 
-    private static class ResponseReferencingFactory extends ReferencingFactory<Response> {
-
-        public ResponseReferencingFactory(@Inject Factory<Ref<Response>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
     private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
 
         public HttpHeadersReferencingFactory(@Inject Factory<Ref<HttpHeaders>> referenceFactory) {
             super(referenceFactory);
+        }
+    }
+
+    private static class RequestContextInjectionFactory extends ReferencingFactory<JerseyContainerRequestContext> {
+
+        public RequestContextInjectionFactory(@Inject Factory<Ref<JerseyContainerRequestContext>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
+     * Injection-enabled client side {@link org.glassfish.jersey.process.internal.RequestInvoker} instance builder.
+     */
+    static final class RequestInvokerBuilder {
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        private ResponseProcessor.Builder<JerseyContainerResponseContext> responseProcessorBuilder;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        /**
+         * Build a new {@link org.glassfish.jersey.process.internal.RequestInvoker request invoker} configured to use
+         * the supplied request processor for processing requests.
+         *
+         * @param rootStage root processing stage.
+         * @return new request invoker instance.
+         */
+        public RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> build(
+                final Stage<JerseyContainerRequestContext> rootStage) {
+
+            final AsyncInflectorAdapter.Builder<JerseyContainerRequestContext,JerseyContainerResponseContext> asyncAdapterBuilder =
+                    new AsyncInflectorAdapter.Builder<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                        @Override
+                        public AsyncInflectorAdapter<JerseyContainerRequestContext, JerseyContainerResponseContext> create(
+                                Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> wrapped,
+                                InvocationCallback<JerseyContainerResponseContext> callback) {
+                            return new AsyncInflectorAdapter<JerseyContainerRequestContext, JerseyContainerResponseContext>(
+                                    wrapped, callback) {
+
+                                @Override
+                                protected JerseyContainerResponseContext convertResponse(
+                                        JerseyContainerRequestContext requestContext, Response response) {
+                                    return new JerseyContainerResponseContext(requestContext, response);
+                                }
+                            };
+                        }
+                    };
+
+            return new RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext>(
+                    rootStage,
+                    requestScope,
+                    asyncAdapterBuilder,
+                    responseProcessorBuilder,
+                    invocationContextReferenceFactory,
+                    executorsFactory);
+        }
+
+    }
+
+    /**
+     * Injection-enabled client side {@link ResponseProcessor} instance builder.
+     */
+    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<JerseyContainerResponseContext> {
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        private Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingCtxProvider;
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
+        @Inject
+        private Factory<JerseyContainerRequestContext> requestContextFactory;
+
+        /**
+         * Default constructor meant to be used by injection framework.
+         */
+        public ResponseProcessorBuilder() {
+            // Injection constructor
+        }
+
+        @Override
+        public ResponseProcessor<JerseyContainerResponseContext> build(
+                final Future<JerseyContainerResponseContext> inflectedResponse,
+                final InvocationCallback<JerseyContainerResponseContext> callback,
+                final RequestScope.Instance scopeInstance) {
+
+            return new ResponseProcessor<JerseyContainerResponseContext>(
+                    callback,
+                    inflectedResponse,
+                    respondingCtxProvider,
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
+
+                @Override
+                protected JerseyContainerResponseContext convertResponse(Response exceptionResponse) {
+                    return (exceptionResponse == null) ? null :
+                            new JerseyContainerResponseContext(requestContextFactory.get(), exceptionResponse);
+                }
+            };
         }
     }
 
@@ -128,11 +224,24 @@ public class ServerModule extends AbstractModule {
         bind(new TypeLiteral<Ref<HttpHeaders>>() {
         }).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
 
-        bind(Response.class).toFactory(ResponseReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Response>>() {
-        }).toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
+        // server-side processing chain
+        bind(JerseyContainerRequestContext.class)
+                .toFactory(RequestContextInjectionFactory.class)
+                .in(RequestScope.class);
+        bind(new TypeLiteral<Ref<JerseyContainerRequestContext>>() {
+        })
+                .toFactory(ReferencingFactory.<JerseyContainerRequestContext>referenceFactory())
+                .in(RequestScope.class);
 
-        //ChunkedResposeWriter
+        bind(new TypeLiteral<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>>() {
+        }).to(new TypeLiteral<DefaultRespondingContext<JerseyContainerResponseContext>>() {
+        }).in(RequestScope.class);
+
+        bind(new TypeLiteral<ResponseProcessor.Builder<JerseyContainerResponseContext>>() {
+        }).to(ResponseProcessorBuilder.class).in(Singleton.class);
+
+
+        //ChunkedResponseWriter
         bind(MessageBodyWriter.class).to(ChunkedResponseWriter.class).in(Singleton.class);
     }
 }

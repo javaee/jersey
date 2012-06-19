@@ -54,9 +54,7 @@ import org.glassfish.jersey._remove.FilterContext;
 import org.glassfish.jersey._remove.PreMatchRequestFilter;
 import org.glassfish.jersey._remove.RequestFilter;
 import org.glassfish.jersey._remove.ResponseFilter;
-import org.glassfish.jersey.filter.PreMatchRequestFilterModule;
-import org.glassfish.jersey.filter.RequestFilterModule;
-import org.glassfish.jersey.filter.ResponseFilterModule;
+import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
@@ -91,7 +89,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new PreMatchRequestFilterModule(preMatchRequestFilters));
+                .addModules(new ProviderInstanceBindingModule<PreMatchRequestFilter>(preMatchRequestFilters, PreMatchRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -125,7 +123,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new RequestFilterModule(requestFilterList));
+                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -159,7 +157,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ResponseFilterModule(responseFilterList));
+                .addModules(new ProviderInstanceBindingModule<ResponseFilter>(responseFilterList, ResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -275,7 +273,7 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter10);
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new RequestFilterModule(requestFilterList));
+                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
@@ -306,7 +304,7 @@ public class ApplicationFilterTest {
         requestFilterList.add(new ExceptionFilter());
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new RequestFilterModule(requestFilterList));
+                .addModules(new ProviderInstanceBindingModule<RequestFilter>(requestFilterList, RequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {

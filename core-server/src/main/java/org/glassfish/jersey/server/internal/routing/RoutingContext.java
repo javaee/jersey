@@ -39,16 +39,12 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -129,58 +125,6 @@ public interface RoutingContext {
     public void pushLeftHandPath();
 
     /**
-     * Get the effective content type of the response calculated from the
-     * request {@code Accept} header values and {@link javax.ws.rs.Consumes @Consumes}
-     * value of the matched resource method. May return {@code null} if no
-     * method was yet matched.
-     *
-     * @return effective accepted media type. May return {@code null} if no
-     *         resource method was yet matched.
-     */
-    public MediaType getEffectiveAcceptableType();
-
-    /**
-     * Set the effective content type of the response calculated from the
-     * request {@code Accept} header values and {@link javax.ws.rs.Consumes @Consumes}
-     * value of the matched resource method. The input value must not be
-     * {@code null} otherwise a {@link NullPointerException} is thrown.
-     *
-     * @param type new effective accepted media type.
-     * @throws NullPointerException in case the input parameter is {@code null}.
-     */
-    public void setEffectiveAcceptableType(MediaType type) throws NullPointerException;
-
-    /**
-     * Set the response type of the method ultimately used to process the request.
-     *
-     * @param responseType response type.
-     * @throws NullPointerException in case the input parameter is {@code null}.
-     */
-    public void setResponseMethodType(Type responseType) throws NullPointerException;
-
-    /**
-     * Get the response type of the method ultimately used to process the request.
-     *
-     * @return processing method response type.
-     */
-    public Type getResponseMethodType();
-
-    /**
-     * Set the annotations on the method ultimately used to process the request.
-     *
-     * @param annotations response method annotations.
-     * @throws NullPointerException in case the input parameter is {@code null}.
-     */
-    public void setResponseMethodAnnotations(Annotation[] annotations) throws NullPointerException;
-
-    /**
-     * Get the annotations on the method ultimately used to process the request.
-     *
-     * @return processing method annotations.
-     */
-    public Annotation[] getResponseMethodAnnotations();
-
-    /**
      * Set the matched request to response inflector.
      *
      * This method can be used in a non-terminal stage to set the inflector that
@@ -188,7 +132,7 @@ public interface RoutingContext {
      *
      * @param inflector matched request to response inflector.
      */
-    public void setInflector(Inflector<Request, Response> inflector);
+    public void setInflector(Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector);
 
     /**
      * Get the matched request to response data inflector if present, or {@code null}
@@ -196,6 +140,6 @@ public interface RoutingContext {
      *
      * @return matched request to response inflector, or {@code null} if not available.
      */
-    public Inflector<Request, Response> getInflector();
+    public Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> getInflector();
 
 }

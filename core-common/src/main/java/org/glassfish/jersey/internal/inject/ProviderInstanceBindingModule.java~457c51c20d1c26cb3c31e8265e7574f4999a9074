@@ -37,37 +37,37 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.inject;
 
-package org.glassfish.jersey.filter;
-
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
-
-import org.glassfish.jersey._remove.RequestFilter;
-import java.util.List;
+import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
- * Module used for registering RequestFilters.
+ * Module used for registering provider instances of provider type {@code T}
+ * in HK2.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @param <T>
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-
-public class RequestFilterModule implements Module {
-    private final List<RequestFilter> requestFilters;
+public class ProviderInstanceBindingModule<T> extends AbstractModule {
+    private final Iterable<? extends T> providers;
+    private final Class<T> providerType;
 
     /**
-     * Create RequestFilterModule with list of {@link RequestFilter} instances.
+     * Create a provider instance binding module for the
+     * supplied collection of provider instances.
      *
-     * @param requestFilters list of {@link RequestFilter} instances.
+     * @param providers list of provider instances.
+     * @param providerType registered provider contract type.
      */
-    public RequestFilterModule(List<RequestFilter> requestFilters) {
-        this.requestFilters = requestFilters;
+    public ProviderInstanceBindingModule(Iterable<? extends T> providers, Class<T> providerType) {
+        this.providers = providers;
+        this.providerType = providerType;
     }
 
     @Override
-    public void configure(BinderFactory binderFactory) {
-        for(RequestFilter requestFilter : requestFilters) {
-            binderFactory.bind(RequestFilter.class).toInstance(requestFilter);
+    protected void configure() {
+        for(T provider : providers) {
+            bind(providerType).toInstance(provider);
         }
     }
 }

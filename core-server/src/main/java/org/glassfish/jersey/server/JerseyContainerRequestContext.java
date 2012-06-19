@@ -70,6 +70,8 @@ import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.message.internal.VariantSelector;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
 
 import com.google.common.base.Function;
@@ -77,6 +79,9 @@ import com.google.common.collect.Lists;
 
 /**
  * Jersey container request context.
+ *
+ * An instance of the request context is passed by the container to the
+ * {@link ApplicationHandler} for each incoming client request.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -93,8 +98,9 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
     private URI baseUri;
     // Absolute request URI
     private URI requestUri;
-    // Lazily computed relative (to application root URI) request paths
+    // Lazily computed encoded request path (relative to application root URI)
     private String encodedRelativePath = null;
+    // Lazily computed decoded request path (relative to application root URI)
     private String decodedRelativePath = null;
     // Request method
     private String httpMethod;
@@ -108,6 +114,10 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
     private UriInfo uriInfo;
     // Entity providers
     private MessageBodyWorkers workers;
+    // Custom Jersey container request scoped initializer
+    private RequestScopedInitializer requestScopedInitializer;
+    // Request-scoped response writer of the invoking container
+    private ContainerResponseWriter responseWriter;
 
 
     /**
@@ -135,6 +145,49 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
         this.propertiesDelegate = propertiesDelegate;
+    }
+
+    /**
+     * Get a custom container extensions initializer for the current request.
+     *
+     * The initializer is guaranteed to be run from within the request scope of
+     * the current request.
+     *
+     * @return custom container extensions initializer or {@code null} if not
+     *     available.
+     */
+    public RequestScopedInitializer getRequestScopedInitializer() {
+        return requestScopedInitializer;
+    }
+
+    /**
+     * Set a custom container extensions initializer for the current request.
+     *
+     * The initializer is guaranteed to be run from within the request scope of
+     * the current request.
+     *
+     * @param requestScopedInitializer custom container extensions initializer.
+     */
+    public void setRequestScopedInitializer(RequestScopedInitializer requestScopedInitializer) {
+        this.requestScopedInitializer = requestScopedInitializer;
+    }
+
+    /**
+     * Get the container response writer for the current request.
+     *
+     * @return container response writer.
+     */
+    public ContainerResponseWriter getResponseWriter() {
+        return responseWriter;
+    }
+
+    /**
+     * Set the container response writer for the current request.
+     *
+     * @param responseWriter container response writer. Must not be {@code null}.
+     */
+    public void setWriter(ContainerResponseWriter responseWriter) {
+        this.responseWriter = responseWriter;
     }
 
     /**

@@ -53,24 +53,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -92,7 +89,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
      * Creates a new Container connected to given {@link ApplicationHandler Jersey application}.
      *
      * @param appHandler Jersey application handler for which the container should be
-     * initialized.
+     *                   initialized.
      */
     JdkHttpHandlerContainer(ApplicationHandler appHandler) {
         this.appHandler = appHandler;
@@ -157,28 +154,15 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
         final URI requestUri = baseUri.resolve(exchangeUri);
 
-        JaxrsRequestBuilderView requestBuilder = Requests.from(baseUri, requestUri, exchange.getRequestMethod(),
-                exchange.getRequestBody());
-
-        /**
-         * Define http headers
-         */
-        for (Map.Entry<String, List<String>> entry : exchange.getRequestHeaders().entrySet()) {
-            for (String value : entry.getValue()) {
-                requestBuilder.header(entry.getKey(), value);
-            }
-        }
-
-
-
-        Request jaxRsRequest = requestBuilder.build();
         final ResponseWriter responseWriter = new ResponseWriter(exchange);
-        ContainerInvocationContext containerInvocationCtx = new JerseyContainerInvocationContext(jaxRsRequest, responseWriter,
-                getSecurityContext(exchange.getPrincipal(), isSecure), null);
+        JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
+                exchange.getRequestMethod(), getSecurityContext(exchange.getPrincipal(), isSecure),
+                new MapPropertiesDelegate());
+        requestContext.setWriter(responseWriter);
         try {
-            appHandler.apply(containerInvocationCtx);
+            appHandler.handle(requestContext);
         } finally {
-            // if the response was not commited yet by the JerseyApplication
+            // if the response was not committed yet by the JerseyApplication
             // then commit it and log warning
             responseWriter.closeAndLogWarning();
         }
@@ -241,23 +225,23 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, Response jaxRsResponse)
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext context)
                 throws ContainerException {
-            final MultivaluedMap<String, String> jaxRsHeaders = Helper.unwrap(jaxRsResponse).getHeaders();
+            final MultivaluedMap<String, String> responseHeaders = HeadersFactory.getStringHeaders(context.getHeaders());
             final Headers serverHeaders = exchange.getResponseHeaders();
-            for (final Map.Entry<String, List<String>> e : jaxRsHeaders.entrySet()) {
+            for (final Map.Entry<String, List<String>> e : responseHeaders.entrySet()) {
                 for (String value : e.getValue()) {
                     serverHeaders.add(e.getKey(), value);
                 }
             }
 
             try {
-                if (jaxRsResponse.getStatus() == 204) {
+                if (context.getStatus() == 204) {
                     // Work around bug in LW HTTP server
                     // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6886436
-                    exchange.sendResponseHeaders(jaxRsResponse.getStatus(), -1);
+                    exchange.sendResponseHeaders(context.getStatus(), -1);
                 } else {
-                    exchange.sendResponseHeaders(jaxRsResponse.getStatus(),
+                    exchange.sendResponseHeaders(context.getStatus(),
                             getResponseLength(contentLength));
                 }
             } catch (IOException ioe) {

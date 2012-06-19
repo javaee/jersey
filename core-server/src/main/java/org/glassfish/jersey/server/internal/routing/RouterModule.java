@@ -109,7 +109,6 @@ public class RouterModule extends AbstractModule {
         bind().to(MatchResultInitializerRouter.Builder.class);
         bind().to(PatternRouter.Builder.class);
         bind().to(PathPatternRouter.Builder.class);
-        bind().to(RedirectingRouter.Builder.class);
     }
 
     private static class UriRoutingContextFactory implements Factory<UriRoutingContext> {

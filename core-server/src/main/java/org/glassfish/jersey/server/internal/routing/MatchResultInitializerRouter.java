@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.ws.rs.core.Request;
-
 import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 
 import org.glassfish.hk2.Factory;
 
@@ -86,10 +85,10 @@ final class MatchResultInitializerRouter implements Router {
     }
 
     @Override
-    public Continuation apply(final Request request) {
+    public Continuation apply(final JerseyContainerRequestContext requestContext) {
         final RoutingContext rc = contextProvider.get();
-        rc.pushMatchResult(new SingleMatchResult(Requests.relativePath(request, false)));
+        rc.pushMatchResult(new SingleMatchResult(requestContext.getPath(false)));
 
-        return Continuation.of(request, rootRouter);
+        return Continuation.of(requestContext, rootRouter);
     }
 }

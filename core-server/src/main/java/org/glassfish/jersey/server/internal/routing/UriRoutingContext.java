@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
@@ -49,18 +47,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import org.glassfish.jersey._remove.Helper;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -69,7 +67,6 @@ import org.glassfish.jersey.uri.internal.UriBuilderImpl;
 import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 /**
@@ -85,10 +82,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private MultivaluedHashMap<String, String> encodedTemplateValues;
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private final LinkedList<String> paths = Lists.newLinkedList();
-    private Optional<MediaType> effectiveMediaType = Optional.fromNullable(null);
-    private Optional<Type> responseMethodType = Optional.fromNullable(null);
-    private Optional<Annotation[]> responseMethodAnnotations = Optional.fromNullable(null);
-    private Inflector<Request, Response> inflector = null;
+    private Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector = null;
 
     /**
      * Injection constructor.
@@ -175,44 +169,14 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return matchResults;
     }
 
-    @Override
-    public MediaType getEffectiveAcceptableType() {
-        return effectiveMediaType.orNull();
-    }
 
     @Override
-    public void setEffectiveAcceptableType(MediaType type) {
-        effectiveMediaType = Optional.of(type);
-    }
-
-    @Override
-    public Type getResponseMethodType() {
-        return responseMethodType.orNull();
-    }
-
-    @Override
-    public void setResponseMethodType(Type responseType) throws NullPointerException {
-        responseMethodType = Optional.of(responseType);
-    }
-
-
-    @Override
-    public void setResponseMethodAnnotations(Annotation[] annotations) throws NullPointerException {
-        responseMethodAnnotations = Optional.of(annotations);
-    }
-
-    @Override
-    public Annotation[] getResponseMethodAnnotations() {
-        return responseMethodAnnotations.orNull();
-    }
-
-    @Override
-    public void setInflector(final Inflector<Request, Response> inflector) {
+    public void setInflector(final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector) {
         this.inflector = inflector;
     }
 
     @Override
-    public Inflector<Request, Response> getInflector() {
+    public Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> getInflector() {
         return inflector;
     }
 

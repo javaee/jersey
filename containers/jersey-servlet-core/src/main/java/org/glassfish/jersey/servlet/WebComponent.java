@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -76,12 +75,11 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
-import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
-import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
@@ -252,18 +250,18 @@ public class WebComponent {
             final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, request, response,
                     asyncExtensionDelegate.createDelegate(request, response));
 
-            ContainerInvocationContext containerContext = new JerseyContainerInvocationContext(jaxRsRequest, responseWriter,
-                    getSecurityContext(request), new RequestScopedInitializer() {
+            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
+                    request.getMethod(),  getSecurityContext(request), new ServletPropertiesDelegate(request));
+            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
                 public void initialize(Services services) {
                     services.forContract(new TypeLiteral<Ref<HttpServletRequest>>() {}).get().set(request);
                     services.forContract(new TypeLiteral<Ref<HttpServletResponse>>() {}).get().set(response);
                 }
             });
+            requestContext.setWriter(responseWriter);
 
-            appHandler.apply(containerContext);
-
-            // jaxRsRequest, containerContext);
+            appHandler.handle(requestContext);
 
             return responseWriter.getResponseStatus();
         } catch (Exception e) {
@@ -336,7 +334,6 @@ public class WebComponent {
     private JaxrsRequestBuilderView addRequestHeaders(HttpServletRequest request, JaxrsRequestBuilderView builder) {
         for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements();) {
             String name = names.nextElement();
-            List<String> valueList = new LinkedList<String>();
             for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements();) {
                 builder = builder.header(name, values.nextElement());
             }

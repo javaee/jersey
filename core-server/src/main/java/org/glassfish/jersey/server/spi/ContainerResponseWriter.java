@@ -42,19 +42,19 @@ package org.glassfish.jersey.server.spi;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 /**
  * A suspendable, request-scoped container response writer.
  *
  * Container sends a new instance of the response writer with every request as part
- * of the call to the Jersey application {@link ApplicationHandler#apply(ContainerInvocationContext) apply(...)}
+ * of the call to the Jersey application
+ * {@link ApplicationHandler#apply(org.glassfish.jersey.server.JerseyContainerRequestContext)}  apply(...)}
  * method. Each container response writer represents an open connection to the client
  * (waiting for a response).
- * <p />
+ * <p>
  * For each request the Jersey runtime will make sure to directly call either
  * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}, {@link #cancel()}
  * or {@code commit()} method on a response writer supplied to the
@@ -62,6 +62,7 @@ import org.glassfish.jersey.server.ContainerException;
  * the container implementations may assume that when the {@code JerseyApplication.apply(...)}
  * method is finished, the container response writer is either {@link #commit() commited},
  * {@link #cancel() canceled} or {@link #suspend(long, TimeUnit, TimeoutHandler) suspended}.
+ * </p>
  *
  * @author Marek Potociar
  */
@@ -94,18 +95,25 @@ public interface ContainerResponseWriter {
     /**
      * Write the status and headers of the response and return an output stream
      * for the web application to write the entity of the response.
+     * <p>
+     * If the response content length is declared to be greater or equal to 0, it
+     * means that the content length in bytes of the entity to be written is known,
+     * otherwise -1. Containers may use this value to determine whether the
+     * {@code "Content-Length"} header can be set or utilize chunked transfer encoding.
+     * </p>
      *
      * @param contentLength greater or equal to 0 if the content length in bytes
      *     of the entity to be written is known, otherwise -1. Containers
      *     may use this value to determine whether the {@code "Content-Length"}
      *     header can be set or utilize chunked transfer encoding.
-     * @param response the JAX-RS response to be written. The status and headers
+     * @param responseContext the JAX-RS response to be written. The status and headers
      *     are obtained from the response.
      * @return the output stream to write the entity (if any).
      * @throws ContainerException if an error occurred when writing out the
-     *     status and headers or obtaining the output stream.
+     *                            status and headers or obtaining the output stream.
      */
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, Response response) throws ContainerException;
+    public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext)
+            throws ContainerException;
 
     /**
      * Suspend the request/response processing.
@@ -119,14 +127,13 @@ public interface ContainerResponseWriter {
      * Once suspended, the specified suspend timeout can be further updated using
      * {@link #setSuspendTimeout(long, java.util.concurrent.TimeUnit) } method.
      *
-     * @param timeOut time-out value. Value less or equal to 0, indicates that
-     *     the processing is suspended indefinitely.
-     * @param timeUnit time-out time unit.
+     * @param timeOut        time-out value. Value less or equal to 0, indicates that
+     *                       the processing is suspended indefinitely.
+     * @param timeUnit       time-out time unit.
      * @param timeoutHandler time-out handler to process a time-out event if it
-     *     occurs.
+     *                       occurs.
      * @throws IllegalStateException in case the container response writer has
-     *     already been suspended.
-     *
+     *                               already been suspended.
      * @see #setSuspendTimeout(long, TimeUnit)
      * @see #cancel()
      * @see #commit()
@@ -139,12 +146,11 @@ public interface ContainerResponseWriter {
      * Once the container response writer is suspended, the suspend timeout value
      * can be further updated by the method.
      *
-     * @param timeOut time-out value. Value less or equal to 0, indicates that
-     *     the processing is suspended indefinitely.
+     * @param timeOut  time-out value. Value less or equal to 0, indicates that
+     *                 the processing is suspended indefinitely.
      * @param timeUnit time-out time unit.
      * @throws IllegalStateException in case the container has not been suspended
-     *     yet.
-     *
+     *                               yet.
      * @see #setSuspendTimeout(long, TimeUnit)
      */
     public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException;
@@ -152,7 +158,7 @@ public interface ContainerResponseWriter {
     /**
      * Cancel the request/response processing. This method automatically commits
      * and closes the writer.
-     *<p />
+     * <p />
      * By invoking this method, {@link org.glassfish.jersey.server.ApplicationHandler
      * Jersey application handler} indicates to the container that the request processing
      * related to this container context has been canceled.

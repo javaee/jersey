@@ -41,13 +41,14 @@ package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -58,16 +59,18 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ReferencesInitializer implements Function<Request, Request> {
+class ReferencesInitializer implements Function<JerseyContainerRequestContext, JerseyContainerRequestContext> {
 
+    @Inject
+    private Services services;
     @Inject
     private Factory<Ref<Request>> requestReference;
     @Inject
+    private Factory<Ref<JerseyContainerRequestContext>> requestContextReference;
+    @Inject
     private Factory<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
-    private Factory<Ref<Response>> responseReference;
-    @Inject
-    private Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
+    private Factory<Ref<SecurityContext>> securityContextReference;
 
     /**
      * Initialize the request references using the incoming request and register
@@ -75,23 +78,21 @@ class ReferencesInitializer implements Function<Request, Request> {
      * {@link org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext
      * responding context}.
      *
-     * @param request incoming request.
-     * @return same (unmodified) request.
+     * @param requestContext incoming request context.
+     * @return same (unmodified) request context.
      */
     @Override
-    public Request apply(final Request request) {
-        requestReference.get().set(request);
-        httpHeadersReference.get().set(Requests.httpHeaders(request));
+    public JerseyContainerRequestContext apply(final JerseyContainerRequestContext requestContext) {
+        requestReference.get().set(requestContext.getRequest());
+        requestContextReference.get().set(requestContext);
+        httpHeadersReference.get().set(Requests.httpHeaders(requestContext));
+        securityContextReference.get().set(requestContext.getSecurityContext());
 
-        respondingContextFactory.get().push(new Function<Response, Response>() {
-            @Override
-            public Response apply(final Response response) {
-                responseReference.get().set(response);
+        final RequestScopedInitializer requestScopedInitializer = requestContext.getRequestScopedInitializer();
+        if (requestScopedInitializer != null) {
+            requestScopedInitializer.initialize(services);
+        }
 
-                return response;
-            }
-        });
-
-        return request;
+        return requestContext;
     }
 }

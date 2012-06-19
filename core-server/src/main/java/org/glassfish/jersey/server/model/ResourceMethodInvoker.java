@@ -39,11 +39,14 @@
  */
 package org.glassfish.jersey.server.model;
 
-import javax.ws.rs.core.Request;
+import java.lang.reflect.Type;
+
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
@@ -58,7 +61,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethodInvoker implements Inflector<Request, Response> {
+public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> {
 
     /**
      * Resource method invoker "assisted" injection helper.
@@ -113,7 +116,7 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
     }
 
     @Override
-    public Response apply(final Request request) {
+    public JerseyContainerResponseContext apply(final JerseyContainerRequestContext requestContext) {
         final Object resource = routingContextFactory.get().peekMatchedResource();
 
         final InvocationContext invocationCtx = invocationContextFactory.get();
@@ -121,19 +124,27 @@ public class ResourceMethodInvoker implements Inflector<Request, Response> {
             invocationCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
         }
 
-        final Response response = dispatcher.dispatch(resource, request);
-
-        final Invocable invocable = method.getInvocable();
-        final RoutingContext routingCtx = routingContextFactory.get();
-        routingCtx.setResponseMethodType(invocable.getResponseType());
-        routingCtx.setResponseMethodAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
+        final Response response = dispatcher.dispatch(resource, requestContext);
 
         if (method.isSuspendDeclared()) {
             invocationCtx.setResponse(resource);
             invocationCtx.trySuspend();
         }
 
-        return response;
+        final JerseyContainerResponseContext responseContext = new JerseyContainerResponseContext(requestContext, response);
+        final Invocable invocable = method.getInvocable();
+        responseContext.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
+
+        if (responseContext.hasEntity()) {
+            Type entityType = responseContext.getEntityType();
+            if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
+                responseContext.setEntityType(responseContext.getEntityClass());
+            }
+        }
+
+        responseContext.setEntityType(invocable.getResponseType());
+
+        return responseContext;
     }
 
     @Override

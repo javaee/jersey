@@ -37,36 +37,37 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.filter;
+package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
-
-import org.glassfish.jersey._remove.PreMatchRequestFilter;
-import java.util.List;
+import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
- * Module used for registering PreMatchRequestFilters.
+ * Module used for registering provider instances of provider type {@code T}
+ * in HK2.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @param <T>
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-
-public class PreMatchRequestFilterModule implements Module {
-    private final List<PreMatchRequestFilter> preMatchRequestFilters;
+public class ProviderInstanceBindingModule<T> extends AbstractModule {
+    private final Iterable<? extends T> providers;
+    private final Class<T> providerType;
 
     /**
-     * Create PreMatchRequestFilterModule with list of {@link PreMatchRequestFilter} instances.
+     * Create a provider instance binding module for the
+     * supplied collection of provider instances.
      *
-     * @param preMatchRequestFilters list of {@link PreMatchRequestFilter} instances.
+     * @param providers list of provider instances.
+     * @param providerType registered provider contract type.
      */
-    public PreMatchRequestFilterModule(List<PreMatchRequestFilter> preMatchRequestFilters) {
-        this.preMatchRequestFilters = preMatchRequestFilters;
+    public ProviderInstanceBindingModule(Iterable<? extends T> providers, Class<T> providerType) {
+        this.providers = providers;
+        this.providerType = providerType;
     }
 
     @Override
-    public void configure(BinderFactory binderFactory) {
-        for(PreMatchRequestFilter preMatchRequestFilter : preMatchRequestFilters) {
-            binderFactory.bind(PreMatchRequestFilter.class).toInstance(preMatchRequestFilter);
+    protected void configure() {
+        for(T provider : providers) {
+            bind(providerType).toInstance(provider);
         }
     }
 }

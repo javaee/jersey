@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,29 +37,37 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
- * Terminal router that pushes the URI matched so far to the stack returned
- * by {@link javax.ws.rs.core.UriInfo#getMatchedURIs()} method.
+ * Module used for registering provider instances of provider type {@code T}
+ * in HK2.
  *
+ * @param <T>
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class PushMatchedUriRouter implements Router {
+public class ProviderInstanceBindingModule<T> extends AbstractModule {
+    private final Iterable<? extends T> providers;
+    private final Class<T> providerType;
 
-    @Inject
-    private Factory<RoutingContext> routingContextFactory;
+    /**
+     * Create a provider instance binding module for the
+     * supplied collection of provider instances.
+     *
+     * @param providers list of provider instances.
+     * @param providerType registered provider contract type.
+     */
+    public ProviderInstanceBindingModule(Iterable<? extends T> providers, Class<T> providerType) {
+        this.providers = providers;
+        this.providerType = providerType;
+    }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext data) {
-        routingContextFactory.get().pushLeftHandPath();
-
-        return Continuation.of(data);
+    protected void configure() {
+        for(T provider : providers) {
+            bind(providerType).toInstance(provider);
+        }
     }
 }

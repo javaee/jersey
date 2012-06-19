@@ -39,12 +39,11 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 import org.glassfish.hk2.Factory;
 
@@ -63,7 +62,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @see RoutingStage
  */
-public class RoutedInflectorExtractorStage implements Stage<Request> {
+public class RoutedInflectorExtractorStage implements Stage<JerseyContainerRequestContext> {
     private final Factory<RoutingContext> routingContextFactory;
 
     /**
@@ -76,9 +75,12 @@ public class RoutedInflectorExtractorStage implements Stage<Request> {
     }
 
     @Override
-    public Continuation<Request> apply(final Request request) {
-        final Inflector<Request, Response> inflector = routingContextFactory.get().getInflector();
+    public Continuation<JerseyContainerRequestContext> apply(final JerseyContainerRequestContext requestContext) {
+        final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector =
+                routingContextFactory.get().getInflector();
 
-        return inflector != null ? Continuation.of(request, Stages.asStage(inflector)) : Continuation.of(request);
+        return inflector != null
+                ? Continuation.of(requestContext, Stages.asStage(inflector))
+                : Continuation.of(requestContext);
     }
 }

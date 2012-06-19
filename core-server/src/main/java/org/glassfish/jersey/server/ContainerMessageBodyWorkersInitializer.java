@@ -37,15 +37,9 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
-
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
+package org.glassfish.jersey.server;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
 
 import org.glassfish.hk2.Factory;
 
@@ -55,48 +49,30 @@ import com.google.common.base.Function;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
- * {@link MessageBodyWorkers} instance on a current request and response.
+ * {@link org.glassfish.jersey.message.MessageBodyWorkers} instance on a current request and response.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MessageBodyWorkersInitializer implements Function<Request, Request> {
+public class ContainerMessageBodyWorkersInitializer
+        implements Function<JerseyContainerRequestContext, JerseyContainerRequestContext> {
     private final Factory<MessageBodyWorkers> workersFactory;
-    private final Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory;
 
     /**
-     * Create new {@link MessageBodyWorkers} initialization function for requests
+     * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function for requests
      * and responses.
      *
      * @param workersFactory {@code MessageBodyWorkers} factory.
-     * @param respondingContextFactory {@link ResponseProcessor.RespondingContext} factory.
      */
-    public MessageBodyWorkersInitializer(
-            @Inject Factory<MessageBodyWorkers> workersFactory,
-            @Inject Factory<ResponseProcessor.RespondingContext<Response>> respondingContextFactory) {
+    public ContainerMessageBodyWorkersInitializer(
+            @Inject Factory<MessageBodyWorkers> workersFactory) {
         this.workersFactory = workersFactory;
-        this.respondingContextFactory = respondingContextFactory;
     }
 
 
     @Override
-    public Request apply(Request request) {
-        final JaxrsRequestBuilderView requestBuilder = Requests.toBuilder(request);
-        final MessageBodyWorkers workers = workersFactory.get();
-        Requests.setMessageWorkers(requestBuilder, workers);
+    public JerseyContainerRequestContext apply(JerseyContainerRequestContext requestContext) {
+        requestContext.setWorkers(workersFactory.get());
 
-        respondingContextFactory.get().push(new Function<Response, Response>() {
-            @Override
-            public Response apply(final Response response) {
-                if (response != null) {
-                    final Response.ResponseBuilder responseBuilder = Responses.toBuilder(response);
-                    Responses.setMessageWorkers(responseBuilder, workers);
-                    return responseBuilder.build();
-                } else {
-                    return null;
-                }
-            }
-        });
-
-        return requestBuilder.build();
+        return requestContext;
     }
 }

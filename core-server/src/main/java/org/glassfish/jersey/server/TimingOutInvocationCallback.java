@@ -58,7 +58,8 @@ import com.google.common.util.concurrent.AbstractFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class TimingOutInvocationCallback extends AbstractFuture<Response> implements InvocationCallback<Response> {
+abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContainerResponseContext>
+        implements InvocationCallback<JerseyContainerResponseContext> {
 
     private static final Logger logger = Logger.getLogger(TimingOutInvocationCallback.class.getName());
     private static final Timer TIMER = new Timer("Jersey application request timer");
@@ -68,19 +69,19 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     private TimerTask timeoutTask = null;
 
     @Override
-    public void result(final Response response) {
+    public void result(final JerseyContainerResponseContext response) {
         if (done.compareAndSet(false, true)) {
             set(handleResponse(response));
         }
     }
 
     /**
-     * Modify returned {@link Response}.
+     * Modify returned {@link JerseyContainerResponseContext response context}.
      *
-     * @param response original response.
-     * @return modified response.
+     * @param response original response context.
+     * @return modified response context.
      */
-    protected abstract Response handleResponse(final Response response);
+    protected abstract JerseyContainerResponseContext handleResponse(final JerseyContainerResponseContext response);
 
     @Override
     public void failure(final Throwable exception) {
@@ -93,9 +94,9 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
      * Convert the exception into a {@link Response}.
      *
      * @param exception to be converted.
-     * @return failure response.
+     * @return failure response context.
      */
-    protected abstract Response handleFailure(final Throwable exception);
+    protected abstract JerseyContainerResponseContext handleFailure(final Throwable exception);
 
     @Override
     public void cancelled() {
@@ -134,12 +135,12 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<Response> impl
     }
 
     /**
-     * Provide a timeout {@link Response}.
+     * Provide a timeout {@link JerseyContainerResponseContext}.
      *
      * @param context invocation context that has timed out.
-     * @return timeout response.
+     * @return timeout response context.
      */
-    protected abstract Response handleTimeout(final InvocationContext context);
+    protected abstract JerseyContainerResponseContext handleTimeout(final InvocationContext context);
 
     @Override
     public void suspendTimeoutChanged(final long time, final TimeUnit unit) {

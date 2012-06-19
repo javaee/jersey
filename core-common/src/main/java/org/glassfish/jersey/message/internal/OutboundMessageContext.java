@@ -844,19 +844,6 @@ public class OutboundMessageContext {
     }
 
     /**
-     * Get the declared generic message entity type information.
-     *
-     * NOTE: DO NOT USE - USE the {@link #getEntityClass} and {@link #getEntityType()}
-     * instead.
-     *
-     * @return declared generic message entity type.
-     */
-    public GenericType<?> getDeclaredEntityType() {
-        // TODO replace in the API?
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * Get the raw message entity type information.
      *
      * @return raw message entity type information.
@@ -866,12 +853,23 @@ public class OutboundMessageContext {
     }
 
     /**
-     * Get the generic message entity type information.
+     * Get the message entity type information.
      *
-     * @return generic message entity type.
+     * @return message entity type.
      */
     public Type getEntityType() {
         return entityType.getType();
+    }
+
+    /**
+     * Set the message entity type information.
+     *
+     * This method overrides any computed or previously set entity type information.
+     *
+     * @param type overriding message entity type.
+     */
+    public void setEntityType(Type type) {
+        this.entityType = new GenericType(type);
     }
 
     /**
@@ -917,5 +915,23 @@ public class OutboundMessageContext {
      */
     public void setStreamProvider(StreamProvider streamProvider) {
         this.rootStream.setStreamProvider(streamProvider);
+    }
+
+    /**
+     * Commits the {@link #getEntityStream() entity stream} if it wasn't already committed.
+     */
+    public void commitStream() {
+        if (!rootStream.isCommitted()) {
+            try {
+                // flush the entity stream
+                entityStream.flush();
+                if (!rootStream.isCommitted()) {
+                    // flush the committing stream
+                    rootStream.flush();
+                }
+            } catch (Exception ioe) {
+                // Do nothing - we are already handling an exception.
+            }
+        }
     }
 }

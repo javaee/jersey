@@ -41,18 +41,11 @@ package org.glassfish.jersey.server;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.util.Map;
+import java.lang.reflect.Type;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import javax.ws.rs.core.GenericType;
 
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
@@ -64,44 +57,28 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedResponse<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
-    private Class<T> rawChunkType;
+    private final GenericType<T> chunkType;
 
     private boolean closed = false;
-    private MessageBodyWorkers messageBodyWorkers = null;
-
-    private Annotation[] annotations;
-    private MediaType mediaType;
-    private MultivaluedMap<String, Object> httpHeaders;
-    private Map<String, Object> responseProperties;
-
-    private OutputStream outputStream;
-    private ContainerResponseWriter containerResponseWriter;
+    private JerseyContainerRequestContext requestContext;
+    private JerseyContainerResponseContext responseContext;
 
     /**
      * Create {@link ChunkedResponse} with specified type.
      *
-     * @param rawChunkType chunk type
+     * @param chunkType chunk type
      */
-    public ChunkedResponse(Class<T> rawChunkType) {
-        this.rawChunkType = rawChunkType;
+    public ChunkedResponse(Type chunkType) {
+        this.chunkType = new GenericType<T>(chunkType);
     }
 
     /**
-     * Used when you need to create descendant with specific chunk type.
+     * Creates a new instance of ChunkResponse, passing the chunk type as an instance of {@link GenericType}.
      *
-     * <p>When used, implementation is required to call {@link ChunkedResponse#setRawChunkType(Class)}
-     * in its constructor.</p>
+     * @param genericType chunk type
      */
-    protected ChunkedResponse() {
-    }
-
-    /**
-     * Set chunk type.
-     *
-     * @param rawType chunk type.
-     */
-    protected void setRawChunkType(Class<T> rawType) {
-        this.rawChunkType = rawType;
+    public ChunkedResponse(GenericType<T> genericType) {
+        this.chunkType = genericType;
     }
 
     /**
@@ -120,35 +97,33 @@ public class ChunkedResponse<T> implements Closeable {
             queue.add(chunk);
         }
 
-        if (messageBodyWorkers != null) {
-            flushQueue();
-        }
+        flushQueue();
     }
 
     private synchronized void flushQueue() throws IOException {
-        if (outputStream == null || messageBodyWorkers == null) {
+        if (requestContext == null) {
             return;
         }
 
         T t;
         while ((t = queue.poll()) != null) {
-            messageBodyWorkers.writeTo(
+            requestContext.getWorkers().writeTo(
                     t,
-                    rawChunkType,
-                    rawChunkType,
-                    annotations,
-                    mediaType,
-                    httpHeaders,
-                    new MapPropertiesDelegate(responseProperties),
-                    outputStream,
+                    chunkType.getRawType(),
+                    chunkType.getType(),
+                    responseContext.getEntityAnnotations(),
+                    responseContext.getMediaType(),
+                    responseContext.getHeaders(),
+                    requestContext.getPropertiesDelegate(),
+                    responseContext.getEntityStream(),
                     null,
                     true);
         }
 
         if (closed) {
-            outputStream.flush();
-            outputStream.close();
-            containerResponseWriter.commit();
+            responseContext.getEntityStream().flush();
+            responseContext.getEntityStream().close();
+            requestContext.getResponseWriter().commit();
         }
     }
 
@@ -159,9 +134,7 @@ public class ChunkedResponse<T> implements Closeable {
     @Override
     public void close() throws IOException {
         closed = true;
-        if (messageBodyWorkers != null) {
-            flushQueue();
-        }
+        flushQueue();
     }
 
     /**
@@ -177,33 +150,16 @@ public class ChunkedResponse<T> implements Closeable {
     }
 
     /**
-     * Set arguments used for {@link javax.ws.rs.ext.MessageBodyWriter} selection and for writing chunks.
+     * Set context used for writing chunks.
      *
-     * @param outputStream            used for writing chunks.
-     * @param containerResponseWriter container needs to be notified when {@link ChunkedResponse} is closed to release/close
-     *                                connection and internal structures.
-     * @param messageBodyWorkers      used for writing chunks.
-     * @param annotations             used for writing chunks.
-     * @param mediaType               used for writing chunks.
-     * @param httpHeaders             used for writing chunks.
-     * @param responseProperties      used for writing chunks.
+     * @param requestContext request context.
+     * @param responseContext response context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
-    void setWriterRelatedArgs(OutputStream outputStream,
-                              ContainerResponseWriter containerResponseWriter,
-                              MessageBodyWorkers messageBodyWorkers,
-                              Annotation[] annotations,
-                              MediaType mediaType,
-                              MultivaluedMap<String, Object> httpHeaders,
-                              Map<String, Object> responseProperties) throws IOException {
-        this.outputStream = outputStream;
-        this.containerResponseWriter = containerResponseWriter;
-        this.messageBodyWorkers = messageBodyWorkers;
-        this.annotations = annotations;
-        this.mediaType = mediaType;
-        this.httpHeaders = httpHeaders;
-        this.responseProperties = responseProperties;
-
+    void setContext(JerseyContainerRequestContext requestContext,
+                    JerseyContainerResponseContext responseContext) throws IOException {
+        this.requestContext = requestContext;
+        this.responseContext = responseContext;
         flushQueue();
     }
 }

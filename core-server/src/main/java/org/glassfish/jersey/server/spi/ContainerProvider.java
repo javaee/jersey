@@ -50,9 +50,9 @@ import org.glassfish.jersey.server.ApplicationHandler;
  * <p />
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
- * {@link JerseyApplication Jersey application} using the application's
- * {@link JerseyApplication#apply(javax.ws.rs.core.Request, org.glassfish.jersey.server.spi.ContainerResponseWriter)
- * apply(request, responseWriter)} method and sending the responses provided by the
+ * {@link ApplicationHandler Jersey application handler} using the handler's
+ * {@link ApplicationHandler#apply(org.glassfish.jersey.server.JerseyContainerRequestContext)}
+ * apply(requestContext)} method and sending the responses provided by the
  * application back to the client.
  * <p />
  * A provider shall support a one-to-one mapping between a type that is not of
@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
  * <p />
  * An implementation (a service-provider) identifies itself by registering a proper
  * HK2 {@code ContainterProvider} contract binding in a custom HK2 module configured
- * in the {@link org.glassfish.jersey.server.JerseyApplication Jersey application}.
+ * in the Jersey application handler.
  * Alternatively, the implementation can identify itself by placing a provider-configuration
  * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}
  * in the resource directory <tt>META-INF/services</tt>, and adding the fully
@@ -85,7 +85,7 @@ public interface ContainerProvider {
      * @param <T> the type of the container.
      *
      * @return the container, otherwise null if the provider does not support
-     *     the requested <code>type</code>.
+     *     the requested {@code type}.
      * @param type the type of the container.
      * @param appHandler the Web application handler the container delegates to
      *     for the handling of HTTP requests.

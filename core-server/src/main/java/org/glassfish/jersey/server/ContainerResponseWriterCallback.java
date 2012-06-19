@@ -41,9 +41,6 @@ package org.glassfish.jersey.server;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -53,7 +50,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class ContainerResponseWriterCallback implements InvocationCallback<Response> {
+abstract class ContainerResponseWriterCallback implements InvocationCallback<JerseyContainerResponseContext> {
 
     private boolean suspended;
     private boolean autosuspend;
@@ -63,33 +60,27 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Res
     private final Object stateUpdateLock;
     //
     /**
-     * Container response writer.
-     */
-    protected final ContainerResponseWriter writer;
-    /**
      * Request data.
      */
-    protected final Request request;
+    protected final JerseyContainerRequestContext requestContext;
 
     /**
      * Construct a new container response writer delegating invocation callback
-     * for a given request.
+     * for a given request context.
      *
-     * @param request request data.
-     * @param writer container response writer used for event delegation.
+     * @param requestContext request context.
      */
-    public ContainerResponseWriterCallback(Request request, ContainerResponseWriter writer) {
+    public ContainerResponseWriterCallback(JerseyContainerRequestContext requestContext) {
         this.suspended = false;
         this.autosuspend = false;
         this.timeoutCancelled = false;
         this.stateUpdateLock = new Object();
 
-        this.request = request;
-        this.writer = writer;
+        this.requestContext = requestContext;
     }
 
     @Override
-    public void result(Response response) {
+    public void result(JerseyContainerResponseContext response) {
         synchronized (stateUpdateLock) {
             if (done) {
                 return;
@@ -118,7 +109,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Res
             }
             done = timeoutCancelled = true;
         }
-        writer.cancel();
+        requestContext.getResponseWriter().cancel();
     }
 
     @Override
@@ -142,7 +133,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Res
      * @param unit suspend timeout time unit.
      */
     private void suspendWriter(final long time, final TimeUnit unit) {
-        writer.suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
+        requestContext.getResponseWriter().suspend(time, unit, new ContainerResponseWriter.TimeoutHandler() {
 
             @Override
             public void onTimeout(ContainerResponseWriter responseWriter) {
@@ -160,7 +151,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Res
 
     @Override
     public void suspendTimeoutChanged(long time, TimeUnit unit) {
-        writer.setSuspendTimeout(time, unit);
+        requestContext.getResponseWriter().setSuspendTimeout(time, unit);
     }
 
     @Override
@@ -195,7 +186,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Res
      *
      * @param response response data.
      */
-    protected abstract void writeResponse(Response response);
+    protected abstract void writeResponse(JerseyContainerResponseContext response);
 
     /**
      * Write the failure response.

@@ -51,27 +51,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerInvocationContext;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.JerseyContainerInvocationContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.Factory;
@@ -86,7 +82,6 @@ import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.utils.Charsets;
 
 /**
  * Grizzly 2 Jersey HTTP Container.
@@ -127,11 +122,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         @Override
         protected void configure() {
             bind(Request.class).toFactory(GrizzlyRequestReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<Request>>() {}).
+            bind(new TypeLiteral<Ref<Request>>() {
+            }).
                     toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
 
             bind(Response.class).toFactory(GrizzlyResponseReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<Response>>() {}).
+            bind(new TypeLiteral<Ref<Response>>() {
+            }).
                     toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
         }
     }
@@ -208,7 +205,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
                             @Override
                             public boolean onTimeout(Response response) {
-                                if(timeoutHandler != null) {
+                                if (timeoutHandler != null) {
                                     timeoutHandler.onTimeout(ResponseWriter.this);
                                 }
 
@@ -234,20 +231,17 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(final long contentLength,
-                final javax.ws.rs.core.Response jaxrsResponse) throws ContainerException {
+                                                          final JerseyContainerResponseContext context)
+                throws ContainerException {
             try {
-                grizzlyResponse.setStatus(jaxrsResponse.getStatus());
+                grizzlyResponse.setStatus(context.getStatus());
                 grizzlyResponse.setContentLengthLong(contentLength);
 
-                for (final Map.Entry<String, List<String>> e : Helper.unwrap(jaxrsResponse).getHeaders().entrySet()) {
+                for (final Map.Entry<String, List<String>> e : HeadersFactory.getStringHeaders(
+                        context.getHeaders()).entrySet()) {
                     for (final String value : e.getValue()) {
                         grizzlyResponse.addHeader(e.getKey(), value);
                     }
-                }
-
-                final String contentType = jaxrsResponse.getHeader(HttpHeaders.CONTENT_TYPE);
-                if (contentLength > 0 && contentType != null) {
-                    grizzlyResponse.setContentType(contentType);
                 }
 
                 return grizzlyResponse.getOutputStream();
@@ -269,7 +263,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         this.appHandler = application;
         this.containerListener = ConfigHelper.getContainerLifecycleListener(application);
 
-        this.appHandler.registerAdditionalModules(new HashSet<Module>() {{add(new GrizzlyModule());}});
+        this.appHandler.registerAdditionalModules(new HashSet<Module>() {{
+            add(new GrizzlyModule());
+        }});
     }
 
     @Override
@@ -283,16 +279,18 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
-            ContainerInvocationContext containerInvocationContext = new JerseyContainerInvocationContext(toJaxrsRequest(request), responseWriter,
-                    getSecurityContext(request), new RequestScopedInitializer() {
-
-                    @Override
-                    public void initialize(Services services) {
-                        services.forContract(new TypeLiteral<Ref<Request>>() {}).get().set(request);
-                        services.forContract(new TypeLiteral<Ref<Response>>() {}).get().set(response);
-                    }
-                });
-            appHandler.apply(containerInvocationContext);
+            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(getBaseUri(request),
+                    URI.create(request.getRequestURI()), request.getMethod().getMethodString(),
+                    getSecurityContext(request), new GrizzlyRequestPropertiesDelegate(request));
+            requestContext.setWriter(responseWriter);
+            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
+                @Override
+                public void initialize(Services services) {
+                    services.forContract(new TypeLiteral<Ref<Request>>() {}).get().set(request);
+                    services.forContract(new TypeLiteral<Ref<Response>>() {}).get().set(response);
+                }
+            });
+            appHandler.handle(requestContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
             logger.debugLog("GrizzlyHttpContaner.service(...) finished");
@@ -367,33 +365,22 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
-    private javax.ws.rs.core.Request toJaxrsRequest(Request grizzlyRequest) {
-
-        final URI baseUri = getBaseUri(grizzlyRequest);
-
-        // TODO: this is terrible, there must be a way to obtain the original request URI!
-        String originalURI = UriBuilder
-                .fromPath(
-                        grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC()
-                                .toString(Charsets.DEFAULT_CHARSET)).build().toString();
-
-        String queryString = grizzlyRequest.getQueryString();
-        if (queryString != null) {
-            originalURI = originalURI + "?" + queryString;
-        }
-
-        final URI requestUri = baseUri.resolve(originalURI);
-
-        final String method = grizzlyRequest.getMethod().getMethodString();
-
-        JaxrsRequestBuilderView rb = Requests.from(baseUri, requestUri, method, grizzlyRequest.getInputStream());
-
-        for (String name : grizzlyRequest.getHeaderNames()) {
-            for (String value : grizzlyRequest.getHeaders(name)) {
-                rb.header(name, value);
-            }
-        }
-
-        return rb.build();
-    }
+    // TODO: commented out as it seems ridiculous - but maybe grizzlyRequest.getRequestURI() does not do what
+    // TODO: I expect it to do, in which case this will have to be uncommented and used
+//    private URI getRequestUri(URI baseUri, Request grizzlyRequest) {
+//        // TODO: this is terrible, there must be a way to obtain the original request URI!
+//        String originalURI = UriBuilder
+//                .fromPath(
+//                        grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC()
+//                                .toString(Charsets.DEFAULT_CHARSET)).build().toString();
+//
+//        String queryString = grizzlyRequest.getQueryString();
+//        if (queryString != null) {
+//            originalURI = originalURI + "?" + queryString;
+//        }
+//
+//        final URI requestUri = baseUri.resolve(originalURI);
+//
+//        return requestUri;
+//    }
 }
