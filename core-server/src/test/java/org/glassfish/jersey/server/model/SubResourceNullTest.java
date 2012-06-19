@@ -43,7 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -89,8 +89,8 @@ public class SubResourceNullTest {
     public void testSubResourceNull() throws Exception {
         app = createApplication(Parent.class);
 
-        assertEquals("child", app.apply(Requests.from("/parent/true", "GET").build()).get().readEntity(String.class));
+        assertEquals("child", app.apply(RequestContextBuilder.from("/parent/true", "GET").build()).get().readEntity(String.class));
 
-        assertEquals(404, app.apply(Requests.from("/parent/false", "GET").build()).get().getStatus());
+        assertEquals(404, app.apply(RequestContextBuilder.from("/parent/false", "GET").build()).get().getStatus());
     }
 }

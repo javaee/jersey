@@ -88,7 +88,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
             // TODO: cache?
             MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
 
-            for (Map.Entry<String, Cookie> e : context.getRequest().getHeaders().getCookies().entrySet()) {
+            for (Map.Entry<String, Cookie> e : context.getRequestContext().getCookies().entrySet()) {
                 cookies.putSingle(e.getKey(), e.getValue().getValue());
             }
 
@@ -111,7 +111,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
 
         @Override
         public Cookie get(HttpContext context) {
-            return context.getRequest().getHeaders().getCookies().get(name);
+            return context.getRequestContext().getCookies().get(name);
         }
     }
 

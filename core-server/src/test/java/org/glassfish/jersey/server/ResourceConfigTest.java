@@ -50,7 +50,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.message.internal.Requests;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -107,7 +106,7 @@ public class ResourceConfigTest {
 
         assertSame(resourceConfig, ah.getServices().forContract(Application.class).get());
 
-        Response r = ah.apply(Requests.from("/", "/resource?id=" + rcId, "GET").build()).get();
+        Response r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
         assertEquals("Injected application instance not same as used for building the Jersey handler.",
                 "true", r.readEntity(String.class));

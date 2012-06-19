@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
@@ -223,8 +223,8 @@ public class PathParamAsPrimitiveTest {
     }
 
     void _test(String type, String value) throws Exception {
-        app.apply(Requests.from("/" + type + "/" + value, "GET").build()).get().readEntity(String.class);
-        app.apply(Requests.from("/" + type + "/wrapper/" + value, "GET").build()).get().readEntity(String.class);
+        app.apply(RequestContextBuilder.from("/" + type + "/" + value, "GET").build()).get().readEntity(String.class);
+        app.apply(RequestContextBuilder.from("/" + type + "/wrapper/" + value, "GET").build()).get().readEntity(String.class);
     }
 
     @Test
@@ -264,13 +264,13 @@ public class PathParamAsPrimitiveTest {
 
     @Test
     public void testBadPrimitiveValue() throws Exception {
-        Response response = app.apply(Requests.from("/int/abcdef", "GET").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/int/abcdef", "GET").build()).get();
         assertEquals(404, response.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws Exception {
-        Response response = app.apply(Requests.from("/int/wrapper/abcdef", "GET").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/int/wrapper/abcdef", "GET").build()).get();
         assertEquals(404, response.getStatus());
     }
 }

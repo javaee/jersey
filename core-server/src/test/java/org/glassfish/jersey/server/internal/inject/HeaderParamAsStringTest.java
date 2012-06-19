@@ -51,7 +51,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -246,7 +246,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("arg1", "a").
                         header("arg2", "b").
                         header("arg3", "c").
@@ -259,7 +259,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringEmpty.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("arg1", "").
                         build()
         ).readEntity(String.class));
@@ -277,7 +277,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final Response response = apply(
-                Requests.from("/", "POST").
+                RequestContextBuilder.from("/", "POST").
                         entity("content").
                         header("arg1", "a").
                         header("arg2", "b").
@@ -293,7 +293,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "a").
                         header("args", "b").
@@ -307,7 +307,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "").
                         header("args", "").
@@ -321,7 +321,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         header("args", "a").
                         header("args", "b").
@@ -349,7 +349,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefaultOverride.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("arg1", "d").
                         header("arg2", "e").
                         header("arg3", "f").
@@ -362,7 +362,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListNullDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
         ).readEntity(String.class));
@@ -373,7 +373,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListNullDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));
@@ -384,7 +384,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
         ).readEntity(String.class));
@@ -395,7 +395,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));
@@ -406,7 +406,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         header("args", "b").
                         build()

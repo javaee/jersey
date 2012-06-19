@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.model;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -74,7 +74,7 @@ public class ProgrammaticResourceMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("/test", "GET").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "GET").build(), application);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ProgrammaticResourceMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("/test", "HEAD").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "HEAD").build(), application);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class ProgrammaticResourceMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("/test", "OPTIONS").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "OPTIONS").build(), application);
     }
 
     @Test
@@ -131,9 +131,9 @@ public class ProgrammaticResourceMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatus(Requests.from("/test", "GET").build(), application);
-        checkReturnedStatus(Requests.from("/test", "HEAD").build(), application);
-        checkReturnedStatus(Requests.from("/test", "OPTIONS").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "GET").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "HEAD").build(), application);
+        checkReturnedStatus(RequestContextBuilder.from("/test", "OPTIONS").build(), application);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class ProgrammaticResourceMethodsTest {
         rc.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
-        checkReturnedStatusEquals(201, Requests.from("/test1", "GET").build(), application);
+        checkReturnedStatusEquals(201, RequestContextBuilder.from("/test1", "GET").build(), application);
 //        checkReturnedStatusEquals(203, Requests.from("/test1", "HEAD").build(), application);
 //        checkReturnedStatusEquals(203, Requests.from("/test1", "OPTIONS").build(), application);
 

@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 
 import org.glassfish.hk2.Factory;

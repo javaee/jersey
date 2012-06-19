@@ -51,7 +51,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -269,7 +269,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final Response response = apply(
-                Requests.from("/;arg1=a;arg2=b;arg3=c", "POST").
+                RequestContextBuilder.from("/;arg1=a;arg2=b;arg3=c", "POST").
                         entity("content").
                         build()
         );
@@ -282,7 +282,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                Requests.from("/;args=a;args=b;args=c", "GET").
+                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
                         entity("content").
                         build()
         ).readEntity(String.class));
@@ -293,7 +293,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                Requests.from("/;args;args;args", "GET").
+                RequestContextBuilder.from("/;args;args;args", "GET").
                         accept("application/stringlist").
                         build()
         ).readEntity(String.class));
@@ -304,7 +304,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                Requests.from("/;args=a;args=b;args=c", "GET").
+                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));
@@ -329,7 +329,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefaultOverride.class);
 
         assertEquals("content", apply(
-                Requests.from("/;arg1=d;arg2=e;arg3=f", "GET").
+                RequestContextBuilder.from("/;arg1=d;arg2=e;arg3=f", "GET").
                         build()
         ).readEntity(String.class));
     }
@@ -339,7 +339,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
         ).readEntity(String.class));
@@ -350,7 +350,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));
@@ -361,7 +361,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
         ).readEntity(String.class));
@@ -372,7 +372,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));
@@ -383,7 +383,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                Requests.from("/;args=b", "GET").
+                RequestContextBuilder.from("/;args=b", "GET").
                         accept("application/list").
                         build()
         ).readEntity(String.class));

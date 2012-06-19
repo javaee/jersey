@@ -81,7 +81,6 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
-import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.BasicValidator;
@@ -197,10 +196,6 @@ public final class ApplicationHandler {
 
     @Inject
     private RequestScope requestScope;
-    @Inject
-    private Factory<RoutingContext> routingContextFactory;
-    @Inject
-    private Factory<Ref<SecurityContext>> securityContextRefFactory;
     @Inject
     private Factory<CloseableService> closeableServiceFactory;
     //

@@ -51,7 +51,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -706,19 +706,19 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
 
     void _test(String type, String value) throws ExecutionException, InterruptedException {
-        assertEquals("content", apply(Requests.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
 
-        assertEquals("content", apply(Requests.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
 
-        assertEquals("content", apply(Requests.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        assertEquals("content", apply(Requests.from(base + "default/null", "GET").accept("application/" + type).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from(base + "default/null", "GET").accept("application/" + type).build()).readEntity(String.class));
 
-        assertEquals("content", apply(Requests.from(base + "default", "GET").accept("application/" + type).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from(base + "default", "GET").accept("application/" + type).build()).readEntity(String.class));
 
-        assertEquals("content", apply(Requests.from(base + "default/override", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from(base + "default/override", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).readEntity(String.class));
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -877,7 +877,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
 
         final Response response = apply(
-                Requests.from("/", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
+                RequestContextBuilder.from("/", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
         );
 
         assertEquals(400, response.getStatus());
@@ -887,7 +887,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
 
         final Response response = apply(
-                Requests.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
         );
 
         assertEquals(400, response.getStatus());
@@ -897,7 +897,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
 
         final Response response = apply(
-                Requests.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
         );
 
         assertEquals(400, response.getStatus());

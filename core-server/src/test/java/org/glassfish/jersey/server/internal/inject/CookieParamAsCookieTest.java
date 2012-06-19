@@ -40,7 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
 import org.junit.Test;
 
 import javax.ws.rs.CookieParam;
@@ -94,6 +95,6 @@ public class CookieParamAsCookieTest extends AbstractTest {
         Cookie one = new Cookie("one", "value_one");
         Cookie two = new Cookie("two", "value_two");
 
-        assertEquals("content", apply(Requests.from("/", "POST").cookie(one).cookie(two).build()).readEntity(String.class));
+        assertEquals("content", apply(RequestContextBuilder.from("/", "POST").cookie(one).cookie(two).build()).readEntity(String.class));
     }
 }

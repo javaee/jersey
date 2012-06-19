@@ -60,7 +60,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 
@@ -92,7 +92,7 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -119,7 +119,7 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -145,7 +145,7 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -211,7 +211,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "bar");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -227,7 +227,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "bar");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -258,7 +258,7 @@ public class FormParamTest extends AbstractTest {
         form.param("decimal", "3.14");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -286,7 +286,7 @@ public class FormParamTest extends AbstractTest {
         Form form = new Form();
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -324,7 +324,7 @@ public class FormParamTest extends AbstractTest {
         Form form = new Form();
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         String s = response.readEntity(String.class);
@@ -357,7 +357,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<jaxbBean><value>b2</value></jaxbBean>");
 
         final Response response = apply(
-                Requests.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         JAXBBean b = response.readEntity(JAXBBean.class);
@@ -374,7 +374,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<x><value>b2</value></jaxbBean>");
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         assertEquals(400, response.getStatus());
@@ -409,7 +409,7 @@ public class FormParamTest extends AbstractTest {
         form.param("c", date_ANSI_C);
 
         final Response response = apply(
-                Requests.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+                RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
         assertEquals("POST", response.readEntity(String.class));

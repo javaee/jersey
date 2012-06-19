@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
@@ -148,7 +148,7 @@ public class PatternRoutingTest {
 
     @Test
     public void testPatternRouting() throws Exception {
-        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
+        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
         Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
 

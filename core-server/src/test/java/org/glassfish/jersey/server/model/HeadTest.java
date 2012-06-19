@@ -43,11 +43,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -81,7 +80,7 @@ public class HeadTest {
     public void testGetNoHead() throws Exception {
         initiateWebApplication(ResourceGetNoHead.class);
 
-        Response response = app.apply(Requests.from("/", "HEAD").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
         String length = response.getHeader("Content-Length");
@@ -109,7 +108,7 @@ public class HeadTest {
     public void testGetWithHead() throws Exception {
         initiateWebApplication(ResourceGetWithHead.class);
 
-        Response response = app.apply(Requests.from("/", "HEAD").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals("HEAD", response.getMetadata().getFirst("X-TEST"));
@@ -136,13 +135,13 @@ public class HeadTest {
         initiateWebApplication(ResourceGetWithProduceNoHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        Response response = app.apply(Requests.from("/", "HEAD").accept(foo).build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
-        response = app.apply(Requests.from("/", "HEAD").accept(bar).build()).get();
+        response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(bar, response.getMediaType());
@@ -181,14 +180,14 @@ public class HeadTest {
         initiateWebApplication(ResourceGetWithProduceWithHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        Response response = app.apply(Requests.from("/", "HEAD").accept(foo).build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
         assertEquals("FOO-HEAD", response.getMetadata().getFirst("X-TEST").toString());
 
         MediaType bar = MediaType.valueOf("application/bar");
-        response = app.apply(Requests.from("/", "HEAD").accept(bar).build()).get();
+        response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(bar, response.getMediaType());
@@ -208,7 +207,7 @@ public class HeadTest {
     public void testGetByteNoHead() throws Exception {
         initiateWebApplication(ResourceGetByteNoHead.class);
 
-        Response response = app.apply(Requests.from("/", "HEAD").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
         String length = response.getHeader("Content-Length");
         assertNotNull(length);
@@ -238,11 +237,11 @@ public class HeadTest {
     public void testResourceXXX() throws Exception {
         initiateWebApplication(ResourceGetWithNoProduces.class);
 
-        Response response = app.apply(Requests.from("/", "HEAD").accept("text/plain").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "HEAD").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("text", response.getHeader("x-value"));
 
-        response = app.apply(Requests.from("/", "HEAD").accept("text/html").build()).get();
+        response = app.apply(RequestContextBuilder.from("/", "HEAD").accept("text/html").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("html", response.getHeader("x-value"));
     }

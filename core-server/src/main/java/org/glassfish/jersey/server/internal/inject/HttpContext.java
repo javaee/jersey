@@ -42,9 +42,7 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
 
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
 /**
@@ -73,13 +71,7 @@ public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
      * Get the HTTP request information.
      * @return the HTTP request information
      */
-    JaxrsRequestView getRequest();
-
-    /**
-     * Get the HTTP response information.
-     * @return the HTTP response information
-     */
-    Response getResponse();
+    JerseyContainerRequestContext getRequestContext();
 
     /**
      * Get the mutable properties.

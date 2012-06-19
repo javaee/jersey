@@ -40,7 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
 import org.junit.Test;
 
 import javax.ws.rs.DefaultValue;
@@ -721,19 +722,19 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         String param = ";" + type + "=" + value;
 
         assertEquals("content", apply(
-                Requests.from("/" + param, "GET").
+                RequestContextBuilder.from("/" + param, "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from("/wrappers" + param, "GET").
+                RequestContextBuilder.from("/wrappers" + param, "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from("/list" + param + param + param, "GET").
+                RequestContextBuilder.from("/list" + param + param + param, "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
@@ -741,20 +742,20 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
         assertEquals("content", apply(
-                Requests.from(base + "default/null", "GET").
+                RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from(base + "default", "GET").
+                RequestContextBuilder.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
 
         String param = ";" + type + "=" + value;
         assertEquals("content", apply(
-                Requests.from(base + "default/override" + param, "GET").
+                RequestContextBuilder.from(base + "default/override" + param, "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
@@ -915,7 +916,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
         final Response response = apply(
-                Requests.from("/;int=abcdef", "GET").
+                RequestContextBuilder.from("/;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );
@@ -926,7 +927,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
         final Response response = apply(
-                Requests.from("/wrappers;int=abcdef", "GET").
+                RequestContextBuilder.from("/wrappers;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );
@@ -937,7 +938,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
         final Response response = apply(
-                Requests.from("/list;int=abcdef;int=abcdef", "GET").
+                RequestContextBuilder.from("/list;int=abcdef;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );

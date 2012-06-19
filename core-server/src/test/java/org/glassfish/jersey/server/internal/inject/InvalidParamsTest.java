@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
@@ -106,7 +106,7 @@ public class InvalidParamsTest {
 
     @Test
     public void testInvalidPathParam() throws Exception {
-        Response response = app.apply(Requests.from("/invalid/path/param", "GET").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
         // returned param is null -> 204 NO CONTENT
         assertEquals(204, response.getStatus());
     }

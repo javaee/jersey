@@ -57,8 +57,14 @@ import org.jvnet.hk2.annotations.Inject;
  */
 final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider<HeaderParam> {
 
+    /**
+     * HeaderParam injection resolver.
+     */
     static final class InjectionResolver extends ParamInjectionResolver<HeaderParam> {
 
+        /**
+         * Create new HeaderParam injection resolver.
+         */
         public InjectionResolver() {
             super(HeaderParam.class, HeaderParamValueFactoryProvider.class);
         }
@@ -75,7 +81,7 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
         @Override
         public Object get(HttpContext context) {
             try {
-                return extractor.extract(context.getRequest().getHeaders().getRequestHeaders());
+                return extractor.extract(context.getRequestContext().getHeaders());
             } catch (ExtractorException e) {
                 throw new ParamException.HeaderParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
@@ -83,6 +89,12 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep multivalued map parameter extractor provider.
+     * @param injector HK2 injector.
+     */
     public HeaderParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
         super(mpep, injector, Parameter.Source.HEADER);
     }

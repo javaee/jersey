@@ -54,7 +54,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.servlet.FilterConfig;
@@ -64,15 +63,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
 import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
@@ -158,11 +153,13 @@ public class WebComponent {
         @Override
         protected void configure() {
             bind(HttpServletRequest.class).toFactory(HttpServletRequestReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<HttpServletRequest>>() {}).
+            bind(new TypeLiteral<Ref<HttpServletRequest>>() {
+            }).
                     toFactory(ReferencingFactory.<HttpServletRequest>referenceFactory()).in(RequestScope.class);
 
             bind(HttpServletResponse.class).toFactory(HttpServletResponseReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<HttpServletResponse>>() {}).
+            bind(new TypeLiteral<Ref<HttpServletResponse>>() {
+            }).
                     toFactory(ReferencingFactory.<HttpServletResponse>referenceFactory()).in(RequestScope.class);
 
             bind(ServletContext.class).toFactory(new Factory<ServletContext>() {
@@ -197,6 +194,7 @@ public class WebComponent {
             }).in(Singleton.class);
         }
     }
+
     //
     final ApplicationHandler appHandler;
     final WebConfig webConfig;
@@ -218,45 +216,47 @@ public class WebComponent {
     /**
      * Dispatch client requests to a resource class.
      *
-     * @param baseUri    the base URI of the request.
-     * @param requestUri the URI of the request.
-     * @param request    the {@link javax.servlet.http.HttpServletRequest} object that
-     *                   contains the request the client made to
-     *                   the Web component.
-     * @param response   the {@link javax.servlet.http.HttpServletResponse} object that
-     *                   contains the response the Web component returns
-     *                   to the client.
+     * @param baseUri         the base URI of the request.
+     * @param requestUri      the URI of the request.
+     * @param servletRequest  the {@link javax.servlet.http.HttpServletRequest} object that
+     *                        contains the request the client made to
+     *                        the Web component.
+     * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} object that
+     *                        contains the response the Web component returns
+     *                        to the client.
      * @return the status code of the response.
-     * @throws java.io.IOException      if an input or output error occurs
-     *                          while the Web component is handling the
-     *                          HTTP request.
+     * @throws java.io.IOException            if an input or output error occurs
+     *                                        while the Web component is handling the
+     *                                        HTTP request.
      * @throws javax.servlet.ServletException if the HTTP request cannot
-     *                          be handled.
+     *                                        be handled.
      */
-    public int service(URI baseUri, URI requestUri, final HttpServletRequest request, final HttpServletResponse response)
-            throws ServletException, IOException {
+    public int service(
+            final URI baseUri,
+            final URI requestUri,
+            final HttpServletRequest servletRequest,
+            final HttpServletResponse servletResponse) throws ServletException, IOException {
 
-        JaxrsRequestBuilderView requestBuilder = Requests.from(baseUri, requestUri, request.getMethod(), request.getInputStream());
-        requestBuilder = addRequestHeaders(request, requestBuilder);
-
-        final Request jaxRsRequest = requestBuilder.build();
+        JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
+                servletRequest.getMethod(), getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
+        addRequestHeaders(servletRequest, requestContext);
 
         // Check if any servlet filters have consumed a request entity
         // of the media type application/x-www-form-urlencoded
         // This can happen if a filter calls request.getParameter(...)
-        filterFormParameters(request, jaxRsRequest);
+        filterFormParameters(servletRequest, requestContext);
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, response,
-                    asyncExtensionDelegate.createDelegate(request, response));
+            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, servletResponse,
+                    asyncExtensionDelegate.createDelegate(servletRequest, servletResponse));
 
-            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
-                    request.getMethod(),  getSecurityContext(request), new ServletPropertiesDelegate(request));
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
                 public void initialize(Services services) {
-                    services.forContract(new TypeLiteral<Ref<HttpServletRequest>>() {}).get().set(request);
-                    services.forContract(new TypeLiteral<Ref<HttpServletResponse>>() {}).get().set(response);
+                    services.forContract(new TypeLiteral<Ref<HttpServletRequest>>() {
+                    }).get().set(servletRequest);
+                    services.forContract(new TypeLiteral<Ref<HttpServletResponse>>() {
+                    }).get().set(servletResponse);
                 }
             });
             requestContext.setWriter(responseWriter);
@@ -307,8 +307,8 @@ public class WebComponent {
             // If no resource config class property is present, create default config
             final ResourceConfig rc = new ResourceConfig().addProperties(initParams);
 
-            final String webapp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
-            if (webapp != null && !"false".equals(webapp)) {
+            final String webApp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
+            if (webApp != null && !"false".equals(webApp)) {
                 rc.addFinder(new WebAppResourcesScanner(config.getServletContext()));
             }
             return rc;
@@ -331,15 +331,14 @@ public class WebComponent {
         }
     }
 
-    private JaxrsRequestBuilderView addRequestHeaders(HttpServletRequest request, JaxrsRequestBuilderView builder) {
-        for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements();) {
+    @SuppressWarnings("unchecked")
+    private void addRequestHeaders(HttpServletRequest request, JerseyContainerRequestContext requestContext) {
+        for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements(); ) {
             String name = names.nextElement();
-            for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements();) {
-                builder = builder.header(name, values.nextElement());
+            for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements(); ) {
+                requestContext.header(name, values.nextElement());
             }
         }
-
-        return builder;
     }
 
     private static Map<String, Object> getInitParams(WebConfig webConfig) {
@@ -355,8 +354,8 @@ public class WebComponent {
     private String[] getPaths(String classpath, ServletContext context) throws ServletException {
         if (classpath == null) {
             String[] paths = {
-                context.getRealPath("/WEB-INF/lib"),
-                context.getRealPath("/WEB-INF/classes")
+                    context.getRealPath("/WEB-INF/lib"),
+                    context.getRealPath("/WEB-INF/classes")
             };
             if (paths[0] == null && paths[1] == null) {
 //                String message = "The default deployment configuration that scans for " +
@@ -396,9 +395,8 @@ public class WebComponent {
         }
     }
 
-    private void filterFormParameters(HttpServletRequest hsr, Request _request) throws IOException {
-        JaxrsRequestView request = Helper.unwrap(_request);
-        if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getHeaders().getMediaType())
+    private void filterFormParameters(HttpServletRequest hsr, JerseyContainerRequestContext request) throws IOException {
+        if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())
                 && !request.hasEntity()) {
 
             Form f = new Form();
@@ -412,9 +410,9 @@ public class WebComponent {
             }
 
             if (!f.asMap().isEmpty()) {
-                request.getProperties().put(HttpContext.FORM_PROPERTY, f);
+                request.setProperty(HttpContext.FORM_PROPERTY, f);
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, LocalizationMessages.FORM_PARAM_CONSUMED(request.getUri()));
+                    LOGGER.log(Level.WARNING, LocalizationMessages.FORM_PARAM_CONSUMED(request.getRequestUri()));
                 }
             }
         }

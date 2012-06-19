@@ -43,11 +43,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.Requests;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
@@ -68,14 +64,20 @@ import static org.junit.Assert.assertSame;
  */
 public class ReferencingFactoryTest extends AbstractModule {
 
+    private static class Foo {
+        final int value;
+
+        private Foo(int value) {
+            this.value = value;
+        }
+    }
+
     private static class ValueInjected {
 
         @Inject(optional = true)
-        Request request;
+        Foo foo;
         @Inject(optional = true)
-        List<Integer> ints;
-        @Inject
-        Response response;
+        List<Integer> integers;
         @Inject
         List<String> strings;
     }
@@ -83,11 +85,9 @@ public class ReferencingFactoryTest extends AbstractModule {
     private static class RefInjected {
 
         @Inject
-        Ref<Request> request;
+        Ref<Foo> foo;
         @Inject
-        Ref<List<Integer>> ints;
-        @Inject
-        Ref<Response> response;
+        Ref<List<Integer>> integers;
         @Inject
         Ref<List<String>> strings;
     }
@@ -95,21 +95,13 @@ public class ReferencingFactoryTest extends AbstractModule {
     public ReferencingFactoryTest() {
     }
     //
-    private Request expectedReqest = null;
-    private List<Integer> expectedInts = null;
-    private Response expectedResponse = Response.noContent().build();
+    private Foo expectedFoo = null;
+    private List<Integer> expectedIntegers = null;
     private List<String> expectedStrings = new LinkedList<String>();
 
-    private static final class RequestReferencingFactory extends ReferencingFactory<Request> {
+    private static final class FooReferencingFactory extends ReferencingFactory<Foo> {
 
-        public RequestReferencingFactory(@Inject Factory<Ref<Request>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    private static final class ResponseReferencingFactory extends ReferencingFactory<Response> {
-
-        public ResponseReferencingFactory(@Inject Factory<Ref<Response>> referenceFactory) {
+        public FooReferencingFactory(@Inject Factory<Ref<Foo>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -130,14 +122,11 @@ public class ReferencingFactoryTest extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Request>>() {}).toFactory(ReferencingFactory.<Request>referenceFactory()).in(Singleton.class);
+        bind(Foo.class).toFactory(FooReferencingFactory.class).in(PerLookup.class);
+        bind(new TypeLiteral<Ref<Foo>>() {}).toFactory(ReferencingFactory.<Foo>referenceFactory()).in(Singleton.class);
 
         bind(new TypeLiteral<List<Integer>>() {}).toFactory(ListOfIntegerReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<List<Integer>>>() {}).toFactory(ReferencingFactory.<List<Integer>>referenceFactory()).in(Singleton.class);
-
-        bind(Response.class).toFactory(ResponseReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Response>>() {}).toFactory(ReferencingFactory.<Response>referenceFactory(expectedResponse)).in(Singleton.class);
 
         bind(new TypeLiteral<List<String>>() {}).toFactory(ListOfStringReferencingFactory.class).in(PerLookup.class);
         bind(new TypeLiteral<Ref<List<String>>>() {}).toFactory(ReferencingFactory.<List<String>>referenceFactory(expectedStrings)).in(Singleton.class);
@@ -149,25 +138,21 @@ public class ReferencingFactoryTest extends AbstractModule {
         Injector injector = services.forContract(Injector.class).get();
 
         ValueInjected emptyValues = injector.inject(ValueInjected.class);
-        assertSame(expectedReqest, emptyValues.request);
-        assertSame(expectedInts, emptyValues.ints);
-        assertSame(expectedResponse, emptyValues.response);
+        assertSame(expectedFoo, emptyValues.foo);
+        assertSame(expectedIntegers, emptyValues.integers);
         assertSame(expectedStrings, emptyValues.strings);
 
         RefInjected refValues = injector.inject(RefInjected.class);
-        expectedReqest = Requests.from("http://jersey.java.net/", "GET").build();
-        refValues.request.set(expectedReqest);
-        expectedInts = new LinkedList<Integer>();
-        refValues.ints.set(expectedInts);
-        expectedResponse = Response.noContent().build();
-        refValues.response.set(expectedResponse);
+        expectedFoo = new Foo(10);
+        refValues.foo.set(expectedFoo);
+        expectedIntegers = new LinkedList<Integer>();
+        refValues.integers.set(expectedIntegers);
         expectedStrings = new ArrayList<String>();
         refValues.strings.set(expectedStrings);
 
         ValueInjected updatedValues = injector.inject(ValueInjected.class);
-        assertSame(expectedReqest, updatedValues.request);
-        assertSame(expectedInts, updatedValues.ints);
-        assertSame(expectedResponse, updatedValues.response);
+        assertSame(expectedFoo, updatedValues.foo);
+        assertSame(expectedIntegers, updatedValues.integers);
         assertSame(expectedStrings, updatedValues.strings);
     }
 }

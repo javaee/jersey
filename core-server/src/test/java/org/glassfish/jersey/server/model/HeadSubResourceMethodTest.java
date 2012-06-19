@@ -43,11 +43,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -81,7 +80,7 @@ public class HeadSubResourceMethodTest {
     public void testGetNoHead() throws Exception {
         initiateWebApplication(ResourceGetNoHead.class);
 
-        Response response = app.apply(Requests.from("/sub", "HEAD").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
@@ -108,7 +107,7 @@ public class HeadSubResourceMethodTest {
     public void testGetWithHead() throws Exception {
         initiateWebApplication(ResourceGetWithHead.class);
 
-        Response response = app.apply(Requests.from("/sub", "HEAD").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals("HEAD", response.getMetadata().getFirst("X-TEST"));
@@ -137,13 +136,13 @@ public class HeadSubResourceMethodTest {
         initiateWebApplication(ResourceGetWithProduceNoHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        Response response = app.apply(Requests.from("/sub", "HEAD").accept(foo).build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
-        response = app.apply(Requests.from("/sub", "HEAD").accept(bar).build()).get();
+        response = app.apply(RequestContextBuilder.from("/sub", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(bar, response.getMediaType());
@@ -186,14 +185,14 @@ public class HeadSubResourceMethodTest {
         initiateWebApplication(ResourceGetWithProduceWithHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        Response response = app.apply(Requests.from("/sub", "HEAD").accept(foo).build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
         assertEquals("FOO-HEAD", response.getMetadata().getFirst("X-TEST").toString());
 
         MediaType bar = MediaType.valueOf("application/bar");
-        response = app.apply(Requests.from("/sub", "HEAD").accept(bar).build()).get();
+        response = app.apply(RequestContextBuilder.from("/sub", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(bar, response.getMediaType());
@@ -223,13 +222,13 @@ public class HeadSubResourceMethodTest {
         initiateWebApplication(ResourceGetWithProduceNoHeadDifferentSub.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        Response response = app.apply(Requests.from("/sub1", "HEAD").accept(foo).build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub1", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
 
         MediaType bar = MediaType.valueOf("application/bar");
-        response = app.apply(Requests.from("/sub2", "HEAD").accept(bar).build()).get();
+        response = app.apply(RequestContextBuilder.from("/sub2", "HEAD").accept(bar).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(bar, response.getMediaType());

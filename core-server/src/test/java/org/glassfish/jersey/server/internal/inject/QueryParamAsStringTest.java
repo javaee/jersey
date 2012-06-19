@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.junit.Test;
 
 import javax.ws.rs.DefaultValue;
@@ -266,7 +266,7 @@ public class QueryParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final Response response = apply(
-                Requests.from("/?arg1=a&arg2=b&arg3=c", "POST").
+                RequestContextBuilder.from("/?arg1=a&arg2=b&arg3=c", "POST").
                         entity("content").
                         build()
         );

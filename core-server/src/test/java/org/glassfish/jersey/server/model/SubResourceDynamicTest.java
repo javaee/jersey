@@ -44,7 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -92,10 +92,10 @@ public class SubResourceDynamicTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/parent", "GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/parent/child", "GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/parent/child", "GET").accept("text/plain").build()).get();
         assertEquals("child", response.readEntity(String.class));
     }
 
@@ -127,9 +127,9 @@ public class SubResourceDynamicTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/parent", "GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.readEntity(String.class));
-        response = app.apply(Requests.from("/parent/child/first", "GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/parent/child/first", "GET").accept("text/plain").build()).get();
         assertEquals("first", response.readEntity(String.class));
     }
 
@@ -157,7 +157,7 @@ public class SubResourceDynamicTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/123-456-789/d", "GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/123-456-789/d", "GET").accept("text/plain").build()).get();
         assertEquals("d", response.readEntity(String.class));
     }
 }

@@ -47,7 +47,7 @@ import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -92,6 +92,6 @@ public class InnerClassWithGenericTypeTest {
     public void testInnerClass() throws Exception {
         app = createApplication(RootResource.class);
 
-        assertEquals("sub", app.apply(Requests.from("/sub", "GET").build()).get().readEntity(String.class));
+        assertEquals("sub", app.apply(RequestContextBuilder.from("/sub", "GET").build()).get().readEntity(String.class));
     }
 }

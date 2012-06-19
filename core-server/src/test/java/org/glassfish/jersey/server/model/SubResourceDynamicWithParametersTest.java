@@ -44,7 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -121,15 +121,15 @@ public class SubResourceDynamicWithParametersTest {
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("parent", app.apply(Requests.from("/parent", "GET").build()).get().readEntity(String.class));
-        assertEquals("first", app.apply(Requests.from("/parent/child/first?a=1&b=2", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().readEntity(String.class));
+        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first?a=1&b=2", "GET").build()).get().readEntity(String.class));
     }
 
     @Test
     public void testSubResourceDynamicWithUnmatchedPath() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("", app.apply(Requests.from("/parent/unmatchedPath/", "GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(Requests.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().readEntity(String.class));
+        assertEquals("", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/", "GET").build()).get().readEntity(String.class));
+        assertEquals("a/b/c/d", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().readEntity(String.class));
     }
 }

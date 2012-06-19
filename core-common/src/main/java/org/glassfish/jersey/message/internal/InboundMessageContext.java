@@ -102,7 +102,6 @@ public class InboundMessageContext {
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
      * is used to control the execution of interceptors.
-     *
      */
     private static class ContentStream {
         private InputStream contentStream;
@@ -851,9 +850,9 @@ public class InboundMessageContext {
     /**
      * Read entity from a context entity input stream.
      *
-     * @param <T>         entity Java object type.
-     * @param rawType     raw Java entity type.
-     * @param propertiesDelegate TODO: add javadoc
+     * @param <T>                entity Java object type.
+     * @param rawType            raw Java entity type.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @return entity read from a context entity input stream.
      */
     public <T> T readEntity(Class<T> rawType, PropertiesDelegate propertiesDelegate) {
@@ -864,9 +863,10 @@ public class InboundMessageContext {
     /**
      * Read entity from a context entity input stream.
      *
-     * @param <T>         entity Java object type.
-     * @param rawType     raw Java entity type.
-     * @param annotations entity annotations.
+     * @param <T>                entity Java object type.
+     * @param rawType            raw Java entity type.
+     * @param annotations        entity annotations.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @return entity read from a context entity input stream.
      */
     public <T> T readEntity(Class<T> rawType, Annotation[] annotations, PropertiesDelegate propertiesDelegate) {
@@ -876,9 +876,10 @@ public class InboundMessageContext {
     /**
      * Read entity from a context entity input stream.
      *
-     * @param <T>         entity Java object type.
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
+     * @param <T>                entity Java object type.
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @return entity read from a context entity input stream.
      */
     public <T> T readEntity(Class<T> rawType, Type type, PropertiesDelegate propertiesDelegate) {
@@ -888,10 +889,11 @@ public class InboundMessageContext {
     /**
      * Read entity from a context entity input stream.
      *
-     * @param <T>         entity Java object type.
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations entity annotations.
+     * @param <T>                entity Java object type.
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param annotations        entity annotations.
+     * @param propertiesDelegate request-scoped properties delegate.
      * @return entity read from a context entity input stream.
      */
     @SuppressWarnings("unchecked")
@@ -932,6 +934,7 @@ public class InboundMessageContext {
     /**
      * Buffer the entity stream (if not empty).
      *
+     * @return {@code true} if the entity input stream was successfully buffered.
      * @throws MessageProcessingException in case of an IO error.
      */
     public boolean bufferEntity() throws MessageProcessingException {

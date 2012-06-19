@@ -41,11 +41,10 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
 
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.JaxrsRequestView;
+import org.glassfish.jersey._remove.Helper;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
 import org.glassfish.hk2.ComponentException;
@@ -65,9 +64,7 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
     @Inject
     private Factory<ExtendedUriInfo> uriInfo;
     @Inject
-    private Factory<Request> request;
-    @Inject
-    private Factory<Response> response;
+    private Factory<JerseyContainerRequestContext> request;
 
     @Override
     public T get() throws ComponentException {
@@ -79,18 +76,13 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
             }
 
             @Override
-            public JaxrsRequestView getRequest() {
-                return Helper.unwrap(request.get());
-            }
-
-            @Override
-            public Response getResponse() {
-                return response.get();
+            public JerseyContainerRequestContext getRequestContext() {
+                return request.get();
             }
 
             @Override
             public Map<String, Object> getProperties() {
-                final Request request = getRequest();
+                final Request request = getRequestContext();
                 return request == null ? null : Helper.unwrap(request).getProperties();
             }
         });

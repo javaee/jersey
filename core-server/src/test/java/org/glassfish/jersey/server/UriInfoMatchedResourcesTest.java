@@ -47,8 +47,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.message.internal.Requests;
-
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -110,19 +108,19 @@ public class UriInfoMatchedResourcesTest {
         ApplicationHandler app = createApplication(Resource.class);
 
         Response response;
-        response = app.apply(Requests.from("/foo", "GET").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foo", response.getEntity());
 
-        response = app.apply(Requests.from("/foo/bar", "GET").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foobar", response.getEntity());
 
-        response = app.apply(Requests.from("/foo/baz", "GET").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/baz", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foobaz", response.getEntity());
 
-        response = app.apply(Requests.from("/foo/baz/bar", "GET").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/baz/bar", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foobazbar", response.getEntity());
     }

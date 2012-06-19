@@ -42,12 +42,13 @@ package org.glassfish.jersey.server.internal.inject;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import static org.junit.Assert.assertEquals;
@@ -65,29 +66,34 @@ public abstract class AbstractTest {
         app = new ApplicationHandler(new ResourceConfig(classes));
     }
 
-    protected Response apply(Request request) throws ExecutionException, InterruptedException {
+    protected JerseyContainerResponseContext apply(JerseyContainerRequestContext request)
+            throws ExecutionException, InterruptedException {
+
         return app.apply(request).get();
     }
 
-    protected Response getResponse(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {
+    protected JerseyContainerResponseContext getResponse(String requestUri, Cookie... cookies)
+            throws ExecutionException, InterruptedException {
+
         return getResponse(requestUri, null, cookies);
     }
 
-    protected Response getResponse(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
-        JaxrsRequestBuilderView requestBuilder = Requests.from(requestUri, "GET");
-        if(accept != null) {
+    protected JerseyContainerResponseContext getResponse(String requestUri, String accept, Cookie... cookies)
+            throws ExecutionException, InterruptedException {
+
+        RequestContextBuilder requestBuilder = RequestContextBuilder.from(requestUri, "GET");
+        if (accept != null) {
             requestBuilder = requestBuilder.accept(accept);
         }
-
-        for(Cookie cookie : cookies) {
-            requestBuilder = requestBuilder.cookie(cookie);
-        }
+        requestBuilder = requestBuilder.header(HttpHeaders.COOKIE, cookies);
 
         return apply(requestBuilder.build());
     }
 
-    protected void _test(String requestUri, String accept, Cookie... cookies) throws ExecutionException, InterruptedException {
-        assertEquals("content", getResponse(requestUri, accept, cookies).readEntity(String.class));
+    protected void _test(String requestUri, String accept, Cookie... cookies)
+            throws ExecutionException, InterruptedException {
+
+        assertEquals("content", getResponse(requestUri, accept, cookies).getEntity());
     }
 
     protected void _test(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {

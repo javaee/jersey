@@ -49,7 +49,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -97,7 +97,7 @@ public class PathParamAsStringTest extends AbstractTest {
         initiateWebApplication(Resource.class);
 
         final Response response = apply(
-                Requests.from("/a/b/c", "POST").
+                RequestContextBuilder.from("/a/b/c", "POST").
                         entity("content").
                         build()
         );

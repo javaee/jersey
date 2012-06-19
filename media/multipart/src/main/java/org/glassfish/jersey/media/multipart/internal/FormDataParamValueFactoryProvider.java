@@ -60,7 +60,6 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
@@ -197,7 +196,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
             MediaType mediaType = (formDataBodyPart != null) ? formDataBodyPart.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
-            MessageBodyWorkers messageBodyWorkers = Requests.getMessageWorkers(context.getRequest());
+            MessageBodyWorkers messageBodyWorkers = context.getRequestContext().getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
                     parameter.getRawType(),
@@ -225,7 +224,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             parameter.getType(),
                             parameter.getAnnotations(),
                             mediaType,
-                            context.getRequest().getHeaders().getRequestHeaders(),
+                            context.getRequestContext().getHeaders(),
                             in);
                 } catch (IOException e) {
                     throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
@@ -248,7 +247,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                                     String.class,
                                     parameter.getAnnotations(),
                                     mediaType,
-                                    context.getRequest().getHeaders().getRequestHeaders(),
+                                    context.getRequestContext().getHeaders(),
                                     ((BodyPartEntity) p.getEntity()).getInputStream());
 
                             map.add(parameter.getSourceName(), value);
@@ -326,7 +325,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         final Map<String,Object> properties = context.getProperties();
 
         if (properties.get(FormDataMultiPart.class.getName()) == null) {
-            FormDataMultiPart formDataMultiPart = context.getRequest().readEntity(FormDataMultiPart.class);
+            FormDataMultiPart formDataMultiPart = context.getRequestContext().readEntity(FormDataMultiPart.class);
             properties.put(FormDataMultiPart.class.getName(), formDataMultiPart);
         }
 

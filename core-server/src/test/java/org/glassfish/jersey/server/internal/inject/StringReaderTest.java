@@ -52,7 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ParamException;
 
 import org.junit.Test;
@@ -300,7 +300,7 @@ public class StringReaderTest extends AbstractTest {
         assertEquals("cookie", response.readEntity(String.class));
 
         response = apply(
-                Requests.from("/header", "GET").
+                RequestContextBuilder.from("/header", "GET").
                         header("x", " 123").
                         build()
         );
@@ -309,7 +309,7 @@ public class StringReaderTest extends AbstractTest {
         Form f = new Form();
         f.param("x", " 123");
         response = apply(
-                Requests.from("/form", "POST").
+                RequestContextBuilder.from("/form", "POST").
                         type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
                         entity(f).
                         build()
@@ -335,7 +335,7 @@ public class StringReaderTest extends AbstractTest {
         assertEquals("param", response.readEntity(String.class));
 
         response = apply(
-                Requests.from("/header", "GET").
+                RequestContextBuilder.from("/header", "GET").
                         header("x", " 123").
                         build()
         );
@@ -344,7 +344,7 @@ public class StringReaderTest extends AbstractTest {
         Form f = new Form();
         f.param("x", " 123");
         response = apply(
-                Requests.from("/form", "POST").
+                RequestContextBuilder.from("/form", "POST").
                         type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
                         entity(f).
                         build()

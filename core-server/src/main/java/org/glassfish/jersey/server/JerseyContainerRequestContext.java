@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
@@ -53,6 +55,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -85,7 +88,9 @@ import com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyContainerRequestContext extends InboundMessageContext implements ContainerRequestContext, Request {
+public class JerseyContainerRequestContext extends InboundMessageContext
+        implements ContainerRequestContext, Request, HttpHeaders {
+
     private static URI DEFAULT_BASE_URI = URI.create("/");
 
     private static URI normalizeBaseUri(URI baseUri) {
@@ -199,6 +204,43 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
      */
     public <T> T readEntity(Class<T> rawType) {
         return readEntity(rawType, propertiesDelegate);
+    }
+
+    /**
+     * Read entity from a context entity input stream.
+     *
+     * @param <T>         entity Java object type.
+     * @param rawType     raw Java entity type.
+     * @param annotations entity annotations.
+     * @return entity read from a context entity input stream.
+     */
+    public <T> T readEntity(Class<T> rawType, Annotation[] annotations) {
+        return super.readEntity(rawType, annotations, propertiesDelegate);
+    }
+
+    /**
+     * Read entity from a context entity input stream.
+     *
+     * @param <T>     entity Java object type.
+     * @param rawType raw Java entity type.
+     * @param type    generic Java entity type.
+     * @return entity read from a context entity input stream.
+     */
+    public <T> T readEntity(Class<T> rawType, Type type) {
+        return super.readEntity(rawType, type, propertiesDelegate);
+    }
+
+    /**
+     * Read entity from a context entity input stream.
+     *
+     * @param <T>         entity Java object type.
+     * @param rawType     raw Java entity type.
+     * @param type        generic Java entity type.
+     * @param annotations entity annotations.
+     * @return entity read from a context entity input stream.
+     */
+    public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations) {
+        return super.readEntity(rawType, type, annotations, propertiesDelegate);
     }
 
     @Override
@@ -624,5 +666,31 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
      */
     private static long roundDown(long time) {
         return time - time % 1000;
+    }
+
+
+    /**
+     * Get the values of a HTTP request header. The returned List is read-only.
+     * This is a shortcut for {@code getRequestHeaders().get(name)}.
+     *
+     * @param name the header name, case insensitive.
+     * @return a read-only list of header values.
+     * @throws IllegalStateException if called outside the scope of a request.
+     */
+    @Override
+    public List<String> getRequestHeader(String name) {
+        return getHeaders().get(name);
+    }
+
+    /**
+     * Get the values of HTTP request headers. The returned Map is case-insensitive
+     * wrt. keys and is read-only. The method never returns {@code null}.
+     *
+     * @return a read-only map of header names and values.
+     * @throws IllegalStateException if called outside the scope of a request.
+     */
+    @Override
+    public MultivaluedMap<String, String> getRequestHeaders() {
+        return getHeaders();
     }
 }

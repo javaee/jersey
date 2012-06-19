@@ -50,7 +50,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -721,19 +721,19 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         String param = type + "=" + value;
 
         assertEquals("content", apply(
-                Requests.from("/?" + param, "GET")
+                RequestContextBuilder.from("/?" + param, "GET")
                         .accept("application/" + type)
                         .build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from("/wrappers?" + param, "GET")
+                RequestContextBuilder.from("/wrappers?" + param, "GET")
                         .accept("application/" + type)
                         .build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from("/list?" + param + "&" + param + "&" + param, "GET")
+                RequestContextBuilder.from("/list?" + param + "&" + param + "&" + param, "GET")
                         .accept("application/" + type)
                         .build()
         ).readEntity(String.class));
@@ -741,13 +741,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
         assertEquals("content", apply(
-                Requests.from(base + "default/null", "GET").
+                RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
 
         assertEquals("content", apply(
-                Requests.from(base + "default", "GET").
+                RequestContextBuilder.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));
@@ -755,7 +755,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         String param = type + "=" + value;
 
         assertEquals("content", apply(
-                Requests.from(base + "default/override?" + param, "GET").
+                RequestContextBuilder.from(base + "default/override?" + param, "GET").
                         accept("application/" + type).
                         build()
         ).readEntity(String.class));

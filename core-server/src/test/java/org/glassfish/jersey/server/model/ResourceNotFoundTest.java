@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
@@ -98,11 +98,11 @@ public class ResourceNotFoundTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/foo","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foo", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/foo/bar","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("bar", response.readEntity(String.class));
     }
@@ -113,16 +113,16 @@ public class ResourceNotFoundTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/foe","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/fooe","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/fooe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/foo/baz","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/foo/bar/baz","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/bar/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
     }
 
@@ -149,19 +149,19 @@ public class ResourceNotFoundTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/foo","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("foo", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/dynamic","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/dynamic", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("dynamic", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/foo/bar","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("bar", response.readEntity(String.class));
 
-        response = app.apply(Requests.from("/foo/dynamic","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/dynamic", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("dynamic", response.readEntity(String.class));
     }
@@ -174,22 +174,22 @@ public class ResourceNotFoundTest {
 
         Response response;
 
-        response = app.apply(Requests.from("/foe","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/fooe","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/fooe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/dynamical","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/dynamical", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/foo/baz","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/foo/bar/baz","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/bar/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
 
-        response = app.apply(Requests.from("/foo/dynamic/baz","GET").accept("text/plain").build()).get();
+        response = app.apply(RequestContextBuilder.from("/foo/dynamic/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
     }
 }

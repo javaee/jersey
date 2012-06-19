@@ -41,10 +41,10 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.Form;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ParamException;
@@ -108,7 +108,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         }
 
         private Form getForm(HttpContext context) {
-            final Request request = ensureValidRequest(context.getRequest());
+            final Request request = ensureValidRequest(context.getRequestContext());
             return getFormParameters(request);
         }
 

@@ -42,9 +42,9 @@ package org.glassfish.jersey.server;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.Factory;
@@ -71,6 +71,8 @@ class ReferencesInitializer implements Function<JerseyContainerRequestContext, J
     private Factory<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
     private Factory<Ref<SecurityContext>> securityContextReference;
+    @Inject
+    private Factory<UriInfo> uriInfoFactory;
 
     /**
      * Initialize the request references using the incoming request and register
@@ -85,13 +87,15 @@ class ReferencesInitializer implements Function<JerseyContainerRequestContext, J
     public JerseyContainerRequestContext apply(final JerseyContainerRequestContext requestContext) {
         requestReference.get().set(requestContext.getRequest());
         requestContextReference.get().set(requestContext);
-        httpHeadersReference.get().set(Requests.httpHeaders(requestContext));
+        httpHeadersReference.get().set(requestContext);
         securityContextReference.get().set(requestContext.getSecurityContext());
 
         final RequestScopedInitializer requestScopedInitializer = requestContext.getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
             requestScopedInitializer.initialize(services);
         }
+
+        requestContext.setUriInfo(uriInfoFactory.get());
 
         return requestContext;
     }

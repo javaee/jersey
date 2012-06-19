@@ -51,11 +51,10 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -113,12 +112,12 @@ public class OptionsTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        Response response = app.apply(Requests.from("/", "OPTIONS").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
         assertEquals(200, response.getStatus());
         _checkAllowContent(response.getHeader("Allow").toString());
 
         final MediaType mediaType = MediaType.APPLICATION_XML_TYPE;
-        response = app.apply(Requests.from("/", "OPTIONS").accept(mediaType).build()).get();
+        response = app.apply(RequestContextBuilder.from("/", "OPTIONS").accept(mediaType).build()).get();
         assertEquals(200, response.getStatus());
         assertEquals(mediaType, response.getMediaType());
         assertEquals(0, response.getLength());
@@ -173,7 +172,7 @@ public class OptionsTest {
     public void testWithOptions() throws Exception {
         initiateWebApplication(ResourceWithOptions.class);
 
-        Response response = app.apply(Requests.from("/", "OPTIONS").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 

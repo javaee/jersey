@@ -40,7 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
 import org.junit.Test;
 
 import javax.ws.rs.DefaultValue;
@@ -164,7 +165,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("arg1", "3.145").
                         header("arg2", "3145").
                         header("arg3", "http://test").
@@ -177,7 +178,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "3.145").
                         header("args", "2.718").
@@ -191,7 +192,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         header("args", "").
                         header("args", "").
@@ -219,7 +220,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefault.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("args", "2.718").
                         build()
         ).readEntity(String.class));
@@ -244,7 +245,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("args", "2.718").
                         build()
         ).readEntity(String.class));
@@ -255,7 +256,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final Response response = apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         header("arg1", "ABCDEF").
                         header("arg2", "3145").
                         header("arg3", "http://test").

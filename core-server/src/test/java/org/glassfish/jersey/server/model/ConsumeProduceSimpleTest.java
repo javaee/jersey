@@ -48,7 +48,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -151,26 +151,26 @@ public class ConsumeProduceSimpleTest  {
     public void testConsumeSimpleBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeSimpleBean.class);
 
-        assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
     }
 
     @Test
     public void testProduceSimpleBean() throws Exception {
         ApplicationHandler app = createApplication(ProduceSimpleBean.class);
 
-        assertEquals("HTML", app.apply(Requests.from("/a/b","GET").accept("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b","GET").accept("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().readEntity(String.class));
     }
 
     @Test
     public void testConsumeProduceSimpleBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeProduceSimpleBean.class);
 
-        assertEquals("HTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/html").accept("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b","POST").entity("").type("text/xhtml").accept("text/xhtml").build()).get().readEntity(String.class));
-        assertEquals("HTML", app.apply(Requests.from("/a/b","GET").accept("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b","GET").accept("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").accept("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").accept("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().readEntity(String.class));
     }
 
     @Path("/")
@@ -190,6 +190,6 @@ public class ConsumeProduceSimpleTest  {
     public void testProduceWithParameters() throws Exception {
         ApplicationHandler app = createApplication(ConsumeProduceWithParameters.class);
 
-        assertEquals("{a=b, c=d}", app.apply(Requests.from("/","POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().readEntity(String.class));
+        assertEquals("{a=b, c=d}", app.apply(RequestContextBuilder.from("/", "POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().readEntity(String.class));
     }
 }

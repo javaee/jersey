@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -88,7 +88,7 @@ public class ConsumeProduceWildcardTest {
     public void testConsumeWildCardBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeWildCardBean.class);
 
-        assertEquals("HTML", app.apply(Requests.from("/a/b", "POST").entity("").type("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(Requests.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().readEntity(String.class));
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
     }
 }

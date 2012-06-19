@@ -50,12 +50,10 @@ import java.util.regex.MatchResult;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey._remove.Helper;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.JerseyContainerResponseContext;
@@ -87,10 +85,10 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     /**
      * Injection constructor.
      *
-     * @param request request reference.
+     * @param requestContext request reference.
      */
-    UriRoutingContext(@Inject Ref<Request> request) {
-        this.request = request;
+    UriRoutingContext(@Inject Ref<JerseyContainerRequestContext> requestContext) {
+        this.requestContext = requestContext;
     }
 
     // RoutingContext
@@ -181,7 +179,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     // UriInfo
-    private Ref<Request> request;
+    private Ref<JerseyContainerRequestContext> requestContext;
 
     @Override
     public URI getAbsolutePath() {
@@ -195,12 +193,12 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getBaseUri() {
-        return Requests.baseUri(request.get());
+        return requestContext.get().getBaseUri();
     }
 
     @Override
     public UriBuilder getBaseUriBuilder() {
-        return new UriBuilderImpl().uri(Requests.baseUri(request.get()));
+        return new UriBuilderImpl().uri(getBaseUri());
     }
 
     @Override
@@ -234,12 +232,12 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public String getPath() {
-        return Requests.relativePath(request.get(), true);
+        return requestContext.get().getPath(true);
     }
 
     @Override
     public String getPath(boolean decode) {
-        return Requests.relativePath(request.get(), decode);
+        return requestContext.get().getPath(decode);
     }
 
     @Override
@@ -305,12 +303,12 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getRequestUri() {
-        return Helper.unwrap(request.get()).getUri();
+        return Helper.unwrap(requestContext.get()).getUri();
     }
 
     @Override
     public UriBuilder getRequestUriBuilder() {
-        return UriBuilder.fromUri(Helper.unwrap(request.get()).getUri());
+        return UriBuilder.fromUri(Helper.unwrap(requestContext.get()).getUri());
     }
 
     // ExtendedUriInfo

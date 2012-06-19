@@ -44,9 +44,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.model.ModelValidationException;
 
 import org.junit.Test;

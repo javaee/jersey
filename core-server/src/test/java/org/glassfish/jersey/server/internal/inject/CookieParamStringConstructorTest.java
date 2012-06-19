@@ -53,7 +53,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -225,7 +225,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final Response response = apply(
-                Requests.from("/", "GET").
+                RequestContextBuilder.from("/", "GET").
                         cookie(new Cookie("arg1", "ABCDEF")).
                         cookie(new Cookie("arg2", "3145")).
                         cookie(new Cookie("arg3", "http://test")).build()

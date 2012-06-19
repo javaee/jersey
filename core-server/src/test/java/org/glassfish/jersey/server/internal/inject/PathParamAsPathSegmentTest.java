@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class PathParamAsPathSegmentTest {
     @Test
     public void testStringArgsGet() throws Exception {
         initiateWebApplication(Resource.class);
-        assertEquals("content", app.apply(Requests.from("/a/b/c", "GET").build()).get().readEntity(String.class));
+        assertEquals("content", app.apply(RequestContextBuilder.from("/a/b/c", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{id}")
@@ -105,8 +105,8 @@ public class PathParamAsPathSegmentTest {
     public void testDuplicate() throws Exception {
         initiateWebApplication(Duplicate.class);
 
-        assertEquals("foo", app.apply(Requests.from("/foo", "GET").build()).get().readEntity(String.class));
-        assertEquals("bar", app.apply(Requests.from("/foo/bar", "GET").build()).get().readEntity(String.class));
+        assertEquals("foo", app.apply(RequestContextBuilder.from("/foo", "GET").build()).get().readEntity(String.class));
+        assertEquals("bar", app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{a}/{b}/{c}")
@@ -147,7 +147,7 @@ public class PathParamAsPathSegmentTest {
     public void testSubResources() throws Exception {
         initiateWebApplication(Root.class);
 
-        assertEquals("1234567", app.apply(Requests.from("/1/2/3/4/5/6/7", "GET").build()).get().readEntity(String.class));
+        assertEquals("1234567", app.apply(RequestContextBuilder.from("/1/2/3/4/5/6/7", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{a}-{b}/{c}-{d}")
@@ -184,8 +184,8 @@ public class PathParamAsPathSegmentTest {
     public void testPathSeg() throws Exception {
         initiateWebApplication(PathSeg.class);
 
-        assertEquals("content", app.apply(Requests.from("/a-b/c-d", "GET").build()).get().readEntity(String.class));
-        assertEquals("sub-content", app.apply(Requests.from("/a-b/c-d/e-f", "GET").build()).get().readEntity(String.class));
+        assertEquals("content", app.apply(RequestContextBuilder.from("/a-b/c-d", "GET").build()).get().readEntity(String.class));
+        assertEquals("sub-content", app.apply(RequestContextBuilder.from("/a-b/c-d/e-f", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{a: .+}/edit/{b}")
@@ -203,7 +203,7 @@ public class PathParamAsPathSegmentTest {
     public void testPathSegs() throws Exception {
         initiateWebApplication(PathSegs.class);
 
-        assertEquals("z-b", app.apply(Requests.from("/x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
+        assertEquals("z-b", app.apply(RequestContextBuilder.from("/x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
         // FIXME: gets x-z instead
 //        assertEquals("z-b", app.apply(Requests.from("///x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
     }
@@ -222,8 +222,8 @@ public class PathParamAsPathSegmentTest {
     public void testPathSegsEnd() throws Exception {
         initiateWebApplication(PathSegsEnd.class);
 
-        assertEquals("z", app.apply(Requests.from("/x/y/z", "GET").build()).get().readEntity(String.class));
-        assertEquals("", app.apply(Requests.from("/x/y/z/", "GET").build()).get().readEntity(String.class));
+        assertEquals("z", app.apply(RequestContextBuilder.from("/x/y/z", "GET").build()).get().readEntity(String.class));
+        assertEquals("", app.apply(RequestContextBuilder.from("/x/y/z/", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/{a: .+}/edit/{b}")
@@ -258,7 +258,7 @@ public class PathParamAsPathSegmentTest {
     public void testPathSegsList() throws Exception {
         initiateWebApplication(PathSegsList.class);
 
-        assertEquals("xyz-b", app.apply(Requests.from("/x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
+        assertEquals("xyz-b", app.apply(RequestContextBuilder.from("/x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
         // FIXME
 //        assertEquals("//xyz-b", app.apply(Requests.from("///x/y/z/edit/b", "GET").build()).get().readEntity(String.class));
     }
@@ -285,8 +285,8 @@ public class PathParamAsPathSegmentTest {
     public void testPathSegsEndList() throws Exception {
         initiateWebApplication(PathSegsEndList.class);
 
-        assertEquals("xyz", app.apply(Requests.from("/x/y/z", "GET").build()).get().readEntity(String.class));
-        assertEquals("xyz/", app.apply(Requests.from("/x/y/z/", "GET").build()).get().readEntity(String.class));
+        assertEquals("xyz", app.apply(RequestContextBuilder.from("/x/y/z", "GET").build()).get().readEntity(String.class));
+        assertEquals("xyz/", app.apply(RequestContextBuilder.from("/x/y/z/", "GET").build()).get().readEntity(String.class));
     }
 
     @Path("/")
@@ -316,6 +316,6 @@ public class PathParamAsPathSegmentTest {
     public void testPathSegOnSubResource() throws Exception {
         initiateWebApplication(PathSegOnSubResource.class);
 
-        assertEquals("x", app.apply(Requests.from("/x", "GET").build()).get().readEntity(String.class));
+        assertEquals("x", app.apply(RequestContextBuilder.from("/x", "GET").build()).get().readEntity(String.class));
     }
 }

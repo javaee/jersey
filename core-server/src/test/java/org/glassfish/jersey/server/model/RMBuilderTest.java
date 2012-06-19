@@ -56,7 +56,7 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.InvokerBuilder;
@@ -131,7 +131,7 @@ public class RMBuilderTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
+        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
 
         Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
 
@@ -146,7 +146,7 @@ public class RMBuilderTest {
 
     @Test
     public void testOptions() throws Exception {
-        final Request req = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
+        final Request req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
         Future<Response> res = requestScope.runInScope(new Callable<Future<Response>>() {
 
             @Override
@@ -160,7 +160,7 @@ public class RMBuilderTest {
 
     @Test
     public void testSubResMethod() throws Exception {
-        final Request req2 = Requests.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
+        final Request req2 = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
 
         Future<Response> res2 = requestScope.runInScope(new Callable<Future<Response>>() {
 

@@ -51,11 +51,10 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import org.glassfish.jersey._remove.Helper;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -117,12 +116,12 @@ public class OptionsSubResourceMethodTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        Response response = app.apply(Requests.from("/sub", "OPTIONS").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
         _checkAllowContent(response.getHeader("Allow").toString());
 
-        response = app.apply(Requests.from("/sub", "OPTIONS").accept(MediaType.TEXT_HTML).build()).get();
+        response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").accept(MediaType.TEXT_HTML).build()).get();
 
         assertEquals(200, response.getStatus());
         _checkAllowContent(response.getHeader("Allow").toString());
@@ -183,7 +182,7 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceWithOptions.class);
 
-        Response response = app.apply(Requests.from("/sub", "OPTIONS").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
@@ -217,7 +216,7 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceNoOptionsDifferentSub.class);
 
-        Response response = app.apply(Requests.from("/sub1", "OPTIONS").build()).get();
+        Response response = app.apply(RequestContextBuilder.from("/sub1", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
@@ -226,7 +225,7 @@ public class OptionsSubResourceMethodTest {
         assertTrue(allow.contains("GET"));
         assertFalse(allow.contains("PUT"));
 
-        response = app.apply(Requests.from("/sub2", "OPTIONS").build()).get();
+        response = app.apply(RequestContextBuilder.from("/sub2", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 

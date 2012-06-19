@@ -45,10 +45,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -94,13 +93,15 @@ public class UriConnegFilterTest {
 
     @Test
     public void testGetFoo() throws Exception {
-        Response response = handler.apply(RequestContextBuilder.from("", "/resource.foo", "GET")).get();
-        assertEquals("foo", response.readEntity(String.class));
+        JerseyContainerResponseContext response = handler.apply(
+                RequestContextBuilder.from("", "/resource.foo", "GET").build()).get();
+        assertEquals("foo", response.getEntity());
     }
 
     @Test
     public void testGetBar() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource.bar", "GET").build()).get();
-        assertEquals("bar", response.readEntity(String.class));
+        JerseyContainerResponseContext response = handler.apply(
+                RequestContextBuilder.from("", "/resource.bar", "GET").build()).get();
+        assertEquals("bar", response.getEntity());
     }
 }
