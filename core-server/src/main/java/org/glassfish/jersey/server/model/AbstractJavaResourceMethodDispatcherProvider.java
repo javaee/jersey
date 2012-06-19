@@ -193,7 +193,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
             if (o instanceof Response) {
                 return Response.class.cast(o);
 //            } else if (o instanceof JResponse) {
-//                context.getResponse().setResponse(((JResponse)o).toResponse());
+//                context.getResponseContext().setResponse(((JResponse)o).toResponse());
             } else if (o != null) {
                 return Response.ok().entity(o).build();
             } else {

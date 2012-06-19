@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -106,8 +106,8 @@ public class InvalidParamsTest {
 
     @Test
     public void testInvalidPathParam() throws Exception {
-        Response response = app.apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
+        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
         // returned param is null -> 204 NO CONTENT
-        assertEquals(204, response.getStatus());
+        assertEquals(204, responseContext.getStatus());
     }
 }

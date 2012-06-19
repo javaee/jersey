@@ -40,19 +40,19 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-
-import org.junit.Test;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -723,13 +723,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/" + type).
                         header(type, value).build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/wrappers", "GET").
                         accept("application/" + type).
                         header(type, value).build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/list", "GET").
@@ -738,7 +738,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
                         header(type, value).
                         header(type, value).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
@@ -746,20 +746,20 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default/override", "GET").
                         accept("application/" + type).
                         header(type, value).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -916,29 +916,29 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         accept("application/int").
                         header("int", "abcdef").build()
         );
 
-        assertEquals(400, response.getStatus());
+        assertEquals(400, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/wrappers", "GET").
                         accept("application/int").
                         header("int", "abcdef").build()
         );
 
-        assertEquals(400, response.getStatus());
+        assertEquals(400, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         accept("application/int").
                         header("int", "abcdef").
@@ -947,6 +947,6 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
                         build()
         );
 
-        assertEquals(400, response.getStatus());
+        assertEquals(400, responseContext.getStatus());
     }
 }

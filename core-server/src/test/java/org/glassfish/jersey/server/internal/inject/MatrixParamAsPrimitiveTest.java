@@ -40,19 +40,19 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-
-import org.junit.Test;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -725,19 +725,19 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from("/" + param, "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/wrappers" + param, "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from("/list" + param + param + param, "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
@@ -745,20 +745,20 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
                 RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default", "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
 
         String param = ";" + type + "=" + value;
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default/override" + param, "GET").
                         accept("application/" + type).
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -915,34 +915,34 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/wrappers;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/list;int=abcdef;int=abcdef", "GET").
                         accept("application/int").
                         build()
         );
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 }

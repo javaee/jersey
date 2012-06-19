@@ -49,8 +49,8 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -251,7 +251,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         header("arg2", "b").
                         header("arg3", "c").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -262,7 +262,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         header("arg1", "").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -276,7 +276,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
     public void testStringPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/", "POST").
                         entity("content").
                         header("arg1", "a").
@@ -285,7 +285,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         build()
         );
 
-        assertEquals("content", response.readEntity(String.class));
+        assertEquals("content", responseContext.getEntity());
     }
 
     @Test
@@ -299,7 +299,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         header("args", "b").
                         header("args", "c").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -313,7 +313,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         header("args", "").
                         header("args", "").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -327,7 +327,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         header("args", "b").
                         header("args", "c").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -354,7 +354,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         header("arg2", "e").
                         header("arg3", "f").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -365,7 +365,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -376,7 +376,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -387,7 +387,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -398,7 +398,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -410,6 +410,6 @@ public class HeaderParamAsStringTest extends AbstractTest {
                         accept("application/list").
                         header("args", "b").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 }

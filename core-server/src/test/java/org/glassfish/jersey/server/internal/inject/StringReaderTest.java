@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ParamException;
 
@@ -79,9 +80,9 @@ public class StringReaderTest extends AbstractTest {
     public void testBadDateResource() throws ExecutionException, InterruptedException {
         initiateWebApplication(BadDateResource.class);
 
-        final Response response = getResponse(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
+        final JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 
 
@@ -101,9 +102,9 @@ public class StringReaderTest extends AbstractTest {
     public void testBadEnumResource() throws ExecutionException, InterruptedException {
         initiateWebApplication(BadEnumResource.class);
 
-        final Response response = getResponse(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
+        final JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 
 //    public static class URIStringReaderProvider implements StringReaderProvider<URI> {
@@ -287,34 +288,34 @@ public class StringReaderTest extends AbstractTest {
                 HeaderExceptionMapper.class,
                 FormExceptionMapper.class);
 
-        Response response = getResponse(UriBuilder.fromPath("/").path("path/ 123").build().toString());
-        assertEquals("path", response.readEntity(String.class));
+        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        assertEquals("path", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
-        assertEquals("matrix", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
+        assertEquals("matrix", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
-        assertEquals("query", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
+        assertEquals("query", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
-        assertEquals("cookie", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
+        assertEquals("cookie", responseContext.getEntity());
 
-        response = apply(
+        responseContext = apply(
                 RequestContextBuilder.from("/header", "GET").
                         header("x", " 123").
                         build()
         );
-        assertEquals("header", response.readEntity(String.class));
+        assertEquals("header", responseContext.getEntity());
 
         Form f = new Form();
         f.param("x", " 123");
-        response = apply(
+        responseContext = apply(
                 RequestContextBuilder.from("/form", "POST").
                         type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
                         entity(f).
                         build()
         );
-        assertEquals("form", response.readEntity(String.class));
+        assertEquals("form", responseContext.getEntity());
     }
 
     @Test
@@ -322,34 +323,34 @@ public class StringReaderTest extends AbstractTest {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 ParamExceptionMapper.class);
 
-        Response response = getResponse(UriBuilder.fromPath("/").path("path/ 123").build().toString());
-        assertEquals("param", response.readEntity(String.class));
+        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        assertEquals("param", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
-        assertEquals("param", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
+        assertEquals("param", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
-        assertEquals("param", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
+        assertEquals("param", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
-        assertEquals("param", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("cookie").build().toString(), new Cookie("x", " 123"));
+        assertEquals("param", responseContext.getEntity());
 
-        response = apply(
+        responseContext = apply(
                 RequestContextBuilder.from("/header", "GET").
                         header("x", " 123").
                         build()
         );
-        assertEquals("param", response.readEntity(String.class));
+        assertEquals("param", responseContext.getEntity());
 
         Form f = new Form();
         f.param("x", " 123");
-        response = apply(
+        responseContext = apply(
                 RequestContextBuilder.from("/form", "POST").
                         type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
                         entity(f).
                         build()
         );
-        assertEquals("param", response.readEntity(String.class));
+        assertEquals("param", responseContext.getEntity());
     }
 
     @Test
@@ -357,14 +358,14 @@ public class StringReaderTest extends AbstractTest {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 URIExceptionMapper.class);
 
-        Response response = getResponse(UriBuilder.fromPath("/").path("path/ 123").build().toString());
-        assertEquals("uri", response.readEntity(String.class));
+        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        assertEquals("uri", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
-        assertEquals("uri", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
+        assertEquals("uri", responseContext.getEntity());
 
-        response = getResponse(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
-        assertEquals("uri", response.readEntity(String.class));
+        responseContext = getResponseContext(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
+        assertEquals("uri", responseContext.getEntity());
     }
 
 

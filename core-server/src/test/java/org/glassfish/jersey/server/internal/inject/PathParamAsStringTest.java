@@ -47,8 +47,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -96,13 +96,13 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testStringArgsPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext response = apply(
                 RequestContextBuilder.from("/a/b/c", "POST").
                         entity("content").
                         build()
         );
 
-        assertEquals("content", response.readEntity(String.class));
+        assertEquals("content", response.getEntity());
     }
 
     @Path("/{id}")
@@ -123,8 +123,8 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testDuplicate() throws ExecutionException, InterruptedException {
         initiateWebApplication(Duplicate.class);
 
-        assertEquals("foo", getResponse("/foo").readEntity(String.class));
-        assertEquals("bar", getResponse("/foo/bar").readEntity(String.class));
+        assertEquals("foo", getResponseContext("/foo").getEntity());
+        assertEquals("bar", getResponseContext("/foo/bar").getEntity());
     }
 
     @Path("/{id}")
@@ -146,7 +146,7 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testDuplicateList() throws ExecutionException, InterruptedException {
         initiateWebApplication(DuplicateList.class);
 
-        assertEquals("foo", getResponse("/foo").readEntity(String.class));
-        assertEquals("barfoo", getResponse("/foo/bar").readEntity(String.class));
+        assertEquals("foo", getResponseContext("/foo").getEntity());
+        assertEquals("barfoo", getResponseContext("/foo/bar").getEntity());
     }
 }

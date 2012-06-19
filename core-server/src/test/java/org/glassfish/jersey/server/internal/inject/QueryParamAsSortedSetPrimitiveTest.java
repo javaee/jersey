@@ -283,16 +283,16 @@ public class QueryParamAsSortedSetPrimitiveTest extends AbstractTest {
     void _test(String type, String value) throws ExecutionException, InterruptedException {
         String param = type + "=" + value;
 
-        super.getResponse("/SortedSet?" + param + "&" + param + "&" + param, "application/" + type);
+        super.getResponseContext("/SortedSet?" + param + "&" + param + "&" + param, "application/" + type);
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        super.getResponse(base + "default/null", "application/" + type);
+        super.getResponseContext(base + "default/null", "application/" + type);
 
-        super.getResponse(base + "default", "application/" + type);
+        super.getResponseContext(base + "default", "application/" + type);
 
         String param = type + "=" + value;
-        super.getResponse(base + "default/override?" + param, "application/" + type);
+        super.getResponseContext(base + "default/override?" + param, "application/" + type);
     }
 
     void _testSortedSetDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -371,7 +371,7 @@ public class QueryParamAsSortedSetPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveSortedSetValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext response = super.getResponse("/SortedSet?int=abcdef&int=abcdef", "application/int");
+        final JerseyContainerResponseContext response = super.getResponseContext("/SortedSet?int=abcdef&int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }

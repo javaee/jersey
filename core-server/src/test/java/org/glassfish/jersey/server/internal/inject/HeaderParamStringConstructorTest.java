@@ -40,21 +40,21 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-
-import org.junit.Test;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -170,7 +170,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                         header("arg2", "3145").
                         header("arg3", "http://test").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -184,7 +184,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                         header("args", "2.718").
                         header("args", "1.618").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -198,7 +198,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                         header("args", "").
                         header("args", "").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         header("args", "2.718").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -248,14 +248,14 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         header("args", "2.718").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         header("arg1", "ABCDEF").
                         header("arg2", "3145").
@@ -263,6 +263,6 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
                         build()
         );
 
-        assertEquals(400, response.getStatus());
+        assertEquals(400, responseContext.getStatus());
     }
 }

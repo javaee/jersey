@@ -50,8 +50,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -259,7 +259,7 @@ public class CookieParamAsStringTest extends AbstractTest {
     public void testStringPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.
                         from("/", "POST").
                         cookie(new Cookie("arg1", "a")).
@@ -268,7 +268,7 @@ public class CookieParamAsStringTest extends AbstractTest {
                         entity("content").build()
         );
 
-        assertEquals("content", response.readEntity(String.class));
+        assertEquals("content", responseContext.getEntity());
     }
 
     @Test

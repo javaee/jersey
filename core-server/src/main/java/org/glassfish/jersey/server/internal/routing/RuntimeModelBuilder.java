@@ -111,6 +111,10 @@ public final class RuntimeModelBuilder {
     private TreeMap<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> subResourceAcceptors =
             Maps.newTreeMap(PathPattern.COMPARATOR);
 
+    public RuntimeModelBuilder() {
+        this(null, false);
+    }
+
     /**
      * Create a new runtime model builder.
      *

@@ -72,13 +72,13 @@ public abstract class AbstractTest {
         return app.apply(request).get();
     }
 
-    protected JerseyContainerResponseContext getResponse(String requestUri, Cookie... cookies)
+    protected JerseyContainerResponseContext getResponseContext(String requestUri, Cookie... cookies)
             throws ExecutionException, InterruptedException {
 
-        return getResponse(requestUri, null, cookies);
+        return getResponseContext(requestUri, null, cookies);
     }
 
-    protected JerseyContainerResponseContext getResponse(String requestUri, String accept, Cookie... cookies)
+    protected JerseyContainerResponseContext getResponseContext(String requestUri, String accept, Cookie... cookies)
             throws ExecutionException, InterruptedException {
 
         RequestContextBuilder requestBuilder = RequestContextBuilder.from(requestUri, "GET");
@@ -93,7 +93,7 @@ public abstract class AbstractTest {
     protected void _test(String requestUri, String accept, Cookie... cookies)
             throws ExecutionException, InterruptedException {
 
-        assertEquals("content", getResponse(requestUri, accept, cookies).getEntity());
+        assertEquals("content", getResponseContext(requestUri, accept, cookies).getEntity());
     }
 
     protected void _test(String requestUri, Cookie... cookies) throws ExecutionException, InterruptedException {

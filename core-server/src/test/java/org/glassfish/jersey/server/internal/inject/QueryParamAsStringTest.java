@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.junit.Test;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -49,10 +49,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -265,13 +266,13 @@ public class QueryParamAsStringTest extends AbstractTest {
     public void testStringPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/?arg1=a&arg2=b&arg3=c", "POST").
                         entity("content").
                         build()
         );
 
-        assertEquals("content", response.readEntity(String.class));
+        assertEquals("content", responseContext.getEntity());
     }
 
     @Test

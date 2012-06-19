@@ -49,8 +49,8 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -245,9 +245,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = getResponse("/;arg1=a;arg2=b;arg3=c");
+        final JerseyContainerResponseContext responseContext = getResponseContext("/;arg1=a;arg2=b;arg3=c");
 
-        assertEquals(200, response.getStatus());
+        assertEquals(200, responseContext.getStatus());
     }
 
     @Test
@@ -268,13 +268,13 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = apply(
+        final JerseyContainerResponseContext responseContext = apply(
                 RequestContextBuilder.from("/;arg1=a;arg2=b;arg3=c", "POST").
                         entity("content").
                         build()
         );
 
-        assertEquals("content", response.readEntity(String.class));
+        assertEquals("content", responseContext.getEntity());
     }
 
     @Test
@@ -285,7 +285,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
                         entity("content").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -296,7 +296,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/;args;args;args", "GET").
                         accept("application/stringlist").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -307,7 +307,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -331,7 +331,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
         assertEquals("content", apply(
                 RequestContextBuilder.from("/;arg1=d;arg2=e;arg3=f", "GET").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -342,7 +342,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -353,7 +353,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -364,7 +364,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/stringlist").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -375,7 +375,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 
     @Test
@@ -386,6 +386,6 @@ public class MatrixParamAsStringTest extends AbstractTest {
                 RequestContextBuilder.from("/;args=b", "GET").
                         accept("application/list").
                         build()
-        ).readEntity(String.class));
+        ).getEntity());
     }
 }

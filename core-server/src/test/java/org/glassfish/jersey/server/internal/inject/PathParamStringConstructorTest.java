@@ -47,7 +47,8 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -82,8 +83,8 @@ public class PathParamStringConstructorTest extends AbstractTest {
 
     @Test
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
-        final Response response = getResponse("/ABCDE/ABCDE");
+        final JerseyContainerResponseContext responseContext = getResponseContext("/ABCDE/ABCDE");
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 }

@@ -39,16 +39,16 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -223,8 +223,8 @@ public class PathParamAsPrimitiveTest {
     }
 
     void _test(String type, String value) throws Exception {
-        app.apply(RequestContextBuilder.from("/" + type + "/" + value, "GET").build()).get().readEntity(String.class);
-        app.apply(RequestContextBuilder.from("/" + type + "/wrapper/" + value, "GET").build()).get().readEntity(String.class);
+        app.apply(RequestContextBuilder.from("/" + type + "/" + value, "GET").build()).get().getEntity();
+        app.apply(RequestContextBuilder.from("/" + type + "/wrapper/" + value, "GET").build()).get().getEntity();
     }
 
     @Test
@@ -264,13 +264,13 @@ public class PathParamAsPrimitiveTest {
 
     @Test
     public void testBadPrimitiveValue() throws Exception {
-        Response response = app.apply(RequestContextBuilder.from("/int/abcdef", "GET").build()).get();
-        assertEquals(404, response.getStatus());
+        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/int/abcdef", "GET").build()).get();
+        assertEquals(404, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws Exception {
-        Response response = app.apply(RequestContextBuilder.from("/int/wrapper/abcdef", "GET").build()).get();
-        assertEquals(404, response.getStatus());
+        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/int/wrapper/abcdef", "GET").build()).get();
+        assertEquals(404, responseContext.getStatus());
     }
 }

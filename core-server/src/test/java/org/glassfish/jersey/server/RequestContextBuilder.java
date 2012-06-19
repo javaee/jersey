@@ -44,13 +44,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -99,18 +97,24 @@ public class RequestContextBuilder {
         @Override
         public void setWorkers(MessageBodyWorkers workers) {
             super.setWorkers(workers);
-            MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try {
-                workers.writeTo(entity, entityType.getRawType(), entityType.getType(), new Annotation[0], getMediaType(),
-                        myMap,
-                        propertiesDelegate, baos, null, true);
-            } catch (IOException ex) {
-                Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (WebApplicationException ex) {
-                Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            byte[] entityBytes;
+            if (entity != null) {
+                MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                try {
+                    workers.writeTo(entity, entityType.getRawType(), entityType.getType(), new Annotation[0], getMediaType(),
+                            myMap,
+                            propertiesDelegate, baos, null, true);
+                } catch (IOException ex) {
+                    Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (WebApplicationException ex) {
+                    Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                entityBytes = baos.toByteArray();
+            } else {
+                entityBytes = new byte[0];
             }
-            setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
+            setEntityStream(new ByteArrayInputStream(entityBytes));
         }
     }
     private final JerseyTestContainerRequestContext result;
@@ -132,7 +136,7 @@ public class RequestContextBuilder {
     }
 
     private RequestContextBuilder(String baseUri, String requestUri, String method) {
-        this(URI.create(baseUri), URI.create(requestUri), method);
+        this(baseUri == null ? null : URI.create(baseUri), URI.create(requestUri), method);
     }
 
     private RequestContextBuilder(URI baseUri, URI requestUri, String method) {
@@ -175,17 +179,32 @@ public class RequestContextBuilder {
         return this;
     }
 
+    public RequestContextBuilder cookie(Cookie cookie) {
+        result.getCookies().put(cookie.getName(), cookie);
+        return this;
+    }
+
     private void putHeader(String name, Object value) {
+        if (value == null) {
+            result.getHeaders().remove(name);
+            return;
+        }
         result.header(name, HeadersFactory.toString(value, rd));
     }
 
     private void putHeaders(String name, Object... values) {
+        if (values == null) {
+            result.getHeaders().remove(name);
+            return;
+        }
         putHeaders(name, HeadersFactory.toString(values, rd));
     }
 
     private void putHeaders(String name, String... values) {
-        List<String> valueList = new ArrayList<String>(result.getHeaders().get(name));
-        valueList.addAll(Arrays.asList(values));
-        result.getHeaders().put(name, valueList);
+        if (values == null) {
+            result.getHeaders().remove(name);
+            return;
+        }
+        result.getHeaders().addAll(name, values);
     }
 }

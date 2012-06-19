@@ -40,19 +40,20 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.junit.Test;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
+
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -225,8 +226,8 @@ public class MatrixParamStringConstructorTest extends AbstractTest {
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final Response response = getResponse("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
+        final JerseyContainerResponseContext responseContext = getResponseContext("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
 
-        assertEquals(404, response.getStatus());
+        assertEquals(404, responseContext.getStatus());
     }
 }

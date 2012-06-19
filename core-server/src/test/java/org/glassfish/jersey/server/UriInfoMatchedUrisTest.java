@@ -44,11 +44,10 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test UriInfo content.
@@ -107,22 +106,22 @@ public class UriInfoMatchedUrisTest {
     public void testMatchedUris() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        Response response;
-        response = app.apply(RequestContextBuilder.from("/foo", "GET").build()).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("foo", response.getEntity());
+        JerseyContainerResponseContext responseContext;
+        responseContext = app.apply(RequestContextBuilder.from("/foo", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foo", responseContext.getEntity());
 
-        response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("foobar", response.getEntity());
+        responseContext = app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobar", responseContext.getEntity());
 
-        response = app.apply(RequestContextBuilder.from("/foo/baz", "GET").build()).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("foobaz", response.getEntity());
+        responseContext = app.apply(RequestContextBuilder.from("/foo/baz", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobaz", responseContext.getEntity());
 
-        response = app.apply(RequestContextBuilder.from("/foo/baz/bar", "GET").build()).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("foobazbar", response.getEntity());
+        responseContext = app.apply(RequestContextBuilder.from("/foo/baz/bar", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobazbar", responseContext.getEntity());
     }
 
     private static void assertMatchedUris(UriInfo uriInfo, String... expectedMatchedUris) {
