@@ -39,28 +39,33 @@
  */
 package org.glassfish.jersey.test.inmemory.internal;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.JerseyClientRequestContext;
 import org.glassfish.jersey.client.JerseyClientResponseContext;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.internal.JaxrsRequestBuilderView;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.InboundMessageContext;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 /**
  * In-memory client connector.
@@ -94,29 +99,24 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
     @Override
     public JerseyClientResponseContext apply(final JerseyClientRequestContext clientRequestContext) {
         // TODO replace request building with a common request cloning functionality
-        Future<Response> responseListenableFuture;
+        Future<JerseyContainerResponseContext> responseListenableFuture;
+        PropertiesDelegate propertiesDelegate = new MapPropertiesDelegate();
 
-        JaxrsRequestBuilderView requestBuilder = Requests.from(
-                baseUri,
-                clientRequestContext.getUri(),
-                clientRequestContext.getMethod());
+        final JerseyContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(baseUri,
+                clientRequestContext.getUri(), clientRequestContext.getMethod(),
+                null, propertiesDelegate);
+        outboundToInbound(clientRequestContext, containerRequestContext, propertiesDelegate, clientRequestContext.getWorkers());
 
-        for (Map.Entry<String, List<Object>> entry : clientRequestContext.getHeaders().entrySet()) {
-            for (Object value : entry.getValue()) {
-                requestBuilder = requestBuilder.header(entry.getKey(), value);
-            }
-        }
+        boolean followRedirects = PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(),
+                ClientProperties.FOLLOW_REDIRECTS, true);
 
-        final Request request = requestBuilder.entity(clientRequestContext.getEntity()).build();
-
-        boolean followRedirects = PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
-                true);
-
-        responseListenableFuture = appHandler.apply(request);
+        responseListenableFuture = appHandler.apply(containerRequestContext);
 
         try {
             if (responseListenableFuture != null) {
-                return tryFollowRedirects(followRedirects, createClientResponseContext(clientRequestContext, responseListenableFuture.get()), clientRequestContext);
+                return tryFollowRedirects(followRedirects, createClientResponseContext(clientRequestContext,
+                        responseListenableFuture.get(), propertiesDelegate, containerRequestContext.getWorkers()),
+                        clientRequestContext);
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
@@ -129,19 +129,64 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
         throw new InvocationException("In-memory transport can't process incoming request");
     }
 
-    private JerseyClientResponseContext createClientResponseContext(JerseyClientRequestContext clientRequestContext, Response response) {
+    private void outboundToInbound(final OutboundMessageContext outboundContext,
+                                   final InboundMessageContext inboundContext,
+                                   final PropertiesDelegate propertiesDelegate,
+                                   final MessageBodyWorkers workers
+    ) {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        final JerseyClientResponseContext clientResponseContext = new JerseyClientResponseContext(response.getStatusInfo(), clientRequestContext);
+        outboundContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return baos;
+            }
 
-        for (Map.Entry<String, List<Object>> entry : response.getMetadata().entrySet()) {
-            for (Object value : entry.getValue()) {
-                // TODO value.toString?
-                clientResponseContext.getHeaders().add(entry.getKey(), value.toString());
+            @Override
+            public void commit() throws IOException {
+                inboundContext.getHeaders().putAll(HeadersFactory.getStringHeaders(outboundContext.getHeaders()));
+            }
+        });
+
+        OutputStream entityStream = outboundContext.getEntityStream();
+
+        try {
+            workers.writeTo(
+                    outboundContext.getEntity(),
+                    outboundContext.getEntityClass(),
+                    outboundContext.getEntityType(),
+                    outboundContext.getEntityAnnotations(),
+                    outboundContext.getMediaType(),
+                    outboundContext.getHeaders(),
+                    propertiesDelegate,
+                    entityStream,
+                    null,
+                    true);
+        } catch (IOException e) {
+            throw new InvocationException(e.getMessage(), e);
+        } finally {
+            if (entityStream != null) {
+                try {
+                    entityStream.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(InMemoryConnector.class.getName()).log(Level.FINE, "Error closing output stream", ex);
+                }
             }
         }
 
-        response.bufferEntity();
-        clientResponseContext.setEntityStream(response.readEntity(InputStream.class));
+        inboundContext.setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
+    }
+
+    private JerseyClientResponseContext createClientResponseContext(final JerseyClientRequestContext clientRequestContext,
+                                                                    final JerseyContainerResponseContext containerResponseContext,
+                                                                    final PropertiesDelegate propertiesDelegate,
+                                                                    final MessageBodyWorkers workers) {
+
+        final JerseyClientResponseContext clientResponseContext =
+                new JerseyClientResponseContext(containerResponseContext.getStatusInfo(), clientRequestContext);
+
+        outboundToInbound(containerResponseContext, clientResponseContext, propertiesDelegate, workers);
+        clientResponseContext.setStatus(containerResponseContext.getStatus());
 
         return clientResponseContext;
     }
