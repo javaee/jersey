@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
@@ -66,7 +63,7 @@ public class InvokerBuilder {
     @Inject
     private ReferencesInitializer referencesInitializer;
     @Inject
-    private RequestInvoker.Builder invokerBuilder;
+    private ServerModule.RequestInvokerBuilder invokerBuilder;
 
 
     /**
@@ -76,7 +73,7 @@ public class InvokerBuilder {
      * @param matchingRoot root resource matching acceptor.
      * @return request processor.
      */
-    public RequestInvoker<Request, Response> build(final Router matchingRoot) {
+    public RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> build(final Router matchingRoot) {
 
         return invokerBuilder.build(Stages
                 .chain(referencesInitializer)

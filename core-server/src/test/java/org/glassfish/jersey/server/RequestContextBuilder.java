@@ -43,21 +43,28 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.message.internal.HeadersFactory;
+
+import com.google.common.net.HttpHeaders;
 
 /**
  * Used by tests to create mock JerseyContainerRequestContext instances.
@@ -66,11 +73,7 @@ import org.glassfish.jersey.message.internal.MediaTypes;
  */
 public class RequestContextBuilder {
 
-    public RequestContextBuilder type(String contentType) {
-        result.getHeaders().putSingle("content-type", contentType);
-        return this;
-
-    }
+    private RuntimeDelegate rd = RuntimeDelegate.getInstance();
 
     public class JerseyTestContainerRequestContext extends JerseyContainerRequestContext {
 
@@ -129,18 +132,48 @@ public class RequestContextBuilder {
         return result;
     }
 
-    public RequestContextBuilder header(String name, Object value) {
-        result.header(name, value);
+    public RequestContextBuilder accept(String... acceptHeader) {
+        putHeaders(HttpHeaders.ACCEPT, acceptHeader);
         return this;
     }
 
-    public RequestContextBuilder accept(String... acceptHeader) {
-        result.getAcceptableMediaTypes().addAll(MediaTypes.createFrom(acceptHeader));
+    public RequestContextBuilder accept(MediaType... acceptHeader) {
+        putHeaders(HttpHeaders.ACCEPT, acceptHeader);
         return this;
     }
 
     public RequestContextBuilder entity(Object entity) {
         result.setEntity(entity);
         return this;
+    }
+
+    public RequestContextBuilder type(String contentType) {
+        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, contentType);
+        return this;
+
+    }
+
+    public RequestContextBuilder type(MediaType contentType) {
+        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeadersFactory.toString(contentType, rd));
+        return this;
+    }
+
+    public RequestContextBuilder header(String name, Object value) {
+        putHeader(name, value);
+        return this;
+    }
+
+    private void putHeader(String name, Object value) {
+        result.header(name, HeadersFactory.toString(value, rd));
+    }
+
+    private void putHeaders(String name, Object... values) {
+        putHeaders(name, HeadersFactory.toString(values, rd));
+    }
+
+    private void putHeaders(String name, String... values) {
+        List<String> valueList = new ArrayList<String>(result.getHeaders().get(name));
+        valueList.addAll(Arrays.asList(values));
+        result.getHeaders().put(name, valueList);
     }
 }

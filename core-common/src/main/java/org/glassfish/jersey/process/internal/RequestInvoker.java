@@ -43,9 +43,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -53,8 +50,6 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
 import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -117,54 +112,6 @@ public class RequestInvoker<REQUEST, RESPONSE> {
         public void cancelled() {
         }
     };
-
-    /**
-     * Injection-enabled {@link RequestInvoker} instance builder.
-     */
-    public static final class Builder {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private ResponseProcessor.Builder<Response> responseProcessorBuilder;
-        @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
-        @Inject
-        private ProcessingExecutorsFactory executorsFactory;
-
-        /**
-         * Build a new {@link RequestInvoker request invoker} configured to use
-         * the supplied request processor for processing requests.
-         *
-         * @param rootStage root processing stage.
-         * @return new request invoker instance.
-         */
-        public RequestInvoker<Request, Response> build(final Stage<Request> rootStage) {
-
-            final AsyncInflectorAdapter.Builder<Request,Response> asyncAdapterBuilder =
-                    new AsyncInflectorAdapter.Builder<Request, Response>() {
-                        @Override
-                        public AsyncInflectorAdapter<Request, Response> create(
-                                Inflector<Request, Response> wrapped, InvocationCallback<Response> callback) {
-                            return new AsyncInflectorAdapter<Request, Response>(wrapped, callback) {
-
-                                @Override
-                                protected Response convertResponse(Request request, Response response) {
-                                    return response;
-                                }
-                            };
-                        }
-                    };
-
-            return new RequestInvoker<Request, Response>(
-                    rootStage,
-                    requestScope,
-                    asyncAdapterBuilder,
-                    responseProcessorBuilder,
-                    invocationContextReferenceFactory,
-                    executorsFactory);
-        }
-
-    }
 
     private final Stage<REQUEST> rootStage;
     private final RequestScope requestScope;

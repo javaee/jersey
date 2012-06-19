@@ -40,7 +40,6 @@
 package org.glassfish.jersey.process.internal;
 
 import javax.ws.rs.core.ExecutionContext;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -48,8 +47,6 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -69,9 +66,6 @@ public class ProcessingModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        // Request Invoker Builder
-        bind().to(RequestInvoker.Builder.class).in(PerLookup.class);
-
         // Invocation context
         bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
         bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);

@@ -47,10 +47,10 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey._remove.Helper;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -84,16 +84,17 @@ public class MixedResourceConfigurationTest {
             @Override
             public Response apply(Request request) {
                 name = Helper.unwrap(request).readEntity(String.class);
-                return Responses.empty().status(200).build();
+                return Response.ok().build();
             }
         });
         resourceConfig.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        final Response response = application.apply(Requests.from("/name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
+        final JerseyContainerResponseContext response = application.apply(
+                RequestContextBuilder.from("/name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
         assertEquals(200, response.getStatus());
 
         assertEquals("Gaga", application.apply(
-                Requests.from("/name", "GET").accept(MediaType.TEXT_PLAIN).build()).get().readEntity(String.class));
+                RequestContextBuilder.from("/name", "GET").accept(MediaType.TEXT_PLAIN).build()).get().getEntity());
     }
 }

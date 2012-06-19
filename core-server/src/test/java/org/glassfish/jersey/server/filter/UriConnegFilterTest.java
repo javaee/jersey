@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Before;
@@ -87,13 +88,13 @@ public class UriConnegFilterTest {
         mediaTypes.put("bar", MediaType.valueOf("application/bar"));
 
         ResourceConfig rc = new ResourceConfig(Resource.class);
-        UriConnegFilter_Old.enableFor(rc, mediaTypes, null);
+        UriConnegFilter.enableFor(rc, mediaTypes, null);
         handler = new ApplicationHandler(rc);
     }
 
     @Test
     public void testGetFoo() throws Exception {
-        Response response = handler.apply(Requests.from("", "/resource.foo", "GET").build()).get();
+        Response response = handler.apply(RequestContextBuilder.from("", "/resource.foo", "GET")).get();
         assertEquals("foo", response.readEntity(String.class));
     }
 
