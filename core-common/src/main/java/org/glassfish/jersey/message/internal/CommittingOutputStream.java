@@ -65,7 +65,7 @@ public final class CommittingOutputStream extends OutputStream {
      */
     private boolean isCommitted = false;
     /**
-     * Stream provider
+     * Stream provider.
      */
     private OutboundMessageContext.StreamProvider streamProvider;
 

@@ -46,9 +46,8 @@ import java.util.List;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.Requests;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
@@ -61,7 +60,7 @@ import org.glassfish.hk2.scopes.Singleton;
 import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
 /**
  *
@@ -98,7 +97,7 @@ public class ReferencingFactoryTest extends AbstractModule {
     //
     private Request expectedReqest = null;
     private List<Integer> expectedInts = null;
-    private Response expectedResponse = Responses.empty().build();
+    private Response expectedResponse = Response.noContent().build();
     private List<String> expectedStrings = new LinkedList<String>();
 
     private static final class RequestReferencingFactory extends ReferencingFactory<Request> {
@@ -145,7 +144,7 @@ public class ReferencingFactoryTest extends AbstractModule {
     }
 
     @Test
-    public void testReferecedBinding() {
+    public void testReferencedBinding() {
         Services services = HK2.get().create(null, this);
         Injector injector = services.forContract(Injector.class).get();
 
@@ -160,7 +159,7 @@ public class ReferencingFactoryTest extends AbstractModule {
         refValues.request.set(expectedReqest);
         expectedInts = new LinkedList<Integer>();
         refValues.ints.set(expectedInts);
-        expectedResponse = Responses.from(200, expectedReqest).build();
+        expectedResponse = Response.noContent().build();
         refValues.response.set(expectedResponse);
         expectedStrings = new ArrayList<String>();
         refValues.strings.set(expectedStrings);

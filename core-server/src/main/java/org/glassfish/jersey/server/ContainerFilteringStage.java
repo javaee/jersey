@@ -54,7 +54,6 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
-import org.glassfish.jersey.process.internal.AbstractFilteringStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
@@ -71,7 +70,7 @@ import com.google.common.base.Predicate;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ContainerFilteringStage extends AbstractFilteringStage<JerseyContainerRequestContext> {
+class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequestContext> {
 
     private static final Predicate<ContainerRequestFilter> PRE_MATCH_FILTER_PREDICATE = new Predicate<ContainerRequestFilter>() {
         @Override

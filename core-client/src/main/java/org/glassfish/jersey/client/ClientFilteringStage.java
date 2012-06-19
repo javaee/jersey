@@ -51,7 +51,6 @@ import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
-import org.glassfish.jersey.process.internal.AbstractFilteringStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
@@ -66,7 +65,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientFilteringStage extends AbstractFilteringStage<JerseyClientRequestContext> {
+class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestContext> {
 
     private final Factory<ServiceProviders> servicesProvidersFactory;
     private final Factory<ResponseProcessor.RespondingContext<JerseyClientResponseContext>> respondingContextFactory;

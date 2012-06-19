@@ -394,7 +394,6 @@ public class JerseyContainerRequestContext extends InboundMessageContext impleme
      * @param workers message body workers.
      */
     public void setWorkers(MessageBodyWorkers workers) {
-        // TODO use this initializer method in the request processing
         this.workers = workers;
     }
 

@@ -44,20 +44,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.WebApplicationException;
-import org.glassfish.jersey._remove.Helper;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.message.internal.Requests;
-import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.spi.ExceptionMappers;
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -86,11 +90,71 @@ public class RequestInvokerTest {
         return services;
     }
 
+    public static final class String2IntegerRequestInvokerBuilder {
+
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        Injector injector;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        public RequestInvoker<String, Integer> build(final Stage<String> rootStage) {
+            final AsyncInflectorAdapter.Builder<String, Integer> asyncAdapterBuilder = new AsyncInflectorAdapter.Builder<String, Integer>() {
+
+                @Override
+                public AsyncInflectorAdapter<String, Integer> create(Inflector<String, Integer> wrapped, InvocationCallback<Integer> callback) {
+                    return new AsyncInflectorAdapter<String, Integer>(wrapped, callback) {
+
+                        @Override
+                        protected Integer convertResponse(String request, Response response) {
+                            return Integer.parseInt(response.getEntity().toString());
+                        }
+                    };
+                }
+            };
+            return new RequestInvoker<String, Integer>(rootStage, requestScope, asyncAdapterBuilder, injector.inject(String2IntegerResponseProcessorBuilder.class), invocationContextReferenceFactory, executorsFactory);
+        }
+    }
+
+    public static class String2IntegerResponseProcessorBuilder implements ResponseProcessor.Builder<Integer> {
+
+        @Inject
+        private RequestScope requestScope;
+        private Factory<ResponseProcessor.RespondingContext<Integer>> respondingCtxProvider = new Factory<ResponseProcessor.RespondingContext<Integer>>() {
+
+            @Override
+            public RespondingContext<Integer> get() throws ComponentException {
+                return new DefaultRespondingContext<Integer>();
+            }
+        };
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
+
+        /**
+         * Default constructor meant to be used by injection framework.
+         */
+        public String2IntegerResponseProcessorBuilder() {
+        }
+
+        @Override
+        public ResponseProcessor<Integer> build(final Future<Integer> inflectedResponse, final InvocationCallback<Integer> callback, final RequestScope.Instance scopeInstance) {
+            return new ResponseProcessor<Integer>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+
+                @Override
+                protected Integer convertResponse(Response exceptionResponse) {
+                    return Integer.parseInt(exceptionResponse.getEntity().toString());
+                }
+            };
+        }
+    }
+
     @Test
     public void testInvocation() throws Exception {
         final Services services = init();
-        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(createProcessingRoot());
+        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get().build(createProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
@@ -98,12 +162,12 @@ public class RequestInvokerTest {
             @Override
             public void run() {
 
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback<Response>() {
+                invoker.apply("",
+                        new AbstractInvocationCallback<Integer>() {
 
                             @Override
-                            public void result(Response response) {
-                                assertEquals(123, response.readEntity(Integer.class).intValue());
+                            public void result(Integer response) {
+                                assertEquals(123, response.intValue());
                             }
 
                             @Override
@@ -118,9 +182,8 @@ public class RequestInvokerTest {
 
             @Override
             public Object call() throws Exception {
-                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
-                        .build());
-                assertEquals(123, result.get().readEntity(Integer.class).intValue());
+                Future<Integer> result = invoker.apply("");
+                assertEquals(123, result.get().intValue());
                 return null;
             }
         });
@@ -129,12 +192,12 @@ public class RequestInvokerTest {
 
             @Override
             public void run() {
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text").build(),
-                        new AbstractInvocationCallback<Response>() {
+                invoker.apply("text",
+                        new AbstractInvocationCallback<Integer>() {
 
                             @Override
-                            public void result(Response response) {
-                                assertEquals(-1, response.readEntity(Integer.class).intValue());
+                            public void result(Integer response) {
+                                assertEquals(-1, response.intValue());
                             }
 
                             @Override
@@ -149,9 +212,8 @@ public class RequestInvokerTest {
 
             @Override
             public Object call() throws Exception {
-                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("text")
-                        .build());
-                assertEquals(-1, result.get().readEntity(Integer.class).intValue());
+                Future<Integer> result = invoker.apply("text");
+                assertEquals(-1, result.get().intValue());
                 return null;
             }
         });
@@ -160,8 +222,7 @@ public class RequestInvokerTest {
     @Test
     public void testWaeThrownInRequestPreProcessingChain() throws Exception {
         final Services services = init();
-        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(createWaeThrowingProcessingRoot());
+        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get().build(createWaeThrowingProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
@@ -169,12 +230,12 @@ public class RequestInvokerTest {
             @Override
             public void run() {
 
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback<Response>() {
+                invoker.apply("",
+                        new AbstractInvocationCallback<Integer>() {
 
                             @Override
-                            public void result(Response response) {
-                                assertEquals("1", response.readEntity(String.class));
+                            public void result(Integer response) {
+                                assertEquals("1", response.toString());
                             }
 
                             @Override
@@ -189,9 +250,8 @@ public class RequestInvokerTest {
 
             @Override
             public Object call() throws Exception {
-                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
-                        .build());
-                assertEquals("1", result.get().readEntity(String.class));
+                Future<Integer> result = invoker.apply("");
+                assertEquals("1", result.get().toString());
                 return null;
             }
         });
@@ -200,8 +260,7 @@ public class RequestInvokerTest {
     @Test
     public void testArbitraryExceptionThrownInRequestPreProcessingChain() throws Exception {
         final Services services = init();
-        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(createArbitraryExceptionThrowingProcessingRoot());
+        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get().build(createArbitraryExceptionThrowingProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
         requestScope.runInScope(new Runnable() {
@@ -209,11 +268,11 @@ public class RequestInvokerTest {
             @Override
             public void run() {
 
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
-                        new AbstractInvocationCallback<Response>() {
+                invoker.apply("",
+                        new AbstractInvocationCallback<Integer>() {
 
                             @Override
-                            public void result(Response response) {
+                            public void result(Integer response) {
                                 fail("Failure callback method expected to be invoked.");
                             }
 
@@ -230,8 +289,7 @@ public class RequestInvokerTest {
 
             @Override
             public Object call() throws Exception {
-                Future<Response> result = invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("")
-                        .build());
+                Future<Integer> result = invoker.apply("");
                 try {
                     result.get();
                     fail("ExecutionException expected to be raised.");
@@ -247,14 +305,14 @@ public class RequestInvokerTest {
         });
     }
 
-    private static Stage<Request> createProcessingRoot() {
+    private static Stage<String> createProcessingRoot() {
 
-        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+        final Stage<String> inflectingStage = Stages.asStage(new Inflector<String, Integer>() {
 
             @Override
-            public Response apply(Request data) {
+            public Integer apply(String data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
+                    return Integer.valueOf(data);
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }
@@ -264,48 +322,49 @@ public class RequestInvokerTest {
         return Stages.chain(append("1")).to(append("2")).to(append("3")).build(inflectingStage);
     }
 
-    private static Stage<Request> createWaeThrowingProcessingRoot() {
+    private static Stage<String> createWaeThrowingProcessingRoot() {
 
-        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+        final Stage<String> inflectingStage = Stages.asStage(new Inflector<String, Integer>() {
 
             @Override
-            public Response apply(Request data) {
+            public Integer apply(String data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
+                    return Integer.valueOf(data);
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }
             }
         });
 
-        return Stages.chain(append("1")).to(new Function<Request, Request>() {
-                    @Override
-                    public Request apply(Request data) {
-                        throw new WebApplicationException(
-                                Responses.from(200, data).entity(Helper.unwrap(data).readEntity(String.class)).build());
-                    }
-                }).to(append("3")).build(inflectingStage);
+        return Stages.chain(append("1")).to(new Function<String, String>() {
+
+            @Override
+            public String apply(String data) {
+                throw new WebApplicationException(Response.ok(data).build());
+            }
+        }).to(append("3")).build(inflectingStage);
     }
 
-    private static Stage<Request> createArbitraryExceptionThrowingProcessingRoot() {
+    private static Stage<String> createArbitraryExceptionThrowingProcessingRoot() {
 
-        final Stage<Request> inflectingStage = Stages.asStage(new Inflector<Request, Response>() {
+        final Stage<String> inflectingStage = Stages.asStage(new Inflector<String, Integer>() {
 
             @Override
-            public Response apply(Request data) {
+            public Integer apply(String data) {
                 try {
-                    return Responses.from(200, data).entity(Integer.valueOf(Helper.unwrap(data).readEntity(String.class))).build();
+                    return Integer.valueOf(data);
                 } catch (NumberFormatException ex) {
                     throw new MappableException(ex);
                 }
             }
         });
 
-        return Stages.chain(append("1")).to(new Function<Request, Request>() {
-                    @Override
-                    public Request apply(Request data) {
-                        throw new RuntimeException("test");
-                    }
-                }).to(append("3")).build(inflectingStage);
+        return Stages.chain(append("1")).to(new Function<String, String>() {
+
+            @Override
+            public String apply(String data) {
+                throw new RuntimeException("test");
+            }
+        }).to(append("3")).build(inflectingStage);
     }
 }

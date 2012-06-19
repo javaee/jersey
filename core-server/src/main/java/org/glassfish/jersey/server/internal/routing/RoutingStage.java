@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
-import org.glassfish.jersey.process.internal.TransformableData;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.JerseyContainerResponseContext;
 

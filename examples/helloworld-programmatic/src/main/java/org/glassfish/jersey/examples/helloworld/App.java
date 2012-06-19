@@ -48,7 +48,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
@@ -115,7 +114,7 @@ public class App {
                     @Override
                     public Response apply(Request data) {
                         getMethodCalled = true;
-                        return Responses.from(200, data).entity("Hello World!").build();
+                        return Response.ok("Hello World!").build();
                     }
                 });
 
@@ -124,7 +123,7 @@ public class App {
             @Override
             public Response apply(Request data) {
                 headMethodCalled = true;
-                return Responses.from(204, data).build();
+                return Response.noContent().build();
             }
         };
         resourceBuilder.addMethod("HEAD").handledBy(noContentResponder);

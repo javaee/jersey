@@ -42,22 +42,28 @@ package org.glassfish.jersey.process.internal;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
-import org.glassfish.jersey.message.internal.Requests;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.ProcessingExecutorsModule;
+import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
 
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
+
+import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -106,15 +112,143 @@ public class CustomProcessingExecutorsProviderTest {
         return services;
     }
 
+    public static final class String2StringRequestInvokerBuilder {
+
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        Injector injector;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        public RequestInvoker<String, String> build(final Stage<String> rootStage) {
+            final AsyncInflectorAdapter.Builder<String, String> asyncAdapterBuilder = new AsyncInflectorAdapter.Builder<String, String>() {
+
+                @Override
+                public AsyncInflectorAdapter<String, String> create(Inflector<String, String> wrapped, InvocationCallback<String> callback) {
+                    return new AsyncInflectorAdapter<String, String>(wrapped, callback) {
+
+                        @Override
+                        protected String convertResponse(String request, Response response) {
+                            return response.getEntity().toString();
+                        }
+                    };
+                }
+            };
+            return new RequestInvoker<String, String>(rootStage, requestScope, asyncAdapterBuilder, injector.inject(String2StringResponseProcessorBuilder.class), invocationContextReferenceFactory, executorsFactory);
+        }
+    }
+
+    public static class String2StringResponseProcessorBuilder implements ResponseProcessor.Builder<String> {
+
+        @Inject
+        private RequestScope requestScope;
+        private Factory<ResponseProcessor.RespondingContext<String>> respondingCtxProvider = new Factory<ResponseProcessor.RespondingContext<String>>() {
+
+            @Override
+            public ResponseProcessor.RespondingContext<String> get() throws ComponentException {
+                return new DefaultRespondingContext<String>();
+            }
+        };
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
+
+        /**
+         * Default constructor meant to be used by injection framework.
+         */
+        public String2StringResponseProcessorBuilder() {
+        }
+
+        @Override
+        public ResponseProcessor<String> build(final Future<String> inflectedResponse, final InvocationCallback<String> callback, final RequestScope.Instance scopeInstance) {
+            return new ResponseProcessor<String>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+
+                @Override
+                protected String convertResponse(Response exceptionResponse) {
+                    return exceptionResponse.getEntity().toString();
+                }
+            };
+        }
+    }
+
+    public static final class String2ResponseRequestInvokerBuilder {
+
+        @Inject
+        private RequestScope requestScope;
+        @Inject
+        Injector injector;
+        @Inject
+        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        @Inject
+        private ProcessingExecutorsFactory executorsFactory;
+
+        public RequestInvoker<String, Response> build(final Stage<String> rootStage) {
+            final AsyncInflectorAdapter.Builder<String, Response> asyncAdapterBuilder = new AsyncInflectorAdapter.Builder<String, Response>() {
+
+                @Override
+                public AsyncInflectorAdapter<String, Response> create(Inflector<String, Response> wrapped, InvocationCallback<Response> callback) {
+                    return new AsyncInflectorAdapter<String, Response>(wrapped, callback) {
+
+                        @Override
+                        protected Response convertResponse(String request, Response response) {
+                            return response;
+                        }
+                    };
+                }
+            };
+            return new RequestInvoker<String, Response>(
+                    rootStage,
+                    requestScope,
+                    asyncAdapterBuilder,
+                    injector.inject(String2ResponseResponseProcessorBuilder.class),
+                    invocationContextReferenceFactory,
+                    executorsFactory);
+        }
+    }
+
+    public static class String2ResponseResponseProcessorBuilder implements ResponseProcessor.Builder<Response> {
+
+        @Inject
+        private RequestScope requestScope;
+        private Factory<ResponseProcessor.RespondingContext<Response>> respondingCtxProvider = new Factory<ResponseProcessor.RespondingContext<Response>>() {
+
+            @Override
+            public ResponseProcessor.RespondingContext<Response> get() throws ComponentException {
+                return new DefaultRespondingContext<Response>();
+            }
+        };
+        @Inject
+        private Factory<ExceptionMappers> exceptionMappersProvider;
+
+        /**
+         * Default constructor meant to be used by injection framework.
+         */
+        public String2ResponseResponseProcessorBuilder() {
+        }
+
+        @Override
+        public ResponseProcessor<Response> build(final Future<Response> inflectedResponse, final InvocationCallback<Response> callback, final RequestScope.Instance scopeInstance) {
+            return new ResponseProcessor<Response>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+
+                @Override
+                protected Response convertResponse(Response exceptionResponse) {
+                    return exceptionResponse;
+                }
+            };
+        }
+    }
+
     @Test
     public void testCustomProcessingExecutors() throws Exception {
         final Services services = init();
 
-        final RequestInvoker<Request, Response> invoker = services.forContract(RequestInvoker.Builder.class).get()
-                .build(Stages.asStage(new Inflector<Request, Response>() {
+        final RequestInvoker<String, Response> invoker = services.forContract(String2ResponseRequestInvokerBuilder.class).get()
+                .build(Stages.asStage(new Inflector<String, Response>() {
 
                     @Override
-                    public Response apply(Request data) {
+                    public Response apply(String data) {
                         return Response.ok(Thread.currentThread().getName()).build();
                     }
                 }));
@@ -127,14 +261,14 @@ public class CustomProcessingExecutorsProviderTest {
 
             @Override
             public void run() {
-                invoker.apply(Requests.from("http://examples.jersey.java.net/", "GET").entity("").build(),
+                invoker.apply("",
                         new AbstractInvocationCallback<Response>() {
 
                             @Override
                             public void result(Response response) {
 
                                 try {
-                                    final String reqThreadName = response.readEntity(String.class);
+                                    final String reqThreadName = response.getEntity().toString();
                                     assertTrue("Unexpected request processing thread name: " + reqThreadName,
                                             reqThreadName.startsWith(REQ_THREAD_NAME));
 

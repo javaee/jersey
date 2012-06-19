@@ -50,17 +50,19 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.message.internal.Responses;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 import org.glassfish.jersey.uri.internal.UriBuilderImpl;
 
 import org.glassfish.hk2.Services;
-import org.glassfish.jersey.internal.inject.Providers;
 
 /**
  * An abstract implementation of {@link RuntimeDelegate} that
@@ -73,6 +75,11 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     final private Set<HeaderDelegateProvider> hps;
     final private Map<Class<?>, HeaderDelegate<?>> map;
 
+    /**
+     * Initialization constructor.
+     *
+     * @param hk2Services HK2 services.
+     */
     protected AbstractRuntimeDelegate(Services hk2Services) {
         hps = Providers.getProviders(hk2Services, HeaderDelegateProvider.class);
 //        hps = new HashSet<HeaderDelegateProvider<?>>();
@@ -101,7 +108,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
 
     @Override
     public ResponseBuilder createResponseBuilder() {
-        return Responses.empty();
+        return new OutboundJaxrsResponse.Builder(Response.Status.NO_CONTENT, new OutboundMessageContext());
     }
 
     @Override

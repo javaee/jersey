@@ -146,7 +146,7 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
     /**
      * Response processor builder for JAX-RS response data type.
      */
-    public static class ResponseBuilder implements Builder<Response> {
+    private static class ResponseBuilder implements Builder<Response> {
         @Inject
         private RequestScope requestScope;
         @Inject

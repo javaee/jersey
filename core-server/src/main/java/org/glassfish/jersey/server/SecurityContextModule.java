@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,53 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server;
 
-package org.glassfish.jersey.process.internal;
+import javax.ws.rs.core.SecurityContext;
 
-import java.util.Map;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScope;
 
-import javax.ws.rs.core.Response;
-import org.glassfish.jersey._remove.ResponseFilter;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.scopes.PerLookup;
 
-import org.glassfish.jersey.internal.MappableException;
-
-import com.google.common.base.Function;
+import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Executes the configured set of response filters on a response.
+ * {@link SecurityContext Security Context} HK2 Module.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class ResponseFilterProcessor extends AbstractFilterProcessor<ResponseFilter> implements Function<Response, Response> {
-
-    /**
-     * Create a new response filter processor.
-     */
-    public ResponseFilterProcessor() {
-        super(PriorityComparator.Order.DESCENDING);
-    }
+class SecurityContextModule extends AbstractModule {
 
     @Override
-    public Response apply(Response data) {
-        JerseyFilterContext filterContext = filterContextFactory.get();
+    protected void configure() {
+        bind(SecurityContext.class).toFactory(SecurityContextReferencingFactory.class).in(PerLookup.class);
+        bind(new TypeLiteral<Ref<SecurityContext>>() {
+        }).toFactory(ReferencingFactory.<SecurityContext>referenceFactory()).in(RequestScope.class);
 
-        // Initialize filter context
-        filterContext.setResponse(data);
-        Map<String, Object> properties = getProperties();
-        if (properties != null) {
-            filterContext.setProperties(properties);
+    }
+
+    /**
+     * Referencing factory for SecurityContext.
+     */
+    private static class SecurityContextReferencingFactory extends ReferencingFactory<SecurityContext> {
+
+        public SecurityContextReferencingFactory(@Inject Factory<Ref<SecurityContext>> referenceFactory) {
+            super(referenceFactory);
         }
-
-        // Execute post filter chain
-        for (ResponseFilter filter : getFilters(ResponseFilter.class)) {
-            try {
-                filter.postFilter(filterContext);
-            } catch (Exception e) {
-                throw new MappableException(e);
-            }
-        }
-
-        return filterContext.getResponse();
     }
 }

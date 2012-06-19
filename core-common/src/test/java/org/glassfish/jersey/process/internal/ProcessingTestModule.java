@@ -56,7 +56,6 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.message.internal.Responses;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -67,7 +66,7 @@ import org.glassfish.hk2.scopes.Singleton;
 import org.jvnet.hk2.annotations.Inject;
 
 /**
- * TODO javadoc.
+ * Processing module for testing purposes.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -120,8 +119,7 @@ public class ProcessingTestModule extends AbstractModule {
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),
-                new JaxrsProviders.Module(),
-                new FilterModule());
+                new JaxrsProviders.Module());
 
 
         bind(ExceptionMapper.class).toInstance(new ExceptionMapper<Throwable>() {
@@ -129,7 +127,7 @@ public class ProcessingTestModule extends AbstractModule {
             @Override
             public Response toResponse(Throwable exception) {
                 if (exception instanceof NumberFormatException) {
-                    return Responses.empty().entity(-1).build();
+                    return Response.ok(-1).build();
                 }
 
                 throw new RuntimeException(exception);

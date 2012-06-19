@@ -85,11 +85,11 @@ public class ProcessingModule extends AbstractModule {
 
         // Responding context
         // TODO remove this
-        bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
-        }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
-        }).in(RequestScope.class);
+    //    bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
+   //     }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
+   //     }).in(RequestScope.class);
 
-        bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
-        }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
+  //      bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
+  //      }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
     }
 }

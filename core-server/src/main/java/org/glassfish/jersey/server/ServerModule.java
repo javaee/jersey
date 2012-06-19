@@ -207,7 +207,7 @@ public class ServerModule extends AbstractModule {
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),
                 new JaxrsProviders.Module(),
-                new FilterModule(),
+                new ContainerFilteringStage.Module(),
                 new SecurityContextModule(),
                 new ParameterInjectionModule(),
                 new ResourceModelModule(),

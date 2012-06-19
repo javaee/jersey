@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import org.glassfish.jersey._remove.Helper;
-import javax.ws.rs.core.Request;
-
-import org.glassfish.jersey.message.internal.Requests;
 
 import com.google.common.base.Function;
 
@@ -51,7 +47,7 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class StringAppender implements Function<Request, Request> {
+class StringAppender implements Function<String, String> {
 
     private final String suffix;
 
@@ -60,9 +56,8 @@ class StringAppender implements Function<Request, Request> {
     }
 
     @Override
-    public Request apply(Request data) {
-        String entity = Helper.unwrap(data).readEntity(String.class);
-        return Requests.from(data).entity((entity == null ? "" : entity) + suffix).build();
+    public String apply(String data) {
+        return (data == null ? "" : data) + suffix;
     }
 
     static StringAppender append(String suffix) {
