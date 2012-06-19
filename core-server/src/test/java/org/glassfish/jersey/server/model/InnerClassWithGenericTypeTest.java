@@ -92,6 +92,6 @@ public class InnerClassWithGenericTypeTest {
     public void testInnerClass() throws Exception {
         app = createApplication(RootResource.class);
 
-        assertEquals("sub", app.apply(RequestContextBuilder.from("/sub", "GET").build()).get().readEntity(String.class));
+        assertEquals("sub", app.apply(RequestContextBuilder.from("/sub", "GET").build()).get().getEntity());
     }
 }

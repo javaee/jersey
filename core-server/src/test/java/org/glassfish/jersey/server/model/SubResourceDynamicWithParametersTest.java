@@ -121,15 +121,15 @@ public class SubResourceDynamicWithParametersTest {
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().readEntity(String.class));
-        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first?a=1&b=2", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().getEntity());
+        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first?a=1&b=2", "GET").build()).get().getEntity());
     }
 
     @Test
     public void testSubResourceDynamicWithUnmatchedPath() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/", "GET").build()).get().readEntity(String.class));
-        assertEquals("a/b/c/d", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().readEntity(String.class));
+        assertEquals("", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/", "GET").build()).get().getEntity());
+        assertEquals("a/b/c/d", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().getEntity());
     }
 }

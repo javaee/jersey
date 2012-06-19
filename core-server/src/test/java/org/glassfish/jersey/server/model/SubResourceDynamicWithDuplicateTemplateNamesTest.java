@@ -131,21 +131,21 @@ public class SubResourceDynamicWithDuplicateTemplateNamesTest {
         app = createApplication(Parent.class);
 
         // Parent.getChild(...) -> Child.getMe(...)
-        assertEquals("parent -> me() : parent", app.apply(RequestContextBuilder.from("/parent/child", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent -> me() : parent", app.apply(RequestContextBuilder.from("/parent/child", "GET").build()).get().getEntity());
 
         // Parent.getChild(...) -> Child.getChild(...) -> Child.getMe(...)
-        assertEquals("parent -> first -> me() : first", app.apply(RequestContextBuilder.from("/parent/child/first", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent -> first -> me() : first", app.apply(RequestContextBuilder.from("/parent/child/first", "GET").build()).get().getEntity());
 
         // Parent.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getMe(...)
-        assertEquals("parent -> first -> second -> me() : second", app.apply(RequestContextBuilder.from("/parent/child/first/second", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent -> first -> second -> me() : second", app.apply(RequestContextBuilder.from("/parent/child/first/second", "GET").build()).get().getEntity());
 
         // Parent.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getMe(...)
-        assertEquals("parent -> first -> second -> third -> me() : third", app.apply(RequestContextBuilder.from("/parent/child/first/second/third", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent -> first -> second -> third -> me() : third", app.apply(RequestContextBuilder.from("/parent/child/first/second/third", "GET").build()).get().getEntity());
 
         // Parent.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getMeAndNext(...)
-        assertEquals("parent -> first -> second -> third -> next() : fourth", app.apply(RequestContextBuilder.from("/parent/child/first/second/third/next/fourth", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent -> first -> second -> third -> next() : fourth", app.apply(RequestContextBuilder.from("/parent/child/first/second/third/next/fourth", "GET").build()).get().getEntity());
 
         // Parent.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getChild(...) -> Child.getAllParams(...)
-        assertEquals("Param 'v' values: fourth third second first parent", app.apply(RequestContextBuilder.from("/parent/child/first/second/third/fourth/all", "GET").build()).get().readEntity(String.class));
+        assertEquals("Param 'v' values: fourth third second first parent", app.apply(RequestContextBuilder.from("/parent/child/first/second/third/fourth/all", "GET").build()).get().getEntity());
     }
 }

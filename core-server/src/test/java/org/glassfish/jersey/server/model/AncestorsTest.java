@@ -138,20 +138,20 @@ public class AncestorsTest {
     public void testNode() throws Exception {
         app = createApplication(Node.class);
 
-        assertEquals("0", app.apply(RequestContextBuilder.from("/node", "GET").build()).get().readEntity(String.class));
-        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node", "GET").build()).get().readEntity(String.class));
-        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node", "GET").build()).get().readEntity(String.class));
-        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node", "GET").build()).get().readEntity(String.class));
+        assertEquals("0", app.apply(RequestContextBuilder.from("/node", "GET").build()).get().getEntity());
+        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node", "GET").build()).get().getEntity());
+        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node", "GET").build()).get().getEntity());
+        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node", "GET").build()).get().getEntity());
     }
 
     @Test
     public void testNodeLeaf() throws Exception {
         app = createApplication(Node.class);
 
-        assertEquals("0", app.apply(RequestContextBuilder.from("/node/leaf", "GET").build()).get().readEntity(String.class));
-        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/leaf", "GET").build()).get().readEntity(String.class));
-        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/leaf", "GET").build()).get().readEntity(String.class));
-        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/leaf", "GET").build()).get().readEntity(String.class));
+        assertEquals("0", app.apply(RequestContextBuilder.from("/node/leaf", "GET").build()).get().getEntity());
+        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/leaf", "GET").build()).get().getEntity());
+        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/leaf", "GET").build()).get().getEntity());
+        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/leaf", "GET").build()).get().getEntity());
     }
 
     @Path("/node/")
@@ -226,20 +226,20 @@ public class AncestorsTest {
     public void testNodeSlash() throws Exception {
         app = createApplication(NodeSlash.class);
 
-        assertEquals("0", app.apply(RequestContextBuilder.from("/node/", "GET").build()).get().readEntity(String.class));
-        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/", "GET").build()).get().readEntity(String.class));
-        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/", "GET").build()).get().readEntity(String.class));
-        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/", "GET").build()).get().readEntity(String.class));
+        assertEquals("0", app.apply(RequestContextBuilder.from("/node/", "GET").build()).get().getEntity());
+        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/", "GET").build()).get().getEntity());
+        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/", "GET").build()).get().getEntity());
+        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/", "GET").build()).get().getEntity());
     }
 
     @Test
     public void testNodeLeafSlash() throws Exception {
         app = createApplication(NodeSlash.class);
 
-        assertEquals("0", app.apply(RequestContextBuilder.from("/node/leaf/", "GET").build()).get().readEntity(String.class));
-        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/leaf/", "GET").build()).get().readEntity(String.class));
-        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/leaf/", "GET").build()).get().readEntity(String.class));
-        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/leaf/", "GET").build()).get().readEntity(String.class));
+        assertEquals("0", app.apply(RequestContextBuilder.from("/node/leaf/", "GET").build()).get().getEntity());
+        assertEquals("1", app.apply(RequestContextBuilder.from("/node/node/leaf/", "GET").build()).get().getEntity());
+        assertEquals("2", app.apply(RequestContextBuilder.from("/node/node/node/leaf/", "GET").build()).get().getEntity());
+        assertEquals("3", app.apply(RequestContextBuilder.from("/node/node/node/node/leaf/", "GET").build()).get().getEntity());
     }
 
     @Path("foo")
@@ -292,7 +292,7 @@ public class AncestorsTest {
     public void testFooBar() throws Exception {
         app = createApplication(FooResource.class);
 
-        assertEquals("foo", app.apply(RequestContextBuilder.from("/foo", "GET").build()).get().readEntity(String.class));
-        assertEquals("bar", app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get().readEntity(String.class));
+        assertEquals("foo", app.apply(RequestContextBuilder.from("/foo", "GET").build()).get().getEntity());
+        assertEquals("bar", app.apply(RequestContextBuilder.from("/foo/bar", "GET").build()).get().getEntity());
     }
 }

@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 
 import static org.junit.Assert.assertEquals;
 
@@ -96,22 +97,22 @@ public class ResourceNotFoundTest {
     public void testExistingDeclarativeResources() throws Exception {
         ApplicationHandler app = createApplication(FooResource.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/foo", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("foo", response.readEntity(String.class));
+        assertEquals("foo", response.getEntity());
 
         response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("bar", response.readEntity(String.class));
+        assertEquals("bar", response.getEntity());
     }
 
     @Test
     public void testMissingDeclarativeResources() throws Exception {
         ApplicationHandler app = createApplication(FooResource.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/foe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
@@ -147,23 +148,23 @@ public class ResourceNotFoundTest {
 
         ApplicationHandler app = createMixedApp();
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/foo", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("foo", response.readEntity(String.class));
+        assertEquals("foo", response.getEntity());
 
         response = app.apply(RequestContextBuilder.from("/dynamic", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("dynamic", response.readEntity(String.class));
+        assertEquals("dynamic", response.getEntity());
 
         response = app.apply(RequestContextBuilder.from("/foo/bar", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("bar", response.readEntity(String.class));
+        assertEquals("bar", response.getEntity());
 
         response = app.apply(RequestContextBuilder.from("/foo/dynamic", "GET").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals("dynamic", response.readEntity(String.class));
+        assertEquals("dynamic", response.getEntity());
     }
 
 
@@ -172,7 +173,7 @@ public class ResourceNotFoundTest {
 
         ApplicationHandler app = createMixedApp();
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/foe", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());

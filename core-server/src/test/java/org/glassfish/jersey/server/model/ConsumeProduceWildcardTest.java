@@ -88,7 +88,7 @@ public class ConsumeProduceWildcardTest {
     public void testConsumeWildCardBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeWildCardBean.class);
 
-        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().readEntity(String.class));
-        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().readEntity(String.class));
+        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().getEntity());
+        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().getEntity());
     }
 }

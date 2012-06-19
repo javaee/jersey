@@ -56,6 +56,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -112,16 +113,16 @@ public class OptionsTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        Response response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
+        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeader("Allow").toString());
+        _checkAllowContent(response.getHeaderString("Allow"));
 
         final MediaType mediaType = MediaType.APPLICATION_XML_TYPE;
         response = app.apply(RequestContextBuilder.from("/", "OPTIONS").accept(mediaType).build()).get();
         assertEquals(200, response.getStatus());
         assertEquals(mediaType, response.getMediaType());
         assertEquals(0, response.getLength());
-        _checkAllowContent(response.getHeader("Allow").toString());
+        _checkAllowContent(response.getHeaderString("Allow"));
     }
 
     private void _checkAllowContent(String allow) {
@@ -172,11 +173,11 @@ public class OptionsTest {
     public void testWithOptions() throws Exception {
         initiateWebApplication(ResourceWithOptions.class);
 
-        Response response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
+        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeader("Allow").toString();
+        String allow = response.getHeaderString("Allow");
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));
@@ -184,6 +185,6 @@ public class OptionsTest {
         assertTrue(allow.contains("DELETE"));
         assertTrue(allow.contains("PATCH"));
 
-        assertEquals("OVERRIDE", response.getHeader("X-TEST"));
+        assertEquals("OVERRIDE", response.getHeaderString("X-TEST"));
     }
 }

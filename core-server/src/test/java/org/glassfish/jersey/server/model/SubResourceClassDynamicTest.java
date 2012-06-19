@@ -91,8 +91,8 @@ public class SubResourceClassDynamicTest {
     public void testSubResourceDynamic() throws Exception {
         app = createApplication(Parent.class);
 
-        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().readEntity(String.class));
-        assertEquals("child", app.apply(RequestContextBuilder.from("/parent/child", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().getEntity());
+        assertEquals("child", app.apply(RequestContextBuilder.from("/parent/child", "GET").build()).get().getEntity());
     }
 
     @Path("/{p}")
@@ -121,8 +121,8 @@ public class SubResourceClassDynamicTest {
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().readEntity(String.class));
-        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().getEntity());
+        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first", "GET").build()).get().getEntity());
     }
 
     @Path("/{p}")
@@ -178,10 +178,10 @@ public class SubResourceClassDynamicTest {
     public void testSubResourceDynamicWithTemplatesLifecycle() throws Exception {
         app = createApplication(ParentWithTemplatesLifecycle.class);
 
-        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().readEntity(String.class));
-        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/x", "GET").build()).get().readEntity(String.class));
-        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/x", "GET").build()).get().readEntity(String.class));
-        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/singleton/x", "GET").build()).get().readEntity(String.class));
-        assertEquals("x2", app.apply(RequestContextBuilder.from("/parent/child/singleton/x", "GET").build()).get().readEntity(String.class));
+        assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().getEntity());
+        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/x", "GET").build()).get().getEntity());
+        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/x", "GET").build()).get().getEntity());
+        assertEquals("x1", app.apply(RequestContextBuilder.from("/parent/child/singleton/x", "GET").build()).get().getEntity());
+        assertEquals("x2", app.apply(RequestContextBuilder.from("/parent/child/singleton/x", "GET").build()).get().getEntity());
     }
 }

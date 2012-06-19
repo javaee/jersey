@@ -89,7 +89,7 @@ public class SubResourceNullTest {
     public void testSubResourceNull() throws Exception {
         app = createApplication(Parent.class);
 
-        assertEquals("child", app.apply(RequestContextBuilder.from("/parent/true", "GET").build()).get().readEntity(String.class));
+        assertEquals("child", app.apply(RequestContextBuilder.from("/parent/true", "GET").build()).get().getEntity());
 
         assertEquals(404, app.apply(RequestContextBuilder.from("/parent/false", "GET").build()).get().getStatus());
     }

@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -90,13 +91,13 @@ public class SubResourceDynamicTest {
     public void testSubResourceDynamic() throws Exception {
         app = createApplication(Parent.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
-        assertEquals("parent", response.readEntity(String.class));
+        assertEquals("parent", response.getEntity());
 
         response = app.apply(RequestContextBuilder.from("/parent/child", "GET").accept("text/plain").build()).get();
-        assertEquals("child", response.readEntity(String.class));
+        assertEquals("child", response.getEntity());
     }
 
     @Path("/{p}")
@@ -125,12 +126,12 @@ public class SubResourceDynamicTest {
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
-        assertEquals("parent", response.readEntity(String.class));
+        assertEquals("parent", response.getEntity());
         response = app.apply(RequestContextBuilder.from("/parent/child/first", "GET").accept("text/plain").build()).get();
-        assertEquals("first", response.readEntity(String.class));
+        assertEquals("first", response.getEntity());
     }
 
     @Path("/")
@@ -155,9 +156,9 @@ public class SubResourceDynamicTest {
     public void testSubResourceCapturingGroups() throws Exception {
         app = createApplication(SubResourceExplicitRegexCapturingGroups.class);
 
-        Response response;
+        JerseyContainerResponseContext response;
 
         response = app.apply(RequestContextBuilder.from("/123-456-789/d", "GET").accept("text/plain").build()).get();
-        assertEquals("d", response.readEntity(String.class));
+        assertEquals("d", response.getEntity());
     }
 }

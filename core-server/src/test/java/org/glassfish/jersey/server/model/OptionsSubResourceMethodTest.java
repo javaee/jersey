@@ -56,6 +56,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerResponseContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -116,15 +117,15 @@ public class OptionsSubResourceMethodTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        Response response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
+        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeader("Allow").toString());
+        _checkAllowContent(response.getHeaderString("Allow"));
 
         response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").accept(MediaType.TEXT_HTML).build()).get();
 
         assertEquals(200, response.getStatus());
-        _checkAllowContent(response.getHeader("Allow").toString());
+        _checkAllowContent(response.getHeaderString("Allow"));
     }
 
     private void _checkAllowContent(final String allow) {
@@ -182,11 +183,11 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceWithOptions.class);
 
-        Response response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
+        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeader("Allow").toString();
+        String allow = response.getHeaderString("Allow");
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertTrue(allow.contains("PUT"));
@@ -216,11 +217,11 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceNoOptionsDifferentSub.class);
 
-        Response response = app.apply(RequestContextBuilder.from("/sub1", "OPTIONS").build()).get();
+        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub1", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
-        String allow = response.getHeader("Allow").toString();
+        String allow = response.getHeaderString("Allow");
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("GET"));
         assertFalse(allow.contains("PUT"));
@@ -229,7 +230,7 @@ public class OptionsSubResourceMethodTest {
 
         assertEquals(200, response.getStatus());
 
-        allow = response.getHeader("Allow").toString();
+        allow = response.getHeaderString("Allow");
         assertTrue(allow.contains("OPTIONS"));
         assertTrue(allow.contains("PUT"));
         assertFalse(allow.contains("GET"));
