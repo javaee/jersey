@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -123,34 +124,34 @@ public class AcceptQsTest {
 
     private void runTestAcceptGet(ApplicationHandler app) throws Exception {
 
-        String s = app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class);
+        String s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get().getEntity();
         assertEquals("foo", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.1").build()).get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1").build()).get().getEntity();
         assertEquals("foo", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
+                .get().getEntity();
         assertEquals("foo", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.4", "application/baz;q=0.2").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.4", "application/baz;q=0.2").build())
+                .get().getEntity();
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo", "application/bar", "application/baz;q=0.6").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo", "application/bar", "application/baz;q=0.6").build())
+                .get().getEntity();
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
+                .get().getEntity();
         assertEquals("bar", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
+                .get().getEntity();
         assertEquals("baz", s);
 
-        s = app.apply(Requests.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz;q=0.4").build())
-                .get().readEntity(String.class);
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz;q=0.4").build())
+                .get().getEntity();
         assertEquals("baz", s);
     }
 

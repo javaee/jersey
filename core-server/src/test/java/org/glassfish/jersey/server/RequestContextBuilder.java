@@ -39,9 +39,25 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+
 import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.MediaTypes;
 
 /**
  * Used by tests to create mock JerseyContainerRequestContext instances.
@@ -49,7 +65,52 @@ import org.glassfish.jersey.internal.MapPropertiesDelegate;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class RequestContextBuilder {
-    private final JerseyContainerRequestContext result;
+
+    public RequestContextBuilder type(String contentType) {
+        result.getHeaders().putSingle("content-type", contentType);
+        return this;
+
+    }
+
+    public class JerseyTestContainerRequestContext extends JerseyContainerRequestContext {
+
+        private Object entity;
+        private GenericType entityType;
+        private final PropertiesDelegate propertiesDelegate;
+
+        public JerseyTestContainerRequestContext(URI baseUri, URI requestUri, String method, SecurityContext securityContext, PropertiesDelegate propertiesDelegate) {
+            super(baseUri, requestUri, method, securityContext, propertiesDelegate);
+            this.propertiesDelegate = propertiesDelegate;
+        }
+
+        public void setEntity(Object entity) {
+            if (entity instanceof GenericEntity) {
+                this.entity = ((GenericEntity) entity).getEntity();
+                this.entityType = new GenericType(((GenericEntity) entity).getType());
+            } else {
+                this.entity = entity;
+                this.entityType = new GenericType(entity.getClass());
+            }
+        }
+
+        @Override
+        public void setWorkers(MessageBodyWorkers workers) {
+            super.setWorkers(workers);
+            MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                workers.writeTo(entity, entityType.getRawType(), entityType.getType(), new Annotation[0], getMediaType(),
+                        myMap,
+                        propertiesDelegate, baos, null, true);
+            } catch (IOException ex) {
+                Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (WebApplicationException ex) {
+                Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
+        }
+    }
+    private final JerseyTestContainerRequestContext result;
 
     public static RequestContextBuilder from(String requestUri, String method) {
         return from(null, requestUri, method);
@@ -60,7 +121,7 @@ public class RequestContextBuilder {
     }
 
     private RequestContextBuilder(String baseUri, String requestUri, String method) {
-        result = new JerseyContainerRequestContext(URI.create(baseUri), URI.create(requestUri), method, null,
+        result = new JerseyTestContainerRequestContext(URI.create(baseUri), URI.create(requestUri), method, null,
                 new MapPropertiesDelegate());
     }
 
@@ -70,6 +131,16 @@ public class RequestContextBuilder {
 
     public RequestContextBuilder header(String name, Object value) {
         result.header(name, value);
+        return this;
+    }
+
+    public RequestContextBuilder accept(String... acceptHeader) {
+        result.getAcceptableMediaTypes().addAll(MediaTypes.createFrom(acceptHeader));
+        return this;
+    }
+
+    public RequestContextBuilder entity(Object entity) {
+        result.setEntity(entity);
         return this;
     }
 }

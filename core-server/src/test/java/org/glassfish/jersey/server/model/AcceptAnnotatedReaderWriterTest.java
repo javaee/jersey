@@ -60,8 +60,8 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey.message.internal.Requests;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -226,13 +226,13 @@ public class AcceptAnnotatedReaderWriterTest {
 
         ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
-        assertEquals("foo: 1st", app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class));
-        assertEquals("foo: 1st", app.apply(Requests.from("/", "GET").accept("application/bar;q=0.8, application/foo").build()).get().readEntity(String.class));
-        assertEquals("bar: 2nd", app.apply(Requests.from("/", "GET").accept("application/bar;q=0.5, application/foo;q=0.2").build()).get().readEntity(String.class));
-        assertEquals("foo: 1st", app.apply(Requests.from("/", "GET").accept("applcation/baz, application/foo;q=0.8").build()).get().readEntity(String.class));
-        assertEquals("bar: 2nd", app.apply(Requests.from("/", "GET").accept("application/bar").build()).get().readEntity(String.class));
-        assertEquals("bar: 2nd", app.apply(Requests.from("/", "GET").accept("application/foo;q=0.8, application/bar").build()).get().readEntity(String.class));
-        assertEquals("bar: 2nd", app.apply(Requests.from("/", "GET").accept("applcation/baz, application/bar;q=0.8").build()).get().readEntity(String.class));
+        assertEquals("foo: 1st", app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get().getEntity());
+        assertEquals("foo: 1st", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar;q=0.8", "application/foo").build()).get().getEntity());
+        assertEquals("bar: 2nd", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar;q=0.5", "application/foo;q=0.2").build()).get().getEntity());
+        assertEquals("foo: 1st", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz", "application/foo;q=0.8").build()).get().getEntity());
+        assertEquals("bar: 2nd", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar").build()).get().getEntity());
+        assertEquals("bar: 2nd", app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.8", "application/bar").build()).get().getEntity());
+        assertEquals("bar: 2nd", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz", "application/bar;q=0.8").build()).get().getEntity());
     }
 
     @Path("/")
@@ -249,12 +249,12 @@ public class AcceptAnnotatedReaderWriterTest {
 
         final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class, StringWrapperWorker.BarStringWorker.class);
 
-        assertEquals("foo: content", app.apply(Requests.from("/", "GET").accept("application/foo").build()).get().readEntity(String.class));
-        assertEquals("foo: content", app.apply(Requests.from("/", "GET").accept("application/bar;q=0.5, application/foo").build()).get().readEntity(String.class));
-        assertEquals("foo: content", app.apply(Requests.from("/", "GET").accept("applcation/baz, application/foo;q=0.8").build()).get().readEntity(String.class));
-        assertEquals("bar: content", app.apply(Requests.from("/", "GET").accept("application/bar").build()).get().readEntity(String.class));
-        assertEquals("bar: content", app.apply(Requests.from("/", "GET").accept("application/foo;q=0.5, application/bar").build()).get().readEntity(String.class));
-        assertEquals("bar: content", app.apply(Requests.from("/", "GET").accept("applcation/baz, application/bar;q=0.8").build()).get().readEntity(String.class));
+        assertEquals("foo: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get().getEntity());
+        assertEquals("foo: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar;q=0.5, application/foo").build()).get().getEntity());
+        assertEquals("foo: content", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz, application/foo;q=0.8").build()).get().getEntity());
+        assertEquals("bar: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar").build()).get().getEntity());
+        assertEquals("bar: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.5, application/bar").build()).get().getEntity());
+        assertEquals("bar: content", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz, application/bar;q=0.8").build()).get().getEntity());
     }
 
     @Path("/")
@@ -292,10 +292,10 @@ public class AcceptAnnotatedReaderWriterTest {
 
         final ApplicationHandler app = createApplication(MultiplePostMethodResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
-        assertEquals("foo: foo", app.apply(Requests.from("/", "POST").entity(new StringWrapperFoo("foo")).type(APPLICATION_FOO).accept(APPLICATION_FOO).build()).get().readEntity(String.class));
-        assertEquals("foo: bar", app.apply(Requests.from("/", "POST").entity(new StringWrapperBar("bar")).type(APPLICATION_BAR).accept(APPLICATION_FOO).build()).get().readEntity(String.class));
-        assertEquals("bar: foo", app.apply(Requests.from("/", "POST").entity(new StringWrapperFoo("foo")).type(APPLICATION_FOO).accept(APPLICATION_BAR).build()).get().readEntity(String.class));
-        assertEquals("bar: bar", app.apply(Requests.from("/", "POST").entity(new StringWrapperBar("bar")).type(APPLICATION_BAR).accept(APPLICATION_BAR).build()).get().readEntity(String.class));
+        assertEquals("foo: foo", app.apply(RequestContextBuilder.from("/", "POST").entity(new StringWrapperFoo("foo")).type(APPLICATION_FOO).accept(APPLICATION_FOO).build()).get().getEntity());
+        assertEquals("foo: bar", app.apply(RequestContextBuilder.from("/", "POST").entity(new StringWrapperBar("bar")).type(APPLICATION_BAR).accept(APPLICATION_FOO).build()).get().getEntity());
+        assertEquals("bar: foo", app.apply(RequestContextBuilder.from("/", "POST").entity(new StringWrapperFoo("foo")).type(APPLICATION_FOO).accept(APPLICATION_BAR).build()).get().getEntity());
+        assertEquals("bar: bar", app.apply(RequestContextBuilder.from("/", "POST").entity(new StringWrapperBar("bar")).type(APPLICATION_BAR).accept(APPLICATION_BAR).build()).get().getEntity());
     }
 
     static String readString(InputStream is) throws IOException {

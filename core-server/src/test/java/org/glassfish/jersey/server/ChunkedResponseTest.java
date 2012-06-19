@@ -43,9 +43,6 @@ import java.io.IOException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.message.internal.Requests;
 
 import org.junit.Test;
 
@@ -89,7 +86,7 @@ public class ChunkedResponseTest {
         final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
 
-        Response response = applicationHandler.apply(Requests.from("/test", "GET").build()).get();
+        JerseyContainerResponseContext response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
         assertEquals(200, response.getStatus());
     }
 }
