@@ -109,7 +109,7 @@ class ClientFilteringStage extends AbstractFilteringStage<JerseyClientRequestCon
                                 Stages.asStage(new Inflector<JerseyClientRequestContext, JerseyClientResponseContext>() {
                                     @Override
                                     public JerseyClientResponseContext apply(final JerseyClientRequestContext requestContext) {
-                                        return JerseyClientResponseContext.initFrom(requestContext, abortResponse);
+                                        return new JerseyClientResponseContext(requestContext, abortResponse);
                                     }
                                 }));
                     }

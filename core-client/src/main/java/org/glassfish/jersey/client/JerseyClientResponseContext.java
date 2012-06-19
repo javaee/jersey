@@ -39,6 +39,10 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientResponseContext;
@@ -62,11 +66,36 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
      *
      * @param requestContext associated request context.
      * @param response JAX-RS response to be used to initialize the response context.
-     * @return new Jersey client response context
      */
-    public static JerseyClientResponseContext initFrom(final JerseyClientRequestContext requestContext, final Response response) {
-        // TODO properly implement
-        return new JerseyClientResponseContext(response.getStatusInfo(), requestContext);
+    public JerseyClientResponseContext(final JerseyClientRequestContext requestContext, final Response response) {
+        this(response.getStatusInfo(), requestContext);
+
+        final Object entity = response.getEntity();
+        if(entity != null) {
+            InputStream entityStream = new InputStream() {
+
+                ByteArrayInputStream byteArrayInputStream = null;
+
+                @Override
+                public int read() throws IOException {
+                    if(byteArrayInputStream == null) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                        try {
+                            requestContext.getWorkers().writeTo(entity, entity.getClass(), null, null, response.getMediaType(),
+                                    response.getMetadata(), requestContext.getPropertiesDelegate(), baos, null, false);
+                        } catch (IOException e) {
+                            // ignore
+                        }
+
+                        byteArrayInputStream = new ByteArrayInputStream(baos.toByteArray());
+                    }
+
+                    return byteArrayInputStream.read();
+                }
+            };
+            setEntityStream(entityStream);
+        }
     }
 
     /**

@@ -84,6 +84,7 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
     /**
      * Create new Jersey client request context.
      *
+     * @param requestUri         request Uri.
      * @param client             executing Jersey client instance.
      * @param configuration      request configuration.
      * @param propertiesDelegate properties delegate.
@@ -167,7 +168,6 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
 
     @Override
     public void abortWith(Response response) {
-        // TODO: implement special handling of "outbound" response type?
         this.abortResponse = response;
     }
 
@@ -205,7 +205,6 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
      * @param workers message body workers.
      */
     public void setWorkers(MessageBodyWorkers workers) {
-        // TODO use this initializer method in the request processing
         this.workers = workers;
     }
 
@@ -218,13 +217,11 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
     }
 
     public void acceptLanguage(Locale... locales) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
     public void acceptLanguage(String... locales) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
     public void cookie(Cookie cookie) {
@@ -232,18 +229,15 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
     }
 
     public void allow(String... methods) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        headers(HttpHeaders.ALLOW, methods);
     }
 
     public void allow(Set<String> methods) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        headers(HttpHeaders.ALLOW, methods);
     }
 
     public void cacheControl(CacheControl cacheControl) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        header(HttpHeaders.CACHE_CONTROL, cacheControl);
     }
 
     public void encoding(String encoding) {
@@ -275,11 +269,10 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
             type((MediaType) null);
             language((String) null);
             encoding(null);
+        } else {
+            type(variant.getMediaType());
+            language(variant.getLanguage());
+            encoding(variant.getEncoding());
         }
-
-        type(variant.getMediaType());
-        language(variant.getLanguage());
-        encoding(variant.getEncoding());
-        // TODO set charset
     }
 }

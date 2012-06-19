@@ -132,7 +132,7 @@ class ClientModule extends AbstractModule {
                                 protected JerseyClientResponseContext convertResponse(
                                         JerseyClientRequestContext requestContext, Response response) {
                                     // TODO get rid of this code on the client side
-                                    return JerseyClientResponseContext.initFrom(requestContext, response);
+                                    return new JerseyClientResponseContext(requestContext, response);
                                 }
                             };
                         }
@@ -200,6 +200,7 @@ class ClientModule extends AbstractModule {
                 new ProcessingModule(),
                 new ContextInjectionResolver.Module(),
                 new MessagingModules.MessageBodyProviders(),
+                new MessagingModules.HeaderDelegateProviders(),
                 new ServiceProvidersModule(RequestScope.class),
                 new MessageBodyFactory.Module(RequestScope.class),
                 new ExceptionMapperFactory.Module(RequestScope.class),
