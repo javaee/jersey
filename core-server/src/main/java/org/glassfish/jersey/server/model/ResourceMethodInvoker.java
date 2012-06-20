@@ -136,13 +136,12 @@ public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestCo
         responseContext.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
 
         if (responseContext.hasEntity()) {
+            Type invocableType = invocable.getResponseType();
             Type entityType = responseContext.getEntityType();
-            if (entityType == null || Void.TYPE == entityType || Void.class == entityType || entityType == Response.class) {
-                responseContext.setEntityType(responseContext.getEntityClass());
+            if (invocableType != null && Void.TYPE != invocableType && Void.class != invocableType && invocableType != Response.class) {
+                responseContext.setEntityType(invocableType);
             }
         }
-
-        responseContext.setEntityType(invocable.getResponseType());
 
         return responseContext;
     }

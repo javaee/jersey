@@ -492,8 +492,11 @@ public final class ApplicationHandler {
 
             @Override
             protected JerseyContainerResponseContext handleResponse(JerseyContainerResponseContext responseContext) {
+                if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
+                    stripEntity(responseContext);
+                }
                 ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, responseContext);
-                return (requestContext.getMethod().equals(HttpMethod.HEAD) ? stripEntity(responseContext) : responseContext);
+                return responseContext;
             }
 
             @Override
