@@ -60,7 +60,6 @@
 
     <modules>
         <module>json</module>
-        <module>json-moxy</module>
         <module>multipart</module>
         <module>sse</module>
     </modules>
