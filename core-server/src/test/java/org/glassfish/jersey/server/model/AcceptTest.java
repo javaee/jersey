@@ -197,7 +197,6 @@ public class AcceptTest {
         ApplicationHandler app = createApplication(MultipleResource.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        MediaType bar = MediaType.valueOf("application/bar");
 
         JerseyContainerResponseContext response;
 

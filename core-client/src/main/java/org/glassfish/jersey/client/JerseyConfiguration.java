@@ -220,8 +220,10 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             }
 
             final State state = strategy.onChange(this);
-            state.features.put(featureClass, feature);
-            feature.onEnable(state);
+            boolean success = feature.onEnable(state);
+            if (success) {
+                state.features.put(featureClass, feature);
+            }
 
             return state;
         }
