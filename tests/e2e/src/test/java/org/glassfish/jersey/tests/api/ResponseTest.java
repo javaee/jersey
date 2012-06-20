@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import javax.annotation.Nullable;
+import org.glassfish.jersey.message.internal.HeadersFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -289,8 +290,8 @@ public class ResponseTest {
             pass = false;
         }
 
-        MultivaluedMap<String, Object> mvp =
-                resp.getMetadata();
+        MultivaluedMap<String, String> mvp = HeadersFactory.getStringHeaders(
+                resp.getMetadata());
 
 
         for (String key : mvp.keySet()) {
@@ -321,7 +322,7 @@ public class ResponseTest {
 
             if (language != null) {
                 if (key.equalsIgnoreCase("Content-language")) {
-                    for (Object lang : mvp.get(key)) {
+                    for (String lang : mvp.get(key)) {
                         if (!language.contains(lang.toString())) {
                             pass = false;
                             sb.append(indent + indent + "language test failed: ").append(lang).append(" is not expected in Response").append(newline);
