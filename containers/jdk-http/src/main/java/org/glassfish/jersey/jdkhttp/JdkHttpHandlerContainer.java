@@ -158,6 +158,8 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
                 exchange.getRequestMethod(), getSecurityContext(exchange.getPrincipal(), isSecure),
                 new MapPropertiesDelegate());
+        requestContext.setEntityStream(exchange.getRequestBody());
+        requestContext.getHeaders().putAll(exchange.getRequestHeaders());
         requestContext.setWriter(responseWriter);
         try {
             appHandler.handle(requestContext);

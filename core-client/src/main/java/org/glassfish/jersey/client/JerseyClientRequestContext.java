@@ -107,6 +107,7 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
         this.requestUri = original.requestUri;
         this.httpMethod = original.httpMethod;
         this.client = original.client;
+        this.workers = original.workers;
         this.configuration = original.configuration.snapshot();
 
         this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);

@@ -55,55 +55,55 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
         return App.create();
     }
     private String[] expectedFragmentsProgrammatic = new String[]{
-        // UriInfo
-        "Absolute path : " + this.getBaseUri() + "programmatic/v1/v2",
-        "Base URI : " + this.getBaseUri(),
-        "Path : /programmatic/v1/v2",
-        "Path segments : [programmatic, v1, v2]",
-        "p1 : v1", "p2 : v2", // path params
-        "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseUri() + "programmatic/v1/v2?q1=1&q2=v2&q2=v3",
-        // RequestHeaders/HttpHeaders
-        "Accept : text/plain",
-        // Injected Parameters
-        "String path param p1=v1",
-        "PathSegment path param p2=v2",
-        "int query param q1=1",
-        "List<String> query param q2=[v2, v3]"
+            // UriInfo
+            "Absolute path : " + this.getBaseUri() + "programmatic/v1/v2",
+            "Base URI : " + this.getBaseUri(),
+            "Path : /programmatic/v1/v2",
+            "Path segments : [programmatic, v1, v2]",
+            "p1 : v1", "p2 : v2", // path params
+            "q1 : 1", "q2 : v2, v3", // query params
+            "Request URI : " + this.getBaseUri() + "programmatic/v1/v2?q1=1&q2=v2&q2=v3",
+            // RequestHeaders/HttpHeaders
+            "Accept : text/plain",
+            // Injected Parameters
+            "String path param p1=v1",
+            "PathSegment path param p2=v2",
+            "int query param q1=1",
+            "List<String> query param q2=[v2, v3]"
     };
     private String[] expectedFragmentsAnnotatedInstance = new String[]{
-        // UriInfo
-        "Absolute path : " + this.getBaseUri() + "annotated/instance/v1/v2",
-        "Base URI : " + this.getBaseUri(),
-        "Path : /annotated/instance/v1/v2",
-        "Path segments : [annotated, instance, v1, v2]",
-        "p1 : v1", "p2 : v2", // path params
-        "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseUri() + "annotated/instance/v1/v2?q1=1&q2=v2&q2=v3",
-        // RequestHeaders/HttpHeaders
-        "Accept : text/plain",
-        // Injected Parameters
-        "String path param p1=v1",
-        "PathSegment path param p2=v2",
-        "int query param q1=1",
-        "List<String> query param q2=[v2, v3]"
+            // UriInfo
+            "Absolute path : " + this.getBaseUri() + "annotated/instance/v1/v2",
+            "Base URI : " + this.getBaseUri(),
+            "Path : /annotated/instance/v1/v2",
+            "Path segments : [annotated, instance, v1, v2]",
+            "p1 : v1", "p2 : v2", // path params
+            "q1 : 1", "q2 : v2, v3", // query params
+            "Request URI : " + this.getBaseUri() + "annotated/instance/v1/v2?q1=1&q2=v2&q2=v3",
+            // RequestHeaders/HttpHeaders
+            "Accept : text/plain",
+            // Injected Parameters
+            "String path param p1=v1",
+            "PathSegment path param p2=v2",
+            "int query param q1=1",
+            "List<String> query param q2=[v2, v3]"
     };
     private String[] expectedFragmentsAnnotatedMethod = new String[]{
-        // UriInfo
-        "Absolute path : " + this.getBaseUri() + "annotated/method/v1/v2",
-        "Base URI : " + this.getBaseUri(),
-        "Path : /annotated/method/v1/v2",
-        "Path segments : [annotated, method, v1, v2]",
-        "p1 : v1", "p2 : v2", // path params
-        "q1 : 1", "q2 : v2, v3", // query params
-        "Request URI : " + this.getBaseUri() + "annotated/method/v1/v2?q1=1&q2=v2&q2=v3",
-        // RequestHeaders/HttpHeaders
-        "Accept : text/plain",
-        // Injected Parameters
-        "String path param p1=v1",
-        "PathSegment path param p2=v2",
-        "int query param q1=1",
-        "List<String> query param q2=[v2, v3]"
+            // UriInfo
+            "Absolute path : " + this.getBaseUri() + "annotated/method/v1/v2",
+            "Base URI : " + this.getBaseUri(),
+            "Path : /annotated/method/v1/v2",
+            "Path segments : [annotated, method, v1, v2]",
+            "p1 : v1", "p2 : v2", // path params
+            "q1 : 1", "q2 : v2, v3", // query params
+            "Request URI : " + this.getBaseUri() + "annotated/method/v1/v2?q1=1&q2=v2&q2=v3",
+            // RequestHeaders/HttpHeaders
+            "Accept : text/plain",
+            // Injected Parameters
+            "String path param p1=v1",
+            "PathSegment path param p2=v2",
+            "int query param q1=1",
+            "List<String> query param q2=[v2, v3]"
     };
 
     private WebTarget prepareTarget(String path) {
@@ -114,34 +114,37 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
 
     @Test
     public void testProgrammaticApp() throws Exception {
-        String responseEntity = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").get(String.class);
+        String responseEntity = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").get(String.class)
+                .toLowerCase();
 
         for (String expectedFragment : expectedFragmentsProgrammatic) {
             assertTrue("Expected fragment '" + expectedFragment + "' not found in response:\n" + responseEntity,
-                    // toLowerCase - http header field names are case insensitive
-                    responseEntity.contains(expectedFragment));
+                    // http header field names are case insensitive
+                    responseEntity.contains(expectedFragment.toLowerCase()));
         }
     }
 
     @Test
     public void testAnnotatedInstanceApp() throws Exception {
-        String responseEntity = prepareTarget(App.ROOT_PATH_ANNOTATED_INSTANCE).request("text/plain").get(String.class);
+        String responseEntity = prepareTarget(App.ROOT_PATH_ANNOTATED_INSTANCE).request("text/plain").get(String.class)
+                .toLowerCase();
 
         for (String expectedFragment : expectedFragmentsAnnotatedInstance) {
             assertTrue("Expected fragment '" + expectedFragment + "' not found in response:\n" + responseEntity,
-                    // toLowerCase - http header field names are case insensitive
-                    responseEntity.contains(expectedFragment));
+                    // http header field names are case insensitive
+                    responseEntity.contains(expectedFragment.toLowerCase()));
         }
     }
 
     @Test
     public void testAnnotatedMethodApp() throws Exception {
-        String responseEntity = prepareTarget(App.ROOT_PATH_ANNOTATED_METHOD).request("text/plain").get(String.class);
+        String responseEntity = prepareTarget(App.ROOT_PATH_ANNOTATED_METHOD).request("text/plain").get(String.class)
+                .toLowerCase();
 
         for (String expectedFragment : expectedFragmentsAnnotatedMethod) {
             assertTrue("Expected fragment '" + expectedFragment + "' not found in response:\n" + responseEntity,
-                    // toLowerCase - http header field names are case insensitive
-                    responseEntity.contains(expectedFragment));
+                    // http header field names are case insensitive
+                    responseEntity.contains(expectedFragment.toLowerCase()));
         }
     }
 }

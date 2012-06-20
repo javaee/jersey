@@ -260,8 +260,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void aroundWriteTo(WriterInterceptorContext writerInterceptorContext) throws IOException, WebApplicationException {
         LoggingStream stream = (LoggingStream) writerInterceptorContext.getProperty(ENTITY_LOGGER_PROPERTY);
+        writerInterceptorContext.proceed();
         if (stream != null) {
-            writerInterceptorContext.proceed();
             log(stream.getStringBuilder());
         }
     }
