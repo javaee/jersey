@@ -169,13 +169,11 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
     public Continuation<JerseyContainerRequestContext> apply(JerseyContainerRequestContext requestContext) {
         final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
-        if (!preMatch) {
-            final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
-                    ContainerResponseFilter.class,
-                    new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
-            if (!responseFilters.isEmpty()) {
-                respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
-            }
+        final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
+                ContainerResponseFilter.class,
+                new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
+        if (!responseFilters.isEmpty()) {
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
 
         Iterable<ContainerRequestFilter> requestFilters = serviceProviders.getAll(
