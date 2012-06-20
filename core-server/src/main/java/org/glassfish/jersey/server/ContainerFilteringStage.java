@@ -222,6 +222,8 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
 
         @Override
         public Continuation<JerseyContainerResponseContext> apply(JerseyContainerResponseContext responseContext) {
+            // TODO from the name-bound filters select only those that are applicable for the invoked resource.
+
             try {
                 for (ContainerResponseFilter filter : filters) {
                     filter.filter(responseContext.getRequestContext(), responseContext);

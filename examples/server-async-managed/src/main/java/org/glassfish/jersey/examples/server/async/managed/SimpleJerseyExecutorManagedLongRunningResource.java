@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
@@ -67,12 +68,12 @@ public class SimpleJerseyExecutorManagedLongRunningResource {
 
     @GET
     @Suspend
-    public void longGet() {
+    public void longGet(@QueryParam("id") int requestId) {
         try {
             Thread.sleep(SLEEP_TIME_IN_MILLIS);
         } catch (InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
         }
-        ctx.resume(NOTIFICATION_RESPONSE);
+        ctx.resume(requestId + " - " + NOTIFICATION_RESPONSE);
     }
 }

@@ -46,6 +46,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.CloseableService;
 
 import org.glassfish.hk2.scopes.Singleton;
@@ -92,7 +94,7 @@ public class CloseableServiceModule extends AbstractModule {
                     try {
                         c.close();
                     } catch (Exception ex) {
-                        LOGGER.log(Level.SEVERE, "Unable to close", ex);
+                        LOGGER.log(Level.SEVERE, LocalizationMessages.CLOSEABLE_UNABLE_TO_CLOSE(c.getClass().getName()), ex);
                     }
                 }
             }
@@ -100,7 +102,13 @@ public class CloseableServiceModule extends AbstractModule {
 
         @SuppressWarnings("unchecked")
         private Set<Closeable> getCloseables() {
-            return (Set<Closeable>) context.getRequestContext().getProperty(HttpContextCloseableService.class.getName());
+            final JerseyContainerRequestContext requestContext = context.getRequestContext();
+            if (requestContext == null) {
+                LOGGER.warning(LocalizationMessages.CLOSEABLE_INJECTED_REQUEST_CONTEXT_NULL(Thread.currentThread().getName()));
+                return null;
+            }
+
+            return (Set<Closeable>) requestContext.getProperty(HttpContextCloseableService.class.getName());
         }
 
     }
