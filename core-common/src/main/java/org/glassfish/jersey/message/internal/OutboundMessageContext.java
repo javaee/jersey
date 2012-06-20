@@ -759,7 +759,7 @@ public class OutboundMessageContext {
         if (entity instanceof GenericEntity) {
             genericType = new GenericType(((GenericEntity) entity).getType());
         } else {
-            genericType = new GenericType(entity.getClass());
+            genericType = (entity == null) ? null : new GenericType(entity.getClass());
         }
 
         setEntity(entity, genericType);

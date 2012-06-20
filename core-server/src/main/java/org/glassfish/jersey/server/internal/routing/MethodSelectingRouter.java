@@ -65,8 +65,7 @@ import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.Factory;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -87,6 +86,64 @@ import com.google.common.collect.Sets;
 final class MethodSelectingRouter implements Router {
 
     private static final Logger LOGGER = Logger.getLogger(MethodSelectingRouter.class.getName());
+
+    private final Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+    private final MessageBodyWorkers workers;
+
+    private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
+    private final Router router;
+
+    /**
+     * Injectable builder of a {@link MethodSelectingRouter} instance.
+     */
+    static class Builder {
+        @Inject
+        private Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+
+        /**
+         * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
+         *
+         * The router selects the method that best matches the request based on
+         * produce/consume information from the resource method models.
+         *
+         * @param workers             message body workers.
+         * @param methodAcceptorPairs [method model, method methodAcceptorPair] pairs.
+         * @return new {@link MethodSelectingRouter}
+         */
+        public MethodSelectingRouter build(
+                final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
+            return new MethodSelectingRouter(respondingContextFactory, workers, methodAcceptorPairs);
+        }
+
+    }
+
+    private MethodSelectingRouter(
+            Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory,
+            MessageBodyWorkers msgWorkers,
+            List<MethodAcceptorPair> methodAcceptorPairs) {
+        this.respondingContextFactory = respondingContextFactory;
+        this.workers = msgWorkers;
+        this.consumesProducesAcceptors = new HashMap<String, List<ConsumesProducesAcceptor>>();
+        for (final MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
+            String httpMethod = methodAcceptorPair.model.getHttpMethod();
+
+            List<ConsumesProducesAcceptor> httpMethodBoundAcceptors = consumesProducesAcceptors.get(httpMethod);
+            if (httpMethodBoundAcceptors == null) {
+                httpMethodBoundAcceptors = new LinkedList<ConsumesProducesAcceptor>();
+                consumesProducesAcceptors.put(httpMethod, httpMethodBoundAcceptors);
+            }
+            addAllConsumesProducesCombinations(httpMethodBoundAcceptors, methodAcceptorPair);
+        }
+
+        if (!consumesProducesAcceptors.containsKey(HttpMethod.HEAD)) {
+            this.router = createHeadEnrichedRouter();
+        } else {
+            this.router = createInternalRouter();
+        }
+        if (!consumesProducesAcceptors.containsKey(HttpMethod.OPTIONS)) {
+            addOptionsSupport();
+        }
+    }
 
     /**
      * Represents a 1-1-1 relation between input and output media type and an methodAcceptorPair.
@@ -246,63 +303,6 @@ final class MethodSelectingRouter implements Router {
         }
     }
 
-    /**
-     * Injectable builder of a {@link MethodSelectingRouter} instance.
-     */
-    static class Builder {
-        @Inject
-        private Services services;
-
-        /**
-         * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
-         *
-         * The router selects the method that best matches the request based on
-         * produce/consume information from the resource method models.
-         *
-         * @param workers             message body workers.
-         * @param methodAcceptorPairs [method model, method methodAcceptorPair] pairs.
-         * @return new {@link MethodSelectingRouter}
-         */
-        public MethodSelectingRouter build(
-                final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
-            return new MethodSelectingRouter(services, workers, methodAcceptorPairs);
-        }
-
-    }
-
-    private final Services services;
-    private final MessageBodyWorkers workers;
-
-    private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
-    private final Router router;
-
-    private MethodSelectingRouter(
-            Services services,
-            MessageBodyWorkers msgWorkers,
-            List<MethodAcceptorPair> methodAcceptorPairs) {
-        this.workers = msgWorkers;
-        this.services = services;
-        this.consumesProducesAcceptors = new HashMap<String, List<ConsumesProducesAcceptor>>();
-        for (final MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
-            String httpMethod = methodAcceptorPair.model.getHttpMethod();
-
-            List<ConsumesProducesAcceptor> httpMethodBoundAcceptors = consumesProducesAcceptors.get(httpMethod);
-            if (httpMethodBoundAcceptors == null) {
-                httpMethodBoundAcceptors = new LinkedList<ConsumesProducesAcceptor>();
-                consumesProducesAcceptors.put(httpMethod, httpMethodBoundAcceptors);
-            }
-            addAllConsumesProducesCombinations(httpMethodBoundAcceptors, methodAcceptorPair);
-        }
-
-        if (!consumesProducesAcceptors.containsKey(HttpMethod.HEAD)) {
-            this.router = createHeadEnrichedRouter();
-        } else {
-            this.router = createInternalRouter();
-        }
-        if (!consumesProducesAcceptors.containsKey(HttpMethod.OPTIONS)) {
-            addOptionsSupport();
-        }
-    }
 
     private Router createInternalRouter() {
         return new Router() {
@@ -424,20 +424,24 @@ final class MethodSelectingRouter implements Router {
             // TODO: if the response already has content type set, we should not be spending cycles calculating
             // TODO: the effective media type in advance - see issue JERSEY-1187
             final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
-            services.forContract(new TypeLiteral<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>>() {
-            }).get().push(new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
-                @Override
-                public JerseyContainerResponseContext apply(final JerseyContainerResponseContext responseContext) {
-                    // If the response has entity and the computed effective response type is not wildcard and response
-                    // does not have a media type set already, set the computed effective media type here.
-                    if (responseContext.hasEntity() && !isWildcard(effectiveResponseType)
-                            && responseContext.getMediaType() == null) {
+            respondingContextFactory.get().push(
+                    new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
+                        @Override
+                        public JerseyContainerResponseContext apply(final JerseyContainerResponseContext responseContext) {
+                            // If the response has entity or is a response to HEAD request
+                            // and the computed effective response type is not wildcard
+                            // and response does not have a media type set already,
+                            // set the computed effective media type here.
+                            final boolean isHeadRequest = HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod());
+                            if ((responseContext.hasEntity() || isHeadRequest)
+                                    && !isWildcard(effectiveResponseType)
+                                    && responseContext.getMediaType() == null) {
 
-                        responseContext.setMediaType(effectiveResponseType);
-                    }
-                    return responseContext;
-                }
-            });
+                                responseContext.setMediaType(effectiveResponseType);
+                            }
+                            return responseContext;
+                        }
+                    });
             return selected.methodAcceptorPair.router;
         }
 
@@ -485,6 +489,15 @@ final class MethodSelectingRouter implements Router {
             public Continuation apply(final JerseyContainerRequestContext requestContext) {
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
                     requestContext.setMethod(HttpMethod.GET);
+                    respondingContextFactory.get().push(
+                            new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
+                                @Override
+                                public JerseyContainerResponseContext apply(JerseyContainerResponseContext responseContext) {
+                                    responseContext.getRequestContext().setMethod(HttpMethod.HEAD);
+                                    return responseContext;
+                                }
+                            }
+                    );
                 }
                 return Continuation.of(requestContext, getMethodRouter(requestContext));
             }

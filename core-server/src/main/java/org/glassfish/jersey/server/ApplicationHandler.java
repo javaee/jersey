@@ -492,10 +492,12 @@ public final class ApplicationHandler {
 
             @Override
             protected JerseyContainerResponseContext handleResponse(JerseyContainerResponseContext responseContext) {
+                ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, responseContext);
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
+                    // for testing purposes:
+                    // need to also strip the object entity as it was stripped writeResponse(...)
                     stripEntity(responseContext);
                 }
-                ApplicationHandler.this.writeResponse(containerResponseWriter, requestContext, responseContext);
                 return responseContext;
             }
 
