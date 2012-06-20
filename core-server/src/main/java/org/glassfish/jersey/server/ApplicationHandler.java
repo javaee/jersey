@@ -705,7 +705,7 @@ public final class ApplicationHandler {
             try {
                 requestContext.getWorkers().writeTo(
                         entity,
-                        responseContext.getEntityClass(),
+                        entity.getClass(),
                         responseContext.getEntityType(),
                         responseContext.getEntityAnnotations(),
                         responseContext.getMediaType(),

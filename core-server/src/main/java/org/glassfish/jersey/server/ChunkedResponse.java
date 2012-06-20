@@ -109,7 +109,7 @@ public class ChunkedResponse<T> implements Closeable {
         while ((t = queue.poll()) != null) {
             requestContext.getWorkers().writeTo(
                     t,
-                    chunkType.getRawType(),
+                    t.getClass(),
                     chunkType.getType(),
                     responseContext.getEntityAnnotations(),
                     responseContext.getMediaType(),

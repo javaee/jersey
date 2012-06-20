@@ -161,7 +161,7 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
                 try {
                     workers.writeTo(
                             outboundContext.getEntity(),
-                            outboundContext.getEntityClass(),
+                            outboundContext.getEntity().getClass(),
                             outboundContext.getEntityType(),
                             outboundContext.getEntityAnnotations(),
                             outboundContext.getMediaType(),
