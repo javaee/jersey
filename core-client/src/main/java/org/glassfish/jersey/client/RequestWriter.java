@@ -240,7 +240,7 @@ public class RequestWriter {
             entityStream = requestContext.getEntityStream();
             workers.writeTo(
                     requestContext.getEntity(),
-                    requestContext.getEntityClass(),
+                    requestContext.getEntity().getClass(),
                     requestContext.getEntityType(),
                     requestContext.getEntityAnnotations(),
                     requestContext.getMediaType(),

@@ -339,7 +339,8 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
         try {
             callback.result(response);
         } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("result"), ex);
+            LOGGER.log(Level.WARNING,
+                    LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("result", Thread.currentThread().getName()), ex);
         }
     }
 
@@ -347,7 +348,8 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
         try {
             callback.failure(exception);
         } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("failure"), ex);
+            LOGGER.log(Level.WARNING,
+                    LocalizationMessages.CALLBACK_METHOD_INVOCATION_FAILED("failure", Thread.currentThread().getName()), ex);
         }
     }
 }

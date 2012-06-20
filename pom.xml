@@ -144,7 +144,7 @@
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
-</developers>
+    </developers>
 
     <!--contributors></contributors-->
 
@@ -231,7 +231,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.11</version>
                 </plugin>
-                 <plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.3</version>
@@ -513,15 +513,15 @@
                         <instructions>
                             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                             <_nodefaultversion>false</_nodefaultversion>
-                     </instructions>
+                        </instructions>
                     </configuration>
                     <executions>
                         <execution>
                             <id>osgi-bundle</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>bundle</goal>
-                                </goals>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>bundle</goal>
+                            </goals>
                         </execution>
                     </executions>
                 </plugin>
@@ -529,7 +529,7 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>xslt-maven-plugin</artifactId>
                     <version>1.0</version>
-               </plugin>
+                </plugin>
             </plugins>
         </pluginManagement>
         <extensions>
@@ -687,11 +687,11 @@
                 <version>11.0.1</version>
             </dependency>
 
-           <dependency>
-               <groupId>com.google.code.findbugs</groupId>
-               <artifactId>jsr305</artifactId>
-               <version>1.3.9</version>
-           </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>1.3.9</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.glassfish.hk2</groupId>
@@ -750,6 +750,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>org.eclipse.persistence.moxy</artifactId>
+                <version>2.4.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
                 <version>${jackson.version}</version>
@@ -770,7 +776,7 @@
                 <version>${jackson.version}</version>
             </dependency>
 
-           <dependency>
+            <dependency>
                 <groupId>org.osgi</groupId>
                 <artifactId>org.osgi.core</artifactId>
                 <version>${osgi.version}</version>

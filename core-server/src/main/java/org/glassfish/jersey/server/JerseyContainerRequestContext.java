@@ -133,7 +133,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
             PropertiesDelegate propertiesDelegate) {
 
         this.baseUri = baseUri == null ? DEFAULT_BASE_URI : normalizeBaseUri(baseUri);
-        this.requestUri = requestUri;
+        this.requestUri = requestUri.normalize();
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
         this.propertiesDelegate = propertiesDelegate;

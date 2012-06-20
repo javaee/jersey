@@ -52,6 +52,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -82,6 +83,7 @@ import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
+import org.glassfish.grizzly.utils.Charsets;
 
 /**
  * Grizzly 2 Jersey HTTP Container.
@@ -279,9 +281,14 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
-            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(getBaseUri(request),
-                    URI.create(request.getRequestURI()), request.getMethod().getMethodString(),
+            URI baseUri = getBaseUri(request);
+            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri,
+                    getRequestUri(baseUri, request), request.getMethod().getMethodString(),
                     getSecurityContext(request), new GrizzlyRequestPropertiesDelegate(request));
+            requestContext.setEntityStream(request.getInputStream());
+            for (String headerName : request.getHeaderNames()) {
+                requestContext.headers(headerName, request.getHeaders(headerName));
+            }
             requestContext.setWriter(responseWriter);
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
@@ -365,22 +372,20 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
-    // TODO: commented out as it seems ridiculous - but maybe grizzlyRequest.getRequestURI() does not do what
-    // TODO: I expect it to do, in which case this will have to be uncommented and used
-//    private URI getRequestUri(URI baseUri, Request grizzlyRequest) {
-//        // TODO: this is terrible, there must be a way to obtain the original request URI!
-//        String originalURI = UriBuilder
-//                .fromPath(
-//                        grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC()
-//                                .toString(Charsets.DEFAULT_CHARSET)).build().toString();
-//
-//        String queryString = grizzlyRequest.getQueryString();
-//        if (queryString != null) {
-//            originalURI = originalURI + "?" + queryString;
-//        }
-//
-//        final URI requestUri = baseUri.resolve(originalURI);
-//
-//        return requestUri;
-//    }
+    private URI getRequestUri(URI baseUri, Request grizzlyRequest) {
+        // TODO: this is terrible, there must be a way to obtain the original request URI!
+        String originalUri = UriBuilder
+                .fromPath(
+                        grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC()
+                                .toString(Charsets.DEFAULT_CHARSET)).build().toString();
+
+        String queryString = grizzlyRequest.getQueryString();
+        if (queryString != null) {
+            originalUri = originalUri + "?" + queryString;
+        }
+
+        final URI requestUri = baseUri.resolve(originalUri);
+
+        return requestUri;
+    }
 }

@@ -103,7 +103,7 @@ public class RequestContextBuilder {
                 MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 try {
-                    workers.writeTo(entity, entityType.getRawType(), entityType.getType(), new Annotation[0], getMediaType(),
+                    workers.writeTo(entity, entity.getClass(), entityType.getType(), new Annotation[0], getMediaType(),
                             myMap,
                             propertiesDelegate, baos, null, true);
                 } catch (IOException ex) {

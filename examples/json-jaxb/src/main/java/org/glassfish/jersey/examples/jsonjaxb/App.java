@@ -51,7 +51,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Utility class which can create {@link JerseyApplication} instance and provides support
+ * Utility class which can create {@link ResourceConfig} instance and provides support
  * for running this sample from command line.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)

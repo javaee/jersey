@@ -37,43 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async.managed;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.ExecutionContext;
+package org.glassfish.jersey.examples.jsonmoxy;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom Jersey container request processing thread.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH)
-@Produces("text/plain")
-public class SimpleJerseyExecutorManagedLongRunningResource {
+public class SimpleBean {
+    public String a;
+    public int b;
+    public long c;
 
-    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
-    //
-    private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    @Context
-    private ExecutionContext ctx;
+    public SimpleBean() {
+    }
 
-    @GET
-    @Suspend
-    public void longGet(@QueryParam("id") int requestId) {
-        try {
-            Thread.sleep(SLEEP_TIME_IN_MILLIS);
-        } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-        }
-        ctx.resume(requestId + " - " + NOTIFICATION_RESPONSE);
+    public SimpleBean(String a, int b, long c) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    }
+
+    public String getA() {
+        return a;
+    }
+
+    public int getB() {
+        return b;
+    }
+
+    public long getC() {
+        return c;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SimpleBean that = (SimpleBean) o;
+
+        if (b != that.b) return false;
+        if (c != that.c) return false;
+        if (a != null ? !a.equals(that.a) : that.a != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = a != null ? a.hashCode() : 0;
+        result = 31 * result + b;
+        result = 31 * result + (int) (c ^ (c >>> 32));
+        return result;
     }
 }

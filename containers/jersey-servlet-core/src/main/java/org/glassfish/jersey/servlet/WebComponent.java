@@ -239,6 +239,7 @@ public class WebComponent {
 
         JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
                 servletRequest.getMethod(), getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
+        requestContext.setEntityStream(servletRequest.getInputStream());
         addRequestHeaders(servletRequest, requestContext);
 
         // Check if any servlet filters have consumed a request entity

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,18 +105,24 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
         final JerseyContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(baseUri,
                 clientRequestContext.getUri(), clientRequestContext.getMethod(),
                 null, propertiesDelegate);
-        outboundToInbound(clientRequestContext, containerRequestContext, propertiesDelegate, clientRequestContext.getWorkers());
+        outboundToInbound(clientRequestContext, containerRequestContext, propertiesDelegate, clientRequestContext.getWorkers(), null);
 
         boolean followRedirects = PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true);
 
-        responseListenableFuture = appHandler.apply(containerRequestContext);
+        ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
+
+        responseListenableFuture = appHandler.apply(containerRequestContext, entityStream);
 
         try {
             if (responseListenableFuture != null) {
-                return tryFollowRedirects(followRedirects, createClientResponseContext(clientRequestContext,
-                        responseListenableFuture.get(), propertiesDelegate, containerRequestContext.getWorkers()),
-                        clientRequestContext);
+                return tryFollowRedirects(followRedirects,
+                        createClientResponseContext(clientRequestContext,
+                                responseListenableFuture.get(),
+                                propertiesDelegate,
+                                containerRequestContext.getWorkers(),
+                                entityStream),
+                        new JerseyClientRequestContext(clientRequestContext));
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
@@ -132,60 +138,71 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
     private void outboundToInbound(final OutboundMessageContext outboundContext,
                                    final InboundMessageContext inboundContext,
                                    final PropertiesDelegate propertiesDelegate,
-                                   final MessageBodyWorkers workers
+                                   final MessageBodyWorkers workers,
+                                   final ByteArrayOutputStream entityBaos
     ) {
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entityBaos == null) {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        outboundContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-            @Override
-            public OutputStream getOutputStream() throws IOException {
-                return baos;
-            }
-
-            @Override
-            public void commit() throws IOException {
-                inboundContext.getHeaders().putAll(HeadersFactory.getStringHeaders(outboundContext.getHeaders()));
-            }
-        });
-
-        OutputStream entityStream = outboundContext.getEntityStream();
-
-        try {
-            workers.writeTo(
-                    outboundContext.getEntity(),
-                    outboundContext.getEntityClass(),
-                    outboundContext.getEntityType(),
-                    outboundContext.getEntityAnnotations(),
-                    outboundContext.getMediaType(),
-                    outboundContext.getHeaders(),
-                    propertiesDelegate,
-                    entityStream,
-                    null,
-                    true);
-        } catch (IOException e) {
-            throw new InvocationException(e.getMessage(), e);
-        } finally {
-            if (entityStream != null) {
-                try {
-                    entityStream.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(InMemoryConnector.class.getName()).log(Level.FINE, "Error closing output stream", ex);
+            outboundContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+                @Override
+                public OutputStream getOutputStream() throws IOException {
+                    return baos;
                 }
+
+                @Override
+                public void commit() throws IOException {
+                }
+            });
+
+            if (outboundContext.hasEntity()) {
+                OutputStream entityStream = outboundContext.getEntityStream();
+
+                try {
+                    workers.writeTo(
+                            outboundContext.getEntity(),
+                            outboundContext.getEntity().getClass(),
+                            outboundContext.getEntityType(),
+                            outboundContext.getEntityAnnotations(),
+                            outboundContext.getMediaType(),
+                            outboundContext.getHeaders(),
+                            propertiesDelegate,
+                            entityStream,
+                            null,
+                            true);
+                } catch (IOException e) {
+                    throw new InvocationException(e.getMessage(), e);
+                } finally {
+                    if (entityStream != null) {
+                        try {
+                            entityStream.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.FINE, "Error closing output stream", ex);
+                        }
+                    }
+                }
+
+                outboundContext.commitStream();
+
+                inboundContext.setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
             }
+        } else {
+            inboundContext.setEntityStream(new ByteArrayInputStream(entityBaos.toByteArray()));
         }
 
-        inboundContext.setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
+        inboundContext.getHeaders().putAll(HeadersFactory.getStringHeaders(outboundContext.getHeaders()));
     }
 
     private JerseyClientResponseContext createClientResponseContext(final JerseyClientRequestContext clientRequestContext,
                                                                     final JerseyContainerResponseContext containerResponseContext,
                                                                     final PropertiesDelegate propertiesDelegate,
-                                                                    final MessageBodyWorkers workers) {
+                                                                    final MessageBodyWorkers workers,
+                                                                    final ByteArrayOutputStream entityStream) {
 
         final JerseyClientResponseContext clientResponseContext =
                 new JerseyClientResponseContext(containerResponseContext.getStatusInfo(), clientRequestContext);
 
-        outboundToInbound(containerResponseContext, clientResponseContext, propertiesDelegate, workers);
+        outboundToInbound(containerResponseContext, clientResponseContext, propertiesDelegate, workers, entityStream);
         clientResponseContext.setStatus(containerResponseContext.getStatus());
 
         return clientResponseContext;

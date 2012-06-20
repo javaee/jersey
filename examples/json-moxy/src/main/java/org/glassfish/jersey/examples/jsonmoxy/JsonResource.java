@@ -37,43 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async.managed;
+package org.glassfish.jersey.examples.jsonmoxy;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.ExecutionContext;
+import javax.ws.rs.core.MediaType;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom Jersey container request processing thread.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH)
-@Produces("text/plain")
-public class SimpleJerseyExecutorManagedLongRunningResource {
-
-    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
-    //
-    private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    @Context
-    private ExecutionContext ctx;
+@Path("test")
+public class JsonResource {
 
     @GET
-    @Suspend
-    public void longGet(@QueryParam("id") int requestId) {
-        try {
-            Thread.sleep(SLEEP_TIME_IN_MILLIS);
-        } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-        }
-        ctx.resume(requestId + " - " + NOTIFICATION_RESPONSE);
+    @Produces(MediaType.APPLICATION_JSON)
+    public SimpleBean createSimpleBean() {
+        return new SimpleBean("a", 1, 1L);
     }
+
 }
