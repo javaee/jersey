@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,51 +37,37 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonjaxb;
+package org.glassfish.jersey.examples.jsonmoxy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Utility class which can create {@link ResourceConfig} instance and provides support
- * for running this sample from command line.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
+public class JsonResourceTest extends JerseyTest {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jsonfromjaxb/");
-
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with JAXB Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    @Override
+    protected Application configure() {
+        return App.createApp();
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .addModules(new JsonJaxbModule())
-                .packages("org.glassfish.jersey.examples.jsonjaxb");
+    @Override
+    protected void configureClient(Configuration clientConfig) {
+        clientConfig.register(MOXyJsonProvider.class);
+    }
 
-        return rc;
+    @Test
+    public void testGet() {
+        final SimpleBean simpleBean = target("test").request(MediaType.APPLICATION_JSON_TYPE).get(SimpleBean.class);
+
+        assertEquals(simpleBean, new SimpleBean("a", 1, 1L));
     }
 }

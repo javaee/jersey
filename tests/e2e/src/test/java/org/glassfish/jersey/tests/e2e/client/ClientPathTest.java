@@ -52,7 +52,6 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -73,11 +72,6 @@ public class ClientPathTest extends JerseyTest {
      * Test that {@link PathParam path parameters} can be passed to {@link Client#target(String)} method.
      */
     @Test
-    // TODO at this point not clear if this test should work - JAX-RS would need to be updated to allow path params
-    // TODO in the string version of UriBuilder.fromUri() and uri() methods and string version of Client.target() method
-    // TODO the implementation of UriBuilder.fromUri(String uri) would have to change to call UriBuilder.uri(String)
-    // TODO instead of UriBuilder.uri(URI.create(uri))
-    @Ignore // TODO ignoring until the above gets resolved - otherwise this test should be removed
     public void pathParamInTargetTest() {
         Response response = client().target("http://localhost:" + getPort() + "/test/{beginBy}").pathParam("beginBy", "abc")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
@@ -89,42 +83,68 @@ public class ClientPathTest extends JerseyTest {
      * Tests path concatenation. (regression test for JERSEY-1114)
      */
     @Test
-    public void pathConcatenationTest() {
+    public void pathConcatenationTest1() {
         Response response = client().target("http://localhost:" + getPort()).path("path").request(MediaType.TEXT_PLAIN_TYPE)
                 .get();
         assertEquals(200, response.getStatus());
         assertEquals("test-path", response.readEntity(String.class));
+    }
 
-        response = client().target("http://localhost:" + getPort()).path("/path").request(MediaType.TEXT_PLAIN_TYPE).get();
+
+    /**
+     * Tests path concatenation. (regression test for JERSEY-1114)
+     */
+    @Test
+    public void pathConcatenationTest2() {
+        Response response = client().target("http://localhost:" + getPort()).path("/path").request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-path", response.readEntity(String.class));
+    }
+
+
+    /**
+     * Tests path concatenation. (regression test for JERSEY-1114)
+     */
+    @Test
+    public void pathConcatenationTest3() {
+        Response response = client().target("http://localhost:" + getPort()).path("/path/").path("/another/")
+                .request(MediaType.TEXT_PLAIN_TYPE).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("test-another-path", response.readEntity(String.class));
     }
 
     /**
      * Tests path concatenation. (regression test for JERSEY-1114)
      */
     @Test
-    public void pathConcatenationAnotherTest() {
-        Response response = client().target("http://localhost:" + getPort()).path("/path/").path("/another/")
+    public void pathConcatenationTest4() {
+        Response response = client().target("http://localhost:" + getPort()).path("/path").path("another/")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-another-path", response.readEntity(String.class));
 
-        response = client().target("http://localhost:" + getPort()).path("/path").path("another/")
+    }
+
+    /**
+     * Tests path concatenation. (regression test for JERSEY-1114)
+     */
+    @Test
+    public void pathConcatenationTest5() {
+        Response response = client().target("http://localhost:" + getPort()).path("/path/").path("//another//")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-another-path", response.readEntity(String.class));
+    }
 
-        response = client().target("http://localhost:" + getPort()).path("/path/").path("//another//")
+    /**
+     * Tests path concatenation. (regression test for JERSEY-1114)
+     */
+    @Test
+    public void pathConcatenationTest6() {
+        Response response = client().target("http://localhost:" + getPort() + "/").path("/path/another")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-another-path", response.readEntity(String.class));
-
-        response = client().target("http://localhost:" + getPort() + "/").path("/path/another")
-                .request(MediaType.TEXT_PLAIN_TYPE).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("test-another-path", response.readEntity(String.class));
-
     }
 
     /**

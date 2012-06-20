@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,51 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonjaxb;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+package org.glassfish.jersey.examples.jsonmoxy;
 
 /**
- * Utility class which can create {@link ResourceConfig} instance and provides support
- * for running this sample from command line.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
+public class SimpleBean {
+    public String a;
+    public int b;
+    public long c;
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jsonfromjaxb/");
-
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with JAXB Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public SimpleBean() {
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .addModules(new JsonJaxbModule())
-                .packages("org.glassfish.jersey.examples.jsonjaxb");
+    public SimpleBean(String a, int b, long c) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    }
 
-        return rc;
+    public String getA() {
+        return a;
+    }
+
+    public int getB() {
+        return b;
+    }
+
+    public long getC() {
+        return c;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SimpleBean that = (SimpleBean) o;
+
+        if (b != that.b) return false;
+        if (c != that.c) return false;
+        if (a != null ? !a.equals(that.a) : that.a != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = a != null ? a.hashCode() : 0;
+        result = 31 * result + b;
+        result = 31 * result + (int) (c ^ (c >>> 32));
+        return result;
     }
 }

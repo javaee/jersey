@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,29 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonjaxb;
+package org.glassfish.jersey.examples.jsonmoxy;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ext.MessageBodyWriter;
+
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.hk2.BinderFactory;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.scopes.Singleton;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
+import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
+
 /**
- * Utility class which can create {@link ResourceConfig} instance and provides support
- * for running this sample from command line.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class App {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jsonfromjaxb/");
+    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static void main(String[] args) {
@@ -79,9 +82,17 @@ public class App {
 
     public static ResourceConfig createApp() {
         final ResourceConfig rc = new ResourceConfig()
-                .addModules(new JsonJaxbModule())
-                .packages("org.glassfish.jersey.examples.jsonjaxb");
+                .addModules(new Module() {
+                    @Override
+                    public void configure(BinderFactory binderFactory) {
+                        binderFactory.bind(MessageBodyWriter.class).to(MOXyJsonProvider.class).in(Singleton.class);
+                    }
+                })
+                .packages("org.glassfish.jersey.examples.jsonmoxy");
 
         return rc;
     }
 }
+
+
+
