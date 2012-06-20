@@ -137,7 +137,6 @@ public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestCo
 
         if (responseContext.hasEntity()) {
             Type invocableType = invocable.getResponseType();
-            Type entityType = responseContext.getEntityType();
             if (invocableType != null && Void.TYPE != invocableType && Void.class != invocableType && invocableType != Response.class) {
                 responseContext.setEntityType(invocableType);
             }

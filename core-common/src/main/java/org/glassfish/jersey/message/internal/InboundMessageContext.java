@@ -424,7 +424,7 @@ public class InboundMessageContext {
     /**
      * Get the mutable message headers multivalued map.
      *
-     * @return mutable multivalued map of response headers.
+     * @return mutable multivalued map of message headers.
      */
     public MultivaluedMap<String, String> getHeaders() {
         return this.headers;
@@ -523,21 +523,19 @@ public class InboundMessageContext {
      * Get the media type of the entity.
      *
      * @return the media type or {@code null} if not specified (e.g. there's no
-     *         response entity).
+     *         message entity).
      */
     public MediaType getMediaType() {
-        MediaType type = singleHeader(HttpHeaders.CONTENT_TYPE, new Function<String, MediaType>() {
+        return singleHeader(HttpHeaders.CONTENT_TYPE, new Function<String, MediaType>() {
             @Override
             public MediaType apply(String input) {
                 return MediaType.valueOf(input);
             }
         });
-
-        return (type == null) ? MediaType.APPLICATION_OCTET_STREAM_TYPE : type;
     }
 
     /**
-     * Get a list of media types that are acceptable for the response.
+     * Get a list of media types that are acceptable for a request.
      *
      * @return a read-only list of requested response media types sorted according
      *         to their q-value, with highest preference first.
@@ -557,7 +555,7 @@ public class InboundMessageContext {
     }
 
     /**
-     * Get a list of languages that are acceptable for the response.
+     * Get a list of languages that are acceptable for the message.
      *
      * @return a read-only list of acceptable languages sorted according
      *         to their q-value, with highest preference first.
@@ -815,7 +813,7 @@ public class InboundMessageContext {
     }
 
     /**
-     * Check if there is a non-empty entity input stream is available in the response
+     * Check if there is a non-empty entity input stream is available in the
      * message.
      *
      * The method returns {@code true} if the entity is present, returns
