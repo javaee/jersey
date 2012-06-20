@@ -464,6 +464,7 @@ public final class ApplicationHandler {
      * Invokes a request and returns the {@link Future response future}.
      *
      * @param requestContext request data.
+     * @param outputStream response output stream.
      * @return response future.
      */
     public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext,
@@ -684,59 +685,58 @@ public final class ApplicationHandler {
             final JerseyContainerResponseContext responseContext) {
         final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
-        final boolean entityExists = responseContext.hasEntity();
-
-        if (entityExists) {
-            responseContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-                private OutputStream output;
-
-                @Override
-                public void commit() throws IOException {
-                    output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), responseContext);
-                }
-
-                @Override
-                public OutputStream getOutputStream() throws IOException {
-                    return output;
-                }
-            });
-
-            final Object entity = responseContext.getEntity();
-            try {
-                requestContext.getWorkers().writeTo(
-                        entity,
-                        responseContext.getEntityClass(),
-                        responseContext.getEntityType(),
-                        responseContext.getEntityAnnotations(),
-                        responseContext.getMediaType(),
-                        responseContext.getHeaders(),
-                        requestContext.getPropertiesDelegate(),
-                        responseContext.getEntityStream(),
-                        messageBodySizeCallback,
-                        true,
-                        !requestContext.getMethod().equals(HttpMethod.HEAD));
-            } catch (IOException ex) {
-                Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
-                throw new MappableException(ex);
-            } finally {
-                responseContext.commitStream();
-
-                if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
-                    try {
-                        ((ChunkedResponse) entity).setContext(requestContext, responseContext);
-                    } catch (IOException ex) {
-                        Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
-                        //noinspection ThrowFromFinallyBlock
-                        throw new MappableException(ex);
-                    }
-                    writer.suspend(0, TimeUnit.SECONDS, null);
-                } else {
-                    writer.commit();
-                }
-            }
-        } else {
+        if (!responseContext.hasEntity()) {
             writer.writeResponseStatusAndHeaders(0, responseContext);
             writer.commit();
+            return;
+        }
+
+        responseContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+            private OutputStream output;
+
+            @Override
+            public void commit() throws IOException {
+                output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), responseContext);
+            }
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return output;
+            }
+        });
+
+        final Object entity = responseContext.getEntity();
+        try {
+            requestContext.getWorkers().writeTo(
+                    entity,
+                    entity.getClass(),
+                    responseContext.getEntityType(),
+                    responseContext.getEntityAnnotations(),
+                    responseContext.getMediaType(),
+                    responseContext.getHeaders(),
+                    requestContext.getPropertiesDelegate(),
+                    responseContext.getEntityStream(),
+                    messageBodySizeCallback,
+                    true,
+                    !requestContext.getMethod().equals(HttpMethod.HEAD));
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
+            throw new MappableException(ex);
+        } finally {
+            responseContext.commitStream();
+
+            if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
+                try {
+                    ((ChunkedResponse) entity).setContext(requestContext, responseContext);
+                } catch (IOException ex) {
+                    Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    //noinspection ThrowFromFinallyBlock
+                    throw new MappableException(ex);
+                }
+                writer.suspend(0, TimeUnit.SECONDS, null);
+            } else {
+                writer.commit();
+            }
         }
     }
 

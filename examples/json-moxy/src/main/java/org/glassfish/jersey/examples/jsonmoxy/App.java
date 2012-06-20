@@ -37,43 +37,62 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.server.async.managed;
+package org.glassfish.jersey.examples.jsonmoxy;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.ExecutionContext;
+
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.hk2.BinderFactory;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.scopes.Singleton;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+
+import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom Jersey container request processing thread.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH)
-@Produces("text/plain")
-public class SimpleJerseyExecutorManagedLongRunningResource {
+public class App {
 
-    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
-    //
-    private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    @Context
-    private ExecutionContext ctx;
+    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
 
-    @GET
-    @Suspend
-    public void longGet(@QueryParam("id") int requestId) {
+    @SuppressWarnings({"ResultOfMethodCallIgnored"})
+    public static void main(String[] args) {
         try {
-            Thread.sleep(SLEEP_TIME_IN_MILLIS);
-        } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
+            System.out.println("JSON with JAXB Jersey Example App");
+
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
+
+            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
+                    BASE_URI));
+            System.in.read();
+            server.stop();
+        } catch (IOException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
-        ctx.resume(requestId + " - " + NOTIFICATION_RESPONSE);
+    }
+
+    public static ResourceConfig createApp() {
+        final ResourceConfig rc = new ResourceConfig()
+                .addModules(new Module() {
+                    @Override
+                    public void configure(BinderFactory binderFactory) {
+                        binderFactory.bind(MessageBodyWriter.class).to(MOXyJsonProvider.class).in(Singleton.class);
+                    }
+                })
+                .packages("org.glassfish.jersey.examples.jsonmoxy");
+
+        return rc;
     }
 }
+
+
+

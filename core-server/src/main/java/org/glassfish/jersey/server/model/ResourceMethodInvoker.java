@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.core.Response;
@@ -135,7 +136,7 @@ public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestCo
         final Invocable invocable = method.getInvocable();
         responseContext.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
 
-        if (responseContext.hasEntity()) {
+        if (responseContext.hasEntity() && !(responseContext.getEntityType() instanceof ParameterizedType)) {
             Type invocableType = invocable.getResponseType();
             if (invocableType != null && Void.TYPE != invocableType && Void.class != invocableType && invocableType != Response.class) {
                 responseContext.setEntityType(invocableType);

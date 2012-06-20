@@ -169,13 +169,11 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
     public Continuation<JerseyContainerRequestContext> apply(JerseyContainerRequestContext requestContext) {
         final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
-        if (!preMatch) {
-            final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
-                    ContainerResponseFilter.class,
-                    new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
-            if (!responseFilters.isEmpty()) {
-                respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
-            }
+        final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
+                ContainerResponseFilter.class,
+                new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
+        if (!responseFilters.isEmpty()) {
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
 
         Iterable<ContainerRequestFilter> requestFilters = serviceProviders.getAll(
@@ -224,6 +222,8 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
 
         @Override
         public Continuation<JerseyContainerResponseContext> apply(JerseyContainerResponseContext responseContext) {
+            // TODO from the name-bound filters select only those that are applicable for the invoked resource.
+
             try {
                 for (ContainerResponseFilter filter : filters) {
                     filter.filter(responseContext.getRequestContext(), responseContext);
