@@ -56,9 +56,9 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
     private boolean autosuspend;
     private boolean done;
     private boolean timeoutCancelled;
-    private InvocationContext invocationContext;
     private final Object stateUpdateLock;
-    //
+    private InvocationContext invocationContext;
+
     /**
      * Request data.
      */
@@ -87,7 +87,11 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
             }
             done = timeoutCancelled = true;
         }
-        writeResponse(response);
+        try {
+            writeResponse(response);
+        } finally {
+            release();
+        }
     }
 
     @Override
@@ -98,7 +102,11 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
             }
             done = timeoutCancelled = true;
         }
-        writeResponse(exception);
+        try {
+            writeResponse(exception);
+        } finally {
+            release();
+        }
     }
 
     @Override
@@ -109,7 +117,11 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
             }
             done = timeoutCancelled = true;
         }
-        requestContext.getResponseWriter().cancel();
+        try {
+            requestContext.getResponseWriter().cancel();
+        } finally {
+            release();
+        }
     }
 
     @Override
@@ -201,4 +213,9 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
      * @param context invocation context.
      */
     protected abstract void writeTimeoutResponse(InvocationContext context);
+
+    /**
+     * Release all resources as the request processing is truly over now.
+     */
+    protected abstract void release();
 }

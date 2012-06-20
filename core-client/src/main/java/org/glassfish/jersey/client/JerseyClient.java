@@ -55,12 +55,6 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ServiceProviders;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -68,8 +62,6 @@ import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
@@ -87,24 +79,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
-
-    private static final class References {
-
-        @Inject
-        private ServiceProviders.Builder serviceProvidersBuilder;
-        @Inject
-        private Ref<JerseyConfiguration> configuration;
-        @Inject
-        private Ref<ServiceProviders> serviceProviders;
-        @Inject
-        private Ref<ExceptionMappers> exceptionMappers;
-        @Inject
-        private Ref<MessageBodyWorkers> messageBodyWorkers;
-        @Inject
-        private Ref<ContextResolvers> contextResolvers;
-        @Inject
-        Ref<JerseyClientRequestContext> requestContextRef;
-    }
 
     /**
      * {@link JerseyClient Jersey client} instance builder.
@@ -175,7 +149,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private final JerseyConfiguration configuration;
     private final AtomicBoolean closedFlag;
     private Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector;
-    private Injector injector;
     private RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext> invoker;
     //
     @Inject
@@ -222,9 +195,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
             services = HK2.get().create(null, modules);
         }
-        this.injector = services.forContract(Injector.class).get();
+        final Injector injector = services.forContract(Injector.class).get();
 
-        final ClientMessageBodyWorkersInitializer workersInitializationStage = injector.inject(ClientMessageBodyWorkersInitializer.class);
+        final RequestProcessingInitializationStage workersInitializationStage = injector.inject(RequestProcessingInitializationStage.class);
         final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
 
         Stage<JerseyClientRequestContext> rootStage = Stages
@@ -234,7 +207,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
         this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);
 
-        this.injector.inject(this);
+        injector.inject(this);
     }
 
     /**
@@ -251,30 +224,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
                     @Override
                     public void run() {
-                        References refs = injector.inject(References.class);
-
-                        final JerseyConfiguration cfg = requestContext.getConfiguration();
-                        final ServiceProviders providers = refs.serviceProvidersBuilder
-                                .setProviderClasses(cfg.getProviderClasses()).setProviderInstances(cfg.getProviderInstances())
-                                .build();
-                        final ExceptionMapperFactory mappers = new ExceptionMapperFactory(providers);
-                        final MessageBodyWorkers workers = new MessageBodyFactory(providers);
-                        final ContextResolvers resolvers = new ContextResolverFactory(providers);
-
-                        refs.configuration.set(cfg);
-                        refs.serviceProviders.set(providers);
-                        refs.exceptionMappers.set(mappers);
-                        refs.messageBodyWorkers.set(workers);
-                        refs.contextResolvers.set(resolvers);
-                        refs.requestContextRef.set(requestContext);
-
-                        // TODO: (MM) we should not mix config with request properties
-                        // TODO: config should be accessible to connectors by some other means
-//                        Map<String, Object> properties = new HashMap<String, Object>(cfg.getProperties());
-//                        properties.putAll(Helper.unwrap(requestContext).getProperties());
-//                        Helper.unwrap(requestContext).getProperties().putAll(properties);
-                        /////
-
                         invoker.apply(requestContext, new InvocationCallback<JerseyClientResponseContext>() {
 
                             @Override

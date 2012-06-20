@@ -54,10 +54,8 @@ import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
 
-import org.jvnet.hk2.annotations.Inject;
-
 import com.google.common.base.Function;
-import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Processes result of the request transformation (successful or not). The response
@@ -82,7 +80,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  * @param <DATA> processed data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> implements Runnable {
+public abstract class ResponseProcessor<DATA> implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ResponseProcessor.class.getName());
 
@@ -127,10 +125,11 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
     public static interface Builder<DATA> {
 
         /**
-         * Create a response processor for a given request scope instance
-         * and invocation callback.
+         * Create a new response processor for a given request / response message exchange.
          *
          * @param inflectedResponse inflected response data future.
+         * @param processedResponse settable future that will be used to set the response
+         *                          processing result.
          * @param callback          the invocation callback to be invoked once the
          *                          response processing has finished.
          * @param scopeInstance     the instance of the request scope this processor
@@ -139,65 +138,41 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
          */
         public ResponseProcessor<DATA> build(
                 final Future<DATA> inflectedResponse,
+                final SettableFuture<DATA> processedResponse,
                 final InvocationCallback<DATA> callback,
                 final RequestScope.Instance scopeInstance);
     }
 
-    /**
-     * Response processor builder for JAX-RS response data type.
-     */
-    private static class ResponseBuilder implements Builder<Response> {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private Factory<RespondingContext<Response>> respondingCtxProvider;
-        @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
-
-        /**
-         * Default constructor meant to be used by injection framework.
-         */
-        public ResponseBuilder() {
-            // Injection constructor
-        }
-
-        @Override
-        public ResponseProcessor<Response> build(
-                final Future<Response> inflectedResponse,
-                final InvocationCallback<Response> callback,
-                final RequestScope.Instance scopeInstance) {
-
-            return new ResponseProcessor<Response>(
-                    callback,
-                    inflectedResponse,
-                    respondingCtxProvider,
-                    scopeInstance,
-                    requestScope,
-                    exceptionMappersProvider) {
-
-                @Override
-                protected Response convertResponse(Response exceptionResponse) {
-                    return exceptionResponse;
-                }
-            };
-        }
-    }
-
-    //
     private final RequestScope requestScope;
     private volatile RequestScope.Instance scopeInstance;
     private final InvocationCallback<DATA> callback;
     private final Future<DATA> inflectedResponse;
+    private final SettableFuture<DATA> processedResponse;
     private final Factory<RespondingContext<DATA>> respondingCtxProvider;
     private final Factory<ExceptionMappers> exceptionMappersProvider;
 
+    /**
+     * Create new response processor for a given request / response message exchange.
+     *
+     * @param callback                 the invocation callback to be invoked once the
+     *                                 response processing has finished.
+     * @param inflectedResponse        inflected response data future.
+     * @param processedResponse        settable future that will be used to set the response
+     *                                 processing result.
+     * @param respondingCtxProvider    responding context provider.
+     * @param scopeInstance            the instance of the request scope this processor
+     *                                 belongs to.
+     * @param requestScope             Jersey request scope.
+     * @param exceptionMappersProvider exception mappers provide.
+     */
     protected ResponseProcessor(
             final InvocationCallback<DATA> callback,
             final Future<DATA> inflectedResponse,
-            final Factory<RespondingContext<DATA>> respondingCtxProvider,
+            SettableFuture<DATA> processedResponse, final Factory<RespondingContext<DATA>> respondingCtxProvider,
             final RequestScope.Instance scopeInstance,
             final RequestScope requestScope,
             final Factory<ExceptionMappers> exceptionMappersProvider) {
+        this.processedResponse = processedResponse;
         this.requestScope = requestScope;
         this.scopeInstance = scopeInstance;
         this.callback = callback;
@@ -216,7 +191,7 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
                 public void run() {
                     if (inflectedResponse.isCancelled()) {
                         // the request processing has been cancelled; just cancel this future & return
-                        ResponseProcessor.super.cancel(true);
+                        processedResponse.cancel(true);
                         return;
                     }
 
@@ -321,7 +296,7 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
 
     private void setResult(DATA response) {
         try {
-            super.set(response);
+            processedResponse.set(response);
         } finally {
             notifyCallback(response);
         }
@@ -329,7 +304,7 @@ public abstract class ResponseProcessor<DATA> extends AbstractFuture<DATA> imple
 
     private void setResult(Throwable exception) {
         try {
-            super.setException(exception);
+            processedResponse.setException(exception);
         } finally {
             notifyCallback(exception);
         }

@@ -48,7 +48,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.CloseableService;
+import org.glassfish.jersey.server.CloseableService;
 
 import org.glassfish.hk2.scopes.Singleton;
 

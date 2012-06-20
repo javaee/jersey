@@ -59,7 +59,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -91,13 +90,11 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
-    // FIXME fix the async issues and un-ignore
     public void testLongRunningResource() throws InterruptedException {
         final WebTarget resourceTarget = target().path(App.ASYNC_LONG_RUNNING_MANAGED_OP_PATH);
         final String expectedResponse = SimpleJerseyExecutorManagedLongRunningResource.NOTIFICATION_RESPONSE;
 
-        final int MAX_MESSAGES = 50;
+        final int MAX_MESSAGES = 100;
         final int LATCH_WAIT_TIMEOUT = 10;
         final boolean debugMode = false;
         final boolean sequentialGet = false;

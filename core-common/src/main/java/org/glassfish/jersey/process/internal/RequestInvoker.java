@@ -79,7 +79,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * processing is resumed in the thread executing the code that resumed the response
  * processing.
  *
- * @param <REQUEST> request processing data type.
+ * @param <REQUEST>  request processing data type.
  * @param <RESPONSE> response processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -120,6 +120,17 @@ public class RequestInvoker<REQUEST, RESPONSE> {
     private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
     private final ProcessingExecutorsFactory executorsFactory;
 
+    /**
+     * Create new request invoker.
+     *
+     * @param rootStage                root processing stage.
+     * @param requestScope             request scope.
+     * @param asyncAdapterBuilder      asynchronous adapter builder.
+     * @param responseProcessorBuilder response processor builder.
+     * @param invocationContextReferenceFactory
+     *                                 invocation context {@link Ref reference} provider.
+     * @param executorsFactory         processing executors factory.
+     */
     public RequestInvoker(
             final Stage<REQUEST> rootStage,
             final RequestScope requestScope,
@@ -161,20 +172,17 @@ public class RequestInvoker<REQUEST, RESPONSE> {
      * @return future response.
      */
     public ListenableFuture<RESPONSE> apply(final REQUEST request, final InvocationCallback<RESPONSE> callback) {
-        // FIXME: Executing request-scoped code.
-        //        We should enter and exit request scope here, in the invoker.
-        //        All code that needs to run in the scope should be converted
-        //        into stages that are executed by the invoker
-        //        (e.g. RequestExecutionInitStage).
-        final Instance instance = requestScope.suspendCurrent();
-        final AsyncInflectorAdapter<REQUEST, RESPONSE> asyncAdapter =
-                asyncAdapterBuilder.create(new AcceptingInvoker(), callback);
-        final ResponseProcessor<RESPONSE> responseProcessor =
-                responseProcessorBuilder.build(asyncAdapter, callback, instance);
+        final Instance instance = requestScope.createInstance();
+        final SettableFuture<RESPONSE> result = SettableFuture.create();
+
         final Runnable requester = new Runnable() {
 
             @Override
             public void run() {
+                final AsyncInflectorAdapter<REQUEST, RESPONSE> asyncAdapter =
+                        asyncAdapterBuilder.create(new AcceptingInvoker(), callback);
+                final ResponseProcessor<RESPONSE> responseProcessor =
+                        responseProcessorBuilder.build(asyncAdapter, result, callback, instance);
                 invocationContextReferenceFactory.get().set(asyncAdapter);
                 try {
                     asyncAdapter.apply(request);
@@ -193,7 +201,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
                         requestScope.runInScope(instance, requester);
                     }
                 });
-                return responseProcessor;
+                return result;
             } catch (RejectedExecutionException ex) {
                 throw new ProcessingException(LocalizationMessages.REQUEST_EXECUTION_FAILED(), ex);
             }

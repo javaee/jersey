@@ -69,6 +69,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -162,8 +163,20 @@ public class CustomProcessingExecutorsProviderTest {
         }
 
         @Override
-        public ResponseProcessor<String> build(final Future<String> inflectedResponse, final InvocationCallback<String> callback, final RequestScope.Instance scopeInstance) {
-            return new ResponseProcessor<String>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+        public ResponseProcessor<String> build(
+                final Future<String> inflectedResponse,
+                final SettableFuture<String> processedResponse,
+                final InvocationCallback<String> callback,
+                final RequestScope.Instance scopeInstance) {
+
+            return new ResponseProcessor<String>(
+                    callback,
+                    inflectedResponse,
+                    processedResponse,
+                    respondingCtxProvider,
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
 
                 @Override
                 protected String convertResponse(Response exceptionResponse) {
@@ -229,8 +242,19 @@ public class CustomProcessingExecutorsProviderTest {
         }
 
         @Override
-        public ResponseProcessor<Response> build(final Future<Response> inflectedResponse, final InvocationCallback<Response> callback, final RequestScope.Instance scopeInstance) {
-            return new ResponseProcessor<Response>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+        public ResponseProcessor<Response> build(
+                final Future<Response> inflectedResponse,
+                final SettableFuture<Response> processedResponse,
+                final InvocationCallback<Response> callback,
+                final RequestScope.Instance scopeInstance) {
+            return new ResponseProcessor<Response>(
+                    callback,
+                    inflectedResponse,
+                    processedResponse,
+                    respondingCtxProvider,
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
 
                 @Override
                 protected Response convertResponse(Response exceptionResponse) {
@@ -257,44 +281,37 @@ public class CustomProcessingExecutorsProviderTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean passed = new AtomicBoolean(false);
 
-        requestScope.runInScope(new Runnable() {
+        invoker.apply("",
+                new AbstractInvocationCallback<Response>() {
 
-            @Override
-            public void run() {
-                invoker.apply("",
-                        new AbstractInvocationCallback<Response>() {
+                    @Override
+                    public void result(Response response) {
 
-                            @Override
-                            public void result(Response response) {
+                        try {
+                            final String reqThreadName = response.getEntity().toString();
+                            assertTrue("Unexpected request processing thread name: " + reqThreadName,
+                                    reqThreadName.startsWith(REQ_THREAD_NAME));
 
-                                try {
-                                    final String reqThreadName = response.getEntity().toString();
-                                    assertTrue("Unexpected request processing thread name: " + reqThreadName,
-                                            reqThreadName.startsWith(REQ_THREAD_NAME));
+                            final String respThreadName = Thread.currentThread().getName();
+                            assertTrue("Unexpected response processing thread name: " + respThreadName,
+                                    respThreadName.startsWith(RESP_THREAD_NAME));
 
-                                    final String respThreadName = Thread.currentThread().getName();
-                                    assertTrue("Unexpected response processing thread name: " + respThreadName,
-                                            respThreadName.startsWith(RESP_THREAD_NAME));
+                            passed.set(true);
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
 
-                                    passed.set(true);
-                                } finally {
-                                    latch.countDown();
-                                }
-                            }
-
-                            @Override
-                            public void failure(Throwable exception) {
-                                try {
-                                    LOGGER.log(Level.ALL, "Request processing failed.", exception);
-                                    fail(exception.getMessage());
-                                } finally {
-                                    latch.countDown();
-                                }
-                            }
-                        });
-            }
-
-        });
+                    @Override
+                    public void failure(Throwable exception) {
+                        try {
+                            LOGGER.log(Level.ALL, "Request processing failed.", exception);
+                            fail(exception.getMessage());
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+                });
         latch.await();
         assertTrue("Test failed", passed.get());
 

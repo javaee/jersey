@@ -67,6 +67,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.google.common.base.Function;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Basic request invoker test.
@@ -140,8 +141,20 @@ public class RequestInvokerTest {
         }
 
         @Override
-        public ResponseProcessor<Integer> build(final Future<Integer> inflectedResponse, final InvocationCallback<Integer> callback, final RequestScope.Instance scopeInstance) {
-            return new ResponseProcessor<Integer>(callback, inflectedResponse, respondingCtxProvider, scopeInstance, requestScope, exceptionMappersProvider) {
+        public ResponseProcessor<Integer> build(
+                final Future<Integer> inflectedResponse,
+                final SettableFuture<Integer> processedResponse,
+                final InvocationCallback<Integer> callback,
+                final RequestScope.Instance scopeInstance) {
+
+            return new ResponseProcessor<Integer>(
+                    callback,
+                    inflectedResponse,
+                    processedResponse,
+                    respondingCtxProvider,
+                    scopeInstance,
+                    requestScope,
+                    exceptionMappersProvider) {
 
                 @Override
                 protected Integer convertResponse(Response exceptionResponse) {
@@ -157,66 +170,39 @@ public class RequestInvokerTest {
         final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get().build(createProcessingRoot());
         final RequestScope requestScope = services.forContract(RequestScope.class).get();
 
-        requestScope.runInScope(new Runnable() {
+        invoker.apply("",
+                new AbstractInvocationCallback<Integer>() {
 
-            @Override
-            public void run() {
+                    @Override
+                    public void result(Integer response) {
+                        assertEquals(123, response.intValue());
+                    }
 
-                invoker.apply("",
-                        new AbstractInvocationCallback<Integer>() {
+                    @Override
+                    public void failure(Throwable exception) {
+                        fail(exception.getMessage());
+                    }
+                });
 
-                            @Override
-                            public void result(Integer response) {
-                                assertEquals(123, response.intValue());
-                            }
+        Future<Integer> result = invoker.apply("");
+        assertEquals(123, result.get().intValue());
 
-                            @Override
-                            public void failure(Throwable exception) {
-                                fail(exception.getMessage());
-                            }
-                        });
-            }
-        });
+        invoker.apply("text",
+                new AbstractInvocationCallback<Integer>() {
 
-        requestScope.runInScope(new Callable<Object>() {
+                    @Override
+                    public void result(Integer response) {
+                        assertEquals(-1, response.intValue());
+                    }
 
-            @Override
-            public Object call() throws Exception {
-                Future<Integer> result = invoker.apply("");
-                assertEquals(123, result.get().intValue());
-                return null;
-            }
-        });
+                    @Override
+                    public void failure(Throwable exception) {
+                        fail(exception.getMessage());
+                    }
+                });
 
-        requestScope.runInScope(new Runnable() {
-
-            @Override
-            public void run() {
-                invoker.apply("text",
-                        new AbstractInvocationCallback<Integer>() {
-
-                            @Override
-                            public void result(Integer response) {
-                                assertEquals(-1, response.intValue());
-                            }
-
-                            @Override
-                            public void failure(Throwable exception) {
-                                fail(exception.getMessage());
-                            }
-                        });
-            }
-        });
-
-        requestScope.runInScope(new Callable<Object>() {
-
-            @Override
-            public Object call() throws Exception {
-                Future<Integer> result = invoker.apply("text");
-                assertEquals(-1, result.get().intValue());
-                return null;
-            }
-        });
+        result = invoker.apply("text");
+        assertEquals(-1, result.get().intValue());
     }
 
     @Test

@@ -51,7 +51,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
-import org.glassfish.jersey.spi.CloseableService;
+import org.glassfish.jersey.server.CloseableService;
 
 import org.jvnet.mimepull.MIMEParsingException;
 

@@ -75,6 +75,8 @@ import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.util.concurrent.SettableFuture;
+
 /**
  * Registers all modules necessary for {@link Client} runtime.
  *
@@ -172,12 +174,14 @@ class ClientModule extends AbstractModule {
         @Override
         public ResponseProcessor<JerseyClientResponseContext> build(
                 final Future<JerseyClientResponseContext> inflectedResponse,
+                final SettableFuture<JerseyClientResponseContext> processedResponse,
                 final InvocationCallback<JerseyClientResponseContext> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<JerseyClientResponseContext>(
                     callback,
                     inflectedResponse,
+                    processedResponse,
                     respondingCtxProvider,
                     scopeInstance,
                     requestScope,

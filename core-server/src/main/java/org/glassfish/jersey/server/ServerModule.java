@@ -41,6 +41,7 @@ package org.glassfish.jersey.server;
 
 import java.util.concurrent.Future;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -58,7 +59,16 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
+import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingExecutorsFactory;
+import org.glassfish.jersey.process.internal.ProcessingModule;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -72,6 +82,8 @@ import org.glassfish.hk2.scopes.PerLookup;
 import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
+
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Server injection binding configuration module.
@@ -124,7 +136,9 @@ public class ServerModule extends AbstractModule {
         public RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> build(
                 final Stage<JerseyContainerRequestContext> rootStage) {
 
-            final AsyncInflectorAdapter.Builder<JerseyContainerRequestContext,JerseyContainerResponseContext> asyncAdapterBuilder =
+            return new RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext>(
+                    rootStage,
+                    requestScope,
                     new AsyncInflectorAdapter.Builder<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
                         @Override
                         public AsyncInflectorAdapter<JerseyContainerRequestContext, JerseyContainerResponseContext> create(
@@ -140,12 +154,7 @@ public class ServerModule extends AbstractModule {
                                 }
                             };
                         }
-                    };
-
-            return new RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext>(
-                    rootStage,
-                    requestScope,
-                    asyncAdapterBuilder,
+                    },
                     responseProcessorBuilder,
                     invocationContextReferenceFactory,
                     executorsFactory);
@@ -176,12 +185,14 @@ public class ServerModule extends AbstractModule {
         @Override
         public ResponseProcessor<JerseyContainerResponseContext> build(
                 final Future<JerseyContainerResponseContext> inflectedResponse,
+                final SettableFuture<JerseyContainerResponseContext> processedResponse,
                 final InvocationCallback<JerseyContainerResponseContext> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<JerseyContainerResponseContext>(
                     callback,
                     inflectedResponse,
+                    processedResponse,
                     respondingCtxProvider,
                     scopeInstance,
                     requestScope,
@@ -226,6 +237,9 @@ public class ServerModule extends AbstractModule {
 
         // server-side processing chain
         bind(JerseyContainerRequestContext.class)
+                .toFactory(RequestContextInjectionFactory.class)
+                .in(RequestScope.class);
+        bind(ContainerRequestContext.class)
                 .toFactory(RequestContextInjectionFactory.class)
                 .in(RequestScope.class);
         bind(new TypeLiteral<Ref<JerseyContainerRequestContext>>() {

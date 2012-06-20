@@ -56,6 +56,12 @@ import javax.ws.rs.core.GenericType;
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedResponse<T> implements Closeable {
+    /**
+     * A request-scoped property indicating that the a chunked response
+     * is used by the user.
+     */
+    static final String CHUNKED_MODE = "jersey.config.server.chunked-mode";
+
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
     private final GenericType<T> chunkType;
 

@@ -68,6 +68,12 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     private InvocationContext invocationCtx = null;
     private TimerTask timeoutTask = null;
 
+    /**
+     * Construct a new invocation callback with a time-out support for a given request context.
+     */
+    protected TimingOutInvocationCallback() {
+    }
+
     @Override
     public void result(JerseyContainerResponseContext response) {
         if (done.compareAndSet(false, true)) {
@@ -75,17 +81,11 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
                 set(handleResponse(response));
             } catch (Throwable t) {
                 setException(t);
+            } finally {
+                release();
             }
         }
     }
-
-    /**
-     * Modify returned {@link JerseyContainerResponseContext response context}.
-     *
-     * @param response original response context.
-     * @return modified response context.
-     */
-    protected abstract JerseyContainerResponseContext handleResponse(final JerseyContainerResponseContext response);
 
     @Override
     public void failure(final Throwable failure) {
@@ -94,6 +94,8 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
                 set(handleFailure(failure));
             } catch (Throwable t) {
                 setException(t);
+            } finally {
+                release();
             }
         }
     }
@@ -109,7 +111,11 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     @Override
     public void cancelled() {
         if (done.compareAndSet(false, true)) {
-            cancel(true);
+            try {
+                cancel(true);
+            } finally {
+                release();
+            }
         }
     }
 
@@ -124,6 +130,8 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
                         set(handleTimeout(invocationCtx));
                     } catch (Throwable t) {
                         setException(t);
+                    } finally {
+                        release();
                     }
                 }
             }
@@ -192,4 +200,18 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
             }
         }
     }
+
+    /**
+     * Modify returned {@link JerseyContainerResponseContext response context}.
+     *
+     * @param response original response context.
+     * @return modified response context.
+     */
+    protected abstract JerseyContainerResponseContext handleResponse(final JerseyContainerResponseContext response);
+
+    /**
+     * Release all resources as the request processing is truly over now.
+     */
+    protected abstract void release();
+
 }
