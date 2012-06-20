@@ -452,8 +452,23 @@ public final class ApplicationHandler {
      * @return response future.
      */
     public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext) {
-        requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        return apply(requestContext, new OutputStream() {
+            @Override
+            public void write(int i) throws IOException {
+                // dummy
+            }
+        });
+    }
 
+    /**
+     * Invokes a request and returns the {@link Future response future}.
+     *
+     * @param requestContext request data.
+     * @return response future.
+     */
+    public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext,
+                                                        final OutputStream outputStream) {
+        requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
         final ContainerResponseWriter containerResponseWriter = new ContainerResponseWriter() {
             @Override
             public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext)
@@ -463,12 +478,7 @@ public final class ApplicationHandler {
                     responseContext.getHeaders().putSingle("Content-Length", Long.toString(contentLength));
                 }
 
-                // fake output stream - Response is not written (serialized) in this case.
-                return new OutputStream() {
-                    @Override
-                    public void write(int i) throws IOException {
-                    }
-                };
+                return outputStream;
             }
 
             @Override

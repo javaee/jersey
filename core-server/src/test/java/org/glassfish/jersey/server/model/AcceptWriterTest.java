@@ -40,10 +40,12 @@
 
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -53,11 +55,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -160,15 +164,27 @@ public class AcceptWriterTest {
         }
     }
 
+    private void _test(ApplicationHandler app, String expected, String method, Object entity, String mediaType, String... accept)
+            throws ExecutionException, InterruptedException {
+        RequestContextBuilder requestContextBuilder = RequestContextBuilder.from("/", method);
+        if (entity != null) {
+            requestContextBuilder.entity(entity).type(mediaType);
+        }
+        JerseyContainerRequestContext requestContext = requestContextBuilder.accept(accept).build();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        app.apply(requestContext, baos);
+        assertEquals(expected, baos.toString());
+    }
+
     @Test
     public void testAcceptGet() throws Exception {
 
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, FooStringWriter.class, BarStringWriter.class);
         final ApplicationHandler app = new ApplicationHandler(resourceConfig);
 
-        assertEquals("foo: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get().getEntity());
-        assertEquals("foo: content", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz, application/foo;q=0.8").build()).get().getEntity());
-        assertEquals("bar: content", app.apply(RequestContextBuilder.from("/", "GET").accept("application/bar").build()).get().getEntity());
-        assertEquals("bar: content", app.apply(RequestContextBuilder.from("/", "GET").accept("applcation/baz, application/bar;q=0.8").build()).get().getEntity());
+        _test(app, "foo: content", "GET", null, null, "application/foo");
+        _test(app, "foo: content", "GET", null, null, "applcation/baz, application/foo;q=0.8");
+        _test(app, "bar: content", "GET", null, null, "application/bar");
+        _test(app, "bar: content", "GET", null, null, "applcation/baz, application/bar;q=0.8");
     }
 }
