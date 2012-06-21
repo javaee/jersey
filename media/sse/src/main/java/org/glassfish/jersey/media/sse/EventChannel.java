@@ -52,7 +52,6 @@ import org.glassfish.jersey.server.ChunkedResponse;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class EventChannel extends ChunkedResponse<OutboundEvent> {
-
     /**
      * {@link String} representation of Server sent events media type. ("{@value}").
      */
@@ -62,8 +61,4 @@ public class EventChannel extends ChunkedResponse<OutboundEvent> {
      * Server sent events media type.
      */
     public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
-
-    public EventChannel() {
-        super(OutboundEvent.class);
-    }
 }

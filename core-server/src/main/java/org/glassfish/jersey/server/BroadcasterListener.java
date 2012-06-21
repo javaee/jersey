@@ -39,52 +39,27 @@
  */
 package org.glassfish.jersey.server;
 
-import java.io.IOException;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-
-import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
-
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Listener interface that can be implemented to listen to events fired by {@link Broadcaster} object.
+ *
+ * To listen to events, implementation of this interface needs to register with a particular {@link Broadcaster} instance
+ * using {@link Broadcaster#addBroadcasterListener(BroadcasterListener)}.
+ *
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ChunkedResponseTest {
-    @Path("/test")
-    public static class MyResource {
-        @GET
-        public ChunkedResponse<String> get() {
-            final ChunkedResponse<String> response = new ChunkedResponse<String>(String.class);
+public interface BroadcasterListener<T> {
+    /**
+     * Called when exception was thrown by a given chunked response when trying to write to it or close it.
+     * @param chunkedResponse instance that threw exception
+     * @param exception thrown exception
+     */
+    void onException(ChunkedResponse<T> chunkedResponse, Exception exception);
 
-            new Thread() {
-                public void run() {
-                    try {
-                        response.write("test");
-                        response.write("test");
-                        response.write("test");
-                        response.close();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        fail();
-                    }
-
-                }
-            }.start();
-
-            return response;
-        }
-    }
-
-    @Test
-    public void testChunkedResponse() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
-        final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
-
-        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
-        assertEquals(200, response.getStatus());
-    }
+    /**
+     * Called when the chunkedResponse has been closed (either by client closing the connection or by calling
+     * {@link org.glassfish.jersey.server.ChunkedResponse#close()} on the server side.
+     *
+     * @param chunkedResponse instance that has been closed.
+     */
+    void onClose(ChunkedResponse<T> chunkedResponse);
 }
