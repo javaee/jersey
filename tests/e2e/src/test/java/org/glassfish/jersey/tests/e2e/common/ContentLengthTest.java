@@ -39,9 +39,10 @@
  */
 package org.glassfish.jersey.tests.e2e.common;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -52,13 +53,14 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -110,6 +112,7 @@ public class ContentLengthTest extends JerseyTest {
         Response response = target().request().get(Response.class);
         assertEquals(200, response.getStatus());
         assertEquals(STR.length(), Integer.parseInt(response.getHeader("Content-Length")));
+        assertTrue(response.hasEntity());
     }
 
 
@@ -135,6 +138,7 @@ public class ContentLengthTest extends JerseyTest {
         Response response = target().path("byte").request().get(Response.class);
         assertEquals(200, response.getStatus());
         assertEquals(3, Integer.parseInt(response.getHeader("Content-Length")));
+        assertTrue(response.hasEntity());
     }
 
     @Test

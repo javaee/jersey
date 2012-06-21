@@ -109,9 +109,9 @@ public class App {
                         if (!className.startsWith("#")) {
                             try {
                                 rc.addClasses(Class.forName(className));
-                                System.out.printf(" - added class %s.\n", className);
+                                System.out.printf(" + loaded class %s.\n", className);
                             } catch (ClassNotFoundException ex) {
-                                System.out.printf(" - class %s not found.\n", className);
+                                System.out.printf(" ! class %s not found.\n", className);
                             }
                         } else {
                             System.out.printf(" - ignored class %s\n", className.substring(1));

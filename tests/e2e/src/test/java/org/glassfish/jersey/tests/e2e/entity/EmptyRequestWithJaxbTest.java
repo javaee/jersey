@@ -47,6 +47,7 @@ import java.util.Set;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -58,6 +59,8 @@ import javax.xml.bind.JAXBException;
 
 import org.glassfish.jersey.media.json.JsonConfiguration;
 import org.glassfish.jersey.media.json.JsonJaxbContext;
+import org.glassfish.jersey.media.json.JsonJaxbFeature;
+import org.glassfish.jersey.media.json.JsonJaxbModule;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -74,9 +77,9 @@ import static junit.framework.Assert.assertEquals;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 @RunWith(Enclosed.class)
-@Ignore // TODO: all tests are failing - filed JERSEY-1188
 public class EmptyRequestWithJaxbTest {
     @Path("/")
+    @Ignore
     public static class Resource {
         @POST
         public void bean(JaxbBean b) {
@@ -112,7 +115,12 @@ public class EmptyRequestWithJaxbTest {
     public static class EmptyRequestTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(Resource.class);
+            return new ResourceConfig(Resource.class).addModules(new JsonJaxbModule());
+        }
+
+        @Override
+        protected void configureClient(Configuration clientConfig) {
+            clientConfig.register(JsonJaxbFeature.class);
         }
 
         @Test
@@ -125,22 +133,22 @@ public class EmptyRequestWithJaxbTest {
             WebTarget r = target();
 
             Response cr = r.request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
 
             cr = r.path("type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
 
             cr = r.path("list-bean").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
 
             cr = r.path("list-type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
 
             cr = r.path("array-bean").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
 
             cr = r.path("array-type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(400, cr.getStatus());
+            assertEquals(204, cr.getStatus());
         }
     }
 
@@ -172,7 +180,12 @@ public class EmptyRequestWithJaxbTest {
     public static class EmptyJsonRequestNaturalTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(NaturalCR.class, Resource.class);
+            return new ResourceConfig(NaturalCR.class, Resource.class).addModules(new JsonJaxbModule());
+        }
+
+        @Override
+        protected void configureClient(Configuration clientConfig) {
+            clientConfig.register(JsonJaxbFeature.class);
         }
 
         public static class NaturalCR extends CR {
@@ -190,7 +203,12 @@ public class EmptyRequestWithJaxbTest {
     public static class MappedJettisonCRTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(MappedJettisonCR.class, Resource.class);
+            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addModules(new JsonJaxbModule());
+        }
+
+        @Override
+        protected void configureClient(Configuration clientConfig) {
+            clientConfig.register(JsonJaxbFeature.class);
         }
 
         public static class MappedJettisonCR extends CR {
@@ -208,7 +226,12 @@ public class EmptyRequestWithJaxbTest {
     public static class BadgerFishCRTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(BadgerFishCR.class, Resource.class);
+            return new ResourceConfig(BadgerFishCR.class, Resource.class).addModules(new JsonJaxbModule());
+        }
+
+        @Override
+        protected void configureClient(Configuration clientConfig) {
+            clientConfig.register(JsonJaxbFeature.class);
         }
 
         public static class BadgerFishCR extends CR {
@@ -225,21 +248,21 @@ public class EmptyRequestWithJaxbTest {
 
     public static void _test(WebTarget target) {
         Response cr = target.request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
 
         cr = target.path("type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
 
         cr = target.path("list-bean").request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
 
         cr = target.path("list-type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
 
         cr = target.path("array-bean").request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
 
         cr = target.path("array-type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(400, cr.getStatus());
+        assertEquals(204, cr.getStatus());
     }
 }
