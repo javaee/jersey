@@ -59,7 +59,7 @@
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.servlet</artifactId>
-            <version>3.1</version>
+            <version>${servlet3.version}</version>
             <scope>provided</scope>
         </dependency>
 

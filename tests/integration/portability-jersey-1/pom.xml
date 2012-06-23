@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -49,30 +49,34 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>servlet-tests</artifactId>
+    <artifactId>portability-jersey-1</artifactId>
     <packaging>war</packaging>
-    <name>jersey-tests-integration-servlet-tests</name>
+    <name>jersey-tests-integration-portability-jersey-1</name>
 
-    <description>Set of smaller unrelated servlet-specific tests.</description>
+    <description>Servlet portability test - testing co-bundling with Jersey 1</description>
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>${servlet2.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-servlet-portability</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-external</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>${jersey1.version}</version>
         </dependency>
     </dependencies>
 
