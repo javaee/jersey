@@ -629,6 +629,43 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>moxy</id>
+            <activation>
+                <property>
+                    <name>moxy</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>org.eclipse.persistence.moxy</artifactId>
+                    <version>${moxy.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <javax.xml.bind.JAXBContext>org.eclipse.persistence.jaxb.JAXBContextFactory</javax.xml.bind.JAXBContext>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <repositories>
+                <repository>
+                    <id>eclipselink.repository</id>
+                    <name>Eclipse Maven Repository</name>
+                    <url>http://www.eclipse.org/downloads/download.php?r=1&amp;nf=1&amp;file=/rt/eclipselink/maven.repo</url>
+                    <layout>default</layout>
+                </repository>
+            </repositories>
+        </profile>
     </profiles>
 
     <modules>
@@ -804,6 +841,8 @@
 
         <jaxb.api.version>2.1</jaxb.api.version>
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>
+
+        <moxy.version>2.3.2</moxy.version>
 
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
