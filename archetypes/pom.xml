@@ -45,10 +45,10 @@
     <parent>
       <groupId>org.glassfish.jersey</groupId>
       <artifactId>project</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>2.0-m05</version>
     </parent>
     <groupId>org.glassfish.jersey.archetypes</groupId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-m05</version>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
     <name>jersey-archetypes</name>
