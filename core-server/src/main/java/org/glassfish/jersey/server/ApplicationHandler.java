@@ -313,7 +313,7 @@ public final class ApplicationHandler {
                     public boolean apply(Class<?> input) {
                         final boolean acceptable = Resource.isAcceptable(input);
                         if (!acceptable) {
-                            LOGGER.warning(LocalizationMessages.NON_INSTANTIATABLE_CLASS(input));
+                            LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(input));
                         }
                         return acceptable;
                     }

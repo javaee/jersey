@@ -62,6 +62,7 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.VariantSelector;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
@@ -417,7 +418,7 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
         if (variants == null || variants.isEmpty()) {
-            throw new IllegalArgumentException("The list of variants is null or empty");
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants"));
         }
         Ref<String> varyValueRef = Refs.emptyRef();
         final Variant variant = VariantSelector.selectVariant(this, variants, varyValueRef);
@@ -433,14 +434,13 @@ public class ContainerRequest extends InboundMessageContext
      *         {@code null} otherwise.
      */
     public String getVaryValue() {
-        // TODO add Vary header to response headers
         return varyValue;
     }
 
     @Override
     public Response.ResponseBuilder evaluatePreconditions(EntityTag eTag) {
         if (eTag == null) {
-            throw new IllegalArgumentException("Parameter 'eTag' cannot be null.");
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag"));
         }
 
         Response.ResponseBuilder r = evaluateIfMatch(eTag);
@@ -453,7 +453,7 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Response.ResponseBuilder evaluatePreconditions(Date lastModified) {
         if (lastModified == null) {
-            throw new IllegalArgumentException("Parameter 'lastModified' cannot be null.");
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified"));
         }
 
         final long lastModifiedTime = lastModified.getTime();
@@ -466,8 +466,11 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public Response.ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
-        if (lastModified == null || eTag == null) {
-            throw new IllegalArgumentException("Parameters 'lastModified' and 'eTag' cannot be null.");
+        if (lastModified == null) {
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified"));
+        }
+        if (eTag == null) {
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag"));
         }
 
         Response.ResponseBuilder r = evaluateIfMatch(eTag);

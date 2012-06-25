@@ -57,7 +57,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Suspend;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -99,7 +98,7 @@ final class IntrospectionModeller {
 
     public Resource.Builder createResourceBuilder(boolean skipAcceptableCheck) throws IllegalArgumentException {
         if (!skipAcceptableCheck && !Resource.isAcceptable(handlerClass)) {
-            addFatalIssue(handlerClass, LocalizationMessages.NON_INSTANTIATABLE_CLASS(handlerClass));
+            addFatalIssue(handlerClass, LocalizationMessages.NON_INSTANTIABLE_CLASS(handlerClass));
         }
 
         checkForNonPublicMethodIssues();

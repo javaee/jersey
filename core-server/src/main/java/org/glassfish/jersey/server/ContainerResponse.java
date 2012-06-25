@@ -39,9 +39,21 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
@@ -54,10 +66,11 @@ import org.glassfish.jersey.message.internal.Statuses;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ContainerResponse extends OutboundMessageContext implements ContainerResponseContext {
+public class ContainerResponse implements ContainerResponseContext {
 
     private Response.StatusType status;
     private final ContainerRequest requestContext;
+    private final OutboundMessageContext messageContext;
 
     /**
      * Create a new Jersey container response context.
@@ -76,10 +89,18 @@ public class ContainerResponse extends OutboundMessageContext implements Contain
      * @param response response instance initializing the response context.
      */
     ContainerResponse(ContainerRequest requestContext, OutboundJaxrsResponse response) {
-        super(response.getContext());
         this.requestContext = requestContext;
         this.status = response.getStatusInfo();
+        this.messageContext = response.getContext();
 
+        final String varyValue = requestContext.getVaryValue();
+        if (varyValue != null && !this.messageContext.getHeaders().containsKey(HttpHeaders.VARY)) {
+            /**
+             * Add a Vary header using the value computed in the request if present
+             * and if the Vary header was not explicitly set in the response already.
+             */
+            this.messageContext.header(HttpHeaders.VARY, varyValue);
+        }
     }
 
     @Override
@@ -116,7 +137,316 @@ public class ContainerResponse extends OutboundMessageContext implements Contain
 
     @Override
     public Map<String, NewCookie> getCookies() {
-        return super.getResponseCookies();
+        return messageContext.getResponseCookies();
     }
 
+    /**
+     * Get the wrapped response message context.
+     *
+     * @return wrapped response message context.
+     */
+    public OutboundMessageContext getWrappedMessageContext() {
+        return messageContext;
+    }
+
+    /**
+     * Add a new header value.
+     *
+     * @param name  header name.
+     * @param value header value.
+     * @return updated context.
+     */
+    public ContainerResponse header(String name, Object value) {
+        messageContext.header(name, value);
+        return this;
+    }
+
+    /**
+     * Add new header values.
+     *
+     * @param name   header name.
+     * @param values header values.
+     * @return updated context.
+     */
+    public ContainerResponse headers(String name, Object... values) {
+        messageContext.headers(name, values);
+        return this;
+    }
+
+    /**
+     * Add new header values.
+     *
+     * @param name   header name.
+     * @param values header values.
+     * @return updated context.
+     */
+    public ContainerResponse headers(String name, Iterable<?> values) {
+        messageContext.headers(name, values);
+        return this;
+    }
+
+    /**
+     * Add new headers.
+     *
+     * @param headers new headers.
+     * @return updated context.
+     */
+    public ContainerResponse headers(MultivaluedMap<String, Object> headers) {
+        messageContext.headers(headers);
+        return this;
+    }
+
+    /**
+     * Remove a header.
+     *
+     * @param name header name.
+     * @return updated context.
+     */
+    public ContainerResponse remove(String name) {
+        messageContext.remove(name);
+        return this;
+    }
+
+    /**
+     * Replace header values with a new single header value.
+     *
+     * @param name  header name.
+     * @param value new single header value.
+     * @return updated context.
+     */
+    public ContainerResponse replace(String name, Object value) {
+        messageContext.replace(name, value);
+        return this;
+    }
+
+    /**
+     * Replace header values.
+     *
+     * @param name   header name.
+     * @param values new header values.
+     * @return updated context.
+     */
+    public ContainerResponse replace(String name, Iterable<?> values) {
+        messageContext.replace(name, values);
+        return this;
+    }
+
+    /**
+     * Replace all headers.
+     *
+     * @param headers new headers.
+     * @return updated context.
+     */
+    public ContainerResponse replaceAll(MultivaluedMap<String, Object> headers) {
+        messageContext.replaceAll(headers);
+        return this;
+    }
+
+    /**
+     * Get a message header as a single string value.
+     *
+     * Each single header value is converted to String using a
+     * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
+     * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
+     * for the header value class or using its {@code toString} method  if a header
+     * delegate is not available.
+     *
+     * @param name the message header.
+     * @return the message header value. If the message header is not present then
+     *         {@code null} is returned. If the message header is present but has no
+     *         value then the empty string is returned. If the message header is present
+     *         more than once then the values of joined together and separated by a ','
+     *         character.
+     */
+    public String getHeaderString(String name) {
+        return messageContext.getHeaderString(name);
+    }
+
+    @Override
+    public MultivaluedMap<String, Object> getHeaders() {
+        return messageContext.getHeaders();
+    }
+
+    @Override
+    public Date getDate() {
+        return messageContext.getDate();
+    }
+
+    @Override
+    public Locale getLanguage() {
+        return messageContext.getLanguage();
+    }
+
+    @Override
+    public MediaType getMediaType() {
+        return messageContext.getMediaType();
+    }
+
+    @Override
+    public Set<String> getAllowedMethods() {
+        return messageContext.getAllowedMethods();
+    }
+
+    @Override
+    public int getLength() {
+        return messageContext.getLength();
+    }
+
+    @Override
+    public EntityTag getEntityTag() {
+        return messageContext.getEntityTag();
+    }
+
+    @Override
+    public Date getLastModified() {
+        return messageContext.getLastModified();
+    }
+
+    @Override
+    public URI getLocation() {
+        return messageContext.getLocation();
+    }
+
+    @Override
+    public Set<Link> getLinks() {
+        return messageContext.getLinks();
+    }
+
+    @Override
+    public boolean hasLink(String relation) {
+        return messageContext.hasLink(relation);
+    }
+
+    @Override
+    public Link getLink(String relation) {
+        return messageContext.getLink(relation);
+    }
+
+    @Override
+    public Link.Builder getLinkBuilder(String relation) {
+        return messageContext.getLinkBuilder(relation);
+    }
+
+    @Override
+    public boolean hasEntity() {
+        return messageContext.hasEntity();
+    }
+
+    @Override
+    public Object getEntity() {
+        return messageContext.getEntity();
+    }
+
+    /**
+     * Set a new message message entity.
+     *
+     * @param entity entity object.
+     * @see javax.ws.rs.ext.MessageBodyWriter
+     */
+    public void setEntity(Object entity) {
+        messageContext.setEntity(entity);
+    }
+
+    /**
+     * Set a new message message entity.
+     *
+     * @param entity      entity object.
+     * @param annotations annotations attached to the entity.
+     * @see javax.ws.rs.ext.MessageBodyWriter
+     */
+    public void setEntity(Object entity, Annotation[] annotations) {
+        messageContext.setEntity(entity, annotations);
+    }
+
+    /**
+     * Set a new message message entity.
+     *
+     * @param entity      entity object.
+     * @param type        declared entity class.
+     * @param annotations annotations attached to the entity.
+     * @see javax.ws.rs.ext.MessageBodyWriter
+     */
+    public void setEntity(Object entity, Type type, Annotation[] annotations) {
+        messageContext.setEntity(entity, type, annotations);
+    }
+
+    @Override
+    public void setEntity(Object entity, Annotation[] annotations, MediaType mediaType) {
+        messageContext.setEntity(entity, annotations, mediaType);
+    }
+
+    @Override
+    public void setEntity(Object entity, Type type, Annotation[] annotations, MediaType mediaType) {
+        messageContext.setEntity(entity, type, annotations, mediaType);
+    }
+
+    /**
+     * Set the message content media type.
+     *
+     * @param mediaType message content media type.
+     */
+    public void setMediaType(MediaType mediaType) {
+        messageContext.setMediaType(mediaType);
+    }
+
+    @Override
+    public Class<?> getEntityClass() {
+        return messageContext.getEntityClass();
+    }
+
+    @Override
+    public Type getEntityType() {
+        return messageContext.getEntityType();
+    }
+
+    /**
+     * Set the message entity type information.
+     *
+     * This method overrides any computed or previously set entity type information.
+     *
+     * @param type overriding message entity type.
+     */
+    public void setEntityType(Type type) {
+        messageContext.setEntityType(type);
+    }
+
+    @Override
+    public Annotation[] getEntityAnnotations() {
+        return messageContext.getEntityAnnotations();
+    }
+
+    /**
+     * Set the annotations attached to the entity.
+     *
+     * @param annotations entity annotations.
+     */
+    public void setEntityAnnotations(Annotation[] annotations) {
+        messageContext.setEntityAnnotations(annotations);
+    }
+
+    @Override
+    public OutputStream getEntityStream() {
+        return messageContext.getEntityStream();
+    }
+
+    @Override
+    public void setEntityStream(OutputStream outputStream) {
+        messageContext.setEntityStream(outputStream);
+    }
+
+    /**
+     * Set the output stream provider.
+     *
+     * @param streamProvider output stream provider.
+     */
+    public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
+        messageContext.setStreamProvider(streamProvider);
+    }
+
+    /**
+     * Commits the {@link #getEntityStream() entity stream} if it wasn't already committed.
+     */
+    public void commitStream() {
+        messageContext.commitStream();
+    }
 }

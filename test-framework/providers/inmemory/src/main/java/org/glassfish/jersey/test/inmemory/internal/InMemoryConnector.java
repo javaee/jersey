@@ -202,7 +202,8 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
         final ClientResponse responseContext =
                 new ClientResponse(containerResponseContext.getStatusInfo(), requestContext);
 
-        outboundToInbound(containerResponseContext, responseContext, propertiesDelegate, workers, entityStream);
+        outboundToInbound(
+                containerResponseContext.getWrappedMessageContext(), responseContext, propertiesDelegate, workers, entityStream);
         responseContext.setStatus(containerResponseContext.getStatus());
 
         return responseContext;
