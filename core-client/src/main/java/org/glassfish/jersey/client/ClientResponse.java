@@ -57,9 +57,9 @@ import org.glassfish.jersey.message.internal.Statuses;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyClientResponseContext extends InboundMessageContext implements ClientResponseContext {
+public class ClientResponse extends InboundMessageContext implements ClientResponseContext {
     private Response.StatusType status;
-    private final JerseyClientRequestContext requestContext;
+    private final ClientRequest requestContext;
 
     /**
      * Create new Jersey client response context initialized from a JAX-RS {@link Response response}.
@@ -67,7 +67,7 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
      * @param requestContext associated request context.
      * @param response JAX-RS response to be used to initialize the response context.
      */
-    public JerseyClientResponseContext(final JerseyClientRequestContext requestContext, final Response response) {
+    public ClientResponse(final ClientRequest requestContext, final Response response) {
         this(response.getStatusInfo(), requestContext);
 
         final Object entity = response.getEntity();
@@ -104,7 +104,7 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
      * @param status response status.
      * @param requestContext associated client request context.
      */
-    public JerseyClientResponseContext(Response.StatusType status, JerseyClientRequestContext requestContext) {
+    public ClientResponse(Response.StatusType status, ClientRequest requestContext) {
         this.status = status;
         this.requestContext = requestContext;
         setWorkers(requestContext.getWorkers());
@@ -138,7 +138,7 @@ public class JerseyClientResponseContext extends InboundMessageContext implement
      *
      * @return associated client request context.
      */
-    public JerseyClientRequestContext getRequestContext() {
+    public ClientRequest getRequestContext() {
         return requestContext;
     }
 

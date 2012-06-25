@@ -51,7 +51,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -226,7 +226,7 @@ public class MatrixParamStringConstructorTest extends AbstractTest {
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final JerseyContainerResponseContext responseContext = getResponseContext("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
+        final ContainerResponse responseContext = getResponseContext("/;arg1=ABCDEF;arg2=3145;arg3=http:%2F%2Ftest");
 
         assertEquals(404, responseContext.getStatus());
     }

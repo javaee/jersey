@@ -62,14 +62,14 @@ import javax.ws.rs.core.Response;
  */
 class InboundJaxrsResponse extends Response {
 
-    private final JerseyClientResponseContext context;
+    private final ClientResponse context;
 
     /**
      * Create new inbound JAX-RS response message.
      *
      * @param context jersey client response context.
      */
-    public InboundJaxrsResponse(JerseyClientResponseContext context) {
+    public InboundJaxrsResponse(ClientResponse context) {
         this.context = context;
     }
 

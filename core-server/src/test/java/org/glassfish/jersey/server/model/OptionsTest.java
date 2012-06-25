@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -113,7 +113,7 @@ public class OptionsTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
         assertEquals(200, response.getStatus());
         _checkAllowContent(response.getHeaderString("Allow"));
 
@@ -173,7 +173,7 @@ public class OptionsTest {
     public void testWithOptions() throws Exception {
         initiateWebApplication(ResourceWithOptions.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 

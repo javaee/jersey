@@ -45,8 +45,8 @@ import java.util.TreeMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToPathBuilder;
@@ -213,7 +213,7 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> createInflector(
+    private Inflector<ContainerRequest, ContainerResponse> createInflector(
             final ResourceMethod method) {
 
         return resourceMethodInvokerBuilder.build(method);
@@ -229,10 +229,10 @@ public final class RuntimeModelBuilder {
              * anything and does not return any inflector. This will cause 404 being
              * returned for every request.
              */
-            routingRoot = Routers.acceptingTree(new Function<JerseyContainerRequestContext, JerseyContainerRequestContext>() {
+            routingRoot = Routers.acceptingTree(new Function<ContainerRequest, ContainerRequest>() {
 
                 @Override
-                public JerseyContainerRequestContext apply(JerseyContainerRequestContext input) {
+                public ContainerRequest apply(ContainerRequest input) {
                     return input;
                 }
 

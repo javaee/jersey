@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
 import org.glassfish.hk2.ComponentException;
@@ -59,7 +59,7 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
     @Inject
     private Factory<ExtendedUriInfo> uriInfo;
     @Inject
-    private Factory<JerseyContainerRequestContext> request;
+    private Factory<ContainerRequest> request;
 
     @Override
     public T get() throws ComponentException {
@@ -71,7 +71,7 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
             }
 
             @Override
-            public JerseyContainerRequestContext getRequestContext() {
+            public ContainerRequest getRequestContext() {
                 return request.get();
             }
         });

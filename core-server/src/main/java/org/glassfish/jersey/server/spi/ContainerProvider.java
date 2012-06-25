@@ -51,7 +51,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
  * {@link ApplicationHandler Jersey application handler} using the handler's
- * {@link ApplicationHandler#apply(org.glassfish.jersey.server.JerseyContainerRequestContext)}
+ * {@link ApplicationHandler#apply(org.glassfish.jersey.server.ContainerRequest)}
  * apply(requestContext)} method and sending the responses provided by the
  * application back to the client.
  * <p />

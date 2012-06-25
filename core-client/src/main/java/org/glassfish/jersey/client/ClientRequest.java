@@ -43,14 +43,12 @@ import java.net.URI;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
@@ -64,8 +62,7 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO complete javadoc on class
-public class JerseyClientRequestContext extends OutboundMessageContext implements ClientRequestContext {
+public class ClientRequest extends OutboundMessageContext implements ClientRequestContext {
     // Executing client instance
     private final JerseyClient client;
     // Request-scoped configuration instance
@@ -89,7 +86,7 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
      * @param configuration      request configuration.
      * @param propertiesDelegate properties delegate.
      */
-    public JerseyClientRequestContext(
+    public ClientRequest(
             URI requestUri, JerseyClient client, JerseyConfiguration configuration, PropertiesDelegate propertiesDelegate) {
         this.requestUri = requestUri;
         this.client = client;
@@ -102,7 +99,7 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
      *
      * @param original original instance.
      */
-    public JerseyClientRequestContext(JerseyClientRequestContext original) {
+    public ClientRequest(ClientRequest original) {
         super(original);
         this.requestUri = original.requestUri;
         this.httpMethod = original.httpMethod;
@@ -209,62 +206,111 @@ public class JerseyClientRequestContext extends OutboundMessageContext implement
         this.workers = workers;
     }
 
+    /**
+     * Add new accepted types to the message headers.
+     *
+     * @param types accepted types to be added.
+     */
     public void accept(MediaType... types) {
         headers(HttpHeaders.ACCEPT, (Object[]) types);
     }
 
+    /**
+     * Add new accepted types to the message headers.
+     *
+     * @param types accepted types to be added.
+     */
     public void accept(String... types) {
         headers(HttpHeaders.ACCEPT, types);
     }
 
+    /**
+     * Add new accepted languages to the message headers.
+     *
+     * @param locales accepted languages to be added.
+     */
     public void acceptLanguage(Locale... locales) {
         headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
+    /**
+     * Add new accepted languages to the message headers.
+     *
+     * @param locales accepted languages to be added.
+     */
     public void acceptLanguage(String... locales) {
         headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
+    /**
+     * Add new cookie to the message headers.
+     *
+     * @param cookie cookie to be added.
+     */
     public void cookie(Cookie cookie) {
         header(HttpHeaders.COOKIE, cookie);
     }
 
-    public void allow(String... methods) {
-        headers(HttpHeaders.ALLOW, methods);
-    }
-
-    public void allow(Set<String> methods) {
-        headers(HttpHeaders.ALLOW, methods);
-    }
-
+    /**
+     * Add new cache control entry to the message headers.
+     *
+     * @param cacheControl cache control entry to be added.
+     */
     public void cacheControl(CacheControl cacheControl) {
         header(HttpHeaders.CACHE_CONTROL, cacheControl);
     }
 
+    /**
+     * Set message encoding.
+     *
+     * @param encoding message encoding to be set.
+     */
     public void encoding(String encoding) {
         replace(HttpHeaders.CONTENT_ENCODING, encoding);
     }
 
-    public void replaceHeaders(MultivaluedMap<String, Object> map) {
-        replaceAll(map);
-    }
-
+    /**
+     * Set message language.
+     *
+     * @param language message language to be set.
+     */
     public void language(String language) {
         replace(HttpHeaders.CONTENT_LANGUAGE, language);
     }
 
+    /**
+     * Set message language.
+     *
+     * @param language message language to be set.
+     */
     public void language(Locale language) {
         replace(HttpHeaders.CONTENT_LANGUAGE, language);
     }
 
+    /**
+     * Set message content type.
+     *
+     * @param type message content type to be set.
+     */
     public void type(MediaType type) {
         setMediaType(type);
     }
 
+    /**
+     * Set message content type.
+     *
+     * @param type message content type to be set.
+     */
     public void type(String type) {
         type(type == null ? null : MediaType.valueOf(type));
     }
 
+    /**
+     * Set message content variant (type, language and encoding).
+     *
+     * @param variant message content content variant (type, language and encoding)
+     *                to be set.
+     */
     public void variant(Variant variant) {
         if (variant == null) {
             type((MediaType) null);

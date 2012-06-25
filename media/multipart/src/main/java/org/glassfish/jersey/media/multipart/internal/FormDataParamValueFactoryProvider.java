@@ -59,7 +59,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
@@ -322,7 +322,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
      * @return a form data multi part entity.
      */
     private FormDataMultiPart getEntity(final HttpContext context) {
-        final JerseyContainerRequestContext requestContext = context.getRequestContext();
+        final ContainerRequest requestContext = context.getRequestContext();
         if (requestContext.getProperty(FormDataMultiPart.class.getName()) == null) {
             FormDataMultiPart formDataMultiPart = requestContext.readEntity(FormDataMultiPart.class);
             requestContext.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);

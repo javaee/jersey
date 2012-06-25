@@ -132,7 +132,7 @@ public class SecurityContextTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerResponseContext response = application.apply(RequestContextBuilder.from("/test", "GET").build()).get();
+        ContainerResponse response = application.apply(RequestContextBuilder.from("/test", "GET").build()).get();
         assertEquals(response.getStatus(), 200);
         assertEquals(response.getEntity(), PRINCIPAL_NAME);
     }
@@ -148,7 +148,7 @@ public class SecurityContextTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerResponseContext response =
+        ContainerResponse response =
                 application.apply(RequestContextBuilder.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();
         assertEquals(200, response.getStatus());
         Object entity = response.getEntity();

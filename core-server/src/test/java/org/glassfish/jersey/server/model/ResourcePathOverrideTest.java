@@ -47,10 +47,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -97,7 +97,7 @@ public class ResourcePathOverrideTest {
 
         ApplicationHandler app = createApplication(resourceConfig);
 
-        JerseyContainerRequestContext request;
+        ContainerRequest request;
         request = RequestContextBuilder.from("/hello", "GET").build();
         assertEquals("Hello!", app.apply(request).get().getEntity());
 

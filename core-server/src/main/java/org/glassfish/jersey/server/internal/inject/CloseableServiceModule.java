@@ -46,7 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.CloseableService;
 
@@ -102,7 +102,7 @@ public class CloseableServiceModule extends AbstractModule {
 
         @SuppressWarnings("unchecked")
         private Set<Closeable> getCloseables() {
-            final JerseyContainerRequestContext requestContext = context.getRequestContext();
+            final ContainerRequest requestContext = context.getRequestContext();
             if (requestContext == null) {
                 LOGGER.warning(LocalizationMessages.CLOSEABLE_INJECTED_REQUEST_CONTEXT_NULL(Thread.currentThread().getName()));
                 return null;

@@ -144,20 +144,20 @@ public class AsyncApplicationBuildingTest {
 
     @Test
     public void testAsyncApp1() throws InterruptedException, ExecutionException {
-        JerseyContainerRequestContext req = RequestContextBuilder.from(
+        ContainerRequest req = RequestContextBuilder.from(
                 BASE_URI, BASE_URI + "a/b/c", "GET").build();
 
-        Future<JerseyContainerResponseContext> res = setupApplication1().apply(req);
+        Future<ContainerResponse> res = setupApplication1().apply(req);
 
         assertEquals("A-B-C", res.get().getEntity());
     }
 
     @Test
     public void testAsyncApp2() throws InterruptedException, ExecutionException {
-        JerseyContainerRequestContext req = RequestContextBuilder.from(
+        ContainerRequest req = RequestContextBuilder.from(
                 BASE_URI, BASE_URI + "a/b/d", "GET").build();
 
-        Future<JerseyContainerResponseContext> res = setupApplication1().apply(req);
+        Future<ContainerResponse> res = setupApplication1().apply(req);
 
         assertEquals("A-B-D", res.get().getEntity());
     }
@@ -176,7 +176,7 @@ public class AsyncApplicationBuildingTest {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
+        ContainerRequest req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }
@@ -186,7 +186,7 @@ public class AsyncApplicationBuildingTest {
         final ResourceConfig resourceConfig = new ResourceConfig();
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
+        ContainerRequest req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals(404, application.apply(req).get().getStatus());
     }
@@ -209,7 +209,7 @@ public class AsyncApplicationBuildingTest {
 
         final ApplicationHandler application = new ApplicationHandler(jaxRsApplication);
 
-        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
+        ContainerRequest req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }
@@ -252,7 +252,7 @@ public class AsyncApplicationBuildingTest {
 
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
+        ContainerRequest req = RequestContextBuilder.from(BASE_URI, BASE_URI, "GET").build();
 
         assertEquals("get!", application.apply(req).get().getEntity());
     }

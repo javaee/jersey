@@ -56,9 +56,9 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.InvokerBuilder;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
@@ -100,7 +100,7 @@ public class PatternRoutingTest {
 
     @Inject
     private RootRouteBuilder<Pattern> routeBuilder;
-    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
+    private RequestInvoker<ContainerRequest, ContainerResponse> invoker;
     private RequestScope requestScope;
     private final String uriSuffix;
     private final String expectedResponse;
@@ -129,11 +129,11 @@ public class PatternRoutingTest {
 
         final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
         Router inflection = Routers.asTreeAcceptor(
-                new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                new Inflector<ContainerRequest, ContainerResponse>() {
 
                     @Override
-                    public JerseyContainerResponseContext apply(final JerseyContainerRequestContext req) {
-                        return new JerseyContainerResponseContext(req, Response.ok("B").build());
+                    public ContainerResponse apply(final ContainerRequest req) {
+                        return new ContainerResponse(req, Response.ok("B").build());
                     }
                 });
         this.invoker = invokerBuilder.build(routeBuilder.root(
@@ -148,14 +148,14 @@ public class PatternRoutingTest {
 
     @Test
     public void testPatternRouting() throws Exception {
-        final JerseyContainerRequestContext req =
+        final ContainerRequest req =
                 RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<JerseyContainerResponseContext> res = requestScope.runInScope(
-                new Callable<Future<JerseyContainerResponseContext>>() {
+        Future<ContainerResponse> res = requestScope.runInScope(
+                new Callable<Future<ContainerResponse>>() {
 
                     @Override
-                    public Future<JerseyContainerResponseContext> call() throws Exception {
+                    public Future<ContainerResponse> call() throws Exception {
                         return invoker.apply(req);
                     }
 

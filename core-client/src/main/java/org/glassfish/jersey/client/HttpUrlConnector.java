@@ -57,7 +57,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -72,7 +71,7 @@ import com.google.common.collect.Maps;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
+public class HttpUrlConnector extends RequestWriter implements Inflector<ClientRequest, ClientResponse> {
 
     private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
         if (uc.getResponseCode() < 300) {
@@ -84,7 +83,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyC
     }
 
     @Override
-    public JerseyClientResponseContext apply(JerseyClientRequestContext request) {
+    public ClientResponse apply(ClientRequest request) {
         try {
             return _apply(request);
         } catch (IOException ex) {
@@ -92,7 +91,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyC
         }
     }
 
-    private JerseyClientResponseContext _apply(final JerseyClientRequestContext requestContext) throws IOException {
+    private ClientResponse _apply(final ClientRequest requestContext) throws IOException {
         final HttpURLConnection uc;
         // TODO introduce & leverage optional connection factory to support customized connections
         uc = (HttpURLConnection) requestContext.getUri().toURL().openConnection();
@@ -174,7 +173,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<JerseyC
             writeOutBoundHeaders(HeadersFactory.getStringHeaders(requestContext.getHeaders()), uc);
         }
 
-        JerseyClientResponseContext responseContext = new JerseyClientResponseContext(
+        ClientResponse responseContext = new ClientResponse(
                 Statuses.from(uc.getResponseCode()), requestContext);
         responseContext.setEntityStream(getInputStream(uc));
         responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));

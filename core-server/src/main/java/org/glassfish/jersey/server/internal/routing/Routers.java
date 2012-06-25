@@ -45,8 +45,8 @@ import java.util.List;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Inflecting;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import com.google.common.base.Function;
 
@@ -65,7 +65,7 @@ class Routers {
      * Creates a leaf-node {@link Router} that implements {@link org.glassfish.jersey.process.internal.Inflecting}
      * interface and returns the provided {@link org.glassfish.jersey.process.Inflector} instance
      * when the {@link org.glassfish.jersey.process.internal.Inflecting#inflector()} method is called.
-     * {@link Router#apply(JerseyContainerRequestContext)} method of the created
+     * {@link Router#apply(org.glassfish.jersey.server.ContainerRequest)} method of the created
      * hierarchical router returns the unchanged request and an empty continuation iterator.
      *
      * @param inflector a request to response transformation to be wrapped in an
@@ -73,7 +73,7 @@ class Routers {
      * @return an {@code Router} that wraps the supplied {@code Inflector}.
      */
     @SuppressWarnings("unchecked")
-    public static Router asTreeAcceptor(final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector) {
+    public static Router asTreeAcceptor(final Inflector<ContainerRequest, ContainerResponse> inflector) {
         return new InflectingRouter(inflector);
     }
 
@@ -84,36 +84,36 @@ class Routers {
      * @return hierarchical accepting tree builder.
      */
     public static Router.Builder acceptingTree(
-            Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation) {
+            Function<ContainerRequest, ContainerRequest> transformation) {
         return new RouterBuilder(transformation);
     }
 
     private static class InflectingRouter
-            implements Router, Inflecting<JerseyContainerRequestContext, JerseyContainerResponseContext> {
+            implements Router, Inflecting<ContainerRequest, ContainerResponse> {
 
-        private final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector;
+        private final Inflector<ContainerRequest, ContainerResponse> inflector;
 
-        public InflectingRouter(final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector) {
+        public InflectingRouter(final Inflector<ContainerRequest, ContainerResponse> inflector) {
             this.inflector = inflector;
         }
 
         @Override
-        public Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector() {
+        public Inflector<ContainerRequest, ContainerResponse> inflector() {
             return inflector;
         }
 
         @Override
-        public Continuation apply(JerseyContainerRequestContext request) {
+        public Continuation apply(ContainerRequest request) {
             return Continuation.of(request);
         }
     }
 
     private static class RouterBuilder implements Router.Builder {
 
-        private final Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation;
+        private final Function<ContainerRequest, ContainerRequest> transformation;
         private List<Router> children;
 
-        public RouterBuilder(Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation) {
+        public RouterBuilder(Function<ContainerRequest, ContainerRequest> transformation) {
             this.transformation = transformation;
         }
 
@@ -136,22 +136,22 @@ class Routers {
 
     private static class LinkedRouter implements Router {
 
-        private final Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation;
+        private final Function<ContainerRequest, ContainerRequest> transformation;
         private final List<Router> children;
 
         public LinkedRouter(
-                Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation, List<Router> children) {
+                Function<ContainerRequest, ContainerRequest> transformation, List<Router> children) {
             this.transformation = transformation;
             this.children = children;
         }
 
-        public LinkedRouter(Function<JerseyContainerRequestContext, JerseyContainerRequestContext> transformation) {
+        public LinkedRouter(Function<ContainerRequest, ContainerRequest> transformation) {
             this.transformation = transformation;
             this.children = Collections.emptyList();
         }
 
         @Override
-        public Continuation apply(JerseyContainerRequestContext data) {
+        public Continuation apply(ContainerRequest data) {
             return Continuation.of(transformation.apply(data), children);
         }
     }

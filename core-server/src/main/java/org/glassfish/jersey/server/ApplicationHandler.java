@@ -111,7 +111,7 @@ import com.google.common.collect.Sets;
  * Jersey server-side application handler.
  * <p/>
  * Container implementations use the {@code ApplicationHandler} API to process requests
- * by invoking the {@link #handle(JerseyContainerRequestContext) handle(requestContext)}
+ * by invoking the {@link #handle(ContainerRequest) handle(requestContext)}
  * method on a configured application  handler instance.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -200,7 +200,7 @@ public final class ApplicationHandler {
     /**
      * Request invoker.
      */
-    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker;
+    private RequestInvoker<ContainerRequest, ContainerResponse> invoker;
     private final ResourceConfig configuration;
     private References refs;
 
@@ -352,7 +352,7 @@ public final class ApplicationHandler {
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
-        final Stage<JerseyContainerRequestContext> rootStage = Stages
+        final Stage<ContainerRequest> rootStage = Stages
                 .chain(injector.inject(ReferencesInitializer.class))
                 .to(injector.inject(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
@@ -448,7 +448,7 @@ public final class ApplicationHandler {
      * @param requestContext request data.
      * @return response future.
      */
-    public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext) {
+    public Future<ContainerResponse> apply(final ContainerRequest requestContext) {
         return apply(requestContext, new OutputStream() {
             @Override
             public void write(int i) throws IOException {
@@ -464,12 +464,12 @@ public final class ApplicationHandler {
      * @param outputStream   response output stream.
      * @return response future.
      */
-    public Future<JerseyContainerResponseContext> apply(final JerseyContainerRequestContext requestContext,
+    public Future<ContainerResponse> apply(final ContainerRequest requestContext,
                                                         final OutputStream outputStream) {
         requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
         requestContext.setWriter(new ContainerResponseWriter() {
             @Override
-            public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext)
+            public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
                     throws ContainerException {
 
                 if (contentLength >= 0) {
@@ -499,7 +499,7 @@ public final class ApplicationHandler {
         final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
 
             @Override
-            protected JerseyContainerResponseContext handleResponse(JerseyContainerResponseContext responseContext) {
+            protected ContainerResponse handleResponse(ContainerResponse responseContext) {
                 ApplicationHandler.this.writeResponse(requestContext, responseContext);
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
                     // for testing purposes:
@@ -510,15 +510,15 @@ public final class ApplicationHandler {
             }
 
             @Override
-            protected JerseyContainerResponseContext handleFailure(Throwable exception) {
-                final JerseyContainerResponseContext response = ApplicationHandler.handleFailure(exception, requestContext);
+            protected ContainerResponse handleFailure(Throwable exception) {
+                final ContainerResponse response = ApplicationHandler.handleFailure(exception, requestContext);
                 ApplicationHandler.this.writeResponse(requestContext, response);
                 return response;
             }
 
             @Override
-            protected JerseyContainerResponseContext handleTimeout(InvocationContext context) {
-                final JerseyContainerResponseContext response =
+            protected ContainerResponse handleTimeout(InvocationContext context) {
+                final ContainerResponse response =
                         ApplicationHandler.prepareTimeoutResponse(context, requestContext);
                 ApplicationHandler.this.writeResponse(requestContext, response);
                 return response;
@@ -541,7 +541,7 @@ public final class ApplicationHandler {
      * @param responseContext processed response context.
      * @return original response without entity.
      */
-    private JerseyContainerResponseContext stripEntity(final JerseyContainerResponseContext responseContext) {
+    private ContainerResponse stripEntity(final ContainerResponse responseContext) {
         if (responseContext.hasEntity()) {
             responseContext.setEntity(null);
         }
@@ -553,7 +553,7 @@ public final class ApplicationHandler {
      * The main request/response processing entry point for Jersey container implementations.
      * <p>
      * The method invokes the request processing of the provided
-     * {@link JerseyContainerRequestContext container request context} and uses the
+     * {@link ContainerRequest container request context} and uses the
      * {@link ContainerResponseWriter container response writer} to suspend & resume the processing
      * as well as write the response back to the container.
      * </p>
@@ -566,13 +566,13 @@ public final class ApplicationHandler {
      *
      * @param requestContext container request context of the current request.
      */
-    public void handle(final JerseyContainerRequestContext requestContext) {
+    public void handle(final ContainerRequest requestContext) {
         checkContainerRequestContext(requestContext);
 
         final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(requestContext) {
 
             @Override
-            protected void writeResponse(JerseyContainerResponseContext response) {
+            protected void writeResponse(ContainerResponse response) {
                 ApplicationHandler.this.writeResponse(requestContext, response);
             }
 
@@ -599,7 +599,7 @@ public final class ApplicationHandler {
         callback.suspendWriterIfRunning();
     }
 
-    private void releaseRequestProcessing(final JerseyContainerRequestContext requestContext) {
+    private void releaseRequestProcessing(final ContainerRequest requestContext) {
         closeableServiceFactory.get().close();
         final boolean isChunked;
         final Object property = requestContext.getProperty(ChunkedResponse.CHUNKED_MODE);
@@ -614,7 +614,7 @@ public final class ApplicationHandler {
         }
     }
 
-    private void checkContainerRequestContext(final JerseyContainerRequestContext requestContext) {
+    private void checkContainerRequestContext(final ContainerRequest requestContext) {
         if (requestContext.getSecurityContext() == null) {
             throw new IllegalArgumentException("SecurityContext from ContainerRequestContext must not be null.");
         } else if (requestContext.getRequest() == null) {
@@ -624,17 +624,17 @@ public final class ApplicationHandler {
         }
     }
 
-    private static JerseyContainerResponseContext prepareTimeoutResponse(
-            final InvocationContext context, JerseyContainerRequestContext requestContext) {
+    private static ContainerResponse prepareTimeoutResponse(
+            final InvocationContext context, ContainerRequest requestContext) {
 
         Response response = context.getResponse();
         if (response == null) {
             response = Response.serverError().entity("Request processing has timed out.").type(MediaType.TEXT_PLAIN).build();
         }
-        return new JerseyContainerResponseContext(requestContext, response);
+        return new ContainerResponse(requestContext, response);
     }
 
-    private static JerseyContainerResponseContext handleFailure(Throwable failure, JerseyContainerRequestContext requestContext) {
+    private static ContainerResponse handleFailure(Throwable failure, ContainerRequest requestContext) {
         Response.StatusType statusCode = Response.Status.INTERNAL_SERVER_ERROR;
         String message = failure.getMessage();
 
@@ -656,7 +656,7 @@ public final class ApplicationHandler {
             LOGGER.log(Level.FINE, message, failure);
         }
 
-        return new JerseyContainerResponseContext(
+        return new ContainerResponse(
                 requestContext,
                 Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build());
     }
@@ -678,8 +678,8 @@ public final class ApplicationHandler {
     }
 
     private void writeResponse(
-            final JerseyContainerRequestContext requestContext,
-            final JerseyContainerResponseContext responseContext) {
+            final ContainerRequest requestContext,
+            final ContainerResponse responseContext) {
 
         final ContainerResponseWriter writer = requestContext.getResponseWriter();
         final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();

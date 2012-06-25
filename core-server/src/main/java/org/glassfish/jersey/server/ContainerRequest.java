@@ -77,7 +77,7 @@ import com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyContainerRequestContext extends InboundMessageContext
+public class ContainerRequest extends InboundMessageContext
         implements ContainerRequestContext, Request, HttpHeaders {
 
     private static URI DEFAULT_BASE_URI = URI.create("/");
@@ -125,7 +125,7 @@ public class JerseyContainerRequestContext extends InboundMessageContext
      * @param propertiesDelegate custom {@link PropertiesDelegate properties delegate}
      *                           to be used by the context.
      */
-    public JerseyContainerRequestContext(
+    public ContainerRequest(
             URI baseUri,
             URI requestUri,
             String httpMethod,
@@ -264,8 +264,12 @@ public class JerseyContainerRequestContext extends InboundMessageContext
         return uriInfo;
     }
 
+    /**
+     * Set the request scoped {@link UriInfo} instance.
+     *
+     * @param uriInfo request scoped {@code UriInfo} instance.
+     */
     public void setUriInfo(UriInfo uriInfo) {
-        // TODO use the initializer
         this.uriInfo = uriInfo;
     }
 

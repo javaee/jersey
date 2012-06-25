@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 import org.glassfish.hk2.Factory;
 
@@ -91,7 +91,7 @@ class PatternRouter implements Router {
     }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext request) {
+    public Continuation apply(final ContainerRequest request) {
         final RoutingContext rc = contextProvider.get();
         // Peek at matching information to obtain the remaining path to match
         String path = rc.getFinalMatchingGroup();

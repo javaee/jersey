@@ -73,7 +73,7 @@ public class InvokerBuilder {
      * @param matchingRoot root resource matching acceptor.
      * @return request processor.
      */
-    public RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> build(final Router matchingRoot) {
+    public RequestInvoker<ContainerRequest, ContainerResponse> build(final Router matchingRoot) {
 
         return invokerBuilder.build(Stages
                 .chain(referencesInitializer)

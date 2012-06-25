@@ -44,7 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -264,13 +264,13 @@ public class PathParamAsPrimitiveTest {
 
     @Test
     public void testBadPrimitiveValue() throws Exception {
-        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/int/abcdef", "GET").build()).get();
+        ContainerResponse responseContext = app.apply(RequestContextBuilder.from("/int/abcdef", "GET").build()).get();
         assertEquals(404, responseContext.getStatus());
     }
 
     @Test
     public void testBadPrimitiveWrapperValue() throws Exception {
-        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/int/wrapper/abcdef", "GET").build()).get();
+        ContainerResponse responseContext = app.apply(RequestContextBuilder.from("/int/wrapper/abcdef", "GET").build()).get();
         assertEquals(404, responseContext.getStatus());
     }
 }

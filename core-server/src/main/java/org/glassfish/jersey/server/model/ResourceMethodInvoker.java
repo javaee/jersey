@@ -46,8 +46,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
@@ -62,7 +62,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> {
+public class ResourceMethodInvoker implements Inflector<ContainerRequest, ContainerResponse> {
 
     /**
      * Resource method invoker "assisted" injection helper.
@@ -117,7 +117,7 @@ public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestCo
     }
 
     @Override
-    public JerseyContainerResponseContext apply(final JerseyContainerRequestContext requestContext) {
+    public ContainerResponse apply(final ContainerRequest requestContext) {
         final Object resource = routingContextFactory.get().peekMatchedResource();
 
         final InvocationContext invocationCtx = invocationContextFactory.get();
@@ -132,7 +132,7 @@ public class ResourceMethodInvoker implements Inflector<JerseyContainerRequestCo
             invocationCtx.trySuspend();
         }
 
-        final JerseyContainerResponseContext responseContext = new JerseyContainerResponseContext(requestContext, response);
+        final ContainerResponse responseContext = new ContainerResponse(requestContext, response);
         final Invocable invocable = method.getInvocable();
         responseContext.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
 

@@ -124,7 +124,7 @@ public class ApplicationHandlerTest {
     public void testMergedResources() throws Exception {
         ApplicationHandler app = createApplication(MergedA.class, MergedB.class);
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
 
         response = app.apply(RequestContextBuilder.from("/merged", "GET").build()).get();
         assertEquals(200, response.getStatus());

@@ -42,10 +42,10 @@ package org.glassfish.jersey.client.filter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyClientRequestContext;
-import org.glassfish.jersey.client.JerseyClientResponseContext;
 import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.process.Inflector;
 
@@ -81,10 +81,10 @@ public class CsrfProtectionFilterTest {
         assertNotNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
-    private static class TestTransport implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
+    private static class TestTransport implements Inflector<ClientRequest, ClientResponse> {
         @Override
-        public JerseyClientResponseContext apply(JerseyClientRequestContext requestContext) {
-            final JerseyClientResponseContext responseContext = new JerseyClientResponseContext(
+        public ClientResponse apply(ClientRequest requestContext) {
+            final ClientResponse responseContext = new ClientResponse(
                     Response.Status.OK, requestContext);
 
             final String headerValue = requestContext.getHeaderString(CsrfProtectionFilter.HEADER_NAME);

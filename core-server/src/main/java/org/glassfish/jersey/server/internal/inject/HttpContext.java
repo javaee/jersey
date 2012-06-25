@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
 /**
@@ -69,5 +69,5 @@ public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
      * Get the HTTP request information.
      * @return the HTTP request information
      */
-    JerseyContainerRequestContext getRequestContext();
+    ContainerRequest getRequestContext();
 }

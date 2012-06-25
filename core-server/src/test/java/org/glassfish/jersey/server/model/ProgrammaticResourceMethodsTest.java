@@ -46,7 +46,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -179,11 +179,11 @@ public class ProgrammaticResourceMethodsTest {
 //        checkReturnedStatusEquals(202, Requests.from("/test2", "OPTIONS").build(), application);
     }
 
-    private void checkReturnedStatus(JerseyContainerRequestContext req, ApplicationHandler app) throws Exception {
+    private void checkReturnedStatus(ContainerRequest req, ApplicationHandler app) throws Exception {
         checkReturnedStatusEquals(200, req, app);
     }
 
-    private void checkReturnedStatusEquals(int expectedStatus, JerseyContainerRequestContext req, ApplicationHandler app)
+    private void checkReturnedStatusEquals(int expectedStatus, ContainerRequest req, ApplicationHandler app)
             throws Exception {
         final int responseStatus = app.apply(req).get().getStatus();
         assertEquals(expectedStatus, responseStatus);

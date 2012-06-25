@@ -54,7 +54,7 @@ import com.google.common.base.Function;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ContainerMessageBodyWorkersInitializer
-        implements Function<JerseyContainerRequestContext, JerseyContainerRequestContext> {
+        implements Function<ContainerRequest, ContainerRequest> {
     private final Factory<MessageBodyWorkers> workersFactory;
 
     /**
@@ -70,7 +70,7 @@ public class ContainerMessageBodyWorkersInitializer
 
 
     @Override
-    public JerseyContainerRequestContext apply(JerseyContainerRequestContext requestContext) {
+    public ContainerRequest apply(ContainerRequest requestContext) {
         requestContext.setWorkers(workersFactory.get());
 
         return requestContext;

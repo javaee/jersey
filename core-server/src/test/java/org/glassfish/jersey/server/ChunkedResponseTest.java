@@ -86,7 +86,7 @@ public class ChunkedResponseTest {
         final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
 
-        JerseyContainerResponseContext response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
+        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
         assertEquals(200, response.getStatus());
     }
 }

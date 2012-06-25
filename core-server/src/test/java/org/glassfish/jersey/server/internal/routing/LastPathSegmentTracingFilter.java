@@ -43,8 +43,8 @@ import java.util.regex.MatchResult;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -53,11 +53,11 @@ import com.google.common.base.Function;
 @RequestScoped
 class LastPathSegmentTracingFilter implements Router {
 
-    private final RespondingContext<JerseyContainerResponseContext> respondingContext;
+    private final RespondingContext<ContainerResponse> respondingContext;
     private final RoutingContext routingContext;
 
     public LastPathSegmentTracingFilter(
-            @Inject RespondingContext<JerseyContainerResponseContext> respondingContext,
+            @Inject RespondingContext<ContainerResponse> respondingContext,
             @Inject RoutingContext routingContext) {
 
         this.respondingContext = respondingContext;
@@ -65,15 +65,15 @@ class LastPathSegmentTracingFilter implements Router {
     }
 
     @Override
-    public Router.Continuation apply(JerseyContainerRequestContext request) {
+    public Router.Continuation apply(ContainerRequest request) {
         final String wholePath = getWholeMatchedPath();
         final String lastMatch = getLastMatch();
         final String lastSegment = wholePath.isEmpty() ? wholePath : wholePath.substring(0, wholePath.length() - lastMatch.length());
 
-        respondingContext.push(new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
+        respondingContext.push(new Function<ContainerResponse, ContainerResponse>() {
 
             @Override
-            public JerseyContainerResponseContext apply(JerseyContainerResponseContext response) {
+            public ContainerResponse apply(ContainerResponse response) {
                 response.setEntity(response.getEntity() + "-" + lastSegment);
                 return response;
             }

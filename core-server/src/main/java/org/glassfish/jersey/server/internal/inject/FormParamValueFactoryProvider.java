@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
@@ -114,8 +114,8 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
             return (Form) context.getRequestContext().getProperty(HttpContext.FORM_PROPERTY);
         }
 
-        private JerseyContainerRequestContext ensureValidRequest(
-                final JerseyContainerRequestContext requestContext) throws IllegalStateException {
+        private ContainerRequest ensureValidRequest(
+                final ContainerRequest requestContext) throws IllegalStateException {
             if (requestContext.getMethod().equals("GET")) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_METHOD_ERROR());
@@ -128,7 +128,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
             return requestContext;
         }
 
-        private Form getFormParameters(JerseyContainerRequestContext requestContext) {
+        private Form getFormParameters(ContainerRequest requestContext) {
             if (requestContext.getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
                 requestContext.bufferEntity();
                 Form f = requestContext.readEntity(Form.class);

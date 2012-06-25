@@ -42,11 +42,10 @@ package org.glassfish.jersey.server.model;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -91,7 +90,7 @@ public class SubResourceDynamicTest {
     public void testSubResourceDynamic() throws Exception {
         app = createApplication(Parent.class);
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
 
         response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.getEntity());
@@ -126,7 +125,7 @@ public class SubResourceDynamicTest {
     public void testSubResourceDynamicWithTemplates() throws Exception {
         app = createApplication(ParentWithTemplates.class);
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
 
         response = app.apply(RequestContextBuilder.from("/parent", "GET").accept("text/plain").build()).get();
         assertEquals("parent", response.getEntity());
@@ -156,7 +155,7 @@ public class SubResourceDynamicTest {
     public void testSubResourceCapturingGroups() throws Exception {
         app = createApplication(SubResourceExplicitRegexCapturingGroups.class);
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
 
         response = app.apply(RequestContextBuilder.from("/123-456-789/d", "GET").accept("text/plain").build()).get();
         assertEquals("d", response.getEntity());

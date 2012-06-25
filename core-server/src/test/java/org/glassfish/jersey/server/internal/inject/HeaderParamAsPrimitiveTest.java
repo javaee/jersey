@@ -49,7 +49,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -916,7 +916,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         accept("application/int").
                         header("int", "abcdef").build()
@@ -927,7 +927,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/wrappers", "GET").
                         accept("application/int").
                         header("int", "abcdef").build()
@@ -938,7 +938,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         accept("application/int").
                         header("int", "abcdef").

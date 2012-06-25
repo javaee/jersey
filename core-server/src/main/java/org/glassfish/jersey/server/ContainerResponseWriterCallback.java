@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class ContainerResponseWriterCallback implements InvocationCallback<JerseyContainerResponseContext> {
+abstract class ContainerResponseWriterCallback implements InvocationCallback<ContainerResponse> {
 
     private boolean suspended;
     private boolean autosuspend;
@@ -62,7 +62,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
     /**
      * Request data.
      */
-    protected final JerseyContainerRequestContext requestContext;
+    protected final ContainerRequest requestContext;
 
     /**
      * Construct a new container response writer delegating invocation callback
@@ -70,7 +70,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
      *
      * @param requestContext request context.
      */
-    public ContainerResponseWriterCallback(JerseyContainerRequestContext requestContext) {
+    public ContainerResponseWriterCallback(ContainerRequest requestContext) {
         this.suspended = false;
         this.autosuspend = false;
         this.timeoutCancelled = false;
@@ -80,7 +80,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
     }
 
     @Override
-    public void result(JerseyContainerResponseContext response) {
+    public void result(ContainerResponse response) {
         synchronized (stateUpdateLock) {
             if (done) {
                 return;
@@ -198,7 +198,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Jer
      *
      * @param response response data.
      */
-    protected abstract void writeResponse(JerseyContainerResponseContext response);
+    protected abstract void writeResponse(ContainerResponse response);
 
     /**
      * Write the failure response.

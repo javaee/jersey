@@ -61,8 +61,8 @@ import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
@@ -155,7 +155,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         final URI requestUri = baseUri.resolve(exchangeUri);
 
         final ResponseWriter responseWriter = new ResponseWriter(exchange);
-        JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
+        ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
                 exchange.getRequestMethod(), getSecurityContext(exchange.getPrincipal(), isSecure),
                 new MapPropertiesDelegate());
         requestContext.setEntityStream(exchange.getRequestBody());
@@ -227,7 +227,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext context)
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse context)
                 throws ContainerException {
             final MultivaluedMap<String, String> responseHeaders = HeadersFactory.getStringHeaders(context.getHeaders());
             final Headers serverHeaders = exchange.getResponseHeaders();

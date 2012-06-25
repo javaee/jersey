@@ -66,8 +66,8 @@ public class ChunkedResponse<T> implements Closeable {
     private final GenericType<T> chunkType;
 
     private boolean closed = false;
-    private JerseyContainerRequestContext requestContext;
-    private JerseyContainerResponseContext responseContext;
+    private ContainerRequest requestContext;
+    private ContainerResponse responseContext;
 
     /**
      * Create {@link ChunkedResponse} with specified type.
@@ -162,8 +162,8 @@ public class ChunkedResponse<T> implements Closeable {
      * @param responseContext response context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
-    void setContext(JerseyContainerRequestContext requestContext,
-                    JerseyContainerResponseContext responseContext) throws IOException {
+    void setContext(ContainerRequest requestContext,
+                    ContainerResponse responseContext) throws IOException {
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         flushQueue();

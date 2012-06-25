@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -121,7 +121,7 @@ public class AcceptTest {
     public void testAcceptGetWildCard() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/wildcard", "application/foo;q=0.6",
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/wildcard", "application/foo;q=0.6",
                 "application/bar;q=0.4", "application/baz;q=0.2").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
 
@@ -133,7 +133,7 @@ public class AcceptTest {
     public void testQualityErrorGreaterThanOne() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=1.1").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=1.1").build()).get();
         assertEquals(400, response.getStatus());
     }
 
@@ -141,7 +141,7 @@ public class AcceptTest {
     public void testQualityErrorMoreThanThreeDigits() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1234").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1234").build()).get();
         assertEquals(400, response.getStatus());
     }
 
@@ -161,7 +161,7 @@ public class AcceptTest {
         MediaType foo = MediaType.valueOf("application/foo");
         MediaType bar = MediaType.valueOf("application/bar");
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept(foo).build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept(foo).build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(foo, response.getMediaType());
@@ -198,7 +198,7 @@ public class AcceptTest {
 
         MediaType foo = MediaType.valueOf("application/foo");
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
 
         response = app.apply(RequestContextBuilder.from("/", "GET").accept("*/*").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
@@ -219,7 +219,7 @@ public class AcceptTest {
     public void testAcceptSubType() throws Exception {
         ApplicationHandler app = createApplication(SubTypeResource.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("text/plain").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("text/plain").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
@@ -253,7 +253,7 @@ public class AcceptTest {
         ApplicationHandler app = createApplication(NoProducesResource.class);
 
         // media type order in the accept header does not impose output media type!
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("image/png, text/plain;q=0.9").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("image/png, text/plain;q=0.9").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(MediaType.valueOf("image/png"), response.getMediaType());
@@ -321,7 +321,7 @@ public class AcceptTest {
     private void test(Class<?> c) throws Exception {
         ApplicationHandler app = createApplication(c);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(MediaType.valueOf("application/foo"), response.getMediaType());

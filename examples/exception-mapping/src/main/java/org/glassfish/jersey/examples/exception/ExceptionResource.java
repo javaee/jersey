@@ -59,7 +59,7 @@ import javax.ws.rs.ext.Provider;
 import org.glassfish.jersey.examples.exception.Exceptions.MyException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubException;
 import org.glassfish.jersey.examples.exception.Exceptions.MySubSubException;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * ExceptionResource class.
@@ -87,7 +87,7 @@ public class ExceptionResource {
         @Override
         public void filter(ContainerRequestContext context) throws IOException {
             System.out.println("WebApplicationExceptionFilter.preFilter() enter");
-            if (context.hasEntity() && ((JerseyContainerRequestContext) context)
+            if (context.hasEntity() && ((ContainerRequest) context)
                     .readEntity(String.class).equals("Request Exception")) {
                 throw new WebApplicationException(Response.Status.OK);
             }

@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -81,7 +81,7 @@ public class HeadTest {
     public void testGetNoHead() throws Exception {
         initiateWebApplication(ResourceGetNoHead.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
         String length = response.getHeaderString("Content-Length");
@@ -109,7 +109,7 @@ public class HeadTest {
     public void testGetWithHead() throws Exception {
         initiateWebApplication(ResourceGetWithHead.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals("HEAD", response.getHeaders().getFirst("X-TEST"));
@@ -136,7 +136,7 @@ public class HeadTest {
         initiateWebApplication(ResourceGetWithProduceNoHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
@@ -181,7 +181,7 @@ public class HeadTest {
         initiateWebApplication(ResourceGetWithProduceWithHead.class);
 
         MediaType foo = MediaType.valueOf("application/foo");
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").accept(foo).build()).get();
         assertEquals(200, response.getStatus());
         assertFalse(response.hasEntity());
         assertEquals(foo, response.getMediaType());
@@ -208,7 +208,7 @@ public class HeadTest {
     public void testGetByteNoHead() throws Exception {
         initiateWebApplication(ResourceGetByteNoHead.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
         String length = response.getHeaderString("Content-Length");
         assertNotNull(length);
@@ -238,7 +238,7 @@ public class HeadTest {
     public void testResourceXXX() throws Exception {
         initiateWebApplication(ResourceGetWithNoProduces.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/", "HEAD").accept("text/plain").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").accept("text/plain").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("text", response.getHeaderString("x-value"));
 

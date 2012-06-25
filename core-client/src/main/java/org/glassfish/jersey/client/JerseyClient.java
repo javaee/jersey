@@ -85,7 +85,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     public static class Builder {
 
-        private Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector;
+        private Inflector<ClientRequest, ClientResponse> connector;
         private final List<Module> customModules = new LinkedList<Module>();
 
         /**
@@ -101,7 +101,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
          * @param connector client transport connector.
          * @return updated Jersey client builder.
          */
-        public Builder transport(Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector) {
+        public Builder transport(Inflector<ClientRequest, ClientResponse> connector) {
             this.connector = connector;
             return this;
         }
@@ -148,8 +148,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
     private final JerseyConfiguration configuration;
     private final AtomicBoolean closedFlag;
-    private Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector;
-    private RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext> invoker;
+    private Inflector<ClientRequest, ClientResponse> connector;
+    private RequestInvoker<ClientRequest, ClientResponse> invoker;
     //
     @Inject
     private RequestScope requestScope;
@@ -164,7 +164,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     protected JerseyClient(
             final JerseyConfiguration configuration,
-            final Inflector<JerseyClientRequestContext, JerseyClientResponseContext> connector,
+            final Inflector<ClientRequest, ClientResponse> connector,
             final List<Module> customModules) {
         this.configuration = configuration;
         this.closedFlag = new AtomicBoolean(false);
@@ -200,7 +200,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         final RequestProcessingInitializationStage workersInitializationStage = injector.inject(RequestProcessingInitializationStage.class);
         final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
 
-        Stage<JerseyClientRequestContext> rootStage = Stages
+        Stage<ClientRequest> rootStage = Stages
                 .chain(workersInitializationStage)
                 .to(filteringStage)
                 .build(Stages.asStage(connector));
@@ -216,7 +216,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * @param requestContext request context to be processed (invoked).
      * @param callback       callback receiving invocation processing notifications.
      */
-    /*package*/ void submit(final JerseyClientRequestContext requestContext,
+    /*package*/ void submit(final ClientRequest requestContext,
                             final javax.ws.rs.client.InvocationCallback<Response> callback) {
 
         requestScope.runInScope(
@@ -224,10 +224,10 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
                     @Override
                     public void run() {
-                        invoker.apply(requestContext, new InvocationCallback<JerseyClientResponseContext>() {
+                        invoker.apply(requestContext, new InvocationCallback<ClientResponse>() {
 
                             @Override
-                            public void result(JerseyClientResponseContext responseContext) {
+                            public void result(ClientResponse responseContext) {
                                 final InboundJaxrsResponse jaxrsResponse = new InboundJaxrsResponse(responseContext);
                                 callback.completed(jaxrsResponse);
                             }

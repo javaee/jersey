@@ -59,7 +59,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -90,7 +90,7 @@ public class FormParamTest extends AbstractTest {
         Form form = new Form();
         form.param("a", "foo");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -116,7 +116,7 @@ public class FormParamTest extends AbstractTest {
         Form form = new Form();
         form.param("a", "foo");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -141,7 +141,7 @@ public class FormParamTest extends AbstractTest {
         Form form = new Form();
         form.param("a", "foo");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -206,7 +206,7 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
         form.param("b", "bar");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -221,7 +221,7 @@ public class FormParamTest extends AbstractTest {
         form.param("a", "foo");
         form.param("b", "bar");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -251,7 +251,7 @@ public class FormParamTest extends AbstractTest {
         form.param("float", "3.14");
         form.param("decimal", "3.14");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -278,7 +278,7 @@ public class FormParamTest extends AbstractTest {
 
         Form form = new Form();
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -315,7 +315,7 @@ public class FormParamTest extends AbstractTest {
 
         Form form = new Form();
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -348,7 +348,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<jaxbBean><value>b2</value></jaxbBean>");
 
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -365,7 +365,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<x><value>b1</value></jaxbBean>");
         form.param("b", "<x><value>b2</value></jaxbBean>");
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 
@@ -400,7 +400,7 @@ public class FormParamTest extends AbstractTest {
         form.param("b", date_RFC1036);
         form.param("c", date_ANSI_C);
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
         );
 

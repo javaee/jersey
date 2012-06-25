@@ -51,7 +51,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -255,7 +255,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         header("arg1", "ABCDEF").
                         header("arg2", "3145").

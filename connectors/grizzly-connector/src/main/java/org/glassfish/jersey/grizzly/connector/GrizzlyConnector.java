@@ -57,8 +57,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientRequestContext;
-import org.glassfish.jersey.client.JerseyClientResponseContext;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.RequestWriter;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.process.Inflector;
@@ -73,7 +73,7 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-public class GrizzlyConnector extends RequestWriter implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
+public class GrizzlyConnector extends RequestWriter implements Inflector<ClientRequest, ClientResponse> {
 
     private AsyncHttpClient client;
     private AsyncHttpClientConfig config;
@@ -114,11 +114,11 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<JerseyC
      * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
      */
     @Override
-    public JerseyClientResponseContext apply(JerseyClientRequestContext clientRequestContext) {
+    public ClientResponse apply(ClientRequest requestContext) {
         com.ning.http.client.Response ningResponse = null;
 
         try {
-            com.ning.http.client.Request grizzlyRequest = this.getRequest(clientRequestContext);
+            com.ning.http.client.Request grizzlyRequest = this.getRequest(requestContext);
             Future<com.ning.http.client.Response> respFuture = client.executeRequest(grizzlyRequest);
             ningResponse = respFuture.get();
         } catch (ExecutionException ex) {
@@ -129,14 +129,14 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<JerseyC
         } finally {
             client.close();
         }
-        JerseyClientResponseContext clientResponseContext = getClientResponse(clientRequestContext, ningResponse);
+        ClientResponse responseContext = getClientResponse(requestContext, ningResponse);
 
-        return clientResponseContext;
+        return responseContext;
     }
 
-    private JerseyClientResponseContext getClientResponse(JerseyClientRequestContext clientRequestContext, final com.ning.http.client.Response original) {
+    private ClientResponse getClientResponse(ClientRequest requestContext, final com.ning.http.client.Response original) {
 
-        final JerseyClientResponseContext clientResponseContext = new JerseyClientResponseContext(new Response.StatusType() {
+        final ClientResponse responseContext = new ClientResponse(new Response.StatusType() {
             @Override
             public int getStatusCode() {
                 return original.getStatusCode();
@@ -151,41 +151,41 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<JerseyC
             public String getReasonPhrase() {
                 return original.getStatusText();
             }
-        }, clientRequestContext);
+        }, requestContext);
 
         for (Map.Entry<String, List<String>> entry : original.getHeaders().entrySet()) {
             for (String value : entry.getValue()) {
                 // TODO value.toString?
-                clientResponseContext.getHeaders().add(entry.getKey(), value);
+                responseContext.getHeaders().add(entry.getKey(), value);
             }
         }
 
         try {
-            clientResponseContext.setEntityStream(original.getResponseBodyAsStream());
+            responseContext.setEntityStream(original.getResponseBodyAsStream());
         } catch (IOException e) {
             Logger.getLogger(GrizzlyConnector.class.getName()).log(Level.SEVERE, null, e);
         }
 
-        return clientResponseContext;
+        return responseContext;
     }
 
-    private com.ning.http.client.Request getRequest(final JerseyClientRequestContext clientRequestContext) {
-        final String strMethod = clientRequestContext.getMethod();
-        final URI uri = clientRequestContext.getUri();
+    private com.ning.http.client.Request getRequest(final ClientRequest requestContext) {
+        final String strMethod = requestContext.getMethod();
+        final URI uri = requestContext.getUri();
 
         RequestBuilder builder = new RequestBuilder(strMethod).setUrl(uri.toString());
 
-        builder.setFollowRedirects(PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
+        builder.setFollowRedirects(PropertiesHelper.getValue(requestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
                 true));
 
-        final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(clientRequestContext);
+        final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(requestContext);
 
         if (entity != null) {
             builder = builder.setBody(entity);
         }
 
         com.ning.http.client.Request result = builder.build();
-        writeOutBoundHeaders(clientRequestContext.getHeaders(), result);
+        writeOutBoundHeaders(requestContext.getHeaders(), result);
 
         return result;
     }
@@ -208,14 +208,14 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<JerseyC
         }
     }
 
-    private com.ning.http.client.Request.EntityWriter getHttpEntity(final JerseyClientRequestContext clientRequestContext) {
-        final Object entity = clientRequestContext.getEntity();
+    private com.ning.http.client.Request.EntityWriter getHttpEntity(final ClientRequest requestContext) {
+        final Object entity = requestContext.getEntity();
 
         if (entity == null) {
             return null;
         }
 
-        final RequestEntityWriter rew = this.getRequestEntityWriter(clientRequestContext);
+        final RequestEntityWriter rew = this.getRequestEntityWriter(requestContext);
 
         return new com.ning.http.client.Request.EntityWriter() {
             @Override

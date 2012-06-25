@@ -57,7 +57,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -100,16 +100,16 @@ public class AsyncContentAndEntityTypeTest {
 
         MediaType foo = MediaType.valueOf("application/foo");
 
-        Future<JerseyContainerResponseContext> responseFuture =
-                Executors.newFixedThreadPool(1).submit(new Callable<JerseyContainerResponseContext>() {
+        Future<ContainerResponse> responseFuture =
+                Executors.newFixedThreadPool(1).submit(new Callable<ContainerResponse>() {
                     @Override
-                    public JerseyContainerResponseContext call() throws Exception {
+                    public ContainerResponse call() throws Exception {
                         return app.apply(RequestContextBuilder.from("/", "GET").accept("*/*").build()).get();
                     }
                 });
 
 
-        JerseyContainerResponseContext response;
+        ContainerResponse response;
         // making sure the JVM optimization does not swap the order of the calls.
         synchronized (this) {
             app.apply(RequestContextBuilder.from("/", "POST").entity("Foo").build());

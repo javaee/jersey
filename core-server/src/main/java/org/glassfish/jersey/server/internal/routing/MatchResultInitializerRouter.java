@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 import org.glassfish.hk2.Factory;
 
@@ -84,7 +84,7 @@ final class MatchResultInitializerRouter implements Router {
     }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext requestContext) {
+    public Continuation apply(final ContainerRequest requestContext) {
         final RoutingContext rc = contextProvider.get();
         rc.pushMatchResult(new SingleMatchResult(requestContext.getPath(false)));
 

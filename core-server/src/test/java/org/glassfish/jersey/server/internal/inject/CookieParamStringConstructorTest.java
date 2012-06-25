@@ -52,7 +52,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Cookie;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -224,7 +224,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
     public void testBadStringConstructorValue() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "GET").
                         cookie(new Cookie("arg1", "ABCDEF")).
                         cookie(new Cookie("arg2", "3145")).

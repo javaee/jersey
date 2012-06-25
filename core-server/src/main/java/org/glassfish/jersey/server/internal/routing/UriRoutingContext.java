@@ -54,8 +54,8 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -79,14 +79,14 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private MultivaluedHashMap<String, String> encodedTemplateValues;
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private final LinkedList<String> paths = Lists.newLinkedList();
-    private Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector = null;
+    private Inflector<ContainerRequest, ContainerResponse> inflector = null;
 
     /**
      * Injection constructor.
      *
      * @param requestContext request reference.
      */
-    UriRoutingContext(@Inject Ref<JerseyContainerRequestContext> requestContext) {
+    UriRoutingContext(@Inject Ref<ContainerRequest> requestContext) {
         this.requestContext = requestContext;
     }
 
@@ -168,17 +168,17 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
 
     @Override
-    public void setInflector(final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector) {
+    public void setInflector(final Inflector<ContainerRequest, ContainerResponse> inflector) {
         this.inflector = inflector;
     }
 
     @Override
-    public Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> getInflector() {
+    public Inflector<ContainerRequest, ContainerResponse> getInflector() {
         return inflector;
     }
 
     // UriInfo
-    private Ref<JerseyContainerRequestContext> requestContext;
+    private Ref<ContainerRequest> requestContext;
 
     @Override
     public URI getAbsolutePath() {

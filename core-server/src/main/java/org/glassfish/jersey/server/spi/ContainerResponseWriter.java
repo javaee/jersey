@@ -44,14 +44,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 
 /**
  * A suspendable, request-scoped container response writer.
  *
  * Container sends a new instance of the response writer with every request as part
  * of the call to the Jersey application
- * {@link ApplicationHandler#apply(org.glassfish.jersey.server.JerseyContainerRequestContext)}  apply(...)}
+ * {@link ApplicationHandler#apply(org.glassfish.jersey.server.ContainerRequest)}  apply(...)}
  * method. Each container response writer represents an open connection to the client
  * (waiting for a response).
  * <p>
@@ -112,7 +112,7 @@ public interface ContainerResponseWriter {
      * @throws ContainerException if an error occurred when writing out the
      *                            status and headers or obtaining the output stream.
      */
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext)
+    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
             throws ContainerException;
 
     /**

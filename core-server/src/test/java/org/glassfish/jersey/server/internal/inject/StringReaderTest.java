@@ -52,7 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ParamException;
 
@@ -80,7 +80,7 @@ public class StringReaderTest extends AbstractTest {
     public void testBadDateResource() throws ExecutionException, InterruptedException {
         initiateWebApplication(BadDateResource.class);
 
-        final JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
+        final ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
 
         assertEquals(404, responseContext.getStatus());
     }
@@ -102,7 +102,7 @@ public class StringReaderTest extends AbstractTest {
     public void testBadEnumResource() throws ExecutionException, InterruptedException {
         initiateWebApplication(BadEnumResource.class);
 
-        final JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
+        final ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("d", "123").build().toString());
 
         assertEquals(404, responseContext.getStatus());
     }
@@ -288,7 +288,7 @@ public class StringReaderTest extends AbstractTest {
                 HeaderExceptionMapper.class,
                 FormExceptionMapper.class);
 
-        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
         assertEquals("path", responseContext.getEntity());
 
         responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
@@ -323,7 +323,7 @@ public class StringReaderTest extends AbstractTest {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 ParamExceptionMapper.class);
 
-        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
         assertEquals("param", responseContext.getEntity());
 
         responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
@@ -358,7 +358,7 @@ public class StringReaderTest extends AbstractTest {
         initiateWebApplication(ParamExceptionMapperResource.class,
                 URIExceptionMapper.class);
 
-        JerseyContainerResponseContext responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
         assertEquals("uri", responseContext.getEntity());
 
         responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());

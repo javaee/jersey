@@ -49,7 +49,7 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -915,7 +915,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/;int=abcdef", "GET").
                         accept("application/int").
                         build()
@@ -926,7 +926,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/wrappers;int=abcdef", "GET").
                         accept("application/int").
                         build()
@@ -937,7 +937,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/list;int=abcdef;int=abcdef", "GET").
                         accept("application/int").
                         build()

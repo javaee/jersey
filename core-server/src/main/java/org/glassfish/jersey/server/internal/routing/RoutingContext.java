@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.regex.MatchResult;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -132,7 +132,7 @@ public interface RoutingContext {
      *
      * @param inflector matched request to response inflector.
      */
-    public void setInflector(Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector);
+    public void setInflector(Inflector<ContainerRequest, ContainerResponse> inflector);
 
     /**
      * Get the matched request to response data inflector if present, or {@code null}
@@ -140,6 +140,6 @@ public interface RoutingContext {
      *
      * @return matched request to response inflector, or {@code null} if not available.
      */
-    public Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> getInflector();
+    public Inflector<ContainerRequest, ContainerResponse> getInflector();
 
 }

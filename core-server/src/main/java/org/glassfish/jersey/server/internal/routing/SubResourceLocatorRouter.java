@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
@@ -102,7 +102,7 @@ class SubResourceLocatorRouter implements Router {
     }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext request) {
+    public Continuation apply(final ContainerRequest request) {
         final RoutingContext routingCtx = injector.inject(RoutingContext.class);
 
         Object subResource = getResource(routingCtx);

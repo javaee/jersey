@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -81,25 +81,25 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testGetNoHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").build()).get();
+        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").build()).get();
         assertEquals("GET", response.getEntity());
     }
 
     @Test
     public void testGetWithHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
         assertEquals("GET", response.getEntity());
     }
 
     @Test
     public void testPutNoHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").build()).get();
+        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").build()).get();
         assertEquals(Response.Status.BAD_REQUEST, response.getStatusInfo());
     }
 
     @Test
     public void testPutWithHeader() throws Exception {
-        JerseyContainerResponseContext response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
         assertEquals("PUT", response.getEntity());
     }
 }

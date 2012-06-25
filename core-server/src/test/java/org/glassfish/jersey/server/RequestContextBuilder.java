@@ -74,13 +74,13 @@ public class RequestContextBuilder {
 
     private RuntimeDelegate rd = RuntimeDelegate.getInstance();
 
-    public class JerseyTestContainerRequestContext extends JerseyContainerRequestContext {
+    public class TestContainerRequest extends ContainerRequest {
 
         private Object entity;
         private GenericType entityType;
         private final PropertiesDelegate propertiesDelegate;
 
-        public JerseyTestContainerRequestContext(URI baseUri, URI requestUri, String method, SecurityContext securityContext, PropertiesDelegate propertiesDelegate) {
+        public TestContainerRequest(URI baseUri, URI requestUri, String method, SecurityContext securityContext, PropertiesDelegate propertiesDelegate) {
             super(baseUri, requestUri, method, securityContext, propertiesDelegate);
             this.propertiesDelegate = propertiesDelegate;
         }
@@ -118,7 +118,7 @@ public class RequestContextBuilder {
             setEntityStream(new ByteArrayInputStream(entityBytes));
         }
     }
-    private final JerseyTestContainerRequestContext result;
+    private final TestContainerRequest result;
 
     public static RequestContextBuilder from(String requestUri, String method) {
         return from(null, requestUri, method);
@@ -141,11 +141,11 @@ public class RequestContextBuilder {
     }
 
     private RequestContextBuilder(URI baseUri, URI requestUri, String method) {
-        result = new JerseyTestContainerRequestContext(baseUri, requestUri, method, null,
+        result = new TestContainerRequest(baseUri, requestUri, method, null,
                 new MapPropertiesDelegate());
     }
 
-    public JerseyContainerRequestContext build() {
+    public ContainerRequest build() {
         return result;
     }
 

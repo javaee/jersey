@@ -49,7 +49,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -371,7 +371,7 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
 
     @Test
     public void testBadPrimitiveSetValue() throws ExecutionException, InterruptedException {
-        final JerseyContainerResponseContext response = super.getResponseContext("/Set?int=abcdef&int=abcdef", "application/int");
+        final ContainerResponse response = super.getResponseContext("/Set?int=abcdef&int=abcdef", "application/int");
 
         assertEquals(404, response.getStatus());
     }

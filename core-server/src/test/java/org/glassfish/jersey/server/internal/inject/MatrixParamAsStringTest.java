@@ -50,7 +50,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -245,7 +245,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringGet() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final JerseyContainerResponseContext responseContext = getResponseContext("/;arg1=a;arg2=b;arg3=c");
+        final ContainerResponse responseContext = getResponseContext("/;arg1=a;arg2=b;arg3=c");
 
         assertEquals(200, responseContext.getStatus());
     }
@@ -268,7 +268,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
     public void testStringPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(ResourceString.class);
 
-        final JerseyContainerResponseContext responseContext = apply(
+        final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/;arg1=a;arg2=b;arg3=c", "POST").
                         entity("content").
                         build()

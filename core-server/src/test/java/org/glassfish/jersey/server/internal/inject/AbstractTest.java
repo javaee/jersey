@@ -45,8 +45,8 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -65,19 +65,19 @@ public abstract class AbstractTest {
         app = new ApplicationHandler(new ResourceConfig(classes));
     }
 
-    protected JerseyContainerResponseContext apply(JerseyContainerRequestContext request)
+    protected ContainerResponse apply(ContainerRequest request)
             throws ExecutionException, InterruptedException {
 
         return app.apply(request).get();
     }
 
-    protected JerseyContainerResponseContext getResponseContext(String requestUri, Cookie... cookies)
+    protected ContainerResponse getResponseContext(String requestUri, Cookie... cookies)
             throws ExecutionException, InterruptedException {
 
         return getResponseContext(requestUri, null, cookies);
     }
 
-    protected JerseyContainerResponseContext getResponseContext(String requestUri, String accept, Cookie... cookies)
+    protected ContainerResponse getResponseContext(String requestUri, String accept, Cookie... cookies)
             throws ExecutionException, InterruptedException {
 
         RequestContextBuilder requestBuilder = RequestContextBuilder.from(requestUri, "GET");

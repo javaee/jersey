@@ -41,8 +41,8 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.glassfish.hk2.Factory;
 
@@ -59,7 +59,7 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see RoutedInflectorExtractorStage
  */
-public class RoutingStage extends AbstractChainableStage<JerseyContainerRequestContext> {
+public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
     /**
      * Injectable {@link RoutingStage resource matching stage} builder.
      */
@@ -98,8 +98,8 @@ public class RoutingStage extends AbstractChainableStage<JerseyContainerRequestC
      * to the {@link RoutingContext routing context}.
      */
     @Override
-    public Continuation<JerseyContainerRequestContext> apply(JerseyContainerRequestContext request) {
-        final TransformableData<JerseyContainerRequestContext, JerseyContainerResponseContext> result =
+    public Continuation<ContainerRequest> apply(ContainerRequest request) {
+        final TransformableData<ContainerRequest, ContainerResponse> result =
                 _apply(request, routingRoot);
 
         if (result.hasInflector()) {
@@ -110,13 +110,13 @@ public class RoutingStage extends AbstractChainableStage<JerseyContainerRequestC
     }
 
     @SuppressWarnings("unchecked")
-    private TransformableData<JerseyContainerRequestContext, JerseyContainerResponseContext> _apply(
-            final JerseyContainerRequestContext request, final Router router) {
+    private TransformableData<ContainerRequest, ContainerResponse> _apply(
+            final ContainerRequest request, final Router router) {
 
         final Router.Continuation continuation = router.apply(request);
 
         for (Router child : continuation.next()) {
-            TransformableData<JerseyContainerRequestContext, JerseyContainerResponseContext> result =
+            TransformableData<ContainerRequest, ContainerResponse> result =
                     _apply(continuation.requestContext(), child);
 
             if (result.hasInflector()) {
@@ -129,7 +129,7 @@ public class RoutingStage extends AbstractChainableStage<JerseyContainerRequestC
         if (router instanceof Inflecting) {
             // inflector at terminal stage found
             return TransformableData.of(continuation.requestContext(),
-                    ((Inflecting<JerseyContainerRequestContext, JerseyContainerResponseContext>) router).inflector());
+                    ((Inflecting<ContainerRequest, ContainerResponse>) router).inflector());
         }
 
         // inflector at terminal stage not found

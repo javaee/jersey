@@ -62,8 +62,8 @@ import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
@@ -233,7 +233,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(final long contentLength,
-                                                          final JerseyContainerResponseContext context)
+                                                          final ContainerResponse context)
                 throws ContainerException {
             try {
                 grizzlyResponse.setStatus(context.getStatus());
@@ -282,7 +282,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         try {
             logger.debugLog("GrizzlyHttpContaner.service(...) started");
             URI baseUri = getBaseUri(request);
-            JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri,
+            ContainerRequest requestContext = new ContainerRequest(baseUri,
                     getRequestUri(baseUri, request), request.getMethod().getMethodString(),
                     getSecurityContext(request), new GrizzlyRequestPropertiesDelegate(request));
             requestContext.setEntityStream(request.getInputStream());

@@ -57,7 +57,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -89,10 +89,10 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
 
         @Override
         public void filter(ContainerRequestContext context) throws IOException {
-            ((JerseyContainerRequestContext) context).bufferEntity();
+            ((ContainerRequest) context).bufferEntity();
 
             // Read entity
-            FormDataMultiPart multiPart = ((JerseyContainerRequestContext) context).readEntity(FormDataMultiPart.class);
+            FormDataMultiPart multiPart = ((ContainerRequest) context).readEntity(FormDataMultiPart.class);
 
             assertEquals(3, multiPart.getBodyParts().size());
             assertNotNull(multiPart.getField("foo"));
@@ -116,7 +116,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public Response get(@Context Request request, FormDataMultiPart multiPart) {
-            Object p = ((JerseyContainerRequestContext)request).getProperty("filtered");
+            Object p = ((ContainerRequest)request).getProperty("filtered");
             assertNotNull(p);
             assertEquals("true", p);
 

@@ -62,7 +62,7 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class RequestProcessingInitializationStage implements Function<JerseyClientRequestContext, JerseyClientRequestContext> {
+public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
 
     private static final class References {
 
@@ -77,7 +77,7 @@ public class RequestProcessingInitializationStage implements Function<JerseyClie
         @Inject
         private Ref<ContextResolvers> contextResolvers;
         @Inject
-        Ref<JerseyClientRequestContext> requestContextRef;
+        Ref<ClientRequest> requestContextRef;
     }
 
     private final Injector injector;
@@ -101,7 +101,7 @@ public class RequestProcessingInitializationStage implements Function<JerseyClie
 
 
     @Override
-    public JerseyClientRequestContext apply(JerseyClientRequestContext requestContext) {
+    public ClientRequest apply(ClientRequest requestContext) {
         References refs = injector.inject(References.class); // request-scoped
 
         final JerseyConfiguration cfg = requestContext.getConfiguration();

@@ -44,7 +44,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * Request stringifier.
@@ -57,7 +57,7 @@ public class Stringifier {
     }
 
     public static String stringify(Request _request) {
-        JerseyContainerRequestContext request = (JerseyContainerRequestContext) _request;
+        ContainerRequest request = (ContainerRequest) _request;
         StringBuilder buffer = new StringBuilder();
 
         printRequestLine(buffer, request);
@@ -70,7 +70,7 @@ public class Stringifier {
         return buffer.toString();
     }
 
-    private static void printRequestLine(StringBuilder buffer, JerseyContainerRequestContext request) {
+    private static void printRequestLine(StringBuilder buffer, ContainerRequest request) {
         buffer.append(request.getMethod()).append(" ").append(request.getUriInfo().getRequestUri().toASCIIString()).append("\n");
     }
 

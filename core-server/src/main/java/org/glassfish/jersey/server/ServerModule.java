@@ -106,9 +106,9 @@ public class ServerModule extends AbstractModule {
         }
     }
 
-    private static class RequestContextInjectionFactory extends ReferencingFactory<JerseyContainerRequestContext> {
+    private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
 
-        public RequestContextInjectionFactory(@Inject Factory<Ref<JerseyContainerRequestContext>> referenceFactory) {
+        public RequestContextInjectionFactory(@Inject Factory<Ref<ContainerRequest>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -120,7 +120,7 @@ public class ServerModule extends AbstractModule {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private ResponseProcessor.Builder<JerseyContainerResponseContext> responseProcessorBuilder;
+        private ResponseProcessor.Builder<ContainerResponse> responseProcessorBuilder;
         @Inject
         private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
@@ -133,24 +133,24 @@ public class ServerModule extends AbstractModule {
          * @param rootStage root processing stage.
          * @return new request invoker instance.
          */
-        public RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> build(
-                final Stage<JerseyContainerRequestContext> rootStage) {
+        public RequestInvoker<ContainerRequest, ContainerResponse> build(
+                final Stage<ContainerRequest> rootStage) {
 
-            return new RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext>(
+            return new RequestInvoker<ContainerRequest, ContainerResponse>(
                     rootStage,
                     requestScope,
-                    new AsyncInflectorAdapter.Builder<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                    new AsyncInflectorAdapter.Builder<ContainerRequest, ContainerResponse>() {
                         @Override
-                        public AsyncInflectorAdapter<JerseyContainerRequestContext, JerseyContainerResponseContext> create(
-                                Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> wrapped,
-                                InvocationCallback<JerseyContainerResponseContext> callback) {
-                            return new AsyncInflectorAdapter<JerseyContainerRequestContext, JerseyContainerResponseContext>(
+                        public AsyncInflectorAdapter<ContainerRequest, ContainerResponse> create(
+                                Inflector<ContainerRequest, ContainerResponse> wrapped,
+                                InvocationCallback<ContainerResponse> callback) {
+                            return new AsyncInflectorAdapter<ContainerRequest, ContainerResponse>(
                                     wrapped, callback) {
 
                                 @Override
-                                protected JerseyContainerResponseContext convertResponse(
-                                        JerseyContainerRequestContext requestContext, Response response) {
-                                    return new JerseyContainerResponseContext(requestContext, response);
+                                protected ContainerResponse convertResponse(
+                                        ContainerRequest requestContext, Response response) {
+                                    return new ContainerResponse(requestContext, response);
                                 }
                             };
                         }
@@ -165,15 +165,15 @@ public class ServerModule extends AbstractModule {
     /**
      * Injection-enabled client side {@link ResponseProcessor} instance builder.
      */
-    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<JerseyContainerResponseContext> {
+    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<ContainerResponse> {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingCtxProvider;
+        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingCtxProvider;
         @Inject
         private Factory<ExceptionMappers> exceptionMappersProvider;
         @Inject
-        private Factory<JerseyContainerRequestContext> requestContextFactory;
+        private Factory<ContainerRequest> requestContextFactory;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -183,13 +183,13 @@ public class ServerModule extends AbstractModule {
         }
 
         @Override
-        public ResponseProcessor<JerseyContainerResponseContext> build(
-                final Future<JerseyContainerResponseContext> inflectedResponse,
-                final SettableFuture<JerseyContainerResponseContext> processedResponse,
-                final InvocationCallback<JerseyContainerResponseContext> callback,
+        public ResponseProcessor<ContainerResponse> build(
+                final Future<ContainerResponse> inflectedResponse,
+                final SettableFuture<ContainerResponse> processedResponse,
+                final InvocationCallback<ContainerResponse> callback,
                 final RequestScope.Instance scopeInstance) {
 
-            return new ResponseProcessor<JerseyContainerResponseContext>(
+            return new ResponseProcessor<ContainerResponse>(
                     callback,
                     inflectedResponse,
                     processedResponse,
@@ -199,9 +199,9 @@ public class ServerModule extends AbstractModule {
                     exceptionMappersProvider) {
 
                 @Override
-                protected JerseyContainerResponseContext convertResponse(Response exceptionResponse) {
+                protected ContainerResponse convertResponse(Response exceptionResponse) {
                     return (exceptionResponse == null) ? null :
-                            new JerseyContainerResponseContext(requestContextFactory.get(), exceptionResponse);
+                            new ContainerResponse(requestContextFactory.get(), exceptionResponse);
                 }
             };
         }
@@ -236,22 +236,22 @@ public class ServerModule extends AbstractModule {
         }).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
 
         // server-side processing chain
-        bind(JerseyContainerRequestContext.class)
+        bind(ContainerRequest.class)
                 .toFactory(RequestContextInjectionFactory.class)
                 .in(RequestScope.class);
         bind(ContainerRequestContext.class)
                 .toFactory(RequestContextInjectionFactory.class)
                 .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<JerseyContainerRequestContext>>() {
+        bind(new TypeLiteral<Ref<ContainerRequest>>() {
         })
-                .toFactory(ReferencingFactory.<JerseyContainerRequestContext>referenceFactory())
+                .toFactory(ReferencingFactory.<ContainerRequest>referenceFactory())
                 .in(RequestScope.class);
 
-        bind(new TypeLiteral<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>>() {
-        }).to(new TypeLiteral<DefaultRespondingContext<JerseyContainerResponseContext>>() {
+        bind(new TypeLiteral<ResponseProcessor.RespondingContext<ContainerResponse>>() {
+        }).to(new TypeLiteral<DefaultRespondingContext<ContainerResponse>>() {
         }).in(RequestScope.class);
 
-        bind(new TypeLiteral<ResponseProcessor.Builder<JerseyContainerResponseContext>>() {
+        bind(new TypeLiteral<ResponseProcessor.Builder<ContainerResponse>>() {
         }).to(ResponseProcessorBuilder.class).in(Singleton.class);
 
 

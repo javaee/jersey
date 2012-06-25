@@ -43,7 +43,7 @@ import java.lang.annotation.Annotation;
 
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.Factory;
@@ -73,7 +73,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
 
         @Override
         protected Object get(HttpContext context) {
-            final JerseyContainerRequestContext requestContext = context.getRequestContext();
+            final ContainerRequest requestContext = context.getRequestContext();
 
             final Class<?> rawType = parameter.getRawType();
             return Request.class.isAssignableFrom(rawType) && rawType.isInstance(requestContext)

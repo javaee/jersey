@@ -52,10 +52,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class CustomTransportTest {
 
-    public static class NullTransport implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
+    public static class NullTransport implements Inflector<ClientRequest, ClientResponse> {
 
         @Override
-        public JerseyClientResponseContext apply(JerseyClientRequestContext request) {
+        public ClientResponse apply(ClientRequest request) {
             throw new RuntimeException("test");
         }
     }

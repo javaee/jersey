@@ -46,7 +46,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -106,7 +106,7 @@ public class InvalidParamsTest {
 
     @Test
     public void testInvalidPathParam() throws Exception {
-        JerseyContainerResponseContext responseContext = app.apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
+        ContainerResponse responseContext = app.apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
         // returned param is null -> 204 NO CONTENT
         assertEquals(204, responseContext.getStatus());
     }

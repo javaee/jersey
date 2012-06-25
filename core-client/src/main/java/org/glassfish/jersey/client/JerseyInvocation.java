@@ -72,10 +72,10 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
-    private final JerseyClientRequestContext requestContext;
+    private final ClientRequest requestContext;
 
     private JerseyInvocation(Builder builder) {
-        this.requestContext = new JerseyClientRequestContext(builder.requestContext);
+        this.requestContext = new ClientRequest(builder.requestContext);
     }
 
     /**
@@ -83,7 +83,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
-        private final JerseyClientRequestContext requestContext;
+        private final ClientRequest requestContext;
 
         /**
          * Create new Jersey-specific client invocation builder.
@@ -93,7 +93,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * @param client Jersey client that will process the invocation.
          */
         protected Builder(URI uri, JerseyConfiguration configuration, JerseyClient client) {
-            this.requestContext = new JerseyClientRequestContext(uri, client, configuration, new MapPropertiesDelegate());
+            this.requestContext = new ClientRequest(uri, client, configuration, new MapPropertiesDelegate());
         }
 
         /**
@@ -101,7 +101,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          *
          * @return mutable request context to be invoked.
          */
-        JerseyClientRequestContext request() {
+        ClientRequest request() {
             return requestContext;
         }
 
@@ -176,14 +176,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Builder allow(String... methods) {
-            requestContext.allow(methods);
-            return this;
+            throw new UnsupportedOperationException("Method will be removed from the API since it is response-only.");
         }
 
         @Override
         public Builder allow(Set<String> methods) {
-            requestContext.allow(methods);
-            return this;
+            throw new UnsupportedOperationException("Method will be removed from the API since it is response-only.");
         }
 
         @Override
@@ -200,7 +198,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Invocation.Builder headers(MultivaluedMap<String, Object> headers) {
-            requestContext.replaceHeaders(headers);
+            requestContext.replaceAll(headers);
             return this;
         }
 
@@ -698,7 +696,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      *
      * @return mutable request context to be invoked.
      */
-    JerseyClientRequestContext request() {
+    ClientRequest request() {
         return requestContext;
     }
 }

@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -117,7 +117,7 @@ public class OptionsSubResourceMethodTest {
     public void testNoOptions() throws Exception {
         initiateWebApplication(ResourceNoOptions.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
         _checkAllowContent(response.getHeaderString("Allow"));
@@ -183,7 +183,7 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceWithOptions.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/sub", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 
@@ -217,7 +217,7 @@ public class OptionsSubResourceMethodTest {
 
         initiateWebApplication(ResourceNoOptionsDifferentSub.class);
 
-        JerseyContainerResponseContext response = app.apply(RequestContextBuilder.from("/sub1", "OPTIONS").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/sub1", "OPTIONS").build()).get();
 
         assertEquals(200, response.getStatus());
 

@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.List;
 import java.util.regex.MatchResult;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.Factory;
@@ -100,7 +100,7 @@ class PathPatternRouter implements Router {
     }
 
     @Override
-    public Router.Continuation apply(final JerseyContainerRequestContext request) {
+    public Router.Continuation apply(final ContainerRequest request) {
         final RoutingContext rc = contextProvider.get();
         // Peek at matching information to obtain path to match
         String path = rc.getFinalMatchingGroup();

@@ -53,7 +53,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -83,7 +83,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     private User authenticate(Request request) {
         // Extract authentication credentials
-        String authentication = ((JerseyContainerRequestContext)request).getHeaderString(HttpHeaders.AUTHORIZATION);
+        String authentication = ((ContainerRequest)request).getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authentication == null) {
             throw new AuthenticationException("Authentication credentials are required", REALM);
         }

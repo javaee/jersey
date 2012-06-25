@@ -70,7 +70,7 @@ import com.google.common.base.Predicate;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequestContext> {
+class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
     private static final Predicate<ContainerRequestFilter> PRE_MATCH_FILTER_PREDICATE = new Predicate<ContainerRequestFilter>() {
         @Override
@@ -116,7 +116,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
         @Inject
         private Factory<ServiceProviders> servicesProvidersFactory;
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
         /**
          * Build a new container filtering stage specifying whether the built stage is
@@ -144,7 +144,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
     }
 
     private final Factory<ServiceProviders> servicesProvidersFactory;
-    private final Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
     private final boolean preMatch;
 
     /**
@@ -157,7 +157,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
      */
     private ContainerFilteringStage(
             Factory<ServiceProviders> servicesProvidersFactory,
-            Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory,
+            Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
             boolean preMatch) {
 
         this.servicesProvidersFactory = servicesProvidersFactory;
@@ -166,7 +166,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
     }
 
     @Override
-    public Continuation<JerseyContainerRequestContext> apply(JerseyContainerRequestContext requestContext) {
+    public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
         final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
         final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
@@ -192,12 +192,12 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
                 if (abortResponse != null) {
                     // abort accepting & return response
                     return Continuation.of(requestContext, Stages.asStage(
-                            new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                            new Inflector<ContainerRequest, ContainerResponse>() {
                                 @Override
-                                public JerseyContainerResponseContext apply(
-                                        final JerseyContainerRequestContext requestContext) {
+                                public ContainerResponse apply(
+                                        final ContainerRequest requestContext) {
 
-                                    return new JerseyContainerResponseContext(requestContext, abortResponse);
+                                    return new ContainerResponse(requestContext, abortResponse);
                                 }
                             }));
                 }
@@ -213,7 +213,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
         return Continuation.of(requestContext, getDefaultNext());
     }
 
-    private static class ResponseFilterStage extends AbstractChainableStage<JerseyContainerResponseContext> {
+    private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
         private final List<ContainerResponseFilter> filters;
 
         private ResponseFilterStage(List<ContainerResponseFilter> filters) {
@@ -221,7 +221,7 @@ class ContainerFilteringStage extends AbstractChainableStage<JerseyContainerRequ
         }
 
         @Override
-        public Continuation<JerseyContainerResponseContext> apply(JerseyContainerResponseContext responseContext) {
+        public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
             // TODO from the name-bound filters select only those that are applicable for the invoked resource.
 
             try {

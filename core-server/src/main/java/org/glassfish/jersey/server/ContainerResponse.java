@@ -54,10 +54,10 @@ import org.glassfish.jersey.message.internal.Statuses;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyContainerResponseContext extends OutboundMessageContext implements ContainerResponseContext {
+public class ContainerResponse extends OutboundMessageContext implements ContainerResponseContext {
 
     private Response.StatusType status;
-    private final JerseyContainerRequestContext requestContext;
+    private final ContainerRequest requestContext;
 
     /**
      * Create a new Jersey container response context.
@@ -65,7 +65,7 @@ public class JerseyContainerResponseContext extends OutboundMessageContext imple
      * @param requestContext associated container request context.
      * @param response response instance initializing the response context.
      */
-    public JerseyContainerResponseContext(JerseyContainerRequestContext requestContext, Response response) {
+    public ContainerResponse(ContainerRequest requestContext, Response response) {
         this(requestContext, OutboundJaxrsResponse.unwrap(response));
     }
 
@@ -75,7 +75,7 @@ public class JerseyContainerResponseContext extends OutboundMessageContext imple
      * @param requestContext associated container request context.
      * @param response response instance initializing the response context.
      */
-    JerseyContainerResponseContext(JerseyContainerRequestContext requestContext, OutboundJaxrsResponse response) {
+    ContainerResponse(ContainerRequest requestContext, OutboundJaxrsResponse response) {
         super(response.getContext());
         this.requestContext = requestContext;
         this.status = response.getStatusInfo();
@@ -110,7 +110,7 @@ public class JerseyContainerResponseContext extends OutboundMessageContext imple
      *
      * @return associated container request context.
      */
-    public JerseyContainerRequestContext getRequestContext() {
+    public ContainerRequest getRequestContext() {
         return requestContext;
     }
 

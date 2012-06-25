@@ -80,7 +80,6 @@ import com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO revise - remove unused methods, fix warnings etc.
 public class OutboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 

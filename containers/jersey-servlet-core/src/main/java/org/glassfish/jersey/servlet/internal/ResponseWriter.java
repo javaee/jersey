@@ -58,7 +58,7 @@ import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 
@@ -78,7 +78,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     private final HttpServletResponse response;
     private final CommittingOutputStream out;
     private final boolean useSetStatusOn404;
-    private final SettableFuture<JerseyContainerResponseContext> responseContext;
+    private final SettableFuture<ContainerResponse> responseContext;
     private long contentLength;
     private final AtomicBoolean statusAndHeadersWritten;
     private final AsyncContextDelegate asyncExt;
@@ -122,7 +122,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, JerseyContainerResponseContext responseContext) throws ContainerException {
+    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) throws ContainerException {
         this.contentLength = contentLength;
         this.responseContext.set(responseContext);
         this.statusAndHeadersWritten.set(false);
@@ -140,7 +140,7 @@ public class ResponseWriter implements ContainerResponseWriter {
             // modification of the response headers will have no effect
             // after the invocation of sendError.
             writeHeaders();
-            final JerseyContainerResponseContext responseContext = getResponseContext();
+            final ContainerResponse responseContext = getResponseContext();
             final int status = responseContext.getStatus();
             if (status >= 400) {
                 if (useSetStatusOn404 && status == 404) {
@@ -200,7 +200,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     /**
-     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.JerseyContainerResponseContext)} has been invoked.
+     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.ContainerResponse)} has been invoked.
      * The method will block if the write method has not been called yet.
      *
      * @return response status
@@ -209,7 +209,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         return getResponseContext().getStatus();
     }
 
-    private JerseyContainerResponseContext getResponseContext() {
+    private ContainerResponse getResponseContext() {
         try {
             return responseContext.get();
         } catch (InterruptedException ex) {

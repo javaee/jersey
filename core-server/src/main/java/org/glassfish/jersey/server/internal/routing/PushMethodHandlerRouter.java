@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.MethodHandler;
 
 import org.glassfish.hk2.Factory;
@@ -96,7 +96,7 @@ class PushMethodHandlerRouter implements Router {
     }
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext request) {
+    public Continuation apply(final ContainerRequest request) {
         Object handlerInstance = methodHandler.getInstance(injector);
         routingContextFactory.get().pushMatchedResource(handlerInstance);
 

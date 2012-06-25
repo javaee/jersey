@@ -92,9 +92,9 @@ class ClientModule extends AbstractModule {
         }
     }
 
-    private static class RequestContextInjectionFactory extends ReferencingFactory<JerseyClientRequestContext> {
+    private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
 
-        public RequestContextInjectionFactory(@Inject Factory<Ref<JerseyClientRequestContext>> referenceFactory) {
+        public RequestContextInjectionFactory(@Inject Factory<Ref<ClientRequest>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -106,7 +106,7 @@ class ClientModule extends AbstractModule {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private ResponseProcessor.Builder<JerseyClientResponseContext> responseProcessorBuilder;
+        private ResponseProcessor.Builder<ClientResponse> responseProcessorBuilder;
         @Inject
         private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
@@ -119,28 +119,28 @@ class ClientModule extends AbstractModule {
          * @param rootStage root processing stage.
          * @return new request invoker instance.
          */
-        public RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext> build(
-                final Stage<JerseyClientRequestContext> rootStage) {
+        public RequestInvoker<ClientRequest, ClientResponse> build(
+                final Stage<ClientRequest> rootStage) {
 
-            final AsyncInflectorAdapter.Builder<JerseyClientRequestContext,JerseyClientResponseContext> asyncAdapterBuilder =
-                    new AsyncInflectorAdapter.Builder<JerseyClientRequestContext, JerseyClientResponseContext>() {
+            final AsyncInflectorAdapter.Builder<ClientRequest,ClientResponse> asyncAdapterBuilder =
+                    new AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse>() {
                         @Override
-                        public AsyncInflectorAdapter<JerseyClientRequestContext, JerseyClientResponseContext> create(
-                                Inflector<JerseyClientRequestContext, JerseyClientResponseContext> wrapped, InvocationCallback<JerseyClientResponseContext> callback) {
-                            return new AsyncInflectorAdapter<JerseyClientRequestContext, JerseyClientResponseContext>(
+                        public AsyncInflectorAdapter<ClientRequest, ClientResponse> create(
+                                Inflector<ClientRequest, ClientResponse> wrapped, InvocationCallback<ClientResponse> callback) {
+                            return new AsyncInflectorAdapter<ClientRequest, ClientResponse>(
                                     wrapped, callback) {
 
                                 @Override
-                                protected JerseyClientResponseContext convertResponse(
-                                        JerseyClientRequestContext requestContext, Response response) {
+                                protected ClientResponse convertResponse(
+                                        ClientRequest requestContext, Response response) {
                                     // TODO get rid of this code on the client side
-                                    return new JerseyClientResponseContext(requestContext, response);
+                                    return new ClientResponse(requestContext, response);
                                 }
                             };
                         }
                     };
 
-            return new RequestInvoker<JerseyClientRequestContext, JerseyClientResponseContext>(
+            return new RequestInvoker<ClientRequest, ClientResponse>(
                     rootStage,
                     requestScope,
                     asyncAdapterBuilder,
@@ -154,15 +154,15 @@ class ClientModule extends AbstractModule {
     /**
      * Injection-enabled client side {@link ResponseProcessor} instance builder.
      */
-    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<JerseyClientResponseContext> {
+    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<ClientResponse> {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<JerseyClientResponseContext>> respondingCtxProvider;
+        private Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingCtxProvider;
         @Inject
         private Factory<ExceptionMappers> exceptionMappersProvider;
         @Inject
-        private Factory<JerseyClientRequestContext> requestContextFactory;
+        private Factory<ClientRequest> requestContextFactory;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -172,13 +172,13 @@ class ClientModule extends AbstractModule {
         }
 
         @Override
-        public ResponseProcessor<JerseyClientResponseContext> build(
-                final Future<JerseyClientResponseContext> inflectedResponse,
-                final SettableFuture<JerseyClientResponseContext> processedResponse,
-                final InvocationCallback<JerseyClientResponseContext> callback,
+        public ResponseProcessor<ClientResponse> build(
+                final Future<ClientResponse> inflectedResponse,
+                final SettableFuture<ClientResponse> processedResponse,
+                final InvocationCallback<ClientResponse> callback,
                 final RequestScope.Instance scopeInstance) {
 
-            return new ResponseProcessor<JerseyClientResponseContext>(
+            return new ResponseProcessor<ClientResponse>(
                     callback,
                     inflectedResponse,
                     processedResponse,
@@ -188,8 +188,8 @@ class ClientModule extends AbstractModule {
                     exceptionMappersProvider) {
 
                 @Override
-                protected JerseyClientResponseContext convertResponse(Response exceptionResponse) {
-                    return (exceptionResponse == null) ? null : new JerseyClientResponseContext(
+                protected ClientResponse convertResponse(Response exceptionResponse) {
+                    return (exceptionResponse == null) ? null : new ClientResponse(
                             exceptionResponse.getStatusInfo(),
                             requestContextFactory.get());
                 }
@@ -224,19 +224,19 @@ class ClientModule extends AbstractModule {
                 .in(RequestScope.class);
 
         // Client-side processing chain
-        bind(JerseyClientRequestContext.class)
+        bind(ClientRequest.class)
                 .toFactory(RequestContextInjectionFactory.class)
                 .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<JerseyClientRequestContext>>() {
+        bind(new TypeLiteral<Ref<ClientRequest>>() {
         })
-                .toFactory(ReferencingFactory.<JerseyClientRequestContext>referenceFactory())
+                .toFactory(ReferencingFactory.<ClientRequest>referenceFactory())
                 .in(RequestScope.class);
 
-        bind(new TypeLiteral<ResponseProcessor.RespondingContext<JerseyClientResponseContext>>() {
-        }).to(new TypeLiteral<DefaultRespondingContext<JerseyClientResponseContext>>() {
+        bind(new TypeLiteral<ResponseProcessor.RespondingContext<ClientResponse>>() {
+        }).to(new TypeLiteral<DefaultRespondingContext<ClientResponse>>() {
         }).in(RequestScope.class);
 
-        bind(new TypeLiteral<ResponseProcessor.Builder<JerseyClientResponseContext>>() {
+        bind(new TypeLiteral<ResponseProcessor.Builder<ClientResponse>>() {
         }).to(ResponseProcessorBuilder.class).in(Singleton.class);
     }
 }

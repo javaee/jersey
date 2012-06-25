@@ -48,7 +48,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
@@ -96,7 +96,7 @@ public class PathParamAsStringTest extends AbstractTest {
     public void testStringArgsPost() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource.class);
 
-        final JerseyContainerResponseContext response = apply(
+        final ContainerResponse response = apply(
                 RequestContextBuilder.from("/a/b/c", "POST").
                         entity("content").
                         build()

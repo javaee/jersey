@@ -42,8 +42,8 @@ package org.glassfish.jersey.server.internal.routing;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.glassfish.hk2.Factory;
 
@@ -62,7 +62,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @see RoutingStage
  */
-public class RoutedInflectorExtractorStage implements Stage<JerseyContainerRequestContext> {
+public class RoutedInflectorExtractorStage implements Stage<ContainerRequest> {
     private final Factory<RoutingContext> routingContextFactory;
 
     /**
@@ -75,8 +75,8 @@ public class RoutedInflectorExtractorStage implements Stage<JerseyContainerReque
     }
 
     @Override
-    public Continuation<JerseyContainerRequestContext> apply(final JerseyContainerRequestContext requestContext) {
-        final Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext> inflector =
+    public Continuation<ContainerRequest> apply(final ContainerRequest requestContext) {
+        final Inflector<ContainerRequest, ContainerResponse> inflector =
                 routingContextFactory.get().getInflector();
 
         return inflector != null

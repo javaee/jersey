@@ -48,14 +48,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -68,8 +67,8 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.hk2.inject.Injector;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+
+import org.glassfish.jersey.server.ContainerResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -106,7 +105,7 @@ public class RMBuilderTest {
             return "another";
         }
     }
-    private RequestInvoker<JerseyContainerRequestContext, JerseyContainerResponseContext> invoker; // will be manually injected in the setupApplication()
+    private RequestInvoker<ContainerRequest, ContainerResponse> invoker; // will be manually injected in the setupApplication()
     private RequestScope requestScope; // will be manually injected in the setupApplication()
 
     @Before
@@ -133,12 +132,12 @@ public class RMBuilderTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        final JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
+        final ContainerRequest req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
 
-        Future<JerseyContainerResponseContext> res = requestScope.runInScope(new Callable<Future<JerseyContainerResponseContext>>() {
+        Future<ContainerResponse> res = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
 
             @Override
-            public Future<JerseyContainerResponseContext> call() throws Exception {
+            public Future<ContainerResponse> call() throws Exception {
                 return invoker.apply(req);
             }
         });
@@ -148,11 +147,11 @@ public class RMBuilderTest {
 
     @Test
     public void testOptions() throws Exception {
-        final JerseyContainerRequestContext req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
-        Future<JerseyContainerResponseContext> res = requestScope.runInScope(new Callable<Future<JerseyContainerResponseContext>>() {
+        final ContainerRequest req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
+        Future<ContainerResponse> res = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
 
             @Override
-            public Future<JerseyContainerResponseContext> call() throws Exception {
+            public Future<ContainerResponse> call() throws Exception {
                 return invoker.apply(req);
             }
         });
@@ -162,12 +161,12 @@ public class RMBuilderTest {
 
     @Test
     public void testSubResMethod() throws Exception {
-        final JerseyContainerRequestContext req2 = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
+        final ContainerRequest req2 = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
 
-        Future<JerseyContainerResponseContext> res2 = requestScope.runInScope(new Callable<Future<JerseyContainerResponseContext>>() {
+        Future<ContainerResponse> res2 = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
 
             @Override
-            public Future<JerseyContainerResponseContext> call() throws Exception {
+            public Future<ContainerResponse> call() throws Exception {
 
                 return invoker.apply(req2);
             }

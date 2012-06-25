@@ -58,8 +58,8 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
@@ -87,7 +87,7 @@ final class MethodSelectingRouter implements Router {
 
     private static final Logger LOGGER = Logger.getLogger(MethodSelectingRouter.class.getName());
 
-    private final Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
@@ -98,7 +98,7 @@ final class MethodSelectingRouter implements Router {
      */
     static class Builder {
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory;
+        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
         /**
          * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
@@ -118,7 +118,7 @@ final class MethodSelectingRouter implements Router {
     }
 
     private MethodSelectingRouter(
-            Factory<ResponseProcessor.RespondingContext<JerseyContainerResponseContext>> respondingContextFactory,
+            Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
             MessageBodyWorkers msgWorkers,
             List<MethodAcceptorPair> methodAcceptorPairs) {
         this.respondingContextFactory = respondingContextFactory;
@@ -219,7 +219,7 @@ final class MethodSelectingRouter implements Router {
          * @param requestContext The request to be tested.
          * @return True if the {@code request} can be processed by this router, false otherwise.
          */
-        boolean isConsumable(JerseyContainerRequestContext requestContext) {
+        boolean isConsumable(ContainerRequest requestContext) {
             MediaType contentType = requestContext.getMediaType();
             return contentType == null || consumes.getMediaType().isCompatible(contentType);
         }
@@ -308,14 +308,14 @@ final class MethodSelectingRouter implements Router {
         return new Router() {
 
             @Override
-            public Continuation apply(JerseyContainerRequestContext requestContext) {
+            public Continuation apply(ContainerRequest requestContext) {
                 return Continuation.of(requestContext, getMethodRouter(requestContext));
             }
         };
     }
 
     @Override
-    public Continuation apply(JerseyContainerRequestContext requestContext) {
+    public Continuation apply(ContainerRequest requestContext) {
         return router.apply(requestContext);
     }
 
@@ -378,7 +378,7 @@ final class MethodSelectingRouter implements Router {
         }
     }
 
-    private Router getMethodRouter(final JerseyContainerRequestContext requestContext) {
+    private Router getMethodRouter(final ContainerRequest requestContext) {
         List<ConsumesProducesAcceptor> acceptors = consumesProducesAcceptors.get(requestContext.getMethod());
         if (acceptors == null) {
             throw new WebApplicationException(
@@ -425,9 +425,9 @@ final class MethodSelectingRouter implements Router {
             // TODO: the effective media type in advance - see issue JERSEY-1187
             final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
             respondingContextFactory.get().push(
-                    new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
+                    new Function<ContainerResponse, ContainerResponse>() {
                         @Override
-                        public JerseyContainerResponseContext apply(final JerseyContainerResponseContext responseContext) {
+                        public ContainerResponse apply(final ContainerResponse responseContext) {
                             // If the response has entity or is a response to HEAD request
                             // and the computed effective response type is not wildcard
                             // and response does not have a media type set already,
@@ -486,13 +486,13 @@ final class MethodSelectingRouter implements Router {
         return new Router() {
 
             @Override
-            public Continuation apply(final JerseyContainerRequestContext requestContext) {
+            public Continuation apply(final ContainerRequest requestContext) {
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
                     requestContext.setMethod(HttpMethod.GET);
                     respondingContextFactory.get().push(
-                            new Function<JerseyContainerResponseContext, JerseyContainerResponseContext>() {
+                            new Function<ContainerResponse, ContainerResponse>() {
                                 @Override
-                                public JerseyContainerResponseContext apply(JerseyContainerResponseContext responseContext) {
+                                public ContainerResponse apply(ContainerResponse responseContext) {
                                     responseContext.getRequestContext().setMethod(HttpMethod.HEAD);
                                     return responseContext;
                                 }
@@ -513,15 +513,15 @@ final class MethodSelectingRouter implements Router {
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.TEXT_PLAIN_TYPE, false),
                 new MethodAcceptorPair(null, Routers.asTreeAcceptor(
-                        new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                        new Inflector<ContainerRequest, ContainerResponse>() {
 
                             @Override
-                            public JerseyContainerResponseContext apply(JerseyContainerRequestContext requestContext) {
+                            public ContainerResponse apply(ContainerRequest requestContext) {
 
                                 final Response response = Response.ok(optionsBody, MediaType.TEXT_PLAIN_TYPE)
                                         .allow(allowedMethods)
                                         .build();
-                                return new JerseyContainerResponseContext(requestContext, response);
+                                return new ContainerResponse(requestContext, response);
                             }
                         })));
     }
@@ -532,16 +532,16 @@ final class MethodSelectingRouter implements Router {
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new MethodAcceptorPair(null, Routers.asTreeAcceptor(
-                        new Inflector<JerseyContainerRequestContext, JerseyContainerResponseContext>() {
+                        new Inflector<ContainerRequest, ContainerResponse>() {
 
                             @Override
-                            public JerseyContainerResponseContext apply(JerseyContainerRequestContext requestContext) {
+                            public ContainerResponse apply(ContainerRequest requestContext) {
                                 final Response response = Response.ok()
                                         .allow(allowedMethods)
                                         .header(HttpHeaders.CONTENT_LENGTH, "0")
                                         .type(requestContext.getAcceptableMediaTypes().get(0))
                                         .build();
-                                return new JerseyContainerResponseContext(requestContext, response);
+                                return new ContainerResponse(requestContext, response);
                             }
                         })));
     }

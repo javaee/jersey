@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 
 import org.glassfish.hk2.Factory;
 
@@ -57,7 +57,7 @@ class PushMatchedUriRouter implements Router {
     private Factory<RoutingContext> routingContextFactory;
 
     @Override
-    public Continuation apply(final JerseyContainerRequestContext data) {
+    public Continuation apply(final ContainerRequest data) {
         routingContextFactory.get().pushLeftHandPath();
 
         return Continuation.of(data);

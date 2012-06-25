@@ -53,8 +53,8 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
@@ -154,10 +154,10 @@ public class ContextBasedInjectionTest {
 
     @Test
     public void testAsyncApp() throws InterruptedException, ExecutionException {
-        JerseyContainerRequestContext req =
+        ContainerRequest req =
                 RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + uriSuffix), "GET").build();
 
-        Future<JerseyContainerResponseContext> res = app.apply(req);
+        Future<ContainerResponse> res = app.apply(req);
 
         assertEquals(expectedResponse, res.get().getEntity());
     }

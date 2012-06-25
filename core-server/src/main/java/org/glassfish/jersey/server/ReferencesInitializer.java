@@ -59,14 +59,14 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ReferencesInitializer implements Function<JerseyContainerRequestContext, JerseyContainerRequestContext> {
+class ReferencesInitializer implements Function<ContainerRequest, ContainerRequest> {
 
     @Inject
     private Services services;
     @Inject
     private Factory<Ref<Request>> requestReference;
     @Inject
-    private Factory<Ref<JerseyContainerRequestContext>> requestContextReference;
+    private Factory<Ref<ContainerRequest>> requestContextReference;
     @Inject
     private Factory<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
@@ -84,7 +84,7 @@ class ReferencesInitializer implements Function<JerseyContainerRequestContext, J
      * @return same (unmodified) request context.
      */
     @Override
-    public JerseyContainerRequestContext apply(final JerseyContainerRequestContext requestContext) {
+    public ContainerRequest apply(final ContainerRequest requestContext) {
         requestReference.get().set(requestContext.getRequest());
         requestContextReference.get().set(requestContext);
         httpHeadersReference.get().set(requestContext);

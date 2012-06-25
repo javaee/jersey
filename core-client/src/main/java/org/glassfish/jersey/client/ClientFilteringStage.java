@@ -65,10 +65,10 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestContext> {
+class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
 
     private final Factory<ServiceProviders> servicesProvidersFactory;
-    private final Factory<ResponseProcessor.RespondingContext<JerseyClientResponseContext>> respondingContextFactory;
+    private final Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
 
     /**
      * Injection constructor.
@@ -78,7 +78,7 @@ class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestCon
      */
     ClientFilteringStage(
             @Inject Factory<ServiceProviders> servicesProvidersFactory,
-            @Inject Factory<ResponseProcessor.RespondingContext<JerseyClientResponseContext>> respondingContextFactory) {
+            @Inject Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory) {
 
         this.servicesProvidersFactory = servicesProvidersFactory;
         this.respondingContextFactory = respondingContextFactory;
@@ -86,7 +86,7 @@ class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestCon
 
 
     @Override
-    public Continuation<JerseyClientRequestContext> apply(JerseyClientRequestContext requestContext) {
+    public Continuation<ClientRequest> apply(ClientRequest requestContext) {
         final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
         final List<ClientResponseFilter> responseFilters = serviceProviders.getAll(
@@ -105,10 +105,10 @@ class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestCon
                     if (abortResponse != null) {
                         // abort accepting & return response
                         return Continuation.of(requestContext,
-                                Stages.asStage(new Inflector<JerseyClientRequestContext, JerseyClientResponseContext>() {
+                                Stages.asStage(new Inflector<ClientRequest, ClientResponse>() {
                                     @Override
-                                    public JerseyClientResponseContext apply(final JerseyClientRequestContext requestContext) {
-                                        return new JerseyClientResponseContext(requestContext, abortResponse);
+                                    public ClientResponse apply(final ClientRequest requestContext) {
+                                        return new ClientResponse(requestContext, abortResponse);
                                     }
                                 }));
                     }
@@ -125,7 +125,7 @@ class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestCon
         return Continuation.of(requestContext, getDefaultNext());
     }
 
-    private static class ResponseFilterStage extends AbstractChainableStage<JerseyClientResponseContext> {
+    private static class ResponseFilterStage extends AbstractChainableStage<ClientResponse> {
         private final List<ClientResponseFilter> filters;
 
         private ResponseFilterStage(List<ClientResponseFilter> filters) {
@@ -133,7 +133,7 @@ class ClientFilteringStage extends AbstractChainableStage<JerseyClientRequestCon
         }
 
         @Override
-        public Continuation<JerseyClientResponseContext> apply(JerseyClientResponseContext responseContext) {
+        public Continuation<ClientResponse> apply(ClientResponse responseContext) {
             try {
                 for (ClientResponseFilter filter : filters) {
                     filter.filter(responseContext.getRequestContext(), responseContext);

@@ -65,7 +65,7 @@ import static org.junit.Assert.*;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyContainerRequestContextTest {
+public class ContainerRequestTest {
 
     private static final SecurityContext SECURITY_CONTEXT = new SecurityContext() {
         @Override
@@ -91,7 +91,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testAcceptableMediaTypes() throws URISyntaxException {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
@@ -104,7 +104,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testAcceptableLanguages() throws URISyntaxException {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.ACCEPT_LANGUAGE, "en-gb;q=0.8, en;q=0.7");
@@ -117,7 +117,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testMethod() {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         assertEquals(r.getMethod(), "GET");
@@ -125,7 +125,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testUri() throws URISyntaxException {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         assertEquals(r.getRequestUri(), URI.create("http://example.org/app/resource"));
@@ -133,7 +133,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testSelectVariant() {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
@@ -148,7 +148,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testPreconditionsMatch() {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.IF_MATCH, "\"686897696a7c876b7e\"");
@@ -159,7 +159,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testPreconditionsNoneMatch() {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.IF_NONE_MATCH, "\"686897696a7c876b7e\"");
@@ -170,7 +170,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testPreconditionsModified() throws ParseException {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.IF_MODIFIED_SINCE, "Sat, 29 Oct 2011 19:43:31 GMT");
@@ -184,7 +184,7 @@ public class JerseyContainerRequestContextTest {
 
     @Test
     public void testPreconditionsUnModified() throws ParseException {
-        JerseyContainerRequestContext r = new JerseyContainerRequestContext(
+        ContainerRequest r = new ContainerRequest(
                 URI.create("http://example.org/app"), URI.create("http://example.org/app/resource"),
                 "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
         r.header(HttpHeaders.IF_UNMODIFIED_SINCE, "Sat, 29 Oct 2011 19:43:31 GMT");

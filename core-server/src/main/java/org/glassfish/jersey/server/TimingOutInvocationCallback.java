@@ -58,8 +58,8 @@ import com.google.common.util.concurrent.AbstractFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContainerResponseContext>
-        implements InvocationCallback<JerseyContainerResponseContext> {
+abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerResponse>
+        implements InvocationCallback<ContainerResponse> {
 
     private static final Logger logger = Logger.getLogger(TimingOutInvocationCallback.class.getName());
     private static final Timer TIMER = new Timer("Jersey application request timer");
@@ -75,7 +75,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     }
 
     @Override
-    public void result(JerseyContainerResponseContext response) {
+    public void result(ContainerResponse response) {
         if (done.compareAndSet(false, true)) {
             try {
                 set(handleResponse(response));
@@ -106,7 +106,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
      * @param exception to be converted.
      * @return failure response context.
      */
-    protected abstract JerseyContainerResponseContext handleFailure(final Throwable exception);
+    protected abstract ContainerResponse handleFailure(final Throwable exception);
 
     @Override
     public void cancelled() {
@@ -155,12 +155,12 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     }
 
     /**
-     * Provide a timeout {@link JerseyContainerResponseContext}.
+     * Provide a timeout {@link ContainerResponse}.
      *
      * @param context invocation context that has timed out.
      * @return timeout response context.
      */
-    protected abstract JerseyContainerResponseContext handleTimeout(final InvocationContext context);
+    protected abstract ContainerResponse handleTimeout(final InvocationContext context);
 
     @Override
     public void suspendTimeoutChanged(final long time, final TimeUnit unit) {
@@ -202,12 +202,12 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<JerseyContaine
     }
 
     /**
-     * Modify returned {@link JerseyContainerResponseContext response context}.
+     * Modify returned {@link ContainerResponse response context}.
      *
      * @param response original response context.
      * @return modified response context.
      */
-    protected abstract JerseyContainerResponseContext handleResponse(final JerseyContainerResponseContext response);
+    protected abstract ContainerResponse handleResponse(final ContainerResponse response);
 
     /**
      * Release all resources as the request processing is truly over now.

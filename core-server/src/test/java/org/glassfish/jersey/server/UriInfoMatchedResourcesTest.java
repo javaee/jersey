@@ -106,7 +106,7 @@ public class UriInfoMatchedResourcesTest {
     public void testMatchedResources() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        JerseyContainerResponseContext responseContext;
+        ContainerResponse responseContext;
         responseContext = app.apply(RequestContextBuilder.from("/foo", "GET").build()).get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foo", responseContext.getEntity());

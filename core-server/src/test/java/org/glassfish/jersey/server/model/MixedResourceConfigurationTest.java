@@ -48,8 +48,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -83,14 +83,14 @@ public class MixedResourceConfigurationTest {
 
             @Override
             public Response apply(Request request) {
-                name = ((JerseyContainerRequestContext) request).readEntity(String.class);
+                name = ((ContainerRequest) request).readEntity(String.class);
                 return Response.ok().build();
             }
         });
         resourceConfig.addResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
-        final JerseyContainerResponseContext response = application.apply(
+        final ContainerResponse response = application.apply(
                 RequestContextBuilder.from("/name", "PUT").entity("Gaga").type(MediaType.TEXT_PLAIN).build()).get();
         assertEquals(200, response.getStatus());
 

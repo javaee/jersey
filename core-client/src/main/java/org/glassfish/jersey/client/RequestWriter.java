@@ -118,7 +118,7 @@ public class RequestWriter {
      */
     private final class DefaultRequestEntityWriter implements RequestEntityWriter {
 
-        private final JerseyClientRequestContext requestContext;
+        private final ClientRequest requestContext;
         private final long size;
         private final MessageBodyWriter writer;
 
@@ -128,7 +128,7 @@ public class RequestWriter {
          * @param requestContext Jersey client request context.
          */
         @SuppressWarnings("unchecked")
-        public DefaultRequestEntityWriter(JerseyClientRequestContext requestContext) {
+        public DefaultRequestEntityWriter(ClientRequest requestContext) {
             this.requestContext = requestContext;
 
             if (!requestContext.hasEntity()) {
@@ -202,7 +202,7 @@ public class RequestWriter {
      * @param request the client request.
      * @return the request entity writer.
      */
-    protected RequestEntityWriter getRequestEntityWriter(final JerseyClientRequestContext request) {
+    protected RequestEntityWriter getRequestEntityWriter(final ClientRequest request) {
         return new DefaultRequestEntityWriter(request);
     }
 
@@ -220,7 +220,7 @@ public class RequestWriter {
      * @throws IOException in case of an IO error.
      */
     @SuppressWarnings("unchecked")
-    protected void writeRequestEntity(JerseyClientRequestContext requestContext, final RequestEntityWriterListener listener)
+    protected void writeRequestEntity(ClientRequest requestContext, final RequestEntityWriterListener listener)
             throws IOException {
 
         ensureMediaType(requestContext);
@@ -260,7 +260,7 @@ public class RequestWriter {
         }
     }
 
-    private void ensureMediaType(final JerseyClientRequestContext requestContext) {
+    private void ensureMediaType(final ClientRequest requestContext) {
         if (requestContext.getMediaType() == null) {
             // Content-Type is not present choose a default type
             final GenericType<?> entityType = new GenericType(requestContext.getEntityType());

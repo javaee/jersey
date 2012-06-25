@@ -62,7 +62,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -315,7 +315,7 @@ public class AcceptAnnotatedReaderWriterTest {
         if (entity != null) {
             requestContextBuilder.entity(entity).type(mediaType);
         }
-        JerseyContainerRequestContext requestContext = requestContextBuilder.accept(accept).build();
+        ContainerRequest requestContext = requestContextBuilder.accept(accept).build();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         app.apply(requestContext, baos);
         assertEquals(expected, baos.toString());

@@ -52,8 +52,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.InvocationException;
 
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientRequestContext;
-import org.glassfish.jersey.client.JerseyClientResponseContext;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -64,15 +64,15 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
-import org.glassfish.jersey.server.JerseyContainerResponseContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 
 /**
  * In-memory client connector.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class InMemoryConnector implements Inflector<JerseyClientRequestContext, JerseyClientResponseContext> {
+public class InMemoryConnector implements Inflector<ClientRequest, ClientResponse> {
 
     private final ApplicationHandler appHandler;
     private final URI baseUri;
@@ -94,20 +94,20 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
      * Transforms client-side request to server-side and invokes it on provided application ({@link RequestInvoker}
      * instance).
      *
-     * @param clientRequestContext client side request to be invoked.
+     * @param requestContext client side request to be invoked.
      */
     @Override
-    public JerseyClientResponseContext apply(final JerseyClientRequestContext clientRequestContext) {
+    public ClientResponse apply(final ClientRequest requestContext) {
         // TODO replace request building with a common request cloning functionality
-        Future<JerseyContainerResponseContext> responseListenableFuture;
+        Future<ContainerResponse> responseListenableFuture;
         PropertiesDelegate propertiesDelegate = new MapPropertiesDelegate();
 
-        final JerseyContainerRequestContext containerRequestContext = new JerseyContainerRequestContext(baseUri,
-                clientRequestContext.getUri(), clientRequestContext.getMethod(),
+        final ContainerRequest containerRequestContext = new ContainerRequest(baseUri,
+                requestContext.getUri(), requestContext.getMethod(),
                 null, propertiesDelegate);
-        outboundToInbound(clientRequestContext, containerRequestContext, propertiesDelegate, clientRequestContext.getWorkers(), null);
+        outboundToInbound(requestContext, containerRequestContext, propertiesDelegate, requestContext.getWorkers(), null);
 
-        boolean followRedirects = PropertiesHelper.getValue(clientRequestContext.getConfiguration().getProperties(),
+        boolean followRedirects = PropertiesHelper.getValue(requestContext.getConfiguration().getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true);
 
         ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
@@ -117,12 +117,12 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
         try {
             if (responseListenableFuture != null) {
                 return tryFollowRedirects(followRedirects,
-                        createClientResponseContext(clientRequestContext,
+                        createClientResponseContext(requestContext,
                                 responseListenableFuture.get(),
                                 propertiesDelegate,
                                 containerRequestContext.getWorkers(),
                                 entityStream),
-                        new JerseyClientRequestContext(clientRequestContext));
+                        new ClientRequest(requestContext));
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
@@ -193,22 +193,22 @@ public class InMemoryConnector implements Inflector<JerseyClientRequestContext, 
         inboundContext.getHeaders().putAll(HeadersFactory.getStringHeaders(outboundContext.getHeaders()));
     }
 
-    private JerseyClientResponseContext createClientResponseContext(final JerseyClientRequestContext clientRequestContext,
-                                                                    final JerseyContainerResponseContext containerResponseContext,
+    private ClientResponse createClientResponseContext(final ClientRequest requestContext,
+                                                                    final ContainerResponse containerResponseContext,
                                                                     final PropertiesDelegate propertiesDelegate,
                                                                     final MessageBodyWorkers workers,
                                                                     final ByteArrayOutputStream entityStream) {
 
-        final JerseyClientResponseContext clientResponseContext =
-                new JerseyClientResponseContext(containerResponseContext.getStatusInfo(), clientRequestContext);
+        final ClientResponse responseContext =
+                new ClientResponse(containerResponseContext.getStatusInfo(), requestContext);
 
-        outboundToInbound(containerResponseContext, clientResponseContext, propertiesDelegate, workers, entityStream);
-        clientResponseContext.setStatus(containerResponseContext.getStatus());
+        outboundToInbound(containerResponseContext, responseContext, propertiesDelegate, workers, entityStream);
+        responseContext.setStatus(containerResponseContext.getStatus());
 
-        return clientResponseContext;
+        return responseContext;
     }
 
-    private JerseyClientResponseContext tryFollowRedirects(boolean followRedirects, JerseyClientResponseContext response, JerseyClientRequestContext request) {
+    private ClientResponse tryFollowRedirects(boolean followRedirects, ClientResponse response, ClientRequest request) {
         final int statusCode = response.getStatus();
         if (!followRedirects || statusCode < 302 || statusCode > 307) {
             return response;

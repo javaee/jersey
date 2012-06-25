@@ -70,7 +70,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.JerseyContainerRequestContext;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -237,7 +237,7 @@ public class WebComponent {
             final HttpServletRequest servletRequest,
             final HttpServletResponse servletResponse) throws ServletException, IOException {
 
-        JerseyContainerRequestContext requestContext = new JerseyContainerRequestContext(baseUri, requestUri,
+        ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
                 servletRequest.getMethod(), getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
         requestContext.setEntityStream(servletRequest.getInputStream());
         addRequestHeaders(servletRequest, requestContext);
@@ -333,7 +333,7 @@ public class WebComponent {
     }
 
     @SuppressWarnings("unchecked")
-    private void addRequestHeaders(HttpServletRequest request, JerseyContainerRequestContext requestContext) {
+    private void addRequestHeaders(HttpServletRequest request, ContainerRequest requestContext) {
         for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements(); ) {
             String name = names.nextElement();
             for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements(); ) {
@@ -396,7 +396,7 @@ public class WebComponent {
         }
     }
 
-    private void filterFormParameters(HttpServletRequest hsr, JerseyContainerRequestContext request) throws IOException {
+    private void filterFormParameters(HttpServletRequest hsr, ContainerRequest request) throws IOException {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())
                 && !request.hasEntity()) {
 
