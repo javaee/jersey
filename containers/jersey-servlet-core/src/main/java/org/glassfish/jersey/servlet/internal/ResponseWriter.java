@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,9 +53,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey.message.internal.CommittingOutputStream;
 import org.glassfish.jersey.message.internal.HeadersFactory;
-import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -70,17 +67,15 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 public class ResponseWriter implements ContainerResponseWriter {
 
     private static final Logger LOGGER = Logger.getLogger(ResponseWriter.class.getName());
 
     private final HttpServletResponse response;
-    private final CommittingOutputStream out;
     private final boolean useSetStatusOn404;
     private final SettableFuture<ContainerResponse> responseContext;
-    private long contentLength;
-    private final AtomicBoolean statusAndHeadersWritten;
     private final AsyncContextDelegate asyncExt;
 
     /**
@@ -93,20 +88,6 @@ public class ResponseWriter implements ContainerResponseWriter {
     public ResponseWriter(final boolean useSetStatusOn404, final HttpServletResponse response, AsyncContextDelegate asyncExt) {
         this.useSetStatusOn404 = useSetStatusOn404;
         this.response = response;
-        this.out = new CommittingOutputStream();
-        this.out.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-
-            @Override
-            public void commit() throws IOException {
-                ResponseWriter.this.writeStatusAndHeaders();
-            }
-
-            @Override
-            public OutputStream getOutputStream() throws IOException {
-                return ResponseWriter.this.response.getOutputStream();
-            }
-        });
-        this.statusAndHeadersWritten = new AtomicBoolean(false);
         this.asyncExt = asyncExt;
         this.responseContext = SettableFuture.create();
     }
@@ -123,42 +104,51 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     @Override
     public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) throws ContainerException {
-        this.contentLength = contentLength;
         this.responseContext.set(responseContext);
-        this.statusAndHeadersWritten.set(false);
-        return out;
+
+        // first set the content length, so that if headers have an explicit value, it takes precedence over this one
+        if (responseContext.hasEntity() && contentLength != -1 && contentLength < Integer.MAX_VALUE) {
+            response.setContentLength((int) contentLength);
+        }
+        // Note that the writing of headers MUST be performed before
+        // the invocation of sendError as on some Servlet implementations
+        // modification of the response headers will have no effect
+        // after the invocation of sendError.
+        MultivaluedMap<String, String> headers = HeadersFactory.getStringHeaders(getResponseContext().getHeaders());
+        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
+            for (String v : e.getValue()) {
+                response.addHeader(e.getKey(), v);
+            }
+        }
+        response.setStatus(responseContext.getStatus());
+
+        if (!responseContext.hasEntity()) {
+            return null;
+        } else {
+            try {
+                return response.getOutputStream();
+            } catch (IOException e) {
+                throw new ContainerException(e);
+            }
+        }
     }
 
     @Override
     public void commit() {
-        if (!statusAndHeadersWritten.compareAndSet(false, true)) {
-            return;
-        }
         try {
-            // Note that the writing of headers MUST be performed before
-            // the invocation of sendError as on some Servlet implementations
-            // modification of the response headers will have no effect
-            // after the invocation of sendError.
-            writeHeaders();
             final ContainerResponse responseContext = getResponseContext();
             final int status = responseContext.getStatus();
-            if (status >= 400) {
-                if (useSetStatusOn404 && status == 404) {
-                    response.setStatus(status);
-                } else {
-                    final String reason = responseContext.getStatusInfo().getReasonPhrase();
-                    try {
-                        if (reason == null || reason.isEmpty()) {
-                            response.sendError(status);
-                        } else {
-                            response.sendError(status, reason);
-                        }
-                    } catch (IOException ex) {
-                        throw new ContainerException("I/O exception occured while sending [" + status + "] error response.", ex);
+            if (!response.isCommitted() && status >= 400 && !(useSetStatusOn404 && status == 404)) {
+                final String reason = responseContext.getStatusInfo().getReasonPhrase();
+                try {
+                    if (reason == null || reason.isEmpty()) {
+                        response.sendError(status);
+                    } else {
+                        response.sendError(status, reason);
                     }
+                } catch (IOException ex) {
+                    throw new ContainerException("I/O exception occured while sending [" + status + "] error response.", ex);
                 }
-            } else {
-                response.setStatus(status);
             }
         } finally {
             asyncExt.complete();
@@ -175,26 +165,6 @@ public class ResponseWriter implements ContainerResponseWriter {
                 LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
             } finally {
                 asyncExt.complete();
-            }
-        }
-    }
-
-    private void writeStatusAndHeaders() {
-        if (!statusAndHeadersWritten.compareAndSet(false, true)) {
-            return;
-        }
-        writeHeaders();
-        response.setStatus(getResponseContext().getStatus());
-    }
-
-    private void writeHeaders() {
-        if (contentLength != -1 && contentLength < Integer.MAX_VALUE) {
-            response.setContentLength((int) contentLength);
-        }
-        MultivaluedMap<String, String> headers = HeadersFactory.getStringHeaders(getResponseContext().getHeaders());
-        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
-            for (String v : e.getValue()) {
-                response.addHeader(e.getKey(), v);
             }
         }
     }

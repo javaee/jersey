@@ -658,7 +658,7 @@ public final class ApplicationHandler {
 
         return new ContainerResponse(
                 requestContext,
-                Response.status(statusCode).entity(message).type(MediaType.TEXT_PLAIN).build());
+                Response.status(statusCode).build());
     }
 
     /**

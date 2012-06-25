@@ -48,7 +48,6 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -73,7 +72,6 @@ public class ForwardOn404ITCase extends JerseyTest {
     }
 
     @Test
-    @Ignore // TODO: broken due to JERSEY-1207
     public void testIndexReachable() {
         Response r = target("forwardingFilter/index.jsp").request().get();
         assertEquals(200, r.getStatus());
