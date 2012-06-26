@@ -82,14 +82,7 @@ public class EventSource implements EventListener {
      * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
      */
     public EventSource(WebTarget target) {
-        this.target = target;
-
-        Executors.newCachedThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                process();
-            }
-        });
+        this(target, Executors.newCachedThreadPool());
     }
 
     /**

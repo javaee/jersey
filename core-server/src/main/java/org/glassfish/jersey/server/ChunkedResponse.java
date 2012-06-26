@@ -47,56 +47,52 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.ws.rs.core.GenericType;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
  * which needs to produce partial responses.
  *
  * @param <T> chunk type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
-public class ChunkedResponse<T> implements Closeable {
+public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     /**
      * A request-scoped property indicating that the a chunked response
      * is used by the user.
      */
-    static final String CHUNKED_MODE = "jersey.config.server.chunked-mode";
+    static final String CHUNKED_MODE = "jersey.internal.server.chunked-mode";
 
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
-    private final GenericType<T> chunkType;
 
     private boolean closed = false;
     private ContainerRequest requestContext;
     private ContainerResponse responseContext;
+
+    protected ChunkedResponse() {
+        super();
+    }
 
     /**
      * Create {@link ChunkedResponse} with specified type.
      *
      * @param chunkType chunk type
      */
-    public ChunkedResponse(Type chunkType) {
-        this.chunkType = new GenericType<T>(chunkType);
-    }
-
-    /**
-     * Creates a new instance of ChunkResponse, passing the chunk type as an instance of {@link GenericType}.
-     *
-     * @param genericType chunk type
-     */
-    public ChunkedResponse(GenericType<T> genericType) {
-        this.chunkType = genericType;
+    public ChunkedResponse(final Type chunkType) {
+        super(chunkType);
     }
 
     /**
      * Write a chunk.
      *
      * @param chunk a chunk instance to be written.
-     * @throws IllegalStateException when {@link ChunkedResponse} is closed.
-     * @throws IOException           when encountered any problem during serializing or writing a chunk.
+     * @throws IOException if this response is closed or when encountered any problem during serializing or writing a chunk.
      */
-    public void write(T chunk) throws IOException {
+    public void write(final T chunk) throws IOException {
         if (closed) {
-            throw new IllegalStateException();
+            throw new IOException(LocalizationMessages.CHUNKED_RESPONSE_CLOSED());
         }
 
         if (chunk != null) {
@@ -111,25 +107,46 @@ public class ChunkedResponse<T> implements Closeable {
             return;
         }
 
-        T t;
-        while ((t = queue.poll()) != null) {
-            requestContext.getWorkers().writeTo(
-                    t,
-                    t.getClass(),
-                    chunkType.getType(),
-                    responseContext.getEntityAnnotations(),
-                    responseContext.getMediaType(),
-                    responseContext.getHeaders(),
-                    requestContext.getPropertiesDelegate(),
-                    responseContext.getEntityStream(),
-                    null,
-                    true);
-        }
+        Exception ex = null;
+        try {
+            T t;
+            while ((t = queue.poll()) != null) {
+                requestContext.getWorkers().writeTo(
+                        t,
+                        t.getClass(),
+                        getType(),
+                        responseContext.getEntityAnnotations(),
+                        responseContext.getMediaType(),
+                        responseContext.getHeaders(),
+                        requestContext.getPropertiesDelegate(),
+                        responseContext.getEntityStream(),
+                        null,
+                        true);
+            }
 
-        if (closed) {
-            responseContext.getEntityStream().flush();
-            responseContext.getEntityStream().close();
-            requestContext.getResponseWriter().commit();
+            // flush the stream for each chunk
+            responseContext.commitStream();
+        } catch (Exception e) {
+            closed = true;
+            ex = e;
+        } finally {
+            if (closed) {
+                try {
+                    responseContext.getEntityStream().close();
+                } catch (Exception e) {
+                    ex = ex == null ? e : ex;
+                }
+                try {
+                    requestContext.getResponseWriter().commit();
+                } catch (Exception e) {
+                    ex = ex == null ? e : ex;
+                }
+                if (ex instanceof IOException) {
+                    throw (IOException) ex;
+                } else if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                }
+            }
         }
     }
 
@@ -155,6 +172,21 @@ public class ChunkedResponse<T> implements Closeable {
         return closed;
     }
 
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj;
+    }
+
+    @Override
+    public int hashCode() {
+        return queue.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ChunkedResponse<" + getType() + ">";
+    }
+
     /**
      * Set context used for writing chunks.
      *
@@ -162,8 +194,8 @@ public class ChunkedResponse<T> implements Closeable {
      * @param responseContext response context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
-    void setContext(ContainerRequest requestContext,
-                    ContainerResponse responseContext) throws IOException {
+    void setContext(final ContainerRequest requestContext,
+                    final ContainerResponse responseContext) throws IOException {
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         flushQueue();

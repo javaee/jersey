@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -54,9 +53,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.media.sse.Broadcaster;
 import org.glassfish.jersey.media.sse.EventChannel;
 import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.media.sse.SseBroadcaster;
+import org.glassfish.jersey.server.ChunkedResponse;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -85,7 +85,7 @@ public class DomainResource {
 
         if(process != null) {
             final EventChannel eventChannel = new EventChannel();
-            process.getBroadcaster().registerEventChannel(eventChannel);
+            process.getBroadcaster().add(eventChannel);
             return eventChannel;
         } else {
             throw new WebApplicationException(404);
@@ -98,7 +98,12 @@ public class DomainResource {
         private static final AtomicInteger counter = new AtomicInteger(0);
 
         private final int id;
-        private final Broadcaster broadcaster = new Broadcaster();
+        private final SseBroadcaster broadcaster = new SseBroadcaster() {
+            @Override
+            public void onException(ChunkedResponse<OutboundEvent> outboundEventChunkedResponse, Exception exception) {
+                exception.printStackTrace();
+            }
+        };
 
         public Process() {
             id = counter.incrementAndGet();
@@ -108,7 +113,7 @@ public class DomainResource {
             return id;
         }
 
-        public Broadcaster getBroadcaster() {
+        public SseBroadcaster getBroadcaster() {
             return broadcaster;
         }
 
@@ -123,10 +128,8 @@ public class DomainResource {
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "70%").build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "99%").build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "done").build());
-                broadcaster.close();
+                broadcaster.closeAll();
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

@@ -39,57 +39,20 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import java.io.IOException;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentSkipListSet;
+import org.glassfish.jersey.server.Broadcaster;
 
 /**
  * Used for broadcasting sse to multiple {@link EventChannel} instances.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class Broadcaster {
-
-    private final ConcurrentSkipListSet<EventChannel> eventChannelSet = new ConcurrentSkipListSet<EventChannel> (new Comparator<EventChannel>() {
-        @Override
-        public int compare(EventChannel eventChannel, EventChannel eventChannel1) {
-            return eventChannel.hashCode() - eventChannel1.hashCode();
-        }
-    });
-
+public class SseBroadcaster extends Broadcaster<OutboundEvent> {
     /**
-     * Register {@link EventChannel} to current {@link Broadcaster} instance.
+     * Register {@link EventChannel} to current {@link SseBroadcaster} instance.
      *
      * @param eventChannel {@link EventChannel} to register.
      */
-    public void registerEventChannel(EventChannel eventChannel) {
-        eventChannelSet.add(eventChannel);
-    }
-
-    /**
-     * Broadcast an {@link OutboundEvent} to all registered {@link EventChannel} instances.
-     *
-     * @param outboundEvent event to be sent.
-     * @throws java.io.IOException when
-     */
-    public void broadcast(OutboundEvent outboundEvent) throws IOException {
-        for (Iterator<EventChannel> iterator = eventChannelSet.iterator(); iterator.hasNext();) {
-            EventChannel eventChannel = iterator.next();
-            if(eventChannel.isClosed()) {
-                iterator.remove();
-            } else {
-                eventChannel.write(outboundEvent);
-            }
-        }
-    }
-
-    /**
-     * Close all registered {@link EventChannel} instances.
-     */
-    public void close() throws IOException {
-        for(EventChannel eventChannel : eventChannelSet) {
-            eventChannel.close();
-        }
+    public void add(final EventChannel eventChannel) {
+        super.add(eventChannel);
     }
 }
