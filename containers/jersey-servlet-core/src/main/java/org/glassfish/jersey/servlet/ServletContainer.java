@@ -69,6 +69,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**

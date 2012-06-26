@@ -62,6 +62,7 @@ import javax.servlet.annotation.HandlesTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
+import org.glassfish.jersey.servlet.init.internal.LocalizationMessages;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -103,7 +104,7 @@ import com.google.common.collect.Maps;
  in the published JAX-RS application.
 
  If not using the Servlet 3 framework pluggability mechanism
- (e.g. in a pre-Servet 3.0 container), the servlet-class or filter-class
+ (e.g. in a pre-Servlet 3.0 container), the servlet-class or filter-class
  element of the web.xml descriptor SHOULD name the JAX-RS
  implementation-supplied Servlet or Filter class respectively. The
  application-supplied subclass of Application SHOULD be identified using an
@@ -177,21 +178,17 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
     private void addServletWithDefaultConfiguration(ServletContext sc, Set<Class<?>> classes) throws ServletException {
         ServletRegistration appReg = sc.getServletRegistration(Application.class.getName());
         if (appReg != null && appReg.getClassName() == null) {
-            final Set<Class<?>> x = getRootResourceAndProviderClasses(classes);
+            final Set<Class<?>> appClasses = getRootResourceAndProviderClasses(classes);
             final ServletContainer s = new ServletContainer(
-                    ResourceConfig.forApplicationClass(ResourceConfig.class, x).addProperties(getInitParams(appReg))
+                    ResourceConfig.forApplicationClass(ResourceConfig.class, appClasses).addProperties(getInitParams(appReg))
             );
             appReg = sc.addServlet(appReg.getName(), s);
 
             if (appReg.getMappings().isEmpty()) {
                 // Error
-                LOGGER.log(Level.SEVERE,
-                        "The Jersey servlet application, named {0}, has no servlet mapping", appReg.getName());
+                LOGGER.log(Level.SEVERE, LocalizationMessages.JERSEY_APP_NO_MAPPING(appReg.getName()));
             } else {
-                LOGGER.log(Level.INFO,
-                        "Registering the Jersey servlet application, named {0}, "
-                        + "with the following root resource and provider classes: {1}",
-                        new Object[]{appReg.getName(), x});
+                LOGGER.log(Level.INFO, LocalizationMessages.JERSEY_APP_REGISTERED_CLASSES(appReg.getName(), appClasses));
             }
         }
     }
@@ -204,21 +201,16 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes);
             final ServletContainer s = new ServletContainer(rc);
 
+            final ServletRegistration.Dynamic dsr = sc.addServlet(a.getName(), s);
+            dsr.setAsyncSupported(true);
+
             final String mapping = createMappingPath(ap);
             if (!mappingExists(sc, mapping)) {
-                sc.addServlet(a.getName(), s).
-                        addMapping(mapping);
+                dsr.addMapping(mapping);
 
-                LOGGER.log(Level.INFO,
-                        "Registering the Jersey servlet application, named {0}, "
-                        + "at the servlet mapping, {1}, with the Application class of the same name",
-                        new Object[]{a.getName(), mapping});
+                LOGGER.log(Level.INFO, LocalizationMessages.JERSEY_APP_REGISTERED_MAPPING(a.getName(), mapping));
             } else {
-                LOGGER.log(Level.SEVERE,
-                        "Mapping conflict. A Servlet declaration exists with same mapping "
-                        + "as the Jersey servlet application, named {0}, at the servlet mapping, {1}. "
-                        + "The Jersey servlet is not deployed.",
-                        new Object[]{a.getName(), mapping});
+                LOGGER.log(Level.SEVERE, LocalizationMessages.JERSEY_APP_MAPPING_CONFLICT(a.getName(), mapping));
             }
         }
     }
@@ -230,35 +222,28 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes).addProperties(getInitParams(sr));
             final ServletContainer s = new ServletContainer(rc);
 
-            sr = sc.addServlet(a.getName(), s);
-            if (sr.getMappings().isEmpty()) {
+            ServletRegistration.Dynamic dsr = sc.addServlet(a.getName(), s);
+            dsr.setAsyncSupported(true);
+
+            if (dsr.getMappings().isEmpty()) {
                 final ApplicationPath ap = a.getAnnotation(ApplicationPath.class);
                 if (ap != null) {
                     final String mapping = createMappingPath(ap);
                     if (!mappingExists(sc, mapping)) {
-                        sr.addMapping(mapping);
+                        dsr.addMapping(mapping);
 
                         LOGGER.log(Level.INFO,
-                                "Registering the Jersey servlet application, named {0}, at the servlet mapping, {1}, "
-                                + "with the Application class of the same name",
-                                new Object[]{a.getName(), mapping});
+                                LocalizationMessages.JERSEY_APP_REGISTERED_MAPPING(a.getName(), mapping));
                     } else {
-                        LOGGER.log(Level.SEVERE,
-                                "Mapping conflict. A Servlet registration exists with same mapping "
-                                + "as the Jersey servlet application, named {0}, at the servlet mapping, {1}. "
-                                + "The Jersey servlet is not deployed.",
-                                new Object[]{a.getName(), mapping});
+                        LOGGER.log(Level.SEVERE, LocalizationMessages.JERSEY_APP_MAPPING_CONFLICT(a.getName(), mapping));
                     }
                 } else {
                     // Error
-                    LOGGER.log(Level.SEVERE,
-                            "The Jersey servlet application, named {0}, is not annotated with {1} and has no servlet mapping",
-                            new Object[]{a.getName(), ApplicationPath.class.getSimpleName()});
+                    LOGGER.log(Level.SEVERE, LocalizationMessages.JERSEY_APP_NO_MAPPING_OR_ANNOTATION(
+                                    a.getName(), ApplicationPath.class.getSimpleName()));
                 }
             } else {
-                LOGGER.log(Level.INFO,
-                        "Registering the Jersey servlet application, named {0}, with the Application class of the same name",
-                        a.getName());
+                LOGGER.log(Level.INFO, LocalizationMessages.JERSEY_APP_REGISTERED_APPLICATION(a.getName()));
             }
         }
     }

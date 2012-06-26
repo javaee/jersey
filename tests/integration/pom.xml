@@ -67,6 +67,7 @@
         <module>servlet-2.5-init-7</module>
         <module>servlet-2.5-init-8</module>
         <module>servlet-3-init-1</module>
+        <module>servlet-3-async</module>
         <module>servlet-tests</module>
     </modules>
 

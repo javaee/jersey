@@ -42,12 +42,11 @@ package org.glassfish.jersey.servlet;
 import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,6 +62,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -91,7 +91,7 @@ import org.glassfish.hk2.scopes.Singleton;
 import org.jvnet.hk2.annotations.Inject;
 
 /**
- * An abstract Web component that may be extended by a Servlet and/or
+ * An common Jersey web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -123,8 +123,10 @@ public class WebComponent {
 
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
 
-        for (AsyncContextDelegateProvider factory : appHandler.getServiceProviders().getAll(AsyncContextDelegateProvider.class)) {
-            return factory;
+        final Set<AsyncContextDelegateProvider> providers =
+                appHandler.getServiceProviders().getAll(AsyncContextDelegateProvider.class);
+        if (!providers.isEmpty()) {
+            return providers.iterator().next();
         }
 
         return new AsyncContextDelegateProvider() {
@@ -192,15 +194,35 @@ public class WebComponent {
                     return webConfig;
                 }
             }).in(Singleton.class);
+            install(new ServiceFinderModule<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
         }
     }
 
-    //
+    /**
+     * Jersey application handler.
+     */
     final ApplicationHandler appHandler;
+    /**
+     * Web component configuration.
+     */
     final WebConfig webConfig;
+    /**
+     * If {@code true} and deployed as filter, the unmatched requests will be forwarded.
+     */
     final boolean forwardOn404;
+    /**
+     * Asynchronous context delegate provider.
+     */
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
 
+    /**
+     * Create and initialize new web component instance.
+     *
+     * @param webConfig      we component configuration.
+     * @param resourceConfig Jersey application configuration.
+     * @throws ServletException in case the Jersey application cannot be created from the supplied
+     *                          resource configuration.
+     */
     public WebComponent(final WebConfig webConfig, ResourceConfig resourceConfig) throws ServletException {
         this.webConfig = webConfig;
         if (resourceConfig == null) {
@@ -321,14 +343,11 @@ public class WebComponent {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
                         .addProperties(initParams);
             } else {
-                String message = "Resource configuration class, " + jaxrsApplicationClassName +
-                        ", is not a super class of " + javax.ws.rs.core.Application.class;
-                throw new ServletException(message);
+                throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_PARENT_CLASS_INVALID(
+                        jaxrsApplicationClassName, javax.ws.rs.core.Application.class));
             }
         } catch (ClassNotFoundException e) {
-            String message = "Resource configuration class, " + jaxrsApplicationClassName
-                    + ", could not be loaded";
-            throw new ServletException(message, e);
+            throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e);
         }
     }
 
@@ -352,49 +371,50 @@ public class WebComponent {
         return props;
     }
 
-    private String[] getPaths(String classpath, ServletContext context) throws ServletException {
-        if (classpath == null) {
-            String[] paths = {
-                    context.getRealPath("/WEB-INF/lib"),
-                    context.getRealPath("/WEB-INF/classes")
-            };
-            if (paths[0] == null && paths[1] == null) {
-//                String message = "The default deployment configuration that scans for " +
-//                        "classes in /WEB-INF/lib and /WEB-INF/classes is not supported " +
-//                        "for the application server." +
-//                        "Try using the package scanning configuration, see the JavaDoc for " +
-//                        PackagesResourceConfig.class.getName() + " and the property " +
-//                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-//                throw new ServletException(message);
-            }
-            return paths;
-        } else {
-            String[] virtualPaths = classpath.split(";");
-            List<String> resourcePaths = new ArrayList<String>();
-            for (String virtualPath : virtualPaths) {
-                virtualPath = virtualPath.trim();
-                if (virtualPath.length() == 0) {
-                    continue;
-                }
-                String path = context.getRealPath(virtualPath);
-                if (path != null) {
-                    resourcePaths.add(path);
-                }
-            }
-            if (resourcePaths.isEmpty()) {
-//                String message = "None of the declared classpath locations, " +
-//                        classpath +
-//                        ", could be resolved. " +
-//                        "This could be because the default deployment configuration that scans for " +
-//                        "classes in classpath locations is not supported. " +
-//                        "Try using the package scanning configuration, see the JavaDoc for " +
-//                        PackagesResourceConfig.class.getName() + " and the property " +
-//                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-//                throw new ServletException(message);
-            }
-            return resourcePaths.toArray(new String[resourcePaths.size()]);
-        }
-    }
+// TODO remove the getPaths() method if really not needed.
+//    private String[] getPaths(String classpath, ServletContext context) throws ServletException {
+//        if (classpath == null) {
+//            String[] paths = {
+//                    context.getRealPath("/WEB-INF/lib"),
+//                    context.getRealPath("/WEB-INF/classes")
+//            };
+//            if (paths[0] == null && paths[1] == null) {
+////                String message = "The default deployment configuration that scans for " +
+////                        "classes in /WEB-INF/lib and /WEB-INF/classes is not supported " +
+////                        "for the application server." +
+////                        "Try using the package scanning configuration, see the JavaDoc for " +
+////                        PackagesResourceConfig.class.getName() + " and the property " +
+////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
+////                throw new ServletException(message);
+//            }
+//            return paths;
+//        } else {
+//            String[] virtualPaths = classpath.split(";");
+//            List<String> resourcePaths = new ArrayList<String>();
+//            for (String virtualPath : virtualPaths) {
+//                virtualPath = virtualPath.trim();
+//                if (virtualPath.length() == 0) {
+//                    continue;
+//                }
+//                String path = context.getRealPath(virtualPath);
+//                if (path != null) {
+//                    resourcePaths.add(path);
+//                }
+//            }
+//            if (resourcePaths.isEmpty()) {
+////                String message = "None of the declared classpath locations, " +
+////                        classpath +
+////                        ", could be resolved. " +
+////                        "This could be because the default deployment configuration that scans for " +
+////                        "classes in classpath locations is not supported. " +
+////                        "Try using the package scanning configuration, see the JavaDoc for " +
+////                        PackagesResourceConfig.class.getName() + " and the property " +
+////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
+////                throw new ServletException(message);
+//            }
+//            return resourcePaths.toArray(new String[resourcePaths.size()]);
+//        }
+//    }
 
     private void filterFormParameters(HttpServletRequest hsr, ContainerRequest request) throws IOException {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())
