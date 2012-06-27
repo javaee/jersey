@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -86,9 +87,9 @@ public class ResourcePathOverrideTest {
 
         Resource.Builder resourceBuilder = Resource.builder(HelloResource.class, new LinkedList<ResourceModelIssue>())
                 .path("hello2");
-        resourceBuilder.addMethod("GET").path("world").produces("text/plain").handledBy(new Inflector<Request, String>() {
+        resourceBuilder.addMethod("GET").path("world").produces("text/plain").handledBy(new Inflector<ContainerRequestContext, String>() {
             @Override
-            public String apply(Request request) {
+            public String apply(ContainerRequestContext request) {
                 return "Hello World!";
             }
         });

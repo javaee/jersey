@@ -48,6 +48,7 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -70,9 +71,9 @@ public class ResourceNotFoundTest {
     }
 
 
-    public static class MyInflector implements Inflector<Request, Response> {
+    public static class MyInflector implements Inflector<ContainerRequestContext, Response> {
         @Override
-        public Response apply(Request data) {
+        public Response apply(ContainerRequestContext data) {
             return Response.ok("dynamic", MediaType.TEXT_PLAIN).build();
         }
     }

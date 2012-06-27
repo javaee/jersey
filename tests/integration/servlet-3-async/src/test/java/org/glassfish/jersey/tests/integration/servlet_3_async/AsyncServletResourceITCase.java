@@ -60,6 +60,7 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -188,6 +189,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
      * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
      */
     @Test
+    @Ignore
     public void testAsyncRequestCanceling() throws InterruptedException {
         final WebTarget resourceTarget = target("async/canceled");
         resourceTarget.configuration().register(new LoggingFilter());

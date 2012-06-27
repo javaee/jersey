@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.model;
 
 import java.net.URI;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -66,10 +67,10 @@ public class ProgrammaticResourceMethodsTest {
     public void testGet() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
         final Resource.Builder resourceBuilder = Resource.builder("test");
-        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -83,10 +84,10 @@ public class ProgrammaticResourceMethodsTest {
     public void testHead() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
         final Resource.Builder resourceBuilder = Resource.builder("test");
-        resourceBuilder.addMethod("HEAD").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("HEAD").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -100,10 +101,10 @@ public class ProgrammaticResourceMethodsTest {
     public void testOptions() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
         final Resource.Builder resourceBuilder = Resource.builder("test");
-        resourceBuilder.addMethod("OPTIONS").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("OPTIONS").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -115,10 +116,10 @@ public class ProgrammaticResourceMethodsTest {
 
     @Test
     public void testMultiple() throws Exception {
-        Inflector<Request, Response> inflector = new Inflector<Request, Response>() {
+        Inflector<ContainerRequestContext, Response> inflector = new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         };
@@ -142,26 +143,26 @@ public class ProgrammaticResourceMethodsTest {
     public void testTwoBindersSamePath() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
         final Resource.Builder resourceBuilder = Resource.builder("/");
-        resourceBuilder.addMethod("GET").path("test1").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("GET").path("test1").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.created(URI.create("/foo")).build();
             }
         });
-        Inflector<Request, Response> inflector1 = new Inflector<Request, Response>() {
+        Inflector<ContainerRequestContext, Response> inflector1 = new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.accepted().build();
             }
         };
         resourceBuilder.addMethod("GET").path("test2").handledBy(inflector1);
         resourceBuilder.addMethod("HEAD").path("test2").handledBy(inflector1);
-        Inflector<Request, Response> inflector2 = new Inflector<Request, Response>() {
+        Inflector<ContainerRequestContext, Response> inflector2 = new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.status(203).build();
             }
         };

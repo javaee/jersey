@@ -88,10 +88,10 @@ public class ApplicationFilterTest {
                 .addModules(new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
-        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -121,10 +121,10 @@ public class ApplicationFilterTest {
                 .addModules(new ProviderInstanceBindingModule<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
-        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -224,10 +224,10 @@ public class ApplicationFilterTest {
                 new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
-        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -254,10 +254,10 @@ public class ApplicationFilterTest {
                 new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
-        rb.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });

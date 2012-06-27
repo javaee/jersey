@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.model;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -61,7 +62,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class AcceptQsTest {
 
-    private static class StringReturningInflector implements Inflector<Request, Response> {
+    private static class StringReturningInflector implements Inflector<ContainerRequestContext, Response> {
 
         String entity;
 
@@ -70,7 +71,7 @@ public class AcceptQsTest {
         }
 
         @Override
-        public Response apply(Request data) {
+        public Response apply(ContainerRequestContext data) {
             return Response.ok(entity).build();
         }
     }
@@ -79,7 +80,7 @@ public class AcceptQsTest {
         return new ApplicationHandler(new ResourceConfig(classes));
     }
 
-    private Inflector<Request, Response> stringResponse(String s) {
+    private Inflector<ContainerRequestContext, Response> stringResponse(String s) {
         return new StringReturningInflector(s);
     }
 

@@ -44,12 +44,14 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -108,14 +110,14 @@ public class App {
         final ResourceConfig resourceConfig = new ResourceConfig(TracingResource.class);
 
         final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH_PROGRAMMATIC);
-        resourceBuilder.addMethod(TRACE.NAME).handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod(TRACE.NAME).handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request request) {
+            public Response apply(ContainerRequestContext request) {
                 if (request == null) {
                     return Response.noContent().build();
                 } else {
-                    return Response.ok(Stringifier.stringify(request), MediaType.TEXT_PLAIN).build();
+                    return Response.ok(Stringifier.stringify((ContainerRequest)request), MediaType.TEXT_PLAIN).build();
                 }
             }
         });

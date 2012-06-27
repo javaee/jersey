@@ -48,6 +48,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Suspend;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 
@@ -349,10 +350,11 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         /**
          * Define an inflector-based resource method handler binding.
          *
+         *
          * @param inflector inflector handling the resource method.
          * @return updated builder object.
          */
-        public Builder handledBy(Inflector<Request, ?> inflector) {
+        public Builder handledBy(Inflector<ContainerRequestContext, ?> inflector) {
             return handledBy(inflector, Invocable.APPLY_INFLECTOR_METHOD);
         }
 

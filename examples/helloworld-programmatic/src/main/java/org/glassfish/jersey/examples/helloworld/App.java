@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -109,19 +110,19 @@ public class App {
     public static ResourceConfig create() {
         final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH);
 
-        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
                     @Override
-                    public Response apply(Request data) {
+                    public Response apply(ContainerRequestContext data) {
                         getMethodCalled = true;
                         return Response.ok("Hello World!").build();
                     }
                 });
 
-        Inflector<Request, Response> noContentResponder = new Inflector<Request, Response>() {
+        Inflector<ContainerRequestContext, Response> noContentResponder = new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request data) {
+            public Response apply(ContainerRequestContext data) {
                 headMethodCalled = true;
                 return Response.noContent().build();
             }

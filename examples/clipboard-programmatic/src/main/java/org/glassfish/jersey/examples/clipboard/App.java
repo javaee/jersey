@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -103,10 +104,10 @@ public class App {
         final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH);
         final Clipboard clipboard = new Clipboard();
 
-        resourceBuilder.addMethod("GET").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request data) {
+            public Response apply(ContainerRequestContext data) {
                 final String content = clipboard.content();
                 if (content.isEmpty()) {
                     return Response.noContent().build();
@@ -115,10 +116,10 @@ public class App {
             }
         });
 
-        resourceBuilder.addMethod("PUT").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("PUT").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request data) {
+            public Response apply(ContainerRequestContext data) {
                 if (data != null) {
                     clipboard.setContent(((ContainerRequest) data).readEntity(String.class));
                 }
@@ -126,20 +127,20 @@ public class App {
             }
         });
 
-        resourceBuilder.addMethod("POST").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("POST").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request data) {
+            public Response apply(ContainerRequestContext data) {
                 String newContent = (data != null)
                         ? clipboard.append(((ContainerRequest) data).readEntity(String.class)) : "";
                 return Response.ok(newContent).build();
             }
         });
 
-        resourceBuilder.addMethod("DELETE").handledBy(new Inflector<Request, Response>() {
+        resourceBuilder.addMethod("DELETE").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(Request data) {
+            public Response apply(ContainerRequestContext data) {
                 clipboard.clear();
                 return Response.noContent().build();
             }

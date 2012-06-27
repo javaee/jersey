@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -59,6 +60,11 @@ import org.jvnet.hk2.annotations.Inject;
  */
 class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annotation> {
 
+    /**
+     * Creates new instance initialized with parameters.
+     * @param mpep Injected multivaluedParameterExtractor provider.
+     * @param injector Injected HK2 injector.
+     */
     EntityParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
         super(mpep, injector, Parameter.Source.ENTITY);
     }
@@ -76,7 +82,9 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
             final ContainerRequest requestContext = context.getRequestContext();
 
             final Class<?> rawType = parameter.getRawType();
-            return Request.class.isAssignableFrom(rawType) && rawType.isInstance(requestContext)
+            return (Request.class.isAssignableFrom(rawType)
+                    || ContainerRequestContext.class.isAssignableFrom(rawType)) &&
+                    rawType.isInstance(requestContext)
                     ? requestContext
                     : requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
         }

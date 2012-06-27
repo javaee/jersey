@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -113,10 +114,10 @@ public class App {
         final Resource.Builder resourceBuilder = Resource.builder("echo");
         ResourceMethod.Builder rmBuilder = resourceBuilder.addMethod("POST");
         rmBuilder.consumes(jsonAndTextTypes).produces(jsonAndTextTypes)
-                .handledBy(new Inflector<Request, Response>() {
+                .handledBy(new Inflector<ContainerRequestContext, Response>() {
 
                     @Override
-                    public Response apply(Request request) {
+                    public Response apply(ContainerRequestContext request) {
                         ClipboardData data = (request != null)
                                 ? ((ContainerRequest)request).readEntity(ClipboardData.class) : null;
                         return Response.ok(data).build();

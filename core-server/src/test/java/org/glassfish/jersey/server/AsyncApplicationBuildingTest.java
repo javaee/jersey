@@ -55,6 +55,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -86,7 +87,7 @@ public class AsyncApplicationBuildingTest {
 
     private static final String BASE_URI = "http://localhost:8080/base/";
 
-    private static class AsyncInflector implements Inflector<Request, Response> {
+    private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Inject
         private InvocationContext invocationContext;
@@ -103,7 +104,7 @@ public class AsyncApplicationBuildingTest {
         }
 
         @Override
-        public Response apply(final Request req) {
+        public Response apply(final ContainerRequestContext req) {
             // Suspend current request
             invocationContext.suspend();
 

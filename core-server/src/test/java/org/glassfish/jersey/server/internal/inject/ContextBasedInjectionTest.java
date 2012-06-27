@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -94,7 +95,7 @@ public class ContextBasedInjectionTest {
         this.expectedResponse = expectedResponse;
     }
 
-    private static class AsyncInflector implements Inflector<Request, Response> {
+    private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Context
         private InvocationContext invocationContext;
@@ -111,7 +112,7 @@ public class ContextBasedInjectionTest {
         }
 
         @Override
-        public Response apply(final Request req) {
+        public Response apply(final ContainerRequestContext req) {
             // Suspend current request
             invocationContext.suspend();
 

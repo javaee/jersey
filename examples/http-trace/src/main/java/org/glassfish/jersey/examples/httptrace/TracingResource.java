@@ -43,6 +43,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey.server.ContainerRequest;
+
 /**
  * This very basic resource showcases support of a HTTP TRACE method,
  * not directly supported by JAX-RS API.
@@ -55,6 +57,6 @@ public class TracingResource {
     @TRACE
     @Produces("text/plain")
     public String trace(Request request) {
-        return Stringifier.stringify(request);
+        return Stringifier.stringify((ContainerRequest)request);
     }
 }
