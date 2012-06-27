@@ -99,13 +99,14 @@ public class UriBuilderImpl extends UriBuilder {
         this.fragment = that.fragment;
     }
 
+    @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
-    public UriBuilder clone() {
+    public UriBuilderImpl clone() {
         return new UriBuilderImpl(this);
     }
 
     @Override
-    public UriBuilder uri(URI uri) {
+    public UriBuilderImpl uri(URI uri) {
         if (uri == null) {
             throw new IllegalArgumentException("URI parameter is null");
         }
@@ -166,7 +167,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder uri(String uriTemplate) {
+    public UriBuilderImpl uri(String uriTemplate) {
         if (uriTemplate == null) {
             throw new IllegalArgumentException("URI parameter is null");
         }
@@ -225,7 +226,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder scheme(String scheme) {
+    public UriBuilderImpl scheme(String scheme) {
         if (scheme != null) {
             this.scheme = scheme;
             UriComponent.validate(scheme, UriComponent.Type.SCHEME, true);
@@ -236,7 +237,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder schemeSpecificPart(String ssp) {
+    public UriBuilderImpl schemeSpecificPart(String ssp) {
         if (ssp == null) {
             throw new IllegalArgumentException("Scheme specific part parameter is null");
         }
@@ -282,7 +283,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder userInfo(String ui) {
+    public UriBuilderImpl userInfo(String ui) {
         checkSsp();
         this.userInfo = (ui != null)
                 ? encode(ui, UriComponent.Type.USER_INFO) : null;
@@ -290,7 +291,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder host(String host) {
+    public UriBuilderImpl host(String host) {
         checkSsp();
         if (host != null) {
             if (host.length() == 0) // null is used to reset host setting
@@ -305,7 +306,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder port(int port) {
+    public UriBuilderImpl port(int port) {
         checkSsp();
         if (port < -1) // -1 is used to reset port setting and since URI allows
         // as port any positive integer, so do we.
@@ -317,7 +318,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder replacePath(String path) {
+    public UriBuilderImpl replacePath(String path) {
         checkSsp();
         this.path.setLength(0);
         if (path != null) {
@@ -327,14 +328,14 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder path(String path) {
+    public UriBuilderImpl path(String path) {
         checkSsp();
         appendPath(path);
         return this;
     }
 
     @Override
-    public UriBuilder path(Class<?> resource) {
+    public UriBuilderImpl path(Class<?> resource) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
@@ -349,7 +350,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder path(Class resource, String methodName) {
+    public UriBuilderImpl path(Class resource, String methodName) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
@@ -381,7 +382,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder path(Method method) {
+    public UriBuilderImpl path(Method method) {
         checkSsp();
         if (method == null) {
             throw new IllegalArgumentException("Method is null");
@@ -400,7 +401,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder segment(String... segments) throws IllegalArgumentException {
+    public UriBuilderImpl segment(String... segments) throws IllegalArgumentException {
         checkSsp();
         if (segments == null) {
             throw new IllegalArgumentException("Segments parameter is null");
@@ -413,7 +414,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder replaceMatrix(String matrix) {
+    public UriBuilderImpl replaceMatrix(String matrix) {
         checkSsp();
         int i = path.lastIndexOf("/");
         if (i != -1) {
@@ -433,7 +434,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder matrixParam(String name, Object... values) {
+    public UriBuilderImpl matrixParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException("Name parameter is null");
@@ -472,7 +473,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder replaceMatrixParam(String name, Object... values) {
+    public UriBuilderImpl replaceMatrixParam(String name, Object... values) {
         checkSsp();
 
         if (name == null) {
@@ -506,7 +507,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder replaceQuery(String query) {
+    public UriBuilderImpl replaceQuery(String query) {
         checkSsp();
         this.query.setLength(0);
         if (query != null) {
@@ -516,7 +517,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder queryParam(String name, Object... values) {
+    public UriBuilderImpl queryParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException("Name parameter is null");
@@ -558,7 +559,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder replaceQueryParam(String name, Object... values) {
+    public UriBuilderImpl replaceQueryParam(String name, Object... values) {
         checkSsp();
 
         if (queryParams == null) {
@@ -584,7 +585,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilder fragment(String fragment) {
+    public UriBuilderImpl fragment(String fragment) {
         this.fragment = (fragment != null)
                 ? encode(fragment, UriComponent.Type.FRAGMENT)
                 : null;
@@ -684,15 +685,20 @@ public class UriBuilderImpl extends UriBuilder {
 
     @Override
     public URI buildFromMap(Map<String, ?> values) {
-        return _buildFromMap(true, values);
+        return _buildFromMap(true, true, values);
+    }
+
+    //@Override
+    public URI buildFromMap(Map<String, ?> values, boolean encodeSlashInPath) {
+        return _buildFromMap(true, encodeSlashInPath, values);
     }
 
     @Override
     public URI buildFromEncodedMap(Map<String, ?> values) throws IllegalArgumentException, UriBuilderException {
-        return _buildFromMap(false, values);
+        return _buildFromMap(false, false, values);
     }
 
-    private URI _buildFromMap(boolean encode, Map<String, ?> values) {
+    private URI _buildFromMap(boolean encode, boolean encodeSlashInPath, Map<String, ?> values) {
         if (ssp != null) {
             throw new IllegalArgumentException("Schema specific part is opaque");
         }
@@ -703,21 +709,26 @@ public class UriBuilderImpl extends UriBuilder {
         String uri = UriTemplate.createURI(
                 scheme, authority,
                 userInfo, host, port,
-                path.toString(), query.toString(), fragment, values, encode);
+                path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
         return createURI(uri);
     }
 
     @Override
     public URI build(Object... values) {
-        return _build(true, values);
+        return _build(true, true, values);
+    }
+
+    // @Override
+    public URI build(Object[] values, boolean encodeSlashInPath) {
+        return _build(true, encodeSlashInPath, values);
     }
 
     @Override
     public URI buildFromEncoded(Object... values) {
-        return _build(false, values);
+        return _build(false, false, values);
     }
 
-    private URI _build(boolean encode, Object... values) {
+    private URI _build(boolean encode, boolean encodeSlashInPath, Object... values) {
         if (values == null || values.length == 0) {
             return createURI(create());
         }
@@ -732,7 +743,7 @@ public class UriBuilderImpl extends UriBuilder {
         String uri = UriTemplate.createURI(
                 scheme, authority,
                 userInfo, host, port,
-                path.toString(), query.toString(), fragment, values, encode);
+                path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
         return createURI(uri);
     }
 

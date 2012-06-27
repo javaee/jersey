@@ -132,7 +132,7 @@ public class UriTemplate {
      */
     private static final Pattern TEMPLATE_NAMES_PATTERN = Pattern.compile("\\{(\\w[-\\w\\.]*)\\}");
     /**
-     * The empty URI template that matches the null or empty URI path
+     * The empty URI template that matches the null or empty URI path.
      */
     public static final UriTemplate EMPTY = new UriTemplate();
     /**
@@ -145,7 +145,7 @@ public class UriTemplate {
      */
     private final String normalizedTemplate;
     /**
-     * The pattern generated from the template
+     * The pattern generated from the template.
      */
     private final PatternWithGroups pattern;
     /**
@@ -168,7 +168,7 @@ public class UriTemplate {
     private final int numOfCharacters;
 
     /**
-     * Constructor for NULL template
+     * Constructor for {@code NULL} template.
      */
     private UriTemplate() {
         this.template = this.normalizedTemplate = "";
@@ -182,17 +182,20 @@ public class UriTemplate {
      * Construct a new URI template.
      * <p>
      * The template will be parsed to extract template variables.
+     * </p>
      * <p>
      * A specific regular expression will be generated from the template
      * to match URIs according to the template and map template variables to
      * template values.
-     * <p>
+     * </p>
+     *
      * @param template the template.
-     * @throws PatternSyntaxException if the specified
-     *         regular expression could not be generated
-     * @throws IllegalArgumentException if the template is null or
-     *         an empty string.
+     * @throws PatternSyntaxException   if the specified
+     *                                  regular expression could not be generated
+     * @throws IllegalArgumentException if the template is {@code null} or
+     *                                  an empty string.
      */
+    @SuppressWarnings("DuplicateThrows")
     public UriTemplate(String template) throws
             PatternSyntaxException, IllegalArgumentException {
         this(new UriTemplateParser(template));
@@ -207,12 +210,14 @@ public class UriTemplate {
      * to match URIs according to the template and map template variables to
      * template values.
      * <p>
+     *
      * @param templateParser the parser to parse the template.
-     * @throws PatternSyntaxException if the specified
-     *         regular expression could not be generated
-     * @throws IllegalArgumentException if the template is null or
-     *         an empty string.
+     * @throws PatternSyntaxException   if the specified
+     *                                  regular expression could not be generated
+     * @throws IllegalArgumentException if the template is {@code null} or
+     *                                  an empty string.
      */
+    @SuppressWarnings("DuplicateThrows")
     protected UriTemplate(UriTemplateParser templateParser) throws
             PatternSyntaxException, IllegalArgumentException {
         this.template = templateParser.getTemplate();
@@ -242,6 +247,7 @@ public class UriTemplate {
 
     /**
      * Get the URI template as a String.
+     *
      * @return the URI template.
      */
     public final String getTemplate() {
@@ -258,7 +264,9 @@ public class UriTemplate {
     }
 
     /**
-     * @return true if the template ends in a '/', otherwise false.
+     * Check if the URI template ends in a slash ({@code '/'}).
+     *
+     * @return {@code true} if the template ends in a '/', otherwise false.
      */
     public final boolean endsWithSlash() {
         return endsWithSlash;
@@ -266,6 +274,7 @@ public class UriTemplate {
 
     /**
      * Get the list of template variables for the template.
+     *
      * @return the list of template variables.
      */
     public final List<String> getTemplateVariables() {
@@ -275,9 +284,10 @@ public class UriTemplate {
     /**
      * Ascertain if a template variable is a member of this
      * template.
+     *
      * @param name name The template variable.
-     * @return true if the template variable is a member of the template, otherwise
-     * false.
+     * @return {@code true} if the template variable is a member of the template, otherwise
+     *         false.
      */
     public final boolean isTemplateVariablePresent(String name) {
         for (String s : templateVariables) {
@@ -310,6 +320,7 @@ public class UriTemplate {
 
     /**
      * Get the number of template variables.
+     *
      * @return the number of template variables.
      */
     public final int getNumberOfTemplateVariables() {
@@ -324,13 +335,13 @@ public class UriTemplate {
      * values.
      * <p>
      *
-     * @param uri the uri to match against the template.
+     * @param uri                     the uri to match against the template.
      * @param templateVariableToValue the map where to put template variables (as keys)
-     *        and template values (as values). The map is cleared before any
-     *        entries are put.
+     *                                and template values (as values). The map is cleared before any
+     *                                entries are put.
      * @return true if the URI matches the template, otherwise false.
      * @throws IllegalArgumentException if the uri or
-     *         templateVariableToValue is null.
+     *                                  templateVariableToValue is null.
      */
     public final boolean match(CharSequence uri, Map<String, String> templateVariableToValue) throws
             IllegalArgumentException {
@@ -348,13 +359,13 @@ public class UriTemplate {
      * will be added to a list passed in as parameter.
      * <p>
      *
-     * @param uri the uri to match against the template.
+     * @param uri         the uri to match against the template.
      * @param groupValues the list to store the values of a pattern's
-     *        capturing groups is matching is successful. The values are stored
-     *        in the same order as the pattern's capturing groups.
+     *                    capturing groups is matching is successful. The values are stored
+     *                    in the same order as the pattern's capturing groups.
      * @return true if the URI matches the template, otherwise false.
      * @throws IllegalArgumentException if the uri or
-     *         templateVariableToValue is null.
+     *                                  templateVariableToValue is null.
      */
     public final boolean match(CharSequence uri, List<String> groupValues) throws
             IllegalArgumentException {
@@ -400,7 +411,7 @@ public class UriTemplate {
      * empty string.
      *
      * @param values the array of template values. The values will be
-     *        substituted in order of occurence of unique template variables.
+     *               substituted in order of occurence of unique template variables.
      * @return the URI.
      */
     public final String createURI(String... values) {
@@ -415,7 +426,7 @@ public class UriTemplate {
      * empty string.
      *
      * @param values the array of template values. The values will be
-     *        substituted in order of occurence of unique template variables.
+     *               substituted in order of occurence of unique template variables.
      * @param offset the offset into the array
      * @param length the length of the array
      * @return the URI.
@@ -460,6 +471,7 @@ public class UriTemplate {
     /**
      * Hashcode is calculated from String of the regular expression
      * generated from the template.
+     *
      * @return the hash code.
      */
     @Override
@@ -470,6 +482,7 @@ public class UriTemplate {
     /**
      * Equality is calculated from the String of the regular expression
      * generated from the templates.
+     *
      * @param o the reference object with which to compare.
      * @return true if equals, otherwise false.
      */
@@ -489,58 +502,34 @@ public class UriTemplate {
      * <p>
      * A template values is an Object instance MUST support the toString()
      * method to convert the template value to a String instance.
+     * </p>
      *
-     * @param scheme the URI scheme component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the template variable to value map
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
-     */
-    public static String createURI(final String scheme,
-            final String userInfo, final String host, final String port,
-            final String path, final String query, final String fragment,
-            final Map<String, ? extends Object> values, final boolean encode) {
-
-        return createURI(scheme, null, userInfo, host, port, path, query, fragment,
-                values, encode);
-    }
-
-    /**
-     * Construct a URI from the component parts each of which may contain
-     * template variables.
-     * <p>
-     * A template values is an Object instance MUST support the toString()
-     * method to convert the template value to a String instance.
-     *
-     * @param scheme the URI scheme component
-     * @param authority the URI authority component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the template variable to value map
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
+     * @param scheme            the URI scheme component.
+     * @param authority         the URI authority component.
+     * @param userInfo          the URI user info component.
+     * @param host              the URI host component.
+     * @param port              the URI port component.
+     * @param path              the URI path component.
+     * @param query             the URI query component.
+     * @param fragment          the URI fragment component.
+     * @param values            the template variable to value map.
+     * @param encode            if true encode a template value according to the correspond
+     *                          component type of the associated template variable, otherwise
+     *                          contextually encode the template value.
+     * @param encodeSlashInPath if {@code true}, the slash ({@code '/'}) characters
+     *                          in parameter values will be encoded if the template
+     *                          is placed in the URI path component, otherwise the slash
+     *                          characters will not be encoded in path templates.
+     * @return a URI.
      */
     public static String createURI(
             final String scheme, String authority,
             final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment,
-            final Map<String, ? extends Object> values, final boolean encode) {
+            final Map<String, ?> values, final boolean encode, final boolean encodeSlashInPath) {
 
         Map<String, String> stringValues = new HashMap<String, String>();
-        for (Map.Entry<String, ? extends Object> e : values.entrySet()) {
+        for (Map.Entry<String, ?> e : values.entrySet()) {
             if (e.getValue() != null) {
                 stringValues.put(e.getKey(), e.getValue().toString());
             }
@@ -548,7 +537,7 @@ public class UriTemplate {
 
         return createURIWithStringValues(scheme, authority,
                 userInfo, host, port, path, query, fragment,
-                stringValues, encode);
+                stringValues, encode, encodeSlashInPath);
     }
 
     /**
@@ -557,60 +546,34 @@ public class UriTemplate {
      * <p>
      * A template value is an Object instance that MUST support the toString()
      * method to convert the template value to a String instance.
+     * </p>
      *
-     * @param scheme the URI scheme component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the template variable to value map
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
+     * @param scheme            the URI scheme component.
+     * @param authority         the URI authority info component.
+     * @param userInfo          the URI user info component.
+     * @param host              the URI host component.
+     * @param port              the URI port component.
+     * @param path              the URI path component.
+     * @param query             the URI query component.
+     * @param fragment          the URI fragment component.
+     * @param values            the template variable to value map.
+     * @param encode            if true encode a template value according to the correspond
+     *                          component type of the associated template variable, otherwise
+     *                          contextually encode the template value.
+     * @param encodeSlashInPath if {@code true}, the slash ({@code '/'}) characters
+     *                          in parameter values will be encoded if the template
+     *                          is placed in the URI path component, otherwise the slash
+     *                          characters will not be encoded in path templates.
+     * @return a URI.
      */
-    public static String createURIWithStringValues(final String scheme,
-            final String userInfo, final String host, final String port,
-            final String path, final String query, final String fragment,
-            final Map<String, ? extends Object> values, final boolean encode) {
-
-        return createURIWithStringValues(scheme, null,
-                userInfo, host, port, path, query, fragment,
-                values, encode);
-    }
-
-    /**
-     * Construct a URI from the component parts each of which may contain
-     * template variables.
-     * <p>
-     * A template value is an Object instance that MUST support the toString()
-     * method to convert the template value to a String instance.
-     *
-     * @param scheme the URI scheme component
-     * @param authority the URI authority info component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the template variable to value map
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
-     */
-    @SuppressWarnings("unchecked")
     public static String createURIWithStringValues(
             final String scheme, final String authority,
             final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment,
-            final Map<String, ? extends Object> values, final boolean encode) {
+            final Map<String, ?> values, final boolean encode, final boolean encodeSlashInPath) {
 
-        return createURIWithStringValues(scheme, authority, userInfo, host, port, path, query, fragment, EMPTY_VALUES,
-                encode, (Map<String, Object>) values);
+        return createURIWithStringValues(
+                scheme, authority, userInfo, host, port, path, query, fragment, EMPTY_VALUES, encode, encodeSlashInPath, values);
     }
 
     /**
@@ -620,56 +583,31 @@ public class UriTemplate {
      * The template values are an array of Object and each Object instance
      * MUST support the toString() method to convert the template value to
      * a String instance.
+     * </p>
      *
-     * @param scheme the URI scheme component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query componnet
-     * @param fragment the URI fragment component
-     * @param values the array of template values
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
-     */
-    public static String createURI(final String scheme,
-            final String userInfo, final String host, final String port,
-            final String path, final String query, final String fragment,
-            final Object[] values, final boolean encode) {
-        return createURI(scheme, null,
-                userInfo, host, port, path, query, fragment,
-                values, encode);
-    }
-
-    /**
-     * Construct a URI from the component parts each of which may contain
-     * template variables.
-     * <p>
-     * The template values are an array of Object and each Object instance
-     * MUST support the toString() method to convert the template value to
-     * a String instance.
-     *
-     * @param scheme the URI scheme component
-     * @param authority the URI authority component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query componnet
-     * @param fragment the URI fragment component
-     * @param values the array of template values
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
+     * @param scheme            the URI scheme component.
+     * @param authority         the URI authority component.
+     * @param userInfo          the URI user info component.
+     * @param host              the URI host component.
+     * @param port              the URI port component.
+     * @param path              the URI path component.
+     * @param query             the URI query component.
+     * @param fragment          the URI fragment component.
+     * @param values            the array of template values.
+     * @param encode            if true encode a template value according to the correspond
+     *                          component type of the associated template variable, otherwise
+     *                          contextually encode the template value.
+     * @param encodeSlashInPath if {@code true}, the slash ({@code '/'}) characters
+     *                          in parameter values will be encoded if the template
+     *                          is placed in the URI path component, otherwise the slash
+     *                          characters will not be encoded in path templates.
+     * @return a URI.
      */
     public static String createURI(
             final String scheme, String authority,
             final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment,
-            final Object[] values, final boolean encode) {
+            final Object[] values, final boolean encode, final boolean encodeSlashInPath) {
 
         String[] stringValues = new String[values.length];
         for (int i = 0; i < values.length; i++) {
@@ -681,70 +619,46 @@ public class UriTemplate {
         return createURIWithStringValues(
                 scheme, authority,
                 userInfo, host, port, path, query, fragment,
-                stringValues, encode);
+                stringValues, encode, encodeSlashInPath);
     }
 
     /**
      * Construct a URI from the component parts each of which may contain
      * template variables.
      *
-     * @param scheme the URI scheme component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the array of template values
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
-     */
-    public static String createURIWithStringValues(final String scheme,
-            final String userInfo, final String host, final String port,
-            final String path, final String query, final String fragment,
-            final String[] values, final boolean encode) {
-
-        return createURIWithStringValues(
-                scheme, null,
-                userInfo, host, port, path, query, fragment,
-                values, encode);
-    }
-
-    /**
-     * Construct a URI from the component parts each of which may contain
-     * template variables.
-     *
-     * @param scheme the URI scheme component
-     * @param authority the URI authority component
-     * @param userInfo the URI user info component
-     * @param host the URI host component
-     * @param port the URI port component
-     * @param path the URI path component
-     * @param query the URI query component
-     * @param fragment the URI fragment component
-     * @param values the array of template values
-     * @param encode if true encode a template value according to the correspond
-     *        component type of the associated template variable, otherwise
-     *        contextually encode the template value
-     * @return a URI
+     * @param scheme            the URI scheme component.
+     * @param authority         the URI authority component.
+     * @param userInfo          the URI user info component.
+     * @param host              the URI host component.
+     * @param port              the URI port component.
+     * @param path              the URI path component.
+     * @param query             the URI query component.
+     * @param fragment          the URI fragment component.
+     * @param values            the array of template values.
+     * @param encode            if true encode a template value according to the correspond
+     *                          component type of the associated template variable, otherwise
+     *                          contextually encode the template value.
+     * @param encodeSlashInPath if {@code true}, the slash ({@code '/'}) characters
+     *                          in parameter values will be encoded if the template
+     *                          is placed in the URI path component, otherwise the slash
+     *                          characters will not be encoded in path templates.
+     * @return a URI.
      */
     public static String createURIWithStringValues(
             final String scheme, final String authority,
             final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment,
-            final String[] values, final boolean encode) {
+            final String[] values, final boolean encode, final boolean encodeSlashInPath) {
 
         final Map<String, Object> mapValues = new HashMap<String, Object>();
-        return createURIWithStringValues(scheme, authority, userInfo, host, port, path, query, fragment, values, encode,
-                mapValues);
+        return createURIWithStringValues(
+                scheme, authority, userInfo, host, port, path, query, fragment, values, encode, encodeSlashInPath, mapValues);
     }
 
     private static String createURIWithStringValues(
             final String scheme, final String authority, final String userInfo, final String host, final String port,
             final String path, final String query, final String fragment, final String[] values, final boolean encode,
-            final Map<String, Object> mapValues) {
+            final boolean encodeSlashInPath, final Map<String, ?> mapValues) {
 
         final StringBuilder sb = new StringBuilder();
         int offset = 0;
@@ -786,7 +700,10 @@ public class UriTemplate {
             if (sb.length() > 0 && path.charAt(0) != '/') {
                 sb.append("/");
             }
-            offset = createURIComponent(UriComponent.Type.PATH, path, values,
+            // path template values are treated as path segments unless encodeSlashInPath is false.
+            UriComponent.Type t = (encodeSlashInPath) ? UriComponent.Type.PATH_SEGMENT : UriComponent.Type.PATH;
+
+            offset = createURIComponent(t, path, values,
                     offset, encode, mapValues, sb);
         }
 
@@ -804,12 +721,16 @@ public class UriTemplate {
         return sb.toString();
     }
 
-    private static int createURIComponent(final UriComponent.Type t,
-            String template,
-            final String[] values, final int offset,
-            final boolean encode,
-            final Map<String, Object> mapValues,
-            final StringBuilder b) {
+    @SuppressWarnings("unchecked")
+    private static int createURIComponent(UriComponent.Type t,
+                                          String template,
+                                          final String[] values, final int offset,
+                                          final boolean encode,
+                                          final Map<String, ?> _mapValues,
+                                          final StringBuilder b) {
+
+        Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
+
         if (template.indexOf('{') == -1) {
             b.append(template);
             return offset;

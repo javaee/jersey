@@ -46,7 +46,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
-import junit.framework.*;
+
+import junit.framework.TestCase;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
@@ -295,6 +296,9 @@ public class UriTemplateTest extends TestCase {
         _testSubstitutionArray("http://example.com/{e}/",
                 "http://example.com//",
                 "");
+        _testSubstitutionArray("http://example.com/{a}/{b}/{a}",
+                "http://example.com/fred/barney/fred",
+                "fred", "barney", "joe");
     }
 
     void _testSubstitutionArray(String template, String uri, String... values) {
