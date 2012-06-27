@@ -136,18 +136,20 @@ public class ResponseWriter implements ContainerResponseWriter {
     @Override
     public void commit() {
         try {
-            final ContainerResponse responseContext = getResponseContext();
-            final int status = responseContext.getStatus();
-            if (!response.isCommitted() && status >= 400 && !(useSetStatusOn404 && status == 404)) {
-                final String reason = responseContext.getStatusInfo().getReasonPhrase();
-                try {
-                    if (reason == null || reason.isEmpty()) {
-                        response.sendError(status);
-                    } else {
-                        response.sendError(status, reason);
+            if (!response.isCommitted()) {
+                final ContainerResponse responseContext = getResponseContext();
+                final int status = responseContext.getStatus();
+                if (status >= 400 && !(useSetStatusOn404 && status == 404)) {
+                    final String reason = responseContext.getStatusInfo().getReasonPhrase();
+                    try {
+                        if (reason == null || reason.isEmpty()) {
+                            response.sendError(status);
+                        } else {
+                            response.sendError(status, reason);
+                        }
+                    } catch (IOException ex) {
+                        throw new ContainerException("I/O exception occurred while sending [" + status + "] error response.", ex);
                     }
-                } catch (IOException ex) {
-                    throw new ContainerException("I/O exception occured while sending [" + status + "] error response.", ex);
                 }
             }
         } finally {
@@ -160,9 +162,12 @@ public class ResponseWriter implements ContainerResponseWriter {
         if (!response.isCommitted()) {
             try {
                 response.reset();
+                response.sendError(500, "Request cancelled.");
             } catch (IllegalStateException ex) {
-                // a race condition externally commiting the response can still occur...
+                // a race condition externally committing the response can still occur...
                 LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
+            } catch (IOException ex) {
+                throw new ContainerException("I/O exception occurred while sending 'Request cancelled.' error response.", ex);
             } finally {
                 asyncExt.complete();
             }

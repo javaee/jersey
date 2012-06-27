@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_async;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -47,6 +48,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -104,9 +106,9 @@ public class AsyncServletResourceITCase extends JerseyTest {
      */
     @Test
     public void testAsyncServlet() throws InterruptedException {
-        final WebTarget resourceTarget = target().path("async");
+        final WebTarget resourceTarget = target("async");
         resourceTarget.configuration().register(new LoggingFilter());
-        final String expectedResponse = AsyncServletResource.MESSAGE;
+        final String expectedResponse = AsyncServletResource.HELLO_ASYNC_WORLD;
 
         final int MAX_MESSAGES = 50;
         final int LATCH_WAIT_TIMEOUT = 10;
@@ -180,4 +182,126 @@ public class AsyncServletResourceITCase extends JerseyTest {
         }
     }
 
+    /**
+     * Test canceling of an async request to a servlet-deployed resource.
+     *
+     * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
+     */
+    @Test
+    public void testAsyncRequestCanceling() throws InterruptedException {
+        final WebTarget resourceTarget = target("async/canceled");
+        resourceTarget.configuration().register(new LoggingFilter());
+
+        final int MAX_MESSAGES = 10;
+        final int LATCH_WAIT_TIMEOUT = 10;
+        final boolean debugMode = false;
+        final boolean sequentialGet = false;
+        final boolean sequentialPost = false;
+        final Object sequentialGetLock = new Object();
+        final Object sequentialPostLock = new Object();
+
+        final ExecutorService executor = Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder().setNameFormat("async-canceled-resource-test-%d").build());
+
+        final Map<Integer, String> postResponses = new ConcurrentHashMap<Integer, String>();
+        final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
+
+        final CountDownLatch postRequestLatch = new CountDownLatch(MAX_MESSAGES);
+        final CountDownLatch getRequestLatch = new CountDownLatch(MAX_MESSAGES);
+
+        try {
+            for (int i = 0; i < MAX_MESSAGES; i++) {
+                final int requestId = i;
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        //noinspection PointlessBooleanExpression,ConstantConditions
+                        if (debugMode || sequentialGet) {
+                            synchronized (sequentialGetLock) {
+                                get();
+                            }
+                        } else {
+                            get();
+                        }
+                    }
+
+                    private void get() throws InvocationException {
+                        try {
+                            final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
+                            getResponses.put(requestId, response);
+                        } catch (InvocationException ex) {
+                            final Response response = ex.getResponse();
+                            getResponses.put(requestId, response.getStatus() + ": " + response.readEntity(String.class));
+                        } finally {
+                            getRequestLatch.countDown();
+                        }
+                    }
+                });
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        //noinspection PointlessBooleanExpression,ConstantConditions
+                        if (debugMode || sequentialPost) {
+                            synchronized (sequentialPostLock) {
+                                post();
+                            }
+                        } else {
+                            post();
+                        }
+                    }
+
+                    private void post() throws InvocationException {
+                        try {
+                            final String response = resourceTarget.request().post(Entity.text("" + requestId), String.class);
+                            postResponses.put(requestId, response);
+                        } finally {
+                            postRequestLatch.countDown();
+                        }
+                    }
+                });
+            }
+
+            //noinspection ConstantConditions
+            if (debugMode) {
+                postRequestLatch.await();
+                getRequestLatch.await();
+            } else {
+                assertTrue("Waiting for all POST requests to complete has timed out.", postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        StringBuilder messageBuilder = new StringBuilder();
+        for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
+            messageBuilder.append("POST response for message ")
+                    .append(postResponseEntry.getKey()).append(": ")
+                    .append(postResponseEntry.getValue()).append('\n');
+        }
+        messageBuilder.append('\n');
+        for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
+            messageBuilder.append("GET response for message ")
+                    .append(getResponseEntry.getKey()).append(": ")
+                    .append(getResponseEntry.getValue()).append('\n');
+        }
+        LOGGER.info(messageBuilder.toString());
+
+        assertEquals(MAX_MESSAGES, postResponses.size());
+        for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
+            assertTrue("Unexpected POST notification response for message " + postResponseEntry.getKey(),
+                    postResponseEntry.getValue().startsWith(AsyncServletResource.CANCELED));
+        }
+
+        assertEquals(MAX_MESSAGES, getResponses.size());
+        final Collection<Integer> getResponseKeys = getResponses.keySet();
+        for (int i = 0; i < MAX_MESSAGES; i++) {
+            assertTrue("Detected a GET message response loss: " + i, getResponseKeys.contains(i));
+            final String getResponseEntry = getResponses.get(i);
+            assertTrue("Unexpected canceled GET response status for request " + i,
+                    getResponseEntry.startsWith("500: "));
+        }
+    }
 }

@@ -39,11 +39,15 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_async;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.ExecutionContext;
@@ -55,22 +59,76 @@ import javax.ws.rs.core.ExecutionContext;
  */
 @Path("async")
 public class AsyncServletResource {
-    public static final String MESSAGE = "Hello Async World!";
+    /**
+     * Hello world message.
+     */
+    public static final String HELLO_ASYNC_WORLD = "Hello Async World!";
+    public static final String CANCELED = "Canceled";
 
+    private static BlockingQueue<CanceledRequest> cancelingQueue = new ArrayBlockingQueue<CanceledRequest>(5);
+
+    @Context
+    private ExecutionContext context;
+
+    private static class CanceledRequest {
+        private final String id;
+        private final ExecutionContext context;
+
+        private CanceledRequest(String id, ExecutionContext context) {
+            this.id = id;
+            this.context = context;
+        }
+    }
+
+    /**
+     * Get the async "Hello World" message.
+     */
     @GET
     @Produces("text/plain")
     @Suspend
-    public void get(@Context final ExecutionContext context) {
+    public void get() {
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(100);
-                    context.resume(MESSAGE);
+                    context.resume(HELLO_ASYNC_WORLD);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         });
     }
+
+    /**
+     * Get a canceled request.
+     *
+     * @param id request id.
+     * @throws InterruptedException in case of not being able to put the request
+     *                              to an internal queue for canceling.
+     */
+    @GET
+    @Suspend
+    @Path("canceled")
+    public void getCanceled(@QueryParam("id") final String id) throws InterruptedException {
+        cancelingQueue.put(new CanceledRequest(id, context));
+    }
+
+    /**
+     * Cancel a request that is on top of the canceling queue.
+     *
+     * @return notification message about successful request canceling.
+     * @throws InterruptedException in case of not being able to take a cancelled request
+     *                              from an internal canceling queue.
+     */
+    @POST
+    @Produces("text/plain")
+    @Path("canceled")
+    public String cancel(String requestId) throws InterruptedException {
+        final CanceledRequest canceledRequest = cancelingQueue.take();
+        canceledRequest.context.cancel();
+
+        return CANCELED + " " + canceledRequest.id + " by POST " + requestId;
+    }
+
 }
