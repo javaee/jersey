@@ -80,6 +80,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
              */
             public State onChange(final State state);
         }
+
         /**
          * Strategy that returns the same state instance.
          */
@@ -266,6 +267,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             return hash;
         }
     }
+
     /**
      * Internal configuration state.
      */
@@ -275,7 +277,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
      * Construct a new Jersey configuration instance with the default features
      * and property values.
      */
-    JerseyConfiguration() {
+    public JerseyConfiguration() {
         this.state = new State();
     }
 

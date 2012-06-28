@@ -37,80 +37,80 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
 
-import java.util.Set;
+package org.glassfish.jersey.server.internal;
+
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Logger;
 
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.spi.RequestExecutorsProvider;
+import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
- * Aggregate {@link ProcessingExecutorsProvider processing executors provider}
- * used directly in the {@link RequestInvoker request invoker} to get the pluggable
- * processing executor services.
+ * {@link org.glassfish.jersey.process.internal.ExecutorsFactory Executors factory} used on the server side. The class returns
+ * the {@link java.util.concurrent.ExecutorService requesting
+ * executor} based on the request data.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Scoped(Singleton.class)
-public class ProcessingExecutorsFactory implements ProcessingExecutorsProvider {
-
-    private static final Logger LOGGER = Logger.getLogger(ProcessingExecutorsFactory.class.getName());
-    //
+public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
 
-    ProcessingExecutorsFactory(@Inject Services services) {
-        final Set<ProcessingExecutorsProvider> providers = Providers.getProviders(services, ProcessingExecutorsProvider.class);
-        requestingExecutor = createRequestingExecutor(providers);
-        respondingExecutor = createRespondingExecutor(providers);
-    }
 
-    private static ExecutorService createRequestingExecutor(final Set<ProcessingExecutorsProvider> providers) {
-        for (ProcessingExecutorsProvider provider : providers) {
-            ExecutorService es = provider.getRequestingExecutor();
-            if (es != null) {
-                LOGGER.config(String.format("Using custom requesting executor [%s] provided by [%s].",
-                        es.getClass().getName(), provider.getClass().getName()));
-                return es;
+    /**
+     * Creates a new instance.
+     * @param services HK2 services.
+     */
+    public ServerExecutorsFactory(@Inject Services services) {
+        super(services);
+        this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
+
+            @Override
+            public ExecutorService getRequestingExecutor() {
+                return MoreExecutors.sameThreadExecutor();
             }
-        }
+        });
+        this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
 
-        LOGGER.config("Using default requesting executor.");
-        return MoreExecutors.sameThreadExecutor();
-    }
-
-    private static ExecutorService createRespondingExecutor(final Set<ProcessingExecutorsProvider> providers) {
-        for (ProcessingExecutorsProvider provider : providers) {
-            ExecutorService es = provider.getRespondingExecutor();
-            if (es != null) {
-                LOGGER.config(String.format("Using custom responding executor [%s] provided by [%s].",
-                        es.getClass().getName(), provider.getClass().getName()));
-                return es;
+            @Override
+            public ExecutorService getRespondingExecutor() {
+                return MoreExecutors.sameThreadExecutor();
             }
-        }
+        });
 
-        LOGGER.config("Using default responding executor.");
-        return MoreExecutors.sameThreadExecutor();
+
     }
 
-    // ProcessingExecutorsProvider
     @Override
-    public ExecutorService getRequestingExecutor() {
+    public ExecutorService getRequestingExecutor(ContainerRequest request) {
         return requestingExecutor;
     }
 
     @Override
-    public ExecutorService getRespondingExecutor() {
+    public ExecutorService getRespondingExecutor(ContainerRequest containerRequest) {
         return respondingExecutor;
+    }
+
+
+    /**
+     * {@link org.glassfish.hk2.Module HK2 Module} registering
+     * {@link ServerExecutorsFactory server executor factory}.
+     */
+    public static class ServerExecutorModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(ExecutorsFactory.class).to(ServerExecutorsFactory.class).in(Singleton.class);
+            bind().to(ServerExecutorsFactory.class).in(Singleton.class);
+        }
     }
 }

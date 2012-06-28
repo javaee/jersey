@@ -77,6 +77,8 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     private Response abortResponse;
     // Entity providers
     private MessageBodyWorkers workers;
+    // Flag indicating whether the request is asynchronous
+    private boolean asynchronous;
 
     /**
      * Create new Jersey client request context.
@@ -106,6 +108,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         this.client = original.client;
         this.workers = original.workers;
         this.configuration = original.configuration.snapshot();
+        this.asynchronous = original.isAsynchronous();
 
         this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);
     }
@@ -321,5 +324,24 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
             language(variant.getLanguage());
             encoding(variant.getEncoding());
         }
+    }
+
+    /**
+     * Returns true if the request is called asynchronously using {@link javax.ws.rs.client.AsyncInvoker}
+     *
+     * @return True if the request is asynchronous; false otherwise.
+     */
+    public boolean isAsynchronous() {
+        return asynchronous;
+    }
+
+
+    /**
+     * Sets the flag indicating whether the request is called asynchronously using {@link javax.ws.rs.client.AsyncInvoker}.
+     *
+     * @param async True if the request is asynchronous; false otherwise.
+     */
+    void setAsynchronous(boolean async) {
+        asynchronous = async;
     }
 }

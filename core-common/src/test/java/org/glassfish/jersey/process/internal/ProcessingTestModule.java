@@ -113,7 +113,8 @@ public class ProcessingTestModule extends AbstractModule {
                 new MessageBodyFactory.Module(Singleton.class),
                 new ExceptionMapperFactory.Module(Singleton.class),
                 new ContextResolverFactory.Module(Singleton.class),
-                new JaxrsProviders.Module());
+                new JaxrsProviders.Module(),
+                new TestExecutorsFactory.TestExecutorsModule());
 
 
         bind(ExceptionMapper.class).toInstance(new ExceptionMapper<Throwable>() {

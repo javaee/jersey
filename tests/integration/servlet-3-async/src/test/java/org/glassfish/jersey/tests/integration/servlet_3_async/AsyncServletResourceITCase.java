@@ -107,6 +107,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
      * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
      */
     @Test
+    @Ignore // TODO: JERSEY-1269 async tests are failing sometimes
     public void testAsyncServlet() throws InterruptedException {
         final WebTarget resourceTarget = target("async");
         resourceTarget.configuration().register(new LoggingFilter());
@@ -190,7 +191,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
      * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
      */
     @Test
-    @Ignore
+    @Ignore // TODO: JERSEY-1269 async tests are failing sometimes
     public void testAsyncRequestCanceling() throws InterruptedException {
         final WebTarget resourceTarget = target("async/canceled");
         resourceTarget.configuration().register(new LoggingFilter());

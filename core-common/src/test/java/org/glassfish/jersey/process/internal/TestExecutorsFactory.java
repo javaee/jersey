@@ -37,51 +37,74 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.process.internal;
 
-import javax.ws.rs.core.ExecutionContext;
+import java.util.concurrent.ExecutorService;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.spi.RequestExecutorsProvider;
+import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 /**
- * Jersey processing framework bindings configuration module.
+ * {@link ExecutorsFactory Executors factory} used in tests.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class ProcessingModule extends AbstractModule {
+public class TestExecutorsFactory extends ExecutorsFactory<Object> {
+    private final ExecutorService requestingExecutor;
+    private final ExecutorService respondingExecutor;
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
 
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
+    /**
+     * Creates a new test factory instance.
+     * @param services Injected HK2 services.
+     */
+    public TestExecutorsFactory(@Inject Services services) {
+        super(services);
+        this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
+
+            @Override
+            public ExecutorService getRequestingExecutor() {
+                return MoreExecutors.sameThreadExecutor();
+            }
+        });
+        this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
+
+            @Override
+            public ExecutorService getRespondingExecutor() {
+                return MoreExecutors.sameThreadExecutor();
+            }
+        });
+
     }
 
     @Override
-    protected void configure() {
-        // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {
-        })
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
+    public ExecutorService getRequestingExecutor(Object request) {
+        return requestingExecutor;
+    }
 
+    @Override
+    public ExecutorService getRespondingExecutor(Object containerRequest) {
+        return respondingExecutor;
+    }
 
-        // Responding context
-        // TODO remove this
-        //    bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
-        //     }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
-        //     }).in(RequestScope.class);
-
-        //      bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
-        //      }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
+    /**
+     * {@link org.glassfish.hk2.Module HK2 Module} registering
+     * {@link TestExecutorsFactory server executor factory}.
+     */
+    public static class TestExecutorsModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(ExecutorsFactory.class).to(TestExecutorsFactory.class).in(Singleton.class);
+            bind().to(TestExecutorsFactory.class).in(Singleton.class);
+        }
     }
 }

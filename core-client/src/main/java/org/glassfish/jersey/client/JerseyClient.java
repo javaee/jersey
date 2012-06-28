@@ -43,6 +43,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -55,6 +56,8 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
+import org.glassfish.jersey.internal.ProviderBinder;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -62,6 +65,8 @@ import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.spi.RequestExecutorsProvider;
+import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
 import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
@@ -70,6 +75,7 @@ import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
 
+import com.google.common.collect.Sets;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -197,7 +203,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         }
         final Injector injector = services.forContract(Injector.class).get();
 
-        final RequestProcessingInitializationStage workersInitializationStage = injector.inject(RequestProcessingInitializationStage.class);
+        final RequestProcessingInitializationStage workersInitializationStage = injector.inject
+                (RequestProcessingInitializationStage.class);
         final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
 
         Stage<ClientRequest> rootStage = Stages
@@ -205,9 +212,47 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                 .to(filteringStage)
                 .build(Stages.asStage(connector));
 
+        bindExecutors(injector);
+
+
         this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);
 
         injector.inject(this);
+    }
+
+    /**
+     * Binds {@link RequestExecutorsProvider request executors}
+     *  and {@link ResponseExecutorsProvider response executors} to
+     *  all provider interfaces and removes them from the configuration, so that
+     *  there will not be bound again in the {@link RequestProcessingInitializationStage}.
+     *
+     * @param injector HK2 injector
+     */
+    private void bindExecutors(Injector injector) {
+        ProviderBinder providerBinder = injector.inject(ProviderBinder.class);
+        Set<Class<?>> executors = Sets.newHashSet();
+        for (Class<?> clazz : this.configuration.getProviderClasses()) {
+            final Set<Class<?>> providerContracts = Providers.getProviderContracts(clazz);
+            if (providerContracts.contains(RequestExecutorsProvider.class)
+                    || providerContracts.contains(ResponseExecutorsProvider.class)) {
+                executors.add(clazz);
+            }
+        }
+        this.configuration.getProviderClasses().removeAll(executors);
+        providerBinder.bindClasses(executors);
+
+
+        Set<Object> executorInstances = Sets.newHashSet();
+        for (Object instance : this.configuration.getProviderInstances()) {
+            final Set<Class<?>> providerInterfaces = Providers.getProviderContracts(instance.getClass());
+            if (providerInterfaces.contains(RequestExecutorsProvider.class)
+                    || providerInterfaces.contains(ResponseExecutorsProvider.class)) {
+                executorInstances.add(instance);
+            }
+        }
+
+        this.configuration.getProviderInstances().removeAll(executorInstances);
+        providerBinder.bindInstances(executorInstances);
     }
 
     /**

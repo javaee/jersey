@@ -348,6 +348,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         private AsyncInvoker(JerseyInvocation.Builder request) {
             this.builder = request;
+            this.builder.requestContext.setAsynchronous(true);
         }
 
         @Override

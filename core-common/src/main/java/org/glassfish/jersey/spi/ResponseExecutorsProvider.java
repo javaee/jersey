@@ -38,31 +38,39 @@
  * holder.
  */
 
-package org.glassfish.jersey.process;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
+import java.util.concurrent.ExecutorService;
 
 /**
- * Module container for a custom {@link ProcessingExecutorsProvider processing
- * executors provider}.
- *
- * The instance of this module can be registered with Jersey runtime
- * (client or server) to set the custom processing executor services.
+ * Pluggable provider of {@link java.util.concurrent.ExecutorService executor services} used to run
+ * Jersey request and response processing code.
+ * <p />
+ * When Jersey receives a request for processing, it will use the
+ * {@link RequestExecutorsProvider request executor} to run the request
+ * pre-processing and request-to-response transformation code. Once the response
+ * is available, Jersey will use the {@link #getRespondingExecutor() responding
+ * executor} to run the response post-processing code, before the final response
+ * is returned to the application layer.
+ * <p/>
+ * <p>
+ * The custom provider implementing this interface should be registered in the standard way on the server.
+ * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see RequestExecutorsProvider
  */
-public final class ProcessingExecutorsModule extends AbstractModule {
-
-    private final ProcessingExecutorsProvider provider;
-
-    public ProcessingExecutorsModule(ProcessingExecutorsProvider provider) {
-        this.provider = provider;
-    }
-
-    @Override
-    protected void configure() {
-        bind(ProcessingExecutorsProvider.class).toInstance(provider);
-    }
-
+@Contract
+public interface ResponseExecutorsProvider {
+    /**
+     * Get response processing executor.
+     * <p/>
+     * This method is called only once at Jersey initialization, before the
+     * first request is processed.
+     *
+     * @return response processing executor, or {@code null} if the provider does not supply the executor.
+     */
+    public ExecutorService getRespondingExecutor();
 }

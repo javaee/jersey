@@ -118,7 +118,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
     private final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder;
     private final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder;
     private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
-    private final ProcessingExecutorsFactory executorsFactory;
+    private final ExecutorsFactory<REQUEST> executorsFactory;
 
     /**
      * Create new request invoker.
@@ -137,7 +137,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
             final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder,
             final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder,
             final Factory<Ref<InvocationContext>> invocationContextReferenceFactory,
-            final ProcessingExecutorsFactory executorsFactory) {
+            final ExecutorsFactory<REQUEST> executorsFactory) {
 
         this.requestScope = requestScope;
         this.rootStage = rootStage;
@@ -187,14 +187,14 @@ public class RequestInvoker<REQUEST, RESPONSE> {
                 try {
                     asyncAdapter.apply(request);
                 } finally {
-                    asyncAdapter.addListener(responseProcessor, executorsFactory.getRespondingExecutor());
+                    asyncAdapter.addListener(responseProcessor, executorsFactory.getRespondingExecutor(request));
                 }
             }
         };
 
         try {
             try {
-                executorsFactory.getRequestingExecutor().submit(new Runnable() {
+                executorsFactory.getRequestingExecutor(request).submit(new Runnable() {
 
                     @Override
                     public void run() {

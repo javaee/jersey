@@ -41,44 +41,35 @@
 package org.glassfish.jersey.spi;
 
 import java.util.concurrent.ExecutorService;
-import org.glassfish.jersey.process.ProcessingExecutorsModule;
 
 /**
  * Pluggable provider of {@link ExecutorService executor services} used to run
  * Jersey request and response processing code.
- * <p />
+ * <p>
  * When Jersey receives a request for processing, it will use the
  * {@link #getRequestingExecutor() requesting executor} to run the request
- * pre-processing and request-to-response transformation code. Once the response
- * is available, Jersey will use the {@link #getRespondingExecutor() responding
- * executor} to run the response post-processing code, before the final response
- * is returned to the application layer.
+ * pre-processing and request-to-response transformation code.
+ * </p>
+ * <p>
+ * The custom provider implementing this interface should be registered in the standard way on the server.
+ * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @see ProcessingExecutorsModule
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see ResponseExecutorsProvider
  */
 @Contract
-public interface ProcessingExecutorsProvider {
+public interface RequestExecutorsProvider {
     /**
      * Get request processing executor.
-     *
+     * <p/>
      * This method is called only once at Jersey initialization, before the
      * first request is processed.
      *
-     * @return request processing executor, or {@code null} if the default
-     *     executor should be used.
+     * @return request processing executor, or {@code null} if the provider does not supply the executor.
      */
     public ExecutorService getRequestingExecutor();
 
-    /**
-     * Get response processing executor.
-     *
-     * This method is called only once at Jersey initialization, before the
-     * first request is processed.
-     *
-     * @return response processing executor, or {@code null} if the default
-     *     executor should be used.
-     */
-    public ExecutorService getRespondingExecutor();
+
 }

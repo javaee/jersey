@@ -59,16 +59,8 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.ProcessingExecutorsFactory;
-import org.glassfish.jersey.process.internal.ProcessingModule;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule;
@@ -125,7 +117,7 @@ public class ServerModule extends AbstractModule {
         @Inject
         private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private ProcessingExecutorsFactory executorsFactory;
+        private ServerExecutorsFactory executorsFactory;
 
         /**
          * Build a new {@link org.glassfish.jersey.process.internal.RequestInvoker request invoker} configured to use
@@ -162,6 +154,7 @@ public class ServerModule extends AbstractModule {
         }
 
     }
+
 
     /**
      * Injection-enabled client side {@link ResponseProcessor} instance builder.
@@ -226,7 +219,8 @@ public class ServerModule extends AbstractModule {
                 new RouterModule(),
                 new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceModule(),
-                new SingletonResourceBinder.SingletonResourceBinderModule());
+                new SingletonResourceBinder.SingletonResourceBinderModule(),
+                new ServerExecutorsFactory.ServerExecutorModule());
 
         // Request/Response injection interfaces
         bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);

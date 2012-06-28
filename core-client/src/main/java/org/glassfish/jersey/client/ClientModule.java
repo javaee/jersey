@@ -57,16 +57,7 @@ import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.ProcessingExecutorsFactory;
-import org.glassfish.jersey.process.internal.ProcessingModule;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.Factory;
@@ -110,7 +101,7 @@ class ClientModule extends AbstractModule {
         @Inject
         private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private ProcessingExecutorsFactory executorsFactory;
+        private ClientExecutorsFactory executorsFactory;
 
         /**
          * Build a new {@link RequestInvoker request invoker} configured to use
@@ -150,6 +141,7 @@ class ClientModule extends AbstractModule {
         }
 
     }
+
 
     /**
      * Injection-enabled client side {@link ResponseProcessor} instance builder.
@@ -210,7 +202,8 @@ class ClientModule extends AbstractModule {
                 new ContextResolverFactory.Module(RequestScope.class),
                 new JaxrsProviders.Module(),
                 new ClientFilteringStage.Module(),
-                new ExceptionWrapperInterceptor.Module());
+                new ExceptionWrapperInterceptor.Module(),
+                new ClientExecutorsFactory.ClientExecutorModule());
 
         bind(javax.ws.rs.client.Configuration.class)
                 .toFactory(ConfigurationInjectionFactory.class)
@@ -238,5 +231,7 @@ class ClientModule extends AbstractModule {
 
         bind(new TypeLiteral<ResponseProcessor.Builder<ClientResponse>>() {
         }).to(ResponseProcessorBuilder.class).in(Singleton.class);
+
+
     }
 }

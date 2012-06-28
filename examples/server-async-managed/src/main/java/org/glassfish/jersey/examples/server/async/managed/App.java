@@ -49,9 +49,10 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.json.JsonJacksonModule;
-import org.glassfish.jersey.process.ProcessingExecutorsModule;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.ProcessingExecutorsProvider;
+import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
+import org.glassfish.jersey.spi.RequestExecutorsProvider;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -75,9 +76,9 @@ public class App {
 
             System.out.println(String.format(
                     "Application started.\n"
-                    + "To test long-running asynchronous operation resource, try %s%s\n"
-                    + "To test async chat resource, try %s%s\n"
-                    + "Hit enter to stop it...",
+                            + "To test long-running asynchronous operation resource, try %s%s\n"
+                            + "To test async chat resource, try %s%s\n"
+                            + "Hit enter to stop it...",
                     BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH,
                     BASE_URI, "chat"));
             System.in.read();
@@ -90,23 +91,19 @@ public class App {
 
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
+                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class, RequestExecProvider.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
                 .addModules(new JsonJacksonModule())
-                .addModules(new ProcessingExecutorsModule(new ProcessingExecutorsProvider() {
-
-                    @Override
-                    public ExecutorService getRequestingExecutor() {
-                        return Executors.newCachedThreadPool(
-                                new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
-                    }
-
-                    @Override
-                    public ExecutorService getRespondingExecutor() {
-                        return null;
-                    }
-                }));
+                .addModules(new ServerExecutorsFactory.ServerExecutorModule());
 
         return resourceConfig;
+    }
+
+    public static class RequestExecProvider implements RequestExecutorsProvider {
+        @Override
+        public ExecutorService getRequestingExecutor() {
+            return Executors.newCachedThreadPool(
+                    new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
+        }
     }
 }
