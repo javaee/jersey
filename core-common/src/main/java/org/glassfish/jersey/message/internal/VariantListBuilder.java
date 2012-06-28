@@ -58,11 +58,14 @@ public class VariantListBuilder extends Variant.VariantListBuilder {
     private List<Variant> variants;
     private final List<MediaType> mediaTypes = new ArrayList<MediaType>();
     private final List<Locale> languages = new ArrayList<Locale>();
-    private final List<String> charsets = new ArrayList<String>();
     private final List<String> encodings = new ArrayList<String>();
 
     @Override
     public List<Variant> build() {
+        if (!mediaTypes.isEmpty() || !languages.isEmpty() || !encodings.isEmpty()) {
+            // if current state is not empty, add combinations to the variant list
+            add();
+        }
         if (variants == null) {
             variants = new ArrayList<Variant>();
         }
@@ -78,7 +81,6 @@ public class VariantListBuilder extends Variant.VariantListBuilder {
 
         addMediaTypes();
 
-        charsets.clear();
         languages.clear();
         encodings.clear();
         mediaTypes.clear();
