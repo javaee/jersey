@@ -98,7 +98,7 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
      * Convenience method to see if there were fatal issues found.
      *
      * @return {@code true} if there are any fatal issues present in the current
-     *     issue list.
+     *         issue list.
      */
     public boolean fatalIssuesFound() {
         for (ResourceModelIssue issue : getIssueList()) {

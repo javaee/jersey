@@ -220,7 +220,8 @@ public class StringReaderTest extends AbstractTest {
         }
     }
 
-    public static class CookieExceptionMapper extends BaseExceptionMapper<ParamException.CookieParamException> {
+    public static class
+            CookieExceptionMapper extends BaseExceptionMapper<ParamException.CookieParamException> {
         public Response toResponse(ParamException.CookieParamException exception) {
             return toResponse(exception, "cookie");
         }

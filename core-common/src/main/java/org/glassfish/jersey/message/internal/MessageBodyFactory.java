@@ -57,7 +57,6 @@ import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -66,8 +65,8 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparator;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
@@ -80,6 +79,7 @@ import org.glassfish.jersey.process.internal.RequestScope;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Scope;
+import org.glassfish.hk2.Services;
 import org.glassfish.hk2.TypeLiteral;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -152,7 +152,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final ServiceProviders serviceProviders;
+    private final Services services;
     private Map<MediaType, List<MessageBodyReader>> readerProviders;
     private Map<MediaType, List<MessageBodyWriter>> writerProviders;
     private List<MessageBodyReaderPair> readerListProviders;
@@ -161,16 +161,16 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private Map<MediaType, List<MessageBodyWriter>> customWriterProviders;
     private List<MessageBodyReaderPair> customReaderListProviders;
     private List<MessageBodyWriterPair> customWriterListProviders;
-    private Set<ReaderInterceptor> readerInterceptors;
-    private Set<WriterInterceptor> writerInterceptors;
+    private List<ReaderInterceptor> readerInterceptors;
+    private List<WriterInterceptor> writerInterceptors;
 
     @Override
-    public Set<ReaderInterceptor> getReaderInterceptors() {
+    public List<ReaderInterceptor> getReaderInterceptors() {
         return readerInterceptors;
     }
 
     @Override
-    public Set<WriterInterceptor> getWriterInterceptors() {
+    public List<WriterInterceptor> getWriterInterceptors() {
         return writerInterceptors;
     }
 
@@ -196,8 +196,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    public MessageBodyFactory(ServiceProviders serviceProviders) {
-        this.serviceProviders = serviceProviders;
+    public MessageBodyFactory(Services services) {
+        this.services = services;
 
         initReaders();
         initWriters();
@@ -256,8 +256,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private void initInterceptors() {
-        this.readerInterceptors = serviceProviders.getAll(ReaderInterceptor.class);
-        this.writerInterceptors = serviceProviders.getAll(WriterInterceptor.class);
+        this.readerInterceptors = Providers.getAllProviders(services, ReaderInterceptor.class);
+        this.writerInterceptors = Providers.getAllProviders(services, WriterInterceptor.class);
     }
 
     private void initReaders() {
@@ -268,8 +268,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 MEDIA_TYPE_COMPARATOR);
         this.readerListProviders = new ArrayList<MessageBodyReaderPair>();
 
-        initReaders(customReaderProviders, customReaderListProviders, serviceProviders.getCustom(MessageBodyReader.class));
-        initReaders(readerProviders, readerListProviders, serviceProviders.getDefault(MessageBodyReader.class));
+        initReaders(customReaderProviders, customReaderListProviders, Providers.getCustomProviders(services, MessageBodyReader
+                .class));
+        initReaders(readerProviders, readerListProviders, Providers.getProviders(services, MessageBodyReader.class));
     }
 
     private void initReaders(Map<MediaType, List<MessageBodyReader>> mediaToProvidersMap,
@@ -305,8 +306,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 MEDIA_TYPE_COMPARATOR);
         this.writerListProviders = new ArrayList<MessageBodyWriterPair>();
 
-        initWriters(customWriterProviders, customWriterListProviders, serviceProviders.getCustom(MessageBodyWriter.class));
-        initWriters(writerProviders, writerListProviders, serviceProviders.getDefault(MessageBodyWriter.class));
+        initWriters(customWriterProviders, customWriterListProviders, Providers.getCustomProviders(services, MessageBodyWriter.class));
+        initWriters(writerProviders, writerListProviders, Providers.getProviders(services, MessageBodyWriter.class));
     }
 
     private void initWriters(Map<MediaType, List<MessageBodyWriter>> mediaToProvidersMap,

@@ -50,8 +50,8 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
@@ -59,6 +59,7 @@ import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -109,12 +110,15 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         }
     };
 
+
     /**
      * Injectable container filtering stage builder.
      */
     static class Builder {
+
         @Inject
-        private Factory<ServiceProviders> servicesProvidersFactory;
+        Services services;
+
         @Inject
         private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
@@ -138,45 +142,44 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
          * @return new container filtering stage.
          */
         public ContainerFilteringStage build(boolean preMatch) {
-            return new ContainerFilteringStage(servicesProvidersFactory, respondingContextFactory, preMatch);
+            return new ContainerFilteringStage(respondingContextFactory, services, preMatch);
         }
 
     }
 
-    private final Factory<ServiceProviders> servicesProvidersFactory;
     private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+    private Services services;
     private final boolean preMatch;
 
     /**
      * Injection constructor.
      *
-     * @param servicesProvidersFactory service providers factory.
+     * @param services                 HK2 services.
      * @param respondingContextFactory responding context factory.
      * @param preMatch                 if {@code true} a pre-match filtering stage is built, otherwise
      *                                 post-match stage is build.
      */
     private ContainerFilteringStage(
-            Factory<ServiceProviders> servicesProvidersFactory,
             Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
+            Services services,
             boolean preMatch) {
 
-        this.servicesProvidersFactory = servicesProvidersFactory;
+        this.services = services;
         this.respondingContextFactory = respondingContextFactory;
         this.preMatch = preMatch;
     }
 
     @Override
     public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
-        final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
-        final List<ContainerResponseFilter> responseFilters = serviceProviders.getAll(
+        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(services,
                 ContainerResponseFilter.class,
                 new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
         if (!responseFilters.isEmpty()) {
             respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
 
-        Iterable<ContainerRequestFilter> requestFilters = serviceProviders.getAll(
+        Iterable<ContainerRequestFilter> requestFilters = Providers.getAllProviders(services,
                 ContainerRequestFilter.class, new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
 
         if (preMatch) {

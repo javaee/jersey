@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +64,9 @@ import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.internal.ServiceProviders;
+import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
@@ -73,17 +75,19 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
+import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.BasicValidator;
+import org.glassfish.jersey.server.model.MethodHandler;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -98,14 +102,13 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Module;
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.scopes.PerLookup;
 import org.glassfish.hk2.scopes.Singleton;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * Jersey server-side application handler.
@@ -152,8 +155,6 @@ public final class ApplicationHandler {
     private static class References {
 
         @Inject
-        private Ref<ServiceProviders> providers;
-        @Inject
         private Ref<ExceptionMappers> mappers;
         @Inject
         private Ref<MessageBodyWorkers> workers;
@@ -191,10 +192,11 @@ public final class ApplicationHandler {
         }
     }
 
-    @Inject
-    private RequestScope requestScope;
+
     @Inject
     private Factory<CloseableService> closeableServiceFactory;
+
+
     //
     private Services services;
     /**
@@ -202,7 +204,6 @@ public final class ApplicationHandler {
      */
     private RequestInvoker<ContainerRequest, ContainerResponse> invoker;
     private final ResourceConfig configuration;
-    private References refs;
 
     /**
      * Create a new Jersey application handler using a default configuration.
@@ -271,7 +272,6 @@ public final class ApplicationHandler {
         configuration.lock();
 
         final List<ResourceModelIssue> resourceModelIssues = Lists.newLinkedList();
-
         final Map<String, Resource.Builder> pathToResourceBuilderMap = Maps.newHashMap();
         final List<Resource.Builder> resourcesBuilders = new LinkedList<Resource.Builder>();
         for (Class<?> c : configuration.getClasses()) {
@@ -304,35 +304,21 @@ public final class ApplicationHandler {
         }
 
         final Injector injector = services.forContract(Injector.class).get();
-        this.refs = injector.inject(References.class);
+        References refs = injector.inject(References.class);
 
-        final ServiceProviders providers = services.forContract(ServiceProviders.Builder.class).get()
-                .setProviderClasses(Sets.filter(configuration.getClasses(), new Predicate<Class<?>>() {
+        registerProvidersAndSingletonResources();
 
-                    @Override
-                    public boolean apply(Class<?> input) {
-                        final boolean acceptable = Resource.isAcceptable(input);
-                        if (!acceptable) {
-                            LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(input));
-                        }
-                        return acceptable;
-                    }
-                }))
-                .setProviderInstances(configuration.getSingletons()).build();
-        this.refs.providers.set(providers);
-
-        final MessageBodyFactory workers = new MessageBodyFactory(providers);
-        this.refs.workers.set(workers);
-        this.refs.mappers.set(new ExceptionMapperFactory(providers));
-        this.refs.resolvers.set(new ContextResolverFactory(providers));
+        final MessageBodyFactory workers = new MessageBodyFactory(services);
+        refs.workers.set(workers);
+        refs.mappers.set(new ExceptionMapperFactory(services));
+        refs.resolvers.set(new ContextResolverFactory(services));
 
         List<Resource> resources = buildAndValidate(resourcesBuilders, resourceModelIssues, workers);
 
-        final RuntimeModelBuilder runtimeModelBuilder =
-                services.byType(RuntimeModelBuilder.class).get();
+        final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
         runtimeModelBuilder.setWorkers(workers);
-        for (Resource r : resources) {
-            runtimeModelBuilder.process(r);
+        for (Resource resource : resources) {
+            runtimeModelBuilder.process(resource);
         }
 
         // assembly request processing chain
@@ -367,6 +353,74 @@ public final class ApplicationHandler {
         injector.inject(this);
     }
 
+    private void registerProvidersAndSingletonResources() {
+        final ProviderBinder providers = services.forContract(ProviderBinder.class).get();
+        SingletonResourceBinder singletonResourceBinder = services.byType(SingletonResourceBinder.class).get();
+
+        Set<Class<?>> cleanProviders = new HashSet<Class<?>>();
+        Set<Class<?>> cleanResources = new HashSet<Class<?>>();
+        Set<Class<?>> resourcesAndProviders = new HashSet<Class<?>>();
+
+
+        for (Class<?> clazz : configuration.getClasses()) {
+            if (!Resource.isAcceptable(clazz)) {
+                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(clazz));
+                continue;
+            }
+
+            final boolean isProvider = Providers.isProvider(clazz);
+            final boolean isResource = Resource.getPath(clazz) != null;
+
+            if (isProvider && isResource) {
+                resourcesAndProviders.add(clazz);
+            } else if (isProvider) {
+                cleanProviders.add(clazz);
+            } else if (isResource) {
+                cleanResources.add(clazz);
+            }
+        }
+
+
+        for (Resource programmaticResource : configuration.getResources()) {
+
+            if (!programmaticResource.getResourceMethods().isEmpty()) {
+                for (ResourceMethod resourceMethod : programmaticResource.getResourceMethods()) {
+                    MethodHandler handler = resourceMethod.getInvocable().getHandler();
+                    if (!handler.isClassBased()) {
+                        continue;
+                    }
+                    Class<?> handlerClass = handler.getHandlerClass();
+                    if (handlerClass != null) {
+                        if (cleanProviders.contains(handlerClass)) {
+                            cleanProviders.remove(handlerClass);
+                            resourcesAndProviders.add(handlerClass);
+                        } else if (cleanResources.contains(handlerClass)) {
+
+                        } else if (resourcesAndProviders.contains(handlerClass)) {
+
+                        } else {
+                            cleanResources.add(handlerClass);
+                        }
+                    }
+                }
+            }
+        }
+
+        providers.bindClasses(cleanProviders);
+        providers.bindClasses(resourcesAndProviders, true);
+        for (Class<?> res : cleanResources) {
+            if (!res.isAnnotationPresent(org.glassfish.jersey.spi.Singleton.class)) {
+                DynamicBinderFactory bf = services.bindDynamically();
+                bf.bind().to(res).in(PerLookup.class);
+                bf.commit();
+            } else {
+                singletonResourceBinder.bindResourceClassAsSingleton(res);
+            }
+        }
+
+        providers.bindInstances(configuration.getSingletons());
+    }
+
     private Application createApplication(Class<? extends Application> applicationClass) {
         // need to handle ResourceConfig and Application separately as invoking forContract() on these
         // will trigger the factories which we don't want at this point
@@ -393,7 +447,8 @@ public final class ApplicationHandler {
         dynamicBinderFactory.commit();
     }
 
-    private List<Resource> buildAndValidate(List<Resource.Builder> resources, List<ResourceModelIssue> modelIssues, MessageBodyWorkers workers) {
+    private List<Resource> buildAndValidate(List<Resource.Builder> resources, List<ResourceModelIssue> modelIssues,
+                                            MessageBodyWorkers workers) {
         final List<Resource> result = new ArrayList<Resource>(resources.size());
 
         ResourceModelValidator validator = new BasicValidator(modelIssues, workers);
@@ -465,7 +520,7 @@ public final class ApplicationHandler {
      * @return response future.
      */
     public Future<ContainerResponse> apply(final ContainerRequest requestContext,
-                                                        final OutputStream outputStream) {
+                                           final OutputStream outputStream) {
         requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
         requestContext.setWriter(new ContainerResponseWriter() {
             @Override
@@ -677,6 +732,7 @@ public final class ApplicationHandler {
         }
     }
 
+
     private void writeResponse(
             final ContainerRequest requestContext,
             final ContainerResponse responseContext) {
@@ -746,15 +802,6 @@ public final class ApplicationHandler {
      */
     public Services getServices() {
         return services;
-    }
-
-    /**
-     * Get the service providers configured for the application.
-     *
-     * @return application service providers.
-     */
-    public ServiceProviders getServiceProviders() {
-        return refs.providers.get();
     }
 
     /**

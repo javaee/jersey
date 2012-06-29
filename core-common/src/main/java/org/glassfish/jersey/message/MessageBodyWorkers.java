@@ -46,7 +46,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -227,14 +226,14 @@ public interface MessageBodyWorkers {
      *
      * @return Reader interceptors.
      */
-    public Set<ReaderInterceptor> getReaderInterceptors();
+    public List<ReaderInterceptor> getReaderInterceptors();
 
     /**
      * Returns global writer interceptors.
      *
      * @return Writer interceptors.
      */
-    public Set<WriterInterceptor> getWriterInterceptors();
+    public List<WriterInterceptor> getWriterInterceptors();
 
     /**
      * Reads a type from the {@link InputStream entityStream} using interceptors. If the

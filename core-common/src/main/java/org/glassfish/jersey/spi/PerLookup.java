@@ -37,26 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 
 /**
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * Used to annotate resources require new instance for each usage.
+ *
+ * Resources are managed in the per lookup scope by default except when they are
+ * also providers (for example {@link javax.ws.rs.container.ContainerRequestFilter
+ * container request filters}). In this case class which is both, provider and
+ * resource class, will be bound as singletons. Annotating such resource provider
+ * class with the {@link PerLookup &#64;PerLookup} annotation with override this
+ * behaviour and a new instance will be created whenever the resource class is looked
+ * up in HK2. However, the class might still be managed as a separate singleton
+ * provider.
  */
-@Path("reload")
-public class ReloadResource {
-
-    @GET
-    @Produces("text/plain")
-    public String get() {
-        ReloadContainerLifecycleListener.container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class,
-                ReloadContainerLifecycleListener.class));
-        return "Reload resource";
-    }}
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface PerLookup {
+}

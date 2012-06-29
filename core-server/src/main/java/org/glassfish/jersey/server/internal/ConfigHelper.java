@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.server.internal;
 
-import java.util.Set;
+import java.util.List;
 
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
@@ -53,7 +54,9 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
  */
 public final class ConfigHelper {
 
-    private static final ContainerLifecycleListener EMPTY_CONTAINER_LIFECYCLE_LISTENER = new AbstractContainerLifecycleListener() {};
+    private static final ContainerLifecycleListener EMPTY_CONTAINER_LIFECYCLE_LISTENER =
+            new AbstractContainerLifecycleListener() {
+            };
 
     /**
      * Provides a single ContainerLifecycleListener instance based on the {@link ApplicationHandler application} configuration.
@@ -65,7 +68,8 @@ public final class ConfigHelper {
      */
     public static ContainerLifecycleListener getContainerLifecycleListener(final ApplicationHandler applicationHandler) {
 
-        final Set<ContainerLifecycleListener> listeners = applicationHandler.getServiceProviders().getAll(ContainerLifecycleListener.class);
+        final List<ContainerLifecycleListener> listeners = Providers.getAllProviders(applicationHandler.getServices(),
+                ContainerLifecycleListener.class);
         return listeners.isEmpty() ? EMPTY_CONTAINER_LIFECYCLE_LISTENER : new ContainerLifecycleListener() {
 
             @Override

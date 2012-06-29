@@ -50,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.Suspend;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
@@ -349,7 +348,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
 
         /**
          * Define an inflector-based resource method handler binding.
-         *
          *
          * @param inflector inflector handling the resource method.
          * @return updated builder object.

@@ -45,8 +45,8 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +64,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -123,8 +124,8 @@ public class WebComponent {
 
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
 
-        final Set<AsyncContextDelegateProvider> providers =
-                appHandler.getServiceProviders().getAll(AsyncContextDelegateProvider.class);
+        final List<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServices(),
+                AsyncContextDelegateProvider.class);
         if (!providers.isEmpty()) {
             return providers.iterator().next();
         }

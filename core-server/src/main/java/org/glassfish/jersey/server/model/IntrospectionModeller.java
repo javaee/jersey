@@ -78,10 +78,10 @@ final class IntrospectionModeller {
      * Create a new introspection modeller for a given JAX-RS resource class.
      *
      * @param handlerClass JAX-RS resource (handler) class.
-     * @param issueList a mutable list of resource model issues that will be updated
-     *                  with any introspection validation issues found on the resource
-     *                  handler class during the {@link Resource.Builder resource builder}
-     *                  initialization.
+     * @param issueList    a mutable list of resource model issues that will be updated
+     *                     with any introspection validation issues found on the resource
+     *                     handler class during the {@link Resource.Builder resource builder}
+     *                     initialization.
      */
     public IntrospectionModeller(Class<?> handlerClass, List<ResourceModelIssue> issueList) {
         this.handlerClass = handlerClass;
@@ -117,7 +117,7 @@ final class IntrospectionModeller {
         final MethodList methodList = new MethodList(handlerClass);
 
         checkResourceClassSetters(methodList, keepEncodedParams);
-        checkResourceClassFields(keepEncodedParams);
+        checkResourceClassFields(keepEncodedParams, BasicValidator.isSingleton(handlerClass));
 
         Resource.Builder resourceBuilder;
 
@@ -177,12 +177,13 @@ final class IntrospectionModeller {
                     method.getGenericParameterTypes()[0],
                     method.getAnnotations());
             if (null != p) {
-                BasicValidator.validateParameter(issueList, p, method.getMethod(), method.getMethod().toGenericString(), "1");
+                BasicValidator.validateParameter(issueList, p, method.getMethod(), method.getMethod().toGenericString(), "1",
+                        BasicValidator.isSingleton(handlerClass));
             }
         }
     }
 
-    private void checkResourceClassFields(final boolean encodedFlag) {
+    private void checkResourceClassFields(final boolean encodedFlag, boolean isInSingleton) {
         for (Field field : handlerClass.getDeclaredFields()) {
             if (field.getDeclaredAnnotations().length > 0) {
                 Parameter p = Parameter.create(
@@ -193,7 +194,7 @@ final class IntrospectionModeller {
                         field.getGenericType(),
                         field.getAnnotations());
                 if (null != p) {
-                    BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName());
+                    BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName(), isInSingleton);
                 }
             }
         }
@@ -290,10 +291,10 @@ final class IntrospectionModeller {
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withoutAnnotation(Path.class)) {
             ResourceMethod.Builder methodBuilder =
                     resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
-                    .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
-                    .produces(resolveProducedTypes(am, defaultProducedTypes))
-                    .encodedParameters(encodedParameters)
-                    .handledBy(handlerClass, am.getMethod());
+                            .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
+                            .produces(resolveProducedTypes(am, defaultProducedTypes))
+                            .encodedParameters(encodedParameters)
+                            .handledBy(handlerClass, am.getMethod());
 
             declareSuspend(am, methodBuilder);
         }
@@ -309,11 +310,11 @@ final class IntrospectionModeller {
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
             ResourceMethod.Builder methodBuilder =
                     resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
-                    .path(am.getAnnotation(Path.class).value())
-                    .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
-                    .produces(resolveProducedTypes(am, defaultProducedTypes))
-                    .encodedParameters(encodedParameters)
-                    .handledBy(handlerClass, am.getMethod());
+                            .path(am.getAnnotation(Path.class).value())
+                            .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
+                            .produces(resolveProducedTypes(am, defaultProducedTypes))
+                            .encodedParameters(encodedParameters)
+                            .handledBy(handlerClass, am.getMethod());
 
             declareSuspend(am, methodBuilder);
         }
@@ -325,8 +326,7 @@ final class IntrospectionModeller {
             boolean encodedParameters) {
 
         for (AnnotatedMethod am : methodList.withoutMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
-            ResourceMethod.Builder methodBuilder =
-                    resourceBuilder.addMethod().path(am.getAnnotation(Path.class).value())
+            resourceBuilder.addMethod().path(am.getAnnotation(Path.class).value())
                     .encodedParameters(encodedParameters)
                     .handledBy(handlerClass, am.getMethod());
         }

@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Produces;
@@ -52,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -64,6 +64,7 @@ import org.glassfish.jersey.spi.ContextResolvers;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Scope;
+import org.glassfish.hk2.Services;
 import org.glassfish.hk2.TypeLiteral;
 
 import org.jvnet.hk2.annotations.Inject;
@@ -122,17 +123,16 @@ public class ContextResolverFactory implements ContextResolvers {
     private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache = Maps.newHashMapWithExpectedSize(3);
 
     /**
-     * Create new context resolver factory backed by the supplied {@link ServiceProviders
+     * Create new context resolver factory backed by the supplied {@link ProviderBinder
      * service providers}.
      *
-     * @param serviceProviders service providers backing the context resolver factory.
+     * @param services HK2 services.
      */
-    public ContextResolverFactory(ServiceProviders serviceProviders) {
+    public ContextResolverFactory(Services services) {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        Set<ContextResolver> providers =
-                serviceProviders.getAll(ContextResolver.class);
+        List<ContextResolver> providers = Providers.getAllProviders(services, ContextResolver.class);
         for (ContextResolver provider : providers) {
             List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 

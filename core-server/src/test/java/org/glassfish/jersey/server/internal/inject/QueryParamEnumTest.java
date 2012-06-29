@@ -50,7 +50,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */

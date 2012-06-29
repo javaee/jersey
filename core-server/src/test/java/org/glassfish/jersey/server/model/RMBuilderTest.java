@@ -50,7 +50,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -112,12 +111,10 @@ public class RMBuilderTest {
     public void setupApplication() {
         Services services = HK2.get().create(null, new ServerModule());
 
-        final Ref<ServiceProviders> providers = services.forContract(new TypeLiteral<Ref<ServiceProviders>>(){}).get();
-        providers.set(services.forContract(ServiceProviders.Builder.class).get().build());
         final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
-        workers.set(new MessageBodyFactory(providers.get()));
+        workers.set(new MessageBodyFactory(services));
         final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
-        mappers.set(new ExceptionMapperFactory(providers.get()));
+        mappers.set(new ExceptionMapperFactory(services));
 
         Injector injector = services.forContract(Injector.class).get();
         injector.inject(this);

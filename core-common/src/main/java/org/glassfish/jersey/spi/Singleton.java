@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,26 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 
 /**
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * Specifies a singleton lifecycle for a resource annotated with this annotation.
+ * <p>
+ * By default, the resource classes are managed in a {@link PerLookup per lookup}
+ * scope which means that a new instance is created for each request. Annotating
+ * the class with the {@code &#64;Singleton} annotation overrides this behaviour
+ * in a sense that only one single instance is used to handle all the requests.
+ * Such resources should be implemented as thread safe and must not inject
+ * non-proxiable request-scoped components (e.g. {@link javax.ws.rs.HeaderParam})
+ * into class fields or constructors.
+ * </p>
+ * <p>
+ * For example, the following resource will not pass the model validation:
+ * </p>
+ * <pre>
+ *  &#064;Singeton
+ *  public class SingletonResource {
+ *      // Injection of path param into a field of a singleton resource
+ *      // is not allowed. Model validation error will occur.
+ *      &#064;PathParam("p")
+ *      String pParam;
+ *
+ *      &#064;GET
+ *      public String get() {
+ *          return "GET";
+ *      }
+ *  }
+ * </pre>
  */
-@Path("reload")
-public class ReloadResource {
-
-    @GET
-    @Produces("text/plain")
-    public String get() {
-        ReloadContainerLifecycleListener.container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class,
-                ReloadContainerLifecycleListener.class));
-        return "Reload resource";
-    }}
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Singleton {
+}

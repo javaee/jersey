@@ -55,6 +55,8 @@ import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerRequest;
 
+import org.glassfish.hk2.Factory;
+
 import org.jvnet.hk2.annotations.Inject;
 
 /**
@@ -69,7 +71,7 @@ import org.jvnet.hk2.annotations.Inject;
 public class SecurityFilter implements ContainerRequestFilter {
 
     @Inject
-    UriInfo uriInfo;
+    Factory<UriInfo> uriInfo;
     private static final String REALM = "HTTPS Example authentication";
 
     @Inject
@@ -83,7 +85,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     private User authenticate(Request request) {
         // Extract authentication credentials
-        String authentication = ((ContainerRequest)request).getHeaderString(HttpHeaders.AUTHORIZATION);
+        String authentication = ((ContainerRequest) request).getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authentication == null) {
             throw new AuthenticationException("Authentication credentials are required", REALM);
         }
@@ -93,7 +95,7 @@ public class SecurityFilter implements ContainerRequestFilter {
             // "Only HTTP Basic authentication is supported"
         }
         authentication = authentication.substring("Basic ".length());
-        String[] values = new String(Base64.decodeAsString(authentication)).split(":");
+        String[] values = Base64.decodeAsString(authentication).split(":");
         if (values.length < 2) {
             throw new WebApplicationException(400);
             // "Invalid syntax for username and password"
@@ -106,7 +108,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         }
 
         // Validate the extracted credentials
-        User user = null;
+        User user;
 
         if (username.equals("user") && password.equals("password")) {
             user = new User("user", "user");
@@ -145,7 +147,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         }
 
         public boolean isSecure() {
-            return "https".equals(uriInfo.getRequestUri().getScheme());
+            return "https".equals(uriInfo.get().getRequestUri().getScheme());
         }
 
         public String getAuthenticationScheme() {

@@ -41,8 +41,10 @@ package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.internal.ServiceProviders;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.spi.ContainerProvider;
+
+import org.glassfish.hk2.Services;
 
 /**
  * Factory for creating specific HTTP-based containers.
@@ -65,8 +67,8 @@ public final class ContainerFactory {
      * <p>
      *
      * @param <T> container type
-     * @param type
-     * @param application
+     * @param type Type of the container
+     * @param application Jersey application.
      * @return the container.
      * @throws ContainerException if there is an error creating the container.
      * @throws IllegalArgumentException if no container provider supports the type.
@@ -76,15 +78,15 @@ public final class ContainerFactory {
 
         ApplicationHandler handler = new ApplicationHandler(application);
 
-        final ServiceProviders serviceProviders = handler.getServiceProviders();
-        for (ContainerProvider cp : serviceProviders.getCustom(ContainerProvider.class)) {
+        final Services services = handler.getServices();
+        for (ContainerProvider cp : Providers.getCustomProviders(services, ContainerProvider.class)) {
             T c = cp.createContainer(type, handler);
             if (c != null) {
                 return c;
             }
         }
 
-        for (ContainerProvider cp : serviceProviders.getDefault(ContainerProvider.class)) {
+        for (ContainerProvider cp : Providers.getProviders(services, ContainerProvider.class)) {
             T c = cp.createContainer(type, handler);
             if (c != null) {
                 return c;

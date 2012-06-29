@@ -37,72 +37,73 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.model.MethodHandler;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.glassfish.hk2.Factory;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.spi.Singleton;
+
+import org.glassfish.hk2.DynamicBinderFactory;
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.inject.Injector;
 
 import org.jvnet.hk2.annotations.Inject;
 
 /**
- * Terminal router that pushes the matched method's handler instance to the stack
- * returned by {@link javax.ws.rs.core.UriInfo#getMatchedResources()} method.
+ * Class used to bind singleton resources classes into HK2.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class PushMethodHandlerRouter implements Router {
+public class SingletonResourceBinder {
+    private Set<Class<?>> registeredClasses = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+    private final Object lock = new Object();
+
+    @Inject
+    private Injector injector;
+    @Inject
+    private Services services;
 
     /**
-     * An injectable factory of {@link PushMethodHandlerRouter} instances.
+     * Binds {@code resourceClass} into HK2 context as singleton.
+     *
+     * @param <T>           Type of the resource class
+     * @param resourceClass Resource class which should be bound. If the class is not
+     *                      annotated with {@link Singleton Singleton annotation} it
+     *                      will be ignored by this method.
      */
-    static class Builder {
-
-        @Inject
-        private Factory<RoutingContext> routingContextFactory;
-        @Inject
-        private Injector injector;
-        @Inject
-        private Services services;
-
-        /**
-         * Build a new {@link PushMethodHandlerRouter} instance.
-         *
-         * @param methodHandler method handler model providing the method handler
-         *                      instance.
-         * @param next          next router to be invoked after the this one.
-         * @return new {@code PushMethodHandlerRouter} instance.
-         */
-        public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next) {
-            return new PushMethodHandlerRouter(routingContextFactory, services, methodHandler, next);
+    public <T> void bindResourceClassAsSingleton(Class<T> resourceClass) {
+        if (registeredClasses.contains(resourceClass)) {
+            return;
         }
 
+        synchronized (lock) {
+            if (registeredClasses.contains(resourceClass)) {
+                return;
+            }
+
+            if (resourceClass.isAnnotationPresent(Singleton.class)) {
+                final DynamicBinderFactory binderFactory = services.bindDynamically();
+                T instance = injector.inject(resourceClass);
+                binderFactory.bind(resourceClass).toInstance(instance);
+                binderFactory.commit();
+            }
+            registeredClasses.add(resourceClass);
+        }
     }
 
-    private final Services services;
-    private final Factory<RoutingContext> routingContextFactory;
-    private final MethodHandler methodHandler;
-    private final Router next;
+    /**
+     * Module which registers {@link SingletonResourceBinder} into HK2.
+     */
+    public static class SingletonResourceBinderModule extends AbstractModule {
 
-    private PushMethodHandlerRouter(
-            final Factory<RoutingContext> routingContextFactory,
-            final Services services,
-            final MethodHandler methodHandler,
-            final Router next) {
-        this.services = services;
-        this.routingContextFactory = routingContextFactory;
-        this.methodHandler = methodHandler;
-        this.next = next;
-    }
-
-    @Override
-    public Continuation apply(final ContainerRequest request) {
-        Object handlerInstance = methodHandler.getInstance(services);
-        routingContextFactory.get().pushMatchedResource(handlerInstance);
-
-        return Continuation.of(request, next);
+        @Override
+        protected void configure() {
+            bind().to(org.glassfish.jersey.server.internal.routing.SingletonResourceBinder.class).in(org.glassfish.hk2.scopes
+                    .Singleton.class);
+        }
     }
 }

@@ -72,7 +72,6 @@ import org.glassfish.hk2.inject.Injector;
  */
 class SubResourceLocatorRouter implements Router {
 
-    private final Services services;
     private final Injector injector;
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
@@ -92,7 +91,6 @@ class SubResourceLocatorRouter implements Router {
             final MessageBodyWorkers workers,
             final ResourceMethod locatorModel) {
         this.injector = injector;
-        this.services = services;
 
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(services, locatorModel.getInvocable());
@@ -110,7 +108,10 @@ class SubResourceLocatorRouter implements Router {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         if (subResource.getClass().isAssignableFrom(Class.class)) {
-            subResource = services.forContract((Class<?>) subResource).get();
+            final Class<?> clazz = (Class<?>) subResource;
+            SingletonResourceBinder singletonResourceFactory = injector.inject(SingletonResourceBinder.class);
+            singletonResourceFactory.bindResourceClassAsSingleton(clazz);
+            subResource = injector.inject(clazz);
         }
 
         // TODO: what to do with the issues?

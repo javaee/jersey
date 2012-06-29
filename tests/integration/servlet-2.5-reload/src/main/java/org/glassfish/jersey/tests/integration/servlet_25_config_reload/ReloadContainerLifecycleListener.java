@@ -37,26 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_config_reload;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 
 /**
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("reload")
-public class ReloadResource {
+@Provider
+public class ReloadContainerLifecycleListener extends AbstractContainerLifecycleListener {
 
-    @GET
-    @Produces("text/plain")
-    public String get() {
-        ReloadContainerLifecycleListener.container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class,
-                ReloadContainerLifecycleListener.class));
-        return "Reload resource";
-    }}
+    static Container container;
+
+    @Override
+    public void onStartup(Container container) {
+        ReloadContainerLifecycleListener.container = container;
+    }
+
+}

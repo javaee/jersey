@@ -47,8 +47,8 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.ServiceProviders;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
@@ -56,6 +56,7 @@ import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
@@ -66,37 +67,35 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
-
-    private final Factory<ServiceProviders> servicesProvidersFactory;
     private final Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
+    private final Services services;
 
     /**
      * Injection constructor.
      *
-     * @param servicesProvidersFactory service providers factory.
+     * @param services                 HK2 services.
      * @param respondingContextFactory responding context factory.
      */
     ClientFilteringStage(
-            @Inject Factory<ServiceProviders> servicesProvidersFactory,
-            @Inject Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory) {
+            @Inject Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
+            @Inject Services services) {
 
-        this.servicesProvidersFactory = servicesProvidersFactory;
+        this.services = services;
         this.respondingContextFactory = respondingContextFactory;
     }
 
 
     @Override
     public Continuation<ClientRequest> apply(ClientRequest requestContext) {
-        final ServiceProviders serviceProviders = servicesProvidersFactory.get();
 
-        final List<ClientResponseFilter> responseFilters = serviceProviders.getAll(
-                ClientResponseFilter.class, new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
+        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(services, ClientResponseFilter.class,
+                new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
         if (!responseFilters.isEmpty()) {
             respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
 
-        final List<ClientRequestFilter> requestFilters = serviceProviders.getAll(
-                ClientRequestFilter.class, new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
+        final List<ClientRequestFilter> requestFilters = Providers.getAllProviders(services, ClientRequestFilter.class,
+                new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
         if (!requestFilters.isEmpty()) {
             for (ClientRequestFilter filter : requestFilters) {
                 try {
