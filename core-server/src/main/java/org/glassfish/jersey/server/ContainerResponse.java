@@ -99,7 +99,7 @@ public class ContainerResponse implements ContainerResponseContext {
              * Add a Vary header using the value computed in the request if present
              * and if the Vary header was not explicitly set in the response already.
              */
-            this.messageContext.header(HttpHeaders.VARY, varyValue);
+            this.messageContext.getHeaders().add(HttpHeaders.VARY, varyValue);
         }
     }
 
@@ -150,99 +150,6 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     /**
-     * Add a new header value.
-     *
-     * @param name  header name.
-     * @param value header value.
-     * @return updated context.
-     */
-    public ContainerResponse header(String name, Object value) {
-        messageContext.header(name, value);
-        return this;
-    }
-
-    /**
-     * Add new header values.
-     *
-     * @param name   header name.
-     * @param values header values.
-     * @return updated context.
-     */
-    public ContainerResponse headers(String name, Object... values) {
-        messageContext.headers(name, values);
-        return this;
-    }
-
-    /**
-     * Add new header values.
-     *
-     * @param name   header name.
-     * @param values header values.
-     * @return updated context.
-     */
-    public ContainerResponse headers(String name, Iterable<?> values) {
-        messageContext.headers(name, values);
-        return this;
-    }
-
-    /**
-     * Add new headers.
-     *
-     * @param headers new headers.
-     * @return updated context.
-     */
-    public ContainerResponse headers(MultivaluedMap<String, Object> headers) {
-        messageContext.headers(headers);
-        return this;
-    }
-
-    /**
-     * Remove a header.
-     *
-     * @param name header name.
-     * @return updated context.
-     */
-    public ContainerResponse remove(String name) {
-        messageContext.remove(name);
-        return this;
-    }
-
-    /**
-     * Replace header values with a new single header value.
-     *
-     * @param name  header name.
-     * @param value new single header value.
-     * @return updated context.
-     */
-    public ContainerResponse replace(String name, Object value) {
-        messageContext.replace(name, value);
-        return this;
-    }
-
-    /**
-     * Replace header values.
-     *
-     * @param name   header name.
-     * @param values new header values.
-     * @return updated context.
-     */
-    public ContainerResponse replace(String name, Iterable<?> values) {
-        messageContext.replace(name, values);
-        return this;
-    }
-
-    /**
-     * Replace all headers.
-     *
-     * @param headers new headers.
-     * @return updated context.
-     */
-    public ContainerResponse replaceAll(MultivaluedMap<String, Object> headers) {
-        messageContext.replaceAll(headers);
-        return this;
-    }
-
-    /**
      * Get a message header as a single string value.
      *
      * Each single header value is converted to String using a
@@ -265,6 +172,11 @@ public class ContainerResponse implements ContainerResponseContext {
     @Override
     public MultivaluedMap<String, Object> getHeaders() {
         return messageContext.getHeaders();
+    }
+
+    //@Override
+    public MultivaluedMap<String, String> getStringHeaders() {
+        return messageContext.getStringHeaders();
     }
 
     @Override

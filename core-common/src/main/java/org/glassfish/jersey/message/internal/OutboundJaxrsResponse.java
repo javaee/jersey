@@ -472,12 +472,12 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         private javax.ws.rs.core.Response.ResponseBuilder header(String name, Object value, boolean single) {
             if (value != null) {
                 if (single) {
-                    context.replace(name, value);
+                    context.getHeaders().putSingle(name, value);
                 } else {
-                    context.header(name, value);
+                    context.getHeaders().add(name, value);
                 }
             } else {
-                context.remove(name);
+                context.getHeaders().remove(name);
             }
             return this;
         }
@@ -524,7 +524,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder replaceAll(MultivaluedMap<String, Object> headers) {
-            context.replaceAll(headers);
+            context.replaceHeaders(headers);
             return this;
         }
 

@@ -290,7 +290,7 @@ public class ResponseTest {
             pass = false;
         }
 
-        MultivaluedMap<String, String> mvp = HeadersFactory.getStringHeaders(
+        MultivaluedMap<String, String> mvp = HeadersFactory.asStringHeaders(
                 resp.getMetadata());
 
 

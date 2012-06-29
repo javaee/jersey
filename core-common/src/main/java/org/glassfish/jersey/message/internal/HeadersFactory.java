@@ -40,9 +40,8 @@
 package org.glassfish.jersey.message.internal;
 
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -74,37 +73,6 @@ public final class HeadersFactory {
     }
 
     /**
-     * Create an inbound message headers container. Created container is mutable
-     * and is initialized with the supplied initial collection of headers.
-     *
-     * @param initial initial collection of headers to be used to initialize the
-     *     created message headers container.
-     * @return a new mutable container for storing inbound message headers
-     *     initialized with the supplied initial collection of headers.
-     */
-    public static AbstractMultivaluedMap<String, String> createInbound(MultivaluedMap<String, String> initial) {
-        AbstractMultivaluedMap<String, String> headers = createInbound();
-        headers.putAll(initial);
-        return headers;
-    }
-
-    /**
-     * Create an inbound message headers container. Created container is mutable
-     * and is initialized with the supplied initial collection of headers supplied
-     * as a {@link Map} of {@code String} keys and {@code List<String>} values.
-     *
-     * @param initial initial collection of headers to be used to initialize the
-     *     created message headers container.
-     * @return a new mutable container for storing inbound message headers
-     *     initialized with the supplied initial collection of headers.
-     */
-    public static AbstractMultivaluedMap<String, String> createInbound(Map<String, List<String>> initial) {
-        AbstractMultivaluedMap<String, String> headers = createInbound();
-        headers.putAll(initial);
-        return headers;
-    }
-
-    /**
      * Get immutable empty message headers container. The factory method can be
      * used to for both message header container types&nbsp;&nbsp;&ndash;&nbsp;&nbsp;inbound
      * as well as outbound.
@@ -127,22 +95,6 @@ public final class HeadersFactory {
     }
 
     /**
-     * Create an outbound message headers container. Created container is mutable
-     * and is initialized with the supplied initial collection of headers supplied
-     * as a {@link Map} of {@code String} keys and {@code List<String>} values.
-     *
-     * @param initial initial collection of headers to be used to initialize the
-     *     created message headers container.
-     * @return a new mutable container for storing outbound message headers
-     *     initialized with the supplied initial collection of headers.
-     */
-    public static AbstractMultivaluedMap<String, Object> createOutbound(Map<String, List<Object>> initial) {
-        AbstractMultivaluedMap<String, Object> headers = createOutbound();
-        headers.putAll(initial);
-        return headers;
-    }
-
-    /**
      * Convert a message header value, represented as a general object, to it's
      * string representation.
      * <p>
@@ -159,7 +111,7 @@ public final class HeadersFactory {
      * @return the string representation of the supplied header value.
      */
     @SuppressWarnings("unchecked")
-    public static String toString(final Object headerValue, RuntimeDelegate rd) {
+    public static String asString(final Object headerValue, RuntimeDelegate rd) {
         if (headerValue instanceof String) {
             return (String) headerValue;
         }
@@ -171,48 +123,83 @@ public final class HeadersFactory {
         return (hp != null) ? hp.toString(headerValue) : headerValue.toString();
     }
 
-    public static List<String> toString(final List<Object> headerValues, final RuntimeDelegate rd) {
-        // Lists#transform returns a list that do not support #add or #set operations so we need to wrap that list to one which
-        // supports these operations.
-        return new LinkedList<String>(Lists.transform(headerValues, new Function<Object, String>() {
-
+    /**
+     * Returns string view of list of header values. Any modifications to the underlying list are visible to the view,
+     * the view also supports removal of elements. Does not support other modifications.
+     *
+     * @param headerValues header values.
+     * @param rd RuntimeDelegate instance (can be passed in as a perf. optimization) or {@code null} (in that case
+     *           {@link RuntimeDelegate#getInstance()} will be called for each element conversion.
+     * @return String view of header values.
+     */
+    public static List<String> asStringList(final List<Object> headerValues, final RuntimeDelegate rd) {
+        if (headerValues == null || headerValues.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Lists.transform(headerValues, new Function<Object, String>() {
             @Override
             public String apply(Object input) {
-                return (input == null) ? "[null]" : HeadersFactory.toString(input, rd);
+                return (input == null) ? "[null]" : HeadersFactory.asString(input, rd);
             }
 
-        }));
+        });
     }
 
-    public static MultivaluedMap<String, String> toString(final MultivaluedMap<String, Object> headers, final RuntimeDelegate rd) {
-        return createInbound(Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
+    /**
+     * Returns string view of passed headers. Any modifications to the headers are visible to the view, the view also
+     * supports removal of elements. Does not support other modifications.
+     *
+     * @param headers headers.
+     * @return String view of headers.
+     */
+    public static MultivaluedMap<String, String> asStringHeaders(final MultivaluedMap<String, Object> headers) {
+        final RuntimeDelegate rd = RuntimeDelegate.getInstance();
+        return new AbstractMultivaluedMap<String, String>(
+                Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
+                    @Override
+                    public List<String> apply(List<Object> input) {
+                        return HeadersFactory.asStringList(input, rd);
+                    }
+                })
+        ) {};
+    }
 
-            @Override
-            public List<String> apply(List<Object> input) {
-                return (input == null) ? Collections.singletonList("[null]") : HeadersFactory.toString(input, rd);
-            }
+    /**
+     * Converts a list of message header values to a single string value (with individual values separated by
+     * {@code ','}).
+     *
+     * Each single header value is converted to String using a
+     * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
+     * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
+     * for the header value class or using its {@code toString()} method if a header
+     * delegate is not available.
+     *
+     * @param values list of individual header values
+     * @param rd RuntimeDelegate instance (can be passed in as a perf. optimization) or {@code null} (in that case
+     *           {@link RuntimeDelegate#getInstance()} will be called for each element conversion.
+     * @return single string consisting of all the values passed in as a parameter. If values parameter is {@code null},
+     *         {@code null} is returned. If the list of values is empty, an empty string is returned.
+     */
+    public static String asHeaderString(List<Object> values, RuntimeDelegate rd) {
+        if (values == null) {
+            return null;
+        }
+        final Iterator<String> stringValues = asStringList(values, rd).iterator();
+        if (!stringValues.hasNext()) {
+            return "";
+        }
 
-        }));
+        StringBuilder buffer = new StringBuilder(stringValues.next());
+        while (stringValues.hasNext()) {
+            buffer.append(',').append(stringValues.next());
+        }
+
+        return buffer.toString();
     }
 
     /**
      * Preventing instantiation
      */
     private HeadersFactory() {
-    }
-
-    /**
-     * Get detached stringified copy of the message headers.
-     *
-     * @return detached stringified copy of the message headers.
-     * @param headers
-     */
-    public static MultivaluedMap<String, String> getStringHeaders(MultivaluedMap<String, Object> headers) {
-        final MultivaluedMap<String, String> stringHeaders = createInbound();
-        if (!headers.isEmpty()) {
-            stringHeaders.putAll(toString(headers, RuntimeDelegate.getInstance()));
-        }
-
-        return stringHeaders;
     }
 }

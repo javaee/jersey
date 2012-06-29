@@ -58,7 +58,6 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
@@ -239,8 +238,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 grizzlyResponse.setStatus(context.getStatus());
                 grizzlyResponse.setContentLengthLong(contentLength);
 
-                for (final Map.Entry<String, List<String>> e : HeadersFactory.getStringHeaders(
-                        context.getHeaders()).entrySet()) {
+                for (final Map.Entry<String, List<String>> e : context.getStringHeaders().entrySet()) {
                     for (final String value : e.getValue()) {
                         grizzlyResponse.addHeader(e.getKey(), value);
                     }

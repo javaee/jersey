@@ -190,7 +190,7 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
             inboundContext.setEntityStream(new ByteArrayInputStream(entityBaos.toByteArray()));
         }
 
-        inboundContext.getHeaders().putAll(HeadersFactory.getStringHeaders(outboundContext.getHeaders()));
+        inboundContext.getHeaders().putAll(outboundContext.getStringHeaders());
     }
 
     private ClientResponse createClientResponseContext(final ClientRequest requestContext,

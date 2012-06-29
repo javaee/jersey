@@ -53,7 +53,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -114,7 +113,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         // the invocation of sendError as on some Servlet implementations
         // modification of the response headers will have no effect
         // after the invocation of sendError.
-        MultivaluedMap<String, String> headers = HeadersFactory.getStringHeaders(getResponseContext().getHeaders());
+        MultivaluedMap<String, String> headers = getResponseContext().getStringHeaders();
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
             for (String v : e.getValue()) {
                 response.addHeader(e.getKey(), v);

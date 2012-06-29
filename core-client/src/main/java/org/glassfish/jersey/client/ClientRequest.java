@@ -212,7 +212,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param types accepted types to be added.
      */
     public void accept(MediaType... types) {
-        headers(HttpHeaders.ACCEPT, (Object[]) types);
+        getHeaders().addAll(HttpHeaders.ACCEPT, (Object[]) types);
     }
 
     /**
@@ -221,7 +221,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param types accepted types to be added.
      */
     public void accept(String... types) {
-        headers(HttpHeaders.ACCEPT, types);
+        getHeaders().addAll(HttpHeaders.ACCEPT, types);
     }
 
     /**
@@ -230,7 +230,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param locales accepted languages to be added.
      */
     public void acceptLanguage(Locale... locales) {
-        headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
+        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
     /**
@@ -239,7 +239,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param locales accepted languages to be added.
      */
     public void acceptLanguage(String... locales) {
-        headers(HttpHeaders.ACCEPT_LANGUAGE, locales);
+        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, locales);
     }
 
     /**
@@ -248,7 +248,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param cookie cookie to be added.
      */
     public void cookie(Cookie cookie) {
-        header(HttpHeaders.COOKIE, cookie);
+        getHeaders().add(HttpHeaders.COOKIE, cookie);
     }
 
     /**
@@ -257,7 +257,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param cacheControl cache control entry to be added.
      */
     public void cacheControl(CacheControl cacheControl) {
-        header(HttpHeaders.CACHE_CONTROL, cacheControl);
+        getHeaders().add(HttpHeaders.CACHE_CONTROL, cacheControl);
     }
 
     /**
@@ -266,7 +266,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param encoding message encoding to be set.
      */
     public void encoding(String encoding) {
-        replace(HttpHeaders.CONTENT_ENCODING, encoding);
+        getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, encoding);
     }
 
     /**
@@ -275,7 +275,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(String language) {
-        replace(HttpHeaders.CONTENT_LANGUAGE, language);
+        getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     }
 
     /**
@@ -284,7 +284,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(Locale language) {
-        replace(HttpHeaders.CONTENT_LANGUAGE, language);
+        getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     }
 
     /**

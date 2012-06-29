@@ -75,8 +75,8 @@ public class OutboundMessageContextTest {
     @Test
     public void testAcceptableMediaTypes() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
-        r.header(HttpHeaders.ACCEPT, "application/json");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/xml, text/plain");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/json");
         assertEquals(r.getAcceptableMediaTypes().size(), 3);
         assertTrue(r.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE));
         assertTrue(r.getAcceptableMediaTypes().contains(MediaType.TEXT_PLAIN_TYPE));
@@ -86,8 +86,8 @@ public class OutboundMessageContextTest {
     @Test
     public void testAcceptableLanguages() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.ACCEPT_LANGUAGE, "en-gb;q=0.8, en;q=0.7");
-        r.header(HttpHeaders.ACCEPT_LANGUAGE, "de");
+        r.getHeaders().add(HttpHeaders.ACCEPT_LANGUAGE, "en-gb;q=0.8, en;q=0.7");
+        r.getHeaders().add(HttpHeaders.ACCEPT_LANGUAGE, "de");
         assertEquals(r.getAcceptableLanguages().size(), 3);
         assertTrue(r.getAcceptableLanguages().contains(Locale.UK));
         assertTrue(r.getAcceptableLanguages().contains(Locale.ENGLISH));
@@ -97,8 +97,8 @@ public class OutboundMessageContextTest {
     @Test
     public void testRequestCookies() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.COOKIE, "oreo=chocolate");
-        r.header(HttpHeaders.COOKIE, "nilla=vanilla");
+        r.getHeaders().add(HttpHeaders.COOKIE, "oreo=chocolate");
+        r.getHeaders().add(HttpHeaders.COOKIE, "nilla=vanilla");
         assertEquals(r.getRequestCookies().size(), 2);
         assertTrue(r.getRequestCookies().containsKey("oreo"));
         assertTrue(r.getRequestCookies().containsKey("nilla"));
@@ -110,7 +110,7 @@ public class OutboundMessageContextTest {
     @Test
     public void testDate() throws URISyntaxException, ParseException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
+        r.getHeaders().add(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(r.getDate(), date);
@@ -119,9 +119,9 @@ public class OutboundMessageContextTest {
     @Test
     public void testHeader() throws URISyntaxException, ParseException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
-        r.header(HttpHeaders.ACCEPT, "application/json");
-        r.header("FOO", "");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/xml, text/plain");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/json");
+        r.getHeaders().add("FOO", "");
         assertTrue(r.getHeaderString(HttpHeaders.ACCEPT).contains("application/xml"));
         assertTrue(r.getHeaderString(HttpHeaders.ACCEPT).contains("text/plain"));
         assertTrue(r.getHeaderString(HttpHeaders.ACCEPT).contains("application/json"));
@@ -132,10 +132,10 @@ public class OutboundMessageContextTest {
     @Test
     public void testHeaderMap() throws URISyntaxException, ParseException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
-        r.header(HttpHeaders.ACCEPT, "application/json");
-        r.header("Allow", "GET, PUT");
-        r.header("Allow", "POST");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/xml, text/plain");
+        r.getHeaders().add(HttpHeaders.ACCEPT, "application/json");
+        r.getHeaders().add("Allow", "GET, PUT");
+        r.getHeaders().add("Allow", "POST");
         assertTrue(r.getHeaders().containsKey(HttpHeaders.ACCEPT));
         assertTrue(r.getHeaders().containsKey("Allow"));
         assertTrue(r.getHeaders().get(HttpHeaders.ACCEPT).contains("application/json"));
@@ -145,8 +145,8 @@ public class OutboundMessageContextTest {
     @Test
     public void testAllowedMethods() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header("Allow", "GET, PUT");
-        r.header("Allow", "POST");
+        r.getHeaders().add("Allow", "GET, PUT");
+        r.getHeaders().add("Allow", "POST");
         assertEquals(3, r.getAllowedMethods().size());
         assertTrue(r.getAllowedMethods().contains("GET"));
         assertTrue(r.getAllowedMethods().contains("PUT"));
@@ -157,8 +157,8 @@ public class OutboundMessageContextTest {
     @Test
     public void testResponseCookies() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.SET_COOKIE, "oreo=chocolate");
-        r.header(HttpHeaders.SET_COOKIE, "nilla=vanilla");
+        r.getHeaders().add(HttpHeaders.SET_COOKIE, "oreo=chocolate");
+        r.getHeaders().add(HttpHeaders.SET_COOKIE, "nilla=vanilla");
         assertEquals(2, r.getResponseCookies().size());
         assertTrue(r.getResponseCookies().containsKey("oreo"));
         assertTrue(r.getResponseCookies().containsKey("nilla"));
@@ -167,14 +167,14 @@ public class OutboundMessageContextTest {
     @Test
     public void testEntityTag() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.ETAG, "\"tag\"");
+        r.getHeaders().add(HttpHeaders.ETAG, "\"tag\"");
         assertEquals(EntityTag.valueOf("\"tag\""), r.getEntityTag());
     }
 
     @Test
     public void testLastModified() throws URISyntaxException, ParseException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.LAST_MODIFIED, "Tue, 29 Jan 2002 22:14:02 -0500");
+        r.getHeaders().add(HttpHeaders.LAST_MODIFIED, "Tue, 29 Jan 2002 22:14:02 -0500");
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
         assertEquals(date, r.getLastModified());
@@ -183,7 +183,7 @@ public class OutboundMessageContextTest {
     @Test
     public void testLocation() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
-        r.header(HttpHeaders.LOCATION, "http://example.org/app");
+        r.getHeaders().add(HttpHeaders.LOCATION, "http://example.org/app");
         assertEquals(URI.create("http://example.org/app"), r.getLocation());
     }
 
@@ -192,8 +192,8 @@ public class OutboundMessageContextTest {
         OutboundMessageContext r = new OutboundMessageContext();
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method", "GET").rel("self").build();
         Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "PUT").rel("self").build();
-        r.header("Link", link1.toString());
-        r.header("Link", link2.toString());
+        r.getHeaders().add("Link", link1.toString());
+        r.getHeaders().add("Link", link2.toString());
         assertEquals(2, r.getLinks().size());
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
@@ -205,9 +205,9 @@ public class OutboundMessageContextTest {
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method", "GET").rel("self").build();
         Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "PUT").rel("update").build();
         Link link3 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "POST").rel("update").build();
-        r.header("Link", link1.toString());
-        r.header("Link", link2.toString());
-        r.header("Link", link3.toString());
+        r.getHeaders().add("Link", link1.toString());
+        r.getHeaders().add("Link", link2.toString());
+        r.getHeaders().add("Link", link3.toString());
         assertTrue(r.getLink("self").equals(link1));
         assertTrue(r.getLink("update").equals(link2) || r.getLink("update").equals(link3));
     }

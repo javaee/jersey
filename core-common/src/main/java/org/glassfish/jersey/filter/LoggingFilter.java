@@ -197,7 +197,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         StringBuilder b = new StringBuilder();
 
         printRequestLine(b, id, context.getMethod(), context.getUri());
-        printPrefixedHeaders(b, id, REQUEST_PREFIX, HeadersFactory.getStringHeaders(context.getHeaders()));
+        // TODO: change to context.getStringHeaders() once the method is added to the API
+        printPrefixedHeaders(b, id, REQUEST_PREFIX, HeadersFactory.asStringHeaders(context.getHeaders()));
 
         if (printEntity && context.hasEntity()) {
             OutputStream stream = new LoggingStream(b, context.getEntityStream());
@@ -245,7 +246,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         StringBuilder b = new StringBuilder();
 
         printResponseLine(b, id, responseContext.getStatus());
-        printPrefixedHeaders(b, id, RESPONSE_PREFIX, HeadersFactory.getStringHeaders(responseContext.getHeaders()));
+        // TODO: change to context.getStringHeaders() once the method is added to the API
+        printPrefixedHeaders(b, id, RESPONSE_PREFIX, HeadersFactory.asStringHeaders(responseContext.getHeaders()));
 
         if (printEntity && responseContext.hasEntity()) {
             OutputStream stream = new LoggingStream(b, responseContext.getEntityStream());

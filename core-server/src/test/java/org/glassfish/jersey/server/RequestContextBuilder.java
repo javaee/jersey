@@ -171,7 +171,7 @@ public class RequestContextBuilder {
     }
 
     public RequestContextBuilder type(MediaType contentType) {
-        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeadersFactory.toString(contentType, rd));
+        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeadersFactory.asString(contentType, rd));
         return this;
     }
 
@@ -195,7 +195,7 @@ public class RequestContextBuilder {
             result.getHeaders().remove(name);
             return;
         }
-        result.header(name, HeadersFactory.toString(value, rd));
+        result.header(name, HeadersFactory.asString(value, rd));
     }
 
     private void putHeaders(String name, Object... values) {
@@ -203,7 +203,7 @@ public class RequestContextBuilder {
             result.getHeaders().remove(name);
             return;
         }
-        result.getHeaders().addAll(name, HeadersFactory.toString(Arrays.asList(values), rd));
+        result.getHeaders().addAll(name, HeadersFactory.asStringList(Arrays.asList(values), rd));
     }
 
     private void putHeaders(String name, String... values) {

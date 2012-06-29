@@ -192,13 +192,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Builder header(String name, Object value) {
-            requestContext.header(name, value);
+            requestContext.getHeaders().add(name, value);
             return this;
         }
 
         @Override
         public Invocation.Builder headers(MultivaluedMap<String, Object> headers) {
-            requestContext.replaceAll(headers);
+            requestContext.replaceHeaders(headers);
             return this;
         }
 

@@ -163,14 +163,14 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<ClientR
 
                         @Override
                         public void commit() throws IOException {
-                            writeOutBoundHeaders(HeadersFactory.getStringHeaders(requestContext.getHeaders()), uc);
+                            writeOutBoundHeaders(requestContext.getStringHeaders(), uc);
                         }
                     };
                 }
 
             });
         } else {
-            writeOutBoundHeaders(HeadersFactory.getStringHeaders(requestContext.getHeaders()), uc);
+            writeOutBoundHeaders(requestContext.getStringHeaders(), uc);
         }
 
         ClientResponse responseContext = new ClientResponse(

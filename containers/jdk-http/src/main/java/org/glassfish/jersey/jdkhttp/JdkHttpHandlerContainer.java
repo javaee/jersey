@@ -229,7 +229,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse context)
                 throws ContainerException {
-            final MultivaluedMap<String, String> responseHeaders = HeadersFactory.getStringHeaders(context.getHeaders());
+            final MultivaluedMap<String, String> responseHeaders = context.getStringHeaders();
             final Headers serverHeaders = exchange.getResponseHeaders();
             for (final Map.Entry<String, List<String>> e : responseHeaders.entrySet()) {
                 for (String value : e.getValue()) {

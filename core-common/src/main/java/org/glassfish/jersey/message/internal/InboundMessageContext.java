@@ -245,12 +245,14 @@ public class InboundMessageContext {
     /**
      * Add a new header value.
      *
+     *
+     *
      * @param name  header name.
      * @param value header value.
      * @return updated context.
      */
     public InboundMessageContext header(String name, Object value) {
-        this.headers.add(name, HeadersFactory.toString(value, RuntimeDelegate.getInstance()));
+        getHeaders().add(name, HeadersFactory.asString(value, RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -262,7 +264,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(String name, Object... values) {
-        this.headers.addAll(name, HeadersFactory.toString(Arrays.asList(values), RuntimeDelegate.getInstance()));
+        this.getHeaders().addAll(name, HeadersFactory.asStringList(Arrays.asList(values), RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -274,7 +276,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(String name, Iterable<?> values) {
-        this.headers.addAll(name, iterableToList(values));
+        this.getHeaders().addAll(name, iterableToList(values));
         return this;
     }
 
@@ -285,7 +287,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(MultivaluedMap<String, String> headers) {
-        this.headers.putAll(headers);
+        this.getHeaders().putAll(headers);
         return this;
     }
 
@@ -296,7 +298,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(Map<String, List<String>> headers) {
-        this.headers.putAll(HeadersFactory.createInbound(headers));
+        this.getHeaders().putAll(headers);
         return this;
     }
 
@@ -307,20 +309,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext remove(String name) {
-        this.headers.remove(name);
-        return this;
-    }
-
-    /**
-     * Replace header values.
-     *
-     * @param name   header name.
-     * @param values new header values.
-     * @return updated context.
-     */
-    public InboundMessageContext replace(String name, Iterable<?> values) {
-        this.headers.remove(name);
-        this.headers.put(name, iterableToList(values));
+        this.getHeaders().remove(name);
         return this;
     }
 
@@ -330,7 +319,7 @@ public class InboundMessageContext {
      * @param headers new headers.
      * @return updated context.
      */
-    public InboundMessageContext replaceAll(MultivaluedMap<String, String> headers) {
+    public InboundMessageContext replaceHeaders(MultivaluedMap<String, String> headers) {
         this.headers.clear();
         this.headers.putAll(headers);
 
@@ -343,7 +332,7 @@ public class InboundMessageContext {
 
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         for (Object element : values) {
-            linkedList.add(HeadersFactory.toString(element, rd));
+            linkedList.add(HeadersFactory.asString(element, rd));
         }
 
         return linkedList;
@@ -366,10 +355,7 @@ public class InboundMessageContext {
      *         character.
      */
     public String getHeaderString(String name) {
-        return toHeaderString(this.headers.get(name));
-    }
-
-    private String toHeaderString(List<String> values) {
+        List<String> values = this.headers.get(name);
         if (values == null) {
             return null;
         }
@@ -411,7 +397,7 @@ public class InboundMessageContext {
         }
 
         try {
-            return converter.apply(HeadersFactory.toString(value, null));
+            return converter.apply(HeadersFactory.asString(value, null));
         } catch (ProcessingException ex) {
             throw exception(name, value, ex);
         }

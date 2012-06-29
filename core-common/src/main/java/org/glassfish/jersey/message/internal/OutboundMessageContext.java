@@ -50,8 +50,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -90,8 +88,6 @@ public class OutboundMessageContext {
     private GenericType<?> entityType;
     private Annotation[] entityAnnotations = EMPTY_ANNOTATIONS;
     private OutputStream entityStream;
-
-
 
     /**
      * Output stream provider.
@@ -145,121 +141,23 @@ public class OutboundMessageContext {
         this.entityAnnotations = original.entityAnnotations;
     }
 
-    // Message headers
-
-    /**
-     * Add a new header value.
-     *
-     * @param name  header name.
-     * @param value header value.
-     * @return updated context.
-     */
-    public OutboundMessageContext header(String name, Object value) {
-        headers.add(name, value);
-        return this;
-    }
-
-    /**
-     * Add new header values.
-     *
-     * @param name   header name.
-     * @param values header values.
-     * @return updated context.
-     */
-    public OutboundMessageContext headers(String name, Object... values) {
-        headers.addAll(name, values);
-        return this;
-    }
-
-    /**
-     * Add new header values.
-     *
-     * @param name   header name.
-     * @param values header values.
-     * @return updated context.
-     */
-    public OutboundMessageContext headers(String name, Iterable<?> values) {
-        headers.addAll(name, iterableToList(values));
-        return this;
-    }
-
-    /**
-     * Add new headers.
-     *
-     * @param headers new headers.
-     * @return updated context.
-     */
-    public OutboundMessageContext headers(MultivaluedMap<String, Object> headers) {
-        headers.putAll(headers);
-        return this;
-    }
-
-    /**
-     * Remove a header.
-     *
-     * @param name header name.
-     * @return updated context.
-     */
-    public OutboundMessageContext remove(String name) {
-        headers.remove(name);
-        return this;
-    }
-
-    /**
-     * Replace header values with a new single header value.
-     *
-     * @param name  header name.
-     * @param value new single header value.
-     * @return updated context.
-     */
-    public OutboundMessageContext replace(String name, Object value) {
-        headers.putSingle(name, value);
-        return this;
-    }
-
-    /**
-     * Replace header values.
-     *
-     * @param name   header name.
-     * @param values new header values.
-     * @return updated context.
-     */
-    public OutboundMessageContext replace(String name, Iterable<?> values) {
-        headers.remove(name);
-        headers.put(name, iterableToList(values));
-        return this;
-    }
-
     /**
      * Replace all headers.
      *
+     *
      * @param headers new headers.
      * @return updated context.
      */
-    public OutboundMessageContext replaceAll(MultivaluedMap<String, Object> headers) {
-        this.headers.clear();
+    public void replaceHeaders(MultivaluedMap<String, Object> headers) {
+        getHeaders().clear();
         if (headers != null) {
-            this.headers.putAll(headers);
+            getHeaders().putAll(headers);
         }
-
-        return this;
     }
 
-    private List<Object> iterableToList(final Iterable<?> values) {
-        final LinkedList<Object> linkedList = new LinkedList<Object>();
-
-        for (Object element : values) {
-            linkedList.add(element);
-        }
-
-        return linkedList;
+    public MultivaluedMap<String, String> getStringHeaders() {
+        return HeadersFactory.asStringHeaders(headers);
     }
-
-
-    // TODO: optimize internal use of getHeaderString(String) and stringify(String) for outbound object-oriented headers.
-    //       Methods that use the function or the function itself should be optimized
-    //       for working with object-based header values. The object-to string-to object
-    //       conversion should be deferred if possible.
 
     /**
      * Get a message header as a single string value.
@@ -278,32 +176,7 @@ public class OutboundMessageContext {
      *         character.
      */
     public String getHeaderString(String name) {
-        return toHeaderString(headers.get(name));
-    }
-
-    private String toHeaderString(List<Object> values) {
-        if (values == null) {
-            return null;
-        }
-        final Iterator<String> stringValues = stringify(values).iterator();
-        if (!stringValues.hasNext()) {
-            return "";
-        }
-
-        StringBuilder buffer = new StringBuilder(stringValues.next());
-        while (stringValues.hasNext()) {
-            buffer.append(',').append(stringValues.next());
-        }
-
-        return buffer.toString();
-    }
-
-    private List<String> stringify(final List<Object> headerValues) {
-        if (headerValues == null || headerValues.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return HeadersFactory.toString(headerValues, RuntimeDelegate.getInstance());
+        return HeadersFactory.asHeaderString(headers.get(name), RuntimeDelegate.getInstance());
     }
 
     /**
@@ -335,7 +208,8 @@ public class OutboundMessageContext {
             return valueType.cast(value);
         } else {
             try {
-                return converter.apply(HeadersFactory.toString(value, null));
+                // TODO: (MM) shouldn't StringReaders be utilized?
+                return converter.apply(HeadersFactory.asString(value, null));
             } catch (ProcessingException ex) {
                 throw exception(name, value, ex);
             }
@@ -428,7 +302,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(HttpHeaderReader.readAcceptMediaType(HeadersFactory.toString(value, rd)));
+                    result.addAll(HttpHeaderReader.readAcceptMediaType(HeadersFactory.asString(value, rd)));
                 } catch (java.text.ParseException e) {
                     throw exception(HttpHeaders.ACCEPT, value, e);
                 }
@@ -470,7 +344,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(Lists.transform(HttpHeaderReader.readAcceptLanguage(HeadersFactory.toString(value, rd)),
+                    result.addAll(Lists.transform(HttpHeaderReader.readAcceptLanguage(HeadersFactory.asString(value, rd)),
                             new Function<AcceptableLanguageTag, Locale>() {
 
                                 @Override
@@ -509,7 +383,7 @@ public class OutboundMessageContext {
         }
 
         Map<String, Cookie> result = new HashMap<String, Cookie>();
-        for (String cookie : stringify(cookies)) {
+        for (String cookie : HeadersFactory.asStringList(cookies, RuntimeDelegate.getInstance())) {
             if (cookie != null) {
                 result.putAll(HttpHeaderReader.readCookies(cookie));
             }
@@ -566,7 +440,7 @@ public class OutboundMessageContext {
         }
 
         Map<String, NewCookie> result = new HashMap<String, NewCookie>();
-        for (String cookie : stringify(cookies)) {
+        for (String cookie : HeadersFactory.asStringList(cookies, RuntimeDelegate.getInstance())) {
             if (cookie != null) {
                 NewCookie newCookie = HttpHeaderReader.readNewCookie(cookie);
                 result.put(newCookie.getName(), newCookie);
@@ -650,7 +524,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.add(Link.valueOf(HeadersFactory.toString(value, rd)));
+                    result.add(Link.valueOf(HeadersFactory.asString(value, rd)));
                 } catch (IllegalArgumentException e) {
                     throw exception(HttpHeaders.LINK, value, e);
                 }
