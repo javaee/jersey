@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,28 +40,58 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<html>
+<head>
+    <title>Jackson JAX-RS JSON Provider Example</title>
+    <style type="text/css"><!--
+    .figure { text-align:center;
+        margin: 20px}
+    .cliSample { background-color:lightgray }
+    --></style>
+</head>
 
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
-    </parent>
 
-    <groupId>org.glassfish.jersey.media</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-media</name>
+<body>
+<h1>MOXy JAX-RS JSON Provider Example</h1>
+<p>This example demonstrates how to produce/consume JSON representations from Java objects.</p>
 
-    <description>
-        Contains entity media type provider modules.
-    </description>
+<h2>Contents</h2>
 
-    <modules>
-        <module>json</module>
-        <module>json-moxy</module>
-        <module>multipart</module>
-        <module>sse</module>
-    </modules>
-</project>
+<p>The mapping of the URI path space is presented in the following table:</p>
+<table border="1">
+    <tr>
+        <th>URI path</th>
+        <th>Resource class</th>
+        <th>HTTP methods</th>
+    </tr>
+
+    <tr>
+        <td>/test</td>
+        <td>JsonResource</td>
+        <td>GET</td>
+    </tr>
+
+    <tr>
+        <td>/test</td>
+        <td>JsonResource</td>
+        <td>POST</td>
+    </tr>
+</table>
+
+<p>(See JsonResourceTest for more details.)</p>
+
+<h2>Running the Example</h2>
+<p>Run the example as follows:</p>
+<blockquote><pre>
+mvn clean compile exec:java</pre></blockquote>
+<p>This deploys the example using
+    <a href="http://grizzly.java.net/">Grizzly</a>
+</p>
+<p>A <a href="http://wadl.java.net/#spec">WADL description</a> may be accessed at the URL:</p>
+<blockquote><code><a href="http://localhost:9998/jsonmoxy/application.wadl">http://localhost:9998/jsonmoxy/application.wadl</a></code></blockquote>
+
+<p>The resource is available at</p>
+<blockquote><code><a href="http://localhost:9998/jsonmoxy/test">http://localhost:9998/jsonmoxy/test</a></code></blockquote>
+
+</body>
+</html>
