@@ -91,6 +91,8 @@ public class OutboundMessageContext {
     private Annotation[] entityAnnotations = EMPTY_ANNOTATIONS;
     private OutputStream entityStream;
 
+
+
     /**
      * Output stream provider.
      */
@@ -235,8 +237,10 @@ public class OutboundMessageContext {
      * @return updated context.
      */
     public OutboundMessageContext replaceAll(MultivaluedMap<String, Object> headers) {
-        headers.clear();
-        headers.putAll(headers);
+        this.headers.clear();
+        if (headers != null) {
+            this.headers.putAll(headers);
+        }
 
         return this;
     }
