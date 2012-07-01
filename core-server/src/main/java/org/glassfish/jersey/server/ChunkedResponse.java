@@ -67,12 +67,12 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
 
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
 
-    private boolean closed = false;
-    private ContainerRequest requestContext;
-    private ContainerResponse responseContext;
+    private volatile boolean closed = false;
+    private boolean flushing = false;
+    private volatile ContainerRequest requestContext;
+    private volatile ContainerResponse responseContext;
 
     protected ChunkedResponse() {
-        super();
     }
 
     /**
@@ -102,15 +102,36 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
         flushQueue();
     }
 
-    private synchronized void flushQueue() throws IOException {
-        if (requestContext == null) {
+    private void flushQueue() throws IOException {
+        if (requestContext == null || responseContext == null) {
             return;
         }
 
         Exception ex = null;
+        T t;
+        boolean shouldClose;
+
+        synchronized (this) {
+            if (flushing) {
+                // if another thread is already flushing the queue, we don't have to do anything
+                return;
+            }
+            // remember the closed flag before polling the queue
+            // (if we did it after, we could miss the last chunk as some other thread may add
+            // a chunk and set closed to true right after we we poll the queue (i.e. we'd think the queue is empty),
+            // but before we check if we should close - so we would close the stream leaving the last chunk undelivered)
+            shouldClose = closed;
+            t = queue.poll();
+            if (t != null || shouldClose) {
+                // no other thread is flushing this queue at the moment and it is not empty and/or we should close ->
+                // set the flushing flag so that other threads know it is already being taken care of
+                // and they don't have to bother
+                flushing = true;
+            }
+        }
+
         try {
-            T t;
-            while ((t = queue.poll()) != null) {
+            while (t != null) {
                 requestContext.getWorkers().writeTo(
                         t,
                         t.getClass(),
@@ -122,25 +143,51 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
                         responseContext.getEntityStream(),
                         null,
                         true);
+                t = queue.poll();
+                if (t == null) {
+                    synchronized (this) {
+                        // queue seems empty
+                        // check again in the synchronized block before unsetting the flushing flag
+                        // first remember the closed flag (this has to be before polling the queue,
+                        // otherwise we could miss the last chunk)
+                        shouldClose = closed;
+                        t = queue.poll();
+                        if (t == null) {
+                            // ok, it is really empty - if anyone adds a chunk while we are here,
+                            // other thread will take care of it -> flush the stream and unset
+                            // the flushing flag at the very end (to make sure it is unset only if no
+                            // exception is thrown)
+                            responseContext.commitStream();
+                            // if closing, we keep the "flushing" flag set, since no other thread needs to flush
+                            // this queue anymore - finally clause will take care of closing the stream
+                            flushing = shouldClose;
+                            break;
+                        }
+                    }
+                }
             }
-
-            // flush the stream for each chunk
-            responseContext.commitStream();
         } catch (Exception e) {
             closed = true;
+            shouldClose = true;
+            // remember the exception (it will get rethrown from finally clause, once it does it's work)
             ex = e;
         } finally {
-            if (closed) {
+            if (shouldClose) {
                 try {
                     responseContext.getEntityStream().close();
                 } catch (Exception e) {
+                    // if no exception remembered before, remember this one
+                    // otherwise the previously remembered exception (from catch clause) takes precedence
                     ex = ex == null ? e : ex;
                 }
                 try {
                     requestContext.getResponseWriter().commit();
                 } catch (Exception e) {
+                    // if no exception remembered before, remember this one
+                    // otherwise the previously remembered exception (from catch clause) takes precedence
                     ex = ex == null ? e : ex;
                 }
+                // rethrow remembered exception (if any)
                 if (ex instanceof IOException) {
                     throw (IOException) ex;
                 } else if (ex instanceof RuntimeException) {
