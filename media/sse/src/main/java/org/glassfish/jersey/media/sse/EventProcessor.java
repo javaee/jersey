@@ -43,6 +43,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -57,6 +59,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 /* package */ final class EventProcessor implements Closeable {
 
     private final EventReceiver eventReceiver;
+    private volatile boolean closed;
 
     /*package*/ EventProcessor(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
         eventReceiver = new EventReceiver(inputStream, annotations, mediaType, headers, messageBodyWorkers);
@@ -71,12 +74,22 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
      */
     public void process(final EventSource eventSource) {
         do {
-            eventReceiver.process(null, eventSource);
+            if (closed) {
+                try {
+                    eventReceiver.close();
+                } catch (IOException e) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);
+                }
+            } else {
+                eventReceiver.process(null, eventSource);
+            }
         } while (!eventReceiver.isClosed());
     }
 
     @Override
-    public void close() throws IOException {
-        eventReceiver.close();
+    public void close() {
+        // this can be called from different threads, so just setting a flag to keep it thread safe
+        // the actual close will be performed by process() method
+        closed = true;
     }
 }

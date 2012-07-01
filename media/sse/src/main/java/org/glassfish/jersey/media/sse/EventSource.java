@@ -65,6 +65,8 @@ import javax.ws.rs.client.WebTarget;
 public class EventSource implements EventListener {
 
     private final WebTarget target;
+    private volatile EventProcessor processor;
+    private boolean close = false;
 
     private final ConcurrentSkipListSet<EventListener> generalListeners = new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
         @Override
@@ -76,13 +78,13 @@ public class EventSource implements EventListener {
     private final ConcurrentSkipListMap<String, List<EventListener>> namedListeners = new ConcurrentSkipListMap<String, List<EventListener>>();
 
     /**
-     * Create new instance and start processing incoming {@link InboundEvent}s in newly created {@link ExecutorService}
-     * ({@link Executors#newCachedThreadPool()}.
+     * Create new instance and start processing incoming {@link InboundEvent}s in newly created
+     * {@link java.util.concurrent.Executors#newSingleThreadExecutor() single thread executor}.
      *
      * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
      */
     public EventSource(WebTarget target) {
-        this(target, Executors.newCachedThreadPool());
+        this(target, Executors.newSingleThreadExecutor());
     }
 
     /**
@@ -132,8 +134,14 @@ public class EventSource implements EventListener {
 
     private void process() {
         target.configuration().register(EventProcessorReader.class);
-        final EventProcessor eventProcessor = target.request().get(EventProcessor.class);
-        eventProcessor.process(this);
+        processor = target.request().get(EventProcessor.class);
+        synchronized (this) {
+            if (close) {
+                processor.close();
+                return;
+            }
+        }
+        processor.process(this);
     }
 
     private void notifyListeners(InboundEvent inboundEvent, Collection<EventListener> listeners) {
@@ -175,5 +183,16 @@ public class EventSource implements EventListener {
     @Override
     public void onEvent(InboundEvent inboundEvent) {
         // do nothing
+    }
+
+    /**
+     * Closes this event source.
+     */
+    public synchronized void close() {
+        if (processor != null) {
+            processor.close();
+        } else {
+            close = true;
+        }
     }
 }
