@@ -79,6 +79,7 @@
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-sent-events</module>
+        <module>system-properties-example</module>
     </modules>
 
     <build>

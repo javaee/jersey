@@ -319,6 +319,7 @@ public class Providers {
                 if (packageName.startsWith("javax.ws.rs")
                         || (packageName.startsWith("org.glassfish.jersey")
                         && !packageName.startsWith("org.glassfish.jersey.test")
+                        && !packageName.startsWith("org.glassfish.jersey.examples")
                         && !parent.getName().equals("org.glassfish.jersey.process.Inflector")
                 )) {
                     interfaces.add(parent);
