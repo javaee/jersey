@@ -37,49 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
+package org.glassfish.jersey.media.xml;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Collections;
+import java.util.Map;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.ext.ContextResolver;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.media.xml.internal.MoxyContextResolver;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
+public class XmlMoxyModule extends AbstractModule {
 
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
+    private final Map properties;
+    private final ClassLoader classLoader;
+    private final boolean oxmMappingLookup;
+    private final Class[] classes;
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    /**
+     * Default constructor creates standard {@link org.eclipse.persistence.jaxb.JAXBContext} without any activated features
+     * and properties. Current context {@link ClassLoader} will be used.
+     */
+    public XmlMoxyModule() {
+        this(Collections.EMPTY_MAP, Thread.currentThread().getContextClassLoader(), false);
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+    /**
+     * Constructor which allows MOXy {@link org.eclipse.persistence.jaxb.JAXBContext} customization.
+     *
+     * @param properties properties to be passed to {@link org.eclipse.persistence.jaxb.JAXBContextFactory#createContext(Class[], java.util.Map, ClassLoader)}. Can be {@code null}.
+     * @param classLoader will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
+     * @param oxmMappingLookup if {@code true}, lookup for file with custom mappings will be performed.
+     * @param classes additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
+     */
+    public XmlMoxyModule(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
+        this.properties = (properties == null ? Collections.EMPTY_MAP : properties);
+        this.classLoader = (classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
+        this.oxmMappingLookup = oxmMappingLookup;
+        this.classes = classes;
+    }
 
-        return rc;
+    @Override
+    protected void configure() {
+        bind(ContextResolver.class).toInstance(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
     }
 }
-
-
-

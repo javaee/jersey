@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,49 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+package org.glassfish.jersey.examples.xmlmoxy;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.examples.xmlmoxy.beans.Address;
+import org.glassfish.jersey.examples.xmlmoxy.beans.Customer;
+import org.glassfish.jersey.examples.xmlmoxy.beans.PhoneNumber;
 
-/**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- */
-public class App {
+@Path("/customer")
+public class CustomerResource {
 
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
+    private static Customer customer = createInitialCustomer();
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+    @PUT
+    @Consumes(MediaType.APPLICATION_XML)
+    public void setCustomer(Customer c) {
+        customer = c;
+    }
 
-        return rc;
+    private static Customer createInitialCustomer() {
+        Customer result = new Customer();
+
+        result.setName("Jane Doe");
+        result.setAddress(new Address("123 Any Street", "My Town"));
+        result.getPhoneNumbers().add(new PhoneNumber("work", "613-555-1111"));
+        result.getPhoneNumbers().add(new PhoneNumber("cell", "613-555-2222"));
+
+        return result;
     }
 }
-
-
-

@@ -43,6 +43,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.media.json.internal.GeneralMoxyJsonProvider;
 
 import org.glassfish.hk2.scopes.Singleton;
 
@@ -57,6 +58,7 @@ public class JsonMoxyModule extends AbstractModule {
     @Override
     protected void configure() {
         bindSingletonReaderWriterProvider(MOXyJsonProvider.class);
+        bindSingletonReaderWriterProvider(GeneralMoxyJsonProvider.class);
     }
 
     private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {

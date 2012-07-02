@@ -49,9 +49,9 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-media-json-moxy</artifactId>
+    <artifactId>jersey-media-moxy</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-media-json-moxy</name>
+    <name>jersey-media-moxy</name>
 
     <description>
         Jersey JSON entity providers support module based on EclipseLink MOXy.

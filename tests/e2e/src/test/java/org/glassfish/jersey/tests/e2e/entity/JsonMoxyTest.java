@@ -193,7 +193,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJaxbBeanRepresentationJSONMediaType() {
         WebTarget target = target("JaxbBeanResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -222,7 +221,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBElementBeanRepresentationJSONMediaType() {
         WebTarget target = target("JAXBElementBeanResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -259,7 +257,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBTypeRepresentationJSONMediaType() {
         WebTarget target = target("JAXBTypeResourceJSONMediaType");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -435,7 +432,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBListRepresentationJSONMediaType() throws Exception {
         WebTarget target = target("JAXBListResourceJSONMediaType");
 

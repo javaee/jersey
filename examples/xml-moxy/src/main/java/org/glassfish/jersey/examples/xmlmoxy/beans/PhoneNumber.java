@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,49 +37,69 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+package org.glassfish.jersey.examples.xmlmoxy.beans;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ *
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class App {
+public class PhoneNumber {
 
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
+    private String type;
+    private String value;
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
+    public PhoneNumber() {}
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public PhoneNumber(String type, String value) {
+        this.type = type;
+        this.value = value;
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+    @XmlAttribute
+    public String getType() {
+        return type;
+    }
 
-        return rc;
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @XmlValue
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PhoneNumber other = (PhoneNumber) obj;
+        if ((this.type == null) ? (other.type != null) : !this.type.equals(other.type)) {
+            return false;
+        }
+        if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 59 * hash + (this.type != null ? this.type.hashCode() : 0);
+        hash = 59 * hash + (this.value != null ? this.value.hashCode() : 0);
+        return hash;
     }
 }
-
-
-

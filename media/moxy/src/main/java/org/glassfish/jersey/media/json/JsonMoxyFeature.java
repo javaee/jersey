@@ -37,49 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
+package org.glassfish.jersey.media.json;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.client.Feature;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.media.json.internal.GeneralMoxyJsonProvider;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
 
 /**
+ * Feature used to register MOXy JSON providers with Client.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
+public class JsonMoxyFeature implements Feature {
 
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
-
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
-
-        return rc;
+    @Override
+    public boolean onEnable(Configuration c) {
+        c.register(MOXyJsonProvider.class);
+        c.register(GeneralMoxyJsonProvider.class);
+        return true;
     }
 }
-
-
-

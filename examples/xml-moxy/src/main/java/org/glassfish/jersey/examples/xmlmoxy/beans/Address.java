@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,49 +37,65 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+package org.glassfish.jersey.examples.xmlmoxy.beans;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ *
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class App {
+public class Address {
 
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
+    private String street;
+    private String city;
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
+    public Address(){}
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public Address(String street, String city) {
+        this.street = street;
+        this.city = city;
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+    public String getStreet() {
+        return street;
+    }
 
-        return rc;
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Address other = (Address) obj;
+        if ((this.street == null) ? (other.street != null) : !this.street.equals(other.street)) {
+            return false;
+        }
+        if ((this.city == null) ? (other.city != null) : !this.city.equals(other.city)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 29 * hash + (this.street != null ? this.street.hashCode() : 0);
+        hash = 29 * hash + (this.city != null ? this.city.hashCode() : 0);
+        return hash;
     }
 }
-
-
-

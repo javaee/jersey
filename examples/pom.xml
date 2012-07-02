@@ -72,6 +72,7 @@
         <module>json-jaxb</module>
         <module>json-moxy</module>
         <module>json-with-padding</module>
+        <module>xml-moxy</module>
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>

@@ -37,49 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jsonmoxy;
+package org.glassfish.jersey.media.json.internal;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
 
 /**
+ * Adding support for "*&#47;*+json" media type.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
-
-    private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
-
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
-    public static void main(String[] args) {
-        try {
-            System.out.println("JSON with MOXy Jersey Example App");
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
-
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
-            System.in.read();
-            server.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+@Consumes("*/*")
+@Produces("*/*")
+public class GeneralMoxyJsonProvider extends MOXyJsonProvider {
+    @Override
+    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        if(super.isReadable(type, genericType, annotations, mediaType)) {
+            return mediaType.getSubtype().endsWith("+json");
         }
+
+        return false;
     }
 
-    public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+    @Override
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        if(super.isWriteable(type, genericType, annotations, mediaType)) {
+            return mediaType.getSubtype().endsWith("+json");
+        }
 
-        return rc;
+        return false;
     }
 }
-
-
-
