@@ -66,6 +66,13 @@
             <type>zip</type>
         </dependency>
          <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>jersey-ejb</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.bundles</groupId>
             <artifactId>apidocs</artifactId>
             <version>${project.version}</version>

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,48 +44,52 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.containers.glassfish</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.containers</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-containers</name>
+    <artifactId>jersey-gf-ejb</artifactId>
+    <packaging>jar</packaging>
+    <name>jersey-gf-ejb</name>
 
-    <description>Jersey container providers umbrella project module</description>
-
-    <modules>
-        <module>glassfish</module>
-        <module>grizzly2-http</module>
-        <module>grizzly2-servlet</module>
-        <module>jdk-http</module>
-        <module>jersey-servlet-core</module>
-        <module>jersey-servlet</module>
-    </modules>
+    <description>Jersey EJB for GlassFish integration</description>
 
     <dependencies>
+
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.ejb</artifactId>
+            <version>${ejb.version}</version>
+            <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>maven-istack-commons-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <inherited>true</inherited>
+                <extensions>true</extensions>
+             </plugin>
+         </plugins>
+    </build>
+
 </project>

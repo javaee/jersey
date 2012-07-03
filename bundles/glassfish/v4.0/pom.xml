@@ -56,7 +56,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
-        <module>docs-and-examples</module>
+        <!-- docs-and-examples will be built for attach-src-and-docs profile only, see bellow -->
     </modules>
      <profiles>
       <profile>

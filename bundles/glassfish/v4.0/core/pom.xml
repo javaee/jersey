@@ -71,6 +71,11 @@
             <artifactId>jersey-container-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
+         <dependency>
+            <groupId>org.glassfish.jersey.containers.glassfish</groupId>
+            <artifactId>jersey-gf-ejb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json</artifactId>
@@ -99,6 +104,7 @@
                           <includeGroupIds>
                                 org.glassfish.jersey.core,
                                ,org.glassfish.jersey.containers,
+                               ,org.glassfish.jersey.containers.glassfish,
                                ,org.glassfish.jersey.media,
                                ,javax.ws.rs,
                                ,com.googlecode.guava-osgi,

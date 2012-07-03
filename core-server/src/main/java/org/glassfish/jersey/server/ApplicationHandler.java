@@ -70,11 +70,24 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import org.jvnet.hk2.annotations.Inject;
+
+import org.glassfish.hk2.ComponentException;
+import org.glassfish.hk2.DynamicBinderFactory;
+import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.HK2;
+import org.glassfish.hk2.Module;
+import org.glassfish.hk2.Services;
+import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.scopes.PerLookup;
+import org.glassfish.hk2.scopes.Singleton;
+
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ProviderBinder;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -102,22 +115,10 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
+import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -318,7 +319,14 @@ public final class ApplicationHandler {
         final Injector injector = services.forContract(Injector.class).get();
         References refs = injector.inject(References.class);
 
-        registerProvidersAndSingletonResources();
+        final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
+
+        for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+            provider.initialize(services);
+            componentProviders.add(provider);
+        }
+
+        registerProvidersAndSingletonResources(componentProviders);
 
         // scan for NameBinding annotations attached to the application class
         Collection<Class<? extends Annotation>> applicationNameBindings =
@@ -447,7 +455,7 @@ public final class ApplicationHandler {
         return result;
     }
 
-    private void registerProvidersAndSingletonResources() {
+    private void registerProvidersAndSingletonResources(Set<ComponentProvider> componentProviders) {
         final ProviderBinder providers = services.forContract(ProviderBinder.class).get();
         SingletonResourceBinder singletonResourceBinder = services.byType(SingletonResourceBinder.class).get();
 
@@ -457,6 +465,11 @@ public final class ApplicationHandler {
 
 
         for (Class<?> clazz : configuration.getClasses()) {
+
+            if (bindWithComponentProvider(clazz, componentProviders)) {
+                continue;
+            }
+
             if (!Resource.isAcceptable(clazz)) {
                 LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(clazz));
                 continue;
@@ -502,6 +515,7 @@ public final class ApplicationHandler {
 
         providers.bindClasses(cleanProviders);
         providers.bindClasses(resourcesAndProviders, true);
+
         for (Class<?> res : cleanResources) {
             if (!res.isAnnotationPresent(org.glassfish.jersey.spi.Singleton.class)) {
                 DynamicBinderFactory bf = services.bindDynamically();
@@ -513,6 +527,10 @@ public final class ApplicationHandler {
         }
 
         providers.bindInstances(configuration.getSingletons());
+
+        for (ComponentProvider componentProvider : componentProviders) {
+            componentProvider.done();
+        }
     }
 
     private Application createApplication(Class<? extends Application> applicationClass) {
@@ -913,5 +931,17 @@ public final class ApplicationHandler {
      */
     public ResourceConfig getConfiguration() {
         return configuration;
+    }
+
+    private boolean bindWithComponentProvider(Class<?> component, Collection<ComponentProvider> componentProviders) {
+
+        Set<Class<?>> contracts = org.glassfish.jersey.internal.inject.Providers.getProviderContracts(component);
+
+        for (ComponentProvider provider : componentProviders) {
+            if (provider.bind(component, contracts)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
