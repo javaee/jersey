@@ -811,4 +811,12 @@ public class OutboundMessageContext {
             }
         }
     }
+
+    /**
+     * Returns {@code true} if the entity stream has been committed.
+     * @return {@code true} if the entity stream has been committed. Otherwise returns {@code false}.
+     */
+    public boolean isCommitted() {
+        return rootStream.isCommitted();
+    }
 }

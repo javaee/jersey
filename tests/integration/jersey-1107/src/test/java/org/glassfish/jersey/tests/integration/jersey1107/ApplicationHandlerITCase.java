@@ -86,8 +86,7 @@ public class ApplicationHandlerITCase extends JerseyTest {
      */
     @Test
     public void testIOExceptionInWriteResponseMethod() throws Exception {
-        // TODO Shouldn't this be rather something like 500 than 200?
-        _testExceptionInWriteResponseMethod("ioe", "exception/ioexception", Response.Status.OK);
+        _testExceptionInWriteResponseMethod("ioe", "exception/ioexception", Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -96,7 +95,7 @@ public class ApplicationHandlerITCase extends JerseyTest {
      */
     @Test
     public void testWebApplicationExceptionInWriteResponseMethod() throws Exception {
-        _testExceptionInWriteResponseMethod("wae", "exception/webapplicationexception", Response.Status.OK);
+        _testExceptionInWriteResponseMethod("wae", "exception/webapplicationexception", Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -105,7 +104,7 @@ public class ApplicationHandlerITCase extends JerseyTest {
      */
     @Test
     public void testNullPointerExceptionInWriteResponseMethod() throws Exception {
-        _testExceptionInWriteResponseMethod("npe", "exception/nullpointerexception", Response.Status.OK);
+        _testExceptionInWriteResponseMethod("npe", "exception/nullpointerexception", Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     /**

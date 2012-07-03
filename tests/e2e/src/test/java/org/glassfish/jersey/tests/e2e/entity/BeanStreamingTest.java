@@ -70,6 +70,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -86,7 +87,7 @@ public class BeanStreamingTest extends JerseyTest {
     protected void configureClient(Configuration clientConfig) {
         for (Class<?> c : getClass().getDeclaredClasses()) {
             if (c.getAnnotation(Provider.class) != null) {
-                clientConfig.getProviderClasses().add(c);
+                clientConfig.register(c);
             }
         }
     }
@@ -142,9 +143,9 @@ public class BeanStreamingTest extends JerseyTest {
 
         try {
             target().path("/plain").request().post(Entity.entity(b, "text/plain"), Bean2.class);
-            assertFalse(false);
+            fail();
         } catch (ClientException ex) {
-            assertTrue(true);
+            // good
         }
     }
 

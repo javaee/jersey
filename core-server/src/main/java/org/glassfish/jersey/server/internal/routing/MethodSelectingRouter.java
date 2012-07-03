@@ -421,22 +421,23 @@ final class MethodSelectingRouter implements Router {
                 reportMethodSelectionAmbiguity(acceptableMediaTypes, selected, methodSelector.sameFitnessAcceptors);
             }
 
-            // TODO: if the response already has content type set, we should not be spending cycles calculating
-            // TODO: the effective media type in advance - see issue JERSEY-1187
-            final MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
             respondingContextFactory.get().push(
                     new Function<ContainerResponse, ContainerResponse>() {
                         @Override
                         public ContainerResponse apply(final ContainerResponse responseContext) {
-                            // If the response has entity or is a response to HEAD request
-                            // and the computed effective response type is not wildcard
-                            // and response does not have a media type set already,
-                            // set the computed effective media type here.
-                            final boolean isHeadRequest = HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod());
-                            if ((responseContext.hasEntity() || isHeadRequest)
-                                    && !isWildcard(effectiveResponseType)
-                                    && responseContext.getMediaType() == null) {
-
+                            // we only need to compute and set the effective media type if it hasn't been set already
+                            // and either there is an entity, or we are responding to a HEAD request
+                            if (responseContext.getMediaType() == null &&
+                                    (responseContext.hasEntity() ||
+                                            HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod()))) {
+                                MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
+                                if (isWildcard(effectiveResponseType)) {
+                                    if (effectiveResponseType.isWildcardType() || effectiveResponseType.getType().equalsIgnoreCase("application")) {
+                                        effectiveResponseType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+                                    } else {
+                                        throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
+                                    }
+                                }
                                 responseContext.setMediaType(effectiveResponseType);
                             }
                             return responseContext;

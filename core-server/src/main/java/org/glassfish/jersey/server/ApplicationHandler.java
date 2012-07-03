@@ -71,6 +71,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -747,6 +748,7 @@ public final class ApplicationHandler {
         }
 
         final Object entity = responseContext.getEntity();
+        boolean skipFinally = false;
         try {
             responseContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                 private OutputStream output;
@@ -773,24 +775,31 @@ public final class ApplicationHandler {
                     messageBodySizeCallback,
                     true,
                     !requestContext.getMethod().equals(HttpMethod.HEAD));
-        } catch (IOException ex) {
-            /**
-             * We're done with processing here. There's nothing we can do about the exception so
-             * let's just log it.
-             */
-            LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY(), ex);
+        } catch (Exception ex) {
+            if (responseContext.isCommitted()) {
+                /**
+                 * We're done with processing here. There's nothing we can do about the exception so
+                 * let's just log it.
+                 */
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY(), ex);
+            } else {
+                skipFinally = true;
+                writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext));
+            }
         } finally {
-            responseContext.commitStream();
+            if (!skipFinally) {
+                responseContext.commitStream();
 
-            if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
-                try {
-                    ((ChunkedResponse) entity).setContext(requestContext, responseContext);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
+                if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
+                    try {
+                        ((ChunkedResponse) entity).setContext(requestContext, responseContext);
+                    } catch (IOException ex) {
+                        LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
+                    }
+                    // disable default writer commit on request scope release & suspend the writer
+                    requestContext.setProperty(ChunkedResponse.CHUNKED_MODE, Boolean.TRUE);
+                    writer.suspend(0, TimeUnit.SECONDS, null);
                 }
-                // disable default writer commit on request scope release & suspend the writer
-                requestContext.setProperty(ChunkedResponse.CHUNKED_MODE, Boolean.TRUE);
-                writer.suspend(0, TimeUnit.SECONDS, null);
             }
         }
     }
