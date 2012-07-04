@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.spi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
- * Contract for a provider that supports the conversion of a string to a Java
- * type. To add a {@code StringValueReaderProvider} implementation, annotate the
- * implementation class with {@link javax.ws.rs.ext.Provider}.
- * <p/>
- * Such providers will be used when converting a String value to a java type
- * annotated by the {@code *Param} annotations such as {@link javax.ws.rs.QueryParam}.
+ * Used to annotate SPI provider contracts recognized by Jersey (in addition to the JAX-RS providers).
  *
- * @see javax.ws.rs.ext.Provider
+ * All proprietary Jersey extension APIs are annotated with the {@code &#064;Contract} annotation.
+ * <p>
+ * Similarly, each custom (i.e. not JAX-RS or Jersey) provider contract that must be annotated with this
+ * annotation otherwise concrete service classes implementing the provider contract would not be recognized
+ * and treated by Jersey as provider services.
+ * </p>
  *
- * @author Paul Sandoz
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Contract
-public interface StringValueReaderProvider {
-
-    /**
-     * Obtain a {@link StringValueReader} that can produce an instance of a particular
-     * type from a string.
-     *
-     * @param <T> The Java type to be produced.
-     *
-     * @param type the class of object to be produced.
-     * @param genericType the type of object to be produced. E.g. if the string
-     * is to be converted into a method parameter, this will be the formal type
-     * of the method parameter as returned by
-     *     {@code Class.getGenericParameterTypes}.
-     * @param annotations an array of the annotations on the declaration of the
-     * artifact that will be initialized with the produced instance. E.g. if the
-     * string is to be converted into a method parameter, this will be the
-     * annotations on that parameter returned by {@code Class.getParameterAnnotations}.
-     * @return the string reader, otherwise {@code null}.
-     */
-    public <T> StringValueReader<T> getStringReader(Class<T> type, Type genericType, Annotation annotations[]);
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Contract {
 }

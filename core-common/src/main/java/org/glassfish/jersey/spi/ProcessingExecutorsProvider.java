@@ -58,6 +58,7 @@ import org.glassfish.jersey.process.ProcessingExecutorsModule;
  *
  * @see ProcessingExecutorsModule
  */
+@Contract
 public interface ProcessingExecutorsProvider {
     /**
      * Get request processing executor.

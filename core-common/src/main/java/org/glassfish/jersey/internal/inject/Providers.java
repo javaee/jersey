@@ -42,17 +42,12 @@ package org.glassfish.jersey.internal.inject;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.container.DynamicBinder;
+
+import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Provider;
@@ -275,7 +270,6 @@ public class Providers {
     }
 
 
-
     /**
      * Get the set of all providers registered for the given service provider contract
      * in the underlying {@link Services HK2 services} container.
@@ -299,53 +293,78 @@ public class Providers {
     }
 
     /**
-     * Returns provider interfaces which are implemented by the {@code clazz}. Provider interfaces are
-     * all interfaces from packages {@code javax.ws.rs.*} and {@code org.glassfish.jersey.*} (except
-     * for {@code org.glassfish.jersey.test.*} and {@code org.glassfish.jersey.process.Inflector}).
+     * Returns provider contracts recognized by Jersey that are implemented by the {@code clazz}.
+     * Recognized provider contracts include all JAX-RS providers as well as all Jersey SPI
+     * components annotated with {@link Contract &#064;Contract} annotation.
      *
-     * @param clazz Class to extract interfaces.
-     * @return Set of provider interfaces implemented by the given class.
+     * @param clazz class to extract the provider interfaces from.
+     * @return set of provider contracts implemented by the given class.
      */
-    public static Set<Class<?>> getProviderInterfaces(Class<?> clazz) {
-        Set<Class<?>> interfaces = new HashSet<Class<?>>();
-        getInterfaces(clazz, interfaces);
+    public static Set<Class<?>> getProviderContracts(Class<?> clazz) {
+        Set<Class<?>> contracts = new HashSet<Class<?>>();
+        computeProviderContracts(clazz, contracts);
+        return contracts;
+    }
+
+    private static void computeProviderContracts(Class<?> clazz, Set<Class<?>> contracts) {
+        for (Class<?> contract : getImplementedContracts(clazz)) {
+            if (isProviderContract(contract)) {
+                contracts.add(contract);
+            }
+            computeProviderContracts(contract, contracts);
+        }
+    }
+
+
+    private static boolean isProviderContract(Class clazz) {
+        return (JAX_RS_PROVIDER_INTERFACE_WHITELIST.contains(clazz) || clazz.isAnnotationPresent(Contract.class));
+    }
+
+    private static final Set<Class<?>> JAX_RS_PROVIDER_INTERFACE_WHITELIST = getJaxRsProviderInterfaces();
+
+    private static Set<Class<?>> getJaxRsProviderInterfaces() {
+        Set<Class<?>> interfaces = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+        interfaces.add(javax.ws.rs.ext.ContextResolver.class);
+        interfaces.add(javax.ws.rs.ext.ExceptionMapper.class);
+        interfaces.add(javax.ws.rs.ext.MessageBodyReader.class);
+        interfaces.add(javax.ws.rs.ext.MessageBodyWriter.class);
+        interfaces.add(javax.ws.rs.ext.Providers.class);
+        interfaces.add(javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate.class);
+        interfaces.add(javax.ws.rs.ext.ReaderInterceptor.class);
+        interfaces.add(javax.ws.rs.ext.WriterInterceptor.class);
+
+        interfaces.add(javax.ws.rs.container.ContainerRequestFilter.class);
+        interfaces.add(javax.ws.rs.container.ContainerResponseFilter.class);
+        interfaces.add(javax.ws.rs.client.ClientResponseFilter.class);
+        interfaces.add(javax.ws.rs.client.ClientRequestFilter.class);
+
+        interfaces.add(DynamicBinder.class);
+
         return interfaces;
     }
 
-    private static void getInterfaces(Class<?> clazz, Set<Class<?>> interfaces) {
-        for (Class<?> parent : getParents(clazz)) {
-            if (parent.isInterface()) {
-                final String packageName = parent.getPackage().getName();
-                if (packageName.startsWith("javax.ws.rs")
-                        || (packageName.startsWith("org.glassfish.jersey")
-                        && !packageName.startsWith("org.glassfish.jersey.test")
-                        && !packageName.startsWith("org.glassfish.jersey.examples")
-                        && !parent.getName().equals("org.glassfish.jersey.process.Inflector")
-                )) {
-                    interfaces.add(parent);
-                }
-            }
-            getInterfaces(parent, interfaces);
-        }
-    }
 
-    private static List<Class<?>> getParents(Class<?> clazz) {
-        List<Class<?>> list = new ArrayList<Class<?>>();
+    private static List<Class<?>> getImplementedContracts(Class<?> clazz) {
+        List<Class<?>> list = new LinkedList<Class<?>>();
+
         Collections.addAll(list, clazz.getInterfaces());
-        if (clazz.getSuperclass() != null) {
-            list.add(clazz.getSuperclass());
+
+        final Class<?> superclass = clazz.getSuperclass();
+        if (superclass != null) {
+            list.add(superclass);
         }
+
         return list;
     }
 
     /**
      * Returns {@code true} if the given class is a provider (implements specific interfaces).
-     * See {@link #getProviderInterfaces}.
+     * See {@link #getProviderContracts}.
      *
      * @param clazz class to test.
      * @return {@code true} if the class is provider, {@code false} otherwise.
      */
     public static boolean isProvider(Class<?> clazz) {
-        return !getProviderInterfaces(clazz).isEmpty();
+        return !getProviderContracts(clazz).isEmpty();
     }
 }

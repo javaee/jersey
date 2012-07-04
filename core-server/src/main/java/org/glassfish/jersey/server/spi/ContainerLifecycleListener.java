@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.server.spi;
 
+import org.glassfish.jersey.spi.Contract;
+
 /**
  * Classes implementing this contract receive container life-cycle notification
  * events.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Contract
 public interface ContainerLifecycleListener {
 
     /**

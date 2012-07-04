@@ -55,6 +55,7 @@ import javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Contract
 public interface HeaderDelegateProvider<T> extends HeaderDelegate<T> {
 
     /**

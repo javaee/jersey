@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.spi;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.spi.Contract;
 
 /**
  * Service-provider interface for creating container instances.
@@ -74,6 +75,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Contract
 public interface ContainerProvider {
 
     /**

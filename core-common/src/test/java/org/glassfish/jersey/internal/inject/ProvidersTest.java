@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,72 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.spi;
 
+package org.glassfish.jersey.internal.inject;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.MessageBodyReader;
+
+import org.glassfish.jersey.spi.Contract;
+
+import org.junit.Test;
+
+import junit.framework.Assert;
+
 /**
- * Contract for a provider that supports the conversion of a string to a Java
- * type. To add a {@code StringValueReaderProvider} implementation, annotate the
- * implementation class with {@link javax.ws.rs.ext.Provider}.
- * <p/>
- * Such providers will be used when converting a String value to a java type
- * annotated by the {@code *Param} annotations such as {@link javax.ws.rs.QueryParam}.
+ * Tests {@link Providers}.
  *
- * @see javax.ws.rs.ext.Provider
- *
- * @author Paul Sandoz
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Contract
-public interface StringValueReaderProvider {
+public class ProvidersTest {
+    @Test
+    public void testIsProviderInterface() {
+        Assert.assertEquals(true, Providers.isProvider(Provider.class));
+        Assert.assertEquals(false, Providers.isProvider(NotProvider.class));
+        Assert.assertEquals(true, Providers.isProvider(JaxRsProvider.class));
+        Assert.assertEquals(true, Providers.isProvider(ClassBasedProvider.class));
+    }
 
-    /**
-     * Obtain a {@link StringValueReader} that can produce an instance of a particular
-     * type from a string.
-     *
-     * @param <T> The Java type to be produced.
-     *
-     * @param type the class of object to be produced.
-     * @param genericType the type of object to be produced. E.g. if the string
-     * is to be converted into a method parameter, this will be the formal type
-     * of the method parameter as returned by
-     *     {@code Class.getGenericParameterTypes}.
-     * @param annotations an array of the annotations on the declaration of the
-     * artifact that will be initialized with the produced instance. E.g. if the
-     * string is to be converted into a method parameter, this will be the
-     * annotations on that parameter returned by {@code Class.getParameterAnnotations}.
-     * @return the string reader, otherwise {@code null}.
-     */
-    public <T> StringValueReader<T> getStringReader(Class<T> type, Type genericType, Annotation annotations[]);
+    public static interface NonContractInterface {
+    }
+
+    @Contract
+    public static interface ContractInterface {
+    }
+
+    @Contract
+    public static abstract class ContractClass {
+    }
+
+    public static class Provider implements ContractInterface {
+    }
+
+    public static class NotProvider implements NonContractInterface {
+    }
+
+    public static class JaxRsProvider implements MessageBodyReader<String> {
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return false;
+        }
+
+        @Override
+        public String readFrom(Class<String> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException,
+                WebApplicationException {
+            return null;
+        }
+    }
+
+    public static class ClassBasedProvider extends ContractClass {
+    }
+
 }

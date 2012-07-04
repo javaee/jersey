@@ -183,7 +183,7 @@ public class BasicValidator extends ResourceModelValidator {
             }
             if (counter == 0 && provider) {
                 addMinorIssue(resClass, LocalizationMessages.RESOURCE_IMPLEMENTS_PROVIDER(resClass,
-                        Providers.getProviderInterfaces(resClass)));
+                        Providers.getProviderContracts(resClass)));
             } else if (counter > 1) {
                 addFatalIssue(resClass, LocalizationMessages.RESOURCE_MULTIPLE_SCOPE_ANNOTATIONS(resClass));
             }
@@ -192,7 +192,7 @@ public class BasicValidator extends ResourceModelValidator {
 
 
     private static boolean isProvider(Class resClass) {
-        return !Providers.getProviderInterfaces(resClass).isEmpty();
+        return !Providers.getProviderContracts(resClass).isEmpty();
     }
 
 

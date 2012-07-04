@@ -177,7 +177,7 @@ public class ProviderBinder {
 
     @SuppressWarnings("unchecked")
     private <T> void bindInstance(T instance, BinderFactory binderFactory) {
-        for (Class contract : Providers.getProviderInterfaces(instance.getClass())) {
+        for (Class contract : Providers.getProviderContracts(instance.getClass())) {
             binderFactory.bind(contract).annotatedWith(Custom.class).toInstance(instance);
         }
     }
@@ -189,14 +189,14 @@ public class ProviderBinder {
         binderFactory.bind().annotatedWith(Custom.class).to(clazz).in(scope);
         if (scope == Singleton.class) {
             SingletonFactory factory = new SingletonFactory(clazz, injector);
-            for (Class contract : Providers.getProviderInterfaces(clazz)) {
+            for (Class contract : Providers.getProviderContracts(clazz)) {
                 binderFactory.bind(contract).annotatedWith(Custom.class).toFactory(factory).in(scope);
             }
             if (alsoResources) {
                 binderFactory.bind(clazz).toFactory(factory).in(scope);
             }
         } else {
-            for (Class contract : Providers.getProviderInterfaces(clazz)) {
+            for (Class contract : Providers.getProviderContracts(clazz)) {
                 binderFactory.bind(contract).annotatedWith(Custom.class).to(clazz).in(scope);
             }
             if (alsoResources) {

@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.spi.internal;
 
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.Factory;
 
@@ -49,6 +50,7 @@ import org.glassfish.hk2.Factory;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@Contract
 public interface ValueFactoryProvider {
 
     /**
