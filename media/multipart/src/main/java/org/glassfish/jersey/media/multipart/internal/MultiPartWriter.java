@@ -50,6 +50,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -73,6 +74,7 @@ import org.glassfish.jersey.media.multipart.MultiPart;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Produces("multipart/*")
+@Singleton
 public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
 
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];

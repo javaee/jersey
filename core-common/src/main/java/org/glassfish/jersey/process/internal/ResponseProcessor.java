@@ -44,15 +44,15 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Provider;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.Factory;
 
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.SettableFuture;
@@ -148,8 +148,8 @@ public abstract class ResponseProcessor<DATA> implements Runnable {
     private final InvocationCallback<DATA> callback;
     private final Future<DATA> inflectedResponse;
     private final SettableFuture<DATA> processedResponse;
-    private final Factory<RespondingContext<DATA>> respondingCtxProvider;
-    private final Factory<ExceptionMappers> exceptionMappersProvider;
+    private final Provider<RespondingContext<DATA>> respondingCtxProvider;
+    private final Provider<ExceptionMappers> exceptionMappersProvider;
 
     /**
      * Create new response processor for a given request / response message exchange.
@@ -168,10 +168,10 @@ public abstract class ResponseProcessor<DATA> implements Runnable {
     protected ResponseProcessor(
             final InvocationCallback<DATA> callback,
             final Future<DATA> inflectedResponse,
-            SettableFuture<DATA> processedResponse, final Factory<RespondingContext<DATA>> respondingCtxProvider,
+            SettableFuture<DATA> processedResponse, final Provider<RespondingContext<DATA>> respondingCtxProvider,
             final RequestScope.Instance scopeInstance,
             final RequestScope requestScope,
-            final Factory<ExceptionMappers> exceptionMappersProvider) {
+            final Provider<ExceptionMappers> exceptionMappersProvider) {
         this.processedResponse = processedResponse;
         this.requestScope = requestScope;
         this.scopeInstance = scopeInstance;

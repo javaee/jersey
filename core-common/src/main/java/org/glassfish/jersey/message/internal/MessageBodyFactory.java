@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -64,10 +66,14 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.KeyComparator;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.KeyComparatorLinkedHashMap;
@@ -76,13 +82,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfa
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
 /**
  * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
@@ -106,26 +106,32 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public static class Module extends AbstractModule {
 
         private static class InjectionFactory extends ReferencingFactory<MessageBodyWorkers> {
-
-            public InjectionFactory(@Inject Factory<Ref<MessageBodyWorkers>> referenceFactory) {
+            @Inject
+            public InjectionFactory(Provider<Ref<MessageBodyWorkers>> referenceFactory) {
                 super(referenceFactory);
+            }
+
+            @Override
+            @RequestScoped
+            public MessageBodyWorkers provide() {
+                return super.provide();
             }
         }
         //
-        private final Class<? extends Scope> refScope;
+        private final Class<? extends Annotation> refScope;
 
-        public Module(Class<? extends Scope> refScope) {
+        public Module(Class<? extends Annotation> refScope) {
             this.refScope = refScope;
         }
 
         @Override
         protected void configure() {
-            bind(MessageBodyWorkers.class)
-                    .toFactory(InjectionFactory.class)
-                    .in(RequestScope.class);
-            bind(new TypeLiteral<Ref<MessageBodyWorkers>>() {})
-                    .toFactory(ReferencingFactory.<MessageBodyWorkers>referenceFactory())
-                    .in(refScope);
+            bind(BuilderHelper.link(InjectionFactory.class).to(MessageBodyWorkers.class).
+                    in(RequestScoped.class).
+                    buildFactory());
+
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<MessageBodyWorkers>referenceFactory(),
+                    refScope, null, null, null, (new TypeLiteral<Ref<MessageBodyWorkers>>() {}).getType()));
         }
     }
     //
@@ -152,7 +158,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final Services services;
+    private final ServiceLocator services;
     private Map<MediaType, List<MessageBodyReader>> readerProviders;
     private Map<MediaType, List<MessageBodyWriter>> writerProviders;
     private List<MessageBodyReaderPair> readerListProviders;
@@ -196,7 +202,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    public MessageBodyFactory(Services services) {
+    public MessageBodyFactory(ServiceLocator services) {
         this.services = services;
 
         initReaders();
@@ -256,8 +262,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private void initInterceptors() {
-        this.readerInterceptors = Providers.getAllProviders(services, ReaderInterceptor.class);
-        this.writerInterceptors = Providers.getAllProviders(services, WriterInterceptor.class);
+        this.readerInterceptors = services.getAllServices(ReaderInterceptor.class);
+        this.writerInterceptors = services.getAllServices(WriterInterceptor.class);
     }
 
     private void initReaders() {

@@ -39,15 +39,14 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.QueryParam;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link QueryParam} injection annotation.
@@ -55,8 +54,10 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider<QueryParam> {
 
+    @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<QueryParam> {
 
         public InjectionResolver() {
@@ -85,7 +86,8 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider<
         }
     }
 
-    public QueryParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    public QueryParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.QUERY);
     }
 

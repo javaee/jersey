@@ -42,10 +42,9 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.Collections;
 import java.util.List;
 
-import org.glassfish.hk2.Factory;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Request routing information. Contains a {@link #routingPattern() routing pattern}
@@ -64,7 +63,7 @@ final class Route<T> {
 
                 @Override
                 public Router apply(Factory<Router> f) {
-                    return f.get();
+                    return f.provide();
                 }
             };
 

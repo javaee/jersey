@@ -44,14 +44,16 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.spi.Singleton;
 
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Class used to bind singleton resources classes into HK2.
@@ -63,15 +65,16 @@ public class SingletonResourceBinder {
     private final Object lock = new Object();
 
     @Inject
-    private Injector injector;
-    @Inject
-    private Services services;
+    private ServiceLocator locator;
 
     /**
      * Binds {@code resourceClass} into HK2 context as singleton.
      *
-     * @param <T>           Type of the resource class
-     * @param resourceClass Resource class which should be bound. If the class is not
+     * The bound class is then cached internally so that any sub-sequent attempt to bind that class
+     * as a singleton is silently ignored.
+     *
+     * @param <T>           type of the resource class.
+     * @param resourceClass resource class that should be bound. If the class is not
      *                      annotated with {@link Singleton Singleton annotation} it
      *                      will be ignored by this method.
      */
@@ -86,10 +89,13 @@ public class SingletonResourceBinder {
             }
 
             if (resourceClass.isAnnotationPresent(Singleton.class)) {
-                final DynamicBinderFactory binderFactory = services.bindDynamically();
-                T instance = injector.inject(resourceClass);
-                binderFactory.bind(resourceClass).toInstance(instance);
-                binderFactory.commit();
+                DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+                final DynamicConfiguration dc = dcs.createDynamicConfiguration();
+                T instance = locator.createAndInitialize(resourceClass);
+                AbstractActiveDescriptor<T> descriptor = BuilderHelper.createConstantDescriptor(instance);
+                descriptor.addContractType(resourceClass);
+                dc.bind(descriptor);
+                dc.commit();
             }
             registeredClasses.add(resourceClass);
         }
@@ -102,8 +108,8 @@ public class SingletonResourceBinder {
 
         @Override
         protected void configure() {
-            bind().to(org.glassfish.jersey.server.internal.routing.SingletonResourceBinder.class).in(org.glassfish.hk2.scopes
-                    .Singleton.class);
+            bind(BuilderHelper.link(org.glassfish.jersey.server.internal.routing.SingletonResourceBinder.class).
+                    in(Singleton.class).build());
         }
     }
 }

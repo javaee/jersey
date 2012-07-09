@@ -52,6 +52,8 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
@@ -64,10 +66,6 @@ import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
-
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
  * of annotation-based resource classes.
@@ -77,8 +75,8 @@ import org.jvnet.hk2.annotations.Inject;
  */
 public class ResourceMethodInvoker implements Inflector<ContainerRequest, ContainerResponse>, ResourceInfo {
 
-    private final Factory<RoutingContext> routingContextFactory;
-    private final Factory<InvocationContext> invocationContextFactory;
+    private final Provider<RoutingContext> routingContextFactory;
+    private final Provider<InvocationContext> invocationContextFactory;
     private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
@@ -97,9 +95,9 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     public static class Builder {
 
         @Inject
-        private Factory<RoutingContext> routingContextFactory;
+        private Provider<RoutingContext> routingContextFactory;
         @Inject
-        private Factory<InvocationContext> invocationContextFactory;
+        private Provider<InvocationContext> invocationContextFactory;
         @Inject
         private ResourceMethodDispatcherFactory dispatcherProviderFactory;
         @Inject
@@ -132,8 +130,8 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     }
 
     private ResourceMethodInvoker(
-            Factory<RoutingContext> routingContextFactory,
-            Factory<InvocationContext> invocationContextFactory,
+            Provider<RoutingContext> routingContextFactory,
+            Provider<InvocationContext> invocationContextFactory,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             ResourceMethod method,

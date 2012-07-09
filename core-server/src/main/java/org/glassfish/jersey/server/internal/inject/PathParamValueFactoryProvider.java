@@ -43,23 +43,24 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  *
  * @author Paul Sandoz
  */
+@Singleton
 final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<PathParam> {
 
+    @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<PathParam> {
 
         public InjectionResolver() {
@@ -123,7 +124,8 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<P
         }
     }
 
-    public PathParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    public PathParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.PATH);
     }
 

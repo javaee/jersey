@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.server;
 
-import java.io.IOException;
-import java.security.Principal;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -48,10 +49,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
-
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.io.IOException;
+import java.security.Principal;
 
 import static junit.framework.Assert.assertEquals;
 

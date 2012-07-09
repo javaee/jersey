@@ -55,14 +55,13 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 import org.glassfish.jersey.uri.internal.UriBuilderImpl;
-
-import org.glassfish.hk2.Services;
 
 /**
  * An abstract implementation of {@link RuntimeDelegate} that
@@ -80,7 +79,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
      *
      * @param hk2Services HK2 services.
      */
-    protected AbstractRuntimeDelegate(Services hk2Services) {
+    protected AbstractRuntimeDelegate(ServiceLocator hk2Services) {
         hps = Providers.getProviders(hk2Services, HeaderDelegateProvider.class);
 //        hps = new HashSet<HeaderDelegateProvider<?>>();
 //        for (HeaderDelegateProvider p : ServiceFinder.find(HeaderDelegateProvider.class, true)) {

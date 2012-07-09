@@ -41,9 +41,8 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.server.ContainerRequest;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Request matching bootstrapping stage that pushes the whole request path to the routing
@@ -62,7 +61,7 @@ final class MatchResultInitializerRouter implements Router {
     public static class Builder {
 
         @Inject
-        private Factory<RoutingContext> contextProvider;
+        private Provider<RoutingContext> contextProvider;
 
         /**
          * Build a match result initializer.
@@ -75,10 +74,10 @@ final class MatchResultInitializerRouter implements Router {
         }
     }
 
-    private final Factory<RoutingContext> contextProvider;
+    private final Provider<RoutingContext> contextProvider;
     private final Router rootRouter;
 
-    private MatchResultInitializerRouter(Factory<RoutingContext> contextProvider, Router rootRouter) {
+    private MatchResultInitializerRouter(Provider<RoutingContext> contextProvider, Router rootRouter) {
         this.contextProvider = contextProvider;
         this.rootRouter = rootRouter;
     }

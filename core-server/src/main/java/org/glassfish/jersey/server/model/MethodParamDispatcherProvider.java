@@ -41,9 +41,8 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-
-import org.glassfish.hk2.Factory;
 
 /**
  * Resource method dispatcher provider that creates factories for method parameter

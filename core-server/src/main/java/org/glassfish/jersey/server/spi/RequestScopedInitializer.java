@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Custom initialization provider that is guaranteed to be run from within an active
@@ -57,5 +57,5 @@ public interface RequestScopedInitializer {
      * @param services current HK2 services instance configured in the
      *                 {@link org.glassfish.jersey.server.ApplicationHandler}.
      */
-    public void initialize(Services services);
+    public void initialize(ServiceLocator services);
 }

@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 @Produces({"application/octet-stream", "*/*"})
 @Consumes({"application/octet-stream", "*/*"})
+@Singleton
 public final class ByteArrayProvider extends AbstractMessageReaderWriterProvider<byte[]> {
 
     public boolean supports(Class type) {

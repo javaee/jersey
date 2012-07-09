@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.security.Principal;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;

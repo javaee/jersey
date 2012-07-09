@@ -49,14 +49,13 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
 
 /**
  * Utility methods for retrieving values or value providers for the
@@ -77,7 +76,7 @@ public final class ParameterValueHelper {
         try {
             int index = 0;
             for (Factory<?> valueProvider : valueProviders) {
-                params[index++] = valueProvider.get();
+                params[index++] = valueProvider.provide();
             }
             return params;
         } catch (WebApplicationException e) {
@@ -99,7 +98,7 @@ public final class ParameterValueHelper {
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<Factory<?>> createValueProviders(final Services services, final Parameterized parameterized) {
+    public static List<Factory<?>> createValueProviders(final ServiceLocator services, final Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }

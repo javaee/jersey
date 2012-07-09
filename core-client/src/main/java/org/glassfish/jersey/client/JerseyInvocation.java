@@ -60,7 +60,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 
-import org.jvnet.tiger_types.Types;
+import org.jvnet.tigertypes.Types;
 
 import com.google.common.util.concurrent.SettableFuture;
 

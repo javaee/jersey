@@ -39,14 +39,11 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Provider;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -189,7 +186,7 @@ public class RequestScopeTest {
      * Test request scope inhabitant.
      *
      */
-    public static class TestProvider implements Provider<String> {
+    public static class TestProvider extends AbstractActiveDescriptor<String> {
         private String id;
 
         public TestProvider(String id) {
@@ -198,29 +195,13 @@ public class RequestScopeTest {
         }
 
         @Override
-        public String get() throws ComponentException {
+        public Class<?> getImplementationClass() {
+            return String.class;
+        }
+
+        @Override
+        public String create(ServiceHandle<?> root) {
             return id;
         }
-
-        @Override
-        public <U> U getByType(Class<U> type) {
-            return null;
-        }
-
-        @Override
-        public Class<? extends String> type() {
-            return null;
-        }
-
-        @Override
-        public Collection<Annotation> getAnnotations() {
-            return null;
-        }
-
-        @Override
-        public boolean isActive() {
-            return false;
-        }
-
     }
 }

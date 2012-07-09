@@ -46,6 +46,8 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -64,8 +66,6 @@ import org.glassfish.jersey.media.multipart.MultiPartProperties;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 
-import org.jvnet.hk2.annotations.Inject;
-
 import org.jvnet.mimepull.Header;
 import org.jvnet.mimepull.MIMEConfig;
 import org.jvnet.mimepull.MIMEMessage;
@@ -80,6 +80,7 @@ import org.jvnet.mimepull.MIMEPart;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Consumes("multipart/*")
+@Singleton
 public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
     /**

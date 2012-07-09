@@ -51,7 +51,9 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
@@ -59,8 +61,6 @@ import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
-
-import org.glassfish.hk2.Module;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -269,9 +269,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
+     * Add {@link Module HK2 modules} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
+     * These modules will be added when creating {@link ServiceLocator} instance.
      *
      * @param modules custom modules.
      * @return updated resource configuration instance.
@@ -281,9 +281,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
+     * Add {@link Module HK2 modules} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
+     * These modules will be added when creating {@link ServiceLocator} instance.
      *
      * @param modules custom modules.
      * @return updated resource configuration instance..

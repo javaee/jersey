@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -49,8 +50,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Annotated resource.
@@ -81,7 +80,7 @@ public class JaxrsInjectionReportingResource {
     @Path("method/{p1}/{p2}")
     public String doGet(
             @Context HttpHeaders httpHeaders,
-            @Inject UriInfo uriInfo,
+            @Context /*Inject*/ UriInfo uriInfo,    // TODO : is @Context okay here?
             @PathParam(value = "p1") String p1,
             @PathParam(value = "p2") PathSegment p2,
             @QueryParam(value = "q1") int q1,

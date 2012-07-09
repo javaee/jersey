@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
@@ -51,8 +52,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.process.Inflector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Programmatic resource.

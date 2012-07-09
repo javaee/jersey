@@ -58,8 +58,6 @@ import javax.ws.rs.ext.Provider;
 
 import javax.ejb.Stateless;
 
-import org.glassfish.hk2.Factory;
-
 /**
  * A simple HTML message body writer to serialize list of message beans.
  *
@@ -69,7 +67,7 @@ import org.glassfish.hk2.Factory;
 @Provider
 public class MessageListWriter implements MessageBodyWriter<List<Message>> {
 
-    @Context Factory<UriInfo> ui;
+    @Context private javax.inject.Provider<UriInfo> ui;
 
     @Override
     public boolean isWriteable(Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType) {

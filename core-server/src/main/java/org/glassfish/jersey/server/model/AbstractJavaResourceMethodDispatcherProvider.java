@@ -43,18 +43,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * An abstract implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -70,7 +68,7 @@ import org.jvnet.hk2.annotations.Inject;
 abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     @Inject
-    private Services services;
+    private ServiceLocator services;
 
     @Override
     public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler invocationHandler) {
@@ -115,7 +113,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
      *
      * @return application-configured HK2 services.
      */
-    final Services getServices() {
+    final ServiceLocator getServices() {
         return services;
     }
 

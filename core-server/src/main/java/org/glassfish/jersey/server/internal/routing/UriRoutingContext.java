@@ -39,6 +39,28 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
+import org.glassfish.jersey.uri.ExtendedUriInfo;
+import org.glassfish.jersey.uri.UriComponent;
+import org.glassfish.jersey.uri.UriTemplate;
+import org.glassfish.jersey.uri.internal.UriBuilderImpl;
+
+import javax.inject.Inject;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Collection;
@@ -49,35 +71,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
-
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.uri.ExtendedUriInfo;
-import org.glassfish.jersey.uri.UriComponent;
-import org.glassfish.jersey.uri.UriTemplate;
-import org.glassfish.jersey.uri.internal.UriBuilderImpl;
-
-import org.jvnet.hk2.annotations.Inject;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 /**
  * Default implementation of the routing context as well as URI information provider.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RequestScoped
 class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
@@ -93,7 +92,8 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      *
      * @param requestContext request reference.
      */
-    UriRoutingContext(@Inject Ref<ContainerRequest> requestContext) {
+    @Inject
+    UriRoutingContext(Ref<ContainerRequest> requestContext) {
         this.requestContext = requestContext;
     }
 

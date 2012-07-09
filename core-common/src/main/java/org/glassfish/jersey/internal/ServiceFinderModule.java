@@ -39,13 +39,15 @@
  */
 package org.glassfish.jersey.internal;
 
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
  * Simple ServiceFinder configuration module.
  *
  * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link org.glassfish.hk2.HK2} service.
+ * and registers found instances to {@link org.glassfish.hk2.api.ServiceLocator}.
  *
  * @param <T> contract type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -66,7 +68,9 @@ public class ServiceFinderModule<T> extends AbstractModule {
     @Override
     public void configure() {
         for (T t : ServiceFinder.find(contract)) {
-            bind(contract).toInstance(t);
+            AbstractActiveDescriptor<T> descriptor = BuilderHelper.createConstantDescriptor(t);
+            descriptor.addContractType(contract);
+            bind(descriptor);
         }
     }
 }

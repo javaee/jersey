@@ -37,10 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal;
 
 import java.util.concurrent.ExecutorService;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
@@ -48,17 +50,17 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
- * {@link org.glassfish.jersey.process.internal.ExecutorsFactory Executors factory} used on the server side. The class returns
- * the {@link java.util.concurrent.ExecutorService requesting
- * executor} based on the request data.
+ * {@link org.glassfish.jersey.process.internal.ExecutorsFactory Executors factory} used on the server side.
+ *
+ * The class returns the {@link java.util.concurrent.ExecutorService requesting executor} based on the request
+ * data.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -69,10 +71,12 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
 
     /**
      * Creates a new instance.
-     * @param services HK2 services.
+     *
+     * @param locator HK2 service locator.
      */
-    public ServerExecutorsFactory(@Inject Services services) {
-        super(services);
+    @Inject
+    public ServerExecutorsFactory(ServiceLocator locator) {
+        super(locator);
         this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
 
             @Override
@@ -103,14 +107,15 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
 
 
     /**
-     * {@link org.glassfish.hk2.Module HK2 Module} registering
+     * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
      * {@link ServerExecutorsFactory server executor factory}.
      */
     public static class ServerExecutorModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(ExecutorsFactory.class).to(ServerExecutorsFactory.class).in(Singleton.class);
-            bind().to(ServerExecutorsFactory.class).in(Singleton.class);
+            bind(BuilderHelper.activeLink(ServerExecutorsFactory.class)
+                    .to(new TypeLiteral<ExecutorsFactory<ContainerRequest>>() {
+                    }.getType()).in(Singleton.class).build());
         }
     }
 }

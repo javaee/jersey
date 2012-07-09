@@ -42,11 +42,15 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
@@ -55,11 +59,6 @@ import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
-
 /**
  * Client filtering stage responsible for execution of request and response filters
  * on each request-response message exchange.
@@ -67,8 +66,8 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
-    private final Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
-    private final Services services;
+    private final Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
+    private final ServiceLocator services;
 
     /**
      * Injection constructor.
@@ -76,9 +75,10 @@ class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
      * @param services                 HK2 services.
      * @param respondingContextFactory responding context factory.
      */
+    @Inject
     ClientFilteringStage(
-            @Inject Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
-            @Inject Services services) {
+            Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
+            ServiceLocator services) {
 
         this.services = services;
         this.respondingContextFactory = respondingContextFactory;
@@ -152,7 +152,7 @@ class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
 
         @Override
         protected void configure() {
-            bind().to(ClientFilteringStage.class);
+            bind(BuilderHelper.link(ClientFilteringStage.class).build());
         }
     }
 }

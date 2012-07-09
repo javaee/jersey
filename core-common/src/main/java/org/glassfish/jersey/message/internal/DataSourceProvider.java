@@ -47,6 +47,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -64,6 +65,7 @@ import javax.activation.DataSource;
  */
 @Produces({"application/octet-stream", "*/*"})
 @Consumes({"application/octet-stream", "*/*"})
+@Singleton
 public class DataSourceProvider extends AbstractMessageReaderWriterProvider<DataSource> {
 
     /**

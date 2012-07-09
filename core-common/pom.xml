@@ -75,7 +75,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.glassfish.jersey.*;version=${project.version}, com.sun.ws.rs.ext;version=${project.version}</Export-Package>
+                        <Export-Package>org.glassfish.jersey.*;version=${project.version}, com.sun.ws.rs.ext;version=${project.version}, org.jvnet.tigertypes;version=${project.version}</Export-Package>
                         <Private-Package>org.glassfish.jersey.osgi</Private-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
@@ -113,13 +113,13 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
-            <artifactId>auto-depends</artifactId>
+            <artifactId>hk2-locator</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.jvnet</groupId>
-            <artifactId>tiger-types</artifactId>
-        </dependency>
+        <!--TODO : <dependency>-->
+            <!--<groupId>org.glassfish.hk2</groupId>-->
+            <!--<artifactId>tiger-types-osgi</artifactId>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>junit</groupId>

@@ -47,6 +47,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -55,27 +56,33 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.message.internal.SaxParserFactoryInjectionProvider;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
 
 import org.junit.Test;
 
 public class JaxbStringReaderProviderTest {
     @Test
     public void stringReaderDoesNotReadExternalDtds() {
-        SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new Factory<FeaturesAndProperties>() {
-            @Override
-            public FeaturesAndProperties get() throws ComponentException {
-                return new ResourceConfig();
-            }
-        });
 
-        JaxbStringReaderProvider.RootElementProvider provider = new JaxbStringReaderProvider.RootElementProvider(spf, new Providers() {
+        Provider<SAXParserFactory> saxParserFactoryProvider = new Provider<SAXParserFactory>() {
+            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new Provider<FeaturesAndProperties>() {
+                @Override
+                public FeaturesAndProperties get() {
+                    return new ResourceConfig();
+                }
+            });
+
+            @Override
+            public SAXParserFactory get() {
+                return spf.provide();
+            }
+        };
+
+        JaxbStringReaderProvider.RootElementProvider provider = new JaxbStringReaderProvider.RootElementProvider(saxParserFactoryProvider, new Providers() {
             @Override
             public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
                 return null;

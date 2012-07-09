@@ -42,21 +42,20 @@ package org.glassfish.jersey.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Jersey implementation of JAX-RS {@link javax.ws.rs.ext.Providers} contract.
@@ -72,16 +71,16 @@ public class JaxrsProviders implements javax.ws.rs.ext.Providers {
 
         @Override
         protected void configure() {
-            bind(javax.ws.rs.ext.Providers.class).to(JaxrsProviders.class).in(PerLookup.class);
+            bind(BuilderHelper.link(JaxrsProviders.class).to(javax.ws.rs.ext.Providers.class).in(PerLookup.class).build());
         }
     }
 
     @Inject
-    private Factory<MessageBodyWorkers> workers;
+    private Provider<MessageBodyWorkers> workers;
     @Inject
-    private Factory<ContextResolvers> resolvers;
+    private Provider<ContextResolvers> resolvers;
     @Inject
-    private Factory<ExceptionMappers> mappers;
+    private Provider<ExceptionMappers> mappers;
 
     @Override
     public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType) {

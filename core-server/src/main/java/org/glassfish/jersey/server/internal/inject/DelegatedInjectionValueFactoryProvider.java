@@ -39,19 +39,25 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.Injectee;
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
 
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Set;
 
-import com.sun.hk2.component.InjectionResolver;
 
 /**
  * Value factory provider that delegates the injection target lookup to
@@ -59,11 +65,13 @@ import com.sun.hk2.component.InjectionResolver;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
 
     private final ContextInjectionResolver resolver;
 
-    public DelegatedInjectionValueFactoryProvider(@Inject Services services) {
+    @Inject
+    public DelegatedInjectionValueFactoryProvider(ServiceLocator services) {
         ContextInjectionResolver result = null;
         for (InjectionResolver r : Providers.getProviders(services, InjectionResolver.class)) {
             if (ContextInjectionResolver.class.isInstance(r)) {
@@ -71,7 +79,6 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
                 break;
             }
         }
-
         resolver = result;
     }
 
@@ -80,24 +87,61 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
         final Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT || paramSource == Parameter.Source.UNKNOWN) {
             return new Factory<Object>() {
+                @Override
+                public Object provide() {
+                    return resolver.resolve(getInjectee(parameter), null);
+                }
 
                 @Override
-                public Object get() throws ComponentException {
-                    return resolver.getValue(
-                            null,
-                            null,
-                            parameter,
-                            parameter.getType(),
-                            parameter.getRawType());
+                public void dispose(Object instance) {
+                    //not used
                 }
             };
         }
-
         return null;
     }
 
     @Override
     public PriorityType getPriority() {
         return Priority.LOW;
+    }
+
+    private static Injectee getInjectee(final Parameter parameter) {
+        return new Injectee() {
+            @Override
+            public Type getRequiredType() {
+                return parameter.getType();
+            }
+
+            @Override
+            public Set<Annotation> getRequiredQualifiers() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public int getPosition() {
+                return 0;
+            }
+
+            @Override
+            public Class<?> getInjecteeClass() {
+                return parameter.getRawType();
+            }
+
+            @Override
+            public AnnotatedElement getParent() {
+                return null;
+            }
+
+            @Override
+            public boolean isOptional() {
+                return false;
+            }
+
+            @Override
+            public boolean isSelf() {
+                return false;
+            }
+        };
     }
 }

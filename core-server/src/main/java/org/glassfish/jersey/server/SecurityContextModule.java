@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.core.SecurityContext;
 
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
 /**
  * {@link SecurityContext Security Context} HK2 Module.
@@ -66,9 +66,10 @@ class SecurityContextModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SecurityContext.class).toFactory(SecurityContextReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<SecurityContext>>() {
-        }).toFactory(ReferencingFactory.<SecurityContext>referenceFactory()).in(RequestScope.class);
+        bind(BuilderHelper.link(SecurityContextReferencingFactory.class).to(SecurityContext.class).in(PerLookup.class).buildFactory());
+        bind(Utilities.createConstantFactoryDescriptor(
+                ReferencingFactory.<SecurityContext>referenceFactory(), RequestScoped.class, null, null, null, (new TypeLiteral<Ref<SecurityContext>>() {
+        }).getType()));
 
     }
 
@@ -76,8 +77,8 @@ class SecurityContextModule extends AbstractModule {
      * Referencing factory for SecurityContext.
      */
     private static class SecurityContextReferencingFactory extends ReferencingFactory<SecurityContext> {
-
-        public SecurityContextReferencingFactory(@Inject Factory<Ref<SecurityContext>> referenceFactory) {
+        @Inject
+        public SecurityContextReferencingFactory(Provider<Ref<SecurityContext>> referenceFactory) {
             super(referenceFactory);
         }
     }

@@ -39,18 +39,16 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
 
@@ -62,17 +60,17 @@ import com.google.common.base.Function;
 class ReferencesInitializer implements Function<ContainerRequest, ContainerRequest> {
 
     @Inject
-    private Services services;
+    private ServiceLocator services;
     @Inject
-    private Factory<Ref<Request>> requestReference;
+    private Provider<Ref<Request>> requestReference;
     @Inject
-    private Factory<Ref<ContainerRequest>> requestContextReference;
+    private Provider<Ref<ContainerRequest>> requestContextReference;
     @Inject
-    private Factory<Ref<HttpHeaders>> httpHeadersReference;
+    private Provider<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
-    private Factory<Ref<SecurityContext>> securityContextReference;
+    private Provider<Ref<SecurityContext>> securityContextReference;
     @Inject
-    private Factory<UriInfo> uriInfoFactory;
+    private Provider<UriInfo> uriInfoFactory;
 
     /**
      * Initialize the request references using the incoming request and register

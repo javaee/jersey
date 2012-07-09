@@ -39,11 +39,14 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.hk2.Binder;
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.NamedBinder;
-import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Descriptor;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.FactoryDescriptors;
+import org.glassfish.hk2.api.Filter;
+import org.glassfish.hk2.api.HK2Loader;
+import org.glassfish.hk2.api.MultiException;
+import org.glassfish.hk2.utilities.DescriptorImpl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -54,19 +57,19 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractModule implements Module, BinderFactory {
+public abstract class AbstractModule implements Module, DynamicConfiguration {
 
-    private transient BinderFactory binderFactory;
+    private transient DynamicConfiguration configuration;
 
     @Override
-    public void configure(BinderFactory binderFactory) {
-        checkState(this.binderFactory == null, "Recursive configuration call detected.");
+    public void bind(DynamicConfiguration configuration) {
+        checkState(this.configuration == null, "Recursive configuration call detected.");
 
-        this.binderFactory = checkNotNull(binderFactory, "binderFactory");
+        this.configuration = checkNotNull(configuration, "configuration");
         try {
             configure();
         } finally {
-            this.binderFactory = null;
+            this.configuration = null;
         }
     }
 
@@ -77,17 +80,17 @@ public abstract class AbstractModule implements Module, BinderFactory {
     protected abstract void configure();
 
     /**
-     * Get the active {@link BinderFactory binder factory} instance used for
+     * Get the active {@link DynamicConfiguration binder factory} instance used for
      * binding configuration. This method can only be called from within the
      * scope of the {@link #configure()} method.
      *
-     * @return binder factory instance used for binding configuration.
+     * @return dynamic configuration instance used for binding configuration.
      * @throws IllegalStateException in case the method is not called from within
      *     an active call to {@link #configure()} method.
      */
-    private BinderFactory binderFactory() {
-        checkState(binderFactory != null, "Binder factory accessed from outside of an active module configuration scope.");
-        return binderFactory;
+    private DynamicConfiguration configuration() {
+        checkState(configuration != null, "Dynamic configuration accessed from outside of an active module configuration scope.");
+        return configuration;
     }
 
     /**
@@ -97,8 +100,9 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final BinderFactory inParent() {
-        return binderFactory().inParent();
+    public ActiveDescriptor<?> bind(Descriptor descriptor) {
+        setLoader(descriptor);
+        return configuration.bind(descriptor);
     }
 
     /**
@@ -108,8 +112,11 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final Binder<Object> bind(String contractName) {
-        return binderFactory().bind(contractName);
+    public FactoryDescriptors bind(FactoryDescriptors factoryDescriptors) {
+        setLoader(factoryDescriptors.getFactoryAsAService());
+        setLoader(factoryDescriptors.getFactoryAsAFactory());
+
+        return configuration.bind(factoryDescriptors);
     }
 
     /**
@@ -119,8 +126,8 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final Binder<Object> bind(String... contractNames) {
-        return binderFactory().bind(contractNames);
+    public <T> ActiveDescriptor<T> addActiveDescriptor(ActiveDescriptor<T> activeDescriptor) throws IllegalArgumentException {
+        return configuration.addActiveDescriptor(activeDescriptor);
     }
 
     /**
@@ -130,8 +137,8 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final <T> Binder<T> bind(Class<T> contract, Class<?>... contracts) {
-        return binderFactory().bind(contract, contracts);
+    public <T> ActiveDescriptor<T> addActiveDescriptor(Class<T> rawClass) throws MultiException, IllegalArgumentException {
+        return configuration.addActiveDescriptor(rawClass);
     }
 
     /**
@@ -141,8 +148,8 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final <T> Binder<T> bind(TypeLiteral<T> typeLiteral) {
-        return binderFactory().bind(typeLiteral);
+    public void addUnbindFilter(Filter unbindFilter) throws IllegalArgumentException {
+        configuration.addUnbindFilter(unbindFilter);
     }
 
     /**
@@ -152,8 +159,8 @@ public abstract class AbstractModule implements Module, BinderFactory {
      * method.
      */
     @Override
-    public final NamedBinder<Object> bind() {
-        return binderFactory().bind();
+    public void commit() throws MultiException {
+        configuration.commit();
     }
 
     /**
@@ -163,7 +170,29 @@ public abstract class AbstractModule implements Module, BinderFactory {
      */
     public final void install(Module... modules) {
         for (Module module : modules) {
-            module.configure(this);
+            module.bind(this);
         }
+    }
+
+    private void setLoader(Descriptor descriptor) {
+        if (descriptor instanceof DescriptorImpl) {
+            final ClassLoader loader = getModuleClassloader();
+
+            ((DescriptorImpl)descriptor).setLoader(new HK2Loader() {
+                @Override
+                public Class<?> loadClass(String className) throws MultiException {
+                    try {
+                        return loader.loadClass(className);
+                    } catch (ClassNotFoundException e) {
+                        throw new MultiException(e);
+                    }
+                }
+            });
+        } // else who knows?
+    }
+
+    private ClassLoader getModuleClassloader() {
+        ClassLoader loader = this.getClass().getClassLoader();
+        return loader == null ? ClassLoader.getSystemClassLoader() : loader;
     }
 }

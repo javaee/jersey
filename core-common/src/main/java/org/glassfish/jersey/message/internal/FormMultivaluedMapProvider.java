@@ -46,6 +46,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -61,6 +62,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 @Produces("application/x-www-form-urlencoded")
 @Consumes("application/x-www-form-urlencoded")
+@Singleton
 public final class FormMultivaluedMapProvider extends AbstractFormProvider<MultivaluedMap<String, String>> {
 
     private final Type mapType;

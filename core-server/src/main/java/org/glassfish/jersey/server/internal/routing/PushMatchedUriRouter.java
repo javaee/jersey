@@ -41,9 +41,8 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.server.ContainerRequest;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Terminal router that pushes the URI matched so far to the stack returned
@@ -54,7 +53,7 @@ import org.jvnet.hk2.annotations.Inject;
 class PushMatchedUriRouter implements Router {
 
     @Inject
-    private Factory<RoutingContext> routingContextFactory;
+    private Provider<RoutingContext> routingContextFactory;
 
     @Override
     public Continuation apply(final ContainerRequest data) {

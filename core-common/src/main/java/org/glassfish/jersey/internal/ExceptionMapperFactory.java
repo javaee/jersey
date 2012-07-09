@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -48,23 +49,22 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -85,13 +85,20 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
         private static class InjectionFactory extends ReferencingFactory<ExceptionMappers> {
 
-            public InjectionFactory(@Inject Factory<Ref<ExceptionMappers>> referenceFactory) {
+            @Inject
+            public InjectionFactory(Provider<Ref<ExceptionMappers>> referenceFactory) {
                 super(referenceFactory);
+            }
+
+            @Override
+            @RequestScoped
+            public ExceptionMappers provide() {
+                return super.provide();
             }
         }
 
         //
-        private final Class<? extends Scope> refScope;
+        private final Class<? extends Annotation> refScope;
 
         /**
          * Create exception mapper factory injection binding registration module.
@@ -99,19 +106,16 @@ public class ExceptionMapperFactory implements ExceptionMappers {
          * @param refScope scope of the injectable exception mapper factory
          *                 {@link Ref reference}.
          */
-        public Module(Class<? extends Scope> refScope) {
+        public Module(Class<? extends Annotation> refScope) {
             this.refScope = refScope;
         }
 
         @Override
         protected void configure() {
-            bind(ExceptionMappers.class)
-                    .toFactory(InjectionFactory.class)
-                    .in(RequestScope.class);
-            bind(new TypeLiteral<Ref<ExceptionMappers>>() {
-            })
-                    .toFactory(ReferencingFactory.<ExceptionMappers>referenceFactory())
-                    .in(refScope);
+            bind(BuilderHelper.link(InjectionFactory.class).to(ExceptionMappers.class).in(RequestScoped.class).buildFactory());
+
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<ExceptionMappers>referenceFactory(),
+                    refScope, null, null, null, (new TypeLiteral<Ref<ExceptionMappers>>() {}).getType()));
         }
     }
 
@@ -149,7 +153,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      *
      * @param services HK2 services.
      */
-    public ExceptionMapperFactory(Services services) {
+    public ExceptionMapperFactory(ServiceLocator services) {
         this(Providers.getAllProviders(services, ExceptionMapper.class));
     }
 

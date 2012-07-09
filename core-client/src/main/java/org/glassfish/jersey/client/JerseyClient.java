@@ -56,8 +56,12 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.ProviderBinder;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationCallback;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -68,12 +72,7 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.collect.Sets;
 import static com.google.common.base.Preconditions.checkState;
@@ -189,9 +188,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                 new ClientModule()
         };
 
-        final Services services;
+        final ServiceLocator serviceLocator;
         if (customModules.isEmpty()) {
-            services = HK2.get().create(null, jerseyModules);
+            serviceLocator = Utilities.create(null, null, jerseyModules);
         } else {
             final Module[] customModulesArray = customModules.toArray(new Module[customModules.size()]);
 
@@ -199,37 +198,32 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             System.arraycopy(jerseyModules, 0, modules, 0, jerseyModules.length);
             System.arraycopy(customModulesArray, 0, modules, jerseyModules.length, customModulesArray.length);
 
-            services = HK2.get().create(null, modules);
+            serviceLocator = Utilities.create(null, null, modules);
         }
-        final Injector injector = services.forContract(Injector.class).get();
 
-        final RequestProcessingInitializationStage workersInitializationStage = injector.inject
-                (RequestProcessingInitializationStage.class);
-        final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
+        final RequestProcessingInitializationStage workersInitializationStage =
+                serviceLocator.createAndInitialize(RequestProcessingInitializationStage.class);
+        final ClientFilteringStage filteringStage = serviceLocator.createAndInitialize(ClientFilteringStage.class);
 
         Stage<ClientRequest> rootStage = Stages
                 .chain(workersInitializationStage)
                 .to(filteringStage)
                 .build(Stages.asStage(connector));
 
-        bindExecutors(injector);
-
-
-        this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);
-
-        injector.inject(this);
+        bindExecutors(serviceLocator);
+        this.invoker = Utilities.getOrCreateComponent(serviceLocator, ClientModule.RequestInvokerBuilder.class).build(rootStage);
+        serviceLocator.inject(this);
     }
 
     /**
-     * Binds {@link RequestExecutorsProvider request executors}
-     *  and {@link ResponseExecutorsProvider response executors} to
-     *  all provider interfaces and removes them from the configuration, so that
-     *  there will not be bound again in the {@link RequestProcessingInitializationStage}.
+     * Binds {@link RequestExecutorsProvider request executors} and {@link ResponseExecutorsProvider response executors}
+     * to all provider interfaces and removes them from the configuration, so that there will not be bound again in the
+     * {@link RequestProcessingInitializationStage}.
      *
-     * @param injector HK2 injector
+     * @param locator HK2 service locator.
      */
-    private void bindExecutors(Injector injector) {
-        ProviderBinder providerBinder = injector.inject(ProviderBinder.class);
+    private void bindExecutors(ServiceLocator locator) {
+        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
         Set<Class<?>> executors = Sets.newHashSet();
         for (Class<?> clazz : this.configuration.getProviderClasses()) {
             final Set<Class<?>> providerContracts = Providers.getProviderContracts(clazz);

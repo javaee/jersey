@@ -39,16 +39,15 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.inject.Provider;
 import javax.xml.transform.TransformerFactory;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerThread;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.FeaturesAndProperties;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerThread;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import javax.inject.Inject;
 
 /**
  * Thread-scoped injection provider of {@link TransformerFactory transformer factories}.
@@ -56,17 +55,17 @@ import org.jvnet.hk2.annotations.Scoped;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Scoped(PerThread.class)
 public class TransformerFactoryInjectionProvider implements Factory<TransformerFactory> {
 
-    private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
 
-    public TransformerFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    @Inject
+    public TransformerFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 
     @Override
-    public TransformerFactory get() {
+    public TransformerFactory provide() {
         TransformerFactory f = TransformerFactory.newInstance();
 
         if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
@@ -74,5 +73,10 @@ public class TransformerFactoryInjectionProvider implements Factory<TransformerF
         }
 
         return f;
+    }
+
+    @Override
+    public void dispose(TransformerFactory instance) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

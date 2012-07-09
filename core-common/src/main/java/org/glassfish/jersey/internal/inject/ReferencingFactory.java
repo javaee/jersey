@@ -39,11 +39,11 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
+import javax.inject.Provider;
 
 /**
  * Factory that provides injection of the referenced instance.
@@ -56,8 +56,13 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
     private static class EmptyReferenceFactory<T> implements Factory<Ref<T>> {
 
         @Override
-        public Ref<T> get() throws ComponentException {
+        public Ref<T> provide() {
             return Refs.emptyRef();
+        }
+
+        @Override
+        public void dispose(Ref<T> instance) {
+            //not used
         }
     }
 
@@ -70,25 +75,35 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
         }
 
         @Override
-        public Ref<T> get() throws ComponentException {
+        public Ref<T> provide() {
             return Refs.of(initialValue);
+        }
+
+        @Override
+        public void dispose(Ref<T> instance) {
+            //not used
         }
     }
 
-    private final Factory<Ref<T>> referenceFactory;
+    private final Provider<Ref<T>> referenceFactory;
 
     /**
      * Create new referencing injection factory.
      *
      * @param referenceFactory reference provider backing the factory.
      */
-    public ReferencingFactory(Factory<Ref<T>> referenceFactory) {
+    public ReferencingFactory(Provider<Ref<T>> referenceFactory) {
         this.referenceFactory = referenceFactory;
     }
 
     @Override
-    public T get() throws ComponentException {
+    public T provide() {
         return referenceFactory.get().get();
+    }
+
+    @Override
+    public void dispose(T instance) {
+        //not used
     }
 
     /**

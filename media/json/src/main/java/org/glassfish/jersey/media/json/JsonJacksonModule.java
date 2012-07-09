@@ -42,13 +42,14 @@ package org.glassfish.jersey.media.json;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import javax.inject.Singleton;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
-
-import org.glassfish.hk2.scopes.Singleton;
 
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
@@ -84,8 +85,6 @@ public class JsonJacksonModule extends AbstractModule {
     }
 
     private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+        bind(BuilderHelper.link(provider).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class).build());
     }
 }

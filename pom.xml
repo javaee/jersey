@@ -737,7 +737,7 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.hk2</groupId>
-                <artifactId>auto-depends</artifactId>
+                <artifactId>hk2-locator</artifactId>
                 <version>${hk2.version}</version>
             </dependency>
             <dependency>
@@ -745,11 +745,11 @@
                 <artifactId>javax.inject</artifactId>
                 <version>${hk2.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.jvnet</groupId>
-                <artifactId>tiger-types</artifactId>
-                <version>1.4</version>
-            </dependency>
+            <!-- TODO :<dependency>-->
+                <!--<groupId>org.glassfish.hk2</groupId>-->
+                <!--<artifactId>tiger-types-osgi</artifactId>-->
+                <!--<version>2.1.6</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>org.glassfish.grizzly</groupId>
@@ -760,6 +760,11 @@
                 <groupId>org.glassfish.grizzly</groupId>
                 <artifactId>grizzly-http-servlet</artifactId>
                 <version>${grizzly2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.grizzly</groupId>
+                <artifactId>grizzly-http-client</artifactId>
+                <version>1.1</version>
             </dependency>
 
             <dependency>
@@ -847,7 +852,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jaxrs.api.version>2.0-m09</jaxrs.api.version>
-        <hk2.version>2.0.3</hk2.version>
+        <hk2.version>2.1.9</hk2.version>
         <grizzly2.version>2.2.10</grizzly2.version>
         <jackson.version>1.9.2</jackson.version>
         <jersey1.version>1.12</jersey1.version>

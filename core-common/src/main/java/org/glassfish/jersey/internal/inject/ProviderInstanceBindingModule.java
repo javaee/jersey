@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 
 /**
@@ -67,7 +69,9 @@ public class ProviderInstanceBindingModule<T> extends AbstractModule {
     @Override
     protected void configure() {
         for(T provider : providers) {
-            bind(providerType).toInstance(provider);
+            AbstractActiveDescriptor<T> descriptor = BuilderHelper.createConstantDescriptor(provider);
+            descriptor.addContractType(providerType);
+            bind(descriptor);
         }
     }
 }

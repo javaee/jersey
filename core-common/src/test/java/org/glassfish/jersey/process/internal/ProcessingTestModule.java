@@ -45,6 +45,9 @@ import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
@@ -58,11 +61,9 @@ import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Processing module for testing purposes.
@@ -81,21 +82,20 @@ public class ProcessingTestModule extends AbstractModule {
         public Ref<ContextResolvers> contextResolvers;
     }
 
-    public static void initProviders(final Services services) throws IllegalStateException {
+    public static void initProviders(final ServiceLocator services) throws IllegalStateException {
         initProviders(services, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
     }
 
-    public static void initProviders(final Services services, final Set<Class<?>> providerClasses,
+    public static void initProviders(final ServiceLocator locator, final Set<Class<?>> providerClasses,
                                      final Set<Object> providerInstances) throws IllegalStateException {
-        final Injector injector = services.forContract(Injector.class).get();
-        ProcessingTestModule.Refs refs = injector.inject(ProcessingTestModule.Refs.class);
+        ProcessingTestModule.Refs refs = locator.createAndInitialize(ProcessingTestModule.Refs.class);
 
-        final ProviderBinder providers = injector.inject(ProviderBinder.class);
+        final ProviderBinder providers = locator.createAndInitialize(ProviderBinder.class);
         providers.bindClasses(providerClasses);
         providers.bindInstances(providerInstances);
-        final MessageBodyWorkers workers = new MessageBodyFactory(services);
-        final ExceptionMappers mappers = new ExceptionMapperFactory(services);
-        final ContextResolvers resolvers = new ContextResolverFactory(services);
+        final MessageBodyWorkers workers = new MessageBodyFactory(locator);
+        final ExceptionMappers mappers = new ExceptionMapperFactory(locator);
+        final ContextResolvers resolvers = new ContextResolverFactory(locator);
 
         refs.messageBodyWorkers.set(workers);
         refs.exceptionMappers.set(mappers);
@@ -116,9 +116,7 @@ public class ProcessingTestModule extends AbstractModule {
                 new JaxrsProviders.Module(),
                 new TestExecutorsFactory.TestExecutorsModule());
 
-
-        bind(ExceptionMapper.class).toInstance(new ExceptionMapper<Throwable>() {
-
+        AbstractActiveDescriptor descriptor = BuilderHelper.createConstantDescriptor(new ExceptionMapper<Throwable>() {
             @Override
             public Response toResponse(Throwable exception) {
                 if (exception instanceof NumberFormatException) {
@@ -128,5 +126,7 @@ public class ProcessingTestModule extends AbstractModule {
                 throw new RuntimeException(exception);
             }
         });
+        descriptor.addContractType(ExceptionMapper.class);
+        bind(descriptor);
     }
 }

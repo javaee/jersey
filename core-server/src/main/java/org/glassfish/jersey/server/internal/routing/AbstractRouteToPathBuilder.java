@@ -41,11 +41,11 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.List;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.routing.Router.Builder;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
 
 import com.google.common.collect.Lists;
 
@@ -58,7 +58,7 @@ import com.google.common.collect.Lists;
  */
 abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPathBuilder<T> {
 
-    private final Services services;
+    private final ServiceLocator services;
     private final List<Route<T>> acceptedRoutes = Lists.newLinkedList();
     private List<Factory<Router>> currentRouters;
 
@@ -68,7 +68,7 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
      * @param services HK2 services.
      * @param pattern  request path routing pattern.
      */
-    protected AbstractRouteToPathBuilder(Services services, T pattern) {
+    protected AbstractRouteToPathBuilder(ServiceLocator services, T pattern) {
         this.services = services;
         _route(pattern);
     }
@@ -123,7 +123,19 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
 
     @Override
     public final RouterModule.RouteToPathBuilder<T> to(Class<? extends Router> ca) {
-        return to(Providers.asFactory(services.forContract(ca).getProvider()));
+        final ServiceHandle<? extends Router> serviceHandle = services.getServiceHandle(ca);
+        Factory<? extends Router> factory = new Factory<Router>() {
+            @Override
+            public Router provide() {
+                return serviceHandle.getService();
+            }
+
+            @Override
+            public void dispose(Router instance) {
+                //not used
+            }
+        };
+        return to(factory);
     }
 
     @Override

@@ -39,13 +39,15 @@
  */
 package org.glassfish.jersey.media.json;
 
+import javax.inject.Singleton;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.media.json.internal.GeneralMoxyJsonProvider;
-
-import org.glassfish.hk2.scopes.Singleton;
 
 import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
 
@@ -62,8 +64,6 @@ public class JsonMoxyModule extends AbstractModule {
     }
 
     private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+        bind(BuilderHelper.link(provider).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class).build());
     }
 }

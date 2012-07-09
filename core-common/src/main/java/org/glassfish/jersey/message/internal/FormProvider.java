@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Form;
@@ -61,6 +62,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 @Produces({"application/x-www-form-urlencoded", "*/*"})
 @Consumes({"application/x-www-form-urlencoded", "*/*"})
+@Singleton
 public final class FormProvider extends AbstractFormProvider<Form> {
 
     @Override

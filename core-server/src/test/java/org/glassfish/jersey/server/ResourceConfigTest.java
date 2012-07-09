@@ -102,7 +102,7 @@ public class ResourceConfigTest {
         ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
         ApplicationHandler ah = new ApplicationHandler(resourceConfig);
 
-        assertSame(resourceConfig, ah.getServices().forContract(Application.class).get());
+        assertSame(resourceConfig, ah.getServiceLocator().getService(Application.class));
 
         ContainerResponse r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());

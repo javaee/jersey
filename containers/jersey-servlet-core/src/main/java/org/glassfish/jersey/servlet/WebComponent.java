@@ -51,6 +51,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -62,14 +65,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -81,15 +90,6 @@ import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * An common Jersey web component that may be extended by a Servlet and/or
@@ -124,7 +124,7 @@ public class WebComponent {
 
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
 
-        final List<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServices(),
+        final List<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServiceLocator(),
                 AsyncContextDelegateProvider.class);
         if (!providers.isEmpty()) {
             return providers.iterator().next();
@@ -140,14 +140,15 @@ public class WebComponent {
     }
 
     private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
-        public HttpServletRequestReferencingFactory(@Inject Factory<Ref<HttpServletRequest>> referenceFactory) {
+        @Inject
+        public HttpServletRequestReferencingFactory(Provider<Ref<HttpServletRequest>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
-
-        public HttpServletResponseReferencingFactory(@Inject Factory<Ref<HttpServletResponse>> referenceFactory) {
+        @Inject
+        public HttpServletResponseReferencingFactory(Provider<Ref<HttpServletResponse>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -155,46 +156,73 @@ public class WebComponent {
     private class WebComponentModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(HttpServletRequest.class).toFactory(HttpServletRequestReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<HttpServletRequest>>() {
-            }).
-                    toFactory(ReferencingFactory.<HttpServletRequest>referenceFactory()).in(RequestScope.class);
+            bind(BuilderHelper.link(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class).in(PerLookup.class).buildFactory());
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<HttpServletRequest>referenceFactory(),
+                    RequestScoped.class, null, null, null, (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType() ));
 
-            bind(HttpServletResponse.class).toFactory(HttpServletResponseReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<HttpServletResponse>>() {
-            }).
-                    toFactory(ReferencingFactory.<HttpServletResponse>referenceFactory()).in(RequestScope.class);
 
-            bind(ServletContext.class).toFactory(new Factory<ServletContext>() {
-                @Override
-                public ServletContext get() throws ComponentException {
-                    return webConfig.getServletContext();
-                }
-            }).in(Singleton.class);
+            bind(BuilderHelper.link(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class).in(PerLookup.class).buildFactory());
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<HttpServletResponse>referenceFactory(),
+                    RequestScoped.class, null, null, null, (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType() ));
+
+            bind(Utilities.createConstantFactoryDescriptor(
+                    new Factory<ServletContext>() {
+                        @Override
+                        public ServletContext provide() {
+                            return webConfig.getServletContext();
+                        }
+
+                        @Override
+                        public void dispose(ServletContext instance) {
+                            //not used
+                        }
+                    },
+                    Singleton.class, null, null, null, ServletContext.class));
+
 
             if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
-                bind(ServletConfig.class).toFactory(new Factory<ServletConfig>() {
-                    @Override
-                    public ServletConfig get() throws ComponentException {
-                        return webConfig.getServletConfig();
-                    }
-                }).in(Singleton.class);
-            } else {
-                bind(FilterConfig.class).toFactory(new Factory<FilterConfig>() {
+                bind(Utilities.createConstantFactoryDescriptor(
+                        new Factory<ServletConfig>() {
+                            @Override
+                            public ServletConfig provide() {
+                                return webConfig.getServletConfig();
+                            }
 
-                    @Override
-                    public FilterConfig get() throws ComponentException {
-                        return webConfig.getFilterConfig();
-                    }
-                }).in(Singleton.class);
+                            @Override
+                            public void dispose(ServletConfig instance) {
+                                //not used
+                            }
+                        },
+                        Singleton.class, null, null, null, ServletConfig.class));
+            } else {
+                bind(Utilities.createConstantFactoryDescriptor(
+                        new Factory<FilterConfig>() {
+                            @Override
+                            public FilterConfig provide() {
+                                return webConfig.getFilterConfig();
+                            }
+
+                            @Override
+                            public void dispose(FilterConfig instance) {
+                                //not used
+                            }
+                        },
+                        Singleton.class, null, null, null, FilterConfig.class));
             }
 
-            bind(WebConfig.class).toFactory(new Factory<WebConfig>() {
-                @Override
-                public WebConfig get() throws ComponentException {
-                    return webConfig;
-                }
-            }).in(Singleton.class);
+            bind(Utilities.createConstantFactoryDescriptor(
+                    new Factory<WebConfig>() {
+                        @Override
+                        public WebConfig provide() {
+                            return webConfig;
+                        }
+
+                        @Override
+                        public void dispose(WebConfig instance) {
+                            //not used
+                        }
+                    },
+                    Singleton.class, null, null, null, WebConfig.class));
             install(new ServiceFinderModule<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
         }
     }
@@ -276,11 +304,11 @@ public class WebComponent {
 
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
-                public void initialize(Services services) {
-                    services.forContract(new TypeLiteral<Ref<HttpServletRequest>>() {
-                    }).get().set(servletRequest);
-                    services.forContract(new TypeLiteral<Ref<HttpServletResponse>>() {
-                    }).get().set(servletResponse);
+                public void initialize(ServiceLocator services) {
+                    services.<Ref<HttpServletRequest>>getService((new TypeLiteral<Ref<HttpServletRequest>>() {
+                    }).getType()).set(servletRequest);
+                    services.<Ref<HttpServletResponse>>getService((new TypeLiteral<Ref<HttpServletResponse>>() {
+                    }).getType()).set(servletResponse);
                 }
             });
             requestContext.setWriter(responseWriter);

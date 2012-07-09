@@ -52,29 +52,29 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
-
-import org.glassfish.hk2.Services;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class SourceProviderTest {
-    private Services services;
+    private ServiceLocator services;
 
     @Before
     public void setUp() {
         services = SaxParserFactoryInjectionProviderTest.createServices(new AbstractModule() {
             @Override
             protected void configure() {
-                bind(SourceProvider.SaxSourceReader.class).to(SourceProvider.SaxSourceReader.class);
+                bind(BuilderHelper.link(SourceProvider.SaxSourceReader.class).build());
             }
         });
     }
 
     @Test
     public void saxSourceReaderDoesNotReadExternalDtds() throws Exception {
-        SourceProvider.SaxSourceReader reader = services.forContract(SourceProvider.SaxSourceReader.class).get();
+        SourceProvider.SaxSourceReader reader = services.getService(SourceProvider.SaxSourceReader.class);
         InputStream entityStream = new ByteArrayInputStream("<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>".getBytes("us-ascii"));
         SAXSource ss = reader.readFrom(null, null, null, null, null, entityStream);
 

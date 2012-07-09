@@ -45,12 +45,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.CloseableService;
 
-import org.glassfish.hk2.scopes.Singleton;
+import javax.inject.Singleton;
 
 /**
  * Module and Factory implementations for {@code CloseableService}.
@@ -114,6 +115,11 @@ public class CloseableServiceModule extends AbstractModule {
     }
 
     private static class CloseableServiceFactory extends AbstractHttpContextValueFactory<CloseableService> {
+        @Override
+        @Singleton
+        public CloseableService provide() {
+            return super.provide();
+        }
 
         @Override
         protected CloseableService get(final HttpContext context) {
@@ -124,7 +130,7 @@ public class CloseableServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(CloseableService.class).toFactory(CloseableServiceFactory.class).in(Singleton.class);
+        bind(BuilderHelper.link(CloseableServiceFactory.class).to(CloseableService.class).in(Singleton.class).buildFactory());
     }
 
 }

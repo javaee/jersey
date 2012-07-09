@@ -42,13 +42,13 @@ package org.glassfish.jersey.config;
 import java.util.Collection;
 import java.util.Set;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.ServiceFinderModule;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -64,20 +64,19 @@ import com.google.common.collect.Collections2;
  */
 public class ServiceFinderModuleTest {
 
-    private static Services services;
+    private static ServiceLocator services;
 
     public ServiceFinderModuleTest() {
     }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        services = HK2.get().create(null, new AbstractModule() {
-
+        services = Utilities.create(null, null, new AbstractModule() {
             @Override
             protected void configure() {
-                bind(TestContract.class).to(TestServiceB.class);
-                bind(TestContract.class).to(TestServiceD.class);
-                new ServiceFinderModule<TestContract>(TestContract.class).configure(this);
+                bind(BuilderHelper.link(TestServiceB.class).to(TestContract.class).build());
+                bind(BuilderHelper.link(TestServiceD.class).to(TestContract.class).build());
+                new ServiceFinderModule<TestContract>(TestContract.class).bind(this);
             }
         });
     }

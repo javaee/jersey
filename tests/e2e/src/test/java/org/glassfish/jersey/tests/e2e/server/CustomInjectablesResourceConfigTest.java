@@ -43,6 +43,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -50,16 +52,11 @@ import javax.ws.rs.core.Application;
 
 import javax.inject.Qualifier;
 
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -70,18 +67,21 @@ import static org.junit.Assert.assertEquals;
  */
 public class CustomInjectablesResourceConfigTest extends JerseyTest {
 
-    public static class MyHK2Module implements Module {
+    public static class MyHK2Module extends AbstractModule {
 
         @Override
-        public void configure(BinderFactory binderFactory) {
+        protected void configure() {
             // request scope binding
-            binderFactory.bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+            bind(BuilderHelper.link(MyInjectablePerRequest.class).in(RequestScoped.class).build());
+
             // singleton binding
-            binderFactory.bind().to(MyInjectableSingleton.class).in(org.glassfish.hk2.scopes.Singleton.class);
+            bind(BuilderHelper.link(MyInjectableSingleton.class).in(Singleton.class).build());
+
             // singleton instance binding
-            binderFactory.bind().toInstance(new MyInjectableSingleton());
+            bind(BuilderHelper.createConstantDescriptor(new MyInjectableSingleton()));
+
             // request scope binding with specified custom annotation
-            binderFactory.bind().annotatedWith(MyAnnotation.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+            bind(BuilderHelper.link(MyInjectablePerRequest.class).qualifiedBy(MyAnnotation.class.getName()).in(RequestScoped.class).build());
         }
     }
 
@@ -89,7 +89,7 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
         public int i = 0;
     }
 
-    @Scoped(Singleton.class)
+    @Singleton
     public static class MyInjectableSingleton {
         public int i = 0;
     }

@@ -43,16 +43,16 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.UriInfo;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.PathPattern;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Provides routing configuration functionality.
@@ -90,25 +90,30 @@ public class RouterModule extends AbstractModule {
 
     @Override
     public void configure() {
-        bind(new TypeLiteral<RootRouteBuilder<Pattern>>() {
-        }).to(PatternRouteBuilder.class);
-        bind(new TypeLiteral<RootRouteBuilder<PathPattern>>() {
-        }).to(PathPatternRouteBuilder.class);
+        bind(BuilderHelper.activeLink(PatternRouteBuilder.class).to((new TypeLiteral<RootRouteBuilder<Pattern>>() {}).getType()).build());
+        bind(BuilderHelper.activeLink(PathPatternRouteBuilder.class).to((new TypeLiteral<RootRouteBuilder<PathPattern>>() {}).getType()).build());
 
         /**
          * Note: Bellow bindings work because UriRoutingContextFactory is bound via class,
          * which causes HK2 to instantiate and inject it properly whenever it needs to be
          * used (typically once per run-time request scope instance).
          */
-        bind(UriRoutingContext.class).to(UriRoutingContext.class).in(RequestScope.class);
-        bind(RoutingContext.class).toFactory(UriRoutingContextFactory.class).in(RequestScope.class);
-        bind(ExtendedUriInfo.class).toFactory(UriRoutingContextFactory.class).in(RequestScope.class);
-        bind(UriInfo.class).toFactory(UriRoutingContextFactory.class).in(RequestScope.class);
+        bind(BuilderHelper.link(UriRoutingContext.class).in(RequestScoped.class).build());
+        bind(BuilderHelper.link(UriRoutingContextFactory.class).
+                to(RoutingContext.class).
+                to(ExtendedUriInfo.class).
+                to(UriInfo.class).
+                in(RequestScoped.class).
+                buildFactory());
 
         // "Assisted" bindings
-        bind().to(MatchResultInitializerRouter.Builder.class);
-        bind().to(PatternRouter.Builder.class);
-        bind().to(PathPatternRouter.Builder.class);
+        bind(BuilderHelper.link(MatchResultInitializerRouter.Builder.class).build());
+        bind(BuilderHelper.link(PatternRouter.Builder.class).build());
+        bind(BuilderHelper.link(PathPatternRouter.Builder.class).build());
+        bind(BuilderHelper.link(PushMethodHandlerRouter.Builder.class).build());
+        bind(BuilderHelper.link(MethodSelectingRouter.Builder.class).build());
+        bind(BuilderHelper.link(RoutingStage.Builder.class).build());
+        bind(BuilderHelper.link(RoutedInflectorExtractorStage.class).build());
     }
 
     private static class UriRoutingContextFactory implements Factory<UriRoutingContext> {
@@ -117,8 +122,14 @@ public class RouterModule extends AbstractModule {
         private UriRoutingContext ctx;
 
         @Override
-        public UriRoutingContext get() throws ComponentException {
+        @RequestScoped
+        public UriRoutingContext provide() {
             return ctx;
+        }
+
+        @Override
+        public void dispose(UriRoutingContext instance) {
+            //not used
         }
     }
 }

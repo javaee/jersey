@@ -40,11 +40,9 @@
 package org.glassfish.jersey.gf.ejb;
 
 import javax.annotation.PostConstruct;
-
 import javax.interceptor.InvocationContext;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * EJB interceptor to inject Jersey specific stuff into EJB beans.
@@ -53,19 +51,22 @@ import org.glassfish.hk2.inject.Injector;
  */
 public final class EjbComponentInterceptor {
 
-    private final Services services;
+    private final ServiceLocator locator;
 
-    public EjbComponentInterceptor(final Services services) {
-        this.services = services;
+    /**
+     * Create new EJB component locator.
+     *
+     * @param locator HK2 service locator.
+     */
+    public EjbComponentInterceptor(final ServiceLocator locator) {
+        this.locator = locator;
     }
 
     @PostConstruct
     private void inject(final InvocationContext context) throws Exception {
 
         final Object beanInstance = context.getTarget();
-        final Injector injector = services.forContract(Injector.class).get();
-
-        injector.inject(beanInstance);
+        locator.inject(beanInstance);
 
         // Invoke next interceptor in chain
         context.proceed();

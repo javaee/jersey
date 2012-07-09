@@ -52,8 +52,6 @@
 
     <artifactId>osgi-helloworld-webapp</artifactId>
     <name>jersey-examples-osgi-helloworld-webapp</name>
-
-    <version>2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>

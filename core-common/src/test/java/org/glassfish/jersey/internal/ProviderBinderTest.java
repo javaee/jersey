@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -59,16 +60,14 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.Custom;
+import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.message.internal.StringMessageProvider;
-
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -141,29 +140,29 @@ public class ProviderBinderTest {
 
     @Test
     public void testServicesNotEmpty() {
-        Services services = HK2.get().create(null, initModules());
+        ServiceLocator services = Utilities.create(null, null, initModules());
         Set<MessageBodyReader> providers = Providers.getProviders(services, MessageBodyReader.class);
         assertTrue(providers.size() > 0);
     }
 
     @Test
     public void testServicesMbr() {
-        Services services = HK2.get().create(null, initModules());
+        ServiceLocator services = Utilities.create(null, null, initModules());
         Set<MessageBodyReader> providers = Providers.getProviders(services, MessageBodyReader.class);
         assertEquals(1, instancesOfType(StringMessageProvider.class, providers).size());
     }
 
     @Test
     public void testServicesMbw() {
-        Services services = HK2.get().create(null, initModules());
+        ServiceLocator services = Utilities.create(null, null, initModules());
         Set<MessageBodyWriter> providers = Providers.getProviders(services, MessageBodyWriter.class);
         assertEquals(1, instancesOfType(StringMessageProvider.class, providers).size());
     }
 
     @Test
     public void testProvidersMbr() {
-        Services services = HK2.get().create(null, initModules());
-        ProviderBinder providerBinder = services.byType(ProviderBinder.class).get();
+        ServiceLocator services = Utilities.create(null, null, initModules());
+        ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(services, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
@@ -171,8 +170,8 @@ public class ProviderBinderTest {
 
     @Test
     public void testProvidersMbw() {
-        Services services = HK2.get().create(null, initModules());
-        ProviderBinder providerBinder = services.byType(ProviderBinder.class).get();
+        ServiceLocator services = Utilities.create(null, null, initModules());
+        ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(services, MessageBodyWriter.class);
@@ -182,8 +181,8 @@ public class ProviderBinderTest {
 
     @Test
     public void testProvidersMbrInstance() {
-        Services services = HK2.get().create(null, initModules());
-        ProviderBinder providerBinder = services.byType(ProviderBinder.class).get();
+        ServiceLocator services = Utilities.create(null, null, initModules());
+        ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindInstances(Sets.<Object>newHashSet(new MyProvider()));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(services, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
@@ -191,8 +190,8 @@ public class ProviderBinderTest {
 
     @Test
     public void testProvidersMbwInstance() {
-        Services services = HK2.get().create(null, initModules());
-        ProviderBinder providerBinder = services.byType(ProviderBinder.class).get();
+        ServiceLocator services = Utilities.create(null, null, initModules());
+        ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindInstances(Sets.newHashSet((Object) new MyProvider()));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(services,MessageBodyWriter.class);
@@ -218,10 +217,9 @@ public class ProviderBinderTest {
 
     @Test
     public void testCustomRegistration() {
-        Services services = HK2.get().create(null, new ProviderBinder.ProviderBinderModule());
-        final Injector injector = services.forContract(Injector.class).get();
+        ServiceLocator services = Utilities.create(null, null, new ProviderBinder.ProviderBinderModule());
 
-        ProviderBinder providerBinder = services.byType(ProviderBinder.class).get();
+        ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindClasses(Child.class);
         providerBinder.bindClasses(NotFilterChild.class);
 
@@ -240,24 +238,22 @@ public class ProviderBinderTest {
         Collection<ContainerResponseFilter> filters = Providers.getCustomProviders(services, ContainerResponseFilter.class);
         Assert.assertEquals(1, filters.size());
 
-        Child child = services.forContract(Child.class).get();
-        Child child2 = services.forContract(Child.class).get();
+        Child child = services.getService(Child.class);
+        Child child2 = services.getService(Child.class);
 
         Assert.assertTrue(child != responseFilter);
 
         Assert.assertTrue(child == child2);
     }
 
-    private ContainerResponseFilter getResponseFilter(Services services) {
-        ContainerResponseFilter responseFilter = services.forContract(ContainerResponseFilter.class).annotatedWith(Custom
-                .class).get();
+    private ContainerResponseFilter getResponseFilter(ServiceLocator services) {
+        ContainerResponseFilter responseFilter = services.getService(ContainerResponseFilter.class, new CustomAnnotationImpl());
         Assert.assertEquals(Child.class, responseFilter.getClass());
         return responseFilter;
     }
 
-    private ContainerRequestFilter getRequestFilter(Services services) {
-        ContainerRequestFilter requestFilter = services.forContract(ContainerRequestFilter.class).annotatedWith(Custom.class)
-                .get();
+    private ContainerRequestFilter getRequestFilter(ServiceLocator services) {
+        ContainerRequestFilter requestFilter = services.getService(ContainerRequestFilter.class, new CustomAnnotationImpl());
         Assert.assertEquals(Child.class, requestFilter.getClass());
         return requestFilter;
     }
@@ -275,12 +271,14 @@ public class ProviderBinderTest {
     public static interface ChildSuperInterface extends ContainerResponseFilter {
     }
 
+    @Singleton
     public static class Parent implements ParentInterface, ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
         }
     }
 
+    @Singleton
     public static class Child extends Parent implements ChildInterface, SecondChildInterface {
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {

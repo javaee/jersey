@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,28 +47,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ContextResolvers;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.collect.Maps;
 
@@ -86,14 +86,20 @@ public class ContextResolverFactory implements ContextResolvers {
     public static class Module extends AbstractModule {
 
         private static class InjectionFactory extends ReferencingFactory<ContextResolvers> {
-
-            public InjectionFactory(@Inject Factory<Ref<ContextResolvers>> referenceFactory) {
+            @Inject
+            public InjectionFactory(Provider<Ref<ContextResolvers>> referenceFactory) {
                 super(referenceFactory);
+            }
+
+            @Override
+            @RequestScoped
+            public ContextResolvers provide() {
+                return super.provide();
             }
         }
 
         //
-        private final Class<? extends Scope> refScope;
+        private final Class<? extends Annotation> refScope;
 
         /**
          * Create new context resolver factory injection bindings module.
@@ -101,20 +107,17 @@ public class ContextResolverFactory implements ContextResolvers {
          * @param refScope scope of the {@link Ref Ref&lt;ContextResolvers&gt;} value
          *                 injection.
          */
-        public Module(Class<? extends Scope> refScope) {
+        public Module(Class<? extends Annotation> refScope) {
             this.refScope = refScope;
         }
 
         @Override
         protected void configure() {
-            bind(ContextResolvers.class)
-                    .toFactory(InjectionFactory.class)
-                    .in(RequestScope.class);
+            bind(BuilderHelper.link(InjectionFactory.class).to(ContextResolvers.class).in(RequestScoped.class).buildFactory());
 
-            bind(new TypeLiteral<Ref<ContextResolvers>>() {
-            })
-                    .toFactory(ReferencingFactory.<ContextResolvers>referenceFactory())
-                    .in(refScope);
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<ContextResolvers>referenceFactory(),
+                    refScope, null, null, null, (new TypeLiteral<Ref<ContextResolvers>>() {
+            }).getType()));
         }
     }
 
@@ -128,7 +131,7 @@ public class ContextResolverFactory implements ContextResolvers {
      *
      * @param services HK2 services.
      */
-    public ContextResolverFactory(Services services) {
+    public ContextResolverFactory(ServiceLocator services) {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 

@@ -48,8 +48,11 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ProviderBinder;
+import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -57,19 +60,16 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -112,16 +112,21 @@ public class PatternRoutingTest {
 
     @Before
     public void setupApplication() {
-        Services services = HK2.get().create(null, new ServerModule());
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
-        workers.set(new MessageBodyFactory(services));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
-        mappers.set(new ExceptionMapperFactory(services));
+        ServiceLocator locator = Utilities.create(null, null, new ServerModule(), new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(BuilderHelper.link(LastPathSegmentTracingFilter.class).build());
+            }
+        });
 
-        Injector injector = services.forContract(Injector.class).get();
-        injector.inject(this);
+        final Ref<MessageBodyWorkers> workers = locator.getService((new TypeLiteral<Ref<MessageBodyWorkers>>(){}).getType());
+        workers.set(new MessageBodyFactory(locator));
+        final Ref<ExceptionMappers> mappers = locator.getService((new TypeLiteral<Ref<ExceptionMappers>>(){}).getType());
+        mappers.set(new ExceptionMapperFactory(locator));
 
-        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        locator.inject(this);
+
+        final InvokerBuilder invokerBuilder = locator.createAndInitialize(InvokerBuilder.class);
         Router inflection = Routers.asTreeAcceptor(
                 new Inflector<ContainerRequest, ContainerResponse>() {
 
@@ -137,7 +142,7 @@ public class PatternRoutingTest {
                         .to(routeBuilder.route("d(/.*)?").to(LastPathSegmentTracingFilter.class)
                                 .to(routeBuilder.route("e(/)?").to(LastPathSegmentTracingFilter.class).to(inflection)))
                         .build()));
-        requestScope = injector.inject(RequestScope.class);
+        requestScope = locator.createAndInitialize(RequestScope.class);
     }
 
     @Test

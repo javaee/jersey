@@ -39,26 +39,26 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.Set;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Custom;
+import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
 import org.glassfish.jersey.internal.inject.Providers;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.ActiveDescriptorBuilder;
+import org.glassfish.hk2.utilities.AliasDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Class used for registration of the custom providers into HK2 services.
@@ -88,9 +88,7 @@ import com.google.common.base.Suppliers;
  */
 public class ProviderBinder {
     @Inject
-    Services services;
-    @Inject
-    Injector injector;
+    ServiceLocator locator;
 
     /**
      * Register/bind custom provider instances. Registered providers will be handled
@@ -98,13 +96,15 @@ public class ProviderBinder {
      *
      * @param instances custom provider instances.
      */
+    // TODO remove the method if not used?
     public <T> void bindInstances(T... instances) {
         if (instances != null && instances.length > 0) {
-            DynamicBinderFactory binderFactory = services.bindDynamically();
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration dc = dcs.createDynamicConfiguration();
             for (T instance : instances) {
-                bindInstance(instance, binderFactory);
+                bindInstance(instance, dc);
             }
-            binderFactory.commit();
+            dc.commit();
         }
     }
 
@@ -115,11 +115,12 @@ public class ProviderBinder {
      * @param instances custom provider instances.
      */
     public void bindInstances(Set<Object> instances) {
-        DynamicBinderFactory binderFactory = services.bindDynamically();
+        DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+        DynamicConfiguration dc = dcs.createDynamicConfiguration();
         for (Object instance : instances) {
-            bindInstance(instance, binderFactory);
+            bindInstance(instance, dc);
         }
-        binderFactory.commit();
+        dc.commit();
     }
 
 
@@ -131,11 +132,12 @@ public class ProviderBinder {
      */
     public void bindClasses(Class<?>... classes) {
         if (classes != null && classes.length > 0) {
-            DynamicBinderFactory binderFactory = services.bindDynamically();
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration dc = dcs.createDynamicConfiguration();
             for (Class<?> clazz : classes) {
-                bindClass(clazz, binderFactory, false);
+                bindClass(clazz, locator, dc, false);
             }
-            binderFactory.commit();
+            dc.commit();
         }
     }
 
@@ -160,86 +162,63 @@ public class ProviderBinder {
      * </p>
      *
      * @param classes         custom provider classes.
-     * @param bindAsResources if {@code true}, the provider classes will also be bound as
+     * @param bindResources if {@code true}, the provider classes will also be bound as
      *                        resources.
      */
-    public void bindClasses(Iterable<Class<?>> classes, boolean bindAsResources) {
+    public void bindClasses(Iterable<Class<?>> classes, boolean bindResources) {
         if (classes == null || !classes.iterator().hasNext()) {
             return;
         }
 
-        DynamicBinderFactory binderFactory = services.bindDynamically();
+        DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+        DynamicConfiguration dc = dcs.createDynamicConfiguration();
         for (Class<?> clazz : classes) {
-            bindClass(clazz, binderFactory, bindAsResources);
+            bindClass(clazz, locator, dc, bindResources);
         }
-        binderFactory.commit();
+        dc.commit();
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindInstance(T instance, BinderFactory binderFactory) {
+    private <T> void bindInstance(T instance, DynamicConfiguration dc) {
         for (Class contract : Providers.getProviderContracts(instance.getClass())) {
-            binderFactory.bind(contract).annotatedWith(Custom.class).toInstance(instance);
+            AbstractActiveDescriptor<T> descriptor = BuilderHelper.createConstantDescriptor(instance);
+            descriptor.addContractType(contract);
+            descriptor.addQualifierAnnotation(new CustomAnnotationImpl());
+            dc.bind(descriptor);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindClass(Class<T> clazz, BinderFactory binderFactory, boolean alsoResources) {
-        Class<? extends Scope> scope = getProviderScope(clazz);
+    private <T> void bindClass(Class<T> clazz, ServiceLocator locator, DynamicConfiguration dc, boolean isResource) {
+        Class<? extends Annotation> scope = getProviderScope(clazz);
 
-        binderFactory.bind().annotatedWith(Custom.class).to(clazz).in(scope);
-        if (scope == Singleton.class) {
-            SingletonFactory factory = new SingletonFactory(clazz, injector);
+        if (isResource) {
+            final ActiveDescriptor<?> descriptor = dc.bind(BuilderHelper.activeLink(clazz).to(clazz).in(scope).build());
+
             for (Class contract : Providers.getProviderContracts(clazz)) {
-                binderFactory.bind(contract).annotatedWith(Custom.class).toFactory(factory).in(scope);
-            }
-            if (alsoResources) {
-                binderFactory.bind(clazz).toFactory(factory).in(scope);
+                AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
+                aliasDescriptor.setScope(scope.getName());
+                aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
+
+                dc.bind(aliasDescriptor);
             }
         } else {
+            final ActiveDescriptorBuilder descriptorBuilder =
+                    BuilderHelper.activeLink(clazz).in(scope).qualifiedBy(new CustomAnnotationImpl());
             for (Class contract : Providers.getProviderContracts(clazz)) {
-                binderFactory.bind(contract).annotatedWith(Custom.class).to(clazz).in(scope);
+                descriptorBuilder.to(contract);
             }
-            if (alsoResources) {
-                binderFactory.bind(clazz).to(clazz).in(scope);
-            }
+            dc.bind(descriptorBuilder.build());
         }
+
     }
 
-    private Class<? extends Scope> getProviderScope(Class<?> clazz) {
-        Class<? extends Scope> hk2Scope = Singleton.class;
+    private Class<? extends Annotation> getProviderScope(Class<?> clazz) {
+        Class<? extends Annotation> hk2Scope = Singleton.class;
         if (clazz.isAnnotationPresent(org.glassfish.jersey.spi.PerLookup.class)) {
             hk2Scope = PerLookup.class;
         }
         return hk2Scope;
-    }
-
-    private static class InstanceSupplier<T> implements Supplier<T> {
-        private Injector injector;
-
-        private Class<T> rawType;
-
-        @Override
-        public T get() throws ComponentException {
-            return injector.inject(rawType);
-        }
-
-        public InstanceSupplier(Class<T> rawType, Injector injector) {
-            this.rawType = rawType;
-            this.injector = injector;
-        }
-    }
-
-    private static class SingletonFactory<T> implements Factory<T> {
-        Supplier<T> supplier;
-
-        @Override
-        public T get() throws ComponentException {
-            return supplier.get();
-        }
-
-        public SingletonFactory(Class<T> rawType, Injector injector) {
-            supplier = Suppliers.memoize(new InstanceSupplier<T>(rawType, injector));
-        }
     }
 
     /**
@@ -250,7 +229,7 @@ public class ProviderBinder {
         @Override
         protected void configure() {
 //            bind(ProviderBinder.class).to(ProviderBinder.class).in(PerLookup.class);
-            bind().to(ProviderBinder.class).in(PerLookup.class);
+            bind(BuilderHelper.link(ProviderBinder.class).in(PerLookup.class).build());
         }
     }
 }

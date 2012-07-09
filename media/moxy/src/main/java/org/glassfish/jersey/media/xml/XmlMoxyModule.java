@@ -44,6 +44,8 @@ import java.util.Map;
 
 import javax.ws.rs.ext.ContextResolver;
 
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.media.xml.internal.MoxyContextResolver;
 
@@ -82,6 +84,9 @@ public class XmlMoxyModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ContextResolver.class).toInstance(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
+        AbstractActiveDescriptor descriptor =
+                BuilderHelper.createConstantDescriptor(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
+        descriptor.addContractType(ContextResolver.class);
+        bind(descriptor);
     }
 }

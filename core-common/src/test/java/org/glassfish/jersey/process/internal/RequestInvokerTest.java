@@ -47,21 +47,19 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import static org.glassfish.jersey.process.internal.StringAppender.append;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -83,12 +81,12 @@ public class RequestInvokerTest {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
-    private Services init() {
-        final Services services = HK2.get().create(null, new ProcessingTestModule());
+    private ServiceLocator init() {
+        final ServiceLocator locator = Utilities.create(null, null, new ProcessingTestModule());
 
-        ProcessingTestModule.initProviders(services);
+        ProcessingTestModule.initProviders(locator);
 
-        return services;
+        return locator;
     }
 
     public static final class String2IntegerRequestInvokerBuilder {
@@ -96,11 +94,11 @@ public class RequestInvokerTest {
         @Inject
         private RequestScope requestScope;
         @Inject
-        Injector injector;
+        ServiceLocator locator;
         @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private Factory<ExecutorsFactory<String>> executorsFactory;
+        private Provider<ExecutorsFactory<String>> executorsFactory;
 
         public RequestInvoker<String, Integer> build(final Stage<String> rootStage) {
             final AsyncInflectorAdapter.Builder<String, Integer> asyncAdapterBuilder = new AsyncInflectorAdapter
@@ -118,8 +116,13 @@ public class RequestInvokerTest {
                     };
                 }
             };
-            return new RequestInvoker<String, Integer>(rootStage, requestScope, asyncAdapterBuilder,
-                    injector.inject(String2IntegerResponseProcessorBuilder.class), invocationContextReferenceFactory,
+
+            return new RequestInvoker<String, Integer>(
+                    rootStage,
+                    requestScope,
+                    asyncAdapterBuilder,
+                    locator.createAndInitialize(String2IntegerResponseProcessorBuilder.class),
+                    invocationContextReferenceFactory,
                     executorsFactory.get());
         }
     }
@@ -128,16 +131,15 @@ public class RequestInvokerTest {
 
         @Inject
         private RequestScope requestScope;
-        private Factory<ResponseProcessor.RespondingContext<Integer>> respondingCtxProvider = new Factory<ResponseProcessor
-                .RespondingContext<Integer>>() {
+        private Provider<RespondingContext<Integer>> respondingCtxProvider = new Provider<ResponseProcessor.RespondingContext<Integer>>() {
 
             @Override
-            public RespondingContext<Integer> get() throws ComponentException {
+            public RespondingContext<Integer> get() {
                 return new DefaultRespondingContext<Integer>();
             }
         };
         @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
+        private Provider<ExceptionMappers> exceptionMappersProvider;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -171,10 +173,9 @@ public class RequestInvokerTest {
 
     @Test
     public void testInvocation() throws Exception {
-        final Services services = init();
-        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get()
-                .build(createProcessingRoot());
-        final RequestScope requestScope = services.forContract(RequestScope.class).get();
+        final ServiceLocator locator = init();
+        final RequestInvoker<String, Integer> invoker = Utilities.getOrCreateComponent(locator, String2IntegerRequestInvokerBuilder.class).build(createProcessingRoot());
+        final RequestScope requestScope = locator.getService(RequestScope.class);
 
         invoker.apply("",
                 new AbstractInvocationCallback<Integer>() {
@@ -213,10 +214,9 @@ public class RequestInvokerTest {
 
     @Test
     public void testWaeThrownInRequestPreProcessingChain() throws Exception {
-        final Services services = init();
-        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get()
-                .build(createWaeThrowingProcessingRoot());
-        final RequestScope requestScope = services.forContract(RequestScope.class).get();
+        final ServiceLocator locator = init();
+        final RequestInvoker<String, Integer> invoker = Utilities.getOrCreateComponent(locator, String2IntegerRequestInvokerBuilder.class).build(createWaeThrowingProcessingRoot());
+        final RequestScope requestScope = locator.getService(RequestScope.class);
 
         requestScope.runInScope(new Runnable() {
 
@@ -252,10 +252,9 @@ public class RequestInvokerTest {
 
     @Test
     public void testArbitraryExceptionThrownInRequestPreProcessingChain() throws Exception {
-        final Services services = init();
-        final RequestInvoker<String, Integer> invoker = services.forContract(String2IntegerRequestInvokerBuilder.class).get()
-                .build(createArbitraryExceptionThrowingProcessingRoot());
-        final RequestScope requestScope = services.forContract(RequestScope.class).get();
+        final ServiceLocator locator = init();
+        final RequestInvoker<String, Integer> invoker = Utilities.getOrCreateComponent(locator, String2IntegerRequestInvokerBuilder.class).build(createArbitraryExceptionThrowingProcessingRoot());
+        final RequestScope requestScope = locator.getService(RequestScope.class);
 
         requestScope.runInScope(new Runnable() {
 

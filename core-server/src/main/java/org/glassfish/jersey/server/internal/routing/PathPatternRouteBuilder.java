@@ -39,14 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToBuilder;
 import org.glassfish.jersey.uri.PathPattern;
 
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
 
 /**
  * {@link RouteBuilder} implementation that builds routes which use {@link PathPattern}
@@ -58,7 +57,7 @@ import org.jvnet.hk2.annotations.Inject;
 class PathPatternRouteBuilder implements RootRouteBuilder<PathPattern> {
 
     @Inject
-    private Services services;
+    private ServiceLocator services;
     @Inject
     private PathPatternRouter.Builder acceptorFactory;
     @Inject

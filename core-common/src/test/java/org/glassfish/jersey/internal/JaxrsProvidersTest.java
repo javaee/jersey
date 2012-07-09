@@ -47,14 +47,15 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.internal.ProcessingTestModule;
 import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
 
 import org.junit.Test;
 
@@ -71,13 +72,15 @@ public class JaxrsProvidersTest {
 
         @Override
         protected void configure() {
-            bind(ContextResolver.class).toInstance(new ContextResolver<String>() {
-
-                @Override
-                public String getContext(Class<?> type) {
-                    throw new UnsupportedOperationException("Not supported yet.");
-                }
-            });
+            AbstractActiveDescriptor descriptor = BuilderHelper.createConstantDescriptor(
+                    new ContextResolver<String>() {
+                        @Override
+                        public String getContext(Class<?> type) {
+                            throw new UnsupportedOperationException("Not supported yet.");
+                        }
+                    });
+            descriptor.addContractType(ContextResolver.class);
+            bind(descriptor);
         }
     }
 
@@ -87,17 +90,17 @@ public class JaxrsProvidersTest {
 
     @Test
     public void testProviders() throws Exception {
-        final Services services = HK2.get().create(null, new ContextInjectionResolver.Module(), new ProcessingTestModule(),
+        final ServiceLocator services = Utilities.create(null, null, new ContextInjectionResolver.Module(), new ProcessingTestModule(),
                 new MessagingModules.MessageBodyProviders(), new Module());
 
         ProcessingTestModule.initProviders(services);
-        RequestScope scope = services.forContract(RequestScope.class).get();
+        RequestScope scope = services.getService(RequestScope.class);
 
         scope.runInScope(new Callable<Object>() {
 
             @Override
             public Object call() throws Exception {
-                Providers instance = services.forContract(Providers.class).get();
+                Providers instance = services.getService(Providers.class);
 
                 assertNotNull(instance);
                 assertSame(JaxrsProviders.class, instance.getClass());

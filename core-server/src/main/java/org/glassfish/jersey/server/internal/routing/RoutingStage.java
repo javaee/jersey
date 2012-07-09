@@ -44,9 +44,8 @@ import org.glassfish.jersey.process.internal.Inflecting;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Request pre-processing stage that encapsulates hierarchical resource matching
@@ -65,7 +64,7 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
      */
     public static class Builder {
         @Inject
-        private Factory<RoutingContext> routingContextFactory;
+        private Provider<RoutingContext> routingContextFactory;
 
         /**
          * Build a properly injected resource matching router.
@@ -79,10 +78,10 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
     }
 
     private final Router routingRoot;
-    private final Factory<RoutingContext> routingContextFactory;
+    private final Provider<RoutingContext> routingContextFactory;
 
     private RoutingStage(final Router routingRoot,
-                         final Factory<RoutingContext> routingContextFactory) {
+                         final Provider<RoutingContext> routingContextFactory) {
         this.routingRoot = routingRoot;
         this.routingContextFactory = routingContextFactory;
     }

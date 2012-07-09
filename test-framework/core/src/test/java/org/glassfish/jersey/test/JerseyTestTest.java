@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.test;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -99,8 +100,8 @@ public class JerseyTestTest {
     public static class MyModule implements Module {
 
         @Override
-        public void configure(BinderFactory binderFactory) {
-            binderFactory.bind(TestContainerFactory.class).to(MyTestContainerFactory.class);
+        public void bind(DynamicConfiguration config) {
+            config.bind(BuilderHelper.link(MyTestContainerFactory.class).to(TestContainerFactory.class).build());
         }
     }
 

@@ -309,7 +309,7 @@ public abstract class JerseyTest {
             if (testContainerFactoryClass == null) {
 
                 Set<TestContainerFactory> testContainerFactories =
-                        Providers.getProviders(application.getServices(), TestContainerFactory.class);
+                        Providers.getProviders(application.getServiceLocator(), TestContainerFactory.class);
 
                 final String tcfClassName = getProperty(TestProperties.CONTAINER_FACTORY);
                 if ((tcfClassName == null)) {

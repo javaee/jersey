@@ -1,14 +1,14 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997-2010 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+ * https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html
  * or packager/legal/LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
@@ -37,47 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.jvnet.tigertypes;
 
-package org.glassfish.jersey.spi;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.WildcardType;
+import java.lang.reflect.TypeVariable;
 
 /**
- * Specifies a singleton lifecycle for a resource annotated with this annotation.
- * <p>
- * By default, the resource classes are managed in a {@link PerLookup per lookup}
- * scope which means that a new instance is created for each request. Annotating
- * the class with the {@code &#64;Singleton} annotation overrides this behaviour
- * in a sense that only one single instance is used to handle all the requests.
- * Such resources should be implemented as thread safe and must not inject
- * non-proxiable request-scoped components (e.g. {@link javax.ws.rs.HeaderParam})
- * into class fields or constructors.
- * </p>
- * <p>
- * For example, the following resource will not pass the model validation:
- * </p>
- * <pre>
- *  &#064;Singeton
- *  public class SingletonResource {
- *      // Injection of path param into a field of a singleton resource
- *      // is not allowed. Model validation error will occur.
- *      &#064;PathParam("p")
- *      String pParam;
- *
- *      &#064;GET
- *      public String get() {
- *          return "GET";
- *      }
- *  }
- * </pre>
+ * @author Kohsuke Kawaguchi
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Singleton {
+abstract class TypeVisitor<T,P> {
+    public final T visit( Type t, P param ) {
+        assert t!=null;
+
+        if (t instanceof Class)
+            return onClass((Class)t,param);
+        if (t instanceof ParameterizedType)
+            return onParameterizdType( (ParameterizedType)t,param);
+        if(t instanceof GenericArrayType)
+            return onGenericArray((GenericArrayType)t,param);
+        if(t instanceof WildcardType)
+            return onWildcard((WildcardType)t,param);
+        if(t instanceof TypeVariable)
+            return onVariable((TypeVariable)t,param);
+
+        // covered all the cases
+        assert false;
+        throw new IllegalArgumentException();
+    }
+
+    protected abstract T onClass(Class c, P param);
+    protected abstract T onParameterizdType(ParameterizedType p, P param);
+    protected abstract T onGenericArray(GenericArrayType g, P param);
+    protected abstract T onVariable(TypeVariable v, P param);
+    protected abstract T onWildcard(WildcardType w, P param);
 }

@@ -41,9 +41,8 @@ package org.glassfish.jersey.internal;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.message.internal.MessagingModules;
-
-import org.glassfish.hk2.HK2;
 
 /**
  * Test runtime delegate.
@@ -54,7 +53,7 @@ public class TestRuntimeDelegate extends AbstractRuntimeDelegate {
 
     public TestRuntimeDelegate() {
         // TODO add more modules as necessary
-        super(HK2.get().create(null, new MessagingModules.HeaderDelegateProviders()));
+        super(Utilities.create(null, null, new MessagingModules.HeaderDelegateProviders()));
     }
 
     @Override

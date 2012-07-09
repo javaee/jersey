@@ -49,11 +49,11 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
-import org.glassfish.hk2.Factory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+
+import javax.inject.Provider;
 
 
 /**
@@ -117,7 +117,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
     private final RequestScope requestScope;
     private final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder;
     private final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder;
-    private final Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+    private final Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
     private final ExecutorsFactory<REQUEST> executorsFactory;
 
     /**
@@ -136,7 +136,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
             final RequestScope requestScope,
             final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder,
             final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder,
-            final Factory<Ref<InvocationContext>> invocationContextReferenceFactory,
+            final Provider<Ref<InvocationContext>> invocationContextReferenceFactory,
             final ExecutorsFactory<REQUEST> executorsFactory) {
 
         this.requestScope = requestScope;

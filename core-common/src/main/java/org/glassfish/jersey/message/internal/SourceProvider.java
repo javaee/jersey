@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -65,7 +66,7 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.api.Factory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -77,6 +78,7 @@ import org.xml.sax.SAXParseException;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public final class SourceProvider {
 
     /**
@@ -84,6 +86,7 @@ public final class SourceProvider {
      */
     @Produces({"application/xml", "text/xml", "*/*"})
     @Consumes({"application/xml", "text/xml", "*/*"})
+    @Singleton
     public static final class StreamSourceReader implements MessageBodyReader<StreamSource> {
 
         @Override
@@ -108,6 +111,7 @@ public final class SourceProvider {
      */
     @Produces({"application/xml", "text/xml", "*/*"})
     @Consumes({"application/xml", "text/xml", "*/*"})
+    @Singleton
     public static final class SaxSourceReader implements MessageBodyReader<SAXSource> {
         // Delay construction of factory
 
@@ -131,7 +135,7 @@ public final class SourceProvider {
                 MultivaluedMap<String, String> httpHeaders,
                 InputStream entityStream) throws IOException {
             try {
-                return new SAXSource(spf.get().newSAXParser().getXMLReader(),
+                return new SAXSource(spf.provide().newSAXParser().getXMLReader(),
                         new InputSource(entityStream));
             } catch (SAXParseException ex) {
                 throw new WebApplicationException(ex, Status.BAD_REQUEST);
@@ -148,6 +152,7 @@ public final class SourceProvider {
      */
     @Produces({"application/xml", "text/xml", "*/*"})
     @Consumes({"application/xml", "text/xml", "*/*"})
+    @Singleton
     public static final class DomSourceReader implements MessageBodyReader<DOMSource> {
 
         private final Factory<DocumentBuilderFactory> dbf;
@@ -170,7 +175,7 @@ public final class SourceProvider {
                 MultivaluedMap<String, String> httpHeaders,
                 InputStream entityStream) throws IOException {
             try {
-                Document d = dbf.get().newDocumentBuilder().parse(entityStream);
+                Document d = dbf.provide().newDocumentBuilder().parse(entityStream);
                 return new DOMSource(d);
             } catch (SAXParseException ex) {
                 throw new WebApplicationException(ex, Status.BAD_REQUEST);
@@ -187,6 +192,7 @@ public final class SourceProvider {
      */
     @Produces({"application/xml", "text/xml", "*/*"})
     @Consumes({"application/xml", "text/xml", "*/*"})
+    @Singleton
     public static final class SourceWriter implements MessageBodyWriter<Source> {
 
         private final Factory<SAXParserFactory> saxParserFactory;
@@ -219,11 +225,11 @@ public final class SourceProvider {
                     inputStream.setCharacterStream(inputStream.getCharacterStream());
                     inputStream.setPublicId(stream.getPublicId());
                     inputStream.setSystemId(source.getSystemId());
-                    source = new SAXSource(saxParserFactory.get().newSAXParser().getXMLReader(), inputStream);
+                    source = new SAXSource(saxParserFactory.provide().newSAXParser().getXMLReader(), inputStream);
                 }
 
                 StreamResult sr = new StreamResult(entityStream);
-                transformerFactory.get().newTransformer().transform(source, sr);
+                transformerFactory.provide().newTransformer().transform(source, sr);
 
             } catch (SAXException ex) {
                 throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);

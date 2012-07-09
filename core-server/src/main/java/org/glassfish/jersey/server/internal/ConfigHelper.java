@@ -68,7 +68,7 @@ public final class ConfigHelper {
      */
     public static ContainerLifecycleListener getContainerLifecycleListener(final ApplicationHandler applicationHandler) {
 
-        final List<ContainerLifecycleListener> listeners = Providers.getAllProviders(applicationHandler.getServices(),
+        final List<ContainerLifecycleListener> listeners = Providers.getAllProviders(applicationHandler.getServiceLocator(),
                 ContainerLifecycleListener.class);
         return listeners.isEmpty() ? EMPTY_CONTAINER_LIFECYCLE_LISTENER : new ContainerLifecycleListener() {
 

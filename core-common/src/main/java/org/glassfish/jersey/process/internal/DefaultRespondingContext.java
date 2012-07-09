@@ -48,6 +48,7 @@ import com.google.common.base.Function;
  * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RequestScoped
 public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
 
     private Stage<DATA> rootStage;

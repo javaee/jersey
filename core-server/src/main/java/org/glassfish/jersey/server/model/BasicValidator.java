@@ -61,12 +61,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.PerLookup;
-import org.glassfish.jersey.spi.Singleton;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**

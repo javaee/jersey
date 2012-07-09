@@ -44,15 +44,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  *
@@ -60,13 +58,14 @@ import org.jvnet.hk2.annotations.Scoped;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Scoped(Singleton.class)
+@Singleton
 final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.Provider {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodDispatcherFactory.class.getName());
     private final Set<ResourceMethodDispatcher.Provider> providers;
 
-    ResourceMethodDispatcherFactory(@Inject Services services) {
+    @Inject
+    ResourceMethodDispatcherFactory(ServiceLocator services) {
         providers = Providers.getProviders(services, ResourceMethodDispatcher.Provider.class);
     }
 

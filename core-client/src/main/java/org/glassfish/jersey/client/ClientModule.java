@@ -44,6 +44,10 @@ import java.util.concurrent.Future;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -52,19 +56,27 @@ import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingModules;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
+import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingModule;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -77,16 +89,28 @@ import com.google.common.util.concurrent.SettableFuture;
 class ClientModule extends AbstractModule {
 
     private static class ConfigurationInjectionFactory extends ReferencingFactory<JerseyConfiguration> {
-
-        public ConfigurationInjectionFactory(@Inject Factory<Ref<JerseyConfiguration>> referenceFactory) {
+        @Inject
+        public ConfigurationInjectionFactory(Provider<Ref<JerseyConfiguration>> referenceFactory) {
             super(referenceFactory);
+        }
+
+        @Override
+        @RequestScoped
+        public JerseyConfiguration provide() {
+            return super.provide();
         }
     }
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
-
-        public RequestContextInjectionFactory(@Inject Factory<Ref<ClientRequest>> referenceFactory) {
+        @Inject
+        public RequestContextInjectionFactory(Provider<Ref<ClientRequest>> referenceFactory) {
             super(referenceFactory);
+        }
+
+        @Override
+        @RequestScoped
+        public ClientRequest provide() {
+            return super.provide();
         }
     }
 
@@ -99,9 +123,9 @@ class ClientModule extends AbstractModule {
         @Inject
         private ResponseProcessor.Builder<ClientResponse> responseProcessorBuilder;
         @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private ClientExecutorsFactory executorsFactory;
+        private ExecutorsFactory<ClientRequest> executorsFactory;
 
         /**
          * Build a new {@link RequestInvoker request invoker} configured to use
@@ -150,11 +174,11 @@ class ClientModule extends AbstractModule {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingCtxProvider;
+        private Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingCtxProvider;
         @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
+        private Provider<ExceptionMappers> exceptionMappersProvider;
         @Inject
-        private Factory<ClientRequest> requestContextFactory;
+        private Provider<ClientRequest> requestContextFactory;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -197,41 +221,42 @@ class ClientModule extends AbstractModule {
                 new MessagingModules.MessageBodyProviders(),
                 new MessagingModules.HeaderDelegateProviders(),
                 new ProviderBinder.ProviderBinderModule(),
-                new MessageBodyFactory.Module(RequestScope.class),
-                new ExceptionMapperFactory.Module(RequestScope.class),
-                new ContextResolverFactory.Module(RequestScope.class),
+                new MessageBodyFactory.Module(RequestScoped.class),
+                new ExceptionMapperFactory.Module(RequestScoped.class),
+                new ContextResolverFactory.Module(RequestScoped.class),
                 new JaxrsProviders.Module(),
                 new ClientFilteringStage.Module(),
                 new ExceptionWrapperInterceptor.Module(),
                 new ClientExecutorsFactory.ClientExecutorModule());
 
-        bind(javax.ws.rs.client.Configuration.class)
-                .toFactory(ConfigurationInjectionFactory.class)
-                .in(RequestScope.class);
-        bind(FeaturesAndProperties.class)
-                .toFactory(ConfigurationInjectionFactory.class)
-                .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<JerseyConfiguration>>() {
-        })
-                .toFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory())
-                .in(RequestScope.class);
+        bind(BuilderHelper.link(ConfigurationInjectionFactory.class).
+                to(javax.ws.rs.client.Configuration.class).
+                to(FeaturesAndProperties.class).
+                in(RequestScoped.class).buildFactory());
+
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<JerseyConfiguration>referenceFactory(),
+                RequestScoped.class, null, null, null,
+                (new TypeLiteral<Ref<JerseyConfiguration>>() {
+                }).getType()));
 
         // Client-side processing chain
-        bind(ClientRequest.class)
-                .toFactory(RequestContextInjectionFactory.class)
-                .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<ClientRequest>>() {
-        })
-                .toFactory(ReferencingFactory.<ClientRequest>referenceFactory())
-                .in(RequestScope.class);
+        bind(BuilderHelper.link(RequestContextInjectionFactory.class).
+                to(ClientRequest.class).
+                in(RequestScoped.class).buildFactory());
 
-        bind(new TypeLiteral<ResponseProcessor.RespondingContext<ClientResponse>>() {
-        }).to(new TypeLiteral<DefaultRespondingContext<ClientResponse>>() {
-        }).in(RequestScope.class);
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<ClientRequest>referenceFactory(),
+                RequestScoped.class, null, null, null,
+                (new TypeLiteral<Ref<ClientRequest>>() {
+                }).getType()));
 
-        bind(new TypeLiteral<ResponseProcessor.Builder<ClientResponse>>() {
-        }).to(ResponseProcessorBuilder.class).in(Singleton.class);
+        bind(BuilderHelper.activeLink(DefaultRespondingContext.class).
+                to((new TypeLiteral<ResponseProcessor.RespondingContext<ClientResponse>>() {
+                }).getType()).
+                in(RequestScoped.class).build());
 
-
+        bind(BuilderHelper.activeLink(ResponseProcessorBuilder.class).
+                to((new TypeLiteral<ResponseProcessor.Builder<ClientResponse>>() {
+                }).getType()).
+                in(Singleton.class).build());
     }
 }

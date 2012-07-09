@@ -41,14 +41,16 @@ package org.glassfish.jersey.process.internal;
 
 import javax.ws.rs.core.ExecutionContext;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Jersey processing framework bindings configuration module.
@@ -59,29 +61,31 @@ public class ProcessingModule extends AbstractModule {
 
     private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
 
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
+        @Inject
+        public InvocationContextReferencingFactory(Provider<Ref<InvocationContext>> referenceFactory) {
             super(referenceFactory);
+        }
+
+        @Override
+        @RequestScoped
+        public InvocationContext provide() {
+            return super.provide();
         }
     }
 
     @Override
     protected void configure() {
         // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {
-        })
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
+        bind(BuilderHelper.link(InvocationContextReferencingFactory.class).in(RequestScoped.class).build());
 
+        bind(BuilderHelper.link(InvocationContextReferencingFactory.class).
+                to(InvocationContext.class).
+                to(ExecutionContext.class).
+                in(RequestScoped.class).
+                buildFactory());
 
-        // Responding context
-        // TODO remove this
-        //    bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
-        //     }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
-        //     }).in(RequestScope.class);
-
-        //      bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
-        //      }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<InvocationContext>referenceFactory(),
+                RequestScoped.class, null, null, null, (new TypeLiteral<Ref<InvocationContext>>() {
+        }).getType()));
     }
 }

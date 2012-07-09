@@ -39,14 +39,12 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.MethodHandler;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Terminal router that pushes the matched method's handler instance to the stack
@@ -62,11 +60,11 @@ class PushMethodHandlerRouter implements Router {
     static class Builder {
 
         @Inject
-        private Factory<RoutingContext> routingContextFactory;
+        private Provider<RoutingContext> routingContextFactory;
         @Inject
-        private Injector injector;
+        private ServiceLocator injector;
         @Inject
-        private Services services;
+        private ServiceLocator services;
 
         /**
          * Build a new {@link PushMethodHandlerRouter} instance.
@@ -82,14 +80,14 @@ class PushMethodHandlerRouter implements Router {
 
     }
 
-    private final Services services;
-    private final Factory<RoutingContext> routingContextFactory;
+    private final ServiceLocator services;
+    private final Provider<RoutingContext> routingContextFactory;
     private final MethodHandler methodHandler;
     private final Router next;
 
     private PushMethodHandlerRouter(
-            final Factory<RoutingContext> routingContextFactory,
-            final Services services,
+            final Provider<RoutingContext> routingContextFactory,
+            final ServiceLocator services,
             final MethodHandler methodHandler,
             final Router next) {
         this.services = services;

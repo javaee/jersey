@@ -41,6 +41,7 @@ package org.glassfish.jersey.gf.ejb;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,17 +50,20 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ext.ExceptionMapper;
 
+import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.PerLookup;
-
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
+
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * EJB component provider.
@@ -82,8 +86,9 @@ public final class EJBComponentProvider implements ComponentProvider {
         final InitialContext ctx;
         final Class<T> clazz;
 
+        @SuppressWarnings("unchecked")
         @Override
-        public T get() throws ComponentException {
+        public T provide() {
             try {
                 return (T) lookup(ctx, clazz, clazz.getSimpleName());
             } catch (NamingException ex) {
@@ -92,25 +97,32 @@ public final class EJBComponentProvider implements ComponentProvider {
             }
         }
 
+        @Override
+        public void dispose(T instance) {
+            // do nothing
+        }
+
         public EjbFactory(Class<T> rawType, InitialContext ctx) {
             this.clazz = rawType;
             this.ctx = ctx;
         }
     }
 
-    // Annotations to determine EJB components
-    static final Set<String> EjbComponentAnnotations = Collections.unmodifiableSet(new HashSet<String>() {{
-       add("javax.ejb.Stateful");
-       add("javax.ejb.Stateless");
-       add("javax.ejb.Singleton");
+    /**
+     * Annotations to determine EJB components.
+     */
+    private static final Set<String> EjbComponentAnnotations = Collections.unmodifiableSet(new HashSet<String>() {{
+        add("javax.ejb.Stateful");
+        add("javax.ejb.Stateless");
+        add("javax.ejb.Singleton");
     }});
 
-    private Services services = null;
+    private ServiceLocator locator = null;
 
     // ComponentProvider
     @Override
-    public void initialize(final Services services) {
-        this.services = services;
+    public void initialize(final ServiceLocator locator) {
+        this.locator = locator;
     }
 
     private void registerEjbInterceptor() {
@@ -134,7 +146,7 @@ public final class EJBComponentProvider implements ComponentProvider {
 
                 // create an interceptor instance via reflection
                 final Class<?> interceptorClass = Class.forName(EJBComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
-                final Object interceptor = interceptorClass.getConstructor(Services.class).newInstance(services);
+                final Object interceptor = interceptorClass.getConstructor(ServiceLocator.class).newInstance(locator);
 
                 interceptorBinderMethod.invoke(interceptorBinder, interceptor);
 
@@ -159,7 +171,7 @@ public final class EJBComponentProvider implements ComponentProvider {
     @Override
     public boolean bind(Class<?> component, Set<Class<?>> providerContracts) {
 
-        if (services == null) {
+        if (locator == null) {
             throw new IllegalStateException(LocalizationMessages.EJB_COMPONENT_PROVIDER_NOT_INITIALIZED_PROPERLY());
         }
 
@@ -172,13 +184,17 @@ public final class EJBComponentProvider implements ComponentProvider {
         }
 
         try {
-            DynamicBinderFactory bf = services.bindDynamically();
-            final EjbFactory ejbFactory = new EjbFactory(component, new InitialContext());
-            bf.bind(component).toFactory(ejbFactory).in(PerLookup.class);
-            for (Class contract : providerContracts) {
-                bf.bind(contract).toFactory(ejbFactory).in(PerLookup.class);
-            }
-            bf.commit();
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration dc = dcs.createDynamicConfiguration();
+
+            //noinspection unchecked
+            Utilities.createConstantFactoryDescriptor(
+                    new EjbFactory(component, new InitialContext()),
+                    PerLookup.class,
+                    null, null, null,
+                    providerContracts.toArray(new Type[providerContracts.size()]));
+
+            dc.commit();
             return true;
         } catch (NamingException ex) {
             Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -189,9 +205,11 @@ public final class EJBComponentProvider implements ComponentProvider {
     @Override
     public void done() {
         if (ejbInterceptorRegistered) {
-            final DynamicBinderFactory binderFactory = services.bindDynamically();
-            binderFactory.bind(ExceptionMapper.class).to(EJBExceptionMapper.class);
-            binderFactory.commit();
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration dc = dcs.createDynamicConfiguration();
+
+            dc.bind(BuilderHelper.link(EJBExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class).build());
+            dc.commit();
         }
     }
 
@@ -219,21 +237,21 @@ public final class EJBComponentProvider implements ComponentProvider {
 
     private static Object lookup(InitialContext ic, Class<?> c, String name) throws NamingException {
         try {
-            return lookupSimpleForm(ic, c, name);
+            return lookupSimpleForm(ic, name);
         } catch (NamingException ex) {
             LOGGER.log(Level.WARNING, LocalizationMessages.EJB_CLASS_SIMPLE_LOOKUP_FAILED(c.getName()), ex);
 
-            return lookupFullyQualfiedForm(ic, c, name);
+            return lookupFullyQualifiedForm(ic, c, name);
         }
     }
 
-    private static Object lookupSimpleForm(InitialContext ic, Class<?> c, String name) throws NamingException {
+    private static Object lookupSimpleForm(InitialContext ic, String name) throws NamingException {
         String jndiName = "java:module/" + name;
         return ic.lookup(jndiName);
     }
 
-    private static Object lookupFullyQualfiedForm(InitialContext ic, Class<?> c, String name) throws NamingException {
-        String jndiName =  "java:module/" + name + "!" + c.getName();
+    private static Object lookupFullyQualifiedForm(InitialContext ic, Class<?> c, String name) throws NamingException {
+        String jndiName = "java:module/" + name + "!" + c.getName();
         return ic.lookup(jndiName);
     }
 }

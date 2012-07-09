@@ -41,16 +41,15 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.core.PathSegment;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link MatrixParam} injection annotation.
@@ -58,8 +57,10 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider<MatrixParam> {
 
+    @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<MatrixParam> {
 
         public InjectionResolver() {
@@ -90,7 +91,8 @@ final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
-    public MatrixParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    public MatrixParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.MATRIX);
     }
 

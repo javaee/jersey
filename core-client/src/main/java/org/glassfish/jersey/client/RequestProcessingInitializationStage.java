@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ProviderBinder;
@@ -48,10 +50,7 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 
@@ -77,37 +76,35 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
         Ref<ClientRequest> requestContextRef;
     }
 
-    private final Services services;
-    private final Injector injector;
+    private final ServiceLocator locator;
     private final ProviderBinder providerBinder;
 
     /**
      * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function
      * for requests and responses.
      *
-     * @param injector       HK2 injector.
+     * @param locator       HK2 locator.
      * @param providerBinder Jersey provider binder.
      */
+    @Inject
     public RequestProcessingInitializationStage(
-            @Inject Injector injector,
-            @Inject Services services,
-            @Inject ProviderBinder providerBinder) {
-        this.injector = injector;
-        this.services = services;
+            ServiceLocator locator,
+            ProviderBinder providerBinder) {
+        this.locator = locator;
         this.providerBinder = providerBinder;
     }
 
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
-        References refs = injector.inject(References.class); // request-scoped
+        References refs = locator.createAndInitialize(References.class); // request-scoped
 
         final JerseyConfiguration cfg = requestContext.getConfiguration();
         providerBinder.bindClasses(cfg.getProviderClasses());
         providerBinder.bindInstances(cfg.getProviderInstances());
-        final ExceptionMapperFactory mappers = new ExceptionMapperFactory(services);
-        final MessageBodyWorkers workers = new MessageBodyFactory(services);
-        final ContextResolvers resolvers = new ContextResolverFactory(services);
+        final ExceptionMapperFactory mappers = new ExceptionMapperFactory(locator);
+        final MessageBodyWorkers workers = new MessageBodyFactory(locator);
+        final ContextResolvers resolvers = new ContextResolverFactory(locator);
 
         refs.configuration.set(cfg);
 

@@ -43,17 +43,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
-import org.jvnet.hk2.annotations.Inject;
+import org.jvnet.hk2.annotations.Optional;
 
 import org.junit.Test;
 import static org.junit.Assert.assertSame;
@@ -74,9 +75,11 @@ public class ReferencingFactoryTest extends AbstractModule {
 
     private static class ValueInjected {
 
-        @Inject(optional = true)
+        @Inject
+        @Optional
         Foo foo;
-        @Inject(optional = true)
+        @Inject
+        @Optional
         List<Integer> integers;
         @Inject
         List<String> strings;
@@ -100,49 +103,49 @@ public class ReferencingFactoryTest extends AbstractModule {
     private List<String> expectedStrings = new LinkedList<String>();
 
     private static final class FooReferencingFactory extends ReferencingFactory<Foo> {
-
-        public FooReferencingFactory(@Inject Factory<Ref<Foo>> referenceFactory) {
+        @Inject
+        public FooReferencingFactory(Provider<Ref<Foo>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     private static final class ListOfIntegerReferencingFactory extends ReferencingFactory<List<Integer>> {
-
-        public ListOfIntegerReferencingFactory(@Inject Factory<Ref<List<Integer>>> referenceFactory) {
+        @Inject
+        public ListOfIntegerReferencingFactory(Provider<Ref<List<Integer>>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     private static final class ListOfStringReferencingFactory extends ReferencingFactory<List<String>> {
-
-        public ListOfStringReferencingFactory(@Inject Factory<Ref<List<String>>> referenceFactory) {
+        @Inject
+        public ListOfStringReferencingFactory(Provider<Ref<List<String>>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     @Override
     protected void configure() {
-        bind(Foo.class).toFactory(FooReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Foo>>() {}).toFactory(ReferencingFactory.<Foo>referenceFactory()).in(Singleton.class);
 
-        bind(new TypeLiteral<List<Integer>>() {}).toFactory(ListOfIntegerReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<List<Integer>>>() {}).toFactory(ReferencingFactory.<List<Integer>>referenceFactory()).in(Singleton.class);
+        bind(BuilderHelper.link(FooReferencingFactory.class).to(Foo.class).in(PerLookup.class).buildFactory());
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<Foo>referenceFactory(), Singleton.class, null, null, null, (new TypeLiteral<Ref<Foo>>() {}).getType()));
 
-        bind(new TypeLiteral<List<String>>() {}).toFactory(ListOfStringReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<List<String>>>() {}).toFactory(ReferencingFactory.<List<String>>referenceFactory(expectedStrings)).in(Singleton.class);
+        bind(Utilities.createFactoryDescriptor(ListOfIntegerReferencingFactory.class, PerLookup.class, PerLookup.class, null, null, (new TypeLiteral<List<Integer>>() {}).getType()));
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<List<Integer>>referenceFactory(), Singleton.class, null, null, null, (new TypeLiteral<Ref<List<Integer>>>() {}).getType()));
+
+        bind(Utilities.createFactoryDescriptor(ListOfStringReferencingFactory.class, PerLookup.class, PerLookup.class, null, null, (new TypeLiteral<List<String>>() {}).getType()));
+        bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<List<String>>referenceFactory(expectedStrings), Singleton.class, null, null, null, (new TypeLiteral<Ref<List<String>>>() {}).getType()));
     }
 
     @Test
     public void testReferencedBinding() {
-        Services services = HK2.get().create(null, this);
-        Injector injector = services.forContract(Injector.class).get();
+        ServiceLocator locator = Utilities.create(null, null, this);
 
-        ValueInjected emptyValues = injector.inject(ValueInjected.class);
+        ValueInjected emptyValues = locator.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, emptyValues.foo);
         assertSame(expectedIntegers, emptyValues.integers);
         assertSame(expectedStrings, emptyValues.strings);
 
-        RefInjected refValues = injector.inject(RefInjected.class);
+        RefInjected refValues = locator.createAndInitialize(RefInjected.class);
         expectedFoo = new Foo(10);
         refValues.foo.set(expectedFoo);
         expectedIntegers = new LinkedList<Integer>();
@@ -150,7 +153,7 @@ public class ReferencingFactoryTest extends AbstractModule {
         expectedStrings = new ArrayList<String>();
         refValues.strings.set(expectedStrings);
 
-        ValueInjected updatedValues = injector.inject(ValueInjected.class);
+        ValueInjected updatedValues = locator.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, updatedValues.foo);
         assertSame(expectedIntegers, updatedValues.integers);
         assertSame(expectedStrings, updatedValues.strings);

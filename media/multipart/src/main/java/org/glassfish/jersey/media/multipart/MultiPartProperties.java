@@ -43,10 +43,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
 
 /**
  * Injectable JavaBean containing the configuration parameters for
@@ -66,16 +65,20 @@ public class MultiPartProperties {
 
         @Override
         protected void configure() {
-            bind(MultiPartProperties.class).toFactory(MultiPartConfigFactory.class);
+            bind(BuilderHelper.link(MultiPartConfigFactory.class).to(MultiPartProperties.class).buildFactory());
         }
 
         private static class MultiPartConfigFactory implements Factory<MultiPartProperties> {
 
             @Override
-            public MultiPartProperties get() throws ComponentException {
+            public MultiPartProperties provide() {
                 return new MultiPartProperties();
             }
 
+            @Override
+            public void dispose(MultiPartProperties instance) {
+                //not used
+            }
         }
 
     }

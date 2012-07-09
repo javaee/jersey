@@ -43,13 +43,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
 
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * An aggregate {@link StringValueReaderProvider string reader provider} that loads all
@@ -63,11 +63,13 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class StringReaderFactory implements StringValueReaderProvider {
 
     private Set<StringValueReaderProvider> readerProviders;
 
-    StringReaderFactory(@Inject Services services) {
+    @Inject
+    StringReaderFactory(ServiceLocator services) {
         readerProviders = Providers.getProviders(services, StringValueReaderProvider.class);
     }
 

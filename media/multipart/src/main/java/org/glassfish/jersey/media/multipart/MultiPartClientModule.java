@@ -39,14 +39,14 @@
  */
 package org.glassfish.jersey.media.multipart;
 
+import javax.inject.Singleton;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
-
-import org.glassfish.hk2.scopes.Singleton;
 
 /**
  * Module with Multipart providers for a client.
@@ -60,12 +60,10 @@ public class MultiPartClientModule extends AbstractModule {
         install(new MultiPartProperties.Module());
 
         // Reader.
-        bind().to(MultiPartReaderClientSide.class).in(Singleton.class);
-        bind(MessageBodyReader.class).to(MultiPartReaderClientSide.class);
+        bind(BuilderHelper.link(MultiPartReaderClientSide.class).to(MessageBodyReader.class).in(Singleton.class).build());
 
         // Writer.
-        bind().to(MultiPartWriter.class).in(Singleton.class);
-        bind(MessageBodyWriter.class).to(MultiPartWriter.class);
+        bind(BuilderHelper.link(MultiPartWriter.class).to(MessageBodyWriter.class).in(Singleton.class).build());
     }
 
 }

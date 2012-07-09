@@ -51,14 +51,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -69,14 +78,6 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -98,8 +99,8 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Referencing factory for Grizzly request.
      */
     private static class GrizzlyRequestReferencingFactory extends ReferencingFactory<Request> {
-
-        public GrizzlyRequestReferencingFactory(@Inject Factory<Ref<Request>> referenceFactory) {
+        @Inject
+        public GrizzlyRequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -108,8 +109,8 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Referencing factory for Grizzly response.
      */
     private static class GrizzlyResponseReferencingFactory extends ReferencingFactory<Response> {
-
-        public GrizzlyResponseReferencingFactory(@Inject Factory<Ref<Response>> referenceFactory) {
+        @Inject
+        public GrizzlyResponseReferencingFactory(Provider<Ref<Response>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -122,15 +123,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         @Override
         protected void configure() {
-            bind(Request.class).toFactory(GrizzlyRequestReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<Request>>() {
-            }).
-                    toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
+            bind(BuilderHelper.link(GrizzlyRequestReferencingFactory.class).to(Request.class).in(PerLookup.class).buildFactory());
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<Request>referenceFactory(),
+                    RequestScoped.class, null, null, null, (new TypeLiteral<Ref<Request>>() {}).getType()));
 
-            bind(Response.class).toFactory(GrizzlyResponseReferencingFactory.class).in(PerLookup.class);
-            bind(new TypeLiteral<Ref<Response>>() {
-            }).
-                    toFactory(ReferencingFactory.<Response>referenceFactory()).in(RequestScope.class);
+            bind(BuilderHelper.link(GrizzlyResponseReferencingFactory.class).to(Response.class).in(PerLookup.class).buildFactory());
+            bind(Utilities.createConstantFactoryDescriptor(ReferencingFactory.<Response>referenceFactory(),
+                    RequestScoped.class, null, null, null, (new TypeLiteral<Ref<Response>>() {}).getType()));
         }
     }
 
@@ -290,9 +289,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             requestContext.setWriter(responseWriter);
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
-                public void initialize(Services services) {
-                    services.forContract(new TypeLiteral<Ref<Request>>() {}).get().set(request);
-                    services.forContract(new TypeLiteral<Ref<Response>>() {}).get().set(response);
+                public void initialize(ServiceLocator services) {
+                    services.<Ref<Request>>getService((new TypeLiteral<Ref<Request>>() {
+                    }).getType()).set(request);
+                    services.<Ref<Response>>getService((new TypeLiteral<Ref<Response>>() {}).getType()).set(response);
                 }
             });
             appHandler.handle(requestContext);

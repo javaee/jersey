@@ -70,17 +70,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.jvnet.hk2.annotations.Inject;
-
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.DynamicBinderFactory;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -89,7 +80,9 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Module;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -119,6 +112,13 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
+
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -180,28 +180,38 @@ public final class ApplicationHandler {
         private class JaxrsApplicationProvider implements Factory<Application> {
 
             @Override
-            public Application get() throws ComponentException {
+            public Application provide() {
                 return ApplicationHandler.this.configuration.getApplication();
+            }
+
+            @Override
+            public void dispose(Application instance) {
+                //not used
             }
         }
 
         private class ResourceConfigProvider implements Factory<ResourceConfig> {
 
             @Override
-            public ResourceConfig get() throws ComponentException {
+            public ResourceConfig provide() {
                 return ApplicationHandler.this.configuration;
+            }
+
+            @Override
+            public void dispose(ResourceConfig instance) {
+                //not used
             }
         }
 
         @Override
         protected void configure() {
             ResourceConfigProvider rcp = new ResourceConfigProvider();
-            bind(ResourceConfig.class).toFactory(rcp).in(Singleton.class);
-            bind(FeaturesAndProperties.class).toFactory(rcp).in(Singleton.class);
+            bind(Utilities.createConstantFactoryDescriptor(rcp, Singleton.class, null, null, null, ResourceConfig.class));
+            bind(Utilities.createConstantFactoryDescriptor(rcp, Singleton.class, null, null, null, FeaturesAndProperties.class));
 
-            bind(Application.class).toFactory(new JaxrsApplicationProvider()).in(Singleton.class);
+            bind(Utilities.createConstantFactoryDescriptor(new JaxrsApplicationProvider(), Singleton.class, null, null, null, Application.class));
 
-            bind(ApplicationHandler.class).toInstance(ApplicationHandler.this);
+            bind(BuilderHelper.createConstantDescriptor(ApplicationHandler.this));
         }
     }
 
@@ -211,7 +221,7 @@ public final class ApplicationHandler {
 
 
     //
-    private Services services;
+    private ServiceLocator serviceLocator;
     /**
      * Request invoker.
      */
@@ -222,7 +232,7 @@ public final class ApplicationHandler {
      * Create a new Jersey application handler using a default configuration.
      */
     public ApplicationHandler() {
-        initServices();
+        initServices(null);
         this.configuration = new ResourceConfig();
         initialize();
     }
@@ -236,7 +246,7 @@ public final class ApplicationHandler {
      *                              application handler.
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
-        initServices();
+        initServices(jaxrsApplicationClass);
         if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
             this.configuration = (ResourceConfig) createApplication(jaxrsApplicationClass);
         } else {
@@ -253,16 +263,27 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        initServices();
-        this.configuration = ResourceConfig.forApplication(application);
+        ResourceConfig configuration = ResourceConfig.forApplication(application);
+        initServices(configuration.getApplicationClass());
+        this.configuration = configuration;
         initialize();
     }
 
-    private void initServices() {
-        // TODO parent/child services - when HK2 bec ready:
+    private void initServices(final Class<? extends Application> jaxrsApplicationClass) {
+        // TODO parent/child serviceLocator - when HK2 bec ready:
         //  this.jerseyServices = HK2.get().build(null, jerseyModules);
-        //  this.services = HK2.get().build(jerseyServices, customModules);
-        services = HK2.get().create(null, new ServerModule(), new ApplicationModule());
+        //  this.serviceLocator = HK2.get().build(jerseyServices, customModules);
+        if (jaxrsApplicationClass == null) {
+            serviceLocator = Utilities.create(null, null, new ServerModule(), new ApplicationModule());
+        }
+        else {
+            serviceLocator = Utilities.create(null, null, new ServerModule(), new ApplicationModule(), new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(BuilderHelper.link(jaxrsApplicationClass).build());
+                }
+            });
+        }
     }
 
     /**
@@ -316,13 +337,12 @@ public final class ApplicationHandler {
             }
         }
 
-        final Injector injector = services.forContract(Injector.class).get();
-        References refs = injector.inject(References.class);
+        References refs = serviceLocator.createAndInitialize(References.class);
 
         final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
 
         for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-            provider.initialize(services);
+            provider.initialize(serviceLocator);
             componentProviders.add(provider);
         }
 
@@ -333,29 +353,29 @@ public final class ApplicationHandler {
                 ReflectionHelper.getAnnotationTypes(configuration.getApplication().getClass(), NameBinding.class);
 
         // find all filters and dynamic binders
-        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(services,
+        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(serviceLocator,
                 ContainerResponseFilter.class);
         final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters
                 = filterNameBound(responseFilters, null, applicationNameBindings);
         final List<ContainerRequestFilter> preMatchFilters = Providers.getAllProviders(
-                services,
+                serviceLocator,
                 ContainerRequestFilter.class,
                 new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING)
         );
         final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
         final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters
                 = filterNameBound(preMatchFilters, requestFilters, applicationNameBindings);
-        final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(services, DynamicBinder.class);
+        final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(serviceLocator, DynamicBinder.class);
 
         // build the models
-        final MessageBodyFactory workers = new MessageBodyFactory(services);
+        final MessageBodyFactory workers = new MessageBodyFactory(serviceLocator);
         refs.workers.set(workers);
-        refs.mappers.set(new ExceptionMapperFactory(services));
-        refs.resolvers.set(new ContextResolverFactory(services));
+        refs.mappers.set(new ExceptionMapperFactory(serviceLocator));
+        refs.resolvers.set(new ContextResolverFactory(serviceLocator));
 
         List<Resource> resources = buildAndValidate(resourcesBuilders, resourceModelIssues, workers);
 
-        final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
+        final RuntimeModelBuilder runtimeModelBuilder = serviceLocator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setWorkers(workers);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, dynamicBinders);
         for (Resource resource : resources) {
@@ -370,28 +390,29 @@ public final class ApplicationHandler {
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(false);
 
         final ContainerFilteringStage preMatchRequestFilteringStage =
-                injector.inject(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
+                serviceLocator.createAndInitialize(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
         final RoutingStage routingStage =
-                injector.inject(RoutingStage.Builder.class).build(resourceRoutingRoot);
+                serviceLocator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
         final ContainerFilteringStage resourceFilteringStage =
-                injector.inject(ContainerFilteringStage.Builder.class).build(requestFilters, null);
-        final RoutedInflectorExtractorStage routedInflectorExtractorStage = injector.inject(RoutedInflectorExtractorStage.class);
+                serviceLocator.createAndInitialize(ContainerFilteringStage.Builder.class).build(requestFilters, null);
+        final RoutedInflectorExtractorStage routedInflectorExtractorStage =
+                serviceLocator.createAndInitialize(RoutedInflectorExtractorStage.class);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
         final Stage<ContainerRequest> rootStage = Stages
-                .chain(injector.inject(ReferencesInitializer.class))
-                .to(injector.inject(ContainerMessageBodyWorkersInitializer.class))
+                .chain(serviceLocator.createAndInitialize(ReferencesInitializer.class))
+                .to(serviceLocator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
 
-        this.invoker = injector.inject(ServerModule.RequestInvokerBuilder.class)
+        this.invoker = serviceLocator.createAndInitialize(ServerModule.RequestInvokerBuilder.class)
                 .build(rootStage);
 
         // inject self
-        injector.inject(this);
+        serviceLocator.inject(this);
     }
 
     /**
@@ -456,9 +477,6 @@ public final class ApplicationHandler {
     }
 
     private void registerProvidersAndSingletonResources(Set<ComponentProvider> componentProviders) {
-        final ProviderBinder providers = services.forContract(ProviderBinder.class).get();
-        SingletonResourceBinder singletonResourceBinder = services.byType(SingletonResourceBinder.class).get();
-
         Set<Class<?>> cleanProviders = new HashSet<Class<?>>();
         Set<Class<?>> cleanResources = new HashSet<Class<?>>();
         Set<Class<?>> resourcesAndProviders = new HashSet<Class<?>>();
@@ -513,21 +531,24 @@ public final class ApplicationHandler {
             }
         }
 
-        providers.bindClasses(cleanProviders);
-        providers.bindClasses(resourcesAndProviders, true);
+        final ProviderBinder providerBinder = serviceLocator.getService(ProviderBinder.class);
+        providerBinder.bindClasses(cleanProviders);
+        providerBinder.bindClasses(resourcesAndProviders, true);
 
+        final SingletonResourceBinder singletonResourceBinder = serviceLocator.getService(SingletonResourceBinder.class);
         for (Class<?> res : cleanResources) {
-            if (!res.isAnnotationPresent(org.glassfish.jersey.spi.Singleton.class)) {
-                DynamicBinderFactory bf = services.bindDynamically();
-                bf.bind().to(res).in(PerLookup.class);
-                bf.commit();
+            if (!res.isAnnotationPresent(javax.inject.Singleton.class)) {
+                final DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
+                final DynamicConfiguration dc = dcs.createDynamicConfiguration();
+
+                dc.bind(BuilderHelper.link(res).in(PerLookup.class).build());
+                dc.commit();
             } else {
                 singletonResourceBinder.bindResourceClassAsSingleton(res);
             }
         }
 
-        providers.bindInstances(configuration.getSingletons());
-
+        providerBinder.bindInstances(configuration.getSingletons());
         for (ComponentProvider componentProvider : componentProviders) {
             componentProvider.done();
         }
@@ -541,7 +562,7 @@ public final class ApplicationHandler {
         } else if (applicationClass == Application.class) {
             return new Application();
         } else {
-            return services.forContract(applicationClass).get();
+            return serviceLocator.createAndInitialize(applicationClass);
         }
     }
 
@@ -551,12 +572,13 @@ public final class ApplicationHandler {
      * @param modules Modules to be registered.
      */
     public void registerAdditionalModules(final Set<Module> modules) {
-        final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
+        final DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
+        final DynamicConfiguration dc = dcs.createDynamicConfiguration();
 
         for (Module module : modules) {
-            module.configure(dynamicBinderFactory);
+            module.bind(dc);
         }
-        dynamicBinderFactory.commit();
+        dc.commit();
     }
 
     private List<Resource> buildAndValidate(List<Resource.Builder> resources, List<ResourceModelIssue> modelIssues,
@@ -727,8 +749,8 @@ public final class ApplicationHandler {
      * <p>
      * The the {@link SecurityContext security context} stored in the container request context
      * is bound as an injectable instance in the scope of the processed request context.
-     * Also, any {@link RequestScopedInitializer cCustom scope injections} are initialized in the
-     * current request scope.
+     * Also, any {@link org.glassfish.jersey.server.spi.RequestScopedInitializer custom scope injections}
+     * are initialized in the current request scope.
      * </p>
      *
      * @param requestContext container request context of the current request.
@@ -767,7 +789,7 @@ public final class ApplicationHandler {
     }
 
     private void releaseRequestProcessing(final ContainerRequest requestContext) {
-        closeableServiceFactory.get().close();
+        closeableServiceFactory.provide().close();
         final boolean isChunked;
         final Object property = requestContext.getProperty(ChunkedResponse.CHUNKED_MODE);
         if (property instanceof Boolean) {
@@ -916,12 +938,12 @@ public final class ApplicationHandler {
     }
 
     /**
-     * Returns {@link Services} relevant to current application.
+     * Returns {@link ServiceLocator} relevant to current application.
      *
-     * @return {@link Services} instance.
+     * @return {@link ServiceLocator} instance.
      */
-    public Services getServices() {
-        return services;
+    public ServiceLocator getServiceLocator() {
+        return serviceLocator;
     }
 
     /**

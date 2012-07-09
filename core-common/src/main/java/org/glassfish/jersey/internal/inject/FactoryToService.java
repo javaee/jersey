@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.hk2.Factory;
-
 import com.google.common.base.Function;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Helper function converting a HK2 {@link Factory service factory} into the
@@ -55,6 +54,6 @@ public final class FactoryToService<T> implements Function<Factory<T>, T> {
 
     @Override
     public T apply(Factory<T> input) {
-        return (input != null) ? input.get() : null;
+        return (input != null) ? input.provide() : null;
     }
 }

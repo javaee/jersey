@@ -105,13 +105,13 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
-            <artifactId>auto-depends</artifactId>
+            <artifactId>hk2-locator</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.jvnet</groupId>
-            <artifactId>tiger-types</artifactId>
-        </dependency>
+        <!--TODO : <dependency>-->
+            <!--<groupId>org.glassfish.hk2</groupId>-->
+            <!--<artifactId>tiger-types-osgi</artifactId>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>junit</groupId>

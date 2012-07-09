@@ -39,13 +39,12 @@
  */
 package org.glassfish.jersey.media.multipart.internal;
 
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import com.sun.hk2.component.InjectionResolver;
+import javax.inject.Singleton;
 
 /**
  * Module providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -56,8 +55,8 @@ public class FormDataParameterInjectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ValueFactoryProvider.class).to(FormDataParamValueFactoryProvider.class);
-        bind(InjectionResolver.class).to(FormDataParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
+        bind(BuilderHelper.link(FormDataParamValueFactoryProvider.class).to(ValueFactoryProvider.class).build());
+        bind(BuilderHelper.link(FormDataParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
     }
 
 }

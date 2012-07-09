@@ -50,15 +50,15 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.
@@ -71,7 +71,7 @@ import org.glassfish.hk2.inject.Injector;
  */
 class SubResourceLocatorRouter implements Router {
 
-    private final Injector injector;
+    private final ServiceLocator locator;
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
     private final RuntimeModelBuilder runtimeModelBuilder;
@@ -79,25 +79,23 @@ class SubResourceLocatorRouter implements Router {
     /**
      * Create a new sub-resource locator router.
      *
-     * @param injector     HK2 injector.
-     * @param services     HK2 services.
+     * @param locator     HK2 locator.
      * @param runtimeModelBuilder Runtime model builder.
      * @param locatorModel resource locator method model.
      */
     public SubResourceLocatorRouter(
-            final Injector injector,
-            final Services services,
+            final ServiceLocator locator,
             final RuntimeModelBuilder runtimeModelBuilder,
             final ResourceMethod locatorModel) {
-        this.injector = injector;
+        this.locator = locator;
         this.runtimeModelBuilder = runtimeModelBuilder;
         this.locatorModel = locatorModel;
-        this.valueProviders = ParameterValueHelper.createValueProviders(services, locatorModel.getInvocable());
+        this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
     }
 
     @Override
     public Continuation apply(final ContainerRequest request) {
-        final RoutingContext routingCtx = injector.inject(RoutingContext.class);
+        final RoutingContext routingCtx = Utilities.getOrCreateComponent(locator, RoutingContext.class);
 
         Object subResource = getResource(routingCtx);
         if (subResource == null) {
@@ -105,9 +103,9 @@ class SubResourceLocatorRouter implements Router {
         }
         if (subResource.getClass().isAssignableFrom(Class.class)) {
             final Class<?> clazz = (Class<?>) subResource;
-            SingletonResourceBinder singletonResourceFactory = injector.inject(SingletonResourceBinder.class);
-            singletonResourceFactory.bindResourceClassAsSingleton(clazz);
-            subResource = injector.inject(clazz);
+            SingletonResourceBinder binder = locator.getService(SingletonResourceBinder.class);
+            binder.bindResourceClassAsSingleton(clazz);
+            subResource = Utilities.getOrCreateComponent(locator, clazz);
         }
 
         // TODO: what to do with the issues?

@@ -41,6 +41,7 @@ package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
 
+import javax.inject.Singleton;
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -48,7 +49,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 
@@ -60,6 +61,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @BindingPriority(10)
+@Singleton
 public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInterceptor {
 
     @Override
@@ -90,8 +92,10 @@ public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInt
 
         @Override
         protected void configure() {
-            bind(ReaderInterceptor.class).to(ExceptionWrapperInterceptor.class).in(Singleton.class);
-            bind(WriterInterceptor.class).to(ExceptionWrapperInterceptor.class).in(Singleton.class);
+            bind(BuilderHelper.link(ExceptionWrapperInterceptor.class).
+                    to(ReaderInterceptor.class).
+                    to(WriterInterceptor.class).
+                    in(Singleton.class).build());
         }
     }
 }

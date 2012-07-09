@@ -44,8 +44,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.Utilities;
 
 
 /**
@@ -126,10 +126,10 @@ public abstract class MethodHandler implements ResourceModelComponent {
      * @param services services that can be used to inject get the instance.
      * @return injected resource method handler instance.
      */
-    public abstract Object getInstance(final Services services);
+    public abstract Object getInstance(final ServiceLocator services);
 
     /**
-     * Return whether the method handler {@link #getInstance(org.glassfish.hk2.Services) creates instances}
+     * Return whether the method handler {@link ServiceLocator creates instances}
      * based on {@link Class classes}.
      *
      * @return True is instances returned bu this method handler are created from {@link Class classes} given to HK2, false\
@@ -178,8 +178,9 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final Services services) {
-            return services.forContract(handlerClass).get();
+        public Object getInstance(final ServiceLocator services) {
+            return Utilities.getOrCreateComponent(services, handlerClass);
+//            return services.getService(handlerClass);
         }
 
         @Override
@@ -221,10 +222,8 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final Services services) {
-            // TODO: should we do the injection only once? Or not at all?
-            Injector injector = services.byType(Injector.class).get();
-            injector.inject(handler);
+        public Object getInstance(final ServiceLocator services) {
+            services.inject(handler);
             return handler;
         }
 

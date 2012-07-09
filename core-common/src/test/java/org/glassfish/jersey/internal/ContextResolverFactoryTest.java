@@ -40,9 +40,10 @@
 package org.glassfish.jersey.internal;
 
 import com.google.common.collect.Sets;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -112,9 +113,9 @@ public class ContextResolverFactoryTest {
 
         @Override
         protected void configure() {
-            bind(ContextResolver.class).to(CustomStringResolver.class);
-            bind(ContextResolver.class).to(CustomIntegerResolverA.class);
-            bind(ContextResolver.class).to(CustomIntegerResolverB.class);
+            bind(BuilderHelper.link(CustomStringResolver.class).to(ContextResolver.class).build());
+            bind(BuilderHelper.link(CustomIntegerResolverA.class).to(ContextResolver.class).build());
+            bind(BuilderHelper.link(CustomIntegerResolverB.class).to(ContextResolver.class).build());
         }
     }
     //
@@ -126,8 +127,8 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final Services services = HK2.get().create(null, new Module(), new ProviderBinder.ProviderBinderModule());
-        final ProviderBinder providerBinder = services.forContract(ProviderBinder.class).get();
+        final ServiceLocator services = Utilities.create(null, null, new Module(), new ProviderBinder.ProviderBinderModule());
+        final ProviderBinder providerBinder = services.getService(ProviderBinder.class);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(CustomIntegerResolverC.class));
 
         crf = new ContextResolverFactory(services);

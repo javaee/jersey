@@ -40,9 +40,9 @@
 package com.sun.ws.rs.ext;
 
 import javax.ws.rs.core.Application;
-import org.glassfish.hk2.HK2;
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Utilities;
 import org.glassfish.jersey.message.internal.MessagingModules;
 
 /**
@@ -60,7 +60,7 @@ import org.glassfish.jersey.message.internal.MessagingModules;
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
     public RuntimeDelegateImpl() {
         // TODO add more modules as necessary
-        super(HK2.get().create(null, new MessagingModules.HeaderDelegateProviders()));
+        super(Utilities.create(null, null, new MessagingModules.HeaderDelegateProviders()));
     }
 
     @Override

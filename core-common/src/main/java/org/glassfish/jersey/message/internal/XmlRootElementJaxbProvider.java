@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import org.glassfish.hk2.api.Factory;
+
 import java.io.InputStream;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -53,8 +56,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
-
-import org.glassfish.hk2.Factory;
 
 /**
  * Base XML-based message body provider for JAXB {@link XmlRootElement root elements}
@@ -87,6 +88,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
      */
     @Produces("application/xml")
     @Consumes("application/xml")
+    @Singleton
     public static final class App extends XmlRootElementJaxbProvider {
 
         public App(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -101,6 +103,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
      */
     @Produces("text/xml")
     @Consumes("text/xml")
+    @Singleton
     public static final class Text extends XmlRootElementJaxbProvider {
 
         public Text(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -115,6 +118,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
      */
     @Produces("*/*")
     @Consumes("*/*")
+    @Singleton
     public static final class General extends XmlRootElementJaxbProvider {
 
         public General(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -131,7 +135,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
     protected Object readFrom(Class<Object> type, MediaType mediaType,
             Unmarshaller u, InputStream entityStream)
             throws JAXBException {
-        final SAXSource s = getSAXSource(spf.get(), entityStream);
+        final SAXSource s = getSAXSource(spf.provide(), entityStream);
         if (type.isAnnotationPresent(XmlRootElement.class)) {
             return u.unmarshal(s);
         } else {

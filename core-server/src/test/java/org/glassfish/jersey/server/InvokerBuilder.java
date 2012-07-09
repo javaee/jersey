@@ -45,9 +45,8 @@ import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStag
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Test utility module for testing hierarchical request accepting (i.e. resource matching).
@@ -57,9 +56,9 @@ import org.jvnet.hk2.annotations.Inject;
 public class InvokerBuilder {
 
     @Inject
-    private Factory<RoutingStage.Builder> matchingStageFactory;
+    private Provider<RoutingStage.Builder> matchingStageFactory;
     @Inject
-    private Factory<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
+    private Provider<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
     @Inject
     private ReferencesInitializer referencesInitializer;
     @Inject

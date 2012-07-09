@@ -39,13 +39,14 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
 
-import org.glassfish.hk2.scopes.Singleton;
-
-import com.sun.hk2.component.InjectionResolver;
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 /**
  * Module providing support for JAX-RS context injection. Namely, standard injection
@@ -104,31 +105,31 @@ public class ParameterInjectionModule extends AbstractModule {
     @Override
     public void configure() {
         // String reader providers
-        bind(StringValueReaderProvider.class).to(StringReaderProviders.AggregatedProvider.class).in(Singleton.class);
-        bind().to(StringReaderFactory.class).in(Singleton.class);
+        bind(BuilderHelper.link(StringReaderProviders.AggregatedProvider.class).to(StringValueReaderProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(StringReaderFactory.class).in(Singleton.class).build());
 
         // Parameter injection value extractor providers
-        bind(MultivaluedParameterExtractorProvider.class).to(MultivaluedParameterExtractorFactory.class).in(Singleton.class);
+        bind(BuilderHelper.link(MultivaluedParameterExtractorFactory.class).to(MultivaluedParameterExtractorProvider.class).in(Singleton.class).build());
 
         // Parameter injection value providers
-        bind(ValueFactoryProvider.class).to(PathParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(QueryParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(MatrixParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(HeaderParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(FormParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(CookieParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(EntityParamValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(DelegatedInjectionValueFactoryProvider.class).in(Singleton.class);
-        bind(ValueFactoryProvider.class).to(WebTargetValueFactoryProvider.class).in(Singleton.class);
+        bind(BuilderHelper.link(PathParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(QueryParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(MatrixParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(HeaderParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(FormParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(CookieParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(EntityParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(DelegatedInjectionValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(WebTargetValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class).build());
 
         // Injection resolvers
         // @XxxParam
-        bind(InjectionResolver.class).to(PathParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(QueryParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(MatrixParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(HeaderParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(FormParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(CookieParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-        bind(InjectionResolver.class).to(WebTargetValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
+        bind(BuilderHelper.link(PathParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(QueryParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(MatrixParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(HeaderParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(FormParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(CookieParamValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
+        bind(BuilderHelper.link(WebTargetValueFactoryProvider.InjectionResolver.class).to(InjectionResolver.class).in(Singleton.class).build());
     }
 }

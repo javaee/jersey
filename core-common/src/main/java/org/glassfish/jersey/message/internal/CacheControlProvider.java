@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.CacheControl;
 
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
@@ -57,6 +58,7 @@ import org.glassfish.jersey.spi.HeaderDelegateProvider;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author hubick@java.net
  */
+@Singleton
 public final class CacheControlProvider implements HeaderDelegateProvider<CacheControl> {
 
     private static final Pattern WHITESPACE = Pattern.compile("\\s");

@@ -49,6 +49,8 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.core.MultivaluedMap;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -61,10 +63,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.uri.PathPattern;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -83,9 +82,7 @@ public final class RuntimeModelBuilder {
     @Inject
     private ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
     @Inject
-    private Injector injector;
-    @Inject
-    private Services services;
+    private ServiceLocator locator;
     @Inject
     private PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder;
     @Inject
@@ -195,7 +192,7 @@ public final class RuntimeModelBuilder {
                 methodAcceptor = Routers.asTreeAcceptor(createInflector(resourceMethod));
                 break;
             case SUB_RESOURCE_LOCATOR:
-                methodAcceptor = new SubResourceLocatorRouter(injector, services, this, resourceMethod);
+                methodAcceptor = new SubResourceLocatorRouter(locator, this, resourceMethod);
                 break;
         }
 
@@ -269,7 +266,7 @@ public final class RuntimeModelBuilder {
      * @return runtime request routing root.
      */
     public Router buildModel(boolean subResourceMode) {
-        final PushMatchedUriRouter uriPushingRouter = injector.inject(PushMatchedUriRouter.class);
+        final PushMatchedUriRouter uriPushingRouter = locator.createAndInitialize(PushMatchedUriRouter.class);
         RouteToPathBuilder<PathPattern> lastRoutedBuilder = null;
 
         // route resource method acceptors
