@@ -41,16 +41,15 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Provides injection of {@link Request} entity value or {@link Request} instance
@@ -58,6 +57,7 @@ import org.jvnet.hk2.annotations.Inject;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annotation> {
 
     /**
@@ -65,7 +65,8 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
      * @param mpep Injected multivaluedParameterExtractor provider.
      * @param injector Injected HK2 injector.
      */
-    EntityParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    EntityParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.ENTITY);
     }
 

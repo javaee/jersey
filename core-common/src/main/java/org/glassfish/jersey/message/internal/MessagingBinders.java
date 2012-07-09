@@ -42,17 +42,17 @@ package org.glassfish.jersey.message.internal;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.TransformerFactory;
 
-import org.glassfish.jersey.internal.ServiceFinderModule;
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
-import org.glassfish.hk2.scopes.PerThread;
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.hk2.api.PerThread;
 
 /**
  * Binding definitions for the default set of message related providers (readers,
@@ -60,9 +60,12 @@ import org.glassfish.hk2.scopes.Singleton;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MessagingModules {
+public class MessagingBinders {
 
-    public static class MessageBodyProviders extends AbstractModule {
+    /**
+     * Message body providers injection binder.
+     */
+    public static class MessageBodyProviders extends AbstractBinder {
 
         @Override
         protected void configure() {
@@ -92,54 +95,55 @@ public class MessagingModules {
             bindSingletonWorker(XmlRootElementJaxbProvider.General.class);
 
             // Message body readers
-            bind(MessageBodyReader.class).to(SourceProvider.StreamSourceReader.class).in(Singleton.class);
-            bind(MessageBodyReader.class).to(SourceProvider.SaxSourceReader.class).in(Singleton.class);
-            bind(MessageBodyReader.class).to(SourceProvider.DomSourceReader.class).in(Singleton.class);
-            bind(MessageBodyReader.class).to(XmlRootObjectJaxbProvider.App.class).in(Singleton.class);
-            bind(MessageBodyReader.class).to(XmlRootObjectJaxbProvider.Text.class).in(Singleton.class);
-            bind(MessageBodyReader.class).to(XmlRootObjectJaxbProvider.General.class).in(Singleton.class);
+            bind(SourceProvider.StreamSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
+            bind(SourceProvider.SaxSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
+            bind(SourceProvider.DomSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
+            bind(XmlRootObjectJaxbProvider.App.class).to(MessageBodyReader.class).in(Singleton.class);
+            bind(XmlRootObjectJaxbProvider.Text.class).to(MessageBodyReader.class).in(Singleton.class);
+            bind(XmlRootObjectJaxbProvider.General.class).to(MessageBodyReader.class).in(Singleton.class);
             /*
              * TODO: com.sun.jersey.core.impl.provider.entity.EntityHolderReader
              */
 
-            install(new ServiceFinderModule<MessageBodyReader>(MessageBodyReader.class));
+            install(new ServiceFinderBinder<MessageBodyReader>(MessageBodyReader.class));
 
             // Message body writers
-            bind(MessageBodyWriter.class).to(StreamingOutputProvider.class).in(Singleton.class);
-            bind(MessageBodyWriter.class).to(SourceProvider.SourceWriter.class).in(Singleton.class);
+            bind(StreamingOutputProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
+            bind(SourceProvider.SourceWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
 
-            install(new ServiceFinderModule<MessageBodyWriter>(MessageBodyWriter.class));
+            install(new ServiceFinderBinder<MessageBodyWriter>(MessageBodyWriter.class));
 
-            install(new ServiceFinderModule<HeaderDelegateProvider>(HeaderDelegateProvider.class));
+            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class));
 
             // XML factory injection points
-            bind(DocumentBuilderFactory.class).toFactory(DocumentBuilderFactoryInjectionProvider.class).in(PerThread.class);
-            bind(SAXParserFactory.class).toFactory(SaxParserFactoryInjectionProvider.class).in(PerThread.class);
-            bind(XMLInputFactory.class).toFactory(XmlInputFactoryInjectionProvider.class).in(PerThread.class);
-            bind(TransformerFactory.class).toFactory(TransformerFactoryInjectionProvider.class).in(PerThread.class);
+            bindFactory(DocumentBuilderFactoryInjectionProvider.class).to(DocumentBuilderFactory.class).in(PerThread.class);
+            bindFactory(SaxParserFactoryInjectionProvider.class).to(SAXParserFactory.class).in(PerThread.class);
+            bindFactory(XmlInputFactoryInjectionProvider.class).to(XMLInputFactory.class).in(PerThread.class);
+            bindFactory(TransformerFactoryInjectionProvider.class).to(TransformerFactory.class).in(PerThread.class);
         }
 
         private <T extends MessageBodyReader & MessageBodyWriter> void bindSingletonWorker(Class<T> worker) {
-            bind().to(worker).in(Singleton.class);
-            bind(MessageBodyReader.class).to(worker).in(Singleton.class);
-            bind(MessageBodyWriter.class).to(worker).in(Singleton.class);
+            bind(worker).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class);
         }
     }
 
-    public static class HeaderDelegateProviders extends AbstractModule {
+    /**
+     * Header delegate provider injection binder.
+     */
+    public static class HeaderDelegateProviders extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(HeaderDelegateProvider.class).to(CacheControlProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(CookieProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(DateProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(EntityTagProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(LinkProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(LocaleProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(MediaTypeProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(NewCookieProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(StringHeaderProvider.class).in(Singleton.class);
-            bind(HeaderDelegateProvider.class).to(UriProvider.class).in(Singleton.class);
+            bind(CacheControlProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(CookieProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(DateProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(EntityTagProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(LinkProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(LocaleProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(MediaTypeProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(NewCookieProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(StringHeaderProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            bind(UriProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
         }
     }
 }

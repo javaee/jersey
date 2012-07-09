@@ -48,9 +48,10 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.hk2.scopes.Singleton;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 /**
  * Interceptor that transforms {@link WebApplicationException} to
@@ -60,6 +61,7 @@ import org.glassfish.jersey.internal.inject.AbstractModule;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @BindingPriority(10)
+@Singleton
 public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInterceptor {
 
     @Override
@@ -82,16 +84,15 @@ public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInt
     }
 
     /**
-     * Module registering the {@link ExceptionWrapperInterceptor Exception Wrapper Interceptor}
+     * Binder registering the {@link ExceptionWrapperInterceptor Exception Wrapper Interceptor}
      * (used on the client side).
      *
      */
-    public static class Module extends AbstractModule {
+    public static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(ReaderInterceptor.class).to(ExceptionWrapperInterceptor.class).in(Singleton.class);
-            bind(WriterInterceptor.class).to(ExceptionWrapperInterceptor.class).in(Singleton.class);
+            bind(ExceptionWrapperInterceptor.class).to(ReaderInterceptor.class).to(WriterInterceptor.class).in(Singleton.class);
         }
     }
 }

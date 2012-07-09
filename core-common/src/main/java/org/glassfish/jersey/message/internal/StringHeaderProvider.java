@@ -41,12 +41,15 @@ package org.glassfish.jersey.message.internal;
 
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
+import javax.inject.Singleton;
+
 /**
  * {@code String} {@link HeaderDelegateProvider header delegate provider}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class StringHeaderProvider implements HeaderDelegateProvider<String> {
 
     @Override

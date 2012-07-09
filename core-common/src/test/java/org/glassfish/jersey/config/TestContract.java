@@ -41,7 +41,7 @@
 package org.glassfish.jersey.config;
 
 /**
- * Test contract for {@link ServiceFinderModule} test.
+ * Test contract for {@link org.glassfish.jersey.internal.ServiceFinderBinder} test.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

@@ -64,8 +64,11 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparator;
@@ -75,14 +78,10 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
@@ -90,11 +89,10 @@ import org.jvnet.hk2.annotations.Inject;
  * <p/>
  * Note: {@link MessageBodyReader} and {@link MessageBodyWriter} implementation
  * must not inject the instance of this type directly, e.g. {@code @Inject MessageBodyWorkers w;}.
- * Instead a {@link Factory}-based injection should be used to prevent
+ * Instead a {@link org.glassfish.hk2.api.Factory}-based injection should be used to prevent
  * cycles in the injection framework caused by the eager initialization of the
  * providers in the current factory implementation:
  * {@code @Inject Factory<MessageBodyWorkers> w;}
- *
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -103,32 +101,47 @@ import org.jvnet.hk2.annotations.Inject;
 // FIXME: Remove the note from the javadoc once the issue is fixed.
 public class MessageBodyFactory implements MessageBodyWorkers {
 
-    public static class Module extends AbstractModule {
+    /**
+     * Message body factory injection binder.
+     */
+    public static class Binder extends AbstractBinder {
 
         private static class InjectionFactory extends ReferencingFactory<MessageBodyWorkers> {
-
-            public InjectionFactory(@Inject Factory<Ref<MessageBodyWorkers>> referenceFactory) {
+            @Inject
+            public InjectionFactory(Provider<Ref<MessageBodyWorkers>> referenceFactory) {
                 super(referenceFactory);
             }
-        }
-        //
-        private final Class<? extends Scope> refScope;
 
-        public Module(Class<? extends Scope> refScope) {
+            @Override
+            @RequestScoped
+            public MessageBodyWorkers provide() {
+                return super.provide();
+            }
+        }
+
+        //
+        private final Class<? extends Annotation> refScope;
+
+        /**
+         * Create new message body factory injection binder.
+         *
+         * @param refScope scope of the injectable {@link Ref reference} of the {@link MessageBodyWorkers message body workers}.
+         */
+        public Binder(Class<? extends Annotation> refScope) {
             this.refScope = refScope;
         }
 
         @Override
         protected void configure() {
-            bind(MessageBodyWorkers.class)
-                    .toFactory(InjectionFactory.class)
-                    .in(RequestScope.class);
-            bind(new TypeLiteral<Ref<MessageBodyWorkers>>() {})
-                    .toFactory(ReferencingFactory.<MessageBodyWorkers>referenceFactory())
-                    .in(refScope);
+            bindFactory(InjectionFactory.class).to(MessageBodyWorkers.class).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<MessageBodyWorkers>referenceFactory()).to(new TypeLiteral<Ref<MessageBodyWorkers>>() {
+            }).in(refScope);
         }
     }
-    //
+
+    /**
+     * Media type comparator.
+     */
     public static final KeyComparator<MediaType> MEDIA_TYPE_COMPARATOR =
             new KeyComparator<MediaType>() {
 
@@ -146,13 +159,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                             + k.getSubtype().toLowerCase().hashCode();
                 }
 
+                @SuppressWarnings("ComparatorMethodParameterNotUsed")
                 @Override
                 public int compare(MediaType o1, MediaType o2) {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
             };
 
-    private final Services services;
+    private final ServiceLocator locator;
     private Map<MediaType, List<MessageBodyReader>> readerProviders;
     private Map<MediaType, List<MessageBodyWriter>> writerProviders;
     private List<MessageBodyReaderPair> readerListProviders;
@@ -196,14 +210,18 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    public MessageBodyFactory(Services services) {
-        this.services = services;
+    /**
+     * Create new message body workers factory.
+     *
+     * @param locator service locator.
+     */
+    public MessageBodyFactory(ServiceLocator locator) {
+        this.locator = locator;
 
         initReaders();
         initWriters();
         initInterceptors();
     }
-
 
 
     /**
@@ -215,7 +233,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * computations.
      *
      * @param <T> common super-type used for computing the declaration distance and
-     *     comparing instances.
+     *            comparing instances.
      */
     private static class DeclarationDistanceComparator<T> implements Comparator<T> {
 
@@ -256,8 +274,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private void initInterceptors() {
-        this.readerInterceptors = Providers.getAllProviders(services, ReaderInterceptor.class);
-        this.writerInterceptors = Providers.getAllProviders(services, WriterInterceptor.class);
+        this.readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
+        this.writerInterceptors = locator.getAllServices(WriterInterceptor.class);
     }
 
     private void initReaders() {
@@ -268,13 +286,13 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 MEDIA_TYPE_COMPARATOR);
         this.readerListProviders = new ArrayList<MessageBodyReaderPair>();
 
-        initReaders(customReaderProviders, customReaderListProviders, Providers.getCustomProviders(services, MessageBodyReader
+        initReaders(customReaderProviders, customReaderListProviders, Providers.getCustomProviders(locator, MessageBodyReader
                 .class));
-        initReaders(readerProviders, readerListProviders, Providers.getProviders(services, MessageBodyReader.class));
+        initReaders(readerProviders, readerListProviders, Providers.getProviders(locator, MessageBodyReader.class));
     }
 
     private void initReaders(Map<MediaType, List<MessageBodyReader>> mediaToProvidersMap,
-            List<MessageBodyReaderPair> listProviders, Set<MessageBodyReader> providersSet) {
+                             List<MessageBodyReaderPair> listProviders, Set<MessageBodyReader> providersSet) {
         for (MessageBodyReader provider : providersSet) {
             List<MediaType> values = MediaTypes.createFrom(
                     provider.getClass().getAnnotation(Consumes.class));
@@ -306,12 +324,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 MEDIA_TYPE_COMPARATOR);
         this.writerListProviders = new ArrayList<MessageBodyWriterPair>();
 
-        initWriters(customWriterProviders, customWriterListProviders, Providers.getCustomProviders(services, MessageBodyWriter.class));
-        initWriters(writerProviders, writerListProviders, Providers.getProviders(services, MessageBodyWriter.class));
+        initWriters(customWriterProviders, customWriterListProviders, Providers.getCustomProviders(locator, MessageBodyWriter.class));
+        initWriters(writerProviders, writerListProviders, Providers.getProviders(locator, MessageBodyWriter.class));
     }
 
     private void initWriters(Map<MediaType, List<MessageBodyWriter>> mediaToProvidersMap,
-            List<MessageBodyWriterPair> listProviders, Set<MessageBodyWriter> providersSet) {
+                             List<MessageBodyWriterPair> listProviders, Set<MessageBodyWriter> providersSet) {
         for (MessageBodyWriter provider : providersSet) {
             List<MediaType> values = MediaTypes.createFrom(
                     provider.getClass().getAnnotation(Produces.class));
@@ -338,7 +356,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private <T> void registerProviderForMediaType(Map<MediaType, List<T>> mediaToProviderMap,
-            T provider, MediaType mediaType) {
+                                                  T provider, MediaType mediaType) {
         if (!mediaToProviderMap.containsKey(mediaType)) {
             mediaToProviderMap.put(mediaType, new ArrayList<T>());
         }
@@ -352,7 +370,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public Map<MediaType, List<MessageBodyReader>> getReaders(MediaType mediaType) {
         Map<MediaType, List<MessageBodyReader>> subSet =
                 new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyReader>>(
-                MEDIA_TYPE_COMPARATOR);
+                        MEDIA_TYPE_COMPARATOR);
 
         if (!customReaderProviders.isEmpty()) {
             getCompatibleProvidersMap(mediaType, customReaderProviders, subSet);
@@ -365,7 +383,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public Map<MediaType, List<MessageBodyWriter>> getWriters(MediaType mediaType) {
         Map<MediaType, List<MessageBodyWriter>> subSet =
                 new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyWriter>>(
-                MEDIA_TYPE_COMPARATOR);
+                        MEDIA_TYPE_COMPARATOR);
 
         if (!customWriterProviders.isEmpty()) {
             getCompatibleProvidersMap(mediaType, customWriterProviders, subSet);
@@ -399,8 +417,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType) {
+                                                         Annotation[] as,
+                                                         MediaType mediaType) {
 
         MessageBodyReader<T> reader;
 
@@ -438,9 +456,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private <T> MessageBodyReader<T> _getMessageBodyReader(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType,
-            Map<MediaType, List<MessageBodyReader>> providers) {
+                                                           Annotation[] as,
+                                                           MediaType mediaType,
+                                                           Map<MediaType, List<MessageBodyReader>> providers) {
         MessageBodyReader<T> p = null;
         if (mediaType != null) {
             p = _getMessageBodyReader(c, t, as, mediaType, mediaType, providers);
@@ -458,9 +476,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @SuppressWarnings("unchecked")
     private <T> MessageBodyReader<T> _getMessageBodyReader(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType, MediaType lookup,
-            Map<MediaType, List<MessageBodyReader>> providers) {
+                                                           Annotation[] as,
+                                                           MediaType mediaType, MediaType lookup,
+                                                           Map<MediaType, List<MessageBodyReader>> providers) {
 
         List<MessageBodyReader> readers = providers.get(lookup);
         if (readers == null) {
@@ -476,8 +494,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> MessageBodyWriter<T> getMessageBodyWriter(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType) {
+                                                         Annotation[] as,
+                                                         MediaType mediaType) {
 
         MessageBodyWriter<T> p;
 
@@ -493,9 +511,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private <T> MessageBodyWriter<T> _getMessageBodyWriter(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType,
-            Map<MediaType, List<MessageBodyWriter>> providers) {
+                                                           Annotation[] as,
+                                                           MediaType mediaType,
+                                                           Map<MediaType, List<MessageBodyWriter>> providers) {
 
         MessageBodyWriter<T> p = null;
 
@@ -515,9 +533,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @SuppressWarnings("unchecked")
     private <T> MessageBodyWriter<T> _getMessageBodyWriter(Class<T> c, Type t,
-            Annotation[] as,
-            MediaType mediaType, MediaType lookup,
-            Map<MediaType, List<MessageBodyWriter>> providers) {
+                                                           Annotation[] as,
+                                                           MediaType mediaType, MediaType lookup,
+                                                           Map<MediaType, List<MessageBodyWriter>> providers) {
         List<MessageBodyWriter> writers = providers.get(lookup);
         if (writers == null) {
             return null;
@@ -532,8 +550,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private <T> void getCompatibleProvidersMap(MediaType mediaType,
-            Map<MediaType, List<T>> set,
-            Map<MediaType, List<T>> subSet) {
+                                               Map<MediaType, List<T>> set,
+                                               Map<MediaType, List<T>> subSet) {
         if (mediaType.isWildcardType()) {
             getCompatibleProvidersList(mediaType, set, subSet);
         } else if (mediaType.isWildcardSubtype()) {
@@ -550,8 +568,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private <T> void getCompatibleProvidersList(MediaType mediaType,
-            Map<MediaType, List<T>> set,
-            Map<MediaType, List<T>> subSet) {
+                                                Map<MediaType, List<T>> set,
+                                                Map<MediaType, List<T>> subSet) {
         List<T> readers = set.get(mediaType);
         if (readers != null) {
             subSet.put(mediaType, Collections.unmodifiableList(readers));
@@ -560,7 +578,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> List<MediaType> getMessageBodyWriterMediaTypes(Class<T> c, Type t,
-            Annotation[] as) {
+                                                              Annotation[] as) {
         List<MediaType> mtl = new ArrayList<MediaType>();
         for (MessageBodyWriterPair mbwp : customWriterListProviders) {
             for (MediaType mt : mbwp.types) {
@@ -583,7 +601,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> MediaType getMessageBodyWriterMediaType(Class<T> c, Type t,
-            Annotation[] as, List<MediaType> acceptableMediaTypes) {
+                                                       Annotation[] as, List<MediaType> acceptableMediaTypes) {
         for (MediaType acceptable : acceptableMediaTypes) {
             for (MessageBodyWriterPair mbwp : customWriterListProviders) {
                 for (MediaType mt : mbwp.types) {
@@ -608,8 +626,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
-            boolean intercept) throws WebApplicationException, IOException {
+                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
+                               boolean intercept) throws WebApplicationException, IOException {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, intercept);
@@ -618,16 +636,16 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-            MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
+                            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
+                            MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
 
         writeTo(t, rawType, type, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
     }
 
     @Override
     public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-            MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
+                            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
+                            MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, sizeCallback, intercept, writeEntity);

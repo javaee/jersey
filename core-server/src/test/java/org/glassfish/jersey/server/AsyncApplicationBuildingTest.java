@@ -60,18 +60,17 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -92,7 +91,7 @@ public class AsyncApplicationBuildingTest {
         @Inject
         private InvocationContext invocationContext;
         @Inject
-        Services services;
+        ServiceLocator serviceLocator;
         private final String responseContent;
 
         public AsyncInflector() {

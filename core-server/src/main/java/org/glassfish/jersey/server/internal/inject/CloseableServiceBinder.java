@@ -45,19 +45,19 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.CloseableService;
-
-import org.glassfish.hk2.scopes.Singleton;
 
 /**
- * Module and Factory implementations for {@code CloseableService}.
+ * Binder and Factory implementations for {@code CloseableService}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class CloseableServiceModule extends AbstractModule {
+public class CloseableServiceBinder extends AbstractBinder {
 
     /**
      * {@code CloseableService} implementation that stores instances of {@code Closeable} into the properties map obtained from
@@ -114,6 +114,11 @@ public class CloseableServiceModule extends AbstractModule {
     }
 
     private static class CloseableServiceFactory extends AbstractHttpContextValueFactory<CloseableService> {
+        @Override
+        @Singleton
+        public CloseableService provide() {
+            return super.provide();
+        }
 
         @Override
         protected CloseableService get(final HttpContext context) {
@@ -124,7 +129,7 @@ public class CloseableServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(CloseableService.class).toFactory(CloseableServiceFactory.class).in(Singleton.class);
+        bindFactory(CloseableServiceFactory.class).to(CloseableService.class).in(Singleton.class);
     }
 
 }

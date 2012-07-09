@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,27 +37,31 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.multipart.internal;
+package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import com.sun.hk2.component.InjectionResolver;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
- * Module providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
+ * Configures injection bindings for resource modeling API.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class FormDataParameterInjectionModule extends AbstractModule {
+public class ResourceModelBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bind(ValueFactoryProvider.class).to(FormDataParamValueFactoryProvider.class);
-        bind(InjectionResolver.class).to(FormDataParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
-    }
+        // Model bindings
+        bindAsContract(RuntimeModelBuilder.class);
 
+        // Resource method invocation bindings
+        bindAsContract(ResourceMethodInvoker.Builder.class);
+        bindAsContract(ResourceMethodDispatcherFactory.class);
+        bindAsContract(ResourceMethodInvocationHandlerFactory.class);
+
+        // Dispatcher providers
+        bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
+        bind(MethodParamDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
+    }
 }

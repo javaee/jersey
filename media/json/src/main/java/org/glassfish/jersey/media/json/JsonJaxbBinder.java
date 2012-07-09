@@ -42,10 +42,13 @@ package org.glassfish.jersey.media.json;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.media.json.internal.entity.JsonArrayProvider;
 import org.glassfish.jersey.media.json.internal.entity.JsonJaxbElementProvider;
 import org.glassfish.jersey.media.json.internal.entity.JsonListElementProvider;
@@ -53,14 +56,12 @@ import org.glassfish.jersey.media.json.internal.entity.JsonObjectProvider;
 import org.glassfish.jersey.media.json.internal.entity.JsonRootElementProvider;
 import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
 
-import org.glassfish.hk2.scopes.Singleton;
-
 /**
- * Module with JAX-RS JAXB JSON providers.
+ * Binder for JAX-RS JAXB JSON providers.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JsonJaxbModule extends AbstractModule {
+public class JsonJaxbBinder extends AbstractBinder {
 
     private static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableList(Arrays.asList(new Class<?>[]{
                 JsonRootElementProvider.App.class,
@@ -97,12 +98,10 @@ public class JsonJaxbModule extends AbstractModule {
         bindSingletonReaderWriterProvider(JsonObjectProvider.App.class);
         bindSingletonReaderWriterProvider(JsonObjectProvider.General.class);
 
-        bind(MessageBodyWriter.class).to(JsonWithPaddingProvider.class).in(Singleton.class);
+        bind(JsonWithPaddingProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
     }
 
     private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+        bind(provider).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class);
     }
 }

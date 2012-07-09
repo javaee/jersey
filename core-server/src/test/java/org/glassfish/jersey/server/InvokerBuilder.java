@@ -39,31 +39,30 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
-
 /**
- * Test utility module for testing hierarchical request accepting (i.e. resource matching).
+ * Test utility binder for testing hierarchical request accepting (i.e. resource matching).
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class InvokerBuilder {
 
     @Inject
-    private Factory<RoutingStage.Builder> matchingStageFactory;
+    private Provider<RoutingStage.Builder> matchingStageFactory;
     @Inject
-    private Factory<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
+    private Provider<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
     @Inject
     private ReferencesInitializer referencesInitializer;
     @Inject
-    private ServerModule.RequestInvokerBuilder invokerBuilder;
+    private ServerBinder.RequestInvokerBuilder invokerBuilder;
 
 
     /**

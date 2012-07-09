@@ -63,7 +63,7 @@ import org.glassfish.jersey.spi.Contract;
  * providers.
  * <p />
  * An implementation (a service-provider) identifies itself by registering a proper
- * HK2 {@code ContainterProvider} contract binding in a custom HK2 module configured
+ * HK2 {@code ContainterProvider} contract binding in a custom HK2 binder configured
  * in the Jersey application handler.
  * Alternatively, the implementation can identify itself by placing a provider-configuration
  * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}

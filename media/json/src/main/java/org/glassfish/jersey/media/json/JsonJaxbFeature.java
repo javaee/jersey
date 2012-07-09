@@ -51,7 +51,7 @@ public class JsonJaxbFeature implements Feature {
 
     @Override
     public boolean onEnable(Configuration c) {
-        for (Class<?> provider : JsonJaxbModule.getProviders()) {
+        for (Class<?> provider : JsonJaxbBinder.getProviders()) {
             c.register(provider);
         }
         return true;

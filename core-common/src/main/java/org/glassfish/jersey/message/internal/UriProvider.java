@@ -43,12 +43,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
+import javax.inject.Singleton;
+
 /**
  * {@code URI} {@link HeaderDelegateProvider header delegate provider}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class UriProvider implements HeaderDelegateProvider<URI> {
 
     @Override

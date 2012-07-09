@@ -48,7 +48,6 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
@@ -60,7 +59,7 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -100,7 +99,7 @@ public class ContextBasedInjectionTest {
         @Context
         private InvocationContext invocationContext;
         @Context
-        Services services;
+        ServiceLocator locator;
         private final String responseContent;
 
         public AsyncInflector() {

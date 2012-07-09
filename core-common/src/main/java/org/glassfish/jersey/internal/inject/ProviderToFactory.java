@@ -39,28 +39,34 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.hk2.Provider;
 
 import com.google.common.base.Function;
-import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceHandle;
+
 
 /**
- * Helper function converting a HK2 {@link Provider service provider} into the
+ * Helper function converting a HK2 {@link ServiceHandle service provider} into the
  * provided service contract instance.
  *
  * @param <T> service contract Java type.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ProviderToFactory<T> implements Function<Provider<T>, Factory<T>> {
+public final class ProviderToFactory<T> implements Function<ServiceHandle<T>, Factory<T>> {
 
     @Override
-    public Factory<T> apply(final Provider<T> provider) {
+    public Factory<T> apply(final ServiceHandle<T> provider) {
         return new Factory<T>() {
 
             @Override
-            public T get() {
-                return provider.get();
+            public T provide() {
+                return provider.getService();
+            }
+
+            @Override
+            public void dispose(T instance) {
+                //not used
             }
         };
     }

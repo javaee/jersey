@@ -68,12 +68,12 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        // JsonJaxbModule must not be registered in the application for this test case.
+        // JsonJaxbBinder must not be registered in the application for this test case.
         return new ResourceConfig(Resource.class);
     }
 
     /**
-     * Send request to with application/json content to server where JsonJaxbModule is not registered. UNSUPPORTED_MEDIA_TYPE
+     * Send request to with application/json content to server where JsonJaxbBinder is not registered. UNSUPPORTED_MEDIA_TYPE
      * should be returned.
      */
     @Test
@@ -82,7 +82,7 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
         TestEntity entity = new TestEntity("testEntity");
         Response response = target().path("test").request("application/json").post(Entity.json(entity));
 
-        // JsonJaxbModule is not registered on the server and therefore the server should return UNSUPPORTED_MEDIA_TYPE
+        // JsonJaxbBinder is not registered on the server and therefore the server should return UNSUPPORTED_MEDIA_TYPE
         assertEquals(Status.UNSUPPORTED_MEDIA_TYPE.getStatusCode(), response.getStatus());
         assertFalse(Resource.methodJsonCalled);
         String responseEntity = response.readEntity(String.class);

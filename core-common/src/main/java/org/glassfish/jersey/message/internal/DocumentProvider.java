@@ -45,6 +45,9 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -59,10 +62,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
-
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -74,12 +73,13 @@ import org.xml.sax.SAXException;
  */
 @Produces({"application/xml", "text/xml", "*/*"})
 @Consumes({"application/xml", "text/xml", "*/*"})
+@Singleton
 public final class DocumentProvider extends AbstractMessageReaderWriterProvider<Document> {
 
     @Inject
-    private Factory<DocumentBuilderFactory> dbf;
+    private Provider<DocumentBuilderFactory> dbf;
     @Inject
-    private Factory<TransformerFactory> tf;
+    private Provider<TransformerFactory> tf;
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {

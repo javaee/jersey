@@ -46,9 +46,9 @@ import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
-import org.jvnet.hk2.annotations.Inject;
-
 import com.google.common.base.Function;
+
+import javax.inject.Inject;
 
 @RequestScoped
 class LastPathSegmentTracingFilter implements Router {
@@ -56,9 +56,10 @@ class LastPathSegmentTracingFilter implements Router {
     private final RespondingContext<ContainerResponse> respondingContext;
     private final RoutingContext routingContext;
 
+    @Inject
     public LastPathSegmentTracingFilter(
-            @Inject RespondingContext<ContainerResponse> respondingContext,
-            @Inject RoutingContext routingContext) {
+             RespondingContext<ContainerResponse> respondingContext,
+             RoutingContext routingContext) {
 
         this.respondingContext = respondingContext;
         this.routingContext = routingContext;

@@ -46,10 +46,10 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ServerModule;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ServerBinder;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -65,10 +65,10 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        Services services = HK2.get().create(null, new ServerModule());
+        ServiceLocator locator = Injections.createLocator(new ServerBinder());
 
-        rmdf = services.forContract(ResourceMethodDispatcherFactory.class).get();
-        rmihf = services.forContract(ResourceMethodInvocationHandlerFactory.class).get();
+        rmdf = locator.getService(ResourceMethodDispatcherFactory.class);
+        rmihf = locator.getService(ResourceMethodInvocationHandlerFactory.class);
     }
 
     @Test

@@ -48,6 +48,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -69,6 +70,7 @@ import javax.imageio.stream.ImageInputStream;
  */
 @Produces("image/*")
 @Consumes({"image/*", "application/octet-stream"})
+@Singleton
 public final class RenderedImageProvider extends AbstractMessageReaderWriterProvider<RenderedImage> {
 
     private static final MediaType IMAGE_MEDIA_TYPE = new MediaType("image", "*");

@@ -49,7 +49,10 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
@@ -57,10 +60,7 @@ import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Container filtering stage responsible for execution of request and response filters
@@ -71,20 +71,20 @@ import org.jvnet.hk2.annotations.Inject;
  */
 class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
-    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
-    private final Services services;
+    private ServiceLocator locator;
     private final List<ContainerRequestFilter> requestFilters;
     private final List<ContainerResponseFilter> responseFilters;
+    private final Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
     /**
      * Injectable container filtering stage builder.
      */
     static class Builder {
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+        ServiceLocator locator;
 
         @Inject
-        private Services services;
+        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
         /**
          * Build a new container filtering stage specifying global request and response filters. This stage class
@@ -103,7 +103,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
          */
         public ContainerFilteringStage build(List<ContainerRequestFilter> requestFilters,
                                              List<ContainerResponseFilter> responseFilters) {
-            return new ContainerFilteringStage(respondingContextFactory, services,
+            return new ContainerFilteringStage(respondingContextFactory, locator,
                     requestFilters, responseFilters);
         }
 
@@ -113,19 +113,19 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
      * Injection constructor.
      *
      * @param respondingContextFactory responding context factory.
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      * @param requestFilters global request filters (pre or post match).
      * @param responseFilters global response filters or {@code null}.
      *
      */
     private ContainerFilteringStage(
-            Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
-            Services services,
+            Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
+            ServiceLocator locator,
             List<ContainerRequestFilter> requestFilters,
-            List<ContainerResponseFilter> responseFilters
-    ) {
+            List<ContainerResponseFilter> responseFilters) {
+
         this.respondingContextFactory = respondingContextFactory;
-        this.services = services;
+        this.locator = locator;
         this.requestFilters = requestFilters;
         this.responseFilters = responseFilters;
     }
@@ -137,14 +137,14 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         if (responseFilters == null) {
             // post-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
             // throws exception, response filters get still invoked)
-            RoutingContext rc = services.forContract(RoutingContext.class).get();
+            RoutingContext rc = locator.getService(RoutingContext.class);
             sortedRequestFilters = new ArrayList<ContainerRequestFilter>(requestFilters);
             sortedRequestFilters.addAll(rc.getBoundRequestFilters());
             Collections.sort(sortedRequestFilters,
                     new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
         } else {
             // pre-matching
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, services));
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator));
             sortedRequestFilters = requestFilters;
         }
 
@@ -177,17 +177,17 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
         private final List<ContainerResponseFilter> filters;
-        private final Services services;
+        private final ServiceLocator locator;
 
-        private ResponseFilterStage(List<ContainerResponseFilter> filters, Services services) {
+        private ResponseFilterStage(List<ContainerResponseFilter> filters, ServiceLocator locator) {
             this.filters = filters;
-            this.services = services;
+            this.locator = locator;
         }
 
         @Override
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
             try {
-                RoutingContext rc = services.forContract(RoutingContext.class).get();
+                RoutingContext rc = locator.getService(RoutingContext.class);
 
                 List<ContainerResponseFilter> sortedResponseFilters = new ArrayList<ContainerResponseFilter>(filters);
                 if (rc != null) {
@@ -208,13 +208,13 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     }
 
     /**
-     * Container filter processing injection binding module.
+     * Container filter processing injection binder.
      */
-    static class Module extends AbstractModule {
+    static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind().to(ContainerFilteringStage.Builder.class);
+            bindAsContract(ContainerFilteringStage.Builder.class);
         }
     }
 }

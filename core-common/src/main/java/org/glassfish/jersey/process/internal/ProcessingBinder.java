@@ -37,33 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.json;
+package org.glassfish.jersey.process.internal;
 
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.core.ExecutionContext;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.media.json.internal.GeneralMoxyJsonProvider;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Module with JAX-RS MOXy JSON providers.
+ * Jersey processing framework injection binder.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JsonMoxyModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bindSingletonReaderWriterProvider(MOXyJsonProvider.class);
-        bindSingletonReaderWriterProvider(GeneralMoxyJsonProvider.class);
+public class ProcessingBinder extends AbstractBinder {
+
+    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
+
+        @Inject
+        public InvocationContextReferencingFactory(Provider<Ref<InvocationContext>> referenceFactory) {
+            super(referenceFactory);
+        }
+
+        @Override
+        @RequestScoped
+        public InvocationContext provide() {
+            return super.provide();
+        }
     }
 
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+    @Override
+    protected void configure() {
+        // Invocation context
+        bindFactory(InvocationContextReferencingFactory.class).in(RequestScoped.class);
+
+        bindFactory(InvocationContextReferencingFactory.class).to(InvocationContext.class).to(ExecutionContext.class)
+                .in(RequestScoped.class);
+
+        bindFactory(ReferencingFactory.<InvocationContext>referenceFactory()).to(new TypeLiteral<Ref<InvocationContext>>() {
+        }).in(RequestScoped.class);
     }
 }

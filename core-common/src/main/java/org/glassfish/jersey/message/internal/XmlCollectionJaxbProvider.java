@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import org.glassfish.hk2.api.Factory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,6 +49,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -60,8 +63,6 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-
-import org.glassfish.hk2.Factory;
 
 /**
  * Base XML-based message body provider for collections of JAXB beans.
@@ -91,6 +92,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
      */
     @Produces("application/xml")
     @Consumes("application/xml")
+    @Singleton
     public static final class App extends XmlCollectionJaxbProvider {
 
         public App(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
@@ -104,6 +106,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
      */
     @Produces("text/xml")
     @Consumes("text/xml")
+    @Singleton
     public static final class Text extends XmlCollectionJaxbProvider {
 
         public Text(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
@@ -117,6 +120,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
      */
     @Produces("*/*")
     @Consumes("*/*")
+    @Singleton
     public static final class General extends XmlCollectionJaxbProvider {
 
         public General(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
@@ -135,7 +139,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
             Unmarshaller u,
             InputStream entityStream)
             throws XMLStreamException {
-        return xif.get().createXMLStreamReader(entityStream);
+        return xif.provide().createXMLStreamReader(entityStream);
     }
 
     @Override

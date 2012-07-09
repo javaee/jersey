@@ -44,11 +44,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.inject.Injector;
 
 /**
  * A parameter value factory provider that provides parameter value factories
@@ -63,7 +62,7 @@ import org.glassfish.hk2.inject.Injector;
 public abstract class AbstractValueFactoryProvider<A extends Annotation> implements ValueFactoryProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
-    private final Injector injector;
+    private final ServiceLocator injector;
     private final Set<Parameter.Source> compatibleSources;
 
     /**
@@ -73,7 +72,7 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
      *     retrieving extractors that can parameter values from the supplied
      *     {@link javax.ws.rs.core.MultivaluedMap multivalued parameter map}.
      */
-    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, Injector injector,
+    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector,
                                            Parameter.Source... compatibleSources) {
         this.mpep = mpep;
         this.injector = injector;

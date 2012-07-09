@@ -106,9 +106,11 @@ public abstract class AbstractHttpServiceTest {
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("auto-depends").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-locator").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
 
                 // javax.annotation
                 wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),

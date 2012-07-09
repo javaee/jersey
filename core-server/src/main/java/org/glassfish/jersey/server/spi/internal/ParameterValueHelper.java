@@ -55,8 +55,8 @@ import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundExceptio
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Utility methods for retrieving values or value providers for the
@@ -77,7 +77,7 @@ public final class ParameterValueHelper {
         try {
             int index = 0;
             for (Factory<?> valueProvider : valueProviders) {
-                params[index++] = valueProvider.get();
+                params[index++] = valueProvider.provide();
             }
             return params;
         } catch (WebApplicationException e) {
@@ -95,17 +95,17 @@ public final class ParameterValueHelper {
      * Create list of parameter value providers for the given {@link Parameterized
      * parameterized} resource model component.
      *
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<Factory<?>> createValueProviders(final Services services, final Parameterized parameterized) {
+    public static List<Factory<?>> createValueProviders(final ServiceLocator locator, final Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
         List<ValueFactoryProvider> valueFactoryProviders = new ArrayList<ValueFactoryProvider>(
-                Providers.getProviders(services, ValueFactoryProvider.class));
+                Providers.getProviders(locator, ValueFactoryProvider.class));
 
         Collections.sort(valueFactoryProviders, new Comparator<ValueFactoryProvider>() {
 

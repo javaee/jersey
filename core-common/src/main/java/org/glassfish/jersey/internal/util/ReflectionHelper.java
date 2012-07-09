@@ -51,6 +51,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
@@ -86,7 +87,7 @@ public class ReflectionHelper {
      * @param ao an accessible object.
      * @return the declaring class of an accessible object.
      * @throws IllegalArgumentException in case the type of the accessible object
-     *     is not supported.
+     *                                  is not supported.
      */
     public static Class<?> getDeclaringClass(AccessibleObject ao) {
         if (ao instanceof Method) {
@@ -104,7 +105,7 @@ public class ReflectionHelper {
      * Create a string representation of an object.
      * <p>
      * Returns a string consisting of the name of the class of which the
-     * object is an instance, the at-sign character '<code>@</code>', and
+     * object is an instance, the at-sign character {@code '&#64;'}, and
      * the unsigned hexadecimal representation of the hash code of the
      * object. In other words, this method returns a string equal to the
      * value of:
@@ -131,11 +132,11 @@ public class ReflectionHelper {
      * class implements the method.
      * <p>
      * Returns a string consisting of the name of the class of which the object
-     * is an instance, the at-sign character '<code>@</code>',
+     * is an instance, the at-sign character {@code '&#64;'},
      * the unsigned hexadecimal representation of the hash code of the
-     * object, the character '<code>.</code>', the name of the method,
-     * the character '<code>(</code>', the list of method parameters, and
-     * the character '<code>)</code>'. In other words, thos method returns a
+     * object, the character {@code '.'}, the name of the method,
+     * the character {@code '('}, the list of method parameters, and
+     * the character {@code ')'}. In other words, those method returns a
      * string equal to the value of:
      * <blockquote>
      * <pre>
@@ -143,7 +144,7 @@ public class ReflectionHelper {
      * '.' + m.getName() + '(' + &lt;parameters&gt; + ')'.
      * </pre></blockquote>
      *
-     * @param o the object whose class implements <code>m</code>.
+     * @param o the object whose class implements {@code m}.
      * @param m the method.
      * @return the string representation of the method and instance.
      */
@@ -167,7 +168,6 @@ public class ReflectionHelper {
     }
 
     /**
-     *
      * @param type
      * @return
      */
@@ -198,7 +198,7 @@ public class ReflectionHelper {
      * Otherwise the defining class loader of this class will
      * be utilized.
      *
-     * @param <T> class type.
+     * @param <T>  class type.
      * @param name the class name.
      * @return the Class, otherwise null if the class cannot be found.
      */
@@ -209,10 +209,10 @@ public class ReflectionHelper {
     /**
      * Get the Class from the class name.
      *
-     * @param <T> class type.
+     * @param <T>  class type.
      * @param name the class name.
-     * @param cl the class loader to use, if null then the defining class loader
-     * of this class will be utilized.
+     * @param cl   the class loader to use, if null then the defining class loader
+     *             of this class will be utilized.
      * @return the Class, otherwise null if the class cannot be found.
      */
     @SuppressWarnings("unchecked")
@@ -244,7 +244,7 @@ public class ReflectionHelper {
      * Otherwise the defining class loader of this class will
      * be utilized.
      *
-     * @param <T> class type.
+     * @param <T>  class type.
      * @param name the class name.
      * @return the Class, otherwise null if the class cannot be found.
      * @throws ClassNotFoundException if the class cannot be found.
@@ -257,10 +257,10 @@ public class ReflectionHelper {
     /**
      * Get the Class from the class name.
      *
-     * @param <T> class type.
+     * @param <T>  class type.
      * @param name the class name.
-     * @param cl the class loader to use, if null then the defining class loader
-     * of this class will be utilized.
+     * @param cl   the class loader to use, if null then the defining class loader
+     *             of this class will be utilized.
      * @return the Class, otherwise null if the class cannot be found.
      * @throws ClassNotFoundException if the class cannot be found.
      */
@@ -328,23 +328,23 @@ public class ReflectionHelper {
      * <ul>
      * <li>If a type argument is a class then the class is returned.</li>
      * <li>If the type argument is a generic array type and the generic component
-     *     type is a class then class of the array is returned.</li>
+     * type is a class then class of the array is returned.</li>
      * <li>If the type argument is a parameterized type and it's raw type is a
-     *     class then that class is returned.</li>
+     * class then that class is returned.</li>
      * </ul>
      * If the {@code type} is not an instance of ParameterizedType an empty
      * list is returned.
      *
      * @param type parameterized type.
      * @return the list of classed representing the actual type arguments. May be empty,
-     *     but may never be {@code null}.
+     *         but may never be {@code null}.
      * @throws IllegalArgumentException if any of the generic type arguments is
-     *     not a class, or a generic array type, or the generic component type
-     *     of the generic array type is not class, or not a parameterized type
-     *     with a raw type that is not a class.
+     *                                  not a class, or a generic array type, or the generic component type
+     *                                  of the generic array type is not class, or not a parameterized type
+     *                                  with a raw type that is not a class.
      */
     public static List<Class<?>> getGenericTypeArgumentClasses(final Type type) throws IllegalArgumentException {
-        final Type[] types = getTypeArgumentOfParameterizedType(type);
+        final Type[] types = getTypeArguments(type);
         if (types == null) {
             return Collections.emptyList();
         }
@@ -353,7 +353,7 @@ public class ReflectionHelper {
 
             @Override
             public Class<?> apply(Type input) {
-                return getClassOfType(input);
+                return erasure(input);
             }
         }));
     }
@@ -367,23 +367,23 @@ public class ReflectionHelper {
      * <ul>
      * <li>If a type argument is a class then the class is returned as raw class.</li>
      * <li>If the type argument is a generic array type and the generic component
-     *     type is a class then class of the array is returned as raw class.</li>
+     * type is a class then class of the array is returned as raw class.</li>
      * <li>If the type argument is a parameterized type and it's raw type is a
-     *     class then that class is returned as raw class.</li>
+     * class then that class is returned as raw class.</li>
      * </ul>
      * If the {@code type} is not an instance of ParameterizedType an empty
      * list is returned.
      *
      * @param type parameterized type.
      * @return the list of class-type pairs representing the actual type arguments.
-     *     May be empty, but may never be {@code null}.
+     *         May be empty, but may never be {@code null}.
      * @throws IllegalArgumentException if any of the generic type arguments is
-     *     not a class, or a generic array type, or the generic component type
-     *     of the generic array type is not class, or not a parameterized type
-     *     with a raw type that is not a class.
+     *                                  not a class, or a generic array type, or the generic component type
+     *                                  of the generic array type is not class, or not a parameterized type
+     *                                  with a raw type that is not a class.
      */
     public static List<ClassTypePair> getTypeArgumentAndClass(final Type type) throws IllegalArgumentException {
-        final Type[] types = getTypeArgumentOfParameterizedType(type);
+        final Type[] types = getTypeArguments(type);
         if (types == null) {
             return Collections.emptyList();
         }
@@ -392,46 +392,201 @@ public class ReflectionHelper {
 
             @Override
             public ClassTypePair apply(Type input) {
-                return ClassTypePair.of(getClassOfType(input), input);
+                return ClassTypePair.of(erasure(input), input);
             }
         }));
     }
 
-    private static Type[] getTypeArgumentOfParameterizedType(Type parameterizedType) {
-        if (!(parameterizedType instanceof ParameterizedType)) {
-            return null;
-        }
-
-        return ((ParameterizedType) parameterizedType).getActualTypeArguments();
-    }
-
-    private static Class<?> getClassOfType(Type type) {
+    /**
+     * Check if the given type is a primitive type.
+     *
+     * @param type type to be checked.
+     */
+    public static boolean isPrimitive(Type type) {
         if (type instanceof Class) {
-            return (Class<?>) type;
-        } else if (type instanceof GenericArrayType) {
-            GenericArrayType arrayType = (GenericArrayType) type;
-            Type t = arrayType.getGenericComponentType();
-            if (t instanceof Class) {
-                return getArrayClass((Class<?>) t);
-            }
-        } else if (type instanceof ParameterizedType) {
-            ParameterizedType subType = (ParameterizedType) type;
-            Type t = subType.getRawType();
-            if (t instanceof Class) {
-                return (Class<?>) t;
-            }
+            Class c = (Class) type;
+            return c.isPrimitive();
         }
-
-        throw new IllegalArgumentException(LocalizationMessages.TYPE_TO_CLASS_CONVERSION_NOT_SUPPORTED(type));
+        return false;
     }
 
     /**
-     * Get Array class of component class.
+     * Get the type arguments for a parameterized type.
+     *
+     * In case the type is not a {@link ParameterizedType parameterized type},
+     * the method returns {@code null}.
+     *
+     * @param type parameterized type.
+     * @return type arguments for a parameterized type, or {@code null} in case the input type is
+     *         not a parameterized type.
+     */
+    public static Type[] getTypeArguments(Type type) {
+        if (!(type instanceof ParameterizedType)) {
+            return null;
+        }
+
+        return ((ParameterizedType) type).getActualTypeArguments();
+    }
+
+    /**
+     * Get a type argument at particular index for a parameterized type.
+     *
+     * In case the type is not a {@link ParameterizedType parameterized type},
+     * the method returns {@code null}.
+     *
+     * @param type  parameterized type.
+     * @param index type parameter index.
+     * @return type argument for a parameterized type at a given index, or {@code null}
+     *         in case the input type is not a parameterized type.
+     */
+    public static Type getTypeArgument(Type type, int index) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType p = (ParameterizedType) type;
+            return fix(p.getActualTypeArguments()[index]);
+        }
+
+        return null;
+    }
+
+    /**
+     * JDK 5.0 has a bug of creating {@link GenericArrayType} where it shouldn't.
+     * fix that manually to work around the problem.
+     *
+     * See bug 6202725.
+     */
+    private static Type fix(Type t) {
+        if (!(t instanceof GenericArrayType))
+            return t;
+
+        GenericArrayType gat = (GenericArrayType) t;
+        if (gat.getGenericComponentType() instanceof Class) {
+            Class c = (Class) gat.getGenericComponentType();
+            return Array.newInstance(c, 0).getClass();
+        }
+
+        return t;
+    }
+
+    /**
+     * Implements the logic for {@link #erasure(Type)}.
+     */
+    private static final TypeVisitor<Class> eraser = new TypeVisitor<Class>() {
+        @Override
+        protected Class onClass(Class clazz) {
+            return clazz;
+        }
+
+        @Override
+        protected Class onParameterizedType(ParameterizedType type) {
+            // TODO: why getRawType returns Type? not Class?
+            return visit(type.getRawType());
+        }
+
+        @Override
+        protected Class onGenericArray(GenericArrayType type) {
+            return Array.newInstance(visit(type.getGenericComponentType()), 0).getClass();
+        }
+
+        @Override
+        protected Class onVariable(TypeVariable type) {
+            return visit(type.getBounds()[0]);
+        }
+
+        @Override
+        protected Class onWildcard(WildcardType type) {
+            return visit(type.getUpperBounds()[0]);
+        }
+
+        @Override
+        protected RuntimeException createError(Type type) {
+            return new IllegalArgumentException(LocalizationMessages.TYPE_TO_CLASS_CONVERSION_NOT_SUPPORTED(type));
+        }
+    };
+
+    /**
+     * Get the {@link Class} representation of the given type.
+     *
+     * This corresponds to the notion of the erasure in JSR-14.
+     *
+     * @param type type to provide the erasure for.
+     * @return the given type's erasure.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Class<T> erasure(Type type) {
+        return eraser.visit(type);
+    }
+
+    /**
+     * Check if {@code subType} is a sub-type of {@code superType}.
+     *
+     * @param subType   sub-type type.
+     * @param superType super-type type.
+     * @return {@code true} in case the {@code subType} is a sub-type of {@code superType},
+     *         {@code false} otherwise.
+     */
+    public static boolean isSubClassOf(Type subType, Type superType) {
+        return erasure(superType).isAssignableFrom(erasure(subType));
+    }
+
+    /**
+     * Checks if the type is an array type.
+     *
+     * @param type type to check.
+     * @return {@code true} in case the type is an array type, {@code false} otherwise.
+     */
+    public static boolean isArray(Type type) {
+        if (type instanceof Class) {
+            Class c = (Class) type;
+            return c.isArray();
+        }
+        return type instanceof GenericArrayType;
+    }
+
+    /**
+     * Checks if the type is an array of a given component type.
+     *
+     * @param type          type to check.
+     * @param componentType array component type.
+     * @return {@code true} in case the type is an array type of a given component type,
+     *         {@code false} otherwise.
+     */
+    public static boolean isArrayOfType(Type type, Class<?> componentType) {
+        if (type instanceof Class) {
+            Class c = (Class) type;
+            return c.isArray() && c != byte[].class;
+        }
+        if (type instanceof GenericArrayType) {
+            final Type arrayComponentType = ((GenericArrayType) type).getGenericComponentType();
+            return arrayComponentType == componentType;
+        }
+        return false;
+    }
+
+    /**
+     * Gets the component type of the array.
+     *
+     * @param type must be an array.
+     * @return array component type.
+     * @throws IllegalArgumentException in case the type is not an array type.
+     */
+    public static Type getArrayComponentType(Type type) {
+        if (type instanceof Class) {
+            Class c = (Class) type;
+            return c.getComponentType();
+        }
+        if (type instanceof GenericArrayType)
+            return ((GenericArrayType) type).getGenericComponentType();
+
+        throw new IllegalArgumentException();
+    }
+
+    /**
+     * Get Array class of component type.
      *
      * @param c the component class of the array
      * @return the array class.
      */
-    public static Class<?> getArrayClass(Class<?> c) {
+    public static Class<?> getArrayForComponentType(Class<?> c) {
         try {
             Object o = Array.newInstance(c, 0);
             return o.getClass();
@@ -497,8 +652,8 @@ public class ReflectionHelper {
      * annotation attached.
      *
      * @param annotatedElement annotated element.
-     * @param metaAnnotation meta annotation attached to the annotation types we are looking for (if null, annotation
-     *                       types of all attached annotations will be returned).
+     * @param metaAnnotation   meta annotation attached to the annotation types we are looking for (if null, annotation
+     *                         types of all attached annotations will be returned).
      * @return list of annotation types with a given meta annotation
      */
     public static Collection<Class<? extends Annotation>> getAnnotationTypes(
@@ -521,8 +676,17 @@ public class ReflectionHelper {
      */
     public static class DeclaringClassInterfacePair {
 
+        /**
+         * Concrete class.
+         */
         public final Class<?> concreteClass;
+        /**
+         * Declaring class.
+         */
         public final Class<?> declaringClass;
+        /**
+         * Generic interface type.
+         */
         public final Type genericInterface;
 
         private DeclaringClassInterfacePair(Class<?> concreteClass, Class<?> declaringClass, Type genericInteface) {
@@ -599,8 +763,8 @@ public class ReflectionHelper {
      * Find the declaring class that implements or extends an interface.
      *
      * @param concrete the concrete class than directly or indirectly
-     *        implements or extends an interface class.
-     * @param iface the interface class.
+     *                 implements or extends an interface class.
+     * @param iface    the interface class.
      * @return the tuple of the declaring class and the generic interface
      *         type.
      */
@@ -656,16 +820,16 @@ public class ReflectionHelper {
      * based on the class that declares the generic type parameter(s) to be resolved
      * and a concrete implementation of the declaring class.
      *
-     * @param concreteClass concrete implementation of the declaring class.
-     * @param declaringClass class declaring the generic type parameter(s) to be
-     *     resolved.
-     * @param rawResolvedType raw class of the generic type to be resolved.
+     * @param concreteClass       concrete implementation of the declaring class.
+     * @param declaringClass      class declaring the generic type parameter(s) to be
+     *                            resolved.
+     * @param rawResolvedType     raw class of the generic type to be resolved.
      * @param genericResolvedType generic type information of th type to be resolved.
      * @return a pair of class and the generic type values with the the resolved
-     *     generic parameter types.
+     *         generic parameter types.
      */
     public static ClassTypePair resolveGenericType(final Class concreteClass, final Class declaringClass,
-            final Class rawResolvedType, final Type genericResolvedType) {
+                                                   final Class rawResolvedType, final Type genericResolvedType) {
         if (genericResolvedType instanceof TypeVariable) {
             ClassTypePair ct = resolveTypeVariable(
                     concreteClass,
@@ -713,9 +877,10 @@ public class ReflectionHelper {
                     resolveGenericType(concreteClass, declaringClass, null, gat.getGenericComponentType());
             if (gat.getGenericComponentType() != ct.type()) {
                 try {
-                    Class ac = ReflectionHelper.getArrayClass(ct.rawClass());
+                    Class ac = ReflectionHelper.getArrayForComponentType(ct.rawClass());
                     return ClassTypePair.of(ac);
                 } catch (Exception e) {
+                    LOGGER.log(Level.FINEST, "", e);
                 }
             }
         }
@@ -726,18 +891,18 @@ public class ReflectionHelper {
     /**
      * Given a type variable resolve the Java class of that variable.
      *
-     * @param c the concrete class from which all type variables are resolved.
+     * @param c  the concrete class from which all type variables are resolved.
      * @param dc the declaring class where the type variable was defined.
      * @param tv the type variable.
      * @return the resolved Java class and type, otherwise null if the type variable
-     *     could not be resolved.
+     *         could not be resolved.
      */
     public static ClassTypePair resolveTypeVariable(Class<?> c, Class<?> dc, TypeVariable tv) {
         return resolveTypeVariable(c, dc, tv, new HashMap<TypeVariable, Type>());
     }
 
     private static ClassTypePair resolveTypeVariable(Class<?> c, Class<?> dc, TypeVariable tv,
-            Map<TypeVariable, Type> map) {
+                                                     Map<TypeVariable, Type> map) {
         Type[] gis = c.getGenericInterfaces();
         for (Type gi : gis) {
             if (gi instanceof ParameterizedType) {
@@ -762,7 +927,7 @@ public class ReflectionHelper {
     }
 
     private static ClassTypePair resolveTypeVariable(ParameterizedType pt, Class<?> c, Class<?> dc, TypeVariable tv,
-            Map<TypeVariable, Type> map) {
+                                                     Map<TypeVariable, Type> map) {
         Type[] typeArguments = pt.getActualTypeArguments();
 
         TypeVariable[] typeParameters = c.getTypeParameters();
@@ -788,7 +953,7 @@ public class ReflectionHelper {
                 if (t instanceof Class) {
                     c = (Class<?>) t;
                     try {
-                        return ClassTypePair.of(getArrayClass(c));
+                        return ClassTypePair.of(getArrayForComponentType(c));
                     } catch (Exception e) {
                     }
                     return null;
@@ -800,7 +965,7 @@ public class ReflectionHelper {
                         return null;
                     }
                     try {
-                        return ClassTypePair.of(getArrayClass(c), gat);
+                        return ClassTypePair.of(getArrayForComponentType(c), gat);
                     } catch (Exception e) {
                         return null;
                     }

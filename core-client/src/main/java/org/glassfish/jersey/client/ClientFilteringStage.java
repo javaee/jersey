@@ -47,7 +47,10 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
@@ -55,10 +58,7 @@ import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Client filtering stage responsible for execution of request and response filters
@@ -67,20 +67,21 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
-    private final Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
-    private final Services services;
+    private final Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
+    private final ServiceLocator locator;
 
     /**
      * Injection constructor.
      *
-     * @param services                 HK2 services.
+     * @param locator                 HK2 service locator.
      * @param respondingContextFactory responding context factory.
      */
+    @Inject
     ClientFilteringStage(
-            @Inject Factory<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
-            @Inject Services services) {
+            Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
+            ServiceLocator locator) {
 
-        this.services = services;
+        this.locator = locator;
         this.respondingContextFactory = respondingContextFactory;
     }
 
@@ -88,13 +89,13 @@ class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
     @Override
     public Continuation<ClientRequest> apply(ClientRequest requestContext) {
 
-        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(services, ClientResponseFilter.class,
+        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(locator, ClientResponseFilter.class,
                 new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
         if (!responseFilters.isEmpty()) {
             respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
         }
 
-        final List<ClientRequestFilter> requestFilters = Providers.getAllProviders(services, ClientRequestFilter.class,
+        final List<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class,
                 new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
         if (!requestFilters.isEmpty()) {
             for (ClientRequestFilter filter : requestFilters) {
@@ -146,13 +147,13 @@ class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
     }
 
     /**
-     * Client filter processing injection binding module.
+     * Client filter processing injection binder.
      */
-    static class Module extends AbstractModule {
+    static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind().to(ClientFilteringStage.class);
+            bindAsContract(ClientFilteringStage.class);
         }
     }
 }

@@ -51,6 +51,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericEntity;
@@ -62,10 +64,6 @@ import org.glassfish.jersey.media.json.JsonWithPadding;
 import org.glassfish.jersey.media.json.internal.LocalizationMessages;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * JSON media type message entity provider (reader & writer) for
@@ -86,7 +84,7 @@ public class JsonWithPaddingProvider extends AbstractMessageReaderWriterProvider
     private static final Logger LOGGER = Logger.getLogger(JsonWithPaddingProvider.class.getName());
     private final Map<String, Set<String>> javascriptTypes;
     @Inject
-    Factory<MessageBodyWorkers> bodyWorker;
+    Provider<MessageBodyWorkers> bodyWorker;
 
     public JsonWithPaddingProvider() {
         javascriptTypes = new HashMap<String, Set<String>>();

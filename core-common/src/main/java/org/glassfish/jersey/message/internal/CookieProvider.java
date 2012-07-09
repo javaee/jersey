@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Cookie;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
@@ -48,6 +49,7 @@ import org.glassfish.jersey.spi.HeaderDelegateProvider;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class CookieProvider implements HeaderDelegateProvider<Cookie> {
 
     @Override

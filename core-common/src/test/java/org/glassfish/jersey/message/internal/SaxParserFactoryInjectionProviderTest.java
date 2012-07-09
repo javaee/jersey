@@ -48,33 +48,31 @@ import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.FeaturesAndProperties;
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.Injections;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.PerThread;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerThread;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.Binder;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.InputSource;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class SaxParserFactoryInjectionProviderTest {
-    private Services services;
+    private ServiceLocator locator;
     private SAXParserFactory f1;
     private SAXParserFactory f2;
     private SAXParserFactory ff1;
@@ -82,7 +80,7 @@ public class SaxParserFactoryInjectionProviderTest {
 
     @Before
     public void setUp() {
-        services = createServices();
+        locator = createServiceLocator();
     }
 
     private static final FeaturesAndProperties EMPTY_FEATURES_AND_PROPERTIES = new FeaturesAndProperties() {
@@ -102,25 +100,32 @@ public class SaxParserFactoryInjectionProviderTest {
         }
     };
 
-    public static Services createServices(Module... additionalModules) {
-        Module[] modules = new Module[additionalModules.length + 2];
+    public static ServiceLocator createServiceLocator(Binder... customBinders) {
+        Binder[] binders = new Binder[customBinders.length + 2];
 
-        modules[0] = new AbstractModule() {
+        binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(FeaturesAndProperties.class).toFactory(new Factory<FeaturesAndProperties>() {
+                bindFactory(new Factory<FeaturesAndProperties>() {
                     @Override
-                    public FeaturesAndProperties get() throws ComponentException {
+                    public FeaturesAndProperties provide() {
                         return EMPTY_FEATURES_AND_PROPERTIES;
                     }
-                });
-                bind(SAXParserFactory.class).toFactory(SaxParserFactoryInjectionProvider.class).in(PerThread.class);
-                bind(MySPFProvider.class).to(MySPFProvider.class).in(PerLookup.class);
+
+                    @Override
+                    public void dispose(FeaturesAndProperties instance) {
+                        //not used
+                    }
+                }).to(FeaturesAndProperties.class);
+                bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).to(SAXParserFactory.class)
+                        .in(PerThread.class);
+                // TODO
+                bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };
-        modules[1] = new ContextInjectionResolver.Module();
-        System.arraycopy(additionalModules, 0, modules, 2, additionalModules.length);
-        return HK2.get().create(null, modules);
+        binders[1] = new ContextInjectionResolver.Binder();
+        System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
+        return Injections.createLocator(binders);
     }
 
     @Test
@@ -137,15 +142,21 @@ public class SaxParserFactoryInjectionProviderTest {
     public void testSameForSameThreads() {
         f1 = getSPF();
         f2 = getSPF();
-        ff1 = getSPFFromFactory();
-        ff2 = getSPFFromFactory();
+        ff1 = getSPFViaProvider();
+        ff2 = getSPFViaProvider();
         assertNotNull(f1);
         assertNotNull(f2);
         assertNotNull(ff1);
         assertNotNull(ff2);
-        assertTrue(f1 == f2);
-        assertTrue(f2 == ff1);
-        assertTrue(ff1 == ff2);
+
+//        System.out.println("f1  : " + f1.toString());
+//        System.out.println("ff1 : " + ff1.toString());
+//        System.out.println("f2  : " + f2.toString());
+//        System.out.println("ff2 : " + ff2.toString());
+
+        assertSame(f1, f2);
+        assertSame(f2, ff1);
+        assertSame(ff1, ff2);
     }
 
     /**
@@ -158,38 +169,45 @@ public class SaxParserFactoryInjectionProviderTest {
             @Override
             public void run() {
                 f1 = getSPF();
-                ff1 = getSPFFromFactory();
+                ff1 = getSPFViaProvider();
             }
         });
         t.start();
         f2 = getSPF();
-        ff2 = getSPFFromFactory();
+        ff2 = getSPFViaProvider();
         t.join();
         assertNotNull(f1);
         assertNotNull(f2);
         assertNotNull(ff1);
         assertNotNull(ff2);
-        assertTrue(f1 != f2);
-        assertTrue(ff1 != ff2);
-        assertTrue(f1 == ff1);
-        assertTrue(f2 == ff2);
+
+//        System.out.println("f1  : " + f1.toString());
+//        System.out.println("ff1 : " + ff1.toString());
+//        System.out.println("f2  : " + f2.toString());
+//        System.out.println("ff2 : " + ff2.toString());
+
+        assertNotSame(f1, f2);
+        assertNotSame(ff1, ff2);
+        assertSame(f1, ff1);
+        assertSame(f2, ff2);
     }
 
     private SAXParserFactory getSPF() {
-        return services.forContract(SAXParserFactory.class).get();
+        return locator.getService(SAXParserFactory.class);
     }
 
-    private SAXParserFactory getSPFFromFactory() {
-        return services.forContract(MySPFProvider.class).get().getSPF();
+    private SAXParserFactory getSPFViaProvider() {
+        return locator.<MySPFProvider>getService(MySPFProvider.class).getSPF();
     }
 
     /**
      * Class to emulate injecting a Factory&lt;SAXParserFactory&gt;
      */
     public static class MySPFProvider {
-        private final Factory<SAXParserFactory> f;
+        private final Provider<SAXParserFactory> f;
 
-        public MySPFProvider(@Inject Factory<SAXParserFactory> f) {
+        @Inject
+        public MySPFProvider(Provider<SAXParserFactory> f) {
             this.f = f;
         }
 

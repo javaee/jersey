@@ -39,16 +39,14 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerThread;
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.message.MessageProperties;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerThread;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
 
 /**
  * Thread-scoped injection provider of {@link DocumentBuilderFactory document
@@ -57,22 +55,23 @@ import org.jvnet.hk2.annotations.Scoped;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Scoped(PerThread.class)
 public class DocumentBuilderFactoryInjectionProvider implements Factory<DocumentBuilderFactory> {
 
-    private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
 
     /**
      * Create new document builder factory provider.
      *
      * @param featuresAndPropertiesFactory features and properties provider.
      */
-    public DocumentBuilderFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    @Inject
+    public DocumentBuilderFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 
     @Override
-    public DocumentBuilderFactory get() {
+    @PerThread
+    public DocumentBuilderFactory provide() {
         DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 
         f.setNamespaceAware(true);
@@ -82,5 +81,10 @@ public class DocumentBuilderFactoryInjectionProvider implements Factory<Document
         }
 
         return f;
+    }
+
+    @Override
+    public void dispose(DocumentBuilderFactory instance) {
+        //not used
     }
 }

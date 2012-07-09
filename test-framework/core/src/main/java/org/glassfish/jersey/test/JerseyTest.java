@@ -54,7 +54,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.internal.ServiceFinderModule;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -114,7 +114,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest() throws TestContainerException {
         ResourceConfig config =  getResourceConfig(configure());
-        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        config.addBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
@@ -135,7 +135,7 @@ public abstract class JerseyTest {
         setTestContainerFactory(testContainerFactory);
 
         ResourceConfig config =  getResourceConfig(configure());
-        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        config.addBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, testContainerFactory);
@@ -158,7 +158,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
         ResourceConfig config = getResourceConfig(jaxrsApplication);
-        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        config.addBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
@@ -176,7 +176,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
         ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
-        config.addModules(new ServiceFinderModule<TestContainerFactory>(TestContainerFactory.class));
+        config.addBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
@@ -309,7 +309,7 @@ public abstract class JerseyTest {
             if (testContainerFactoryClass == null) {
 
                 Set<TestContainerFactory> testContainerFactories =
-                        Providers.getProviders(application.getServices(), TestContainerFactory.class);
+                        Providers.getProviders(application.getServiceLocator(), TestContainerFactory.class);
 
                 final String tcfClassName = getProperty(TestProperties.CONTAINER_FACTORY);
                 if ((tcfClassName == null)) {

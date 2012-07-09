@@ -48,10 +48,11 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.spi.Singleton;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;

@@ -43,10 +43,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Injectable JavaBean containing the configuration parameters for
@@ -62,20 +61,24 @@ public class MultiPartProperties {
      * Injectable provider that supplies a configured instance of {@link org.glassfish.jersey.media.multipart
      * .MultiPartProperties} for this application.
      */
-    public static class Module extends AbstractModule {
+    public static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(MultiPartProperties.class).toFactory(MultiPartConfigFactory.class);
+            bindFactory(MultiPartConfigFactory.class).to(MultiPartProperties.class);
         }
 
         private static class MultiPartConfigFactory implements Factory<MultiPartProperties> {
 
             @Override
-            public MultiPartProperties get() throws ComponentException {
+            public MultiPartProperties provide() {
                 return new MultiPartProperties();
             }
 
+            @Override
+            public void dispose(MultiPartProperties instance) {
+                //not used
+            }
         }
 
     }
@@ -108,7 +111,7 @@ public class MultiPartProperties {
 
     /**
      * Load and customize (if necessary) the configuration values for the
-     * {@code jersey-multipart} module.
+     * {@code jersey-multipart} injection binder.
      *
      * @throws IllegalArgumentException if the configuration resource
      * exists, but there are problems reading it

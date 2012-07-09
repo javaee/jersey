@@ -47,12 +47,12 @@ import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -64,10 +64,16 @@ import com.google.common.collect.Maps;
  */
 final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<Uri> {
 
+    /**
+     * {@link Uri} injection resolver.
+     */
     static final class InjectionResolver extends ParamInjectionResolver<Uri> {
 
+        /**
+         * Create new injection resolver.
+         */
         public InjectionResolver() {
-            super(Uri.class, WebTargetValueFactoryProvider.class);
+            super(WebTargetValueFactoryProvider.class);
         }
     }
 
@@ -104,10 +110,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<U
     /**
      * Initialize the provider.
      *
-     * @param injector Injector to be used for injecting into the values factory.
+     * @param locator service locator to be used for injecting into the values factory.
      */
-    public WebTargetValueFactoryProvider(@Inject Injector injector) {
-        super(null, injector, Parameter.Source.URI);
+    @Inject
+    public WebTargetValueFactoryProvider(ServiceLocator locator) {
+        super(null, locator, Parameter.Source.URI);
     }
 
     @Override

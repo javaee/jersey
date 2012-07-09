@@ -41,127 +41,130 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.inject.Named;
-import javax.inject.Qualifier;
+import java.util.Set;
 
 import javax.ws.rs.core.Context;
 
-import org.glassfish.hk2.ContractLocator;
-import org.glassfish.hk2.Provider;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.Singleton;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.component.ComponentException;
-import org.jvnet.hk2.component.Inhabitant;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
-import org.jvnet.tiger_types.Types;
-
-import com.sun.hk2.component.InjectionResolver;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.Injectee;
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ContextInjectionResolver extends InjectionResolver<Context> {
+@Singleton
+public class ContextInjectionResolver implements InjectionResolver<Context> {
 
-    public static final class Module extends AbstractModule {
+    public static final class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
             // @Context
-            bind(InjectionResolver.class).to(ContextInjectionResolver.class).in(Singleton.class);
+            bind(ContextInjectionResolver.class).to(new TypeLiteral<InjectionResolver<Context>>() {
+            }).in(Singleton.class);
         }
     }
-    //
+
     @Inject
-    Services services;
+    ServiceLocator serviceLocator;
 
-    public ContextInjectionResolver() {
-        super(Context.class);
+    @Override
+    public Object resolve(Injectee injectee, ServiceHandle<?> root) {
+        Type requiredType = injectee.getRequiredType();
+        boolean isHk2Factory = ReflectionHelper.isSubClassOf(requiredType, Factory.class);
+        Injectee newInjectee;
+
+        if (isHk2Factory) {
+            newInjectee = getInjectee(injectee, ReflectionHelper.getTypeArgument(requiredType, 0));
+        } else {
+            newInjectee = injectee;
+        }
+
+        ActiveDescriptor<?> ad = serviceLocator.getInjecteeDescriptor(newInjectee);
+        if (ad != null) {
+            final ServiceHandle handle = serviceLocator.getServiceHandle(ad);
+
+            if (isHk2Factory) {
+                return asFactory(handle);
+            } else {
+                return handle.getService();
+            }
+        }
+        return null;
+    }
+
+    private Factory asFactory(final ServiceHandle handle) {
+        return new Factory() {
+            @Override
+            public Object provide() {
+                return handle.getService();
+            }
+
+            @Override
+            public void dispose(Object instance) {
+                //not used
+            }
+        };
+    }
+
+    private Injectee getInjectee(final Injectee injectee, final Type requiredType) {
+        return new Injectee() {
+            @Override
+            public Type getRequiredType() {
+                return requiredType;
+            }
+
+            @Override
+            public Set<Annotation> getRequiredQualifiers() {
+                return injectee.getRequiredQualifiers();
+            }
+
+            @Override
+            public int getPosition() {
+                return injectee.getPosition();
+            }
+
+            @Override
+            public Class<?> getInjecteeClass() {
+                return injectee.getInjecteeClass();
+            }
+
+            @Override
+            public AnnotatedElement getParent() {
+                return injectee.getParent();
+            }
+
+            @Override
+            public boolean isOptional() {
+                return injectee.isOptional();
+            }
+
+            @Override
+            public boolean isSelf() {
+                return injectee.isSelf();
+            }
+        };
     }
 
     @Override
-    public boolean isOptional(AnnotatedElement annotated, Context annotation) {
-        return true; // seems like all @Context are optional so far...
+    public boolean isConstructorParameterIndicator() {
+        return true;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <V> V getValue(Object component, Inhabitant<?> onBehalfOf, AnnotatedElement annotated, Type genericType, Class<V> type) throws ComponentException {
-        final boolean isHk2Factory = Types.isSubClassOf(type, org.glassfish.hk2.Factory.class);
-
-        String targetTypeName;
-        if (isHk2Factory) {
-            targetTypeName = exploreType(Types.getTypeArgument(genericType, 0));
-        } else {
-            targetTypeName = exploreType(genericType);
-        }
-
-        ContractLocator<?> locator = services.forContract(targetTypeName);
-        for (Annotation a : annotated.getAnnotations()) {
-            final Class<? extends Annotation> ac = a.annotationType();
-            if (Named.class.isAssignableFrom(ac)) {
-                locator = locator.named(Named.class.cast(a).value());
-            } else if (ac.isAnnotationPresent(Qualifier.class)) {
-                locator = locator.annotatedWith(ac);
-            }
-            // todo: what to do about scopes?
-        }
-
-        Provider<?> provider = locator.getProvider();
-        if (isHk2Factory) {
-            return (V) ((provider == null) ? Providers.asFactory(services.byType(targetTypeName).getProvider()) : Providers.asFactory(provider));
-        } else {
-            return (V) ((provider == null) ? services.byType(targetTypeName).get() : provider.get());
-        }
-    }
-
-    // TODO: Replace with HK2 API call once such API is available
-    private static void exploreType(Type type, StringBuilder builder) {
-        if (type instanceof ParameterizedType) {
-            builder.append(TypeLiteral.getRawType(type).getName());
-
-            // we ignore wildcard types.
-            Collection<Type> types = Arrays.asList(((ParameterizedType) type).getActualTypeArguments());
-            Iterator<Type> typesEnum = types.iterator();
-            List<Type> nonWildcards = new ArrayList<Type>();
-            while (typesEnum.hasNext()) {
-                Type genericType = typesEnum.next();
-                if (!(genericType instanceof WildcardType)) {
-                    nonWildcards.add(genericType);
-                }
-            }
-            if (!nonWildcards.isEmpty()) {
-                builder.append("<");
-                Iterator<Type> typesItr = nonWildcards.iterator();
-                while (typesItr.hasNext()) {
-                    exploreType(typesItr.next(), builder);
-                    if (typesItr.hasNext()) {
-                        builder.append(",");
-                    }
-                }
-                builder.append(">");
-            }
-        } else {
-            builder.append(TypeLiteral.getRawType(type).getName());
-        }
-    }
-
-    private static String exploreType(Type type) {
-        StringBuilder builder = new StringBuilder();
-        exploreType(type, builder);
-        return builder.toString();
+    public boolean isMethodParameterIndicator() {
+        return false;
     }
 }

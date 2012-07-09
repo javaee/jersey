@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -49,12 +50,15 @@ import javax.ws.rs.container.DynamicBinder;
 
 import org.glassfish.jersey.spi.Contract;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Provider;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.BuilderHelper;
 
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -76,12 +80,17 @@ public class Providers {
      * @param provider HK2 service provider to be wrapped.
      * @return HK2 service factory wrapping the HK2 service provider.
      */
-    public static <T> Factory<T> asFactory(final Provider<T> provider) {
+    public static <T> Factory<T> asFactory(final ServiceHandle<T> provider) {
         return new Factory<T>() {
 
             @Override
-            public T get() {
-                return provider.get();
+            public T provide() {
+                return provider.getService();
+            }
+
+            @Override
+            public void dispose(T instance) {
+                //not used
             }
         };
     }
@@ -97,8 +106,13 @@ public class Providers {
         return new Factory<T>() {
 
             @Override
-            public T get() {
+            public T provide() {
                 return instance;
+            }
+
+            @Override
+            public void dispose(T instance) {
+                //not used
             }
         };
     }
@@ -164,104 +178,128 @@ public class Providers {
      * Get a typed service instance for a contract specified as a string.
      *
      * @param <T> expected contract type.
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      * @param contract string definition of the contract Java type.
      * @return typed service instance for the contract.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getContract(Services services, String contract) {
-        return (T) services.forContract(contract).all();//get();
+    public static <T> T getContract(ServiceLocator locator, String contract) {
+        return Providers.<T>getProvider(locator, contract).getService();
     }
 
     /**
      * Get a typed HK2 service provider for a contract specified as string.
      *
      * @param <T> expected contract type.
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      * @param contract string definition of the contract Java type.
      * @return typed HK2 service provider for the contract.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Provider<T> getProvider(Services services, String contract) {
-        return (Provider<T>) services.forContract(contract).getProvider();
+    public static <T> ServiceHandle<T> getProvider(final ServiceLocator locator, final String contract) {
+        ActiveDescriptor descriptor = locator.getBestDescriptor(BuilderHelper.createContractFilter(contract));
+        return locator.getServiceHandle(descriptor);
     }
 
     /**
      * Get a typed HK2 service factory for a contract specified as string.
      *
      * @param <T> expected contract type.
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      * @param contract string definition of the contract Java type.
      * @return typed HK2 service factory for the contract.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Factory<T> getFactory(Services services, String contract) {
-        return (Factory<T>) asFactory(services.forContract(contract).getProvider());
+    public static <T> Factory<T> getFactory(final ServiceLocator locator, final String contract) {
+        return (Factory<T>) asFactory(getProvider(locator, contract));
     }
 
     /**
      * Get the set of default providers registered for the given service provider contract
-     * in the underlying {@link Services HK2 services} container.
+     * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
      * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
+     * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available default service provider instances for the contract.
      */
-    public static <T> Set<T> getProviders(Services services, Class<T> contract) {
-        final Collection<Provider<T>> hk2Providers = services.forContract(contract).all();
+    public static <T> Set<T> getProviders(ServiceLocator locator, Class<T> contract) {
+        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
         return getClasses(hk2Providers);
     }
 
 
     /**
      * Get the set of all custom providers registered for the given service provider contract
-     * in the underlying {@link Services HK2 services} container.
+     * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
      * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
+     * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> Set<T> getCustomProviders(Services services, Class<T> contract) {
-        final Collection<Provider<T>> hk2Providers = services.forContract(contract).annotatedWith(Custom.class).all();
+    public static <T> Set<T> getCustomProviders(ServiceLocator locator, Class<T> contract) {
+        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
         return getClasses(hk2Providers);
     }
 
     /**
      * Get the set of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link Services HK2 services} container.
+     * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
      * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
+     * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> List<T> getAllProviders(Services services, Class<T> contract) {
-        List<T> providers = new ArrayList<T>(getClasses(services.forContract(contract).annotatedWith(Custom.class).all()));
-        providers.addAll(getClasses(services.forContract(contract).all()));
-        return providers;
+    public static <T> List<T> getAllProviders(ServiceLocator locator, Class<T> contract) {
+        List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
+        providers.addAll(getAllServiceHandles(locator, contract));
+
+        LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap = Maps.newLinkedHashMap();
+
+        for (ServiceHandle<T> provider : providers) {
+            ActiveDescriptor key = provider.getActiveDescriptor();
+            if (!providerMap.containsKey(key)) {
+                providerMap.put(key, provider);
+            }
+        }
+        ArrayList<T> ts = new ArrayList<T>(getClasses(providerMap.values()));
+
+        return ts;
+    }
+
+    private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract, Annotation... qualifiers) {
+
+        List<ServiceHandle<?>> allServiceHandles = qualifiers == null ?
+                locator.getAllServiceHandles(contract) :
+                locator.getAllServiceHandles(contract, qualifiers);
+
+        ArrayList<ServiceHandle<T>> serviceHandles = new ArrayList<ServiceHandle<T>>();
+        for (ServiceHandle handle : allServiceHandles) {
+            serviceHandles.add((ServiceHandle<T>) handle);
+        }
+        return serviceHandles;
     }
 
     /**
      * Get the set of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link Services HK2 services} container ordered based on the given {@code comparator}.
+     * in the underlying {@link ServiceLocator HK2 service locator} container ordered based on the given {@code comparator}.
      *
      * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
+     * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract ordered using the given
      * {@link Comparator comparator}.
      */
-    public static <T> List<T> getAllProviders(Services services, Class<T> contract, Comparator<T> comparator) {
-        List<T> providers = new ArrayList<T>(getClasses(services.forContract(contract).annotatedWith(Custom.class).all()));
-        providers.addAll(getClasses(services.forContract(contract).all()));
+    public static <T> List<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
+        List<T> providers = getAllProviders(locator, contract);
         Collections.sort(providers, comparator);
         return providers;
     }
 
 
-    private static <T> Set<T> getClasses(Collection<Provider<T>> hk2Providers) {
+    private static <T> Set<T> getClasses(Collection<ServiceHandle<T>> hk2Providers) {
         if (hk2Providers.isEmpty()) {
             return Sets.newLinkedHashSet();
         } else {
@@ -272,17 +310,17 @@ public class Providers {
 
     /**
      * Get the set of all providers registered for the given service provider contract
-     * in the underlying {@link Services HK2 services} container.
+     * in the underlying {@link ServiceLocator HK2 locator} container.
      *
      * @param <T> service provider contract Java type.
-     * @param services underlying HK2 services container.
+     * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
      * @param comparator contract comparator used for ordering contracts in the
      *     set.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> SortedSet<T> getProviders(Services services, Class<T> contract, final Comparator<T> comparator) {
-        final Collection<Provider<T>> hk2Providers = services.forContract(contract).all();
+    public static <T> SortedSet<T> getProviders(ServiceLocator locator, Class<T> contract, final Comparator<T> comparator) {
+        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
         if (hk2Providers.isEmpty()) {
             return Sets.newTreeSet(comparator);
         } else {

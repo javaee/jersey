@@ -47,7 +47,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -102,7 +102,7 @@ public class ResourceConfigTest {
         ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
         ApplicationHandler ah = new ApplicationHandler(resourceConfig);
 
-        assertSame(resourceConfig, ah.getServices().forContract(Application.class).get());
+        assertSame(resourceConfig, ah.getServiceLocator().getService(Application.class));
 
         ContainerResponse r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
@@ -112,26 +112,26 @@ public class ResourceConfigTest {
 
     @Test
     public void testResourceConfigMergeApplications() throws Exception {
-        // No custom module.
+        // No custom binder.
         ApplicationHandler ah = new ApplicationHandler(ResourceConfig.class);
-        assertEquals(0, ah.getConfiguration().getCustomModules().size());
+        assertEquals(0, ah.getConfiguration().getCustomBinders().size());
 
-        // with MyModule
+        // with MyBinder
         ah = new ApplicationHandler(MyResourceConfig1.class);
-        assertEquals(1, ah.getConfiguration().getCustomModules().size());
+        assertEquals(1, ah.getConfiguration().getCustomBinders().size());
 
-        // Add myModule + one default.
-        final MyModule defaultModule = new MyModule();
+        // Add myBinder + one default.
+        final MyBinder defaultBinder = new MyBinder();
         ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
-        rc.addModules(defaultModule);
+        rc.addBinders(defaultBinder);
         ah = new ApplicationHandler(rc);
-        assertEquals(2, ah.getConfiguration().getCustomModules().size());
-        assertTrue(ah.getConfiguration().getCustomModules().contains(defaultModule));
+        assertEquals(2, ah.getConfiguration().getCustomBinders().size());
+        assertTrue(ah.getConfiguration().getCustomBinders().contains(defaultBinder));
     }
 
     public static class MyResourceConfig1 extends ResourceConfig {
         public MyResourceConfig1() {
-            addModules(new MyModule());
+            addBinders(new MyBinder());
         }
     }
 
@@ -161,7 +161,7 @@ public class ResourceConfigTest {
         }
     }
 
-    public static class MyModule extends AbstractModule {
+    public static class MyBinder extends AbstractBinder {
 
         @Override
         protected void configure() {

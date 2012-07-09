@@ -58,7 +58,7 @@
     <!-- we can use full maven properties incl. inheritance ! -->
     <properties>
         <junit-version>4.5</junit-version>
-        <pax-exam-version>1.2.3</pax-exam-version>
+        <pax-exam-version>1.2.4</pax-exam-version>
         <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
     </properties>
 

@@ -39,10 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -50,28 +53,26 @@ import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
-
 /**
  * Value factory provider supporting the {@link FormParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<FormParam> {
 
     /**
      * {@link FormParam} injection resolver.
      */
+    @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<FormParam> {
 
         /**
          * Create new FormParam injection resolver.
          */
         public InjectionResolver() {
-            super(FormParam.class, FormParamValueFactoryProvider.class);
+            super(FormParamValueFactoryProvider.class);
         }
     }
 
@@ -145,7 +146,8 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
      * @param mpep extractor provider.
      * @param injector injector.
      */
-    public FormParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    public FormParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.FORM);
     }
 

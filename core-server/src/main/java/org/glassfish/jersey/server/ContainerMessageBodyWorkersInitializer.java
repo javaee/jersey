@@ -41,11 +41,10 @@ package org.glassfish.jersey.server;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
-
 import com.google.common.base.Function;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -55,7 +54,7 @@ import com.google.common.base.Function;
  */
 public class ContainerMessageBodyWorkersInitializer
         implements Function<ContainerRequest, ContainerRequest> {
-    private final Factory<MessageBodyWorkers> workersFactory;
+    private final Provider<MessageBodyWorkers> workersFactory;
 
     /**
      * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function for requests
@@ -63,8 +62,9 @@ public class ContainerMessageBodyWorkersInitializer
      *
      * @param workersFactory {@code MessageBodyWorkers} factory.
      */
+    @Inject
     public ContainerMessageBodyWorkersInitializer(
-            @Inject Factory<MessageBodyWorkers> workersFactory) {
+            Provider<MessageBodyWorkers> workersFactory) {
         this.workersFactory = workersFactory;
     }
 

@@ -46,15 +46,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * An injectable {@link ResourceMethodInvocationHandlerProvider resource method
@@ -70,7 +69,7 @@ import org.jvnet.hk2.annotations.Scoped;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Scoped(Singleton.class)
+@Singleton
 final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvocationHandlerProvider {
 
     private static final InvocationHandler DEFAULT_HANDLER = new InvocationHandler() {
@@ -84,8 +83,9 @@ final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvo
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
     private final Set<ResourceMethodInvocationHandlerProvider> providers;
 
-    ResourceMethodInvocationHandlerFactory(@Inject Services services) {
-        providers = Providers.getProviders(services, ResourceMethodInvocationHandlerProvider.class);
+    @Inject
+    ResourceMethodInvocationHandlerFactory(ServiceLocator locator) {
+        providers = Providers.getProviders(locator, ResourceMethodInvocationHandlerProvider.class);
     }
 
     // ResourceMethodInvocationHandlerProvider

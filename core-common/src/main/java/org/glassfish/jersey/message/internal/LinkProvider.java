@@ -42,6 +42,7 @@ package org.glassfish.jersey.message.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import javax.inject.Singleton;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MultivaluedMap;
@@ -53,6 +54,7 @@ import org.glassfish.jersey.spi.HeaderDelegateProvider;
  * @author Santiago Pericas-Geertsen
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override

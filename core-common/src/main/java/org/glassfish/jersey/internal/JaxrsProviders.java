@@ -48,15 +48,15 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.PerLookup;
 
 /**
  * Jersey implementation of JAX-RS {@link javax.ws.rs.ext.Providers} contract.
@@ -66,22 +66,22 @@ import org.jvnet.hk2.annotations.Inject;
 public class JaxrsProviders implements javax.ws.rs.ext.Providers {
 
     /**
-     * Jersey module registering {@link javax.ws.rs.ext.Providers} injection bindings.
+     * Jersey binder registering {@link javax.ws.rs.ext.Providers JAX-RS Providers} injection bindings.
      */
-    public static class Module extends AbstractModule {
+    public static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(javax.ws.rs.ext.Providers.class).to(JaxrsProviders.class).in(PerLookup.class);
+            bind(JaxrsProviders.class).to(javax.ws.rs.ext.Providers.class).in(PerLookup.class);
         }
     }
 
     @Inject
-    private Factory<MessageBodyWorkers> workers;
+    private Provider<MessageBodyWorkers> workers;
     @Inject
-    private Factory<ContextResolvers> resolvers;
+    private Provider<ContextResolvers> resolvers;
     @Inject
-    private Factory<ExceptionMappers> mappers;
+    private Provider<ExceptionMappers> mappers;
 
     @Override
     public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType) {

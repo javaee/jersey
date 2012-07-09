@@ -100,7 +100,17 @@ final class IntrospectionModeller {
         issueList.add(new ResourceModelIssue(source, message, false));
     }
 
-    public Resource.Builder createResourceBuilder(boolean skipAcceptableCheck) throws IllegalArgumentException {
+    /**
+     * Create a new resource model builder for the introspected class.
+     *
+     * The model returned is filled with the introspected data.
+     *
+     * @param skipAcceptableCheck if {@code true}, the check if the introspected class
+     *                            is a valid, {@link Resource#isAcceptable(Class) acceptable}
+     *                            resource class is skipped.
+     * @return new resource model builder for the introspected class.
+     */
+    public Resource.Builder createResourceBuilder(boolean skipAcceptableCheck) {
         if (!skipAcceptableCheck && !Resource.isAcceptable(handlerClass)) {
             addFatalIssue(handlerClass, LocalizationMessages.NON_INSTANTIABLE_CLASS(handlerClass));
         }
@@ -226,18 +236,26 @@ final class IntrospectionModeller {
         return result;
     }
 
-    public static Class<?> getAnnotatedResourceClass(Class<?> rc) {
-        if (rc.isAnnotationPresent(Path.class)) {
-            return rc;
+    /**
+     * Get the class in the provided resource class ancestor hierarchy that
+     * is actually annotated with the {@link Path &#64;Path} annotation.
+     *
+     * @param resourceClass resource class.
+     * @return resource class or it's ancestor that is annotated with the {@link Path &#64;Path}
+     *         annotation.
+     */
+    static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
+        if (resourceClass.isAnnotationPresent(Path.class)) {
+            return resourceClass;
         }
 
-        for (Class<?> i : rc.getInterfaces()) {
+        for (Class<?> i : resourceClass.getInterfaces()) {
             if (i.isAnnotationPresent(Path.class)) {
                 return i;
             }
         }
 
-        return rc;
+        return resourceClass;
     }
 
     private static List<MediaType> resolveConsumedTypes(final AnnotatedMethod am, final List<MediaType> defaultConsumedTypes) {

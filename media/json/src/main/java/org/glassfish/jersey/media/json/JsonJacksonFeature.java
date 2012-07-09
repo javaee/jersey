@@ -51,7 +51,7 @@ public class JsonJacksonFeature implements Feature {
 
     @Override
     public boolean onEnable(Configuration c) {
-        for (Class<?> provider : JsonJacksonModule.getProviders()) {
+        for (Class<?> provider : JsonJacksonBinder.getProviders()) {
             c.register(provider);
         }
         return true;

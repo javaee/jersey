@@ -37,55 +37,71 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.json;
+package org.glassfish.jersey.config;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
+import java.util.Set;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
 
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.hk2.api.ServiceLocator;
 
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 /**
- * Module with JAX-RS Jackson JSON providers.
+ * Service finder injection binder unit test.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JsonJacksonModule extends AbstractModule {
+public class ServiceFinderBinderTest {
 
-    private static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableList(Arrays.asList(new Class<?>[]{
-                JacksonJsonProvider.class,
-                JacksonJaxbJsonProvider.class,
-                JsonWithPaddingProvider.class
-            }));
+    private static ServiceLocator locator;
 
-    /**
-     * Get providers used for serialization and de-serialization of entities
-     * to/from JSON media type.
-     *
-     * @return {@link Collection} of providers.
-     */
-    public static Collection<Class<?>> getProviders() {
-        return PROVIDERS;
+    public ServiceFinderBinderTest() {
     }
 
-    @Override
-    protected void configure() {
-        bindSingletonReaderWriterProvider(JacksonJsonProvider.class);
-        bindSingletonReaderWriterProvider(JacksonJaxbJsonProvider.class);
-        bindSingletonReaderWriterProvider(JsonWithPaddingProvider.class);
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        locator = Injections.createLocator(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(TestServiceB.class).to(TestContract.class);
+                bind(TestServiceD.class).to(TestContract.class);
+                new ServiceFinderBinder<TestContract>(TestContract.class).bind(this);
+            }
+        });
     }
 
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind().to(provider).in(Singleton.class);
-        bind(MessageBodyReader.class).to(provider);
-        bind(MessageBodyWriter.class).to(provider);
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Test
+    public void testConfigure() {
+        final Set<TestContract> providers = Providers.getProviders(locator, TestContract.class);
+        assertEquals(4, providers.size());
+
+        final Collection<String> providerNames = Collections2.transform(providers, new Function<TestContract, String>() {
+
+            @Override
+            public String apply(TestContract input) {
+                return input.name();
+            }
+        });
+
+        assertTrue(providerNames.contains(TestServiceA.class.getName()));
+        assertTrue(providerNames.contains(TestServiceB.class.getName()));
+        assertTrue(providerNames.contains(TestServiceC.class.getName()));
+        assertTrue(providerNames.contains(TestServiceD.class.getName()));
     }
 }

@@ -42,6 +42,7 @@ package org.glassfish.jersey.message.internal;
 import java.text.ParseException;
 import java.util.Map;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
@@ -52,6 +53,7 @@ import org.glassfish.jersey.spi.HeaderDelegateProvider;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
+@Singleton
 public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
 
     @Override

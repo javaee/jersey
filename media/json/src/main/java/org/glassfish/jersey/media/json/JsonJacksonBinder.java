@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,37 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.media.json;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.media.json.internal.entity.JsonWithPaddingProvider;
+
+import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 /**
- * Module used for registering provider instances of provider type {@code T}
- * in HK2.
+ * Binder for JAX-RS Jackson JSON providers.
  *
- * @param <T>
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProviderInstanceBindingModule<T> extends AbstractModule {
-    private final Iterable<? extends T> providers;
-    private final Class<T> providerType;
+public class JsonJacksonBinder extends AbstractBinder {
+
+    private static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableList(Arrays.<Class<?>>asList(
+            JacksonJsonProvider.class,
+            JacksonJaxbJsonProvider.class,
+            JsonWithPaddingProvider.class));
 
     /**
-     * Create a provider instance binding module for the
-     * supplied collection of provider instances.
+     * Get providers used for serialization and de-serialization of entities
+     * to/from JSON media type.
      *
-     * @param providers list of provider instances.
-     * @param providerType registered provider contract type.
+     * @return {@link Collection} of providers.
      */
-    public ProviderInstanceBindingModule(Iterable<? extends T> providers, Class<T> providerType) {
-        this.providers = providers;
-        this.providerType = providerType;
+    public static Collection<Class<?>> getProviders() {
+        return PROVIDERS;
     }
 
     @Override
     protected void configure() {
-        for(T provider : providers) {
-            bind(providerType).toInstance(provider);
-        }
+        bindSingletonReaderWriterProvider(JacksonJsonProvider.class);
+        bindSingletonReaderWriterProvider(JacksonJaxbJsonProvider.class);
+        bindSingletonReaderWriterProvider(JsonWithPaddingProvider.class);
+    }
+
+    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
+        bind(provider).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class);
     }
 }

@@ -60,7 +60,8 @@ import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
 import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
-import org.glassfish.hk2.Module;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -89,7 +90,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     private final Map<String, Object> properties;
     private final Map<String, Object> propertiesView;
     //
-    private final Set<Module> customModules;
+    private final Set<Binder> customBinders;
     //
     private ClassLoader classLoader = null;
     //
@@ -111,7 +112,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         this.propertiesView = Collections.unmodifiableMap(this.properties);
 
         this.resourceFinders = Sets.newHashSet();
-        this.customModules = Sets.newHashSet();
+        this.customBinders = Sets.newHashSet();
     }
 
     /**
@@ -269,27 +270,27 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
+     * Add {@link Binder HK2 binders} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
+     * These binders will be added when creating {@link ServiceLocator} instance.
      *
-     * @param modules custom modules.
+     * @param binders custom binders.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addModules(Set<Module> modules) {
-        return internalState.addModules(modules);
+    public final ResourceConfig addBinders(Set<Binder> binders) {
+        return internalState.addBinders(binders);
     }
 
     /**
-     * Add {@link org.glassfish.hk2.Module HK2 modules} to {@code ResourceConfig}.
+     * Add {@link Binder HK2 binders} to {@code ResourceConfig}.
      *
-     * These modules will be added when creating {@link org.glassfish.hk2.Services} instance.
+     * These binders will be added when creating {@link ServiceLocator} instance.
      *
-     * @param modules custom modules.
-     * @return updated resource configuration instance..
+     * @param binders custom binders.
+     * @return updated resource configuration instance.
      */
-    public final ResourceConfig addModules(Module... modules) {
-        return addModules(Sets.newHashSet(modules));
+    public final ResourceConfig addBinders(Binder... binders) {
+        return addBinders(Sets.newHashSet(binders));
     }
 
     /**
@@ -332,12 +333,12 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
     }
 
     /**
-     * Returns modules declared during {@code ResourceConfig} creation.
+     * Returns binders declared during {@code ResourceConfig} creation.
      *
-     * @return set of custom modules.
+     * @return set of custom HK2 binders.
      */
-    final Set<Module> getCustomModules() {
-        return customModules;
+    final Set<Binder> getCustomBinders() {
+        return customBinders;
     }
 
     /**
@@ -629,7 +630,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
 
         ResourceConfig addFinder(ResourceFinder resourceFinder);
 
-        ResourceConfig addModules(Set<Module> modules);
+        ResourceConfig addBinders(Set<Binder> binders);
 
         ResourceConfig addProperties(Map<String, Object> properties);
 
@@ -659,7 +660,7 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         @Override
-        public ResourceConfig addModules(Set<Module> modules) {
+        public ResourceConfig addBinders(Set<Binder> binders) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -711,8 +712,8 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         @Override
-        public ResourceConfig addModules(Set<Module> modules) {
-            ResourceConfig.this.customModules.addAll(modules);
+        public ResourceConfig addBinders(Set<Binder> binders) {
+            ResourceConfig.this.customBinders.addAll(binders);
             return ResourceConfig.this;
         }
 
@@ -816,10 +817,10 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
         }
 
         /**
-         * Merges fields (e.g. custom modules, properties) of the given application with this application.
+         * Merges fields (e.g. custom binders, properties) of the given application with this application.
          * <p>
          * The merging should be done because of the possibility of reloading this {@code ResourceConfig} in a container
-         * so this resource config should know about custom modules and properties of the underlying application to ensure
+         * so this resource config should know about custom binders and properties of the underlying application to ensure
          * the reload process will complete successfully.
          * </p>
          * @param application the application which fields should be merged with this application.
@@ -828,9 +829,9 @@ public class ResourceConfig extends Application implements FeaturesAndProperties
          */
         private void mergeApplications(final Application application) {
             if (application instanceof ResourceConfig) {
-                // Merge custom modules.
+                // Merge custom binders.
                 ResourceConfig rc = (ResourceConfig) application;
-                super.customModules.addAll(rc.customModules);
+                super.customBinders.addAll(rc.customBinders);
 
                 // Merge resources
                 super.resources.addAll(rc.resources);

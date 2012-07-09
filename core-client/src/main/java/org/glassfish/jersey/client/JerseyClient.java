@@ -56,7 +56,10 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.ProviderBinder;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationCallback;
@@ -68,12 +71,8 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.Sets;
 import static com.google.common.base.Preconditions.checkState;
@@ -92,7 +91,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     public static class Builder {
 
         private Inflector<ClientRequest, ClientResponse> connector;
-        private final List<Module> customModules = new LinkedList<Module>();
+        private final List<Binder> customBinders = new LinkedList<Binder>();
 
         /**
          * Package-private Jersey client builder constructor used by
@@ -113,14 +112,14 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         }
 
         /**
-         * Register custom HK2 modules for the Jersey client.
+         * Register custom HK2 binders for the Jersey client.
          *
-         * @param modules custom HK2 modules to be registered with the Jersey client.
+         * @param binders custom HK2 binders to be registered with the Jersey client.
          * @return updated Jersey client builder.
          */
-        public Builder modules(Module... modules) {
-            if (modules != null && modules.length > 0) {
-                Collections.addAll(this.customModules, modules);
+        public Builder binders(Binder... binders) {
+            if (binders != null && binders.length > 0) {
+                Collections.addAll(this.customBinders, binders);
             }
             return this;
         }
@@ -131,7 +130,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
          * @return new Jersey client.
          */
         public JerseyClient build() {
-            return new JerseyClient(new JerseyConfiguration(), connector, customModules);
+            return new JerseyClient(new JerseyConfiguration(), connector, customBinders);
         }
 
         /**
@@ -148,7 +147,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             } else {
                 jerseyConfiguration = (JerseyConfiguration) configuration;
             }
-            return new JerseyClient(jerseyConfiguration, connector, customModules);
+            return new JerseyClient(jerseyConfiguration, connector, customBinders);
         }
     }
 
@@ -166,70 +165,65 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * @param configuration jersey client configuration.
      * @param connector     transport connector. If {@code null}, the {@link HttpUrlConnector
      *                      default transport} will be used.
-     * @param customModules custom HK2 modules to be registered with the client.
+     * @param customBinders custom HK2 binders to be registered with the client.
      */
     protected JerseyClient(
             final JerseyConfiguration configuration,
             final Inflector<ClientRequest, ClientResponse> connector,
-            final List<Module> customModules) {
+            final List<Binder> customBinders) {
         this.configuration = configuration;
         this.closedFlag = new AtomicBoolean(false);
         this.connector = (connector == null) ? new HttpUrlConnector() : connector;
 
-        initialize(customModules);
+        initialize(customBinders);
     }
 
     /**
      * Initialize the newly constructed client instance.
      *
-     * @param customModules list of {@link Module}.
+     * @param customBinders list of custom {@link Binder HK2 binders}.
      */
-    private void initialize(final List<Module> customModules) {
-        final Module[] jerseyModules = new Module[]{
-                new ClientModule()
+    private void initialize(final List<Binder> customBinders) {
+        final Binder[] jerseyBinders = new Binder[]{
+                new ClientBinder()
         };
 
-        final Services services;
-        if (customModules.isEmpty()) {
-            services = HK2.get().create(null, jerseyModules);
+        final ServiceLocator serviceLocator;
+        if (customBinders.isEmpty()) {
+            serviceLocator = Injections.createLocator(jerseyBinders);
         } else {
-            final Module[] customModulesArray = customModules.toArray(new Module[customModules.size()]);
+            final Binder[] customBinderArray = customBinders.toArray(new Binder[customBinders.size()]);
 
-            Module[] modules = new Module[jerseyModules.length + customModulesArray.length];
-            System.arraycopy(jerseyModules, 0, modules, 0, jerseyModules.length);
-            System.arraycopy(customModulesArray, 0, modules, jerseyModules.length, customModulesArray.length);
+            Binder[] binders = new Binder[jerseyBinders.length + customBinderArray.length];
+            System.arraycopy(jerseyBinders, 0, binders, 0, jerseyBinders.length);
+            System.arraycopy(customBinderArray, 0, binders, jerseyBinders.length, customBinderArray.length);
 
-            services = HK2.get().create(null, modules);
+            serviceLocator = Injections.createLocator(binders);
         }
-        final Injector injector = services.forContract(Injector.class).get();
 
-        final RequestProcessingInitializationStage workersInitializationStage = injector.inject
-                (RequestProcessingInitializationStage.class);
-        final ClientFilteringStage filteringStage = injector.inject(ClientFilteringStage.class);
+        final RequestProcessingInitializationStage workersInitializationStage =
+                serviceLocator.createAndInitialize(RequestProcessingInitializationStage.class);
+        final ClientFilteringStage filteringStage = serviceLocator.createAndInitialize(ClientFilteringStage.class);
 
         Stage<ClientRequest> rootStage = Stages
                 .chain(workersInitializationStage)
                 .to(filteringStage)
                 .build(Stages.asStage(connector));
 
-        bindExecutors(injector);
-
-
-        this.invoker = injector.inject(ClientModule.RequestInvokerBuilder.class).build(rootStage);
-
-        injector.inject(this);
+        bindExecutors(serviceLocator);
+        this.invoker = Injections.getOrCreate(serviceLocator, ClientBinder.RequestInvokerBuilder.class).build(rootStage);
+        serviceLocator.inject(this);
     }
 
     /**
-     * Binds {@link RequestExecutorsProvider request executors}
-     *  and {@link ResponseExecutorsProvider response executors} to
-     *  all provider interfaces and removes them from the configuration, so that
-     *  there will not be bound again in the {@link RequestProcessingInitializationStage}.
+     * Binds {@link RequestExecutorsProvider request executors} and {@link ResponseExecutorsProvider response executors}
+     * to all provider interfaces and removes them from the configuration, so that there will not be bound again in the
+     * {@link RequestProcessingInitializationStage}.
      *
-     * @param injector HK2 injector
+     * @param locator HK2 service locator.
      */
-    private void bindExecutors(Injector injector) {
-        ProviderBinder providerBinder = injector.inject(ProviderBinder.class);
+    private void bindExecutors(ServiceLocator locator) {
+        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
         Set<Class<?>> executors = Sets.newHashSet();
         for (Class<?> clazz : this.configuration.getProviderClasses()) {
             final Set<Class<?>> providerContracts = Providers.getProviderContracts(clazz);

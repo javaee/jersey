@@ -60,7 +60,7 @@ import javax.xml.bind.JAXBException;
 import org.glassfish.jersey.media.json.JsonConfiguration;
 import org.glassfish.jersey.media.json.JsonJaxbContext;
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
+import org.glassfish.jersey.media.json.JsonJaxbBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -115,7 +115,7 @@ public class EmptyRequestWithJaxbTest {
     public static class EmptyRequestTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(Resource.class).addModules(new JsonJaxbModule());
+            return new ResourceConfig(Resource.class).addBinders(new JsonJaxbBinder());
         }
 
         @Override
@@ -180,7 +180,7 @@ public class EmptyRequestWithJaxbTest {
     public static class EmptyJsonRequestNaturalTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(NaturalCR.class, Resource.class).addModules(new JsonJaxbModule());
+            return new ResourceConfig(NaturalCR.class, Resource.class).addBinders(new JsonJaxbBinder());
         }
 
         @Override
@@ -203,7 +203,7 @@ public class EmptyRequestWithJaxbTest {
     public static class MappedJettisonCRTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addModules(new JsonJaxbModule());
+            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addBinders(new JsonJaxbBinder());
         }
 
         @Override
@@ -226,7 +226,7 @@ public class EmptyRequestWithJaxbTest {
     public static class BadgerFishCRTest extends JerseyTest {
         @Override
         protected Application configure() {
-            return new ResourceConfig(BadgerFishCR.class, Resource.class).addModules(new JsonJaxbModule());
+            return new ResourceConfig(BadgerFishCR.class, Resource.class).addBinders(new JsonJaxbBinder());
         }
 
         @Override

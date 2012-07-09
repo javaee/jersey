@@ -40,16 +40,16 @@
 package com.sun.ws.rs.ext;
 
 import javax.ws.rs.core.Application;
-import org.glassfish.hk2.HK2;
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.message.internal.MessagingModules;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 
 /**
  * Default implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
  * The {@link javax.ws.rs.ext.RuntimeDelegate} class looks for the implementations registered
  * in META-INF/services. If no such implementation is found, this one is picked
- * as the default. Server module should override this (using META-INF/services)
+ * as the default. Server injection binder should override this (using META-INF/services)
  * to provide an implementation that supports {@link #createEndpoint(javax.ws.rs.core.Application, java.lang.Class)}
  * method.
  *
@@ -59,8 +59,7 @@ import org.glassfish.jersey.message.internal.MessagingModules;
  */
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
     public RuntimeDelegateImpl() {
-        // TODO add more modules as necessary
-        super(HK2.get().create(null, new MessagingModules.HeaderDelegateProviders()));
+        super(Injections.createLocator("jersey-common-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override

@@ -42,14 +42,15 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.ExecutorService;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -58,17 +59,19 @@ import com.google.common.util.concurrent.MoreExecutors;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class TestExecutorsFactory extends ExecutorsFactory<Object> {
+public class TestExecutorsFactory extends ExecutorsFactory<String> {
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
 
 
     /**
      * Creates a new test factory instance.
-     * @param services Injected HK2 services.
+     *
+     * @param serviceLocator Injected HK2 service locator.
      */
-    public TestExecutorsFactory(@Inject Services services) {
-        super(services);
+    @Inject
+    public TestExecutorsFactory(ServiceLocator serviceLocator) {
+        super(serviceLocator);
         this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
 
             @Override
@@ -87,24 +90,24 @@ public class TestExecutorsFactory extends ExecutorsFactory<Object> {
     }
 
     @Override
-    public ExecutorService getRequestingExecutor(Object request) {
+    public ExecutorService getRequestingExecutor(String request) {
         return requestingExecutor;
     }
 
     @Override
-    public ExecutorService getRespondingExecutor(Object containerRequest) {
+    public ExecutorService getRespondingExecutor(String containerRequest) {
         return respondingExecutor;
     }
 
     /**
-     * {@link org.glassfish.hk2.Module HK2 Module} registering
+     * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
      * {@link TestExecutorsFactory server executor factory}.
      */
-    public static class TestExecutorsModule extends AbstractModule {
+    public static class TestExecutorsBinder extends AbstractBinder {
         @Override
         protected void configure() {
-            bind(ExecutorsFactory.class).to(TestExecutorsFactory.class).in(Singleton.class);
-            bind().to(TestExecutorsFactory.class).in(Singleton.class);
+            bind(TestExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<String>>() {
+            }).in(Singleton.class);
         }
     }
 }

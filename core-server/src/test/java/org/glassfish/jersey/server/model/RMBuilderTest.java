@@ -56,6 +56,8 @@ import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -65,14 +67,12 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ServerModule;
+import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.inject.Injector;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -114,27 +114,31 @@ public class RMBuilderTest {
 
     @Before
     public void setupApplication() {
-        Services services = HK2.get().create(null, new ServerModule());
+        ServiceLocator locator = Injections.createLocator(new ServerBinder(), new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bindAsContract(HelloWorldResource.class);
+            }
+        });
 
-        final Ref<MessageBodyWorkers> workers = services.forContract(new TypeLiteral<Ref<MessageBodyWorkers>>(){}).get();
-        workers.set(new MessageBodyFactory(services));
-        final Ref<ExceptionMappers> mappers = services.forContract(new TypeLiteral<Ref<ExceptionMappers>>(){}).get();
-        mappers.set(new ExceptionMapperFactory(services));
+        final Ref<MessageBodyWorkers> workers = locator.getService((new TypeLiteral<Ref<MessageBodyWorkers>>(){}).getType());
+        workers.set(new MessageBodyFactory(locator));
+        final Ref<ExceptionMappers> mappers = locator.getService((new TypeLiteral<Ref<ExceptionMappers>>(){}).getType());
+        mappers.set(new ExceptionMapperFactory(locator));
 
-        Injector injector = services.forContract(Injector.class).get();
-        injector.inject(this);
+        locator.inject(this);
 
-        final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
+        final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setBoundProviders(
                 new MultivaluedHashMap<Class<? extends Annotation>, ContainerRequestFilter>(),
                 new MultivaluedHashMap<Class<? extends Annotation>, ContainerResponseFilter>(),
                 Collections.<DynamicBinder>emptyList()
         );
         runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build(), false);
-        final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
+        final InvokerBuilder invokerBuilder = locator.createAndInitialize(InvokerBuilder.class);
 
         this.invoker = invokerBuilder.build(runtimeModelBuilder.buildModel(false));
-        this.requestScope = injector.inject(RequestScope.class);
+        this.requestScope = locator.createAndInitialize(RequestScope.class);
     }
 
     @Test

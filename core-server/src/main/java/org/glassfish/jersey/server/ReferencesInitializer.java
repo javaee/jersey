@@ -44,13 +44,13 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 
@@ -62,17 +62,17 @@ import com.google.common.base.Function;
 class ReferencesInitializer implements Function<ContainerRequest, ContainerRequest> {
 
     @Inject
-    private Services services;
+    private ServiceLocator locator;
     @Inject
-    private Factory<Ref<Request>> requestReference;
+    private Provider<Ref<Request>> requestReference;
     @Inject
-    private Factory<Ref<ContainerRequest>> requestContextReference;
+    private Provider<Ref<ContainerRequest>> requestContextReference;
     @Inject
-    private Factory<Ref<HttpHeaders>> httpHeadersReference;
+    private Provider<Ref<HttpHeaders>> httpHeadersReference;
     @Inject
-    private Factory<Ref<SecurityContext>> securityContextReference;
+    private Provider<Ref<SecurityContext>> securityContextReference;
     @Inject
-    private Factory<UriInfo> uriInfoFactory;
+    private Provider<UriInfo> uriInfoFactory;
 
     /**
      * Initialize the request references using the incoming request and register
@@ -92,7 +92,7 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
 
         final RequestScopedInitializer requestScopedInitializer = requestContext.getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
-            requestScopedInitializer.initialize(services);
+            requestScopedInitializer.initialize(locator);
         }
 
         requestContext.setUriInfo(uriInfoFactory.get());

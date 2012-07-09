@@ -51,20 +51,18 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.ComponentException;
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -85,14 +83,6 @@ public class CustomProcessingExecutorsProviderTest {
     private static final String REQ_THREAD_NAME = "custom-requesting-thread";
     private static final String RESP_THREAD_NAME = "custom-responding-thread";
 
-    /**
-     * Test constructor.
-     */
-    public CustomProcessingExecutorsProviderTest() {
-        RuntimeDelegate.setInstance(new TestRuntimeDelegate());
-    }
-
-
     private static class CustomExecutorProvider implements RequestExecutorsProvider, ResponseExecutorsProvider {
         @Override
         public ExecutorService getRequestingExecutor() {
@@ -105,16 +95,21 @@ public class CustomProcessingExecutorsProviderTest {
         }
     }
 
-    private Services init() {
+    /**
+     * Test constructor.
+     */
+    public CustomProcessingExecutorsProviderTest() {
+        RuntimeDelegate.setInstance(new TestRuntimeDelegate());
+    }
+
+    private ServiceLocator init() {
         final RequestExecutorsProvider customExecutorsProvider = new CustomExecutorProvider();
+        final ServiceLocator serviceLocator = Injections.createLocator(new ProcessingTestBinder());
 
-        final Services services = HK2.get().create(null,
-                new ProcessingTestModule());
-
-        ProcessingTestModule.initProviders(services, Collections.<Class<?>>emptySet(),
+        ProcessingTestBinder.initProviders(serviceLocator, Collections.<Class<?>>emptySet(),
                 Sets.newHashSet((Object) customExecutorsProvider));
 
-        return services;
+        return serviceLocator;
     }
 
     public static final class String2StringRequestInvokerBuilder {
@@ -122,11 +117,11 @@ public class CustomProcessingExecutorsProviderTest {
         @Inject
         private RequestScope requestScope;
         @Inject
-        Injector injector;
+        ServiceLocator locator;
         @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private Factory<ExecutorsFactory<String>> executorsFactoryProvider;
+        private Provider<ExecutorsFactory<String>> executorsFactoryProvider;
 
         public RequestInvoker<String, String> build(final Stage<String> rootStage) {
             final AsyncInflectorAdapter.Builder<String, String> asyncAdapterBuilder = new AsyncInflectorAdapter.Builder<String,
@@ -144,8 +139,12 @@ public class CustomProcessingExecutorsProviderTest {
                     };
                 }
             };
-            return new RequestInvoker<String, String>(rootStage, requestScope, asyncAdapterBuilder,
-                    injector.inject(String2StringResponseProcessorBuilder.class), invocationContextReferenceFactory,
+            return new RequestInvoker<String, String>(
+                    rootStage,
+                    requestScope,
+                    asyncAdapterBuilder,
+                    locator.createAndInitialize(String2StringResponseProcessorBuilder.class),
+                    invocationContextReferenceFactory,
                     executorsFactoryProvider.get());
         }
     }
@@ -154,16 +153,16 @@ public class CustomProcessingExecutorsProviderTest {
 
         @Inject
         private RequestScope requestScope;
-        private Factory<ResponseProcessor.RespondingContext<String>> respondingCtxProvider = new Factory<ResponseProcessor
-                .RespondingContext<String>>() {
+        private Provider<ResponseProcessor.RespondingContext<String>> respondingCtxProvider =
+                new Provider<ResponseProcessor.RespondingContext<String>>() {
 
-            @Override
-            public ResponseProcessor.RespondingContext<String> get() throws ComponentException {
-                return new DefaultRespondingContext<String>();
-            }
-        };
+                    @Override
+                    public ResponseProcessor.RespondingContext<String> get() {
+                        return new DefaultRespondingContext<String>();
+                    }
+                };
         @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
+        private Provider<ExceptionMappers> exceptionMappersProvider;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -200,33 +199,33 @@ public class CustomProcessingExecutorsProviderTest {
         @Inject
         private RequestScope requestScope;
         @Inject
-        Injector injector;
+        ServiceLocator locator;
         @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private Factory<ExecutorsFactory<String>> executorsFactory;
+        private Provider<ExecutorsFactory<String>> executorsFactory;
 
         public RequestInvoker<String, Response> build(final Stage<String> rootStage) {
-            final AsyncInflectorAdapter.Builder<String, Response> asyncAdapterBuilder = new AsyncInflectorAdapter
-                    .Builder<String, Response>() {
-
-                @Override
-                public AsyncInflectorAdapter<String, Response> create(Inflector<String, Response> wrapped,
-                                                                      InvocationCallback<Response> callback) {
-                    return new AsyncInflectorAdapter<String, Response>(wrapped, callback) {
+            final AsyncInflectorAdapter.Builder<String, Response> asyncAdapterBuilder =
+                    new AsyncInflectorAdapter.Builder<String, Response>() {
 
                         @Override
-                        protected Response convertResponse(String request, Response response) {
-                            return response;
+                        public AsyncInflectorAdapter<String, Response> create(Inflector<String, Response> wrapped,
+                                                                              InvocationCallback<Response> callback) {
+                            return new AsyncInflectorAdapter<String, Response>(wrapped, callback) {
+
+                                @Override
+                                protected Response convertResponse(String request, Response response) {
+                                    return response;
+                                }
+                            };
                         }
                     };
-                }
-            };
             return new RequestInvoker<String, Response>(
                     rootStage,
                     requestScope,
                     asyncAdapterBuilder,
-                    injector.inject(String2ResponseResponseProcessorBuilder.class),
+                    locator.createAndInitialize(String2ResponseResponseProcessorBuilder.class),
                     invocationContextReferenceFactory,
                     executorsFactory.get());
         }
@@ -236,16 +235,16 @@ public class CustomProcessingExecutorsProviderTest {
 
         @Inject
         private RequestScope requestScope;
-        private Factory<ResponseProcessor.RespondingContext<Response>> respondingCtxProvider = new Factory<ResponseProcessor
-                .RespondingContext<Response>>() {
+        private Provider<ResponseProcessor.RespondingContext<Response>> respondingCtxProvider =
+                new Provider<ResponseProcessor.RespondingContext<Response>>() {
 
-            @Override
-            public ResponseProcessor.RespondingContext<Response> get() throws ComponentException {
-                return new DefaultRespondingContext<Response>();
-            }
-        };
+                    @Override
+                    public ResponseProcessor.RespondingContext<Response> get() {
+                        return new DefaultRespondingContext<Response>();
+                    }
+                };
         @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
+        private Provider<ExceptionMappers> exceptionMappersProvider;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -278,16 +277,17 @@ public class CustomProcessingExecutorsProviderTest {
 
     @Test
     public void testCustomProcessingExecutors() throws Exception {
-        final Services services = init();
+        final ServiceLocator locator = init();
 
-        final RequestInvoker<String, Response> invoker = services.forContract(String2ResponseRequestInvokerBuilder.class).get()
-                .build(Stages.asStage(new Inflector<String, Response>() {
+        final RequestInvoker<String, Response> invoker =
+                Injections.getOrCreate(locator, String2ResponseRequestInvokerBuilder.class)
+                        .build(Stages.asStage(new Inflector<String, Response>() {
 
-                    @Override
-                    public Response apply(String data) {
-                        return Response.ok(Thread.currentThread().getName()).build();
-                    }
-                }));
+                            @Override
+                            public Response apply(String data) {
+                                return Response.ok(Thread.currentThread().getName()).build();
+                            }
+                        }));
 
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean passed = new AtomicBoolean(false);

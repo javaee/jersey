@@ -74,6 +74,9 @@ public class SecurityContextFilterTest extends JerseyTest {
         return new ResourceConfig(SecurityContextFilter.class, Resource.class);
     }
 
+    /**
+     * Test security context container request filter.
+     */
     public static class SecurityContextFilter implements ContainerRequestFilter {
 
         // TODO: won't work until we have proxiable scope
@@ -151,10 +154,10 @@ public class SecurityContextFilterTest extends JerseyTest {
         Assert.assertTrue(!entity.equals(PRINCIPAL_NAME));
     }
 
-    @Path("test")
     /**
      * Test resource class.
      */
+    @Path("test")
     public static class Resource {
 
         /**

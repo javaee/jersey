@@ -42,39 +42,37 @@ package org.glassfish.jersey.process.internal;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Aggregate {@link org.glassfish.jersey.spi.RequestExecutorsProvider request executors provider} and  {@link
- * org.glassfish.jersey.spi.ResponseExecutorsProvider response executors provider} used directly in the {@link RequestInvoker
- * request invoker} to get the pluggable processing executor services.
+ * Aggregate {@link org.glassfish.jersey.spi.RequestExecutorsProvider request executors provider} and
+ * {@link org.glassfish.jersey.spi.ResponseExecutorsProvider response executors provider} used directly in the
+ * {@link RequestInvoker request invoker} to get the pluggable processing executor services.
  *
  * @param <REQUEST> request data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Scoped(Singleton.class)
+@Singleton
 public abstract class ExecutorsFactory<REQUEST> {
-    private final Services services;
+    private final ServiceLocator locator;
 
     private static final Logger LOGGER = Logger.getLogger(ExecutorsFactory.class.getName());
 
     /**
      * Creates new instance.
      *
-     * @param services Injected HK2 services.
+     * @param locator Injected HK2 locator.
      */
-    public ExecutorsFactory(@Inject Services services) {
-        this.services = services;
+    public ExecutorsFactory(ServiceLocator locator) {
+        this.locator = locator;
     }
 
     /**
@@ -88,7 +86,7 @@ public abstract class ExecutorsFactory<REQUEST> {
      */
     protected ExecutorService getInitialRequestingExecutor(RequestExecutorsProvider defaultProvider) {
 
-        for (RequestExecutorsProvider provider : Providers.getAllProviders(services,
+        for (RequestExecutorsProvider provider : Providers.getAllProviders(locator,
                 RequestExecutorsProvider.class)) {
             final ExecutorService requestingExecutor = provider.getRequestingExecutor();
             if (requestingExecutor != null) {
@@ -110,12 +108,12 @@ public abstract class ExecutorsFactory<REQUEST> {
      * its executor will be returned. Otherwise executor of the {@code defaultProvider} is returned. The result is logged.
      *
      * @param defaultProvider Default provider which must return not-null executor. This provider will be used if no custom
-     *                       {@link ResponseExecutorsProvider response executor provider} is found.
+     *                        {@link ResponseExecutorsProvider response executor provider} is found.
      * @return {@link ExecutorService Responding executor}.
      */
     protected ExecutorService getInitialRespondingExecutor(ResponseExecutorsProvider defaultProvider) {
 
-        for (ResponseExecutorsProvider provider : Providers.getAllProviders(services,
+        for (ResponseExecutorsProvider provider : Providers.getAllProviders(locator,
                 ResponseExecutorsProvider.class)) {
             final ExecutorService respondingExecutor = provider.getRespondingExecutor();
             if (respondingExecutor != null) {

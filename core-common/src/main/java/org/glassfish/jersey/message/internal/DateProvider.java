@@ -43,12 +43,15 @@ import java.text.ParseException;
 import java.util.Date;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
+import javax.inject.Singleton;
+
 /**
  * {@code Date} {@link HeaderDelegateProvider header delegate provider}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class DateProvider implements HeaderDelegateProvider<Date> {
 
     @Override

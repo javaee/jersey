@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.multipart.webapp;
 
 import javax.ws.rs.ApplicationPath;
 
-import org.glassfish.jersey.media.multipart.MultiPartModule;
+import org.glassfish.jersey.media.multipart.MultiPartBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -54,7 +54,7 @@ public class MyApplication extends ResourceConfig {
         super();
 
         addClasses(MultiPartResource.class);
-        addModules(new MultiPartModule());
+        addBinders(new MultiPartBinder());
     }
 
 }

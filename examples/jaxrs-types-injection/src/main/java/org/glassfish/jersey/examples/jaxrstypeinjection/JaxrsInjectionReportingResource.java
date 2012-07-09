@@ -50,8 +50,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.jvnet.hk2.annotations.Inject;
-
 /**
  * Annotated resource.
  *
@@ -72,6 +70,7 @@ public class JaxrsInjectionReportingResource {
     public void setP2(PathSegment p2) {
         this.p2 = p2;
     }
+
     @QueryParam(value = "q1")
     private int q1;
     @QueryParam(value = "q2")
@@ -81,7 +80,7 @@ public class JaxrsInjectionReportingResource {
     @Path("method/{p1}/{p2}")
     public String doGet(
             @Context HttpHeaders httpHeaders,
-            @Inject UriInfo uriInfo,
+            @Context UriInfo uriInfo,
             @PathParam(value = "p1") String p1,
             @PathParam(value = "p2") PathSegment p2,
             @QueryParam(value = "q1") int q1,

@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -52,8 +53,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * {@link javax.ws.rs.ext.MessageBodyWriter} for {@link EventProcessor}.

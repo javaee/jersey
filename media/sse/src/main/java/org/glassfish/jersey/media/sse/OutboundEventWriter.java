@@ -49,13 +49,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import javax.inject.Inject;
+
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Writer for {@link OutboundEvent}.
@@ -70,7 +70,7 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
     }
 
     @Inject
-    private Services services;
+    private ServiceLocator locator;
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -85,7 +85,7 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
     @Override
     @SuppressWarnings("unchecked")
     public void writeTo(OutboundEvent outboundEvent, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-        final References references = services.forContract(Injector.class).get().inject(References.class);
+        final References references = Injections.getOrCreate(locator, References.class);
 
         if(outboundEvent.getComment() != null) {
             entityStream.write(String.format(": %s\n", outboundEvent.getComment()).getBytes());

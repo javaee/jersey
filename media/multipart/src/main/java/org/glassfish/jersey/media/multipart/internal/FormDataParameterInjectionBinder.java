@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.media.multipart.internal;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Simple ServiceFinder configuration module.
+ * Binder providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
  *
- * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link org.glassfish.hk2.HK2} service.
- *
- * @param <T> contract type.
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ServiceFinderModule<T> extends AbstractModule {
-
-    private final Class<T> contract;
-
-    /**
-     * Create a new service finder module.
-     *
-     * @param contract contract of the service providers bound by this module.
-     */
-    public ServiceFinderModule(Class<T> contract) {
-        this.contract = contract;
-    }
+public class FormDataParameterInjectionBinder extends AbstractBinder {
 
     @Override
-    public void configure() {
-        for (T t : ServiceFinder.find(contract)) {
-            bind(contract).toInstance(t);
-        }
+    protected void configure() {
+        bind(FormDataParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(FormDataParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormDataParam>>() {
+        }).in(Singleton.class);
     }
+
 }

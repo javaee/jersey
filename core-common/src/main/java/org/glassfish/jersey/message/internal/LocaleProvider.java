@@ -43,12 +43,15 @@ import java.text.ParseException;
 import java.util.Locale;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
+import javax.inject.Singleton;
+
 /**
  * {@code Locale} {@link HeaderDelegateProvider header delegate provider}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class LocaleProvider implements HeaderDelegateProvider<Locale> {
 
     @Override

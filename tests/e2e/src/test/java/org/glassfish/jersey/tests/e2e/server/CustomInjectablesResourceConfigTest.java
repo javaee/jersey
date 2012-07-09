@@ -48,18 +48,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
+import javax.inject.Inject;
 import javax.inject.Qualifier;
+import javax.inject.Singleton;
 
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import org.glassfish.hk2.api.AnnotationLiteral;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -70,18 +68,21 @@ import static org.junit.Assert.assertEquals;
  */
 public class CustomInjectablesResourceConfigTest extends JerseyTest {
 
-    public static class MyHK2Module implements Module {
+    public static class MyHK2Binder extends AbstractBinder {
 
         @Override
-        public void configure(BinderFactory binderFactory) {
+        protected void configure() {
             // request scope binding
-            binderFactory.bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+            bindAsContract(MyInjectablePerRequest.class).in(RequestScoped.class);
+
             // singleton binding
-            binderFactory.bind().to(MyInjectableSingleton.class).in(org.glassfish.hk2.scopes.Singleton.class);
+            bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
+
             // singleton instance binding
-            binderFactory.bind().toInstance(new MyInjectableSingleton());
+            bind(new MyInjectableSingleton()).to(MyInjectableSingleton.class);
+
             // request scope binding with specified custom annotation
-            binderFactory.bind().annotatedWith(MyAnnotation.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+            bindAsContract(MyInjectablePerRequest.class).qualifiedBy(new MyAnnotationImpl()).in(RequestScoped.class);
         }
     }
 
@@ -89,7 +90,7 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
         public int i = 0;
     }
 
-    @Scoped(Singleton.class)
+    @Singleton
     public static class MyInjectableSingleton {
         public int i = 0;
     }
@@ -99,6 +100,9 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     @Qualifier
     public static @interface MyAnnotation {
 
+    }
+
+    private static class MyAnnotationImpl extends AnnotationLiteral<MyAnnotation> implements MyAnnotation {
     }
 
     @Path("/")
@@ -137,36 +141,36 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     protected Application configure() {
         ResourceConfig rc = new ResourceConfig();
         rc.addClasses(Resource.class);
-        rc.addModules(new MyHK2Module());
+        rc.addBinders(new MyHK2Binder());
 
         return rc;
     }
 
     @Test
     public void testPerRequest() throws Exception {
-        final javax.ws.rs.client.WebTarget perrequest = target().path("perrequest");
+        final javax.ws.rs.client.WebTarget perRequest = target().path("perrequest");
 
-        assertEquals("1", perrequest.request().get(String.class));
-        assertEquals("1", perrequest.request().get(String.class));
-        assertEquals("1", perrequest.request().get(String.class));
+        assertEquals("1", perRequest.request().get(String.class));
+        assertEquals("1", perRequest.request().get(String.class));
+        assertEquals("1", perRequest.request().get(String.class));
     }
 
     @Test
     public void testSingleton() throws Exception {
-        final javax.ws.rs.client.WebTarget perrequest = target().path("singleton");
+        final javax.ws.rs.client.WebTarget perRequest = target().path("singleton");
 
-        assertEquals("1", perrequest.request().get(String.class));
-        assertEquals("2", perrequest.request().get(String.class));
-        assertEquals("3", perrequest.request().get(String.class));
+        assertEquals("1", perRequest.request().get(String.class));
+        assertEquals("2", perRequest.request().get(String.class));
+        assertEquals("3", perRequest.request().get(String.class));
     }
 
     @Test
     @Ignore
     public void testCustomAnnotation() throws Exception {
-        final javax.ws.rs.client.WebTarget perrequestCustomAnnotation = target().path("perrequestCustomAnnotation");
+        final javax.ws.rs.client.WebTarget perRequestCustomAnnotation = target().path("perrequestCustomAnnotation");
 
-        assertEquals("1", perrequestCustomAnnotation.request().get(String.class));
-        assertEquals("1", perrequestCustomAnnotation.request().get(String.class));
-        assertEquals("1", perrequestCustomAnnotation.request().get(String.class));
+        assertEquals("1", perRequestCustomAnnotation.request().get(String.class));
+        assertEquals("1", perRequestCustomAnnotation.request().get(String.class));
+        assertEquals("1", perRequestCustomAnnotation.request().get(String.class));
     }
 }

@@ -44,6 +44,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -57,6 +58,7 @@ import javax.ws.rs.ext.Provider;
  * @see MessageBodyWriter
  */
 @Provider
+@Singleton
 public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<?>> {
 
     @Override

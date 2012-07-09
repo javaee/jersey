@@ -48,6 +48,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
@@ -64,10 +66,6 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Sets;
@@ -87,7 +85,7 @@ final class MethodSelectingRouter implements Router {
 
     private static final Logger LOGGER = Logger.getLogger(MethodSelectingRouter.class.getName());
 
-    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+    private final Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
@@ -98,7 +96,7 @@ final class MethodSelectingRouter implements Router {
      */
     static class Builder {
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
         /**
          * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
@@ -118,7 +116,7 @@ final class MethodSelectingRouter implements Router {
     }
 
     private MethodSelectingRouter(
-            Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
+            Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
             MessageBodyWorkers msgWorkers,
             List<MethodAcceptorPair> methodAcceptorPairs) {
         this.respondingContextFactory = respondingContextFactory;

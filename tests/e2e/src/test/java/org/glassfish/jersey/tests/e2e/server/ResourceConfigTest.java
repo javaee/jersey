@@ -12,7 +12,7 @@ import javax.ws.rs.client.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
+import org.glassfish.jersey.media.json.JsonJaxbBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -100,14 +100,14 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     /**
-     * Application similar to the one that needs to register a custom {@code Module} to run properly and is supposed to be present
-     * in WAR files.
+     * Application similar to the one that needs to register a custom {@code Binder} to run properly
+     * and is supposed to be present in WAR files.
      */
     public static class Jersey1094 extends ResourceConfig {
 
         public Jersey1094() {
             addClasses(Resource.class);
-            addModules(new JsonJaxbModule());
+            addBinders(new JsonJaxbBinder());
         }
 
     }
@@ -124,7 +124,7 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     /**
-     * Tests whether the {@code ApplicationHandler} is able to register and use custom modules provided by an extension of
+     * Tests whether the {@code ApplicationHandler} is able to register and use custom binders provided by an extension of
      * {@code ResourceConfig} if only a class reference of this extension is passed in the {@code ResourceConfig} to the
      * {@code ApplicationHandler}.
      * <p/>

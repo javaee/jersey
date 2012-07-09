@@ -59,11 +59,10 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.message.XmlHeader;
-
-import org.glassfish.hk2.Factory;
 
 import org.xml.sax.InputSource;
 
@@ -133,7 +132,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(fp.get().isProperty(MessageProperties.XML_FORMAT_OUTPUT));
+                return Boolean.valueOf(fp.provide().isProperty(MessageProperties.XML_FORMAT_OUTPUT));
             }
         });
 
@@ -141,7 +140,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(fp.get().isProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
+                return Boolean.valueOf(fp.provide().isProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
             }
         });
     }

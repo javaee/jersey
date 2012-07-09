@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,7 +51,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
@@ -59,15 +63,11 @@ import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfa
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ContextResolvers;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.collect.Maps;
 
@@ -80,41 +80,42 @@ import com.google.common.collect.Maps;
 public class ContextResolverFactory implements ContextResolvers {
 
     /**
-     * Injection binding module defining {@link ContextResolverFactory} and
+     * Injection binder defining {@link ContextResolverFactory} and
      * {@link ContextResolvers} bindings.
      */
-    public static class Module extends AbstractModule {
+    public static class Binder extends AbstractBinder {
 
         private static class InjectionFactory extends ReferencingFactory<ContextResolvers> {
-
-            public InjectionFactory(@Inject Factory<Ref<ContextResolvers>> referenceFactory) {
+            @Inject
+            public InjectionFactory(Provider<Ref<ContextResolvers>> referenceFactory) {
                 super(referenceFactory);
+            }
+
+            @Override
+            @RequestScoped
+            public ContextResolvers provide() {
+                return super.provide();
             }
         }
 
         //
-        private final Class<? extends Scope> refScope;
+        private final Class<? extends Annotation> refScope;
 
         /**
-         * Create new context resolver factory injection bindings module.
+         * Create new context resolver factory injection binder.
          *
          * @param refScope scope of the {@link Ref Ref&lt;ContextResolvers&gt;} value
          *                 injection.
          */
-        public Module(Class<? extends Scope> refScope) {
+        public Binder(Class<? extends Annotation> refScope) {
             this.refScope = refScope;
         }
 
         @Override
         protected void configure() {
-            bind(ContextResolvers.class)
-                    .toFactory(InjectionFactory.class)
-                    .in(RequestScope.class);
-
-            bind(new TypeLiteral<Ref<ContextResolvers>>() {
-            })
-                    .toFactory(ReferencingFactory.<ContextResolvers>referenceFactory())
-                    .in(refScope);
+            bindFactory(InjectionFactory.class).to(ContextResolvers.class).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<ContextResolvers>referenceFactory()).to(new TypeLiteral<Ref<ContextResolvers>>() {
+            }).in(refScope);
         }
     }
 
@@ -126,13 +127,13 @@ public class ContextResolverFactory implements ContextResolvers {
      * Create new context resolver factory backed by the supplied {@link ProviderBinder
      * service providers}.
      *
-     * @param services HK2 services.
+     * @param locator HK2 service locator.
      */
-    public ContextResolverFactory(Services services) {
+    public ContextResolverFactory(ServiceLocator locator) {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        List<ContextResolver> providers = Providers.getAllProviders(services, ContextResolver.class);
+        List<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
         for (ContextResolver provider : providers) {
             List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 

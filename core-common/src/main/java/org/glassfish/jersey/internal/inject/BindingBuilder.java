@@ -37,51 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
-
-import javax.ws.rs.core.ExecutionContext;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-
-import org.jvnet.hk2.annotations.Inject;
+package org.glassfish.jersey.internal.inject;
 
 /**
- * Jersey processing framework bindings configuration module.
+ * Base binding builder (marker) interface.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingModule extends AbstractModule {
-
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
-
-        public InvocationContextReferencingFactory(@Inject Factory<Ref<InvocationContext>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    @Override
-    protected void configure() {
-        // Invocation context
-        bind().to(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(InvocationContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(ExecutionContext.class).toFactory(InvocationContextReferencingFactory.class).in(RequestScope.class);
-        bind(new TypeLiteral<Ref<InvocationContext>>() {
-        })
-                .toFactory(ReferencingFactory.<InvocationContext>referenceFactory()).in(RequestScope.class);
-
-
-        // Responding context
-        // TODO remove this
-        //    bind(new TypeLiteral<ResponseProcessor.RespondingContext<Response>>() {
-        //     }).to(new TypeLiteral<DefaultRespondingContext<Response>>() {
-        //     }).in(RequestScope.class);
-
-        //      bind(new TypeLiteral<ResponseProcessor.Builder<Response>>() {
-        //      }).to(ResponseProcessor.ResponseBuilder.class).in(Singleton.class);
-    }
+public interface BindingBuilder<T> {
 }

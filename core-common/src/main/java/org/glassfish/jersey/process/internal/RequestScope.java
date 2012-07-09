@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.process.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -46,13 +47,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 
-import org.glassfish.hk2.Provider;
-import org.glassfish.hk2.Scope;
-import org.glassfish.hk2.ScopeInstance;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Context;
+import org.glassfish.hk2.api.ServiceHandle;
 
 import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkState;
@@ -128,26 +131,69 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class RequestScope implements Scope {
+@Singleton
+public class RequestScope implements Context<RequestScoped> {
 
     private static final ExtendedLogger logger = new ExtendedLogger(Logger.getLogger(RequestScope.class.getName()), Level.FINEST);
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            final RequestScope requestScope = new RequestScope();
-            bind(RequestScope.class).toInstance(requestScope);
-        }
-    }
 
     /**
      * A thread local copy of the current scope instance.
      */
-    private final ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<Instance>();
+    private ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<Instance>();
 
     @Override
-    public ScopeInstance current() {
+    public Class<? extends Annotation> getScope() {
+        return RequestScoped.class;
+    }
+
+    @Override
+    public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
+        Instance instance = current();
+
+        U retVal = instance.get(activeDescriptor);
+        if (retVal == null) {
+            retVal = activeDescriptor.create(root);
+            instance.put(activeDescriptor, retVal);
+        }
+        return retVal;
+    }
+
+    @Override
+    public boolean containsKey(ActiveDescriptor<?> descriptor) {
+        Instance instance = current();
+        return instance.contains(descriptor);
+    }
+
+    @Override
+    public boolean supportsNullCreation() {
+        return true;
+    }
+
+    public <U> U find(ActiveDescriptor<U> activeDescriptor) {
+        Instance instance = current();
+
+        return instance.get(activeDescriptor);
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
+    }
+
+    @Override
+    public void shutdown() {
+        currentScopeInstance = null;
+    }
+
+    public static class Binder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(new RequestScope()).to(RequestScope.class);
+        }
+    }
+
+    public Instance current() {
         Instance scopeInstance = currentScopeInstance.get();
         checkState(scopeInstance != null, "Not inside a request scope.");
         return scopeInstance;
@@ -371,7 +417,7 @@ public class RequestScope implements Scope {
     /**
      * Implementation of the request scope instance.
      */
-    public static final class Instance implements ScopeInstance {
+    public static final class Instance {
         /*
          * Scope instance UUID.
          *
@@ -383,14 +429,14 @@ public class RequestScope implements Scope {
         /**
          * A map of injectable instances in this scope.
          */
-        private final Map<Provider<?>, Object> store;
+        private final Map<ActiveDescriptor<?>, Object> store;
         /**
          * Holds the number of snapshots of this scope.
          */
         private final AtomicInteger referenceCounter;
 
         private Instance() {
-            this.store = new HashMap<Provider<?>, Object>();
+            this.store = new HashMap<ActiveDescriptor<?>, Object>();
             this.referenceCounter = new AtomicInteger(1);
         }
 
@@ -400,27 +446,23 @@ public class RequestScope implements Scope {
             return this;
         }
 
-        @Override
         @SuppressWarnings("unchecked")
-        public <T> T get(Provider<T> inhabitant) {
+        public <T> T get(ActiveDescriptor<T> inhabitant) {
             return (T) store.get(inhabitant);
         }
 
-        @Override
         @SuppressWarnings("unchecked")
-        public <T> T put(Provider<T> inhabitant, T value) {
-            checkState(!store.containsKey(inhabitant), "An instance for the provider %s was "
-                    + "already seeded in this scope. Old instance: %s New instance: %s", inhabitant, store.get(inhabitant), value);
+        public <T> T put(ActiveDescriptor<T> descriptor, T value) {
+            checkState(!store.containsKey(descriptor), "An instance for the descriptor %s was "
+                    + "already seeded in this scope. Old instance: %s New instance: %s", descriptor, store.get(descriptor), value);
 
-            return (T) store.put(inhabitant, value);
+            return (T) store.put(descriptor, value);
         }
 
-        @Override
-        public <T> boolean contains(Provider<T> provider) {
+        public <T> boolean contains(ActiveDescriptor<T> provider) {
             return store.containsKey(provider);
         }
 
-        @Override
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {

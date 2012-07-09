@@ -43,7 +43,7 @@ import java.util.List;
 
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
-import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Resource method dispatcher provider that creates factories for method parameter
@@ -55,6 +55,6 @@ class MethodParamDispatcherProvider extends AbstractJavaResourceMethodDispatcher
 
     @Override
     protected List<Factory<?>> createValueProviders(final Invocable invocableResourceMethod) {
-        return ParameterValueHelper.createValueProviders(getServices(), invocableResourceMethod);
+        return ParameterValueHelper.createValueProviders(getServiceLocator(), invocableResourceMethod);
     }
 }

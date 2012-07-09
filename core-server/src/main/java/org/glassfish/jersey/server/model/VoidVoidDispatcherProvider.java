@@ -41,15 +41,12 @@ package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.InvocationHandler;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Scoped;
 
 /**
  * Specific resource method dispatcher for dispatching requests to a void
@@ -59,7 +56,7 @@ import org.jvnet.hk2.annotations.Scoped;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Scoped(Singleton.class)
+@Singleton
 final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {

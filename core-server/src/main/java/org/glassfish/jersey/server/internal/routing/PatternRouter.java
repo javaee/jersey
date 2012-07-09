@@ -45,9 +45,8 @@ import java.util.regex.Pattern;
 
 import org.glassfish.jersey.server.ContainerRequest;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Matches the un-matched right-hand request path to a configured {@link Pattern pattern}.
@@ -66,7 +65,7 @@ class PatternRouter implements Router {
     public static class Builder {
 
         @Inject
-        private Factory<RoutingContext> contextProvider;
+        private Provider<RoutingContext> contextProvider;
 
         /**
          * Build a pattern request router.
@@ -80,10 +79,10 @@ class PatternRouter implements Router {
         }
     }
 
-    private final Factory<RoutingContext> contextProvider;
+    private final Provider<RoutingContext> contextProvider;
     private final List<Route<Pattern>> acceptedRoutes;
 
-    private PatternRouter(Factory<RoutingContext> contextProvider,
+    private PatternRouter(Provider<RoutingContext> contextProvider,
                           List<Route<Pattern>> routes) {
 
         this.contextProvider = contextProvider;

@@ -40,7 +40,8 @@
 package org.glassfish.jersey.server.spi;
 
 import java.util.Set;
-import org.glassfish.hk2.Services;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Component provider interface to allow custom management of 3rd party
@@ -60,20 +61,20 @@ public interface ComponentProvider {
 
 
     /**
-     * Initializes the component provider with a reference to a HK2 services
+     * Initializes the component provider with a reference to a HK2 service locator
      * instance, which will get used in the application to manage individual components.
-     * Providers should keep a reference to the HK2 services for later use.
+     * Providers should keep a reference to the HK2 service locator for later use.
      * This method will be invoked prior to any bind method calls.
-     * The services parameter will not be fully initialized at the time of invocation
+     * The service locator parameter will not be fully initialized at the time of invocation
      * and should be used as a reference only.
      *
-     * @param services an HK2 services instance, which will get used by the Jersey application
+     * @param locator an HK2 service locator.
      */
-    public void initialize(final Services services);
+    public void initialize(final ServiceLocator locator);
 
     /**
      * Jersey will invoke this method before binding of each component class internally
-     * during initialization of it's HK2 services.
+     * during initialization of it's HK2 service locator.
      *
      * If the component provider wants to bind the component class
      * itself, it must do so and return true. In that case, Jersey will not

@@ -45,22 +45,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
+ * Default Jersey byte array entity provider (reader and writer).
  *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Produces({"application/octet-stream", "*/*"})
 @Consumes({"application/octet-stream", "*/*"})
 public final class ByteArrayProvider extends AbstractMessageReaderWriterProvider<byte[]> {
-
-    public boolean supports(Class type) {
-        return type == byte[].class;
-    }
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {

@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -60,9 +61,8 @@ import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.internal.LocalizationMessages;
-
-import org.glassfish.hk2.Factory;
 
 /**
  * Base XML-based message body reader for JAXB beans.
@@ -97,6 +97,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
      */
     @Produces("application/xml")
     @Consumes("application/xml")
+    @Singleton
     public static final class App extends XmlRootObjectJaxbProvider {
 
         public App(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -110,6 +111,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
      */
     @Produces("text/xml")
     @Consumes("text/xml")
+    @Singleton
     public static final class Text extends XmlRootObjectJaxbProvider {
 
         public Text(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -123,6 +125,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
      */
     @Produces("*/*")
     @Consumes("*/*")
+    @Singleton
     public static final class General extends XmlRootObjectJaxbProvider {
 
         public General(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -154,7 +157,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
             InputStream entityStream) throws IOException {
         try {
             return getUnmarshaller(type, mediaType).
-                    unmarshal(getSAXSource(spf.get(), entityStream));
+                    unmarshal(getSAXSource(spf.provide(), entityStream));
         } catch (UnmarshalException ex) {
             throw new WebApplicationException(ex, Status.BAD_REQUEST);
         } catch (JAXBException ex) {

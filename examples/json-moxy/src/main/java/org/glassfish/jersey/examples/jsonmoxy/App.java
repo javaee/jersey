@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
+import org.glassfish.jersey.media.json.JsonMoxyBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -75,7 +75,7 @@ public class App {
 
     public static ResourceConfig createApp() {
         final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addModules(new JsonMoxyModule());
+                .packages("org.glassfish.jersey.examples.jsonmoxy").addBinders(new JsonMoxyBinder());
 
         return rc;
     }

@@ -50,13 +50,16 @@ import java.util.Date;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.hk2.inject.Injector;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Container of several different {@link StringValueReaderProvider string reader provider}
@@ -66,6 +69,7 @@ import org.glassfish.jersey.spi.StringValueReaderProvider;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 class StringReaderProviders {
 
     private static abstract class AbstractStringReader<T> implements StringValueReader<T> {
@@ -97,6 +101,7 @@ class StringReaderProviders {
      * Provider of string readers that produce the target Java type instance
      * by invoking a single {@code String} parameter constructor on the target type.
      */
+    @Singleton
     public static class StringConstructor implements StringValueReaderProvider {
 
         @Override
@@ -117,6 +122,7 @@ class StringReaderProviders {
      * Provider of string readers that produce the target Java type instance
      * by invoking a static {@code valueOf(String)} method on the target type.
      */
+    @Singleton
     public static class TypeValueOf implements StringValueReaderProvider {
 
         @Override
@@ -137,6 +143,7 @@ class StringReaderProviders {
      * Provider of string readers that produce the target Java type instance
      * by invoking a static {@code fromString(String)} method on the target type.
      */
+    @Singleton
     public static class TypeFromString implements StringValueReaderProvider {
 
         @Override
@@ -157,6 +164,7 @@ class StringReaderProviders {
      * Provider of string readers that produce the target Java {@link Enum enum} type instance
      * by invoking a static {@code fromString(String)} method on the target enum type.
      */
+    @Singleton
     public static class TypeFromStringEnum extends TypeFromString {
 
         @Override
@@ -171,6 +179,7 @@ class StringReaderProviders {
      * {@link Date} instance using conversion method from the
      * {@link HttpDateFormat http date formatter} utility class.
      */
+    @Singleton
     public static class DateProvider implements StringValueReaderProvider {
 
         @Override
@@ -189,18 +198,19 @@ class StringReaderProviders {
         }
     }
 
+    @Singleton
     public static class AggregatedProvider implements StringValueReaderProvider {
 
         final StringValueReaderProvider[] providers;
 
-        public AggregatedProvider(@Context Injector injector) {
+        public AggregatedProvider(@Context ServiceLocator locator) {
             providers = new StringValueReaderProvider[]{
-                injector.inject(TypeFromStringEnum.class),
-                injector.inject(TypeValueOf.class),
-                injector.inject(TypeFromString.class),
-                injector.inject(StringConstructor.class),
-                injector.inject(DateProvider.class),
-                injector.inject(JaxbStringReaderProvider.RootElementProvider.class)
+                locator.createAndInitialize(TypeFromStringEnum.class),
+                locator.createAndInitialize(TypeValueOf.class),
+                locator.createAndInitialize(TypeFromString.class),
+                locator.createAndInitialize(StringConstructor.class),
+                locator.createAndInitialize(DateProvider.class),
+                locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
             };
         }
 

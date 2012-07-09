@@ -42,6 +42,7 @@ package org.glassfish.jersey.examples.httpsclientservergrizzly;
 import java.io.IOException;
 import java.security.Principal;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -53,10 +54,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.server.ContainerRequest;
-
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Simple authentication filter.
@@ -70,7 +67,7 @@ import org.jvnet.hk2.annotations.Inject;
 public class SecurityFilter implements ContainerRequestFilter {
 
     @Inject
-    Factory<UriInfo> uriInfo;
+    javax.inject.Provider<UriInfo> uriInfo;
     private static final String REALM = "HTTPS Example authentication";
 
     @Override

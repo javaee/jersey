@@ -28,7 +28,7 @@ public class Main {
         // support for JSON on the service (you also have to uncomment
         // dependency on jersey-media-json module in pom.xml)
         // --
-        // rc.addModule(org.glassfish.jersey.media.json.JsonJaxbModule);
+        // rc.addBinder(org.glassfish.jersey.media.json.JsonJaxbBinder);
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI

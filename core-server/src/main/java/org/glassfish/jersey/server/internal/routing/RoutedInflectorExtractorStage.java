@@ -45,9 +45,8 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
-import org.glassfish.hk2.Factory;
-
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Request pre-processing stage that {@link RoutingContext#getInflector() extracts
@@ -63,14 +62,15 @@ import org.jvnet.hk2.annotations.Inject;
  * @see RoutingStage
  */
 public class RoutedInflectorExtractorStage implements Stage<ContainerRequest> {
-    private final Factory<RoutingContext> routingContextFactory;
+    private final Provider<RoutingContext> routingContextFactory;
 
     /**
      * Create new inflector extracting acceptor.
      *
      * @param routingContextFactory accepting context factory;
      */
-    public RoutedInflectorExtractorStage(@Inject Factory<RoutingContext> routingContextFactory) {
+    @Inject
+    public RoutedInflectorExtractorStage(Provider<RoutingContext> routingContextFactory) {
         this.routingContextFactory = routingContextFactory;
     }
 

@@ -66,7 +66,7 @@ import javax.xml.bind.JAXBContext;
 
 import org.glassfish.jersey.media.json.JsonJaxbContext;
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
+import org.glassfish.jersey.media.json.JsonJaxbBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.codehaus.jettison.json.JSONArray;
@@ -138,7 +138,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addModules(new JsonJaxbModule());
+        return ((ResourceConfig) super.configure()).addBinders(new JsonJaxbBinder());
     }
 
     @Override

@@ -53,7 +53,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.StringValueReader;
 
-import org.jvnet.hk2.annotations.Inject;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Implementation of {@link MultivaluedParameterExtractorProvider}. For each
@@ -64,6 +65,7 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 final class MultivaluedParameterExtractorFactory implements MultivaluedParameterExtractorProvider {
 
     private final StringReaderFactory stringReaderFactory;
@@ -73,7 +75,8 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
      *
      * @param stringReaderFactory string readers factory.
      */
-    public MultivaluedParameterExtractorFactory(@Inject StringReaderFactory stringReaderFactory) {
+    @Inject
+    public MultivaluedParameterExtractorFactory(StringReaderFactory stringReaderFactory) {
         this.stringReaderFactory = stringReaderFactory;
     }
 

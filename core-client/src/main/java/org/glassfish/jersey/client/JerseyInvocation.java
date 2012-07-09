@@ -59,8 +59,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
-
-import org.jvnet.tiger_types.Types;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -88,9 +87,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         /**
          * Create new Jersey-specific client invocation builder.
          *
-         * @param uri invoked request URI.
+         * @param uri           invoked request URI.
          * @param configuration Jersey client configuration.
-         * @param client Jersey client that will process the invocation.
+         * @param client        Jersey client that will process the invocation.
          */
         protected Builder(URI uri, JerseyConfiguration configuration, JerseyClient client) {
             this.requestContext = new ClientRequest(uri, client, configuration, new MapPropertiesDelegate());
@@ -648,8 +647,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
-        final Type callbackType = Types.getTypeArgument(callback.getClass(), 0);
-        final Class<T> rawType = Types.erasure(callbackType);
+        final Type callbackType = ReflectionHelper.getTypeArgument(callback.getClass(), 0);
+        final Class<T> rawType = ReflectionHelper.erasure(callbackType);
 
         requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
 

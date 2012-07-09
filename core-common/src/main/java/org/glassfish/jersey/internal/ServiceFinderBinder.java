@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,48 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.internal;
 
-import javax.ws.rs.core.SecurityContext;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 /**
- * {@link SecurityContext Security Context} HK2 Module.
+ * Simple ServiceFinder injection binder.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Looks for all implementations of a given contract using {@link ServiceFinder}
+ * and registers found instances to {@link org.glassfish.hk2.api.ServiceLocator}.
+ *
+ * @param <T> contract type.
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+public class ServiceFinderBinder<T> extends AbstractBinder {
 
-// TODO: (MM) this module is wrong - the SecurityContext should be taken from the ContainerRequestContext
-// TODO: when I tried to fix this by creating Factory<SecurityContext> that injects ContainerRequest and calls
-// TODO: getSecurityContext() on it, HK2 suddenly started to inject my SecurityContextFactory into
-// TODO: ResourceMethodInvoker.Builder.invocationContextFactory.
-class SecurityContextModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(SecurityContext.class).toFactory(SecurityContextReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<SecurityContext>>() {
-        }).toFactory(ReferencingFactory.<SecurityContext>referenceFactory()).in(RequestScope.class);
-
-    }
+    private final Class<T> contract;
 
     /**
-     * Referencing factory for SecurityContext.
+     * Create a new service finder injection binder.
+     *
+     * @param contract contract of the service providers bound by this binder.
      */
-    private static class SecurityContextReferencingFactory extends ReferencingFactory<SecurityContext> {
+    public ServiceFinderBinder(Class<T> contract) {
+        this.contract = contract;
+    }
 
-        public SecurityContextReferencingFactory(@Inject Factory<Ref<SecurityContext>> referenceFactory) {
-            super(referenceFactory);
+    @Override
+    public void configure() {
+        for (T t : ServiceFinder.find(contract)) {
+            bind(t).to(contract);
         }
     }
 }

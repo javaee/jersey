@@ -50,18 +50,18 @@ import java.util.regex.Pattern;
  * on various strings.  These inflections will be useful in code generators that
  * convert things like database table names into Java class names.</p>
  *
- * <p>The <code>getInstance()</code> method returns a singleton instance of
+ * <p>The {@code getInstance()} method returns a singleton instance of
  * this class with a default set of rules, which can then be customized.
  * Rules added during customization will take precedence over the standard ones.
- * Use the <code>addIrregular()</code>, <code>addPlural()</code>, <code>addSingular()</code>,
- * and <code>addUncountable()</code> methods to add additional rules ot the default
+ * Use the {@code addIrregular()}, {@code addPlural()}, {@code addSingular()},
+ * and {@code addUncountable()} methods to add additional rules ot the default
  * ones.</p>
  *
  * <p><strong>IMPLEMENTATION NOTE</strong> - The default implementation is
- * intended to be functionally compatible with the <code>Inflector::inflections</code>
- * class in Ruby on Rails.  The <code>gsub()</code> method on Ruby strings
+ * intended to be functionally compatible with the {@code Inflector::inflections}
+ * class in Ruby on Rails.  The {@code gsub()} method on Ruby strings
  * matches regular expressions anywhere in the input.  However, nearly all of
- * the actual patterns used in this module use <code>$</code> at the end to
+ * the actual patterns used in this component use {@code $} at the end to
  * match the end of the input string (so that only the last word in a multiple
  * word phrase will be singularized or pluralized).  Therefore, the Java versions
  * of the regular expressions have been modified to capture all text before the
@@ -171,7 +171,7 @@ final class NounInflector {
     // ------------------------------------------------------ Instance Variables
     // ---------------------------------------------------------- Static Methods
     /**
-     * <p>Return a fully configured {@link Inflector} instance that can be used
+     * <p>Return a fully configured {@link NounInflector} instance that can be used
      * for performing transformations.</p>
      */
     public static NounInflector getInstance() {

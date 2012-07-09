@@ -68,8 +68,8 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.media.json.JsonMoxyBinder;
 import org.glassfish.jersey.media.json.JsonMoxyFeature;
-import org.glassfish.jersey.media.json.JsonMoxyModule;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Ignore;
@@ -137,7 +137,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addModules(new JsonMoxyModule());
+        return ((ResourceConfig) super.configure()).addBinders(new JsonMoxyBinder());
     }
 
     @Override

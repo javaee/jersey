@@ -37,36 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.multipart;
+package org.glassfish.jersey.internal.inject;
 
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionModule;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
-import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
-
-import org.glassfish.hk2.scopes.Singleton;
+import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
- * Module with Multipart providers.
- *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * Custom annotation implementation
  */
-public class MultiPartModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        install(new FormDataParameterInjectionModule(), new MultiPartProperties.Module());
-
-        // Reader.
-        bind().to(MultiPartReaderServerSide.class).in(Singleton.class);
-        bind(MessageBodyReader.class).to(MultiPartReaderServerSide.class);
-
-        // Writer.
-        bind().to(MultiPartWriter.class).in(Singleton.class);
-        bind(MessageBodyWriter.class).to(MultiPartWriter.class);
-    }
-
+public class CustomAnnotationImpl extends AnnotationLiteral<Custom> implements Custom {
 }

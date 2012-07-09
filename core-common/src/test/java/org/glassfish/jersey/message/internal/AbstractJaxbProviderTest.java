@@ -52,22 +52,21 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.glassfish.hk2.Services;
-
+import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.Before;
 import org.junit.Test;
 
 public class AbstractJaxbProviderTest {
-    private Services services;
+    private ServiceLocator serviceLocator;
 
     @Before
     public void setUp() {
-        services = SaxParserFactoryInjectionProviderTest.createServices();
+        serviceLocator = SaxParserFactoryInjectionProviderTest.createServiceLocator();
     }
 
     @Test
     public void abstractJaxbProviderDoesNotReadExternalDtds() throws Exception {
-        SAXParserFactory spf = services.forContract(SAXParserFactory.class).get();
+        SAXParserFactory spf = serviceLocator.getService(SAXParserFactory.class);
 
         String url = "file:///no-such-file";
         String s = "<!DOCTYPE x SYSTEM '" + url + "'><x/>";

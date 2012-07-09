@@ -49,8 +49,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.spi.PerLookup;
-import org.glassfish.jersey.spi.Singleton;
 
 import org.junit.Ignore;
 import org.junit.Test;

@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbModule;
+import org.glassfish.jersey.media.json.JsonJaxbBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -81,7 +81,7 @@ public class App {
 
     public static ResourceConfig createApp() {
         final ResourceConfig rc = new ResourceConfig(ChangeList.class, JAXBContextResolver.class)
-                .addModules(new JsonJaxbModule());
+                .addBinders(new JsonJaxbBinder());
 
         return rc;
     }

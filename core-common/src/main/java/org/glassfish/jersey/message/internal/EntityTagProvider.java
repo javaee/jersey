@@ -41,6 +41,7 @@ package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.EntityTag;
 
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
@@ -52,6 +53,7 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader.Event;
  * @author Marc Hadley
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 public class EntityTagProvider implements HeaderDelegateProvider<EntityTag> {
 
     @Override

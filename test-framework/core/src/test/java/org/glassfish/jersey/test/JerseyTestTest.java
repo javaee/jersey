@@ -39,19 +39,20 @@
  */
 package org.glassfish.jersey.test;
 
-import org.glassfish.hk2.BinderFactory;
-import org.glassfish.hk2.Module;
+import java.net.URI;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import java.net.URI;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -96,18 +97,18 @@ public class JerseyTestTest {
         }
     }
 
-    public static class MyModule implements Module {
+    public static class MyBinder extends AbstractBinder {
 
         @Override
-        public void configure(BinderFactory binderFactory) {
-            binderFactory.bind(TestContainerFactory.class).to(MyTestContainerFactory.class);
+        public void configure() {
+            bind(MyTestContainerFactory.class).to(TestContainerFactory.class);
         }
     }
 
     private static class MyJerseyTest extends JerseyTest {
 
         private MyJerseyTest() throws TestContainerException {
-            super(new ResourceConfig(MyResource.class).addModules(new MyModule()));
+            super(new ResourceConfig(MyResource.class).addBinders(new MyBinder()));
         }
     }
 

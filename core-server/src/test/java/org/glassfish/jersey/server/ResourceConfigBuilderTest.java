@@ -106,7 +106,7 @@ public class ResourceConfigBuilderTest {
         };
 
         ApplicationHandler ah = new ApplicationHandler(application);
-        assertTrue(ah.getServices().forContract(Application.class).get().equals(application));
+        assertTrue(ah.getServiceLocator().getService(Application.class).equals(application));
     }
 
     /**

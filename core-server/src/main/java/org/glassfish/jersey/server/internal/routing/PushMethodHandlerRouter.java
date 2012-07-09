@@ -39,14 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.MethodHandler;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Terminal router that pushes the matched method's handler instance to the stack
@@ -62,11 +61,11 @@ class PushMethodHandlerRouter implements Router {
     static class Builder {
 
         @Inject
-        private Factory<RoutingContext> routingContextFactory;
+        private Provider<RoutingContext> routingContextFactory;
         @Inject
-        private Injector injector;
+        private ServiceLocator injector;
         @Inject
-        private Services services;
+        private ServiceLocator locator;
 
         /**
          * Build a new {@link PushMethodHandlerRouter} instance.
@@ -77,22 +76,22 @@ class PushMethodHandlerRouter implements Router {
          * @return new {@code PushMethodHandlerRouter} instance.
          */
         public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next) {
-            return new PushMethodHandlerRouter(routingContextFactory, services, methodHandler, next);
+            return new PushMethodHandlerRouter(routingContextFactory, locator, methodHandler, next);
         }
 
     }
 
-    private final Services services;
-    private final Factory<RoutingContext> routingContextFactory;
+    private final ServiceLocator locator;
+    private final Provider<RoutingContext> routingContextFactory;
     private final MethodHandler methodHandler;
     private final Router next;
 
     private PushMethodHandlerRouter(
-            final Factory<RoutingContext> routingContextFactory,
-            final Services services,
+            final Provider<RoutingContext> routingContextFactory,
+            final ServiceLocator locator,
             final MethodHandler methodHandler,
             final Router next) {
-        this.services = services;
+        this.locator = locator;
         this.routingContextFactory = routingContextFactory;
         this.methodHandler = methodHandler;
         this.next = next;
@@ -100,7 +99,7 @@ class PushMethodHandlerRouter implements Router {
 
     @Override
     public Continuation apply(final ContainerRequest request) {
-        Object handlerInstance = methodHandler.getInstance(services);
+        Object handlerInstance = methodHandler.getInstance(locator);
         routingContextFactory.get().pushMatchedResource(handlerInstance);
 
         return Continuation.of(request, next);

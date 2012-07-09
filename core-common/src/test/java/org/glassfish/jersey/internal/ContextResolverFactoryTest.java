@@ -39,24 +39,25 @@
  */
 package org.glassfish.jersey.internal;
 
-import com.google.common.collect.Sets;
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.junit.Before;
-import org.junit.Test;
-
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Injections;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
+import org.junit.Before;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.google.common.collect.Sets;
+
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ContextResolverFactoryTest {
@@ -108,16 +109,16 @@ public class ContextResolverFactoryTest {
         }
     }
 
-    private static class Module extends AbstractModule {
+    private static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(ContextResolver.class).to(CustomStringResolver.class);
-            bind(ContextResolver.class).to(CustomIntegerResolverA.class);
-            bind(ContextResolver.class).to(CustomIntegerResolverB.class);
+            bind(CustomStringResolver.class).to(ContextResolver.class);
+            bind(CustomIntegerResolverA.class).to(ContextResolver.class);
+            bind(CustomIntegerResolverB.class).to(ContextResolver.class);
         }
     }
-    //
+
     private ContextResolverFactory crf;
 
     public ContextResolverFactoryTest() {
@@ -126,11 +127,11 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final Services services = HK2.get().create(null, new Module(), new ProviderBinder.ProviderBinderModule());
-        final ProviderBinder providerBinder = services.forContract(ProviderBinder.class).get();
+        final ServiceLocator locator = Injections.createLocator(new Binder(), new ProviderBinder.ProviderBinderBinder());
+        final ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(CustomIntegerResolverC.class));
 
-        crf = new ContextResolverFactory(services);
+        crf = new ContextResolverFactory(locator);
     }
 
     @Test

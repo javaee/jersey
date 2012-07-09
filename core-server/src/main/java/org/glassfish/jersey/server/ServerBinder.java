@@ -47,62 +47,78 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ProviderBinder;
-import org.glassfish.jersey.internal.ServiceFinderModule;
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.MessagingModules;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
+import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingBinder;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
-import org.glassfish.jersey.server.internal.inject.CloseableServiceModule;
-import org.glassfish.jersey.server.internal.inject.ParameterInjectionModule;
-import org.glassfish.jersey.server.internal.routing.RouterModule;
+import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
+import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
+import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
-import org.glassfish.jersey.server.model.ResourceModelModule;
+import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-import org.glassfish.hk2.scopes.Singleton;
-
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
- * Server injection binding configuration module.
+ * Server injection binder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ServerModule extends AbstractModule {
+public class ServerBinder extends AbstractBinder {
 
     private static class RequestReferencingFactory extends ReferencingFactory<Request> {
-
-        public RequestReferencingFactory(@Inject Factory<Ref<Request>> referenceFactory) {
+        @Inject
+        public RequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
-
-        public HttpHeadersReferencingFactory(@Inject Factory<Ref<HttpHeaders>> referenceFactory) {
+        @Inject
+        public HttpHeadersReferencingFactory(Provider<Ref<HttpHeaders>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
-
-        public RequestContextInjectionFactory(@Inject Factory<Ref<ContainerRequest>> referenceFactory) {
+        @Inject
+        public RequestContextInjectionFactory(Provider<Ref<ContainerRequest>> referenceFactory) {
             super(referenceFactory);
+        }
+
+        @Override
+        @RequestScoped
+        public ContainerRequest provide() {
+            return super.provide();
         }
     }
 
@@ -115,9 +131,9 @@ public class ServerModule extends AbstractModule {
         @Inject
         private ResponseProcessor.Builder<ContainerResponse> responseProcessorBuilder;
         @Inject
-        private Factory<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
         @Inject
-        private ServerExecutorsFactory executorsFactory;
+        private ExecutorsFactory<ContainerRequest> executorsFactory;
 
         /**
          * Build a new {@link org.glassfish.jersey.process.internal.RequestInvoker request invoker} configured to use
@@ -155,7 +171,6 @@ public class ServerModule extends AbstractModule {
 
     }
 
-
     /**
      * Injection-enabled client side {@link ResponseProcessor} instance builder.
      */
@@ -163,11 +178,11 @@ public class ServerModule extends AbstractModule {
         @Inject
         private RequestScope requestScope;
         @Inject
-        private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingCtxProvider;
+        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingCtxProvider;
         @Inject
-        private Factory<ExceptionMappers> exceptionMappersProvider;
+        private Provider<ExceptionMappers> exceptionMappersProvider;
         @Inject
-        private Factory<ContainerRequest> requestContextFactory;
+        private Provider<ContainerRequest> requestContextFactory;
 
         /**
          * Default constructor meant to be used by injection framework.
@@ -203,55 +218,52 @@ public class ServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new RequestScope.Module(), // must go first as it registers the request scope instance.
-                new ProcessingModule(),
-                new ContextInjectionResolver.Module(),
-                new MessagingModules.MessageBodyProviders(),
-                new ProviderBinder.ProviderBinderModule(),
-                new MessageBodyFactory.Module(Singleton.class),
-                new ExceptionMapperFactory.Module(Singleton.class),
-                new ContextResolverFactory.Module(Singleton.class),
-                new JaxrsProviders.Module(),
-                new ContainerFilteringStage.Module(),
-                new SecurityContextModule(),
-                new ParameterInjectionModule(),
-                new ResourceModelModule(),
-                new RouterModule(),
-                new ServiceFinderModule<ContainerProvider>(ContainerProvider.class),
-                new CloseableServiceModule(),
-                new SingletonResourceBinder.SingletonResourceBinderModule(),
-                new ServerExecutorsFactory.ServerExecutorModule());
+        install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
+                new ProcessingBinder(),
+                new ContextInjectionResolver.Binder(),
+                new MessagingBinders.MessageBodyProviders(),
+                new ProviderBinder.ProviderBinderBinder(),
+                new MessageBodyFactory.Binder(Singleton.class),
+                new ExceptionMapperFactory.Binder(Singleton.class),
+                new ContextResolverFactory.Binder(Singleton.class),
+                new JaxrsProviders.Binder(),
+                new ContainerFilteringStage.Binder(),
+                new SecurityContextBinder(),
+                new ParameterInjectionBinder(),
+                new ResourceModelBinder(),
+                new RouterBinder(),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
+                new CloseableServiceBinder(),
+                new SingletonResourceBinder.SingletonResourceBinderBinder(),
+                new ServerExecutorsFactory.ServerExecutorBinder());
 
         // Request/Response injection interfaces
-        bind(Request.class).toFactory(RequestReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<Request>>() {
-        }).toFactory(ReferencingFactory.<Request>referenceFactory()).in(RequestScope.class);
+        bindFactory(RequestReferencingFactory.class).to(Request.class).in(PerLookup.class);
+        bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
+        }).in(RequestScoped.class);
 
-        bind(HttpHeaders.class).toFactory(HttpHeadersReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<HttpHeaders>>() {
-        }).toFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).in(RequestScope.class);
+
+        bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class).in(PerLookup.class);
+        bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
+        }).in(RequestScoped.class);
 
         // server-side processing chain
-        bind(ContainerRequest.class)
-                .toFactory(RequestContextInjectionFactory.class)
-                .in(RequestScope.class);
-        bind(ContainerRequestContext.class)
-                .toFactory(RequestContextInjectionFactory.class)
-                .in(RequestScope.class);
-        bind(new TypeLiteral<Ref<ContainerRequest>>() {
-        })
-                .toFactory(ReferencingFactory.<ContainerRequest>referenceFactory())
-                .in(RequestScope.class);
+        bindFactory(RequestContextInjectionFactory.class).to(ContainerRequest.class).in(RequestScoped.class);
+        bindFactory(RequestContextInjectionFactory.class).to(ContainerRequestContext.class).in(RequestScoped.class);
 
-        bind(new TypeLiteral<ResponseProcessor.RespondingContext<ContainerResponse>>() {
-        }).to(new TypeLiteral<DefaultRespondingContext<ContainerResponse>>() {
-        }).in(RequestScope.class);
+        bindFactory(ReferencingFactory.<ContainerRequest>referenceFactory()).to(new TypeLiteral<Ref<ContainerRequest>>() {
+        }).in(RequestScoped.class);
 
-        bind(new TypeLiteral<ResponseProcessor.Builder<ContainerResponse>>() {
-        }).to(ResponseProcessorBuilder.class).in(Singleton.class);
+        bind(DefaultRespondingContext.class).to(new TypeLiteral<ResponseProcessor.RespondingContext<ContainerResponse>>() {
+        }).in(RequestScoped.class);
 
+        bind(ResponseProcessorBuilder.class).to(new TypeLiteral<ResponseProcessor.Builder<ContainerResponse>>() {
+        }).in(Singleton.class);
 
         //ChunkedResponseWriter
-        bind(MessageBodyWriter.class).to(ChunkedResponseWriter.class).in(Singleton.class);
+        bind(ChunkedResponseWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
+
+        bindAsContract(RequestInvokerBuilder.class);
+        bindAsContract(ReferencesInitializer.class);
     }
 }

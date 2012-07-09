@@ -44,6 +44,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
@@ -62,8 +63,6 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
-
-import org.glassfish.hk2.Factory;
 
 import org.xml.sax.InputSource;
 
@@ -157,14 +156,14 @@ public class JaxbStringReaderProvider {
      */
     public static class RootElementProvider extends JaxbStringReaderProvider implements StringValueReaderProvider {
 
-        private Factory<SAXParserFactory> spfProvider;
+        private Provider<SAXParserFactory> spfProvider;
 
         /**
          * Creates new instance.
          *
          * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
          */
-        public RootElementProvider(@Context Factory<SAXParserFactory> spfProvider, @Context Providers ps) {
+        public RootElementProvider(@Context Provider<SAXParserFactory> spfProvider, @Context Providers ps) {
             super(ps);
             this.spfProvider = spfProvider;
         }

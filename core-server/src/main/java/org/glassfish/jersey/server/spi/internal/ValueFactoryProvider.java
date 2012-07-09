@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.spi.internal;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.Contract;
 
-import org.glassfish.hk2.Factory;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Parameter value factory SPI.
@@ -59,7 +59,7 @@ public interface ValueFactoryProvider {
      *
      * @param parameter parameter requesting the value factory instance.
      * @return injected parameter value factory. Returns {@code null} if parameter
-     * is not supported.
+     *         is not supported.
      */
     public Factory<?> getValueFactory(Parameter parameter);
 
@@ -67,7 +67,6 @@ public interface ValueFactoryProvider {
      * Gets the priority of this provider.
      *
      * @return the priority of this provider.
-     *
      * @see PriorityType
      * @see Priority
      */
@@ -98,9 +97,17 @@ public interface ValueFactoryProvider {
      * priority are examined then those with {@code NORMAL} priority and at last the ones with the {@code LOW} priority.
      */
     enum Priority implements PriorityType {
-
+        /**
+         * Low priority.
+         */
         LOW(100),
+        /**
+         * Normal priority.
+         */
         NORMAL(200),
+        /**
+         * High priority.
+         */
         HIGH(300);
 
         /**

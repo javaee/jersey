@@ -48,8 +48,7 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJacksonModule;
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.media.json.JsonJacksonBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
@@ -93,8 +92,7 @@ public class App {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class, RequestExecProvider.class)
                 .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
-                .addModules(new JsonJacksonModule())
-                .addModules(new ServerExecutorsFactory.ServerExecutorModule());
+                .addBinders(new JsonJacksonBinder(), new ServerExecutorsFactory.ServerExecutorBinder());
 
         return resourceConfig;
     }

@@ -39,10 +39,13 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import org.glassfish.hk2.api.Factory;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -54,8 +57,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.hk2.Factory;
 
 /**
  * Base XML-based message body provider for {@link JAXBElement JAXB element} instances.
@@ -85,6 +86,7 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
      */
     @Produces("application/xml")
     @Consumes("application/xml")
+    @Singleton
     public static final class App extends XmlJaxbElementProvider {
 
         public App(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -98,6 +100,7 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
      */
     @Produces("text/xml")
     @Consumes("text/xml")
+    @Singleton
     public static final class Text extends XmlJaxbElementProvider {
 
         public Text(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -111,6 +114,7 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
      */
     @Produces("*/*")
     @Consumes("*/*")
+    @Singleton
     public static final class General extends XmlJaxbElementProvider {
 
         public General(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
@@ -126,7 +130,7 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
     @Override
     protected final JAXBElement<?> readFrom(Class<?> type, MediaType mediaType,
             Unmarshaller u, InputStream entityStream) throws JAXBException {
-        return u.unmarshal(getSAXSource(spf.get(), entityStream), type);
+        return u.unmarshal(getSAXSource(spf.provide(), entityStream), type);
     }
 
     @Override

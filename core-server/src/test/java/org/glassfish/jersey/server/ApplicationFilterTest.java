@@ -50,7 +50,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
+import org.glassfish.jersey.internal.inject.ProviderInstanceBindingBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.Resource;
 
@@ -83,7 +83,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
+                .addBinders(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -102,7 +102,6 @@ public class ApplicationFilterTest {
 
     @Test
     public void testSingleResponseFilter() throws Exception {
-
         final AtomicInteger called = new AtomicInteger(0);
 
         List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
@@ -114,7 +113,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addModules(new ProviderInstanceBindingModule<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
+                .addBinders(new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -214,8 +213,8 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = new ResourceConfig().addModules(
-                new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig().addBinders(
+                new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -244,8 +243,8 @@ public class ApplicationFilterTest {
         List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
-        final ResourceConfig resourceConfig = new ResourceConfig().addModules(
-                new ProviderInstanceBindingModule<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig().addBinders(
+                new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {

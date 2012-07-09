@@ -47,36 +47,35 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.message.internal.MessagingModules;
-import org.glassfish.jersey.process.internal.ProcessingTestModule;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.process.internal.ProcessingTestBinder;
 import org.glassfish.jersey.process.internal.RequestScope;
 
-import org.glassfish.hk2.HK2;
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JaxrsProvidersTest {
 
-    private static class Module extends AbstractModule {
+    private static class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(ContextResolver.class).toInstance(new ContextResolver<String>() {
-
+            bind(new ContextResolver<String>() {
                 @Override
                 public String getContext(Class<?> type) {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
+            }).to(new TypeLiteral<ContextResolver<String>>() {
             });
         }
     }
@@ -87,17 +86,17 @@ public class JaxrsProvidersTest {
 
     @Test
     public void testProviders() throws Exception {
-        final Services services = HK2.get().create(null, new ContextInjectionResolver.Module(), new ProcessingTestModule(),
-                new MessagingModules.MessageBodyProviders(), new Module());
+        final ServiceLocator locator = Injections.createLocator(new ContextInjectionResolver.Binder(), new ProcessingTestBinder(),
+                new MessagingBinders.MessageBodyProviders(), new Binder());
 
-        ProcessingTestModule.initProviders(services);
-        RequestScope scope = services.forContract(RequestScope.class).get();
+        ProcessingTestBinder.initProviders(locator);
+        RequestScope scope = locator.getService(RequestScope.class);
 
         scope.runInScope(new Callable<Object>() {
 
             @Override
             public Object call() throws Exception {
-                Providers instance = services.forContract(Providers.class).get();
+                Providers instance = locator.getService(Providers.class);
 
                 assertNotNull(instance);
                 assertSame(JaxrsProviders.class, instance.getClass());

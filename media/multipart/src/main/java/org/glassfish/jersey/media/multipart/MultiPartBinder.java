@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,31 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.media.multipart;
 
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionBinder;
+import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
+import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 
 /**
- * Configures injection bindings for resource modeling API.
+ * Binder for Multipart providers.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ResourceModelModule extends AbstractModule {
+public class MultiPartBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        // Model bindings
-        bind().to(RuntimeModelBuilder.class);
+        install(new FormDataParameterInjectionBinder(), new MultiPartProperties.Binder());
 
-        // Resource method invocation bindings
-        bind().to(ResourceMethodInvoker.Builder.class);
-        bind().to(ResourceMethodDispatcherFactory.class);
-        bind().to(ResourceMethodInvocationHandlerFactory.class);
-
-        // Dispatcher providers
-        bind(ResourceMethodDispatcher.Provider.class).to(VoidVoidDispatcherProvider.class);
-        bind(ResourceMethodDispatcher.Provider.class).to(MethodParamDispatcherProvider.class);
+        bind(MultiPartReaderServerSide.class).to(MessageBodyReader.class).in(Singleton.class);
+        bind(MultiPartWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
     }
+
 }

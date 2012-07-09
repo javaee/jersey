@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.spi;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
+package org.glassfish.jersey.internal.inject;
 
 /**
- * Specifies a singleton lifecycle for a resource annotated with this annotation.
- * <p>
- * By default, the resource classes are managed in a {@link PerLookup per lookup}
- * scope which means that a new instance is created for each request. Annotating
- * the class with the {@code &#64;Singleton} annotation overrides this behaviour
- * in a sense that only one single instance is used to handle all the requests.
- * Such resources should be implemented as thread safe and must not inject
- * non-proxiable request-scoped components (e.g. {@link javax.ws.rs.HeaderParam})
- * into class fields or constructors.
- * </p>
- * <p>
- * For example, the following resource will not pass the model validation:
- * </p>
- * <pre>
- *  &#064;Singeton
- *  public class SingletonResource {
- *      // Injection of path param into a field of a singleton resource
- *      // is not allowed. Model validation error will occur.
- *      &#064;PathParam("p")
- *      String pParam;
+ * Utility Injection binder that may be used for registering provider instances of provider
+ * type {@code T} in HK2.
  *
- *      &#064;GET
- *      public String get() {
- *          return "GET";
- *      }
- *  }
- * </pre>
+ * @param <T>
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Singleton {
+public class ProviderInstanceBindingBinder<T> extends AbstractBinder {
+    private final Iterable<? extends T> providers;
+    private final Class<T> providerType;
+
+    /**
+     * Create an injection binder for the supplied collection of provider instances.
+     *
+     * @param providers list of provider instances.
+     * @param providerType registered provider contract type.
+     */
+    public ProviderInstanceBindingBinder(Iterable<? extends T> providers, Class<T> providerType) {
+        this.providers = providers;
+        this.providerType = providerType;
+    }
+
+    @Override
+    protected void configure() {
+        for(T provider : providers) {
+            bind(provider).to(providerType);
+        }
+    }
 }

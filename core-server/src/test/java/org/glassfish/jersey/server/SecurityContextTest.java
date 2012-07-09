@@ -145,7 +145,7 @@ public class SecurityContextTest {
      * Tests SecurityContext in filter.
      *
      * @throws Exception Thrown when request processing fails in the
-     * application.
+     *                   application.
      */
     @Test
     public void testDefaultSecurityContext() throws Exception {
@@ -159,10 +159,10 @@ public class SecurityContextTest {
         Assert.assertTrue(!PRINCIPAL_NAME.equals(entity));
     }
 
-    @Path("test")
     /**
      * Test resource class.
      */
+    @Path("test")
     public static class Resource {
 
         /**
@@ -178,6 +178,13 @@ public class SecurityContextTest {
             return userPrincipal == null ? PRINCIPAL_IS_NULL : userPrincipal.getName();
         }
 
+        /**
+         * Test resource method.
+         *
+         * @param sc security context.
+         * @param cr container request context.
+         * @return String response with principal name.
+         */
         @GET
         @Path("2")
         public String getSomething2(@Context SecurityContext sc, @Context ContainerRequestContext cr) {

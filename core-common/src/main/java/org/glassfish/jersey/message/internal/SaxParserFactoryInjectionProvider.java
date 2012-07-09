@@ -39,16 +39,16 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.message.MessageProperties;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.scopes.PerThread;
-
-import org.jvnet.hk2.annotations.Inject;
-import org.jvnet.hk2.annotations.Scoped;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerThread;
 
 /**
  * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
@@ -57,16 +57,17 @@ import org.jvnet.hk2.annotations.Scoped;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-@Scoped(PerThread.class)
 public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFactory> {
-    private final Factory<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
 
-    public SaxParserFactoryInjectionProvider(@Inject Factory<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    @Inject
+    public SaxParserFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 
     @Override
-    public SAXParserFactory get() {
+    @PerThread
+    public SAXParserFactory provide() {
         SAXParserFactory factory = SAXParserFactory.newInstance();
 
         factory.setNamespaceAware(true);
@@ -76,5 +77,10 @@ public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFacto
         }
 
         return factory;
+    }
+
+    @Override
+    public void dispose(SAXParserFactory instance) {
+        //not used
     }
 }

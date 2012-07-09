@@ -58,8 +58,8 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartClientModule;
-import org.glassfish.jersey.media.multipart.MultiPartModule;
+import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
+import org.glassfish.jersey.media.multipart.MultiPartBinder;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -73,12 +73,7 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemPackage;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
+import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 @RunWith(JUnit4TestRunner.class)
@@ -127,9 +122,11 @@ public class MultiPartTest {
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("auto-depends").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-locator").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
 
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
@@ -177,10 +174,10 @@ public class MultiPartTest {
 
     @Test
     public void testMultiPartResource() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(MultiPartResource.class).addModules(new MultiPartModule());
+        final ResourceConfig resourceConfig = new ResourceConfig(MultiPartResource.class).addBinders(new MultiPartBinder());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
-        Client c = JerseyClientFactory.clientBuilder().modules(new MultiPartClientModule()).build();
+        Client c = JerseyClientFactory.clientBuilder().binders(new MultiPartClientBinder()).build();
         final Response response = c.target(baseUri).path("/multipart-simple").request().buildGet().invoke();
 
         MultiPart result = response.readEntity(MultiPart.class);

@@ -62,7 +62,7 @@ import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartClientModule;
+import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.JerseyTest;
@@ -95,7 +95,7 @@ public class MultiPartWebAppTest extends JerseyTest {
 
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        return JerseyClientFactory.clientBuilder().modules(new MultiPartClientModule()).build();
+        return JerseyClientFactory.clientBuilder().binders(new MultiPartClientBinder()).build();
     }
 
     @Test

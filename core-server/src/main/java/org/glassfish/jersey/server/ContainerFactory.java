@@ -44,7 +44,7 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Factory for creating specific HTTP-based containers.
@@ -78,15 +78,15 @@ public final class ContainerFactory {
 
         ApplicationHandler handler = new ApplicationHandler(application);
 
-        final Services services = handler.getServices();
-        for (ContainerProvider cp : Providers.getCustomProviders(services, ContainerProvider.class)) {
+        final ServiceLocator locator = handler.getServiceLocator();
+        for (ContainerProvider cp : Providers.getCustomProviders(locator, ContainerProvider.class)) {
             T c = cp.createContainer(type, handler);
             if (c != null) {
                 return c;
             }
         }
 
-        for (ContainerProvider cp : Providers.getProviders(services, ContainerProvider.class)) {
+        for (ContainerProvider cp : Providers.getProviders(locator, ContainerProvider.class)) {
             T c = cp.createContainer(type, handler);
             if (c != null) {
                 return c;

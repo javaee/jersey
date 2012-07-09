@@ -55,7 +55,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.sse.EventChannel;
 import org.glassfish.jersey.media.sse.EventSource;
@@ -65,18 +64,16 @@ import org.glassfish.jersey.media.sse.OutboundEventWriter;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import org.glassfish.grizzly.http.server.HttpServer;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-
 import org.osgi.framework.BundleContext;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.junit.Assert.assertEquals;
-
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
@@ -129,9 +126,11 @@ public class SseTest {
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("auto-depends").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-locator").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
                 // javax.annotation

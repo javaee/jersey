@@ -41,18 +41,17 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.inject.Injector;
-
-import org.jvnet.hk2.annotations.Inject;
 
 /**
  * Value factory provider supporting the {@link CookieParam} injection annotation.
@@ -60,18 +59,20 @@ import org.jvnet.hk2.annotations.Inject;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Singleton
 final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider<CookieParam> {
 
     /**
      * Injection resolver for {@link CookieParam} annotation.
      */
+    @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
 
         /**
          * Create new {@link CookieParam} annotation injection resolver.
          */
         public InjectionResolver() {
-            super(CookieParam.class, CookieParamValueFactoryProvider.class);
+            super(CookieParamValueFactoryProvider.class);
         }
     }
 
@@ -120,7 +121,8 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
      * @param mpep multivalued parameter extractor provider.
      * @param injector injector instance.
      */
-    public CookieParamValueFactoryProvider(@Inject MultivaluedParameterExtractorProvider mpep, @Inject Injector injector) {
+    @Inject
+    public CookieParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.COOKIE);
     }
 

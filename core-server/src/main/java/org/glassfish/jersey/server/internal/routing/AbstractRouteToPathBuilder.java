@@ -44,8 +44,9 @@ import java.util.List;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.routing.Router.Builder;
 
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.Services;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.collect.Lists;
 
@@ -56,20 +57,20 @@ import com.google.common.collect.Lists;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPathBuilder<T> {
+abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPathBuilder<T> {
 
-    private final Services services;
+    private final ServiceLocator serviceLocator;
     private final List<Route<T>> acceptedRoutes = Lists.newLinkedList();
     private List<Factory<Router>> currentRouters;
 
     /**
-     * Initialize the abstract {@link RouterModule.RouteToPathBuilder route to path builder}.
+     * Initialize the abstract {@link RouterBinder.RouteToPathBuilder route to path builder}.
      *
-     * @param services HK2 services.
+     * @param serviceLocator HK2 service locator.
      * @param pattern  request path routing pattern.
      */
-    protected AbstractRouteToPathBuilder(Services services, T pattern) {
-        this.services = services;
+    protected AbstractRouteToPathBuilder(ServiceLocator serviceLocator, T pattern) {
+        this.serviceLocator = serviceLocator;
         _route(pattern);
     }
 
@@ -81,7 +82,7 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
      * @param pattern routing pattern for the new sub-route.
      * @return updated builder.
      */
-    protected final RouterModule.RouteToBuilder<T> _route(T pattern) {
+    protected final RouterBinder.RouteToBuilder<T> _route(T pattern) {
         currentRouters = Lists.newLinkedList();
         acceptedRoutes.add(Route.of(pattern, currentRouters));
         return this;
@@ -94,7 +95,7 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
      * @return updated builder.
      */
     @SuppressWarnings("unchecked")
-    protected final RouterModule.RouteToPathBuilder<T> _to(Factory<? extends Router> pa) {
+    protected final RouterBinder.RouteToPathBuilder<T> _to(Factory<? extends Router> pa) {
         currentRouters.add((Factory<Router>) pa);
         return this;
     }
@@ -110,33 +111,45 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterModule.RouteToPath
 
     // RouteToBuilder<T>
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(Router.Builder ab) {
+    public final RouterBinder.RouteToPathBuilder<T> to(Router.Builder ab) {
         return to(ab.build());
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(final Router a) {
+    public final RouterBinder.RouteToPathBuilder<T> to(final Router a) {
         // TODO    return to(Providers.of(a));
 
         return to(Providers.factoryOf(a));
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(Class<? extends Router> ca) {
-        return to(Providers.asFactory(services.forContract(ca).getProvider()));
+    public final RouterBinder.RouteToPathBuilder<T> to(Class<? extends Router> ca) {
+        final ServiceHandle<? extends Router> serviceHandle = serviceLocator.getServiceHandle(ca);
+        Factory<? extends Router> factory = new Factory<Router>() {
+            @Override
+            public Router provide() {
+                return serviceHandle.getService();
+            }
+
+            @Override
+            public void dispose(Router instance) {
+                //not used
+            }
+        };
+        return to(factory);
     }
 
     @Override
-    public final RouterModule.RouteToPathBuilder<T> to(Factory<? extends Router> pa) {
+    public final RouterBinder.RouteToPathBuilder<T> to(Factory<? extends Router> pa) {
         return _to(pa);
     }
 
     // RouteBuilder<T>
     @Override
-    public abstract RouterModule.RouteToBuilder<T> route(String pattern);
+    public abstract RouterBinder.RouteToBuilder<T> route(String pattern);
 
     @Override
-    public RouterModule.RouteToBuilder<T> route(T pattern) {
+    public RouterBinder.RouteToBuilder<T> route(T pattern) {
         return _route(pattern);
     }
 

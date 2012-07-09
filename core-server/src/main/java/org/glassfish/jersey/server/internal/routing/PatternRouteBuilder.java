@@ -41,13 +41,13 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
-import org.glassfish.jersey.server.internal.routing.RouterModule.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterModule.RouteToBuilder;
+import javax.inject.Inject;
 
-import org.glassfish.hk2.Services;
+import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
+import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteBuilder;
+import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteToBuilder;
 
-import org.jvnet.hk2.annotations.Inject;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * {@link RouteBuilder} implementation that builds routes which use {@link Pattern}
@@ -59,7 +59,7 @@ import org.jvnet.hk2.annotations.Inject;
 class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
 
     @Inject
-    private Services services;
+    private ServiceLocator locator;
     @Inject
     private PatternRouter.Builder acceptorFactory;
     @Inject
@@ -72,7 +72,7 @@ class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
 
     @Override
     public RouteToBuilder<Pattern> route(Pattern pattern) {
-        return new AbstractRouteToPathBuilder<Pattern>(services, pattern) {
+        return new AbstractRouteToPathBuilder<Pattern>(locator, pattern) {
 
             @Override
             public RouteToBuilder<Pattern> route(String pattern) {
