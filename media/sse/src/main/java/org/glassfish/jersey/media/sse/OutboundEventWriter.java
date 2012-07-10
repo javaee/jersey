@@ -99,7 +99,7 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                 entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());
             }
             if(outboundEvent.getId() != null) {
-                entityStream.write(String.format("id: %s\n", outboundEvent.getName()).getBytes());
+                entityStream.write(String.format("id: %s\n", outboundEvent.getId()).getBytes());
             }
 
             messageBodyWriter.writeTo(outboundEvent.getData(), outboundEvent.getClass(), null, annotations, mediaType, httpHeaders, new OutputStream() {
