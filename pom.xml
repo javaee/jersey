@@ -859,6 +859,8 @@
 
         <moxy.version>2.4.0</moxy.version>
 
+        <mimepull.version>1.8</mimepull.version>
+
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
         <findbugs.exclude>exclude-common.xml</findbugs.exclude>

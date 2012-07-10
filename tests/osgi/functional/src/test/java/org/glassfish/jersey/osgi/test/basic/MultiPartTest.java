@@ -150,7 +150,7 @@ public class MultiPartTest {
                 mavenBundle().groupId("org.glassfish.external").artifactId("management-api").versionAsInProject(),
 
                 // jersey-multipart deps
-                mavenBundle().groupId("org.jvnet").artifactId("mimepull").versionAsInProject(),
+                mavenBundle().groupId("org.jvnet.mimepull").artifactId("mimepull").versionAsInProject(),
 
                 // start felix framework
                 felix());
