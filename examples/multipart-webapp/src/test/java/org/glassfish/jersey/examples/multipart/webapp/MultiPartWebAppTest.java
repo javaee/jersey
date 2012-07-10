@@ -40,6 +40,7 @@
 package org.glassfish.jersey.examples.multipart.webapp;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Iterator;
 
 import javax.ws.rs.client.Client;
@@ -47,6 +48,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -61,16 +63,16 @@ import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartClientModule;
-import org.glassfish.jersey.media.multipart.MultiPartModule;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainer;
 
+import org.w3c.dom.Document;
+
 import org.junit.Ignore;
 import org.junit.Test;
-import org.w3c.dom.Document;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -82,8 +84,13 @@ import static org.junit.Assert.assertEquals;
 public class MultiPartWebAppTest extends JerseyTest {
 
     @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("multipart-webapp").build();
+    }
+
+    @Override
     protected Application configure() {
-        return new ResourceConfig(MultiPartResource.class).addModules(new MultiPartModule());
+        return new MyApplication();
     }
 
     @Override
