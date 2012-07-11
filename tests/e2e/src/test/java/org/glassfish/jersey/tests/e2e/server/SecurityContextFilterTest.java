@@ -49,11 +49,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.jvnet.hk2.annotations.Inject;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,30 +76,24 @@ public class SecurityContextFilterTest extends JerseyTest {
 
     public static class SecurityContextFilter implements ContainerRequestFilter {
 
-        @Inject
-        Ref<SecurityContext> securityContextRef;
-        @Context
-        SecurityContext securityContext;
+        // TODO: won't work until we have proxiable scope
+//        @Context
+//        SecurityContext securityContext;
 
         @Override
         public void filter(ContainerRequestContext context) {
-            // test injections
-            Assert.assertNotNull(securityContext);
-            Assert.assertEquals(securityContextRef.get(), securityContext);
+            Assert.assertNotNull(context.getSecurityContext());
 
+            // test injections
+            // TODO: won't work until SecurityContext is proxiable
+//            Assert.assertEquals(context.getSecurityContext(), securityContext);
 
             String header = context.getHeaders().getFirst(SKIP_FILTER);
             if ("true".equals(header)) {
                 return;
             }
 
-            // test injections
-            Assert.assertNotNull(securityContext);
-            Assert.assertEquals(securityContextRef.get(), securityContext);
-
-            // set new Security Context
-            securityContextRef.set(new SecurityContext() {
-
+            context.setSecurityContext(new SecurityContext() {
                 @Override
                 public boolean isUserInRole(String role) {
                     return false;
@@ -139,7 +130,7 @@ public class SecurityContextFilterTest extends JerseyTest {
      *                   application.
      */
     @Test
-    public void testSecurityContextInjectionFilter() throws Exception {
+    public void testSecurityContextFilter() throws Exception {
         Response response = target().path("test").request().get();
         assertEquals(200, response.getStatus());
         String entity = response.readEntity(String.class);
@@ -169,13 +160,15 @@ public class SecurityContextFilterTest extends JerseyTest {
         /**
          * Test resource method.
          *
-         * @param securityCtx security context.
+         * @param crc container request context.
          * @return String response with principal name.
          */
+
+        // TODO: inject SecurityContext directly once JERSEY-1282 is fixed
         @GET
-        public String getPrincipal(@Context SecurityContext securityCtx) {
-            Assert.assertNotNull(securityCtx);
-            Principal userPrincipal = securityCtx.getUserPrincipal();
+        public String getPrincipal(@Context ContainerRequestContext crc) {
+            Assert.assertNotNull(crc.getSecurityContext());
+            Principal userPrincipal = crc.getSecurityContext().getUserPrincipal();
             return userPrincipal == null ? PRINCIPAL_IS_NULL : userPrincipal.getName();
         }
     }

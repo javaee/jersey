@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.NameBinding;
 import javax.ws.rs.Suspend;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
@@ -55,6 +57,8 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.uri.PathPattern;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -64,7 +68,7 @@ import com.google.common.collect.Sets;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod implements ResourceModelComponent, Routed, Producing, Consuming, Suspendable {
+public class ResourceMethod implements ResourceModelComponent, Routed, Producing, Consuming, Suspendable, NameBound {
 
     /**
      * Resource method classification based on the recognized JAX-RS
@@ -160,6 +164,8 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         private Object handlerInstance;
         private Method handlingMethod;
         private boolean encodedParams;
+        // NameBound
+        private final Collection<Class<? extends Annotation>> nameBindings;
 
         /**
          * Create a resource method builder.
@@ -191,6 +197,8 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
             this.suspendTimeoutUnit = TimeUnit.MILLISECONDS;
 
             this.encodedParams = false;
+
+            this.nameBindings = Sets.newLinkedHashSet();
         }
 
         /**
@@ -278,6 +286,51 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         public Builder consumes(Collection<MediaType> types) {
             this.consumedTypes.addAll(types);
             return this;
+        }
+
+        /**
+         * Adds name bindings. The passed annotation types not annotated with {@link javax.ws.rs.NameBinding}
+         * meta-annotation will be ignored.
+         *
+         * @param nameBindings collection of name binding annotation types.
+         * @return updated builder object.
+         */
+        public Builder nameBindings(final Collection<Class<? extends Annotation>> nameBindings) {
+            for (Class<? extends Annotation> nameBinding : nameBindings) {
+                if (nameBinding.getAnnotation(NameBinding.class) != null) {
+                    this.nameBindings.add(nameBinding);
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Adds name bindings. The passed annotation types not annotated with {@link javax.ws.rs.NameBinding}
+         * meta-annotation will be ignored.
+         *
+         * @param nameBindings name binding annotation types.
+         * @return updated builder object.
+         */
+        public Builder nameBindings(final Class<? extends Annotation>... nameBindings) {
+            return nameBindings(Arrays.asList(nameBindings));
+        }
+
+        /**
+         * Adds name bindings. The passed annotations not annotated with {@link javax.ws.rs.NameBinding}
+         * meta-annotation will be ignored.
+         *
+         * @param nameBindings name binding annotations.
+         * @return updated builder object.
+         */
+        public Builder nameBindings(final Annotation... nameBindings) {
+            return nameBindings(Collections2.transform(Arrays.asList(nameBindings),
+                    new Function<Annotation, Class<? extends Annotation>>() {
+                        @Override
+                        public Class<? extends Annotation> apply(Annotation input) {
+                            return input.annotationType();
+                        }
+                    })
+            );
         }
 
         /**
@@ -383,7 +436,8 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                     suspended,
                     suspendTimeout,
                     suspendTimeoutUnit,
-                    invocable);
+                    invocable,
+                    nameBindings);
 
             parent.onBuildMethod(this, method);
 
@@ -420,6 +474,8 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     private final TimeUnit suspendTimeoutUnit;
     // Invocable
     private final Invocable invocable;
+    // NameBound
+    private final Collection<Class<? extends Annotation>> nameBindings;
 
     private ResourceMethod(final String httpMethod,
                            final String path,
@@ -428,8 +484,9 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                            final boolean suspended,
                            final long suspendTimeout,
                            final TimeUnit suspendTimeoutUnit,
-                           final Invocable invocable) {
-
+                           final Invocable invocable,
+                           final Collection<Class<? extends Annotation>> nameBindings
+    ) {
         this.type = JaxrsType.classify(httpMethod, path);
 
         this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
@@ -443,6 +500,8 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         this.suspended = suspended;
         this.suspendTimeout = suspendTimeout;
         this.suspendTimeoutUnit = suspendTimeoutUnit;
+
+        this.nameBindings = Collections.unmodifiableCollection(Lists.newArrayList(nameBindings));
     }
 
     /**
@@ -535,6 +594,12 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         visitor.visitResourceMethod(this);
     }
 
+    // NameBound
+    @Override
+    public Collection<Class<? extends Annotation>> getNameBindings() {
+        return nameBindings;
+    }
+
     @Override
     public String toString() {
         return "ResourceMethod{" +
@@ -545,6 +610,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                 ", suspended=" + suspended +
                 ", suspendTimeout=" + suspendTimeout +
                 ", suspendTimeoutUnit=" + suspendTimeoutUnit +
-                ", invocable=" + invocable + '}';
+                ", invocable=" + invocable +
+                ", nameBindings=" + nameBindings + '}';
     }
 }

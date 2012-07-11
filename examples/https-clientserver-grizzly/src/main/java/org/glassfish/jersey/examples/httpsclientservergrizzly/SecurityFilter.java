@@ -52,7 +52,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.Base64;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerRequest;
 
 import org.glassfish.hk2.Factory;
@@ -74,13 +73,10 @@ public class SecurityFilter implements ContainerRequestFilter {
     Factory<UriInfo> uriInfo;
     private static final String REALM = "HTTPS Example authentication";
 
-    @Inject
-    Ref<SecurityContext> securityContextRef;
-
     @Override
     public void filter(ContainerRequestContext filterContext) throws IOException {
         User user = authenticate(filterContext.getRequest());
-        securityContextRef.set(new Authorizer(user));
+        filterContext.setSecurityContext(new Authorizer(user));
     }
 
     private User authenticate(Request request) {

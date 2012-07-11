@@ -50,7 +50,6 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -82,21 +81,18 @@ class SubResourceLocatorRouter implements Router {
      *
      * @param injector     HK2 injector.
      * @param services     HK2 services.
-     * @param workers      message body workers.
+     * @param runtimeModelBuilder Runtime model builder.
      * @param locatorModel resource locator method model.
      */
     public SubResourceLocatorRouter(
             final Injector injector,
             final Services services,
-            final MessageBodyWorkers workers,
+            final RuntimeModelBuilder runtimeModelBuilder,
             final ResourceMethod locatorModel) {
         this.injector = injector;
-
+        this.runtimeModelBuilder = runtimeModelBuilder;
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(services, locatorModel.getInvocable());
-
-        this.runtimeModelBuilder = new RuntimeModelBuilder(workers, true);
-        this.injector.inject(runtimeModelBuilder);
     }
 
     @Override
@@ -116,11 +112,11 @@ class SubResourceLocatorRouter implements Router {
 
         // TODO: what to do with the issues?
         final Resource subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
-        runtimeModelBuilder.process(subResourceModel);
+        runtimeModelBuilder.process(subResourceModel, true);
 
         // TODO: implement generated sub-resource methodAcceptorPair caching
         routingCtx.pushMatchedResource(subResource);
-        Router subResourceAcceptor = runtimeModelBuilder.buildModel();
+        Router subResourceAcceptor = runtimeModelBuilder.buildModel(true);
         return Continuation.of(request, subResourceAcceptor);
     }
 

@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,15 +49,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -79,7 +86,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private MultivaluedHashMap<String, String> encodedTemplateValues;
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private final LinkedList<String> paths = Lists.newLinkedList();
-    private Inflector<ContainerRequest, ContainerResponse> inflector = null;
+    private Inflector<ContainerRequest, ContainerResponse> inflector;
 
     /**
      * Injection constructor.
@@ -177,8 +184,36 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return inflector;
     }
 
+    @Override
+    public Collection<ContainerRequestFilter> getBoundRequestFilters() {
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
+    }
+
+    @Override
+    public Collection<ContainerResponseFilter> getBoundResponseFilters() {
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
+    }
+
+    @Override
+    public Collection<ReaderInterceptor> getBoundReaderInterceptors() {
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getReaderInterceptors() : null);
+    }
+
+    @Override
+    public Collection<WriterInterceptor> getBoundWriterInterceptors() {
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getWriterInterceptors() : null);
+    }
+
     // UriInfo
     private Ref<ContainerRequest> requestContext;
+
+    private static <T> Collection<T> emptyIfNull(Collection<T> collection) {
+        return collection == null ? Collections.<T>emptyList() : collection;
+    }
 
     @Override
     public URI getAbsolutePath() {
@@ -388,5 +423,17 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             i++;
         }
         return pIndex;
+    }
+
+    @Override
+    public Method getResourceMethod() {
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getResourceMethod() : null;
+    }
+
+    @Override
+    public Class<?> getResourceClass() {
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getResourceClass() : null;
     }
 }

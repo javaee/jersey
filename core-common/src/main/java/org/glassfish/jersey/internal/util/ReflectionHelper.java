@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -52,8 +54,10 @@ import java.lang.reflect.TypeVariable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -486,6 +490,29 @@ public class ReflectionHelper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Returns collection of all annotation types attached to a given annotated element that have the provided meta
+     * annotation attached.
+     *
+     * @param annotatedElement annotated element.
+     * @param metaAnnotation meta annotation attached to the annotation types we are looking for (if null, annotation
+     *                       types of all attached annotations will be returned).
+     * @return list of annotation types with a given meta annotation
+     */
+    public static Collection<Class<? extends Annotation>> getAnnotationTypes(
+            AnnotatedElement annotatedElement,
+            Class<? extends Annotation> metaAnnotation
+    ) {
+        HashSet<Class<? extends Annotation>> result = new HashSet<Class<? extends Annotation>>();
+        for (Annotation a : annotatedElement.getAnnotations()) {
+            Class<? extends Annotation> aType = a.annotationType();
+            if (metaAnnotation == null || aType.getAnnotation(metaAnnotation) != null) {
+                result.add(aType);
+            }
+        }
+        return result;
     }
 
     /**

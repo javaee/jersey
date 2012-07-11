@@ -37,48 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.model;
 
-import javax.ws.rs.core.SecurityContext;
-
-import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.Factory;
-import org.glassfish.hk2.TypeLiteral;
-import org.glassfish.hk2.scopes.PerLookup;
-
-import org.jvnet.hk2.annotations.Inject;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
 
 /**
- * {@link SecurityContext Security Context} HK2 Module.
+ * Model component that can be name bound (i.e. be associated with name bould filters and interceptors).
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * A component implementing this interface provides additional information about
+ * the name bindings attached to it.
+ *
+ * @author Martin Matula (martin.matula at oracle.com)
+ * @see javax.ws.rs.NameBinding
  */
-
-// TODO: (MM) this module is wrong - the SecurityContext should be taken from the ContainerRequestContext
-// TODO: when I tried to fix this by creating Factory<SecurityContext> that injects ContainerRequest and calls
-// TODO: getSecurityContext() on it, HK2 suddenly started to inject my SecurityContextFactory into
-// TODO: ResourceMethodInvoker.Builder.invocationContextFactory.
-class SecurityContextModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(SecurityContext.class).toFactory(SecurityContextReferencingFactory.class).in(PerLookup.class);
-        bind(new TypeLiteral<Ref<SecurityContext>>() {
-        }).toFactory(ReferencingFactory.<SecurityContext>referenceFactory()).in(RequestScope.class);
-
-    }
-
+public interface NameBound {
     /**
-     * Referencing factory for SecurityContext.
+     * Get the collection of name bindings attached to this component.
+     *
+     * @return collection of name binding annotation types.
      */
-    private static class SecurityContextReferencingFactory extends ReferencingFactory<SecurityContext> {
-
-        public SecurityContextReferencingFactory(@Inject Factory<Ref<SecurityContext>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
+    Collection<Class<? extends Annotation>> getNameBindings();
 }

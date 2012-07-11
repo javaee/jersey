@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -48,16 +50,21 @@ import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.DynamicBinder;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.InvokerBuilder;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerModule;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -66,8 +73,6 @@ import org.glassfish.hk2.HK2;
 import org.glassfish.hk2.Services;
 import org.glassfish.hk2.TypeLiteral;
 import org.glassfish.hk2.inject.Injector;
-
-import org.glassfish.jersey.server.ContainerResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -120,10 +125,15 @@ public class RMBuilderTest {
         injector.inject(this);
 
         final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
-        runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build());
+        runtimeModelBuilder.setBoundProviders(
+                new MultivaluedHashMap<Class<? extends Annotation>, ContainerRequestFilter>(),
+                new MultivaluedHashMap<Class<? extends Annotation>, ContainerResponseFilter>(),
+                Collections.<DynamicBinder>emptyList()
+        );
+        runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build(), false);
         final InvokerBuilder invokerBuilder = injector.inject(InvokerBuilder.class);
 
-        this.invoker = invokerBuilder.build(runtimeModelBuilder.buildModel());
+        this.invoker = invokerBuilder.build(runtimeModelBuilder.buildModel(false));
         this.requestScope = injector.inject(RequestScope.class);
     }
 

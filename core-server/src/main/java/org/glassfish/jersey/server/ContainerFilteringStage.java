@@ -40,155 +40,115 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import javax.ws.rs.NameBinding;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.AbstractModule;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.routing.RoutingContext;
 
 import org.glassfish.hk2.Factory;
 import org.glassfish.hk2.Services;
 
 import org.jvnet.hk2.annotations.Inject;
 
-import com.google.common.base.Predicate;
-
 /**
  * Container filtering stage responsible for execution of request and response filters
  * on each request-response message exchange.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
 class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
-    private static final Predicate<ContainerRequestFilter> PRE_MATCH_FILTER_PREDICATE = new Predicate<ContainerRequestFilter>() {
-        @Override
-        public boolean apply(final ContainerRequestFilter filter) {
-            for (Annotation annotation : filter.getClass().getAnnotations()) {
-                if (annotation instanceof PostMatching) {
-                    return false;
-                }
-                for (Annotation metaAnnotation : annotation.getClass().getAnnotations()) {
-                    if (metaAnnotation instanceof NameBinding) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-    };
-
-    // TODO implement real support for filter named bindings
-    private static final Predicate<ContainerRequestFilter> POST_MATCH_FILTER_PREDICATE = new Predicate<ContainerRequestFilter>() {
-        @Override
-        public boolean apply(final ContainerRequestFilter filter) {
-            for (Annotation annotation : filter.getClass().getAnnotations()) {
-                if (annotation instanceof PostMatching) {
-                    return true;
-                }
-                for (Annotation metaAnnotation : annotation.getClass().getAnnotations()) {
-                    if (metaAnnotation instanceof NameBinding) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-    };
-
+    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+    private final Services services;
+    private final List<ContainerRequestFilter> requestFilters;
+    private final List<ContainerResponseFilter> responseFilters;
 
     /**
      * Injectable container filtering stage builder.
      */
     static class Builder {
-
-        @Inject
-        Services services;
-
         @Inject
         private Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
 
+        @Inject
+        private Services services;
+
         /**
-         * Build a new container filtering stage specifying whether the built stage is
-         * a pre-match filtering ({@code true}) stage or post-match ({@code false}).
+         * Build a new container filtering stage specifying global request and response filters. This stage class
+         * is reused for both pre and post match filtering phases.
          * <p>
-         * A pre-match stage would search only for pre-match filters and would
-         * NOT try to search for response filters or would NOT register any response
-         * filtering stage in the {@link ResponseProcessor.RespondingContext responding context}.
-         * </p>
-         * <p>
-         * A post-match stage would run all bound post-matching request filters
-         * as well as also load all the applicable response filters and register
-         * a response filtering stage in the responding context to run the response
-         * filters.
+         * All global response filters are passed in the pre-match stage, since if a pre-match filter aborts,
+         * response filters should still be executed. For the post-match filter stage creation, {@code null} is passed
+         * to the responseFilters parameter.
          * </p>
          *
-         * @param preMatch if {@code true} a pre-match filtering stage is built, otherwise
-         *                 post-match stage is build.
+         * @param requestFilters list of global (unbound) request filters (either pre or post match - depending on the
+         *                       stage being created).
+         * @param responseFilters list of global response filters (for pre-match stage) or {@code null} (for post-match
+         *                        stage).
          * @return new container filtering stage.
          */
-        public ContainerFilteringStage build(boolean preMatch) {
-            return new ContainerFilteringStage(respondingContextFactory, services, preMatch);
+        public ContainerFilteringStage build(List<ContainerRequestFilter> requestFilters,
+                                             List<ContainerResponseFilter> responseFilters) {
+            return new ContainerFilteringStage(respondingContextFactory, services,
+                    requestFilters, responseFilters);
         }
 
     }
-
-    private final Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
-    private Services services;
-    private final boolean preMatch;
 
     /**
      * Injection constructor.
      *
-     * @param services                 HK2 services.
      * @param respondingContextFactory responding context factory.
-     * @param preMatch                 if {@code true} a pre-match filtering stage is built, otherwise
-     *                                 post-match stage is build.
+     * @param services HK2 services.
+     * @param requestFilters global request filters (pre or post match).
+     * @param responseFilters global response filters or {@code null}.
+     *
      */
     private ContainerFilteringStage(
             Factory<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
             Services services,
-            boolean preMatch) {
-
-        this.services = services;
+            List<ContainerRequestFilter> requestFilters,
+            List<ContainerResponseFilter> responseFilters
+    ) {
         this.respondingContextFactory = respondingContextFactory;
-        this.preMatch = preMatch;
+        this.services = services;
+        this.requestFilters = requestFilters;
+        this.responseFilters = responseFilters;
     }
 
     @Override
     public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
+        List<ContainerRequestFilter> sortedRequestFilters;
 
-        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(services,
-                ContainerResponseFilter.class,
-                new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
-        if (!responseFilters.isEmpty()) {
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
-        }
-
-        Iterable<ContainerRequestFilter> requestFilters = Providers.getAllProviders(services,
-                ContainerRequestFilter.class, new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
-
-        if (preMatch) {
-            requestFilters = com.google.common.collect.Iterables.filter(requestFilters, PRE_MATCH_FILTER_PREDICATE);
+        if (responseFilters == null) {
+            // post-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
+            // throws exception, response filters get still invoked)
+            RoutingContext rc = services.forContract(RoutingContext.class).get();
+            sortedRequestFilters = new ArrayList<ContainerRequestFilter>(requestFilters);
+            sortedRequestFilters.addAll(rc.getBoundRequestFilters());
+            Collections.sort(sortedRequestFilters,
+                    new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
         } else {
-            requestFilters = com.google.common.collect.Iterables.filter(requestFilters, POST_MATCH_FILTER_PREDICATE);
+            // pre-matching
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, services));
+            sortedRequestFilters = requestFilters;
         }
 
-        for (ContainerRequestFilter filter : requestFilters) {
+        for (ContainerRequestFilter filter : sortedRequestFilters) {
             try {
                 filter.filter(requestContext);
                 final Response abortResponse = requestContext.getAbortResponse();
@@ -199,7 +159,6 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                                 @Override
                                 public ContainerResponse apply(
                                         final ContainerRequest requestContext) {
-
                                     return new ContainerResponse(requestContext, abortResponse);
                                 }
                             }));
@@ -218,17 +177,26 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
         private final List<ContainerResponseFilter> filters;
+        private final Services services;
 
-        private ResponseFilterStage(List<ContainerResponseFilter> filters) {
+        private ResponseFilterStage(List<ContainerResponseFilter> filters, Services services) {
             this.filters = filters;
+            this.services = services;
         }
 
         @Override
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
-            // TODO from the name-bound filters select only those that are applicable for the invoked resource.
-
             try {
-                for (ContainerResponseFilter filter : filters) {
+                RoutingContext rc = services.forContract(RoutingContext.class).get();
+
+                List<ContainerResponseFilter> sortedResponseFilters = new ArrayList<ContainerResponseFilter>(filters);
+                if (rc != null) {
+                    sortedResponseFilters.addAll(rc.getBoundResponseFilters());
+                }
+                Collections.sort(sortedResponseFilters,
+                        new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
+
+                for (ContainerResponseFilter filter : sortedResponseFilters) {
                     filter.filter(responseContext.getRequestContext(), responseContext);
                 }
             } catch (IOException ex) {

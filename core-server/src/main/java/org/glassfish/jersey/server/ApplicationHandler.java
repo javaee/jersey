@@ -41,9 +41,12 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +57,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.DynamicBinder;
+import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
@@ -67,14 +77,15 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractModule;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -82,8 +93,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
-import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.BasicValidator;
 import org.glassfish.jersey.server.model.MethodHandler;
 import org.glassfish.jersey.server.model.ModelValidationException;
@@ -309,6 +320,26 @@ public final class ApplicationHandler {
 
         registerProvidersAndSingletonResources();
 
+        // scan for NameBinding annotations attached to the application class
+        Collection<Class<? extends Annotation>> applicationNameBindings =
+                ReflectionHelper.getAnnotationTypes(configuration.getApplication().getClass(), NameBinding.class);
+
+        // find all filters and dynamic binders
+        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(services,
+                ContainerResponseFilter.class);
+        final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters
+                = filterNameBound(responseFilters, null, applicationNameBindings);
+        final List<ContainerRequestFilter> preMatchFilters = Providers.getAllProviders(
+                services,
+                ContainerRequestFilter.class,
+                new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING)
+        );
+        final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
+        final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters
+                = filterNameBound(preMatchFilters, requestFilters, applicationNameBindings);
+        final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(services, DynamicBinder.class);
+
+        // build the models
         final MessageBodyFactory workers = new MessageBodyFactory(services);
         refs.workers.set(workers);
         refs.mappers.set(new ExceptionMapperFactory(services));
@@ -318,8 +349,9 @@ public final class ApplicationHandler {
 
         final RuntimeModelBuilder runtimeModelBuilder = services.byType(RuntimeModelBuilder.class).get();
         runtimeModelBuilder.setWorkers(workers);
+        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, dynamicBinders);
         for (Resource resource : resources) {
-            runtimeModelBuilder.process(resource);
+            runtimeModelBuilder.process(resource, false);
         }
 
         // assembly request processing chain
@@ -327,14 +359,14 @@ public final class ApplicationHandler {
          * Root hierarchical request matching acceptor.
          * Invoked in a single linear stage as part of the main linear accepting chain.
          */
-        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel();
+        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(false);
 
         final ContainerFilteringStage preMatchRequestFilteringStage =
-                injector.inject(ContainerFilteringStage.Builder.class).build(true);
+                injector.inject(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
         final RoutingStage routingStage =
                 injector.inject(RoutingStage.Builder.class).build(resourceRoutingRoot);
         final ContainerFilteringStage resourceFilteringStage =
-                injector.inject(ContainerFilteringStage.Builder.class).build(false);
+                injector.inject(ContainerFilteringStage.Builder.class).build(requestFilters, null);
         final RoutedInflectorExtractorStage routedInflectorExtractorStage = injector.inject(RoutedInflectorExtractorStage.class);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
@@ -352,6 +384,67 @@ public final class ApplicationHandler {
 
         // inject self
         injector.inject(this);
+    }
+
+    /**
+     * Takes collection of all filters (either request or response) and separates out all name-bound filters, returns
+     * them as a separate MultivaluedMap, mapping the name-bound annotation to the list of name-bound filters.
+     * Note, the name-bound filters are removed from the original filters collection.
+     * If non-null collection is passed in the postMatching parameter, this method also removes all the global
+     * postMatching filters from the original collection and adds them to the collection passed in the postMatching
+     * parameter.
+     *
+     * @param all Collection of all filters to be processed.
+     * @param postMatching Collection where this method should move all global post-matching filters, or {@code null} if
+     *                     separating out global post-matching filters is not desirable.
+     * @param applicationNameBindings collection of name binding annotations attached to the JAX-RS application.
+     * @param <T> Filter type (either {@link ContainerRequestFilter} or {@link ContainerResponseFilter}).
+     * @return {@link MultivaluedMap} of all name-bound filters.
+     */
+    private static <T> MultivaluedMap<Class<? extends Annotation>, T> filterNameBound(
+            final Collection<T> all,
+            final Collection<ContainerRequestFilter> postMatching,
+            final Collection<Class<? extends Annotation>> applicationNameBindings
+    ) {
+        final MultivaluedMap<Class<? extends Annotation>, T> result
+                = new MultivaluedHashMap<Class<? extends Annotation>, T>();
+
+        outer:
+        for (Iterator<T> it = all.iterator(); it.hasNext();) {
+            T filter = it.next();
+            boolean post = false;
+            HashSet<Class<? extends Annotation>> nameBindings = new HashSet<Class<? extends Annotation>>();
+            for (Annotation annotation : filter.getClass().getAnnotations()) {
+                if (postMatching != null && (annotation instanceof PostMatching ||
+                        // treat NameBindings attached to application as global post-matching filters
+                        applicationNameBindings.contains(annotation.annotationType()))) {
+                    post = true;
+                } else {
+                    if (postMatching == null && applicationNameBindings.contains(annotation.annotationType())) {
+                        // treat NameBindings attached to annotation as global filters (if no need to distinguish
+                        // as post-matching - i.e. postMatching == null)
+                        continue outer;
+                    }
+                    for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {
+                        if (metaAnnotation instanceof NameBinding) {
+                            nameBindings.add(annotation.annotationType());
+                        }
+                    }
+                }
+            }
+
+            if (post) {
+                it.remove();
+                postMatching.add((ContainerRequestFilter) filter);
+            } else if (!nameBindings.isEmpty()) {
+                it.remove();
+                for (Class<? extends Annotation> nameBinding : nameBindings) {
+                    result.add(nameBinding, filter);
+                }
+            }
+        }
+
+        return result;
     }
 
     private void registerProvidersAndSingletonResources() {

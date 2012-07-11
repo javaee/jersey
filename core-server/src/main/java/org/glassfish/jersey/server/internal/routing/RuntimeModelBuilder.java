@@ -39,9 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.DynamicBinder;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
@@ -88,7 +94,9 @@ public final class RuntimeModelBuilder {
     private SingletonResourceBinder resourceProvider;
 
     private MessageBodyWorkers workers;
-    private boolean subResourceMode;
+    private MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters;
+    private MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters;
+    private List<DynamicBinder> dynamicBinders;
 
     /**
      * A sorted map of closed resource path patterns to the list of (root) resource method
@@ -113,29 +121,14 @@ public final class RuntimeModelBuilder {
     private TreeMap<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> subResourceAcceptors =
             Maps.newTreeMap(PathPattern.COMPARATOR);
 
-    public RuntimeModelBuilder() {
-        this(null, false);
-    }
-
-    /**
-     * Create a new runtime model builder.
-     *
-     * @param workers         message body workers.
-     * @param subResourceMode if {@code true}, all the resources will be processed as a
-     *                        sub-resources.
-     */
-    public RuntimeModelBuilder(MessageBodyWorkers workers, boolean subResourceMode) {
-        this.workers = workers;
-        this.subResourceMode = subResourceMode;
-    }
-
     /**
      * Process a single resource model and add it to the currently build runtime
      * routing and accepting model.
      *
      * @param resource resource model to be processed.
+     * @param subResourceMode if {@code true}, all resources will be processed as sub-resources.
      */
-    public void process(final Resource resource) {
+    public void process(final Resource resource, final boolean subResourceMode) {
         if (!(resource.isRootResource() || subResourceMode)) {
             // ignore sub-resources if not in a sub-resource modelling mode.
             return;
@@ -155,7 +148,7 @@ public final class RuntimeModelBuilder {
                     new Function<ResourceMethod, MethodAcceptorPair>() {
                         @Override
                         public MethodAcceptorPair apply(ResourceMethod methodModel) {
-                            return new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel));
+                            return new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel, subResourceMode));
                         }
                     }));
         }
@@ -173,16 +166,16 @@ public final class RuntimeModelBuilder {
             }
 
             for (ResourceMethod methodModel : resource.getSubResourceMethods()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel);
+                updateSubResourceMethodMap(sameResourcePathMap, methodModel, subResourceMode);
             }
             for (ResourceMethod methodModel : resource.getSubResourceLocators()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel);
+                updateSubResourceMethodMap(sameResourcePathMap, methodModel, subResourceMode);
             }
         }
     }
 
     private void updateSubResourceMethodMap(
-            final TreeMap<PathPattern, List<MethodAcceptorPair>> subResourceMethodMap, final ResourceMethod methodModel) {
+            final TreeMap<PathPattern, List<MethodAcceptorPair>> subResourceMethodMap, final ResourceMethod methodModel, boolean subResourceMode) {
 
         PathPattern openMethodPattern = new PathPattern(methodModel.getPath());
 
@@ -191,10 +184,10 @@ public final class RuntimeModelBuilder {
             samePathMethodAcceptorPairs = Lists.newLinkedList();
             subResourceMethodMap.put(openMethodPattern, samePathMethodAcceptorPairs);
         }
-        samePathMethodAcceptorPairs.add(new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel)));
+        samePathMethodAcceptorPairs.add(new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel, subResourceMode)));
     }
 
-    private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod) {
+    private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod, boolean subResourceMode) {
         Router methodAcceptor = null;
         switch (resourceMethod.getType()) {
             case RESOURCE_METHOD:
@@ -202,7 +195,7 @@ public final class RuntimeModelBuilder {
                 methodAcceptor = Routers.asTreeAcceptor(createInflector(resourceMethod));
                 break;
             case SUB_RESOURCE_LOCATOR:
-                methodAcceptor = new SubResourceLocatorRouter(injector, services, workers, resourceMethod);
+                methodAcceptor = new SubResourceLocatorRouter(injector, services, this, resourceMethod);
                 break;
         }
 
@@ -218,10 +211,15 @@ public final class RuntimeModelBuilder {
     private Inflector<ContainerRequest, ContainerResponse> createInflector(
             final ResourceMethod method) {
 
-        return resourceMethodInvokerBuilder.build(method);
+        return resourceMethodInvokerBuilder.build(
+                method,
+                nameBoundRequestFilters,
+                nameBoundResponseFilters,
+                dynamicBinders
+        );
     }
 
-    private Router createRootTreeAcceptor(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
+    private Router createRootTreeAcceptor(RouteToPathBuilder<PathPattern> lastRoutedBuilder, boolean subResourceMode) {
         final Router routingRoot;
         if (lastRoutedBuilder != null) {
             routingRoot = lastRoutedBuilder.build();
@@ -252,7 +250,7 @@ public final class RuntimeModelBuilder {
             final RouteToPathBuilder<PathPattern> lastRoutedBuilder,
             final PathPattern pathPattern,
             final Router uriPushingAcceptor,
-            final Router methodAcceptor) {
+            final Router methodAcceptor, boolean subResourceMode) {
 
         if (subResourceMode) {
             return routedBuilder(lastRoutedBuilder).route(pathPattern)
@@ -267,9 +265,10 @@ public final class RuntimeModelBuilder {
     /**
      * Build a runtime model.
      *
+     * @param subResourceMode if {@code true}, all resources will be processed as sub-resources.
      * @return runtime request routing root.
      */
-    public Router buildModel() {
+    public Router buildModel(boolean subResourceMode) {
         final PushMatchedUriRouter uriPushingRouter = injector.inject(PushMatchedUriRouter.class);
         RouteToPathBuilder<PathPattern> lastRoutedBuilder = null;
 
@@ -283,7 +282,7 @@ public final class RuntimeModelBuilder {
                         lastRoutedBuilder,
                         closedResourcePathPattern,
                         uriPushingRouter,
-                        methodSelectingAcceptorBuilder.build(workers, methodAcceptorPairs));
+                        methodSelectingAcceptorBuilder.build(workers, methodAcceptorPairs), subResourceMode);
             }
             rootAcceptors.clear();
         }
@@ -323,11 +322,11 @@ public final class RuntimeModelBuilder {
                 }
                 assert srRoutedBuilder != null;
                 lastRoutedBuilder = routeMethodAcceptor(
-                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build());
+                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build(), subResourceMode);
             }
             subResourceAcceptors.clear();
         }
-        return createRootTreeAcceptor(lastRoutedBuilder);
+        return createRootTreeAcceptor(lastRoutedBuilder, subResourceMode);
     }
 
     private RouteBuilder<PathPattern> routedBuilder(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
@@ -341,5 +340,22 @@ public final class RuntimeModelBuilder {
      */
     public void setWorkers(MessageBodyWorkers workers) {
         this.workers = workers;
+    }
+
+    /**
+     * Set the name bound filters and dynamic binders.
+     *
+     * @param nameBoundRequestFilters name bound request filters.
+     * @param nameBoundResponseFilters name bound response filters.
+     * @param dynamicBinders dynamic binders.
+     */
+    public void setBoundProviders(
+            MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
+            MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+            List<DynamicBinder> dynamicBinders
+    ) {
+        this.nameBoundRequestFilters = nameBoundRequestFilters;
+        this.nameBoundResponseFilters = nameBoundResponseFilters;
+        this.dynamicBinders = dynamicBinders;
     }
 }

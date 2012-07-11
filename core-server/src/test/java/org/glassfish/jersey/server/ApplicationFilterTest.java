@@ -48,7 +48,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.ProviderInstanceBindingModule;
@@ -60,7 +59,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 
-import junit.framework.Assert;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -99,9 +97,7 @@ public class ApplicationFilterTest {
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
-
-        // TODO: should be "1"; current value is "2" because of HK2 issue
-        Assert.assertTrue(called.intValue() >= 1);
+        assertEquals(1, called.intValue());
     }
 
     @Test
@@ -132,9 +128,7 @@ public class ApplicationFilterTest {
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
-
-        // TODO: should be "1"; current value is "2" because of HK2 issue
-        Assert.assertTrue(called.intValue() >= 1);
+        assertEquals(1, called.intValue());
     }
 
     public abstract class CommonFilter implements ContainerRequestFilter {

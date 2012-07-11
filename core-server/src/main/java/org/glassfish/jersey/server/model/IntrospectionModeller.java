@@ -39,12 +39,14 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,11 +56,13 @@ import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Suspend;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
@@ -113,6 +117,8 @@ final class IntrospectionModeller {
                 extractMediaTypes(annotatedResourceClass.getAnnotation(Consumes.class));
         final List<MediaType> defaultProducedTypes =
                 extractMediaTypes(annotatedResourceClass.getAnnotation(Produces.class));
+        final Collection<Class<? extends Annotation>> defaultNameBindings =
+                ReflectionHelper.getAnnotationTypes(annotatedResourceClass, NameBinding.class);
 
         final MethodList methodList = new MethodList(handlerClass);
 
@@ -130,9 +136,9 @@ final class IntrospectionModeller {
         resourceBuilder.name(handlerClass.getName());
 
         addResourceMethods(resourceBuilder, methodList, keepEncodedParams,
-                defaultConsumedTypes, defaultProducedTypes);
+                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings);
         addSubResourceMethods(resourceBuilder, methodList, keepEncodedParams,
-                defaultConsumedTypes, defaultProducedTypes);
+                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings);
         addSubResourceLocators(resourceBuilder, methodList, keepEncodedParams);
 
         if (LOGGER.isLoggable(Level.FINEST)) {
@@ -282,18 +288,21 @@ final class IntrospectionModeller {
     }
 
     private void addResourceMethods(
-            Resource.Builder resourceBuilder,
-            MethodList methodList,
-            boolean encodedParameters,
-            List<MediaType> defaultConsumedTypes,
-            List<MediaType> defaultProducedTypes) {
-
+            final Resource.Builder resourceBuilder,
+            final MethodList methodList,
+            final boolean encodedParameters,
+            final List<MediaType> defaultConsumedTypes,
+            final List<MediaType> defaultProducedTypes,
+            final Collection<Class<? extends Annotation>> defaultNameBindings
+    ) {
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withoutAnnotation(Path.class)) {
             ResourceMethod.Builder methodBuilder =
                     resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
                             .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters)
+                            .nameBindings(defaultNameBindings)
+                            .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
 
             declareSuspend(am, methodBuilder);
@@ -301,12 +310,13 @@ final class IntrospectionModeller {
     }
 
     private void addSubResourceMethods(
-            Resource.Builder resourceBuilder,
-            MethodList methodList,
-            boolean encodedParameters,
-            List<MediaType> defaultConsumedTypes,
-            List<MediaType> defaultProducedTypes) {
-
+            final Resource.Builder resourceBuilder,
+            final MethodList methodList,
+            final boolean encodedParameters,
+            final List<MediaType> defaultConsumedTypes,
+            final List<MediaType> defaultProducedTypes,
+            final Collection<Class<? extends Annotation>> defaultNameBindings
+    ) {
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
             ResourceMethod.Builder methodBuilder =
                     resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
@@ -314,6 +324,8 @@ final class IntrospectionModeller {
                             .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters)
+                            .nameBindings(defaultNameBindings)
+                            .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
 
             declareSuspend(am, methodBuilder);

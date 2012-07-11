@@ -39,8 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.MatchResult;
+
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -51,8 +58,9 @@ import org.glassfish.jersey.uri.UriTemplate;
  * Jersey request matching and routing context.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public interface RoutingContext {
+public interface RoutingContext extends ResourceInfo {
 
     /**
      * Push the result of the successful request URI routing pattern match.
@@ -142,4 +150,41 @@ public interface RoutingContext {
      */
     public Inflector<ContainerRequest, ContainerResponse> getInflector();
 
+    /**
+     * Get all bound request filters applicable to this request.
+     * This is populated once the right resource method is matched.
+     *
+     * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    public Collection<ContainerRequestFilter> getBoundRequestFilters();
+
+    /**
+     * Get all bound response filters applicable to this request.
+     * This is populated once the right resource method is matched.
+     *
+     * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    public Collection<ContainerResponseFilter> getBoundResponseFilters();
+
+    /**
+     * Get all <b>dynamically</b> bound reader interceptors applicable to this request.
+     * This is populated once the right resource method is matched.
+     * Note, this method does not return name-bound interceptors.
+     *
+     * @return All dynamically bound reader interceptors applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    public Collection<ReaderInterceptor> getBoundReaderInterceptors();
+
+    /**
+     * Get all <b>dynamically</b> bound writer interceptors applicable to this request.
+     * This is populated once the right resource method is matched.
+     * Note, this method does not return name-bound interceptors.
+     *
+     * @return All dynamically bound writer interceptors applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    public Collection<WriterInterceptor> getBoundWriterInterceptors();
 }
