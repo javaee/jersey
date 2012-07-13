@@ -82,12 +82,12 @@ public abstract class ParamException extends WebApplicationException {
      * All such exceptions of this type will contain a response with a 404
      * (Not Found) status code.
      */
-    public static abstract class URIParamException extends ParamException {
+    public static abstract class UriParamException extends ParamException {
 
         private static final long serialVersionUID = 44233528459885541L;
 
-        protected URIParamException(Throwable cause,
-                Class<? extends Annotation> parameterType, String name, String defaultStringValue) {
+        protected UriParamException(Throwable cause,
+                                    Class<? extends Annotation> parameterType, String name, String defaultStringValue) {
             super(cause, Response.Status.NOT_FOUND, parameterType, name, defaultStringValue);
         }
     }
@@ -95,7 +95,7 @@ public abstract class ParamException extends WebApplicationException {
     /**
      * A URI-parameter-based exception for errors with {@link PathParam}.
      */
-    public static class PathParamException extends URIParamException {
+    public static class PathParamException extends UriParamException {
 
         private static final long serialVersionUID = -2708538214692835633L;
 
@@ -107,7 +107,7 @@ public abstract class ParamException extends WebApplicationException {
     /**
      * A URI-parameter-based exception for errors with {@link MatrixParam}.
      */
-    public static class MatrixParamException extends URIParamException {
+    public static class MatrixParamException extends UriParamException {
 
         private static final long serialVersionUID = -5849392883623736362L;
 
@@ -119,7 +119,7 @@ public abstract class ParamException extends WebApplicationException {
     /**
      * A URI-parameter-based exception for errors with {@link QueryParam}.
      */
-    public static class QueryParamException extends URIParamException {
+    public static class QueryParamException extends UriParamException {
 
         private static final long serialVersionUID = -4822407467792322910L;
 

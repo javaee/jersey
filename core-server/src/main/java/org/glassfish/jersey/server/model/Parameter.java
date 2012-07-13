@@ -60,6 +60,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.Uri;
 import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -110,6 +111,10 @@ public class Parameter implements AnnotatedElement {
          * Form parameter injection source.
          */
         FORM,
+        /**
+         * Uri parameter injection source.
+         */
+        URI,
         /**
          * Unknown parameter injection source.
          */
@@ -207,6 +212,18 @@ public class Parameter implements AnnotatedElement {
             @Override
             public Parameter.Source getSource() {
                 return Parameter.Source.FORM;
+            }
+        });
+        m.put(Uri.class, new ParamAnnotationHelper<Uri>() {
+
+            @Override
+            public String getValueOf(Uri a) {
+                return a.value();
+            }
+
+            @Override
+            public Parameter.Source getSource() {
+                return Parameter.Source.URI;
             }
         });
         return Collections.unmodifiableMap(m);
