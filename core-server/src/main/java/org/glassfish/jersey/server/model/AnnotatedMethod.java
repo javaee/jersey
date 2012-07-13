@@ -60,7 +60,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  *
  * @author Paul Sandoz
  */
-final class AnnotatedMethod implements AnnotatedElement {
+public final class AnnotatedMethod implements AnnotatedElement {
 
     @SuppressWarnings("unchecked")
     private static final Set<Class<? extends Annotation>> METHOD_META_ANNOTATIONS = getSet(

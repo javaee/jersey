@@ -44,9 +44,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Response.Status;
 
 /**
@@ -62,6 +64,8 @@ import javax.ws.rs.core.Response.Status;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
+@BindingPriority(BindingPriority.SECURITY - 10) // should be one of the first post-matching filters to get executed
+@PostMatching // must be post-matching to ensure it is executed after any HTTP method overriding
 public class CsrfProtectionFilter implements ContainerRequestFilter {
 
     /**

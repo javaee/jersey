@@ -56,13 +56,14 @@
 
     <!-- we can use full maven properties incl. inheritance ! -->
     <properties>
+        <javax.annotation.version>1.0</javax.annotation.version>
         <junit-version>4.5</junit-version>
         <pax-exam-version>1.2.3</pax-exam-version>
         <jetty-version>0.7.1</jetty-version>
         <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
         <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
         <osgi.version>4.2.0</osgi.version>
-        <!-- end of the workaround --> 
+        <!-- end of the workaround -->
     </properties>
 
     <profiles>
@@ -89,6 +90,12 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>jsr250-api</artifactId>
+            <version>${javax.annotation.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
             <artifactId>war-bundle</artifactId>
@@ -131,7 +138,7 @@
             <artifactId>org.osgi.core</artifactId>
             <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
             <version>${osgi.version}</version>
-            <!-- end of the workaround --> 
+            <!-- end of the workaround -->
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -139,7 +146,7 @@
             <artifactId>org.osgi.compendium</artifactId>
             <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
             <version>${osgi.version}</version>
-            <!-- end of the workaround --> 
+            <!-- end of the workaround -->
             <scope>test</scope>
         </dependency>
         <dependency>

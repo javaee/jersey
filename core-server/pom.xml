@@ -71,7 +71,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-		<inherited>true</inherited>
+                <inherited>true</inherited>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -103,6 +103,13 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>jsr250-api</artifactId>
+            <version>${javax.annotation.version}</version>
             <scope>provided</scope>
         </dependency>
 

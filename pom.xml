@@ -853,6 +853,7 @@
         <jersey1.version>1.12</jersey1.version>
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0</servlet3.version>
+        <javax.annotation.version>1.0</javax.annotation.version>
 
         <jaxb.api.version>2.1</jaxb.api.version>
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>

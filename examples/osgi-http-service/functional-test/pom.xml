@@ -87,6 +87,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>jsr250-api</artifactId>
+            <version>${javax.annotation.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.examples.osgi-http-service</groupId>
             <artifactId>bundle</artifactId>
             <version>${project.version}</version>

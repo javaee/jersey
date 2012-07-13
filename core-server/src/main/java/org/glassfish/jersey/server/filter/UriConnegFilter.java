@@ -94,6 +94,7 @@ import com.google.common.collect.Maps;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  */
+// TODO: @PreMatching
 public class UriConnegFilter implements ContainerRequestFilter {
 
     protected final Map<String, MediaType> mediaTypeMappings;

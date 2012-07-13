@@ -83,6 +83,7 @@ tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/InjectedProviderTe
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/InvalidFormTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/JAXBContextResolverTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/NoMessageBodyWorkerTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/RolesAllowedTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageMediaTypeTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegMediaTypeTest.java
@@ -376,7 +377,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/Redirection
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ReloadResourceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ReloadTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ResponseWriterMetadataTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/RolesAllowedTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ServletRequestParametersTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/StatusCodeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/TraceTest.java
