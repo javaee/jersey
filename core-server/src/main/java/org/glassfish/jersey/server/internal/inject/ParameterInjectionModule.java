@@ -90,6 +90,11 @@ import com.sun.hk2.component.InjectionResolver;
  * Support for cookie parameter injection as defined by the JAX-RS specification.
  * </dd>
  *
+ * <dt>{@link javax.ws.rs.Uri @Uri}</dt>
+ * <dd>
+ * Support for {@link javax.ws.rs.client.WebTarget} injection as defined by the JAX-RS specification.
+ * </dd>
+ *
  * </dl>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -114,6 +119,7 @@ public class ParameterInjectionModule extends AbstractModule {
         bind(ValueFactoryProvider.class).to(CookieParamValueFactoryProvider.class).in(Singleton.class);
         bind(ValueFactoryProvider.class).to(EntityParamValueFactoryProvider.class).in(Singleton.class);
         bind(ValueFactoryProvider.class).to(DelegatedInjectionValueFactoryProvider.class).in(Singleton.class);
+        bind(ValueFactoryProvider.class).to(WebTargetValueFactoryProvider.class).in(Singleton.class);
 
         // Injection resolvers
         // @XxxParam
@@ -123,5 +129,6 @@ public class ParameterInjectionModule extends AbstractModule {
         bind(InjectionResolver.class).to(HeaderParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
         bind(InjectionResolver.class).to(FormParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
         bind(InjectionResolver.class).to(CookieParamValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
+        bind(InjectionResolver.class).to(WebTargetValueFactoryProvider.InjectionResolver.class).in(Singleton.class);
     }
 }

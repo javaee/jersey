@@ -79,14 +79,20 @@
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
-             </plugin>
-         </plugins>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 

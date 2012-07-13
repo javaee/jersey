@@ -196,8 +196,8 @@ public class StringReaderTest extends AbstractTest {
         }
     }
 
-    public static class URIExceptionMapper extends BaseExceptionMapper<ParamException.URIParamException> {
-        public Response toResponse(ParamException.URIParamException exception) {
+    public static class UriExceptionMapper extends BaseExceptionMapper<ParamException.UriParamException> {
+        public Response toResponse(ParamException.UriParamException exception) {
             return toResponse(exception, "uri");
         }
     }
@@ -357,7 +357,7 @@ public class StringReaderTest extends AbstractTest {
     @Test
     public void testURIParamException() throws ExecutionException, InterruptedException {
         initiateWebApplication(ParamExceptionMapperResource.class,
-                URIExceptionMapper.class);
+                UriExceptionMapper.class);
 
         ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
         assertEquals("uri", responseContext.getEntity());

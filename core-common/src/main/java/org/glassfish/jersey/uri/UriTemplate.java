@@ -268,6 +268,7 @@ public class UriTemplate {
      *
      * @return {@code true} if the template ends in a '/', otherwise false.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public final boolean endsWithSlash() {
         return endsWithSlash;
     }
@@ -289,6 +290,7 @@ public class UriTemplate {
      * @return {@code true} if the template variable is a member of the template, otherwise
      *         false.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public final boolean isTemplateVariablePresent(String name) {
         for (String s : templateVariables) {
             if (s.equals(name)) {
@@ -715,7 +717,7 @@ public class UriTemplate {
 
         if (fragment != null && fragment.length() > 0) {
             sb.append('#');
-            offset = createURIComponent(UriComponent.Type.FRAGMENT, fragment, values,
+            createURIComponent(UriComponent.Type.FRAGMENT, fragment, values,
                     offset, encode, mapValues, sb);
         }
         return sb.toString();
