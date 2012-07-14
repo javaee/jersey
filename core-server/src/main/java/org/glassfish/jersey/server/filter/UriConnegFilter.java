@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
@@ -95,6 +96,7 @@ import com.google.common.collect.Maps;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 // TODO: @PreMatching
+@BindingPriority(BindingPriority.HEADER_DECORATOR)
 public class UriConnegFilter implements ContainerRequestFilter {
 
     protected final Map<String, MediaType> mediaTypeMappings;

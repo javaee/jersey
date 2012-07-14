@@ -83,6 +83,7 @@ tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/InjectedProviderTe
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/InvalidFormTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/JAXBContextResolverTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/NoMessageBodyWorkerTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/PostToPutDeleteTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/RolesAllowedTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageMediaTypeTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLanguageTest.java
@@ -342,7 +343,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotated
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedWithSplitResourceFiltersTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredResourceFilterFactoriesTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LoggingFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/PostToPutDeleteTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/ResourceFilterFactoriesTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/UriModificationFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/CanonicalizationFeatureTest.java

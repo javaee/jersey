@@ -159,6 +159,28 @@ public final class ServerProperties {
      */
     public static final String LANGUAGE_MAPPINGS = "jersey.config.server.languageMappings";
 
+    /**
+     * Defines configuration of HTTP method overriding.
+     * This property is used by {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter} to determine
+     * where it should look for method override information (e.g. request header or query parameters).
+     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} enum lists the allowed property
+     * values.
+     * <p>
+     *     The property value must be an instance of {@link String}, {@code String[]},
+     *     {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} or
+     *     {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source[]}.
+     *     Each {@code String} instance represents one or more class names separated by characters declared in
+     *     {@link #COMMON_DELIMITERS}.
+     * </p>
+     * <p>
+     *     The default value is {@code "HEADER,QUERY"}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    public static final String HTTP_METHOD_OVERRIDE = "jersey.config.server.httpMethodOverride";
+
     private ServerProperties() {
         // prevents instantiation
     }
