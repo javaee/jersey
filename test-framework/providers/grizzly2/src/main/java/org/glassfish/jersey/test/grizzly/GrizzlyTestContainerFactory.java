@@ -43,8 +43,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -69,7 +68,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
         }
 
         @Override
-        public Client getClient() {
+        public ClientConfig getClientConfig() {
             return null;
         }
 

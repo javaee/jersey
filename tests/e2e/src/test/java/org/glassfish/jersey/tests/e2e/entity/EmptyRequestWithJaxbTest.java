@@ -47,7 +47,6 @@ import java.util.Set;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -57,6 +56,7 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonConfiguration;
 import org.glassfish.jersey.media.json.JsonJaxbContext;
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
@@ -119,7 +119,7 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(Configuration clientConfig) {
+        protected void configureClient(ClientConfig clientConfig) {
             clientConfig.register(JsonJaxbFeature.class);
         }
 
@@ -184,7 +184,7 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(Configuration clientConfig) {
+        protected void configureClient(ClientConfig clientConfig) {
             clientConfig.register(JsonJaxbFeature.class);
         }
 
@@ -207,7 +207,7 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(Configuration clientConfig) {
+        protected void configureClient(ClientConfig clientConfig) {
             clientConfig.register(JsonJaxbFeature.class);
         }
 
@@ -230,7 +230,7 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(Configuration clientConfig) {
+        protected void configureClient(ClientConfig clientConfig) {
             clientConfig.register(JsonJaxbFeature.class);
         }
 

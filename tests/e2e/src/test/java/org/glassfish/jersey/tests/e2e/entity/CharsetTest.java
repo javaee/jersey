@@ -48,7 +48,6 @@ import java.util.Map;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -64,6 +63,7 @@ import javax.ws.rs.ext.Provider;
 
 import javax.xml.bind.JAXBContext;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonJaxbContext;
 import org.glassfish.jersey.media.json.JsonJaxbFeature;
 import org.glassfish.jersey.media.json.JsonJaxbBinder;
@@ -142,7 +142,7 @@ public class CharsetTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
         clientConfig.register(new JsonJaxbFeature());
         clientConfig.getProviderClasses().add(MyJaxbContextResolver.class);

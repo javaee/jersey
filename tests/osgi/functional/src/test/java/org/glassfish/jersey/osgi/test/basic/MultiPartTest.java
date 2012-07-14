@@ -43,23 +43,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URI;
-import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.media.multipart.MultiPartBinder;
+import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -67,11 +67,9 @@ import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
@@ -79,18 +77,14 @@ import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 @RunWith(JUnit4TestRunner.class)
 public class MultiPartTest {
 
-    private static final Logger LOGGER = Logger.getLogger(MultiPartTest.class.getName());
     private static final int port = Helper.getEnvVariable("jersey.test.port", 8080);
     private static final String CONTEXT = "/jersey";
     private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(Helper.getEnvVariable("jersey.test.port", 8080)).path(CONTEXT).build();
 
-    @Inject
-    protected BundleContext bundleContext;
-
     @Configuration
     public static Option[] configuration() {
 
-        Option[] options = options(
+        return options(
 //                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("jersey.test.port").value(String.valueOf(port)),
                 systemPackage("sun.misc"),
@@ -154,8 +148,6 @@ public class MultiPartTest {
 
                 // start felix framework
                 felix());
-
-        return options;
     }
 
     @Path("/multipart-simple")
@@ -177,7 +169,7 @@ public class MultiPartTest {
         final ResourceConfig resourceConfig = new ResourceConfig(MultiPartResource.class).addBinders(new MultiPartBinder());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
-        Client c = JerseyClientFactory.clientBuilder().binders(new MultiPartClientBinder()).build();
+        Client c = ClientFactory.newClient(new ClientConfig().binders(new MultiPartClientBinder()));
         final Response response = c.target(baseUri).path("/multipart-simple").request().buildGet().invoke();
 
         MultiPart result = response.readEntity(MultiPart.class);

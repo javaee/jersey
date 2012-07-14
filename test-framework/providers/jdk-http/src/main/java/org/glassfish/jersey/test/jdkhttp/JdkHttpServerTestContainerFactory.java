@@ -43,8 +43,7 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -74,7 +73,7 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
         }
 
         @Override
-        public Client getClient() {
+        public ClientConfig getClientConfig() {
             return null;
         }
 

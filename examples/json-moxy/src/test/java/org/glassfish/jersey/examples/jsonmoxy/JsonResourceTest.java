@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.examples.jsonmoxy;
 
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonMoxyFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -66,7 +66,7 @@ public class JsonResourceTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         clientConfig.register(new JsonMoxyFeature());
     }
 

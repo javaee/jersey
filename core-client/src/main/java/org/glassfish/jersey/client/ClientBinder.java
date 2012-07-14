@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,15 +86,15 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 class ClientBinder extends AbstractBinder {
 
-    private static class ConfigurationInjectionFactory extends ReferencingFactory<JerseyConfiguration> {
+    private static class ConfigurationInjectionFactory extends ReferencingFactory<ClientConfig> {
         @Inject
-        public ConfigurationInjectionFactory(Provider<Ref<JerseyConfiguration>> referenceFactory) {
+        public ConfigurationInjectionFactory(Provider<Ref<ClientConfig>> referenceFactory) {
             super(referenceFactory);
         }
 
         @Override
         @RequestScoped
-        public JerseyConfiguration provide() {
+        public ClientConfig provide() {
             return super.provide();
         }
     }
@@ -232,7 +232,7 @@ class ClientBinder extends AbstractBinder {
                 to(FeaturesAndProperties.class).
                 in(RequestScoped.class);
 
-        bindFactory(ReferencingFactory.<JerseyConfiguration>referenceFactory()).to(new TypeLiteral<Ref<JerseyConfiguration>>() {
+        bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
         // Client-side processing chain

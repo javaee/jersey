@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.examples.clipboard;
 
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -61,7 +61,7 @@ public class ClipboardTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration c) {
+    protected void configureClient(ClientConfig c) {
         c.register(ClipboardDataProvider.ApplicationJson.class).register(ClipboardDataProvider.TextPlain.class);
     }
 

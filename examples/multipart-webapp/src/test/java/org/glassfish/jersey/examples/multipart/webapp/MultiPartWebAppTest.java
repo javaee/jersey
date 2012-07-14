@@ -43,7 +43,6 @@ import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -58,21 +57,17 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainer;
-
-import org.w3c.dom.Document;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
+import org.w3c.dom.Document;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -94,8 +89,8 @@ public class MultiPartWebAppTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        return JerseyClientFactory.clientBuilder().binders(new MultiPartClientBinder()).build();
+    protected void configureClient(ClientConfig clientConfig) {
+        clientConfig.binders(new MultiPartClientBinder());
     }
 
     @Test

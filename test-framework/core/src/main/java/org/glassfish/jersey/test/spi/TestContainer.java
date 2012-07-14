@@ -41,7 +41,7 @@ package org.glassfish.jersey.test.spi;
 
 import java.net.URI;
 
-import javax.ws.rs.client.Client;
+import org.glassfish.jersey.client.ClientConfig;
 
 /**
  * A test container.
@@ -51,12 +51,12 @@ import javax.ws.rs.client.Client;
 public interface TestContainer {
 
     /**
-     * Get a client specific to the test container.
+     * Get a client configuration specific to the test container.
      *
-     * @return a client specific to the test container, otherwise {@code null} if there
-     *         is no specific client required.
+     * @return a client configuration specific to the test container, otherwise {@code null} if there
+     *         is no specific client configuration required.
      */
-    Client getClient();
+    ClientConfig getClientConfig();
 
     /**
      * Get the base URI of the application.

@@ -60,7 +60,7 @@ import com.google.common.collect.Maps;
 public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     // TODO base URI support
-    private final JerseyConfiguration configuration;
+    private final ClientConfig configuration;
     private final UriBuilder targetUri;
     private final Map<String, Object> pathParams;
     private final JerseyClient client;
@@ -86,14 +86,14 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
         this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
     }
 
-    protected WebTarget(UriBuilder targetUri, Map<String, Object> pathParams, JerseyConfiguration jerseyConfiguration, JerseyClient client) {
+    protected WebTarget(UriBuilder targetUri, Map<String, Object> pathParams, ClientConfig clientConfig, JerseyClient client) {
         this.targetUri = targetUri;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);
         } else {
             this.pathParams = Maps.newHashMap();
         }
-        this.configuration = jerseyConfiguration;
+        this.configuration = clientConfig;
         this.client = client;
     }
 
@@ -130,7 +130,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public JerseyConfiguration configuration() {
+    public ClientConfig configuration() {
         return configuration;
     }
 

@@ -54,7 +54,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -62,6 +61,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -84,7 +84,7 @@ public class BeanStreamingTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         for (Class<?> c : getClass().getDeclaredClasses()) {
             if (c.getAnnotation(Provider.class) != null) {
                 clientConfig.register(c);

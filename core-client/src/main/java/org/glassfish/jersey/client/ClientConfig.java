@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,28 +42,35 @@ package org.glassfish.jersey.client;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 
 import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.process.Inflector;
+
+import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.Configuration JAX-RS client
+ * Jersey implementation of {@link Configuration JAX-RS client
  * configuration} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public class JerseyConfiguration implements javax.ws.rs.client.Configuration, FeaturesAndProperties {
+public class ClientConfig implements Configuration, FeaturesAndProperties {
 
     /**
      * Default encapsulation of the internal configuration state.
      */
-    private static class State implements javax.ws.rs.client.Configuration {
+    private static class State implements Configuration {
 
         /**
          * Configuration state change strategy.
@@ -108,6 +115,10 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
         private final Set<Object> providerInstances;
         private final BiMap<Class<? extends Feature>, Feature> features;
         private final Set<Feature> featuresSetView;
+        private final List<Binder> binders;
+        private Inflector<ClientRequest, ClientResponse> connector;
+
+        private volatile boolean locked = false;
 
         /**
          * Default configuration state constructor with {@link StateChangeStrategy "identity"}
@@ -121,6 +132,8 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
 
             this.providerClasses = new LinkedHashSet<Class<?>>();
             this.providerInstances = new LinkedHashSet<Object>();
+
+            this.binders = Lists.newLinkedList();
 
             this.features = HashBiMap.create();
             this.featuresSetView = Collections.unmodifiableSet(features.values());
@@ -141,8 +154,12 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
             this.providerInstances = new LinkedHashSet<Object>(original.providerInstances);
 
+            this.binders = Lists.newLinkedList(original.binders);
+
             this.features = HashBiMap.create(original.features);
             this.featuresSetView = Collections.unmodifiableSet(this.features.values());
+
+            this.connector = original.connector;
         }
 
         private State copy() {
@@ -197,7 +214,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
 
         @Override
         public State update(final javax.ws.rs.client.Configuration configuration) {
-            return new State(((JerseyConfiguration) configuration).state);
+            return new State(((ClientConfig) configuration).state);
         }
 
         @Override
@@ -230,7 +247,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
         }
 
         @Override
-        public State setProperties(final Map<String, ? extends Object> properties) {
+        public State setProperties(final Map<String, ?> properties) {
             final State state = strategy.onChange(this);
             state.properties.clear();
             state.properties.putAll(properties);
@@ -244,26 +261,60 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
             return state;
         }
 
+        void binders(Binder... binders) {
+            checkLocked();
+            if (binders != null && binders.length > 0) {
+                Collections.addAll(this.binders, binders);
+            }
+        }
+
+        List<Binder> getCustomBinders() {
+            return binders;
+        }
+
+        void setConnector(Inflector<ClientRequest, ClientResponse> connector) {
+            checkLocked();
+            this.connector = connector;
+        }
+
+        Inflector<ClientRequest, ClientResponse> getConnector() {
+            return connector;
+        }
+
+        void lock() {
+            locked = true;
+        }
+
+        private void checkLocked() {
+            if (locked) {
+                throw new IllegalStateException();
+            }
+        }
+
         @Override
         public boolean equals(final Object obj) {
             if (!(obj instanceof State)) {
                 return false;
             }
             State other = (State) obj;
-            return (properties == other.properties
-                    || properties != null && properties.equals(other.properties))
-                    && (providerClasses == other.providerClasses
-                    || providerClasses != null && providerClasses.equals(other.providerClasses))
-                    && (providerInstances == other.providerInstances
-                    || providerInstances != null && providerInstances.equals(other.providerInstances));
+            return this == other
+                    || (properties == other.properties || properties.equals(other.properties))
+                    && (providerClasses == other.providerClasses || providerClasses.equals(other.providerClasses))
+                    && (providerInstances == other.providerInstances || providerInstances.equals(other.providerInstances))
+                    && (binders == other.binders || binders.equals(other.binders))
+                    && (connector == other.connector
+                    || connector != null && connector.equals(other.connector))
+                    ;
         }
 
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 41 * hash + (this.properties != null ? this.properties.hashCode() : 0);
-            hash = 41 * hash + (this.providerClasses != null ? this.providerClasses.hashCode() : 0);
-            hash = 41 * hash + (this.providerInstances != null ? this.providerInstances.hashCode() : 0);
+            hash = 41 * hash + this.properties.hashCode();
+            hash = 41 * hash + this.providerClasses.hashCode();
+            hash = 41 * hash + this.providerInstances.hashCode();
+            hash = 41 * hash + this.binders.hashCode();
+            hash = 41 * hash + (this.connector != null ? this.connector.hashCode() : 0);
             return hash;
         }
     }
@@ -277,8 +328,30 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
      * Construct a new Jersey configuration instance with the default features
      * and property values.
      */
-    public JerseyConfiguration() {
+    public ClientConfig() {
         this.state = new State();
+    }
+
+    /**
+     * Construct a new Jersey configuration instance and register the provided list of provider classes.
+     * @param providerClasses provider classes to be registered with this client configuration.
+     */
+    public ClientConfig(Class<?>... providerClasses) {
+        this();
+        for (Class<?> providerClass : providerClasses) {
+            state.register(providerClass);
+        }
+    }
+
+    /**
+     * Construct a new Jersey configuration instance and register the provided list of provider instances.
+     * @param providers provider instances to be registered with this client configuration.
+     */
+    public ClientConfig(Object... providers) {
+        this();
+        for (Object provider : providers) {
+            state.register(provider);
+        }
     }
 
     /**
@@ -288,7 +361,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
      * @param that original {@link javax.ws.rs.client.Configuration}.
      *
      */
-    JerseyConfiguration(javax.ws.rs.client.Configuration that) {
+    ClientConfig(javax.ws.rs.client.Configuration that) {
         this.state = new State();
 
         state = state.setProperties(that.getProperties());
@@ -311,7 +384,7 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
      *
      * @param state to be referenced from the new configuration instance.
      */
-    private JerseyConfiguration(final State state) {
+    private ClientConfig(final State state) {
         this.state = state;
     }
 
@@ -325,9 +398,9 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
      *
      * @return snapshot of the current configuration.
      */
-    JerseyConfiguration snapshot() {
+    ClientConfig snapshot() {
         state.markAsShared();
-        return new JerseyConfiguration(state);
+        return new ClientConfig(state);
     }
 
     @Override
@@ -365,20 +438,20 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
     }
 
     @Override
-    public JerseyConfiguration update(final javax.ws.rs.client.Configuration configuration) {
+    public ClientConfig update(final javax.ws.rs.client.Configuration configuration) {
         state = state.update(configuration);
         return this;
     }
 
     @Override
-    public JerseyConfiguration register(final Class<?> providerClass) {
+    public ClientConfig register(final Class<?> providerClass) {
         // TODO features
         state = state.register(providerClass);
         return this;
     }
 
     @Override
-    public JerseyConfiguration register(final Object provider) {
+    public ClientConfig register(final Object provider) {
         // TODO features properly
         if (provider instanceof Feature) {
             state = state.enable((Feature) provider);
@@ -389,15 +462,49 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
     }
 
     @Override
-    public JerseyConfiguration setProperties(final Map<String, ? extends Object> properties) {
+    public ClientConfig setProperties(final Map<String, ?> properties) {
         state = state.setProperties(properties);
         return this;
     }
 
     @Override
-    public JerseyConfiguration setProperty(final String name, final Object value) {
+    public ClientConfig setProperty(final String name, final Object value) {
         state = state.setProperty(name, value);
         return this;
+    }
+
+    /**
+     * Set Jersey client transport connector.
+     *
+     * @param connector client transport connector.
+     * @return this client config instance.
+     */
+    public ClientConfig connector(Inflector<ClientRequest, ClientResponse> connector) {
+        state.setConnector(connector);
+        return this;
+    }
+
+    /**
+     * Register custom HK2 binders.
+     *
+     * @param binders custom HK2 binders to be registered with the Jersey client.
+     * @return this client config instance.
+     */
+    public ClientConfig binders(Binder... binders) {
+        state.binders(binders);
+        return this;
+    }
+
+    void lock() {
+        state.lock();
+    }
+
+    Inflector<ClientRequest, ClientResponse> getConnector() {
+        return state.getConnector();
+    }
+
+    List<Binder> getCustomBinders() {
+        return state.getCustomBinders();
     }
 
     @Override
@@ -408,11 +515,8 @@ public class JerseyConfiguration implements javax.ws.rs.client.Configuration, Fe
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final JerseyConfiguration other = (JerseyConfiguration) obj;
-        if (this.state != other.state && (this.state == null || !this.state.equals(other.state))) {
-            return false;
-        }
-        return true;
+        final ClientConfig other = (ClientConfig) obj;
+        return this.state == other.state || (this.state != null && this.state.equals(other.state));
     }
 
     @Override

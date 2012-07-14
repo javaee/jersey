@@ -65,7 +65,7 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
 
     private static final class References {
         @Inject
-        private Ref<JerseyConfiguration> configuration;
+        private Ref<ClientConfig> configuration;
         @Inject
         private Ref<ExceptionMappers> exceptionMappers;
         @Inject
@@ -99,7 +99,7 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
     public ClientRequest apply(ClientRequest requestContext) {
         References refs = locator.createAndInitialize(References.class); // request-scoped
 
-        final JerseyConfiguration cfg = requestContext.getConfiguration();
+        final ClientConfig cfg = requestContext.getConfiguration();
         providerBinder.bindClasses(cfg.getProviderClasses());
         providerBinder.bindInstances(cfg.getProviderInstances());
         final ExceptionMapperFactory mappers = new ExceptionMapperFactory(locator);

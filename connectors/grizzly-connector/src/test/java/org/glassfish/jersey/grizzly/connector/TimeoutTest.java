@@ -43,17 +43,14 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -88,10 +85,8 @@ public class TimeoutTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        Client c = super.getClient(tc, applicationHandler);
-        c.configuration().setProperty(ClientProperties.READ_TIMEOUT, 1000);
-        return JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(c.configuration())).build();
+    protected void configureClient(ClientConfig clientConfig) {
+        clientConfig.connector(new GrizzlyConnector(clientConfig)).setProperty(ClientProperties.READ_TIMEOUT, 1000);
     }
 
     @Test

@@ -51,7 +51,6 @@ import java.lang.reflect.Type;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -59,6 +58,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.client.ClientConfig;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -145,7 +146,7 @@ public class InjectedProviderTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         clientConfig.register(BeanReader.class);
     }
 

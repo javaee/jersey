@@ -42,13 +42,14 @@ package org.glassfish.jersey.grizzly.connector;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -83,7 +84,8 @@ public class FollowRedirectsTest extends JerseyTest {
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         Client c = super.getClient(tc, applicationHandler);
-        return JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(c.configuration())).build();
+        ClientConfig cc = new ClientConfig().connector(new GrizzlyConnector(c.configuration()));
+        return ClientFactory.newClient(cc);
     }
 
     @Test

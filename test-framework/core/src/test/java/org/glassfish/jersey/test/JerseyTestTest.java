@@ -43,8 +43,8 @@ import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -77,7 +77,7 @@ public class JerseyTestTest {
             return new TestContainer() {
 
                 @Override
-                public Client getClient() {
+                public ClientConfig getClientConfig() {
                     return null;
                 }
 

@@ -6,11 +6,11 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.media.json.JsonJaxbBinder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -119,7 +119,7 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration c) {
+    protected void configureClient(ClientConfig c) {
         c.register(new JsonJacksonFeature());
     }
 

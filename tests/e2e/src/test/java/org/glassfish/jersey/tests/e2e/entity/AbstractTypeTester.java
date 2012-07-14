@@ -49,7 +49,6 @@ import java.util.HashSet;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -59,6 +58,7 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -112,7 +112,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         clientConfig.getProviderClasses().add(RequestEntityInterceptor.class);
     }
 

@@ -40,25 +40,20 @@
 
 package org.glassfish.jersey.grizzly.connector;
 
-import java.net.URI;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -99,43 +94,32 @@ public class MethodTest extends JerseyTest{
         return new ResourceConfig(HttpMethodResource.class);
     }
 
+    @Override
+    protected void configureClient(ClientConfig clientConfig) {
+        clientConfig.connector(new GrizzlyConnector(clientConfig));
+    }
+
     @Test
     public void testGet() {
-        final URI u = target().getUri();
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        WebTarget t = client.target(u);
-
-        Response response = t.path(PATH).request().get();
+        Response response = target(PATH).request().get();
         assertEquals("GET", response.readEntity(String.class));
     }
 
-    @Ignore
+    @Test
     public void testPost() {
-        final URI u = target().getUri();
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        WebTarget t = client.target(u);
-
-        Response response = t.path(PATH).request().post(Entity.entity("POST",MediaType.TEXT_PLAIN));
+        Response response = target(PATH).request().post(Entity.entity("POST",MediaType.TEXT_PLAIN));
         assertEquals("POST", response.readEntity(String.class));
     }
 
     @Test
     public void testPut() {
-        final URI u = target().getUri();
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        WebTarget t = client.target(u);
-
-        Response response = t.path(PATH).request().put(Entity.entity("PUT", MediaType.TEXT_PLAIN));
+        Response response = target(PATH).request().put(Entity.entity("PUT", MediaType.TEXT_PLAIN));
         assertEquals("PUT", response.readEntity(String.class));
     }
 
     @Test
     public void testDelete() {
-        final URI u = target().getUri();
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        WebTarget t = client.target(u);
-
-        Response response = t.path(PATH).request().delete();
+        Response response = target(PATH).request().delete();
         assertEquals("DELETE", response.readEntity(String.class));
     }
 }

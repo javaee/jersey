@@ -44,12 +44,13 @@ import java.net.URI;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -84,7 +85,7 @@ public class HttpHeadersTest extends JerseyTest{
     @Test
     public void testPost() {
         final URI u = target().getUri();
-        JerseyClient c = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
+        Client c = ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().configuration())));
         WebTarget t = c.target(u);
 
         Response response = t.path("test").request().header("X-CLIENT", "client").post(null);

@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.client;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientException;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.process.Inflector;
@@ -50,9 +52,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class CustomTransportTest {
+public class CustomConnectorTest {
 
-    public static class NullTransport implements Inflector<ClientRequest, ClientResponse> {
+    public static class NullConnector implements Inflector<ClientRequest, ClientResponse> {
 
         @Override
         public ClientResponse apply(ClientRequest request) {
@@ -61,8 +63,8 @@ public class CustomTransportTest {
     }
 
     @Test
-    public void testNullTransport() {
-        JerseyClient client = new JerseyClient.Builder().transport(new NullTransport()).build();
+    public void testNullConnector() {
+        Client client = ClientFactory.newClient(new ClientConfig().connector(new NullConnector()));
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
         } catch (ClientException ce) {

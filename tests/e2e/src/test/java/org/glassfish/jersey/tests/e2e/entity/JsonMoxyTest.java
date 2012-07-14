@@ -56,7 +56,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -68,6 +67,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonMoxyBinder;
 import org.glassfish.jersey.media.json.JsonMoxyFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -141,7 +141,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
         clientConfig.register(new JsonMoxyFeature());
     }

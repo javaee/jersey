@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
-import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,8 +49,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -121,15 +119,16 @@ public class ParallelTest extends JerseyTest {
         return new ResourceConfig(ParallelTest.MyResource.class);
     }
 
+    @Override
+    protected void configureClient(ClientConfig clientConfig) {
+        clientConfig.connector(new GrizzlyConnector(clientConfig));
+    }
+
     @Ignore
     @Test
     public void testParallel() {
-        final URI u = target().getUri();
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new GrizzlyConnector(this.client().configuration())).build();
-        WebTarget t = client.target(u);
-
         for (int i = 1; i <= numberOfThreads; i++) {
-            ResourceThread rt = new ResourceThread(t, PATH, Method.GET);
+            ResourceThread rt = new ResourceThread(target(), PATH, Method.GET);
             rt.start();
         }
 

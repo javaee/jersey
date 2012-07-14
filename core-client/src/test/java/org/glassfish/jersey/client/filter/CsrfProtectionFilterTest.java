@@ -39,14 +39,15 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.process.Inflector;
 
 import org.junit.Before;
@@ -60,12 +61,12 @@ import static org.junit.Assert.assertNull;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class CsrfProtectionFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+    private Invocation.Builder invBuilder;
 
     @Before
     public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(CsrfProtectionFilter.class);
+        Client client = ClientFactory.newClient(new ClientConfig(CsrfProtectionFilter.class)
+                .connector(new TestConnector()));
         invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
     }
 
@@ -81,7 +82,7 @@ public class CsrfProtectionFilterTest {
         assertNotNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
     }
 
-    private static class TestTransport implements Inflector<ClientRequest, ClientResponse> {
+    private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(

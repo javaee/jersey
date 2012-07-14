@@ -41,10 +41,10 @@ package org.glassfish.jersey.examples.jsonp;
 
 import java.util.List;
 
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -66,7 +66,7 @@ public class JsonpTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration config) {
+    protected void configureClient(ClientConfig config) {
         config.register(JAXBContextResolver.class);
     }
 

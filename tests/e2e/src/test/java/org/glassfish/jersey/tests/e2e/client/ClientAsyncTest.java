@@ -61,7 +61,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.jersey.client.JerseyConfiguration;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.test.JerseyTest;
@@ -85,7 +85,7 @@ public class ClientAsyncTest extends JerseyTest {
 
     @Test
     public void testAsync() throws ExecutionException, InterruptedException {
-        JerseyConfiguration jerseyConfig = new JerseyConfiguration();
+        ClientConfig jerseyConfig = new ClientConfig();
         jerseyConfig.register
                 (AsyncProvider.class).register(ThreadInterceptor.class);
         Client client = ClientFactory.newClient(jerseyConfig);
@@ -94,7 +94,7 @@ public class ClientAsyncTest extends JerseyTest {
 
     @Test
     public void testAsyncWithProvidersInstances() throws ExecutionException, InterruptedException {
-        JerseyConfiguration jerseyConfig = new JerseyConfiguration();
+        ClientConfig jerseyConfig = new ClientConfig();
         jerseyConfig.register
                 (new AsyncProvider()).register(ThreadInterceptor.class);
         Client client = ClientFactory.newClient(jerseyConfig);
@@ -104,7 +104,7 @@ public class ClientAsyncTest extends JerseyTest {
 
     @Test
     public void testSync() throws ExecutionException, InterruptedException {
-        JerseyConfiguration jerseyConfig = new JerseyConfiguration();
+        ClientConfig jerseyConfig = new ClientConfig();
         jerseyConfig.register
                 (AsyncProvider.class).register(ThreadInterceptor.class);
         Client client = ClientFactory.newClient(jerseyConfig);
@@ -114,7 +114,7 @@ public class ClientAsyncTest extends JerseyTest {
 
     @Test
     public void testSyncWithProvidersInstances() throws ExecutionException, InterruptedException {
-        JerseyConfiguration jerseyConfig = new JerseyConfiguration();
+        ClientConfig jerseyConfig = new ClientConfig();
         jerseyConfig.register
                 (new AsyncProvider()).register(ThreadInterceptor.class);
         Client client = ClientFactory.newClient(jerseyConfig);

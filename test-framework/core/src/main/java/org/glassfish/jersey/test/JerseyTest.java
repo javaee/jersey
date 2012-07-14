@@ -48,11 +48,11 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -435,8 +435,8 @@ public abstract class JerseyTest {
     /**
      * Creates an instance of {@link Client}.
      *
-     * Checks whether TestContainer provides client instance and
-     * if not, ClientFactory obtained through getClientFactory()
+     * Checks whether TestContainer provides ClientConfig instance and
+     * if not, empty new {@link org.glassfish.jersey.client.ClientConfig} instance
      * will be used to create new client instance.
      *
      * This method is called exactly once when JerseyTest is created.
@@ -446,22 +446,20 @@ public abstract class JerseyTest {
      * @return A Client instance.
      */
     protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        Client c = tc.getClient();
+        ClientConfig cc = tc.getClientConfig();
 
-        if (c != null) {
-            return c;
-        } else {
-            c = ClientFactory.newClient();
+        if (cc == null) {
+            cc = new ClientConfig();
         }
 
         //check if logging is required
         if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            c.configuration().register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
+            cc.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
         }
 
-        configureClient(c.configuration());
+        configureClient(cc);
 
-        return c;
+        return ClientFactory.newClient(cc);
     }
 
     /**
@@ -470,7 +468,7 @@ public abstract class JerseyTest {
      *
      * @param clientConfig Client configuration that can be modified to configure the client.
      */
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         // nothing
     }
 

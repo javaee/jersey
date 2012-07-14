@@ -66,7 +66,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     // Executing client instance
     private final JerseyClient client;
     // Request-scoped configuration instance
-    private final JerseyConfiguration configuration;
+    private final ClientConfig configuration;
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
     // Absolute request URI
@@ -89,7 +89,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param propertiesDelegate properties delegate.
      */
     public ClientRequest(
-            URI requestUri, JerseyClient client, JerseyConfiguration configuration, PropertiesDelegate propertiesDelegate) {
+            URI requestUri, JerseyClient client, ClientConfig configuration, PropertiesDelegate propertiesDelegate) {
         this.requestUri = requestUri;
         this.client = client;
         this.configuration = configuration;
@@ -182,7 +182,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     }
 
     @Override
-    public JerseyConfiguration getConfiguration() {
+    public ClientConfig getConfiguration() {
         return configuration;
     }
 

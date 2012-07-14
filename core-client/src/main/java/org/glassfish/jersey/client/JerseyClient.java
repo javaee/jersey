@@ -40,13 +40,12 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Link;
@@ -84,74 +83,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
-
-    /**
-     * {@link JerseyClient Jersey client} instance builder.
-     */
-    public static class Builder {
-
-        private Inflector<ClientRequest, ClientResponse> connector;
-        private final List<Binder> customBinders = new LinkedList<Binder>();
-
-        /**
-         * Package-private Jersey client builder constructor used by
-         * {@link JerseyClientFactory}.
-         */
-        Builder() {
-        }
-
-        /**
-         * Set Jersey client transport connector.
-         *
-         * @param connector client transport connector.
-         * @return updated Jersey client builder.
-         */
-        public Builder transport(Inflector<ClientRequest, ClientResponse> connector) {
-            this.connector = connector;
-            return this;
-        }
-
-        /**
-         * Register custom HK2 binders for the Jersey client.
-         *
-         * @param binders custom HK2 binders to be registered with the Jersey client.
-         * @return updated Jersey client builder.
-         */
-        public Builder binders(Binder... binders) {
-            if (binders != null && binders.length > 0) {
-                Collections.addAll(this.customBinders, binders);
-            }
-            return this;
-        }
-
-        /**
-         * Build a new Jersey client.
-         *
-         * @return new Jersey client.
-         */
-        public JerseyClient build() {
-            return new JerseyClient(new JerseyConfiguration(), connector, customBinders);
-        }
-
-        /**
-         * Build a new Jersey client using an additional custom configuration.
-         *
-         * @param configuration JAX-RS client configuration for the new Jersey
-         *                      client.
-         * @return new Jersey client.
-         */
-        public JerseyClient build(javax.ws.rs.client.Configuration configuration) {
-            final JerseyConfiguration jerseyConfiguration;
-            if (configuration instanceof JerseyConfiguration) {
-                jerseyConfiguration = new JerseyConfiguration(configuration);
-            } else {
-                jerseyConfiguration = (JerseyConfiguration) configuration;
-            }
-            return new JerseyClient(jerseyConfiguration, connector, customBinders);
-        }
-    }
-
-    private final JerseyConfiguration configuration;
+    private final ClientConfig configuration;
     private final AtomicBoolean closedFlag;
     private Inflector<ClientRequest, ClientResponse> connector;
     private RequestInvoker<ClientRequest, ClientResponse> invoker;
@@ -163,19 +95,16 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * Create a new Jersey client instance.
      *
      * @param configuration jersey client configuration.
-     * @param connector     transport connector. If {@code null}, the {@link HttpUrlConnector
-     *                      default transport} will be used.
-     * @param customBinders custom HK2 binders to be registered with the client.
      */
-    protected JerseyClient(
-            final JerseyConfiguration configuration,
-            final Inflector<ClientRequest, ClientResponse> connector,
-            final List<Binder> customBinders) {
-        this.configuration = configuration;
+    protected JerseyClient(final Configuration configuration) {
+        this.configuration = configuration instanceof ClientConfig ? (ClientConfig) configuration :
+                new ClientConfig(configuration);
         this.closedFlag = new AtomicBoolean(false);
-        this.connector = (connector == null) ? new HttpUrlConnector() : connector;
 
-        initialize(customBinders);
+        this.configuration.lock();
+        this.connector = this.configuration.getConnector() == null ? new HttpUrlConnector() :
+                this.configuration.getConnector();
+        initialize(this.configuration.getCustomBinders());
     }
 
     /**
@@ -329,7 +258,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public JerseyConfiguration configuration() {
+    public ClientConfig configuration() {
         checkClosed();
         return configuration;
     }

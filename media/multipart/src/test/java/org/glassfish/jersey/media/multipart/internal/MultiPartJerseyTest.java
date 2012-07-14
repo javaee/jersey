@@ -40,22 +40,14 @@
 package org.glassfish.jersey.media.multipart.internal;
 
 import java.util.Set;
-import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartBinder;
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 /**
  * Common parent class for MultiPart test cases.
@@ -63,9 +55,6 @@ import org.glassfish.jersey.test.spi.TestContainer;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 abstract class MultiPartJerseyTest extends JerseyTest {
-
-    private static final Logger LOGGER = Logger.getLogger(MultiPartJerseyTest.class.getName());
-
     @Override
     protected Application configure() {
         return new ResourceConfig()
@@ -82,18 +71,8 @@ abstract class MultiPartJerseyTest extends JerseyTest {
     protected abstract Set<Class<?>> getResourceClasses();
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        final JerseyClient client = JerseyClientFactory.clientBuilder().binders(new MultiPartClientBinder()).build();
-
-        final Configuration configuration = client.configuration();
-        configuration.getProviderClasses().add(MultiPartBeanProvider.class);
-
-        // check if logging is required
-        if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            configuration.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
-        }
-
-        return client;
+    protected void configureClient(ClientConfig clientConfig) {
+        clientConfig.binders(new MultiPartClientBinder()).register(MultiPartBeanProvider.class);
     }
 
 }

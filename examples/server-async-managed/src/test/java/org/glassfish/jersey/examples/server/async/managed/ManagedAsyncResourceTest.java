@@ -48,12 +48,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.json.JsonJacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -88,7 +88,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration config) {
+    protected void configureClient(ClientConfig config) {
         config.register(new JsonJacksonFeature());
     }
 

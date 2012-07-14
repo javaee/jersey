@@ -53,20 +53,12 @@ public class JerseyClientFactory extends ClientFactory {
 
     @Override
     protected Client getClient() {
-        return clientBuilder().build();
+        return getClient(new ClientConfig());
     }
 
     @Override
     protected Client getClient(Configuration configuration) {
-        return clientBuilder().build(configuration);
+        return new JerseyClient(configuration);
     }
 
-    /**
-     * Get a new Jersey {@link JerseyClient.Builder client builder}.
-     *
-     * @return Jersey client builder.
-     */
-    public static JerseyClient.Builder clientBuilder() {
-        return new JerseyClient.Builder();
-    }
 }

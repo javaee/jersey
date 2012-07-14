@@ -43,11 +43,11 @@ import java.net.SocketTimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -85,7 +85,7 @@ public class TimeoutTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(Configuration clientConfig) {
+    protected void configureClient(ClientConfig clientConfig) {
         clientConfig.setProperty(ClientProperties.READ_TIMEOUT, 1000);
     }
 

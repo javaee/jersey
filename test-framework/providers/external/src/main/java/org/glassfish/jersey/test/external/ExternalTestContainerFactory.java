@@ -39,13 +39,14 @@
  */
 package org.glassfish.jersey.test.external;
 
-import org.glassfish.jersey.client.JerseyClient;
+import java.net.URI;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
 
 /**
  * A Web-based test container factory for creating test container instances
@@ -88,7 +89,7 @@ public class ExternalTestContainerFactory implements TestContainerFactory {
             this.baseUri = UriBuilder.fromUri(baseUri).build();
         }
 
-        public JerseyClient getClient() {
+        public ClientConfig getClientConfig() {
             return null;
         }
 

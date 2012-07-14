@@ -40,15 +40,16 @@
 package org.glassfish.jersey.client.filter;
 
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyClientFactory;
-import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.process.Inflector;
 
@@ -62,12 +63,12 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class HttpBasicAuthFilterTest {
-    private JerseyInvocation.Builder invBuilder;
+    private Invocation.Builder invBuilder;
 
     @Before
     public void setUp() {
-        JerseyClient client = JerseyClientFactory.clientBuilder().transport(new TestTransport()).build();
-        client.configuration().register(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"));
+        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
+                .connector(new TestConnector()));
         invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
     }
 
@@ -77,7 +78,7 @@ public class HttpBasicAuthFilterTest {
         assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeader(HttpHeaders.AUTHORIZATION));
     }
 
-    private static class TestTransport implements Inflector<ClientRequest, ClientResponse> {
+    private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(

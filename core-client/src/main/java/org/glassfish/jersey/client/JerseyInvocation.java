@@ -91,7 +91,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * @param configuration Jersey client configuration.
          * @param client        Jersey client that will process the invocation.
          */
-        protected Builder(URI uri, JerseyConfiguration configuration, JerseyClient client) {
+        protected Builder(URI uri, ClientConfig configuration, JerseyClient client) {
             this.requestContext = new ClientRequest(uri, client, configuration, new MapPropertiesDelegate());
         }
 
@@ -202,7 +202,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public JerseyConfiguration configuration() {
+        public ClientConfig configuration() {
             return requestContext.getConfiguration();
         }
 
@@ -687,7 +687,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public JerseyConfiguration configuration() {
+    public ClientConfig configuration() {
         return requestContext.getConfiguration();
     }
 
