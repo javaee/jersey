@@ -316,7 +316,7 @@ public class MediaTypes {
      *         {@link #QUALITY_SOURCE_MEDIA_TYPE_COMPARATOR}.
      */
     public static List<MediaType> createQualitySourceMediaTypes(Produces mime) {
-        if (mime == null) {
+        if (mime == null || mime.value().length == 0) {
             return GENERAL_QUALITY_SOURCE_MEDIA_TYPE_LIST;
         }
 
