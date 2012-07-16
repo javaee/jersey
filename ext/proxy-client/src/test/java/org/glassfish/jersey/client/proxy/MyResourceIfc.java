@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -57,7 +59,7 @@ public interface MyResourceIfc {
     @POST
     @Consumes({MediaType.APPLICATION_XML})
     @Produces({MediaType.APPLICATION_XML})
-    MyBean postIt(MyBean entity);
+    List<MyBean> postIt(List<MyBean> entity);
 
     @Path("{id}")
     @GET

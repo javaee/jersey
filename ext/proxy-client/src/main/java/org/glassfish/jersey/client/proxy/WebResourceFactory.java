@@ -43,19 +43,33 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -107,6 +121,7 @@ public final class WebResourceFactory implements InvocationHandler {
      * @return Instance of a class implementing the resource interface that can
      * be used for making requests to the server.
      */
+    @SuppressWarnings("unchecked")
     public static <C> C newResource(Class<C> resourceInterface, WebTarget target, boolean ignoreResourcePath,
                                     MultivaluedMap<String, Object> headers, List<Cookie> cookies, Form form) {
         return (C) Proxy.newProxyInstance(resourceInterface.getClassLoader(),
@@ -124,6 +139,7 @@ public final class WebResourceFactory implements InvocationHandler {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // get the interface describing the resource
         Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
@@ -164,6 +180,7 @@ public final class WebResourceFactory implements InvocationHandler {
         form.asMap().putAll(this.form.asMap());
         Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
+        Type entityType = null;
         for (int i = 0; i < paramAnns.length; i++) {
             Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
             for (Annotation ann : paramAnns[i]) {
@@ -172,6 +189,7 @@ public final class WebResourceFactory implements InvocationHandler {
             Annotation ann;
             Object value = args[i];
             if (anns.isEmpty()) {
+                entityType = method.getGenericParameterTypes()[i];
                 entity = value;
             } else {
                 if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
@@ -267,10 +285,14 @@ public final class WebResourceFactory implements InvocationHandler {
             }
         }
 
+        GenericType responseGenericType = new GenericType(method.getGenericReturnType());
         if (entity != null) {
-            result = b.method(httpMethod, Entity.entity(entity, contentType), responseType);
+            if (entityType instanceof ParameterizedType) {
+                entity = new GenericEntity(entity, entityType);
+            }
+            result = b.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
         } else {
-            result = b.method(httpMethod, responseType);
+            result = b.method(httpMethod, responseGenericType);
         }
 
         return result;

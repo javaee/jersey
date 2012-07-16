@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import java.util.Collections;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -74,7 +76,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     public void testPostIt() {
         MyBean bean = new MyBean();
         bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(bean).name);
+        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
     }
 
     @Test

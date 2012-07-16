@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import java.util.List;
+
 public class MyResource implements MyResourceIfc {
 
     @Override
@@ -47,7 +49,7 @@ public class MyResource implements MyResourceIfc {
     }
 
     @Override
-    public MyBean postIt(MyBean entity) {
+    public List<MyBean> postIt(List<MyBean> entity) {
         return entity;
     }
 
