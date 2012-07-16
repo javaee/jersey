@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * TODO javadoc.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("combinedAnnotations")
 public class CombinedAnnotationResource {

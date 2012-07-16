@@ -45,17 +45,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJaxbBinder;
+import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Utility class which can create {@link JerseyApplication} instance and provides support
+ * Utility class which can create {@link org.glassfish.jersey.server.ApplicationHandler} instance and provides support
  * for running this sample from command line.
  *
- * @author Jakub Podlesak
- * @author Marek Potociar
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class App {
 
@@ -69,8 +69,7 @@ public class App {
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
 
-            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
+            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...", BASE_URI, ROOT_PATH));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -80,9 +79,7 @@ public class App {
     }
 
     public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig(ChangeList.class, JAXBContextResolver.class)
-                .addBinders(new JsonJaxbBinder());
-
-        return rc;
+        return new ResourceConfig(ChangeList.class, JaxbContextResolver.class).
+                addBinders(new JettisonBinder());
     }
 }

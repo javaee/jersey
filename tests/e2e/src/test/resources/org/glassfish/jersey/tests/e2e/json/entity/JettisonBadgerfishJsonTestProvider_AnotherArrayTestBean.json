@@ -1,0 +1,1 @@
+{"anotherArrayTestBean":{"cats":[{"name":{"$":"Foo"},"nickName":{"$":"Kitty"}},{"name":{"$":"Bar"},"nickName":{"$":"Puss"}}],"prop":{"$":"testProp"}}}

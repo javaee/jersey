@@ -70,10 +70,12 @@ import com.google.common.collect.Maps;
 /**
  * Parent class for all tests written using Jersey test framework.
  *
- * @author Paul Sandoz
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Srinivas Bhimisetty
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@SuppressWarnings("UnusedDeclaration")
 public abstract class JerseyTest {
 
     private static final Logger LOGGER = Logger.getLogger(TestContainerFactory.class.getName());
@@ -91,7 +93,7 @@ public abstract class JerseyTest {
      * The test container on which the tests would be run.
      */
     private final TestContainer tc;
-    private final Client client;
+    private Client client;
     private final ApplicationHandler application;
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
@@ -118,7 +120,6 @@ public abstract class JerseyTest {
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
-        this.client = getClient(tc, application);
     }
 
     /**
@@ -139,7 +140,6 @@ public abstract class JerseyTest {
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, testContainerFactory);
-        this.client = getClient(tc, application);
     }
 
     private ResourceConfig getResourceConfig(Application app) {
@@ -162,7 +162,6 @@ public abstract class JerseyTest {
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
-        this.client = getClient(tc, application);
     }
 
     /**
@@ -180,7 +179,6 @@ public abstract class JerseyTest {
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
-        this.client = getClient(tc, application);
     }
 
     /**
@@ -190,7 +188,7 @@ public abstract class JerseyTest {
      * @param featureName name of the enabled feature.
      */
     protected final void enable(String featureName) {
-        // TODO: perhaps we could reuse the resouce config for the test properties?
+        // TODO: perhaps we could reuse the resource config for the test properties?
         propertyMap.put(featureName, Boolean.TRUE.toString());
     }
 
@@ -300,19 +298,22 @@ public abstract class JerseyTest {
     }
 
     /**
-     * TODO
-     * @return TODO
-     * @throws TestContainerException TODO
+     * Returns an instance of {@link TestContainerFactory} class. This instance can be set by a constructor ({@link
+     * #JerseyTest(org.glassfish.jersey.test.spi.TestContainerFactory)}, as an application {@link Providers Provider} or the
+     * {@link TestContainerFactory} class can be set as a {@value org.glassfish.jersey.test.TestProperties#CONTAINER_FACTORY}
+     * property.
+     *
+     * @return an instance of {@link TestContainerFactory} class.
+     * @throws TestContainerException if the initialization of {@link TestContainerFactory} instance is not successful.
      */
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         if (testContainerFactory == null) {
             if (testContainerFactoryClass == null) {
 
-                Set<TestContainerFactory> testContainerFactories =
-                        Providers.getProviders(application.getServiceLocator(), TestContainerFactory.class);
-
                 final String tcfClassName = getProperty(TestProperties.CONTAINER_FACTORY);
                 if ((tcfClassName == null)) {
+                    Set<TestContainerFactory> testContainerFactories =
+                            Providers.getProviders(application.getServiceLocator(), TestContainerFactory.class);
 
                     if (testContainerFactories.size() >= 1) {
                         // if default factory is present, use it.
@@ -346,13 +347,13 @@ public abstract class JerseyTest {
                     } catch (ClassNotFoundException ex) {
                         throw new TestContainerException(
                                 "The default test container factory class name, "
-                                + tcfClassName
-                                + ", cannot be loaded", ex);
+                                        + tcfClassName
+                                        + ", cannot be loaded", ex);
                     } catch (ClassCastException ex) {
                         throw new TestContainerException(
                                 "The default test container factory class, "
-                                + tcfClassName
-                                + ", is not an instance of TestContainerFactory", ex);
+                                        + tcfClassName
+                                        + ", is not an instance of TestContainerFactory", ex);
                     }
                 }
             }
@@ -362,8 +363,8 @@ public abstract class JerseyTest {
             } catch (Exception ex) {
                 throw new TestContainerException(
                         "The default test container factory, "
-                        + testContainerFactoryClass
-                        + ", could not be instantiated", ex);
+                                + testContainerFactoryClass
+                                + ", could not be instantiated", ex);
             }
         }
 
@@ -377,7 +378,7 @@ public abstract class JerseyTest {
      * @return the created web resource
      */
     public WebTarget target() {
-        return client.target(tc.getBaseUri());
+        return client().target(tc.getBaseUri());
     }
 
     /**
@@ -399,6 +400,9 @@ public abstract class JerseyTest {
      * @return the configured client.
      */
     public Client client() {
+        if (client == null) {
+            client = getClient(tc, application);
+        }
         return client;
     }
 
@@ -406,7 +410,7 @@ public abstract class JerseyTest {
      * Set up the test by invoking {@link TestContainer#start() } on
      * the test container obtained from the test container factory.
      *
-     * @throws Exception TODO
+     * @throws Exception if an exception is thrown during setting up the test environment.
      */
     @Before
     public void setUp() throws Exception {
@@ -417,7 +421,7 @@ public abstract class JerseyTest {
      * Tear down the test by invoking {@link TestContainer#stop() } on
      * the test container obtained from the test container factory.
      *
-     * @throws Exception TODO
+     * @throws Exception if an exception is thrown during tearing down the test environment.
      */
     @After
     public void tearDown() throws Exception {
@@ -498,8 +502,8 @@ public abstract class JerseyTest {
             } catch (NumberFormatException e) {
                 LOGGER.log(Level.CONFIG,
                         "Value of " + TestProperties.CONTAINER_PORT
-                        + " property is not a valid positive integer [" + value + "]."
-                        + " Reverting to default [" + TestProperties.DEFAULT_CONTAINER_PORT + "].",
+                                + " property is not a valid positive integer [" + value + "]."
+                                + " Reverting to default [" + TestProperties.DEFAULT_CONTAINER_PORT + "].",
                         e);
             }
         }

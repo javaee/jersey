@@ -65,9 +65,23 @@
             <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>jersey-ejb</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>bookmark</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>bookmark-em</artifactId>
             <version>${project.version}</version>
             <classifier>gf-project-src</classifier>
             <type>zip</type>
@@ -79,7 +93,7 @@
             <classifier>javadoc</classifier>
             <type>jar</type>
         </dependency>
-  </dependencies>
+    </dependencies>
     <build>
         <plugins>
             <plugin>
@@ -93,9 +107,9 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                          <stripVersion>true</stripVersion>
-                          <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
-                          <outputDirectory>${project.build.directory}/dependency/examples</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                            <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
+                            <outputDirectory>${project.build.directory}/dependency/examples</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -105,9 +119,9 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                          <stripVersion>true</stripVersion>
-                          <includeGroupIds>org.glassfish.jersey.bundles</includeGroupIds>
-                          <outputDirectory>${project.build.directory}/dependency/apidocs</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                            <includeGroupIds>org.glassfish.jersey.bundles</includeGroupIds>
+                            <outputDirectory>${project.build.directory}/dependency/apidocs</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

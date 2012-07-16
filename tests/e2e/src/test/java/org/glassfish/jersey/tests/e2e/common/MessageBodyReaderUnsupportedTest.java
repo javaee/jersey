@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response.Status;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.glassfish.jersey.media.json.JsonJacksonFeature;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -78,7 +78,7 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
      */
     @Test
     public void testUnsupportedMesageBodyReader() {
-        client().configuration().register(new JsonJacksonFeature());
+        client().configuration().register(new JacksonFeature());
         TestEntity entity = new TestEntity("testEntity");
         Response response = target().path("test").request("application/json").post(Entity.json(entity));
 
@@ -103,6 +103,7 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
         @POST
         @Produces("application/json")
         @Consumes("application/json")
+        @SuppressWarnings("UnusedParameters")
         public TestEntity processJsonAndProduceNullAsJson(TestEntity entity) {
             methodJsonCalled = true;
             return null;
@@ -116,6 +117,7 @@ public class MessageBodyReaderUnsupportedTest extends JerseyTest {
      *
      */
     @XmlRootElement
+    @SuppressWarnings("UnusedDeclaration")
     public static class TestEntity {
 
         private String value;

@@ -326,7 +326,7 @@ public class MediaTypes {
     /**
      * Create a list of quality source media type from an array of media types.
      * <p>
-     * @param mediaTypes the array of meda types.
+     * @param mediaTypes the array of media types.
      * @return the list of {@link QualitySourceMediaType}, ordered according to
      * the quality source as the primary key and {@link #MEDIA_TYPE_COMPARATOR}
      * as the secondary key.

@@ -58,15 +58,15 @@
         <module>core</module>
         <!-- docs-and-examples will be built for attach-src-and-docs profile only, see bellow -->
     </modules>
-     <profiles>
-      <profile>
-        <id>attach-src-and-docs</id>
-        <activation>
-            <activeByDefault>false</activeByDefault>
-        </activation>
-        <modules>
-            <module>docs-and-examples</module>
-        </modules>
-      </profile>
+    <profiles>
+        <profile>
+            <id>attach-src-and-docs</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>docs-and-examples</module>
+            </modules>
+        </profile>
     </profiles>
 </project>

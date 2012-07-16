@@ -46,13 +46,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.GenericEntity;
 
-import org.glassfish.jersey.media.json.JsonWithPadding;
+import org.glassfish.jersey.server.JSONP;
 
 /**
- * TODO javadoc.
- *
  * @author Jakub Podlesak
  */
 @Path(App.ROOT_PATH)
@@ -70,14 +67,15 @@ public class ChangeList {
     }
 
     @GET
-    public JsonWithPadding getChanges(@QueryParam("callback") String callback, @QueryParam("type") int type) {
-        return new JsonWithPadding(new GenericEntity<List<ChangeRecordBean>>(changes) {
-        }, callback);
+    @JSONP(callback = "callback", isQueryParam = true)
+    public List<ChangeRecordBean> getChanges(@QueryParam("callback") String callback, @QueryParam("type") int type) {
+        return changes;
     }
 
     @GET
     @Path("latest")
-    public JsonWithPadding getLastChange(@QueryParam("callback") String callback, @QueryParam("type") int type) {
-        return new JsonWithPadding(changes.get(changes.size() - 1), callback);
+    @JSONP
+    public ChangeRecordBean getLastChange(@QueryParam("callback") String callback, @QueryParam("type") int type) {
+        return changes.get(changes.size() - 1);
     }
 }

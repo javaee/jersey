@@ -46,6 +46,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -70,6 +71,7 @@ import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
+import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.Factory;
@@ -262,6 +264,9 @@ public class ServerBinder extends AbstractBinder {
 
         //ChunkedResponseWriter
         bind(ChunkedResponseWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
+
+        // JSONP
+        bind(JsonWithPaddingInterceptor.class).to(WriterInterceptor.class).in(Singleton.class);
 
         bindAsContract(RequestInvokerBuilder.class);
         bindAsContract(ReferencesInitializer.class);

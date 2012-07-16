@@ -44,19 +44,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.json.JsonWithPadding;
-
 /**
- * TODO javadoc.
- *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("/nonJaxbResource")
 public class NonJaxbBeanResource {
 
     @GET
     @Produces({"application/javascript", MediaType.APPLICATION_JSON})
-    public JsonWithPadding getSimpleBeanJSONP() {
-        return new JsonWithPadding(new NonJaxbBean());
+    public NonJaxbBean getSimpleBeanJSONP() {
+        return new NonJaxbBean();
     }
 }

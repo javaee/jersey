@@ -67,12 +67,12 @@ public class JsonpTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.register(JAXBContextResolver.class);
+        config.register(JaxbContextResolver.class);
     }
 
     /**
      * Test checks that the application.wadl is reachable.
-     *
+     * <p/>
      * TODO: un-ignore once WADL is supported.
      */
     @Test
@@ -81,8 +81,7 @@ public class JsonpTest extends JerseyTest {
     public void testApplicationWadl() {
         WebTarget target = target();
         String applicationWadl = target.path("application.wadl").request().get(String.class);
-        assertTrue("Something wrong. Returned wadl length is not > 0",
-                applicationWadl.length() > 0);
+        assertTrue("Something wrong. Returned wadl length is not > 0", applicationWadl.length() > 0);
     }
 
     /**
@@ -93,9 +92,8 @@ public class JsonpTest extends JerseyTest {
     // TODO un-igonre
     public void testGetOnChangesJSONFormat() {
         WebTarget target = target();
-        GenericType<List<ChangeRecordBean>> genericType =
-                new GenericType<List<ChangeRecordBean>>() {
-                };
+        GenericType<List<ChangeRecordBean>> genericType = new GenericType<List<ChangeRecordBean>>() {
+        };
         // get the initial representation
         List<ChangeRecordBean> changes = target.path("changes").request("application/json").get(genericType);
         // check that there are two changes entries
@@ -118,9 +116,16 @@ public class JsonpTest extends JerseyTest {
      * Test check GET on the "changes" resource in "application/javascript" format.
      */
     @Test
-    public void testGetOnLatestChangeJavasriptFormat() {
+    public void testGetOnLatestChangeJavascriptFormat() {
         WebTarget target = target();
         String js = target.path("changes").request("application/x-javascript").get(String.class);
         assertTrue(js.startsWith("callback"));
+    }
+
+    @Test
+    public void testGetOnLatestChangeJavascriptFormatDifferentCallback() {
+        WebTarget target = target();
+        String js = target.path("changes").queryParam("callback", "parse").request("application/x-javascript").get(String.class);
+        assertTrue(js.startsWith("parse"));
     }
 }

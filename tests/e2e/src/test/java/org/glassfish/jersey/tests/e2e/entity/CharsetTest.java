@@ -64,9 +64,9 @@ import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.json.JsonJaxbContext;
-import org.glassfish.jersey.media.json.JsonJaxbFeature;
-import org.glassfish.jersey.media.json.JsonJaxbBinder;
+import org.glassfish.jersey.jettison.JettisonBinder;
+import org.glassfish.jersey.jettison.JettisonFeature;
+import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.codehaus.jettison.json.JSONArray;
@@ -79,20 +79,16 @@ import org.junit.Test;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class CharsetTest extends AbstractTypeTester {
+
     private static String[] CHARSETS = {
-            "US-ASCII",
-            "ISO-8859-1",
-            "UTF-8",
-            "UTF-16BE",
-            "UTF-16LE",
-            "UTF-16"
+            "US-ASCII", "ISO-8859-1", "UTF-8", "UTF-16BE", "UTF-16LE", "UTF-16"
     };
 
-    private static final String CONTENT =
-            "\u00A9 CONTENT \u00FF \u2200 \u22FF";
+    private static final String CONTENT = "\u00A9 CONTENT \u00FF \u2200 \u22FF";
 
     @Path("/StringCharsetResource")
     public static class StringCharsetResource {
+
         @Path("US-ASCII")
         @POST
         @Produces("text/plain;charset=US-ASCII")
@@ -138,13 +134,13 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new JsonJaxbBinder());
+        return ((ResourceConfig) super.configure()).addBinders(new JettisonBinder());
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.register(new JsonJaxbFeature());
+        clientConfig.register(new JettisonFeature());
         clientConfig.register(MyJaxbContextResolver.class);
     }
 
@@ -165,6 +161,7 @@ public class CharsetTest extends AbstractTypeTester {
     }
 
     public static abstract class CharsetResource<T> {
+
         @Context
         HttpHeaders h;
 
@@ -177,6 +174,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Path("/StringResource")
     public static class StringResource extends CharsetResource<String> {
+
     }
 
     @Test
@@ -184,9 +182,9 @@ public class CharsetTest extends AbstractTypeTester {
         _test(CONTENT, StringResource.class);
     }
 
-
     @Path("/FormMultivaluedMapResource")
     public static class FormMultivaluedMapResource extends CharsetResource<MultivaluedMap<String, String>> {
+
     }
 
     @Test
@@ -200,6 +198,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Path("/FormResource")
     public static class FormResource extends CharsetResource<Form> {
+
     }
 
     @Test
@@ -213,6 +212,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Path("/JSONObjectResource")
     public static class JSONObjectResource extends CharsetResource<JSONObject> {
+
     }
 
     @Test
@@ -228,6 +228,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Path("/JSONOArrayResource")
     public static class JSONOArrayResource extends CharsetResource<JSONArray> {
+
     }
 
     @Test
@@ -238,9 +239,9 @@ public class CharsetTest extends AbstractTypeTester {
         _test(array, JSONOArrayResource.class, MediaType.APPLICATION_JSON_TYPE);
     }
 
-
     @Path("/JAXBBeanResource")
     public static class JAXBBeanResource extends CharsetResource<JaxbBean> {
+
     }
 
     @Test
@@ -255,10 +256,11 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Provider
     public static class MyJaxbContextResolver implements ContextResolver<JAXBContext> {
+
         JAXBContext context;
 
         public MyJaxbContextResolver() throws Exception {
-            context = new JsonJaxbContext(JaxbBean.class);
+            context = new JettisonJaxbContext(JaxbBean.class);
         }
 
         public JAXBContext getContext(Class<?> objectType) {
@@ -280,6 +282,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Path("/ReaderResource")
     public static class ReaderResource extends CharsetResource<Reader> {
+
     }
 
     @Test

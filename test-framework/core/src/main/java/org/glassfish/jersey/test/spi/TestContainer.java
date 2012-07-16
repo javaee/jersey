@@ -56,24 +56,22 @@ public interface TestContainer {
      * @return a client configuration specific to the test container, otherwise {@code null} if there
      *         is no specific client configuration required.
      */
-    ClientConfig getClientConfig();
+    public ClientConfig getClientConfig();
 
     /**
      * Get the base URI of the application.
      *
      * @return the base URI of the application.
      */
-    URI getBaseUri();
+    public URI getBaseUri();
 
     /**
      * Start the container.
-     *
      */
-    void start();
+    public void start();
 
     /**
-     * Stop the contaner.
-     *
+     * Stop the container.
      */
-    void stop();
+    public void stop();
 }

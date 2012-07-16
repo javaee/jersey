@@ -15,7 +15,7 @@
         <!-- uncomment this to get JSON support:
          <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json</artifactId>
+            <artifactId>jersey-media-moxy</artifactId>
             <version>\${jersey-version}</version>
         </dependency>
         -->

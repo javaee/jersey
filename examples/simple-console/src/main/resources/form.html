@@ -1,0 +1,96 @@
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+	<title>A Form</title>
+	<script type="text/javascript">
+		function setColours() {
+			var http_request = new XMLHttpRequest();
+			if (document.bio.hint.value.length > 0)
+				http_request.open("GET", "form/colours?match="+document.bio.hint.value, false);
+			else
+				http_request.open("GET", "form/colours", false);
+			http_request.setRequestHeader("Accept", "application/json");
+			http_request.send(null);
+			if (http_request.status == 200) {
+				list = eval("(" + http_request.responseText + ")");
+				document.bio.colour.options.length = 0;
+				document.bio.colour.options[0] = new Option("Pick a colour", "", true, false);
+				for (var i = 0; i<list.length; i++) {
+					document.bio.colour.options[i+1] = new Option(list[i], list[i], false, false);
+				}
+			} else {
+				alert("There was a problem fetching the list of colours.");
+			}
+			http_request = null;
+		}
+	</script>
+</head>
+<body>
+<p>Tell me about yourself:</p>
+<form name="bio" action="form" method="POST">
+	<table>
+		<tr>
+			<td align="right">Name:</td>
+			<td><input type="text" name="name" value="" size="30" /></td>
+		</tr>
+		<tr>
+			<td align="right">Favorite colour:</td>
+			<td>
+				<select name="colour" onmousedown="setColours()">
+					<option>Pick a colour</option>
+				</select> <i>Populated dynamically when you click on the control</i><br/>
+				<input type="text" name="hint" value="" size="13"/> <i>Type a hint to reduce the number of options</i>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<input type="submit" value="Submit" name="submit" />
+			</td>
+		</tr>
+	</table>
+</form>
+</body>
+</html>

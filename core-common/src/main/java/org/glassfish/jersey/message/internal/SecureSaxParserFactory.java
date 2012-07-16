@@ -160,6 +160,16 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         return spf.getFeature(s);
     }
 
+    private boolean isXdkParserFactory(final SAXParserFactory parserFactory) {
+        try {
+            final Class<?> xdkFactoryClass = Class.forName("oracle.xml.jaxp.JXSAXParserFactory");
+            return xdkFactoryClass.isAssignableFrom(parserFactory.getClass());
+        } catch (ClassNotFoundException e) {
+            // Ignore this.
+        }
+        return false;
+    }
+
     private static final class WrappingSAXParser extends SAXParser {
         private final SAXParser sp;
 

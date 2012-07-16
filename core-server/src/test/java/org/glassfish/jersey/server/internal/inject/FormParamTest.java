@@ -148,7 +148,7 @@ public class FormParamTest extends AbstractTest {
         assertEquals("foo", responseContext.getEntity());
     }
 
-    @XmlRootElement
+    @XmlRootElement(name = "jaxbBean")
     public static class JAXBBean {
 
         public String value;

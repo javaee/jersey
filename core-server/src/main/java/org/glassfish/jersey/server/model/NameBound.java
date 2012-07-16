@@ -43,7 +43,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 
 /**
- * Model component that can be name bound (i.e. be associated with name bould filters and interceptors).
+ * Model component that can be name bound (i.e. be associated with name bound filters and interceptors).
  *
  * A component implementing this interface provides additional information about
  * the name bindings attached to it.
