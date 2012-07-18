@@ -249,7 +249,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         return closedFlag.get();
     }
 
-    private void checkClosed() {
+    void checkClosed() {
         checkState(!closedFlag.get(), "Client instance has been closed.");
     }
 

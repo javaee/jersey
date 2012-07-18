@@ -121,26 +121,31 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public URI getUri() {
+        client.checkClosed();
         return targetUri.buildFromMap(pathParams);
     }
 
     @Override
     public UriBuilder getUriBuilder() {
+        client.checkClosed();
         return targetUri.clone();
     }
 
     @Override
     public ClientConfig configuration() {
+        client.checkClosed();
         return configuration;
     }
 
     @Override
     public WebTarget path(String path) throws NullPointerException {
+        client.checkClosed();
         return new WebTarget(getUriBuilder().path(path), this);
     }
 
     @Override
     public WebTarget pathParam(String name, Object value) throws IllegalArgumentException, NullPointerException {
+        client.checkClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
         result.setPathParam(name, value);
         return result;
@@ -148,6 +153,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public WebTarget pathParams(Map<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
+        client.checkClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
         result.replacePathParams(parameters);
         return result;
@@ -155,17 +161,20 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public WebTarget matrixParam(String name, Object... values) throws NullPointerException {
+        client.checkClosed();
         return new WebTarget(getUriBuilder().matrixParam(name, values), this);
     }
 
     @Override
     public WebTarget queryParam(String name, Object... values) throws NullPointerException {
+        client.checkClosed();
         return new WebTarget(getUriBuilder().queryParam(name, values), this);
     }
 
     @Override
     public WebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
         // TODO move the implementation to a proprietary Jersey uri builder or leave it here?
+        client.checkClosed();
         UriBuilder ub = getUriBuilder(); // clone
         for (Entry<String, List<Object>> e : parameters.entrySet()) {
             ub.queryParam(e.getKey(), e.getValue().toArray());
@@ -177,12 +186,14 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request() {
         // TODO values
+        client.checkClosed();
         return new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
     }
 
     @Override
     public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
         // TODO values
+        client.checkClosed();
         JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
@@ -191,6 +202,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
         // TODO values
+        client.checkClosed();
         JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
         b.request().accept(acceptedResponseTypes);
         return b;
