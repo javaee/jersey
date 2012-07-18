@@ -157,26 +157,16 @@ public class ClientConfigTest {
         fail("The test case is a prototype.");
     }
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
+    @Test(expected = UnsupportedOperationException.class)
     public void testGetProviderClasses() {
         ClientConfig instance = new ClientConfig();
-        Set expResult = null;
-        Set result = instance.getProviderClasses();
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        instance.getProviderClasses().add(ClientConfigTest.class);
     }
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
+    @Test(expected = UnsupportedOperationException.class)
     public void testGetProviderInstances() {
         ClientConfig instance = new ClientConfig();
-        Set expResult = null;
-        Set result = instance.getProviderInstances();
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        instance.getProviderInstances().add(this);
     }
 
     @Test

@@ -145,7 +145,7 @@ public class CharsetTest extends AbstractTypeTester {
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
         clientConfig.register(new JsonJaxbFeature());
-        clientConfig.getProviderClasses().add(MyJaxbContextResolver.class);
+        clientConfig.register(MyJaxbContextResolver.class);
     }
 
     @Test

@@ -113,7 +113,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.getProviderClasses().add(RequestEntityInterceptor.class);
+        clientConfig.register(RequestEntityInterceptor.class);
     }
 
     protected <T> void _test(T in, Class resource) {

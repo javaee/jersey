@@ -112,7 +112,9 @@ public class ClientConfig implements Configuration, FeaturesAndProperties {
         private final Map<String, Object> properties;
         private final Map<String, Object> immutablePropertiesView;
         private final Set<Class<?>> providerClasses;
+        private final Set<Class<?>> immutableClassesView;
         private final Set<Object> providerInstances;
+        private final Set<Object> immutableInstancesView;
         private final BiMap<Class<? extends Feature>, Feature> features;
         private final Set<Feature> featuresSetView;
         private final List<Binder> binders;
@@ -131,7 +133,9 @@ public class ClientConfig implements Configuration, FeaturesAndProperties {
             this.immutablePropertiesView = Collections.unmodifiableMap(properties);
 
             this.providerClasses = new LinkedHashSet<Class<?>>();
+            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.providerInstances = new LinkedHashSet<Object>();
+            this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
 
             this.binders = Lists.newLinkedList();
 
@@ -152,7 +156,9 @@ public class ClientConfig implements Configuration, FeaturesAndProperties {
             this.immutablePropertiesView = Collections.unmodifiableMap(properties);
 
             this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
+            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.providerInstances = new LinkedHashSet<Object>(original.providerInstances);
+            this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
 
             this.binders = Lists.newLinkedList(original.binders);
 
@@ -204,12 +210,12 @@ public class ClientConfig implements Configuration, FeaturesAndProperties {
 
         @Override
         public Set<Class<?>> getProviderClasses() {
-            return providerClasses;
+            return immutableClassesView;
         }
 
         @Override
         public Set<Object> getProviderInstances() {
-            return providerInstances;
+            return immutableInstancesView;
         }
 
         @Override

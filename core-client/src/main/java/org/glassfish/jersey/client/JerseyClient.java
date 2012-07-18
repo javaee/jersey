@@ -146,8 +146,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
     /**
      * Binds {@link RequestExecutorsProvider request executors} and {@link ResponseExecutorsProvider response executors}
-     * to all provider interfaces and removes them from the configuration, so that there will not be bound again in the
-     * {@link RequestProcessingInitializationStage}.
+     * to all provider interfaces.
      *
      * @param locator HK2 service locator.
      */
@@ -161,7 +160,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                 executors.add(clazz);
             }
         }
-        this.configuration.getProviderClasses().removeAll(executors);
         providerBinder.bindClasses(executors);
 
 
@@ -173,8 +171,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
                 executorInstances.add(instance);
             }
         }
-
-        this.configuration.getProviderInstances().removeAll(executorInstances);
         providerBinder.bindInstances(executorInstances);
     }
 
