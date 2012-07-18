@@ -54,6 +54,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -64,9 +67,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -78,10 +80,9 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.process.internal.PriorityComparator;
+import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 import org.glassfish.jersey.process.internal.RequestScoped;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
@@ -274,8 +275,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private void initInterceptors() {
-        this.readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
-        this.writerInterceptors = locator.getAllServices(WriterInterceptor.class);
+        // TODO: only "global" interceptors should be taken into account here ?
+
+        final List<ReaderInterceptor> _readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
+        Collections.sort(_readerInterceptors, new PriorityComparator<ReaderInterceptor>(Order.ASCENDING));
+        this.readerInterceptors = Collections.unmodifiableList(_readerInterceptors);
+
+        final List<WriterInterceptor> _writerInterceptors = locator.getAllServices(WriterInterceptor.class);
+        Collections.sort(_writerInterceptors, new PriorityComparator<WriterInterceptor>(Order.ASCENDING));
+        this.writerInterceptors = Collections.unmodifiableList(_writerInterceptors);
     }
 
     private void initReaders() {

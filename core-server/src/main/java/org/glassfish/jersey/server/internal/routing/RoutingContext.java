@@ -169,21 +169,19 @@ public interface RoutingContext extends ResourceInfo {
     public Collection<ContainerResponseFilter> getBoundResponseFilters();
 
     /**
-     * Get all <b>dynamically</b> bound reader interceptors applicable to this request.
+     * Get all reader interceptors applicable to this request.
      * This is populated once the right resource method is matched.
-     * Note, this method does not return name-bound interceptors.
      *
-     * @return All dynamically bound reader interceptors applicable to the matched inflector (or an empty
+     * @return All reader interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
     public Collection<ReaderInterceptor> getBoundReaderInterceptors();
 
     /**
-     * Get all <b>dynamically</b> bound writer interceptors applicable to this request.
+     * Get all writer interceptors applicable to this request.
      * This is populated once the right resource method is matched.
-     * Note, this method does not return name-bound interceptors.
      *
-     * @return All dynamically bound writer interceptors applicable to the matched inflector (or an empty
+     * @return All writer interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
     public Collection<WriterInterceptor> getBoundWriterInterceptors();

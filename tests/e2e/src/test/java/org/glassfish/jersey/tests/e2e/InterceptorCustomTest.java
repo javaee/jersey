@@ -118,7 +118,7 @@ public class InterceptorCustomTest extends JerseyTest {
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             final OutputStream old = context.getOutputStream();
-            OutputStream newOut = new OutputStream() {
+            context.setOutputStream(new OutputStream() {
 
                 @Override
                 public void write(int b) throws IOException {
@@ -128,13 +128,8 @@ public class InterceptorCustomTest extends JerseyTest {
                         old.write(b + 1);
                     }
                 }
-            };
-            context.setOutputStream(newOut);
-            try {
-                context.proceed();
-            } finally {
-                context.setOutputStream(old);
-            }
+            });
+            context.proceed();
         }
     }
 
@@ -165,12 +160,7 @@ public class InterceptorCustomTest extends JerseyTest {
                 }
             });
 
-            try {
-                return context.proceed();
-            } finally {
-                context.setInputStream(old);
-            }
-
+            return context.proceed();
         }
     }
 

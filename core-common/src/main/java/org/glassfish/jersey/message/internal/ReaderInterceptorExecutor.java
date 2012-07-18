@@ -44,7 +44,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -60,59 +60,75 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 
 /**
- * Entry point of the reader interceptor chain. It contstructs the chain of wrapped
- * interceptor and invokes it. At the end of the chain {@link MessageBodyWriter MBW}
- * is invoked which writes the entity to the output stream. The
- * {@link ExceptionWrapperInterceptor} is always invoked on the client as a first
- * interceptor.
+ * Represents reader interceptor chain executor for both client and server side.
+ * It constructs wrapped interceptor chain and invokes it. At the end of the chain
+ * a {@link MessageBodyReader message body reader} execution interceptor is inserted,
+ * which finally reads an entity from the output stream provided by the chain.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
-    private InputStream inputStream;
-    private final MultivaluedMap<String, String> headers;
-    private Iterator<ReaderInterceptor> iterator;
+public final class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
 
     /**
-     * Reads a type from the {@link InputStream entityStream} using interceptors.
+     * Defines property, which is used to pass a list of reader interceptors
+     * to the executor via {@link PropertiesDelegate}.
+     */
+    public static final String INTERCEPTORS = "jersey.runtime.reader.interceptors";
+
+    private InputStream inputStream;
+    private final MultivaluedMap<String, String> headers;
+
+    private final Iterator<ReaderInterceptor> iterator;
+
+    /**
+     * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
+     * List of interceptors to be used is taken from given {@link MessageBodyWorkers workers} instance
+     * unless {@value #INTERCEPTORS} property is set in {@link PropertiesDelegate propertiesDelegate}.
+     * If such a property is present, the executor tries to cast it to <code>List&lt;ReaderInterceptor&gt;</code>
+     * and the list is then used to build the interceptor chain.
      *
      * @param rawType     raw Java entity type.
      * @param type        generic Java entity type.
-     * @param annotations an array of the annotations on the declaration of the artifact
+     * @param annotations array of annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
      *            {@code Method.getParameterAnnotations}.
-     * @param mediaType the media type of the HTTP entity.
+     * @param mediaType media type of the HTTP entity.
      * @param headers mutable message headers.
-     * @param propertiesDelegate a request-scoped properties delegate.
-     * @param inputStream entity stream.
+     * @param propertiesDelegate request-scoped properties delegate.
+     * @param inputStream entity input stream.
      * @param workers {@link MessageBodyWorkers Message body workers}.
-     * @param intercept true if the user interceptors should be executed. Otherwise only
+     * @param intercept if set to true, user interceptors will be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed in the client.
+     *            be executed on the client side.
      */
     public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
             MessageBodyWorkers workers, boolean intercept) {
+
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
 
-        List<ReaderInterceptor> interceptors = new ArrayList<ReaderInterceptor>();
-        for (ReaderInterceptor interceptor : workers.getReaderInterceptors()) {
+        final List<ReaderInterceptor> effectiveInterceptors = new ArrayList<ReaderInterceptor>();
+
+        final Object readerInterceptorsProperty = propertiesDelegate.getProperty(INTERCEPTORS);
+        final Collection<ReaderInterceptor> readerInterceptors = (readerInterceptorsProperty != null)
+                ? (Collection<ReaderInterceptor>)readerInterceptorsProperty : workers.getReaderInterceptors();
+
+        for (ReaderInterceptor interceptor : readerInterceptors) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
-                interceptors.add(interceptor);
+                effectiveInterceptors.add(interceptor);
             }
         }
-        Collections.sort(interceptors, new PriorityComparator<ReaderInterceptor>(Order.ASCENDING));
 
-        interceptors.add(new TerminalReaderInterceptor(workers));
-        this.iterator = interceptors.iterator();
+        effectiveInterceptors.add(new TerminalReaderInterceptor(workers));
+
+        this.iterator = effectiveInterceptors.iterator();
     }
 
     /**
@@ -190,8 +206,6 @@ public class ReaderInterceptorExecutor extends InterceptorExecutor implements Re
                 entity = ((CompletableReader) bodyReader).complete(entity);
             }
             return entity;
-
         }
-
     }
 }

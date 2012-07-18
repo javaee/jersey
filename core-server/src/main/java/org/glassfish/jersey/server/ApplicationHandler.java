@@ -122,6 +122,8 @@ import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 /**
  * Jersey server-side application handler.
@@ -333,7 +335,7 @@ public final class ApplicationHandler {
         Collection<Class<? extends Annotation>> applicationNameBindings =
                 ReflectionHelper.getAnnotationTypes(configuration.getApplication().getClass(), NameBinding.class);
 
-        // find all filters and dynamic binders
+        // find all filters, interceptors and dynamic binders
         final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(serviceLocator,
                 ContainerResponseFilter.class);
         final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters
@@ -346,6 +348,14 @@ public final class ApplicationHandler {
         final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
         final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters
                 = filterNameBound(preMatchFilters, requestFilters, applicationNameBindings);
+
+        final List<ReaderInterceptor> readerInterceptors = serviceLocator.getAllServices(ReaderInterceptor.class);
+        final MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors
+                = filterNameBound(readerInterceptors, null, applicationNameBindings);
+
+        final List<WriterInterceptor> writerInterceptors = serviceLocator.getAllServices(WriterInterceptor.class);
+        final MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors
+                = filterNameBound(writerInterceptors, null, applicationNameBindings);
         final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(serviceLocator, DynamicBinder.class);
 
         // build the models
@@ -358,7 +368,8 @@ public final class ApplicationHandler {
 
         final RuntimeModelBuilder runtimeModelBuilder = serviceLocator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setWorkers(workers);
-        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, dynamicBinders);
+        runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
+        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors, nameBoundWriterInterceptors, dynamicBinders);
         for (Resource resource : resources) {
             runtimeModelBuilder.process(resource, false);
         }
@@ -397,10 +408,10 @@ public final class ApplicationHandler {
     }
 
     /**
-     * Takes collection of all filters (either request or response) and separates out all name-bound filters, returns
-     * them as a separate MultivaluedMap, mapping the name-bound annotation to the list of name-bound filters.
-     * Note, the name-bound filters are removed from the original filters collection.
-     * If non-null collection is passed in the postMatching parameter, this method also removes all the global
+     * Takes collection of all filters/interceptors (either request/reader or response/writer) and separates out all name-bound filters/interceptors, returns
+     * them as a separate MultivaluedMap, mapping the name-bound annotation to the list of name-bound filters/interceptors.
+     * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
+     * If non-null collection is passed in the postMatching parameter (applicable for filters only), this method also removes all the global
      * postMatching filters from the original collection and adds them to the collection passed in the postMatching
      * parameter.
      *

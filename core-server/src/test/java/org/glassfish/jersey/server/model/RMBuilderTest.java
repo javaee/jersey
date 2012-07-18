@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.model;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -54,7 +55,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -71,11 +76,10 @@ import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-
 import org.junit.Before;
 import org.junit.Test;
+
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -129,9 +133,12 @@ public class RMBuilderTest {
         locator.inject(this);
 
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
+        runtimeModelBuilder.setGlobalInterceptors(new HashSet<ReaderInterceptor>(), new HashSet<WriterInterceptor>());
         runtimeModelBuilder.setBoundProviders(
                 new MultivaluedHashMap<Class<? extends Annotation>, ContainerRequestFilter>(),
                 new MultivaluedHashMap<Class<? extends Annotation>, ContainerResponseFilter>(),
+                new MultivaluedHashMap<Class<? extends Annotation>, ReaderInterceptor>(),
+                new MultivaluedHashMap<Class<? extends Annotation>, WriterInterceptor>(),
                 Collections.<DynamicBinder>emptyList()
         );
         runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build(), false);

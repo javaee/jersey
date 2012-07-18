@@ -44,22 +44,28 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
+import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
@@ -83,8 +89,8 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     private final Class<?> resourceClass;
     private final Collection<ContainerRequestFilter> requestFilters = new HashSet<ContainerRequestFilter>();
     private final Collection<ContainerResponseFilter> responseFilters = new HashSet<ContainerResponseFilter>();
-    private final Collection<ReaderInterceptor> readerInterceptors = new HashSet<ReaderInterceptor>();
-    private final Collection<WriterInterceptor> writerInterceptors = new HashSet<WriterInterceptor>();
+    private final List<ReaderInterceptor> readerInterceptors;
+    private final List<WriterInterceptor> writerInterceptors;
 
     /**
      * Resource method invoker "assisted" injection helper.
@@ -115,6 +121,10 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
         public ResourceMethodInvoker build(ResourceMethod method,
             MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
             MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+            Collection<ReaderInterceptor> globalReaderInterceptors,
+            Collection<WriterInterceptor> globalWriterInterceptors,
+            MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
+            MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
             Collection<DynamicBinder> dynamicBinders
         ) {
             return new ResourceMethodInvoker(
@@ -125,6 +135,10 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
                     method,
                     nameBoundRequestFilters,
                     nameBoundResponseFilters,
+                    globalReaderInterceptors,
+                    globalWriterInterceptors,
+                    nameBoundReaderInterceptors,
+                    nameBoundWriterInterceptors,
                     dynamicBinders);
         }
     }
@@ -137,7 +151,12 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
             ResourceMethod method,
             MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
             MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+            Collection<ReaderInterceptor> globalReaderInterceptors,
+            Collection<WriterInterceptor> globalWriterInterceptors,
+            MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
+            MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
             Collection<DynamicBinder> dynamicBinders) {
+
         this.routingContextFactory = routingContextFactory;
         this.invocationContextFactory = invocationContextFactory;
 
@@ -148,16 +167,19 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
         this.resourceMethod = invocable.getHandlingMethod();
         this.resourceClass = invocable.getHandler().getHandlerClass();
 
+        List<ReaderInterceptor> _readerInterceptors = new LinkedList<ReaderInterceptor>();
+        List<WriterInterceptor> _writerInterceptors = new LinkedList<WriterInterceptor>();
+
         for (DynamicBinder dynamicBinder : dynamicBinders) {
             Object boundProvider = dynamicBinder.getBoundProvider(this);
 
             // TODO: should be based on the type arg. value rather than instanceof?
             if (boundProvider instanceof WriterInterceptor) {
-                writerInterceptors.add((WriterInterceptor) boundProvider);
+                _writerInterceptors.add((WriterInterceptor) boundProvider);
             }
 
             if (boundProvider instanceof ReaderInterceptor) {
-                readerInterceptors.add((ReaderInterceptor) boundProvider);
+                _readerInterceptors.add((ReaderInterceptor) boundProvider);
             }
 
             if (boundProvider instanceof ContainerRequestFilter) {
@@ -169,27 +191,50 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
             }
         }
 
+        _readerInterceptors.addAll(globalReaderInterceptors);
+        _writerInterceptors.addAll(globalWriterInterceptors);
+
         if (resourceMethod != null) {
-            addNameBoundFilters(nameBoundRequestFilters, nameBoundResponseFilters, method);
+            addNameBoundFiltersAndInterceptors(
+                    nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors, nameBoundWriterInterceptors,
+                    this.requestFilters, this.responseFilters, _readerInterceptors, _writerInterceptors,
+                    method);
         }
-        if (resourceClass != null) {
-            addNameBoundFilters(nameBoundRequestFilters, nameBoundResponseFilters, method);
-        }
+
+        Collections.sort(_readerInterceptors, new PriorityComparator<ReaderInterceptor>(PriorityComparator.Order.ASCENDING));
+        Collections.sort(_writerInterceptors, new PriorityComparator<WriterInterceptor>(PriorityComparator.Order.ASCENDING));
+
+        this.readerInterceptors = Collections.unmodifiableList(_readerInterceptors);
+        this.writerInterceptors = Collections.unmodifiableList(_writerInterceptors);
     }
 
-    private void addNameBoundFilters(
-            MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
-            MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
-            ResourceMethod method
+    private void addNameBoundFiltersAndInterceptors(
+            final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
+            final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+            final MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
+            final MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
+            final Collection<ContainerRequestFilter> targetRequestFilters,
+            final Collection<ContainerResponseFilter> targetResponseFilters,
+            final Collection<ReaderInterceptor> targetReaderInterceptors,
+            final Collection<WriterInterceptor> targetWriterInterceptors,
+            NameBound target
     ) {
-        for (Class<? extends Annotation> nameBinding : method.getNameBindings()) {
+        for (Class<? extends Annotation> nameBinding : target.getNameBindings()) {
             List<ContainerRequestFilter> reqF = nameBoundRequestFilters.get(nameBinding);
             if (reqF != null) {
-                this.requestFilters.addAll(reqF);
+                targetRequestFilters.addAll(reqF);
             }
             List<ContainerResponseFilter> resF = nameBoundResponseFilters.get(nameBinding);
             if (resF != null) {
-                this.responseFilters.addAll(resF);
+                targetResponseFilters.addAll(resF);
+            }
+            List<ReaderInterceptor> _readerInterceptors = nameBoundReaderInterceptors.get(nameBinding);
+            if (_readerInterceptors != null) {
+                targetReaderInterceptors.addAll(_readerInterceptors);
+            }
+            List<WriterInterceptor> _writerInterceptors = nameBoundWriterInterceptors.get(nameBinding);
+            if (_writerInterceptors != null) {
+                targetWriterInterceptors.addAll(_writerInterceptors);
             }
         }
     }
@@ -212,7 +257,8 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
         if (method.isSuspendDeclared()) {
             invocationCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
         }
-
+        requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS, getReaderInterceptors());
+        requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS, getWriterInterceptors());
         final Response response = dispatcher.dispatch(resource, requestContext);
 
         if (method.isSuspendDeclared()) {
@@ -257,24 +303,22 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     }
 
     /**
-     * Get all <b>dynamically</b> bound reader interceptors applicable to the {@link #getResourceMethod() resource method}
+     * Get all reader interceptors applicable to the {@link #getResourceMethod() resource method}
      * wrapped by this invoker.
-     * Note, this method does not return name-bound interceptors.
      *
-     * @return All dynamically bound reader interceptors applicable to the {@link #getResourceMethod() resource method}.
+     * @return All reader interceptors applicable to the {@link #getResourceMethod() resource method}.
      */
-    public Collection<WriterInterceptor> getWriterInterceptors() {
+    public List<WriterInterceptor> getWriterInterceptors() {
         return writerInterceptors;
     }
 
     /**
-     * Get all <b>dynamically</b> bound writer interceptors applicable to the {@link #getResourceMethod() resource method}
+     * Get all writer interceptors applicable to the {@link #getResourceMethod() resource method}
      * wrapped by this invoker.
-     * Note, this method does not return name-bound interceptors.
      *
-     * @return All dynamically bound writer interceptors applicable to the {@link #getResourceMethod() resource method}.
+     * @return All writer interceptors applicable to the {@link #getResourceMethod() resource method}.
      */
-    public Collection<ReaderInterceptor> getReaderInterceptors() {
+    public List<ReaderInterceptor> getReaderInterceptors() {
         return readerInterceptors;
     }
 

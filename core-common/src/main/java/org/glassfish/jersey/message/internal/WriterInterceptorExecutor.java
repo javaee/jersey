@@ -40,11 +40,12 @@
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -60,48 +61,57 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
-import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.PriorityComparator.Order;
 
 /**
- * Entry point of the writer interceptor chain. It constructs the chain of wrapped
- * interceptor and invokes it. At the end of the chain the {@link MessageBodyWriter}
- * is invoked which writes the entity to the output stream. The
- * {@link ExceptionWrapperInterceptor} is always invoked on the client as a first
- * interceptor.
+ * Represents writer interceptor chain executor for both client and server side.
+ * It constructs wrapped interceptor chain and invokes it. At the end of the chain
+ * a {@link MessageBodyWriter message body writer} execution interceptor is inserted,
+ * which writes entity to the output stream provided by the chain.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class WriterInterceptorExecutor extends InterceptorExecutor implements WriterInterceptorContext {
-    private Iterator<WriterInterceptor> iterator;
+public final class WriterInterceptorExecutor extends InterceptorExecutor implements WriterInterceptorContext {
+
+    /**
+     * Defines property, which is used to pass a list of writer interceptors
+     * to the executor via {@link PropertiesDelegate}.
+     */
+    public static final String INTERCEPTORS = "jersey.runtime.writer.interceptors";
 
     private OutputStream outputStream;
     private final MultivaluedMap<String, Object> headers;
     private Object entity;
 
+    private final Iterator<WriterInterceptor> iterator;
+
     /**
-     * Reads a type from the {@link java.io.InputStream entityStream} using interceptors.
+     * Constructs a new executor to write given type to provided {@link InputStream entityStream}.
+     * List of interceptors to be used is taken from given {@link MessageBodyWorkers workers} instance
+     * unless {@value #INTERCEPTORS} property is set in {@link PropertiesDelegate propertiesDelegate}.
+     * If such a property is present, the executor tries to cast it to <code>List&lt;WriterInterceptor&gt;</code>
+     * and the list is then used to build the interceptor chain.
      *
      * @param entity entity object to be processed.
      * @param rawType     raw Java entity type.
      * @param type        generic Java entity type.
-     * @param annotations an array of the annotations on the declaration of the artifact
+     * @param annotations array of annotations on the declaration of the artifact
      *            that will be initialized with the produced instance. E.g. if the message
      *            body is to be converted into a method parameter, this will be the
      *            annotations on that parameter returned by
      *            {@code Method.getParameterAnnotations}.
-     * @param mediaType the media type of the HTTP entity.
-     * @param headers the mutable HTTP headers associated with HTTP entity.
-     * @param propertiesDelegate a request-scoped properties depegate.
-     * @param entityStream the {@link java.io.InputStream} of the HTTP entity. The stream is not
+     * @param mediaType media type of the HTTP entity.
+     * @param headers mutable HTTP headers associated with HTTP entity.
+     * @param propertiesDelegate request-scoped properties delegate.
+     * @param entityStream {@link java.io.InputStream} from which an entity will be read. The stream is not
      *            closed after reading the entity.
      * @param workers {@link MessageBodyWorkers Message body workers}.
      * @param sizeCallback {@link MessageBodySizeCallback} instance. Can be null.
-     * @param intercept true if the user interceptors should be executed. Otherwise only
+     * @param intercept if true, user interceptors will be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed in the client.
-     * @param writeEntity true if the entity should be written. Otherwise only headers will
-     *            be written to underlying {@link OutputStream}.
+     *            be executed on the client side.
+     * @param writeEntity if true, the entity will be written. Otherwise only headers will
+     *            be written to the underlying {@link OutputStream}.
      */
     public WriterInterceptorExecutor(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
@@ -112,17 +122,20 @@ public class WriterInterceptorExecutor extends InterceptorExecutor implements Wr
         this.headers = headers;
         this.outputStream = entityStream;
 
-        List<WriterInterceptor> interceptors = new ArrayList<WriterInterceptor>();
-        for (WriterInterceptor interceptor : workers.getWriterInterceptors()) {
+        final List<WriterInterceptor> effectiveInterceptors = new ArrayList<WriterInterceptor>();
+
+        final Object writerInterceptorsProperty = propertiesDelegate.getProperty(INTERCEPTORS);
+        final Collection<WriterInterceptor> writerInterceptors =
+                (writerInterceptorsProperty != null) ? (Collection<WriterInterceptor>)writerInterceptorsProperty : workers.getWriterInterceptors();
+
+        for (WriterInterceptor interceptor : writerInterceptors) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
-                interceptors.add(interceptor);
+                effectiveInterceptors.add(interceptor);
             }
         }
-        Collections.sort(interceptors, new PriorityComparator<WriterInterceptor>(Order.ASCENDING));
+        effectiveInterceptors.add(new TerminalWriterInterceptor(workers, sizeCallback, writeEntity));
 
-        interceptors.add(new TerminalWriterInterceptor(workers, sizeCallback, writeEntity));
-
-        this.iterator = interceptors.iterator();
+        this.iterator = effectiveInterceptors.iterator();
     }
 
     /**

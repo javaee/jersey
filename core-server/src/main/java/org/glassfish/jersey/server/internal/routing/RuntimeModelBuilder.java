@@ -44,13 +44,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.inject.Inject;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -63,11 +66,10 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.uri.PathPattern;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.Collection;
 
 /**
  * This is a common base for root resource and sub-resource runtime model
@@ -93,6 +95,10 @@ public final class RuntimeModelBuilder {
     private MessageBodyWorkers workers;
     private MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters;
     private MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters;
+    private Collection<ReaderInterceptor> globalReaderInterceptors;
+    private Collection<WriterInterceptor> globalWriterInterceptors;
+    private MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors;
+    private MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors;
     private List<DynamicBinder> dynamicBinders;
 
     /**
@@ -212,6 +218,10 @@ public final class RuntimeModelBuilder {
                 method,
                 nameBoundRequestFilters,
                 nameBoundResponseFilters,
+                globalReaderInterceptors,
+                globalWriterInterceptors,
+                nameBoundReaderInterceptors,
+                nameBoundWriterInterceptors,
                 dynamicBinders
         );
     }
@@ -340,19 +350,36 @@ public final class RuntimeModelBuilder {
     }
 
     /**
+     * Set global reader and writer interceptors.
+     *
+     * @param readerInterceptors global reader interceptors.
+     * @param writerInterceptors global writer interceptors.
+     */
+    public void setGlobalInterceptors (Collection<ReaderInterceptor> readerInterceptors, Collection<WriterInterceptor> writerInterceptors) {
+        this.globalReaderInterceptors = readerInterceptors;
+        this.globalWriterInterceptors = writerInterceptors;
+    }
+
+    /**
      * Set the name bound filters and dynamic binders.
      *
      * @param nameBoundRequestFilters name bound request filters.
      * @param nameBoundResponseFilters name bound response filters.
+     * @param nameBoundReaderInterceptors name bound reader interceptors.
+     * @param nameBoundWriterInterceptors name bound writer interceptors.
      * @param dynamicBinders dynamic binders.
      */
     public void setBoundProviders(
             MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
             MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+            MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
+            MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
             List<DynamicBinder> dynamicBinders
     ) {
         this.nameBoundRequestFilters = nameBoundRequestFilters;
         this.nameBoundResponseFilters = nameBoundResponseFilters;
+        this.nameBoundReaderInterceptors = nameBoundReaderInterceptors;
+        this.nameBoundWriterInterceptors = nameBoundWriterInterceptors;
         this.dynamicBinders = dynamicBinders;
     }
 }
