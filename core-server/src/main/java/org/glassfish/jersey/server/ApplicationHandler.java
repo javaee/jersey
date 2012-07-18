@@ -59,6 +59,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
@@ -813,6 +814,12 @@ public final class ApplicationHandler {
             }
 
             // TODO better handle other processing exception
+        } else if (failure instanceof WebApplicationException) {
+            // TODO: (MM) should actually handle the full exception mapping here
+            // TODO: as we will get here even if an interceptor or MessageBodyWriter
+            // TODO: throws something before any bytes are written to the stream
+            WebApplicationException wae = (WebApplicationException) failure;
+            return new ContainerResponse(requestContext, wae.getResponse());
         }
 
         if (statusCode == Response.Status.INTERNAL_SERVER_ERROR) {
