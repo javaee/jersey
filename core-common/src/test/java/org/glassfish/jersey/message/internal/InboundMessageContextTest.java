@@ -72,6 +72,12 @@ public class InboundMessageContextTest {
     }
 
     @Test
+    public void testNoLength() {
+        InboundMessageContext r = new InboundMessageContext();
+        assertEquals(-1, r.getLength());
+    }
+
+    @Test
     public void testRequestCookies() throws URISyntaxException {
         InboundMessageContext r = new InboundMessageContext();
         r.header(HttpHeaders.COOKIE, "oreo=chocolate");
