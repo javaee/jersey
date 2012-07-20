@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,55 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.message;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
+import javax.ws.rs.core.HttpHeaders;
 
-import org.glassfish.jersey.Config;
-import org.glassfish.jersey.message.MessageProperties;
+import org.glassfish.jersey.spi.ContentEncoder;
 
 /**
- * Thread-scoped injection provider of {@link DocumentBuilderFactory document
- * builder factories}.
+ * GZIP encoding support. Interceptor that encodes the output or decodes the input if
+ * {@link HttpHeaders#CONTENT_ENCODING Content-Encoding header} value equals to {@code gzip} or {@code x-gzip}.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public class DocumentBuilderFactoryInjectionProvider implements Factory<DocumentBuilderFactory> {
-
-    private final Provider<Config> featuresAndPropertiesFactory;
-
+public class GZipEncoder extends ContentEncoder {
     /**
-     * Create new document builder factory provider.
-     *
-     * @param featuresAndPropertiesFactory features and properties provider.
+     * Initialize GZipEncoder.
      */
-    @Inject
-    public DocumentBuilderFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
-        this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
+    public GZipEncoder() {
+        super("gzip", "x-gzip");
     }
 
     @Override
-    @PerThread
-    public DocumentBuilderFactory provide() {
-        DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
-
-        f.setNamespaceAware(true);
-
-        if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
-            f.setExpandEntityReferences(false);
-        }
-
-        return f;
+    public InputStream decode(String contentEncoding, InputStream encodedStream)
+            throws IOException {
+        return new GZIPInputStream(encodedStream);
     }
 
     @Override
-    public void dispose(DocumentBuilderFactory instance) {
-        //not used
+    public OutputStream encode(String contentEncoding, OutputStream entityStream)
+            throws IOException {
+        return new GZIPOutputStream(entityStream);
     }
 }

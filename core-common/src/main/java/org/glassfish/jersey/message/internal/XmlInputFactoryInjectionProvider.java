@@ -45,8 +45,9 @@ import javax.xml.stream.XMLInputFactory;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
+
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageProperties;
-import org.glassfish.jersey.FeaturesAndProperties;
 
 /**
  * Thread-scoped injection provider of {@link XMLInputFactory transformer factories}.
@@ -56,10 +57,10 @@ import org.glassfish.jersey.FeaturesAndProperties;
  */
 public class XmlInputFactoryInjectionProvider implements Factory<XMLInputFactory> {
 
-    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<Config> featuresAndPropertiesFactory;
 
     @Inject
-    public XmlInputFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    public XmlInputFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 

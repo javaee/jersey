@@ -290,11 +290,12 @@ public interface MessageBodyWorkers {
      * @param intercept true if the user interceptors should be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed in the client.
+     * @return Outer output stream that should be closed by the caller.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> void writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+    public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
@@ -324,11 +325,12 @@ public interface MessageBodyWorkers {
      *            be executed in the client.
      * @param writeEntity true if the entity should be written. Otherwise only headers will
      *            be written to underlying {@link OutputStream}.
+     * @return Outer output stream that should be closed by the caller.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> void writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+    public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;

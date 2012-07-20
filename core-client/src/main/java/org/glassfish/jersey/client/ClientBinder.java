@@ -48,7 +48,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
@@ -229,7 +229,7 @@ class ClientBinder extends AbstractBinder {
 
         bindFactory(ConfigurationInjectionFactory.class).
                 to(javax.ws.rs.client.Configuration.class).
-                to(FeaturesAndProperties.class).
+                to(Config.class).
                 in(RequestScoped.class);
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {

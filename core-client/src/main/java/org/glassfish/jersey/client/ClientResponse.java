@@ -43,6 +43,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientResponseContext;
@@ -80,10 +81,17 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                 public int read() throws IOException {
                     if(byteArrayInputStream == null) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+                        OutputStream stream = null;
                         try {
-                            requestContext.getWorkers().writeTo(entity, entity.getClass(), null, null, response.getMediaType(),
-                                    response.getMetadata(), requestContext.getPropertiesDelegate(), baos, null, false);
+                            try {
+                                stream = requestContext.getWorkers().writeTo(
+                                        entity, entity.getClass(), null, null, response.getMediaType(),
+                                        response.getMetadata(), requestContext.getPropertiesDelegate(), baos, null, false);
+                            } finally {
+                                if (stream != null) {
+                                    stream.close();
+                                }
+                            }
                         } catch (IOException e) {
                             // ignore
                         }

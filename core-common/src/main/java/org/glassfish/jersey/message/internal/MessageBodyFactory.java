@@ -635,20 +635,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
-    public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+    public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
                             MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
 
-        writeTo(t, rawType, type, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
+        return writeTo(t, rawType, type, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
     }
 
     @Override
-    public <T> void writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+    public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                             MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
                             MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, sizeCallback, intercept, writeEntity);
         executor.proceed();
+        return executor.getOutputStream();
     }
 }

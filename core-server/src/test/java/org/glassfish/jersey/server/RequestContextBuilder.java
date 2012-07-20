@@ -42,6 +42,7 @@ package org.glassfish.jersey.server;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Arrays;
@@ -102,14 +103,24 @@ public class RequestContextBuilder {
             if (entity != null) {
                 MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                OutputStream stream = null;
                 try {
-                    workers.writeTo(entity, entity.getClass(), entityType.getType(), new Annotation[0], getMediaType(),
+                    stream = workers.writeTo(entity, entity.getClass(), entityType.getType(),
+                            new Annotation[0], getMediaType(),
                             myMap,
                             propertiesDelegate, baos, null, true);
                 } catch (IOException ex) {
                     Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (WebApplicationException ex) {
                     Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    if (stream != null) {
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
                 }
                 entityBytes = baos.toByteArray();
             } else {

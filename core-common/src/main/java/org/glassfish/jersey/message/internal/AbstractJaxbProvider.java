@@ -60,8 +60,9 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
 import org.glassfish.hk2.api.Factory;
+
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageProperties;
-import org.glassfish.jersey.FeaturesAndProperties;
 import org.glassfish.jersey.message.XmlHeader;
 
 import org.xml.sax.InputSource;
@@ -127,7 +128,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
     }
 
     @Context
-    public void setConfiguration(final Factory<FeaturesAndProperties> fp) {
+    public void setConfiguration(final Factory<Config> fp) {
         formattedOutput = Suppliers.memoize(new Supplier<Boolean>() {
 
             @Override

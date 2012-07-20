@@ -164,6 +164,17 @@ public final class ClientProperties {
     public static final String SSL_CONTEXT =
             "jersey.config.client.ssl.sslContext";
 
+    /**
+     * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is registered, this property indicates the value
+     * of Content-Encoding property the filter should be adding.
+     *
+     * <p>The value MUST be an instance of {@link String}.</p>
+     * <p>The default value is {@code null}.</p>
+     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     */
+    public static final String USE_ENCODING =
+            "jersey.config.client.useEncoding";
+
     private ClientProperties() {
         // prevents instantiation
     }

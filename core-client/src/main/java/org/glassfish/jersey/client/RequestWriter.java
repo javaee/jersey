@@ -237,8 +237,7 @@ public class RequestWriter {
         requestContext.setStreamProvider(listener.onGetStreamProvider());
         OutputStream entityStream = null;
         try {
-            entityStream = requestContext.getEntityStream();
-            workers.writeTo(
+            entityStream = workers.writeTo(
                     requestContext.getEntity(),
                     requestContext.getEntity().getClass(),
                     requestContext.getEntityType(),
@@ -246,9 +245,10 @@ public class RequestWriter {
                     requestContext.getMediaType(),
                     headers,
                     requestContext.getPropertiesDelegate(),
-                    entityStream,
+                    requestContext.getEntityStream(),
                     sizeCallback,
                     true);
+            requestContext.setEntityStream(entityStream);
         } finally {
             if (entityStream != null) {
                 try {

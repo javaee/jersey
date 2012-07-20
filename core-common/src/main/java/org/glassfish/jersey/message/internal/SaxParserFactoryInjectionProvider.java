@@ -41,10 +41,9 @@ package org.glassfish.jersey.message.internal;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageProperties;
 
 import org.glassfish.hk2.api.Factory;
@@ -58,10 +57,10 @@ import org.glassfish.hk2.api.PerThread;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFactory> {
-    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<Config> featuresAndPropertiesFactory;
 
     @Inject
-    public SaxParserFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    public SaxParserFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 

@@ -65,6 +65,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -74,7 +75,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ProcessingException;
@@ -206,7 +207,7 @@ public final class ApplicationHandler {
         @Override
         protected void configure() {
             bindFactory(new ResourceConfigProvider())
-                    .to(ResourceConfig.class).to(FeaturesAndProperties.class).in(Singleton.class);
+                    .to(ResourceConfig.class).to(Config.class).in(Singleton.class);
             bindFactory(new JaxrsApplicationProvider()).to(Application.class).in(Singleton.class);
             bind(ApplicationHandler.this).to(ApplicationHandler.class);
         }
@@ -663,10 +664,11 @@ public final class ApplicationHandler {
         });
 
         final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
+            private ContainerResponse responseContext;
 
             @Override
             protected ContainerResponse handleResponse(ContainerResponse responseContext) {
-                ApplicationHandler.this.writeResponse(requestContext, responseContext);
+                this.responseContext = ApplicationHandler.this.writeResponse(requestContext, responseContext);
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
                     // for testing purposes:
                     // need to also strip the object entity as it was stripped writeResponse(...)
@@ -677,22 +679,19 @@ public final class ApplicationHandler {
 
             @Override
             protected ContainerResponse handleFailure(Throwable exception) {
-                final ContainerResponse response = ApplicationHandler.handleFailure(exception, requestContext);
-                ApplicationHandler.this.writeResponse(requestContext, response);
-                return response;
+                return responseContext = ApplicationHandler.this.writeResponse(requestContext,
+                        ApplicationHandler.handleFailure(exception, requestContext));
             }
 
             @Override
             protected ContainerResponse handleTimeout(InvocationContext context) {
-                final ContainerResponse response =
-                        ApplicationHandler.prepareTimeoutResponse(context, requestContext);
-                ApplicationHandler.this.writeResponse(requestContext, response);
-                return response;
+                return responseContext = ApplicationHandler.this.writeResponse(
+                        requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
             }
 
             @Override
             protected void release() {
-                releaseRequestProcessing(requestContext);
+                releaseRequestProcessing(requestContext, responseContext);
             }
         };
 
@@ -736,27 +735,28 @@ public final class ApplicationHandler {
         checkContainerRequestContext(requestContext);
 
         final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(requestContext) {
+            private ContainerResponse responseContext;
 
             @Override
             protected void writeResponse(ContainerResponse response) {
-                ApplicationHandler.this.writeResponse(requestContext, response);
+                responseContext = ApplicationHandler.this.writeResponse(requestContext, response);
             }
 
             @Override
             protected void writeResponse(Throwable exception) {
-                ApplicationHandler.this.writeResponse(
+                responseContext = ApplicationHandler.this.writeResponse(
                         requestContext, ApplicationHandler.handleFailure(exception, requestContext));
             }
 
             @Override
             protected void writeTimeoutResponse(InvocationContext context) {
-                ApplicationHandler.this.writeResponse(
+                responseContext = ApplicationHandler.this.writeResponse(
                         requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
             }
 
             @Override
             protected void release() {
-                releaseRequestProcessing(requestContext);
+                releaseRequestProcessing(requestContext, responseContext);
             }
         };
 
@@ -765,7 +765,7 @@ public final class ApplicationHandler {
         callback.suspendWriterIfRunning();
     }
 
-    private void releaseRequestProcessing(final ContainerRequest requestContext) {
+    private void releaseRequestProcessing(final ContainerRequest requestContext, ContainerResponse responseContext) {
         closeableServiceFactory.provide().close();
         final boolean isChunked;
         final Object property = requestContext.getProperty(ChunkedResponse.CHUNKED_MODE);
@@ -776,6 +776,15 @@ public final class ApplicationHandler {
         }
         // Commit the container response writer if not in chunked mode
         if (!isChunked) {
+            // TODO: move to ContainerResponse.close()
+            if (responseContext.hasEntity()) {
+                try {
+                    responseContext.getEntityStream().flush();
+                    responseContext.getEntityStream().close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                }
+            }
             requestContext.getResponseWriter().commit();
         }
     }
@@ -850,7 +859,7 @@ public final class ApplicationHandler {
     }
 
 
-    private void writeResponse(
+    private ContainerResponse writeResponse(
             final ContainerRequest requestContext,
             final ContainerResponse responseContext) {
 
@@ -860,7 +869,7 @@ public final class ApplicationHandler {
 
         if (!responseContext.hasEntity()) {
             writer.writeResponseStatusAndHeaders(0, responseContext);
-            return;
+            return responseContext;
         }
 
         final Object entity = responseContext.getEntity();
@@ -871,7 +880,13 @@ public final class ApplicationHandler {
 
                 @Override
                 public void commit() throws IOException {
-                    output = writer.writeResponseStatusAndHeaders(messageBodySizeCallback.getSize(), responseContext);
+                    final long size;
+                    if (responseContext.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING) != null) {
+                        size = -1;
+                    } else {
+                        size = messageBodySizeCallback.getSize();
+                    }
+                    output = writer.writeResponseStatusAndHeaders(size, responseContext);
                 }
 
                 @Override
@@ -879,7 +894,7 @@ public final class ApplicationHandler {
                     return output;
                 }
             });
-            requestContext.getWorkers().writeTo(
+            responseContext.setEntityStream(requestContext.getWorkers().writeTo(
                     entity,
                     entity.getClass(),
                     responseContext.getEntityType(),
@@ -890,7 +905,7 @@ public final class ApplicationHandler {
                     responseContext.getEntityStream(),
                     messageBodySizeCallback,
                     true,
-                    !requestContext.getMethod().equals(HttpMethod.HEAD));
+                    !requestContext.getMethod().equals(HttpMethod.HEAD)));
         } catch (Exception ex) {
             if (responseContext.isCommitted()) {
                 /**
@@ -900,7 +915,7 @@ public final class ApplicationHandler {
                 LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY(), ex);
             } else {
                 skipFinally = true;
-                writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext));
+                return writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext));
             }
         } finally {
             if (!skipFinally) {
@@ -918,6 +933,8 @@ public final class ApplicationHandler {
                 }
             }
         }
+
+        return responseContext;
     }
 
     /**

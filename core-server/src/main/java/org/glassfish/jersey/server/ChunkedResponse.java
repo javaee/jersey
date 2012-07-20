@@ -132,7 +132,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
 
         try {
             while (t != null) {
-                requestContext.getWorkers().writeTo(
+                responseContext.setEntityStream(requestContext.getWorkers().writeTo(
                         t,
                         t.getClass(),
                         getType(),
@@ -142,7 +142,9 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
                         requestContext.getPropertiesDelegate(),
                         responseContext.getEntityStream(),
                         null,
-                        true);
+                        // TODO: (MM) should intercept only for the very first chunk!
+                        // TODO: from then on the stream is already wrapped by interceptor streams
+                        true));
                 t = queue.poll();
                 if (t == null) {
                     synchronized (this) {

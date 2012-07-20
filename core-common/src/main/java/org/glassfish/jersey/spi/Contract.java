@@ -40,8 +40,11 @@
 
 package org.glassfish.jersey.spi;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Used to annotate SPI provider contracts recognized by Jersey (in addition to the JAX-RS providers).
@@ -57,5 +60,7 @@ import java.lang.annotation.RetentionPolicy;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
 public @interface Contract {
 }

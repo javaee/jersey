@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
@@ -72,7 +72,7 @@ import com.google.common.collect.Sets;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ResourceConfig extends Application implements FeaturesAndProperties {
+public class ResourceConfig extends Application implements Config {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceConfig.class.getName());
     //

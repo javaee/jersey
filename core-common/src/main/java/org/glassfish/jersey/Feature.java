@@ -54,12 +54,12 @@ public interface Feature {
      *
      * @param configuration configuration where the feature should be enabled.
      */
-    public void onEnable(FeaturesAndProperties configuration);
+    public void onEnable(Config configuration);
     /**
      * Called when the feature is disabled. The responsibility of the feature is
      * to properly update the supplied configuration.
      *
      * @param configuration configuration where the feature should be disabled.
      */
-    public void onDisable(FeaturesAndProperties configuration);
+    public void onDisable(Config configuration);
 }

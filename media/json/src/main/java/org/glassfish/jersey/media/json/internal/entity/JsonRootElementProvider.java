@@ -87,7 +87,7 @@ public class JsonRootElementProvider extends AbstractRootElementJaxbProvider {
 // TODO add support for configuration from injected features&properties
 //    @Context
 //    @Override
-//    public void setConfiguration(FeaturesAndProperties fp) {
+//    public void setConfiguration(Config fp) {
 //        super.setConfiguration(fp);
 //        jacksonEntityProviderTakesPrecedence = fp.getFeature(JSONConfiguration.FEATURE_POJO_MAPPING);
 //    }

@@ -53,7 +53,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -83,7 +83,7 @@ public class SaxParserFactoryInjectionProviderTest {
         locator = createServiceLocator();
     }
 
-    private static final FeaturesAndProperties EMPTY_FEATURES_AND_PROPERTIES = new FeaturesAndProperties() {
+    private static final Config EMPTY_CONFIG = new Config() {
         @Override
         public Object getProperty(String propertyName) {
             return null;
@@ -106,20 +106,19 @@ public class SaxParserFactoryInjectionProviderTest {
         binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(new Factory<FeaturesAndProperties>() {
+                bindFactory(new Factory<Config>() {
                     @Override
-                    public FeaturesAndProperties provide() {
-                        return EMPTY_FEATURES_AND_PROPERTIES;
+                    public Config provide() {
+                        return EMPTY_CONFIG;
                     }
 
                     @Override
-                    public void dispose(FeaturesAndProperties instance) {
+                    public void dispose(Config instance) {
                         //not used
                     }
-                }).to(FeaturesAndProperties.class);
+                }).to(Config.class);
                 bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).to(SAXParserFactory.class)
                         .in(PerThread.class);
-                // TODO
                 bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };

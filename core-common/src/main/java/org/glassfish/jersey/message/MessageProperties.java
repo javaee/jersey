@@ -56,6 +56,7 @@ public final class MessageProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     public static final String JAXB_PROCESS_XML_ROOT_ELEMENT = "jersey.config.jaxb.collections.processXmlRootElement";
+
     /**
      * If set to {@code true} XML security features when parsing XML documents will be
      * disabled.
@@ -65,6 +66,7 @@ public final class MessageProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     public static final String XML_SECURITY_DISABLE = "jersey.config.xml.security.disable";
+
     /**
      * If set to {@code true} indicates that produced XML output should be formatted
      * if possible (see below).
@@ -79,6 +81,7 @@ public final class MessageProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     public static final String XML_FORMAT_OUTPUT = "jersey.config.xml.formatOutput";
+
     /**
      * Value of the property indicates the buffer size to be used for I/O operations
      * on byte and character streams. The property value is expected to be a positive
@@ -89,11 +92,23 @@ public final class MessageProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     public static final String IO_BUFFER_SIZE = "jersey.config.io.bufferSize";
+
     /**
      * The default buffer size ({@value}) for I/O operations on byte and character
      * streams.
      */
     public static final int IO_DEFAULT_BUFFER_SIZE = 8192;
+
+    /**
+     * If set to {@code true}, {@code DeflateEncoder deflate encoding interceptor} will use non-standard version
+     * of the deflate content encoding, skipping the zlib wrapper. Unfortunately, deflate encoding
+     * implementations in some products use this non-compliant version, hence the switch.
+     * <p />
+     * The default value is {@code false}.
+     * <p />
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String DEFLATE_WITHOUT_ZLIB = "jersey.config.deflate.nozlib";
 
     private MessageProperties() {
         // prevents instantiation

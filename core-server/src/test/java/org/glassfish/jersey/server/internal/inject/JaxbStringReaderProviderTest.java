@@ -58,7 +58,7 @@ import javax.ws.rs.ext.Providers;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.internal.SaxParserFactoryInjectionProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -69,9 +69,9 @@ public class JaxbStringReaderProviderTest {
     public void stringReaderDoesNotReadExternalDtds() {
 
         Provider<SAXParserFactory> saxParserFactoryProvider = new Provider<SAXParserFactory>() {
-            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new Provider<FeaturesAndProperties>() {
+            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new Provider<Config>() {
                 @Override
-                public FeaturesAndProperties get() {
+                public Config get() {
                     return new ResourceConfig();
                 }
             });

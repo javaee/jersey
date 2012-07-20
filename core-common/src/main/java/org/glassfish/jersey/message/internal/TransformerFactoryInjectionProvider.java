@@ -39,15 +39,14 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.xml.transform.TransformerFactory;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageProperties;
-import org.glassfish.jersey.FeaturesAndProperties;
 
-import javax.inject.Inject;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Thread-scoped injection provider of {@link TransformerFactory transformer factories}.
@@ -57,10 +56,10 @@ import javax.inject.Inject;
  */
 public class TransformerFactoryInjectionProvider implements Factory<TransformerFactory> {
 
-    private final Provider<FeaturesAndProperties> featuresAndPropertiesFactory;
+    private final Provider<Config> featuresAndPropertiesFactory;
 
     @Inject
-    public TransformerFactoryInjectionProvider(Provider<FeaturesAndProperties> featuresAndPropertiesFactory) {
+    public TransformerFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
         this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
     }
 
@@ -77,6 +76,6 @@ public class TransformerFactoryInjectionProvider implements Factory<TransformerF
 
     @Override
     public void dispose(TransformerFactory instance) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // not used
     }
 }

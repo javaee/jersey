@@ -46,7 +46,7 @@ import java.util.Map;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public interface FeaturesAndProperties {
+public interface Config {
 
     /**
      * Get the value of the property with a given name.
@@ -76,7 +76,7 @@ public interface FeaturesAndProperties {
 //
 //    public boolean isEnabled(Class<? extends Feature> feature);
 //
-//    public FeaturesAndProperties enable(Class<? extends Feature> feature);
+//    public Config enable(Class<? extends Feature> feature);
 //
-//    public FeaturesAndProperties disable(Class<? extends Feature> feature);
+//    public Config disable(Class<? extends Feature> feature);
 }

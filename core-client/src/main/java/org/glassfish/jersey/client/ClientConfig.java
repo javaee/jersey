@@ -49,7 +49,7 @@ import java.util.Set;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 
-import org.glassfish.jersey.FeaturesAndProperties;
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.process.Inflector;
 
 import org.glassfish.hk2.utilities.Binder;
@@ -65,7 +65,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ClientConfig implements Configuration, FeaturesAndProperties {
+public class ClientConfig implements Configuration, Config {
 
     /**
      * Default encapsulation of the internal configuration state.

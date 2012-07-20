@@ -91,7 +91,7 @@ public class JsonListElementProvider extends AbstractCollectionJaxbProvider {
 // TODO add support for configuration from injected features&properties
 //    @Context
 //    @Override
-//    public void setConfiguration(FeaturesAndProperties fp) {
+//    public void setConfiguration(Config fp) {
 //        super.setConfiguration(fp);
 //        jacksonEntityProviderTakesPrecedence = fp.getFeature(JsonConfiguration.FEATURE_POJO_MAPPING);
 //    }

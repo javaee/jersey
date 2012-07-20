@@ -65,7 +65,7 @@ import org.glassfish.jersey.media.json.JsonMarshaller;
 import org.glassfish.jersey.media.json.internal.reader.JsonFormatException;
 import org.glassfish.jersey.message.internal.AbstractJaxbElementProvider;
 
-//import com.sun.jersey.core.util.FeaturesAndProperties;
+//import com.sun.jersey.core.util.Config;
 
 /**
  * JSON message entity media type provider (reader & writer) for {@link JAXBElement}
@@ -87,7 +87,7 @@ public class JsonJaxbElementProvider extends AbstractJaxbElementProvider {
 // TODO add support for configuration from injected features&properties
 //    @Context
 //    @Override
-//    public void setConfiguration(FeaturesAndProperties fp) {
+//    public void setConfiguration(Config fp) {
 //        super.setConfiguration(fp);
 //        jacksonEntityProviderTakesPrecedence = fp.getFeature(JSONConfiguration.FEATURE_POJO_MAPPING);
 //    }

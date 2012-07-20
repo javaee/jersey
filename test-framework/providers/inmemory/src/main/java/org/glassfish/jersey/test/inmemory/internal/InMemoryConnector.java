@@ -58,7 +58,6 @@ import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.Inflector;
@@ -159,7 +158,7 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
                 OutputStream entityStream = outboundContext.getEntityStream();
 
                 try {
-                    workers.writeTo(
+                    entityStream = workers.writeTo(
                             outboundContext.getEntity(),
                             outboundContext.getEntity().getClass(),
                             outboundContext.getEntityType(),
@@ -170,6 +169,8 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
                             entityStream,
                             null,
                             true);
+                    outboundContext.setEntityStream(entityStream);
+                    outboundContext.commitStream();
                 } catch (IOException e) {
                     throw new InvocationException(e.getMessage(), e);
                 } finally {
@@ -181,8 +182,6 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
                         }
                     }
                 }
-
-                outboundContext.commitStream();
 
                 inboundContext.setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
             }
