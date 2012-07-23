@@ -99,7 +99,6 @@ public class SseTest {
         Option[] options = options(
                 //                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("jersey.test.port").value(String.valueOf(port)),
-                systemPackage("sun.misc"),
                 // define maven repository
                 repositories(
                 "http://repo1.maven.org/maven2",
