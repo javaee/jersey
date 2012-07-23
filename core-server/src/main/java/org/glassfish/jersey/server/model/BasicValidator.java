@@ -67,8 +67,9 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.PerLookup;
 import org.glassfish.jersey.uri.UriTemplate;
+
+import org.glassfish.hk2.api.PerLookup;
 
 /**
  * Performs a basic check on abstract resources.
@@ -102,6 +103,9 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
     private final MessageBodyWorkers workers;
+    /**
+     * Classes that have been checked already.
+     */
     protected final Set<Class<?>> checkedClasses = new HashSet<Class<?>>();
 
     /**
