@@ -381,7 +381,7 @@ public class InboundMessageContext {
      *                  if conversion fails.
      * @param convertNull if {@code true} this method calls the provided converter even for {@code null}. Otherwise this
      *                    method returns the {@code null} without calling the converter.
-     * @return value of the header, or {@code null} if not present.
+     * @return value of the header, or (possibly converted) {@code null} if not present.
      */
     private <T> T singleHeader(String name, Function<String, T> converter, boolean convertNull) {
         final List<String> values = this.headers.get(name);

@@ -144,9 +144,7 @@ public class OutboundMessageContext {
     /**
      * Replace all headers.
      *
-     *
      * @param headers new headers.
-     * @return updated context.
      */
     public void replaceHeaders(MultivaluedMap<String, Object> headers) {
         getHeaders().clear();
@@ -155,6 +153,12 @@ public class OutboundMessageContext {
         }
     }
 
+    /**
+     * Get a multi-valued map representing outbound message headers with their values converted
+     * to strings.
+     *
+     * @return multi-valued map of outbound message header names to their string-converted values.
+     */
     public MultivaluedMap<String, String> getStringHeaders() {
         return HeadersFactory.asStringHeaders(headers);
     }
@@ -187,13 +191,15 @@ public class OutboundMessageContext {
      * @param valueType header value class.
      * @param converter from string conversion function. Is expected to throw {@link ProcessingException}
      *                  if conversion fails.
-     * @return value of the header, or {@code null} if not present.
+     * @param convertNull if {@code true} this method calls the provided converter even for {@code null}. Otherwise this
+     *                    method returns the {@code null} without calling the converter.
+     * @return value of the header, or (possibly converted) {@code null} if not present.
      */
-    private <T> T singleHeader(String name, Class<T> valueType, Function<String, T> converter) {
+    private <T> T singleHeader(String name, Class<T> valueType, Function<String, T> converter, boolean convertNull) {
         final List<Object> values = headers.get(name);
 
         if (values == null || values.isEmpty()) {
-            return null;
+            return convertNull ? converter.apply(null) : null;
         }
         if (values.size() > 1) {
             throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()));
@@ -201,14 +207,13 @@ public class OutboundMessageContext {
 
         Object value = values.get(0);
         if (value == null) {
-            return null;
+            return convertNull ? converter.apply(null) : null;
         }
 
         if (valueType.isInstance(value)) {
             return valueType.cast(value);
         } else {
             try {
-                // TODO: (MM) shouldn't StringReaders be utilized?
                 return converter.apply(HeadersFactory.asString(value, null));
             } catch (ProcessingException ex) {
                 throw exception(name, value, ex);
@@ -244,7 +249,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(e);
                 }
             }
-        });
+        }, false);
     }
 
     /**
@@ -262,7 +267,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(e);
                 }
             }
-        });
+        }, false);
     }
 
     /**
@@ -277,7 +282,7 @@ public class OutboundMessageContext {
             public MediaType apply(String input) {
                 return MediaType.valueOf(input);
             }
-        });
+        }, false);
     }
 
     /**
@@ -425,7 +430,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(ex);
                 }
             }
-        });
+        }, true);
     }
 
     /**
@@ -464,7 +469,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(ex);
                 }
             }
-        });
+        }, false);
     }
 
     /**
@@ -482,7 +487,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(e);
                 }
             }
-        });
+        }, false);
     }
 
     /**
@@ -500,7 +505,7 @@ public class OutboundMessageContext {
                     throw new ProcessingException(ex);
                 }
             }
-        });
+        }, false);
     }
 
     /**

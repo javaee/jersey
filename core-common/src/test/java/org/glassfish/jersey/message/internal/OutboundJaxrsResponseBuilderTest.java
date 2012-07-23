@@ -69,10 +69,18 @@ public class OutboundJaxrsResponseBuilderTest {
      */
     @Test
     public void testMediaType() {
-        Response r = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext())
+        final Response r = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext())
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML)
                 .build();
         assertEquals(200, r.getStatus());
         assertEquals(Response.Status.OK, r.getStatusInfo());
+    }
+
+    @Test
+    public void testIssue1297Fix() {
+        final Response response = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext()).entity("1234567890")
+                .build();
+        final int len = response.getLength();
+        assertEquals(-1, len);
     }
 }
