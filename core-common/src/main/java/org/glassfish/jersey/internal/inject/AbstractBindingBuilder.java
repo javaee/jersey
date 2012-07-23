@@ -333,7 +333,7 @@ abstract class AbstractBindingBuilder<T> implements
             }
 
             for (Type contract : contracts) {
-                factoryDescriptorBuilder.to(new ParameterizedTypeImpl(Factory.class, contract)) ;
+                factoryDescriptorBuilder.to(new ParameterizedTypeImpl(Factory.class, contract));
                 descriptorBuilder.to(contract);
             }
 
@@ -362,6 +362,7 @@ abstract class AbstractBindingBuilder<T> implements
             return factoryDescriptor;
         }
 
+        @Override
         public String toString() {
             return "FactoryDescriptorsImpl(\n" +
                     serviceDescriptor + ",\n" + factoryDescriptor + ",\n\t" + System.identityHashCode(this) + ")";
@@ -369,35 +370,55 @@ abstract class AbstractBindingBuilder<T> implements
     }
 
     /**
-     * TODO javadoc.
+     * Create a new service binding builder.
+     *
+     * @param <T>            service type.
+     * @param serviceType    service class.
+     * @param bindAsContract if {@code true}, the service class will be bound as one of the contracts.
+     * @return initialized binding builder.
      */
     static <T> AbstractBindingBuilder<T> create(Class<T> serviceType, boolean bindAsContract) {
         return new ClassBasedBindingBuilder<T>(serviceType, bindAsContract ? serviceType : null);
     }
 
     /**
-     * TODO javadoc.
+     * Create a new service binding builder.
+     *
+     * @param <T>            service type.
+     * @param serviceType    generic service type.
+     * @param bindAsContract if {@code true}, the service class will be bound as one of the contracts.
+     * @return initialized binding builder.
      */
     static <T> AbstractBindingBuilder<T> create(TypeLiteral<T> serviceType, boolean bindAsContract) {
         return new ClassBasedBindingBuilder<T>(serviceType.getRawType(), bindAsContract ? serviceType.getType() : null);
     }
 
     /**
-     * TODO javadoc.
+     * Create a new service binding builder.
+     *
+     * @param service service instance.
+     * @return initialized binding builder.
      */
     static <T> AbstractBindingBuilder<T> create(T service) {
         return new InstanceBasedBindingBuilder<T>(service);
     }
 
     /**
-     * TODO javadoc.
+     * Create a new service binding builder.
+     *
+     * @param factory service factory instance.
+     * @return initialized binding builder.
      */
     static <T> AbstractBindingBuilder<T> createFactoryBinder(Factory<T> factory) {
         return new FactoryInstanceBasedBindingBuilder<T>(factory);
     }
 
     /**
-     * TODO javadoc.
+     * Create a new service binding builder.
+     *
+     * @param factoryType service factory class.
+     * @param factoryScope service factory scope.
+     * @return initialized binding builder.
      */
     static <T> AbstractBindingBuilder<T> createFactoryBinder(Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
         return new FactoryTypeBasedBindingBuilder<T>(factoryType, factoryScope);
