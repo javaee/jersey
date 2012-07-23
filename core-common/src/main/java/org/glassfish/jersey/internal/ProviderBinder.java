@@ -97,7 +97,7 @@ public class ProviderBinder {
 
     /**
      * Register/bind custom provider classes. Registered providers will be handled
-     * always as Singletons unless annotated by {@link org.glassfish.jersey.spi.PerLookup}.
+     * always as Singletons unless annotated by {@link PerLookup}.
      *
      * @param classes custom provider classes.
      */
@@ -113,7 +113,7 @@ public class ProviderBinder {
 
     /**
      * Register/bind custom provider classes. Registered providers will be handled
-     * always as Singletons unless annotated by {@link org.glassfish.jersey.spi.PerLookup}.
+     * always as Singletons unless annotated by {@link PerLookup}.
      *
      * @param classes custom provider classes.
      */
@@ -124,7 +124,7 @@ public class ProviderBinder {
     /**
      * Register/bind custom provider classes that may also be resources. Registered
      * providers/resources will be handled always as Singletons unless annotated by
-     * {@link org.glassfish.jersey.spi.PerLookup}.
+     * {@link PerLookup}.
      *
      * <p>
      * If {@code bindAsResources} is set to {@code true}, the providers will also be bound
@@ -181,7 +181,7 @@ public class ProviderBinder {
 
     private Class<? extends Annotation> getProviderScope(Class<?> clazz) {
         Class<? extends Annotation> hk2Scope = Singleton.class;
-        if (clazz.isAnnotationPresent(org.glassfish.jersey.spi.PerLookup.class)) {
+        if (clazz.isAnnotationPresent(PerLookup.class)) {
             hk2Scope = PerLookup.class;
         }
         return hk2Scope;
