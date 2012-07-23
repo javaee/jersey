@@ -130,8 +130,9 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public void close() throws MessageProcessingException {
-        // TODO: implement method.
+        context.close();
     }
+
     @Override
     public String getHeader(String name) {
         return context.getHeaderString(name);

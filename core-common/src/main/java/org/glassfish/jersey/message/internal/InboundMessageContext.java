@@ -110,45 +110,36 @@ public class InboundMessageContext {
     private static class ContentStream {
         private InputStream contentStream;
         private Type type;
+        private boolean closed;
 
-        public ContentStream(InputStream contentStream) {
+        ContentStream(InputStream contentStream) {
             super();
             this.contentStream = contentStream;
             this.type = Type.INTERNAL;
         }
 
-        public void setBufferedContentStream(InputStream bufferedInputStream) {
+        void setBufferedContentStream(InputStream bufferedInputStream) {
             this.contentStream = bufferedInputStream;
             this.type = (this.type == Type.EXTERNAL ? Type.EXTERNAL_BUFFERED : Type.BUFFERED);
         }
 
-        public void setBufferedTempContentStream(InputStream inputStream) {
-            this.contentStream = inputStream;
-            this.type = Type.TEMP_BUFFERED;
-        }
-
-        public void setNewContentStream(InputStream contentStream) {
-            this.contentStream = contentStream;
-            this.type = Type.INTERNAL;
-        }
-
-        public void setExternalContentStream(InputStream contentStream) {
+        void setExternalContentStream(InputStream contentStream) {
             this.contentStream = contentStream;
             this.type = Type.EXTERNAL;
         }
 
-        public InputStream getInputStream() {
+        InputStream getInputStream() {
             return contentStream;
         }
 
-        public Type getType() {
+        Type getType() {
             return type;
         }
 
-        public void invalidateContentStream() {
-            if (contentStream != null) {
+        void invalidateContentStream() {
+            if (this.contentStream != null) {
                 try {
-                    contentStream.close();
+                    this.contentStream.close();
                 } catch (IOException ex) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
                 }
@@ -156,7 +147,22 @@ public class InboundMessageContext {
             }
         }
 
+        void close() {
+            if (!closed) {
+                try {
+                    contentStream.close();
+                    closed = true;
+                } catch (IOException ex) {
+                    LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                }
+            }
+        }
+
+
         public boolean isEmpty() {
+            if (closed) {
+                throw new MessageProcessingException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
+            }
             if (contentStream == null) {
                 return true;
             }
@@ -191,7 +197,7 @@ public class InboundMessageContext {
         }
 
         /**
-         * State of the input stream.
+         * Type of the input stream.
          *
          * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
          */
@@ -910,7 +916,7 @@ public class InboundMessageContext {
             }
             return t;
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Error reading entity from input stream", ex);
+            LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
         }
 
         return null;
@@ -944,4 +950,10 @@ public class InboundMessageContext {
         }
     }
 
+    /**
+     * Closes the underlying content stream.
+     */
+    public void close() {
+        contentStream.close();
+    }
 }

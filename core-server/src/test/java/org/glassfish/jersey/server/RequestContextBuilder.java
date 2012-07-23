@@ -129,6 +129,7 @@ public class RequestContextBuilder {
             setEntityStream(new ByteArrayInputStream(entityBytes));
         }
     }
+
     private final TestContainerRequest result;
 
     public static RequestContextBuilder from(String requestUri, String method) {
