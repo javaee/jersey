@@ -44,12 +44,12 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.Provider;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -59,8 +59,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Provider
-class EventProcessorReader implements MessageBodyReader<EventProcessor> {
+public class EventProcessorReader implements MessageBodyReader<EventProcessor> {
 
     @Inject
     Ref<MessageBodyWorkers> messageBodyWorkers;

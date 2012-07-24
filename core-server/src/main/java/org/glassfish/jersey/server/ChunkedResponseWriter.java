@@ -44,12 +44,10 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
 
 /**
  * Used for writing {@link ChunkedResponse}.
@@ -57,10 +55,7 @@ import javax.ws.rs.ext.Provider;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @see MessageBodyWriter
  */
-@Provider
-@Singleton
 public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<?>> {
-
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return ChunkedResponse.class.isAssignableFrom(type);

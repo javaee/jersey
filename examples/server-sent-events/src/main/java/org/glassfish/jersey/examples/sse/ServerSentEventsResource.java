@@ -73,6 +73,7 @@ public class ServerSentEventsResource {
     @DELETE
     public void close() throws IOException {
         eventChannel.close();
+        eventChannel = new EventChannel();
     }
 
     @POST

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.media.sse;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,38 +53,47 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
- * Used for retrieving server-side events.
+ * Used for retrieving server-sent events.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-/* package */ final class EventProcessor implements Closeable {
+public final class EventProcessor implements Closeable {
 
-    private final EventReceiver eventReceiver;
+    private final InputStream inputStream;
+    private final Annotation[] annotations;
+    private final MediaType mediaType;
+    private final MultivaluedMap<String, String> headers;
+    private final MessageBodyWorkers messageBodyWorkers;
+
     private volatile boolean closed;
 
-    /*package*/ EventProcessor(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
-        eventReceiver = new EventReceiver(inputStream, annotations, mediaType, headers, messageBodyWorkers);
+    EventProcessor(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
+        this.inputStream = inputStream;
+        this.annotations = annotations;
+        this.mediaType = mediaType;
+        this.headers = headers;
+        this.messageBodyWorkers = messageBodyWorkers;
     }
 
     /**
-     * Starts message processing.
+     * Starts synchronous message processing. This method blocks until the connection is closed.
      *
-     * @param eventSource {@link EventSource} instance
-     * @see org.glassfish.jersey.media.sse.EventListener
-     * {@link InboundEvent}.
+     * @param eventListener Event listener that will be synchronously receive {@link InboundEvent events}.
      */
-    public void process(final EventSource eventSource) {
+    public void process(final EventListener eventListener) {
+
         do {
             if (closed) {
                 try {
-                    eventReceiver.close();
+                    inputStream.close();
+                    break;
                 } catch (IOException e) {
                     Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);
                 }
             } else {
-                eventReceiver.process(null, eventSource);
+                nextEvent(eventListener);
             }
-        } while (!eventReceiver.isClosed());
+        } while (true);
     }
 
     @Override
@@ -91,5 +101,127 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
         // this can be called from different threads, so just setting a flag to keep it thread safe
         // the actual close will be performed by process() method
         closed = true;
+    }
+
+    private enum State {
+        START,
+
+        COMMENT,
+        FIELD_NAME,
+        FIELD_VALUE_FIRST,
+        FIELD_VALUE,
+
+        EVENT_FIRED
+    }
+
+    private void nextEvent(final EventListener listener) {
+        /**
+         * http://dev.w3.org/html5/eventsource/
+         * last editors draft from 13 March 2012
+         */
+
+        InboundEvent inboundEvent = new InboundEvent(messageBodyWorkers, annotations, mediaType, headers);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        State currentState = State.START;
+        String fieldName = null;
+
+        try {
+            int data = 0;
+            while(currentState != State.EVENT_FIRED && (data = inputStream.read()) != -1) {
+
+                switch (currentState) {
+
+                    case START:
+                        if(data == ':') {
+                            currentState = State.COMMENT;
+                        } else if(data != '\n') {
+                            baos.write(data);
+                            currentState = State.FIELD_NAME;
+                        } else if(data == '\n') {
+                            if(!inboundEvent.isEmpty()) {
+                                // fire!
+                                listener.onEvent(inboundEvent);
+                                currentState = State.EVENT_FIRED;
+                            }
+
+                            inboundEvent = new InboundEvent(messageBodyWorkers, annotations, mediaType, headers);
+                        }
+                        break;
+                    case COMMENT:
+                        if(data == '\n') {
+                            currentState = State.START;
+                        }
+                        break;
+                    case FIELD_NAME:
+                        if(data == ':') {
+                            fieldName = baos.toString();
+                            baos.reset();
+                            currentState = State.FIELD_VALUE_FIRST;
+                        } else if(data == '\n') {
+                            processField(inboundEvent, baos.toString(), "".getBytes());
+                            baos.reset();
+                            currentState = State.START;
+                        } else {
+                            baos.write(data);
+                        }
+                        break;
+                    case FIELD_VALUE_FIRST:
+                        // first space has to be skipped
+                        if(data != ' ') {
+                            baos.write(data);
+                        }
+
+                        if(data == '\n') {
+                            processField(inboundEvent, fieldName, baos.toByteArray());
+                            baos.reset();
+                            currentState = State.START;
+                            break;
+                        }
+
+                        currentState = State.FIELD_VALUE;
+                        break;
+                    case FIELD_VALUE:
+                        if(data == '\n') {
+                            processField(inboundEvent, fieldName, baos.toByteArray());
+                            baos.reset();
+                            currentState = State.START;
+                        } else {
+                            baos.write(data);
+                        }
+                        break;
+                }
+
+            }
+
+            if(data == -1) {
+                close();
+            }
+        } catch (IOException e) {
+            Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);
+            close();
+        }
+    }
+
+    private void processField(InboundEvent inboundEvent, String name, byte[] value) {
+        if(name.equals("event")) {
+            inboundEvent.setName(new String(value));
+        } else if(name.equals("data")) {
+            inboundEvent.addData(value);
+            inboundEvent.addData(new byte[]{'\n'});
+        } else if(name.equals("id")) {
+            String s = new String(value);
+            try {
+                // TODO: check the value [0-9]*
+                Integer.parseInt(new String(value));
+            } catch (NumberFormatException nfe) {
+                s = "";
+            }
+            inboundEvent.setId(s);
+        } else if(name.equals("retry")) {
+            // TODO
+        } else {
+            // ignore
+        }
     }
 }

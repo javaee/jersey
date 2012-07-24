@@ -99,7 +99,7 @@ public class InboundEvent {
     }
 
     /**
-     * Add data. Used by {@link EventReceiver}.
+     * Add data. Used by {@link EventProcessor}.
      *
      * @param data byte array containing incoming data.
      */

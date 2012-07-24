@@ -767,25 +767,9 @@ public final class ApplicationHandler {
 
     private void releaseRequestProcessing(final ContainerRequest requestContext, ContainerResponse responseContext) {
         closeableServiceFactory.provide().close();
-        final boolean isChunked;
-        final Object property = requestContext.getProperty(ChunkedResponse.CHUNKED_MODE);
-        if (property instanceof Boolean) {
-            isChunked = (Boolean) property;
-        } else {
-            isChunked = false;
-        }
         // Commit the container response writer if not in chunked mode
-        if (!isChunked) {
-            // TODO: move to ContainerResponse.close()
-            if (responseContext.hasEntity()) {
-                try {
-                    responseContext.getEntityStream().flush();
-                    responseContext.getEntityStream().close();
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, e.getMessage(), e);
-                }
-            }
-            requestContext.getResponseWriter().commit();
+        if (!responseContext.isChunked()) {
+            responseContext.close();
         }
     }
 
@@ -921,14 +905,13 @@ public final class ApplicationHandler {
             if (!skipFinally) {
                 responseContext.commitStream();
 
-                if (ChunkedResponse.class.isAssignableFrom(entity.getClass())) {
+                if (responseContext.isChunked()) {
                     try {
                         ((ChunkedResponse) entity).setContext(requestContext, responseContext);
                     } catch (IOException ex) {
                         LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                     }
-                    // disable default writer commit on request scope release & suspend the writer
-                    requestContext.setProperty(ChunkedResponse.CHUNKED_MODE, Boolean.TRUE);
+                    // suspend the writer
                     writer.suspend(0, TimeUnit.SECONDS, null);
                 }
             }

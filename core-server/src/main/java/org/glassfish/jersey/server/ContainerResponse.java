@@ -369,4 +369,21 @@ public class ContainerResponse implements ContainerResponseContext {
     public boolean isCommitted() {
         return messageContext.isCommitted();
     }
+
+    /**
+     * Closes the response. Flushes and closes the entity stream, frees up container resources associated with
+     * the corresponding request.
+     */
+    public void close() {
+        messageContext.close();
+        requestContext.getResponseWriter().commit();
+    }
+
+    /**
+     * Returns {@code true} if the response entity is a {@link ChunkedResponse} instance.
+     * @return {@code true} if the entity is a {@link ChunkedResponse} instance, {@code false} otherwise.
+     */
+    public boolean isChunked() {
+        return hasEntity() && ChunkedResponse.class.isAssignableFrom(getEntity().getClass());
+    }
 }

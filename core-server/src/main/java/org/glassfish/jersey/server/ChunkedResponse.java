@@ -59,12 +59,6 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
-    /**
-     * A request-scoped property indicating that the a chunked response
-     * is used by the user.
-     */
-    static final String CHUNKED_MODE = "jersey.internal.server.chunked-mode";
-
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
 
     private volatile boolean closed = false;
@@ -176,14 +170,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
         } finally {
             if (shouldClose) {
                 try {
-                    responseContext.getEntityStream().close();
-                } catch (Exception e) {
-                    // if no exception remembered before, remember this one
-                    // otherwise the previously remembered exception (from catch clause) takes precedence
-                    ex = ex == null ? e : ex;
-                }
-                try {
-                    requestContext.getResponseWriter().commit();
+                    responseContext.close();
                 } catch (Exception e) {
                     // if no exception remembered before, remember this one
                     // otherwise the previously remembered exception (from catch clause) takes precedence
@@ -191,8 +178,10 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
                 }
                 // rethrow remembered exception (if any)
                 if (ex instanceof IOException) {
+                    //noinspection ThrowFromFinallyBlock
                     throw (IOException) ex;
                 } else if (ex instanceof RuntimeException) {
+                    //noinspection ThrowFromFinallyBlock
                     throw (RuntimeException) ex;
                 }
             }
@@ -221,6 +210,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
         return closed;
     }
 
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
     public boolean equals(final Object obj) {
         return this == obj;

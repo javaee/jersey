@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
@@ -823,5 +825,19 @@ public class OutboundMessageContext {
      */
     public boolean isCommitted() {
         return rootStream.isCommitted();
+    }
+
+    /**
+     * Closes the context. Flushes and closes the entity stream.
+     */
+    public void close() {
+        if (hasEntity()) {
+            try {
+                getEntityStream().flush();
+                getEntityStream().close();
+            } catch (IOException e) {
+                Logger.getLogger(OutboundMessageContext.class.getName()).log(Level.WARNING, e.getMessage(), e);
+            }
+        }
     }
 }

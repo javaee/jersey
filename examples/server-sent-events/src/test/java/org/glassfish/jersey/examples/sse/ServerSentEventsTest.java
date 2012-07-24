@@ -41,16 +41,20 @@ package org.glassfish.jersey.examples.sse;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.sse.EventListener;
+import org.glassfish.jersey.media.sse.EventProcessor;
+import org.glassfish.jersey.media.sse.EventProcessorReader;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
@@ -60,6 +64,7 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -91,6 +96,39 @@ public class ServerSentEventsTest extends JerseyTest {
 
         target().path(App.ROOT_PATH).request().post(Entity.text("message"));
         target().path(App.ROOT_PATH).request().delete();
+    }
+
+    @Test
+    public void testEventProcessor() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(5);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                WebTarget target = target(App.ROOT_PATH);
+                target.configuration().register(EventProcessorReader.class);
+                EventProcessor processor = target.request().get(EventProcessor.class);
+                processor.process(new EventListener() {
+                    @Override
+                    public void onEvent(InboundEvent inboundEvent) {
+                        try {
+                            System.out.println("# Received: " + inboundEvent);
+                            System.out.println(inboundEvent.getData(String.class));
+
+                            assertEquals("message " + (5 - latch.getCount()), inboundEvent.getData());
+                            latch.countDown();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        }).start();
+
+        for (int i = 0; i < 5; i++) {
+            target(App.ROOT_PATH).request().post(Entity.text("message " + i));
+        }
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        target(App.ROOT_PATH).request().delete();
     }
 
     @Test

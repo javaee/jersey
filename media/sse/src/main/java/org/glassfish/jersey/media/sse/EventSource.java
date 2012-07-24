@@ -68,6 +68,30 @@ public class EventSource implements EventListener {
     private volatile EventProcessor processor;
     private boolean close = false;
 
+    private final EventListener processorListener = new EventListener() {
+        /**
+         * Called by EventProcessor when inboundEvent is received.
+         * Is responsible for calling {@link EventSource#onEvent(InboundEvent)} and all registered
+         * {@link EventListener} instances.
+         *
+         * @param inboundEvent incoming {@link InboundEvent}.
+         */
+        @Override
+        public void onEvent(final InboundEvent inboundEvent) {
+            EventSource.this.onEvent(inboundEvent);
+
+            notifyListeners(inboundEvent, generalListeners);
+
+            final String eventName = inboundEvent.getName();
+            if(eventName != null) {
+                final List<EventListener> eventListeners = namedListeners.get(eventName);
+                if(eventListeners != null) {
+                    notifyListeners(inboundEvent, eventListeners);
+                }
+            }
+        }
+    };
+
     private final ConcurrentSkipListSet<EventListener> generalListeners = new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
         @Override
         public int compare(EventListener eventListener, EventListener eventListener1) {
@@ -141,32 +165,12 @@ public class EventSource implements EventListener {
                 return;
             }
         }
-        processor.process(this);
+        processor.process(processorListener);
     }
 
     private void notifyListeners(InboundEvent inboundEvent, Collection<EventListener> listeners) {
         for(EventListener eventListener : listeners) {
             eventListener.onEvent(inboundEvent);
-        }
-    }
-
-    /**
-     * Called when inboundEvent is received. Is responsible for calling {@link EventSource#onEvent(InboundEvent)} and all registered
-     * {@link EventListener} instances.
-     *
-     * @param inboundEvent incoming {@link InboundEvent}.
-     */
-    void onReceivedEvent(InboundEvent inboundEvent) {
-        onEvent(inboundEvent);
-
-        notifyListeners(inboundEvent, generalListeners);
-
-        final String eventName = inboundEvent.getName();
-        if(eventName != null) {
-            final List<EventListener> eventListeners = namedListeners.get(eventName);
-            if(eventListeners != null) {
-                notifyListeners(inboundEvent, eventListeners);
-            }
         }
     }
 
