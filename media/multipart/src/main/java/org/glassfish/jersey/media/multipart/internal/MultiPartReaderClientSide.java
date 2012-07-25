@@ -46,8 +46,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -56,7 +54,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -93,7 +94,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
      * for our body parts.
      */
     @Inject
-    private Ref<MessageBodyWorkers> messageBodyWorkers;
+    private Provider<MessageBodyWorkers> messageBodyWorkers;
 
     private final MIMEConfig mimeConfig;
 
@@ -167,7 +168,9 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         } else {
             multiPart = new MultiPart();
         }
-        multiPart.setMessageBodyWorkers(messageBodyWorkers.get());
+
+        final MessageBodyWorkers workers = messageBodyWorkers.get();
+        multiPart.setMessageBodyWorkers(workers);
 
         MultivaluedMap<String,String> multiPartHeaders = multiPart.getHeaders();
         for (Map.Entry<String,List<String>> entry : headers.entrySet()) {
@@ -192,7 +195,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
             }
 
             // Configure providers.
-            bodyPart.setMessageBodyWorkers(messageBodyWorkers.get());
+            bodyPart.setMessageBodyWorkers(workers);
 
             // Copy headers.
             for (Header header : mimePart.getAllHeaders()) {

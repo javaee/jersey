@@ -50,8 +50,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
@@ -62,7 +62,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 public class EventProcessorReader implements MessageBodyReader<EventProcessor> {
 
     @Inject
-    Ref<MessageBodyWorkers> messageBodyWorkers;
+    private Provider<MessageBodyWorkers> messageBodyWorkers;
 
     @Override
     public boolean isReadable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {

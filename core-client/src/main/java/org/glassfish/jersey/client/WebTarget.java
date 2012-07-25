@@ -59,42 +59,78 @@ import com.google.common.collect.Maps;
  */
 public class WebTarget implements javax.ws.rs.client.WebTarget {
 
-    // TODO base URI support
     private final ClientConfig configuration;
     private final UriBuilder targetUri;
     private final Map<String, Object> pathParams;
-    private final JerseyClient client;
 
+    /**
+     * Create new web target instance.
+     *
+     * @param uri target URI.
+     * @param parent parent client.
+     */
     /*package*/ WebTarget(String uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
+        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
     }
 
+    /**
+     * Create new web target instance.
+     *
+     * @param uri target URI.
+     * @param parent parent client.
+     */
     /*package*/ WebTarget(URI uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot(), parent);
+        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
     }
 
+    /**
+     * Create new web target instance.
+     *
+     * @param uriBuilder builder for the target URI.
+     * @param parent parent client.
+     */
     /*package*/ WebTarget(UriBuilder uriBuilder, JerseyClient parent) {
-        this(uriBuilder.clone(), null, parent.configuration().snapshot(), parent);
+        this(uriBuilder.clone(), null, parent.configuration().snapshot());
     }
 
+    /**
+     * Create new web target instance.
+     *
+     * @param link link to the target URI.
+     * @param parent parent client.
+     */
     /*package*/ WebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
-        this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot(), parent);
+        this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot());
     }
 
-    protected WebTarget(UriBuilder targetUri, WebTarget that) {
-        this(targetUri, that.pathParams, that.configuration.snapshot(), that.client);
+    /**
+     * Create new web target instance.
+     *
+     * @param uriBuilder builder for the target URI.
+     * @param that original target to copy the internal data from.
+     */
+    protected WebTarget(UriBuilder uriBuilder, WebTarget that) {
+        this(uriBuilder, that.pathParams, that.configuration.snapshot());
     }
 
-    protected WebTarget(UriBuilder targetUri, Map<String, Object> pathParams, ClientConfig clientConfig, JerseyClient client) {
-        this.targetUri = targetUri;
+    /**
+     * Create new web target instance.
+     *
+     * @param uriBuilder builder for the target URI.
+     * @param pathParams map of path parameter names to values.
+     * @param clientConfig target configuration.
+     */
+    protected WebTarget(UriBuilder uriBuilder, Map<String, Object> pathParams, ClientConfig clientConfig) {
+        clientConfig.checkClient();
+
+        this.targetUri = uriBuilder;
         if (pathParams != null) {
             this.pathParams = Maps.newHashMap(pathParams);
         } else {
             this.pathParams = Maps.newHashMap();
         }
         this.configuration = clientConfig;
-        this.client = client;
     }
 
     /**
@@ -112,40 +148,49 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
         }
     }
 
-    protected final void replacePathParams(Map<String, Object> params) {
+    /**
+     * Replace path parameter values.
+     *
+     * @param valueMap path parameter name to value map.
+     */
+    protected final void replacePathParams(Map<String, Object> valueMap) {
         pathParams.clear();
-        if (params != null) {
-            pathParams.putAll(params);
+        if (valueMap != null) {
+            pathParams.putAll(valueMap);
         }
     }
 
     @Override
     public URI getUri() {
-        client.checkClosed();
+        configuration.getClient().checkNotClosed();
         return targetUri.buildFromMap(pathParams);
+    }
+
+    private void checkNotClosed() {
+        configuration.getClient().checkNotClosed();
     }
 
     @Override
     public UriBuilder getUriBuilder() {
-        client.checkClosed();
+        checkNotClosed();
         return targetUri.clone();
     }
 
     @Override
     public ClientConfig configuration() {
-        client.checkClosed();
+        checkNotClosed();
         return configuration;
     }
 
     @Override
     public WebTarget path(String path) throws NullPointerException {
-        client.checkClosed();
+        checkNotClosed();
         return new WebTarget(getUriBuilder().path(path), this);
     }
 
     @Override
     public WebTarget pathParam(String name, Object value) throws IllegalArgumentException, NullPointerException {
-        client.checkClosed();
+        checkNotClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
         result.setPathParam(name, value);
         return result;
@@ -153,7 +198,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public WebTarget pathParams(Map<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
-        client.checkClosed();
+        checkNotClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
         result.replacePathParams(parameters);
         return result;
@@ -161,20 +206,20 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public WebTarget matrixParam(String name, Object... values) throws NullPointerException {
-        client.checkClosed();
+        checkNotClosed();
         return new WebTarget(getUriBuilder().matrixParam(name, values), this);
     }
 
     @Override
     public WebTarget queryParam(String name, Object... values) throws NullPointerException {
-        client.checkClosed();
+        checkNotClosed();
         return new WebTarget(getUriBuilder().queryParam(name, values), this);
     }
 
     @Override
     public WebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
         // TODO move the implementation to a proprietary Jersey uri builder or leave it here?
-        client.checkClosed();
+        checkNotClosed();
         UriBuilder ub = getUriBuilder(); // clone
         for (Entry<String, List<Object>> e : parameters.entrySet()) {
             ub.queryParam(e.getKey(), e.getValue().toArray());
@@ -186,15 +231,15 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request() {
         // TODO values
-        client.checkClosed();
-        return new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
+        checkNotClosed();
+        return new JerseyInvocation.Builder(getUri(), configuration.snapshot());
     }
 
     @Override
     public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
         // TODO values
-        client.checkClosed();
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
+        checkNotClosed();
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
         b.request().accept(acceptedResponseTypes);
         return b;
     }
@@ -202,8 +247,8 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
         // TODO values
-        client.checkClosed();
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot(), client);
+        checkNotClosed();
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
         b.request().accept(acceptedResponseTypes);
         return b;
     }

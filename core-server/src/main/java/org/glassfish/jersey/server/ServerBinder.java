@@ -54,7 +54,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
@@ -222,10 +221,9 @@ public class ServerBinder extends AbstractBinder {
                 new ProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
-                new ProviderBinder.ProviderBinderBinder(),
-                new MessageBodyFactory.Binder(Singleton.class),
-                new ExceptionMapperFactory.Binder(Singleton.class),
-                new ContextResolverFactory.Binder(Singleton.class),
+                new MessageBodyFactory.Binder(),
+                new ExceptionMapperFactory.Binder(),
+                new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ContainerFilteringStage.Binder(),
                 new SecurityContextBinder(),

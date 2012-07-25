@@ -54,9 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -67,22 +64,22 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparator;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.KeyComparatorLinkedHashMap;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.PriorityComparator.Order;
-import org.glassfish.jersey.process.internal.RequestScoped;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
@@ -106,37 +103,9 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * Message body factory injection binder.
      */
     public static class Binder extends AbstractBinder {
-
-        private static class InjectionFactory extends ReferencingFactory<MessageBodyWorkers> {
-            @Inject
-            public InjectionFactory(Provider<Ref<MessageBodyWorkers>> referenceFactory) {
-                super(referenceFactory);
-            }
-
-            @Override
-            @RequestScoped
-            public MessageBodyWorkers provide() {
-                return super.provide();
-            }
-        }
-
-        //
-        private final Class<? extends Annotation> refScope;
-
-        /**
-         * Create new message body factory injection binder.
-         *
-         * @param refScope scope of the injectable {@link Ref reference} of the {@link MessageBodyWorkers message body workers}.
-         */
-        public Binder(Class<? extends Annotation> refScope) {
-            this.refScope = refScope;
-        }
-
         @Override
         protected void configure() {
-            bindFactory(InjectionFactory.class).to(MessageBodyWorkers.class).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<MessageBodyWorkers>referenceFactory()).to(new TypeLiteral<Ref<MessageBodyWorkers>>() {
-            }).in(refScope);
+            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
         }
     }
 
@@ -216,6 +185,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      *
      * @param locator service locator.
      */
+    @Inject
     public MessageBodyFactory(ServiceLocator locator) {
         this.locator = locator;
 

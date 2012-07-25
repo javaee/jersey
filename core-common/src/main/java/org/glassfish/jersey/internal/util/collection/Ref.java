@@ -40,7 +40,7 @@
 package org.glassfish.jersey.internal.util.collection;
 
 /**
- * A possibly mutable reference (tuple of 1) to a single value.
+ * A possibly mutable value reference.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -49,14 +49,7 @@ package org.glassfish.jersey.internal.util.collection;
  *
  * @see Refs
  */
-public interface Ref<T> {
-
-    /**
-     * Returns referenced value.
-     *
-     * @return referenced value
-     */
-    T get();
+public interface Ref<T> extends Value<T> {
 
     /**
      * Sets a new value to be referenced.

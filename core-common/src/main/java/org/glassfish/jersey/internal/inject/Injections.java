@@ -63,6 +63,12 @@ public class Injections {
     private final static ServiceLocatorGenerator generator = new ServiceLocatorGeneratorImpl();
     private final static ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
 
+    /**
+     * Get service locator {@link DynamicConfiguration dynamic configuration}.
+     *
+     * @param locator HK2 service locator.
+     * @return dynamic configuration for a given service locator.
+     */
     public static DynamicConfiguration getConfiguration(ServiceLocator locator) {
         DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
         return dcs.createDynamicConfiguration();
@@ -72,7 +78,13 @@ public class Injections {
      * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param binders the HK2 binders.
+     * @param name    The name of this service locator. Passing a {@code null}
+     *                name will result in a newly created service locator with a
+     *                generated name.
+     * @param parent  The parent of this ServiceLocator. Services can be found in
+     *                the parent (and all grand-parents). May be {@code null}.
+     *                if the returned ServiceLocator should not be parented.
+     * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(String name, ServiceLocator parent, Binder... binders) {
@@ -91,8 +103,10 @@ public class Injections {
      * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param name    the name of the service locator to create; may be {@code null}.
-     * @param binders the HK2 binders.
+     * @param name    The name of this service locator. Passing a {@code null}
+     *                name will result in a newly created service locator with a
+     *                generated name.
+     * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(String name, Binder... binders) {
@@ -109,9 +123,32 @@ public class Injections {
     }
 
     /**
+     * Create an unnamed, parented {@link ServiceLocator}. In case the {@code parent} service locator
+     * is not specified, the locator will not be parented.
+     *
+     * @param parent  The parent of this ServiceLocator. Services can be found in
+     *                the parent (and all grand-parents). May be {@code null}.
+     *                if the returned ServiceLocator should not be parented.
+     * @param binders custom the HK2 {@link Binder binders}.
+     * @return a service locator with all the bindings.
+     */
+    public static ServiceLocator createLocator(ServiceLocator parent, Binder... binders) {
+
+        ServiceLocator locator = factory.create(null, parent, generator);
+
+        ServiceLocatorUtilities.enablePerThreadScope(locator);
+
+        for (Binder binder : binders) {
+            bind(locator, binder);
+        }
+
+        return locator;
+    }
+
+    /**
      * Create an unnamed {@link ServiceLocator}.
      *
-     * @param binders the HK2 binders.
+     * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(Binder... binders) {

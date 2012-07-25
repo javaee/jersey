@@ -50,9 +50,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -64,13 +63,10 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
 
-    private static final class References {
-        @Inject
-        private Ref<MessageBodyWorkers> messageBodyWorkers;
-    }
-
     @Inject
     private ServiceLocator locator;
+    @Inject
+    private Provider<MessageBodyWorkers> workersProvider;
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -85,15 +81,12 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
     @Override
     @SuppressWarnings("unchecked")
     public void writeTo(OutboundEvent outboundEvent, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-        final References references = Injections.getOrCreate(locator, References.class);
-
         if(outboundEvent.getComment() != null) {
             entityStream.write(String.format(": %s\n", outboundEvent.getComment()).getBytes());
         }
 
         if(outboundEvent.getType() != null) {
-            final MessageBodyWorkers messageBodyWorkers = references.messageBodyWorkers.get();
-            final MessageBodyWriter messageBodyWriter = messageBodyWorkers.getMessageBodyWriter(outboundEvent.getType(),
+            final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
                     null, annotations, (outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType()));
             if(outboundEvent.getName() != null) {
                 entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());

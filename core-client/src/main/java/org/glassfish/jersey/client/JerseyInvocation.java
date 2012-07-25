@@ -89,10 +89,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          *
          * @param uri           invoked request URI.
          * @param configuration Jersey client configuration.
-         * @param client        Jersey client that will process the invocation.
          */
-        protected Builder(URI uri, ClientConfig configuration, JerseyClient client) {
-            this.requestContext = new ClientRequest(uri, client, configuration, new MapPropertiesDelegate());
+        protected Builder(URI uri, ClientConfig configuration) {
+            this.requestContext = new ClientRequest(uri, configuration, new MapPropertiesDelegate());
         }
 
         /**
@@ -566,7 +565,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -585,7 +584,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -619,7 +618,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {
@@ -650,7 +649,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         final Type callbackType = ReflectionHelper.getTypeArgument(callback.getClass(), 0);
         final Class<T> rawType = ReflectionHelper.erasure(callbackType);
 
-        requestContext.getClient().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new InvocationCallback<Response>() {
 
             @Override
             public void completed(Response response) {

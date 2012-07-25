@@ -63,8 +63,6 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ClientRequest extends OutboundMessageContext implements ClientRequestContext {
-    // Executing client instance
-    private final JerseyClient client;
     // Request-scoped configuration instance
     private final ClientConfig configuration;
     // Request-scoped properties delegate
@@ -84,14 +82,14 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * Create new Jersey client request context.
      *
      * @param requestUri         request Uri.
-     * @param client             executing Jersey client instance.
      * @param configuration      request configuration.
      * @param propertiesDelegate properties delegate.
      */
     public ClientRequest(
-            URI requestUri, JerseyClient client, ClientConfig configuration, PropertiesDelegate propertiesDelegate) {
+            URI requestUri, ClientConfig configuration, PropertiesDelegate propertiesDelegate) {
+        configuration.checkClient();
+
         this.requestUri = requestUri;
-        this.client = client;
         this.configuration = configuration;
         this.propertiesDelegate = propertiesDelegate;
     }
@@ -105,7 +103,6 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         super(original);
         this.requestUri = original.requestUri;
         this.httpMethod = original.httpMethod;
-        this.client = original.client;
         this.workers = original.workers;
         this.configuration = original.configuration.snapshot();
         this.asynchronous = original.isAsynchronous();
@@ -164,7 +161,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
 
     @Override
     public JerseyClient getClient() {
-        return client;
+        return configuration.getClient();
     }
 
     @Override

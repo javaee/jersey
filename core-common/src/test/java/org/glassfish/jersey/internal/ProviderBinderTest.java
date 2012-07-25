@@ -64,6 +64,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.message.internal.StringMessageProvider;
@@ -129,7 +130,6 @@ public class ProviderBinderTest {
         List<org.glassfish.hk2.utilities.Binder> binderList = Lists.newArrayList(binders);
 
         binderList.add(new ContextInjectionResolver.Binder());
-        binderList.add(new ProviderBinder.ProviderBinderBinder());
         binderList.add(new MessagingBinders.MessageBodyProviders());
 
         return binderList.toArray(new org.glassfish.hk2.utilities.Binder[binderList.size()]);
@@ -163,7 +163,7 @@ public class ProviderBinderTest {
     @Test
     public void testProvidersMbr() {
         ServiceLocator locator = Injections.createLocator(initBinders());
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(locator, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
@@ -172,7 +172,7 @@ public class ProviderBinderTest {
     @Test
     public void testProvidersMbw() {
         ServiceLocator locator = Injections.createLocator(initBinders());
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(locator, MessageBodyWriter.class);
@@ -183,7 +183,7 @@ public class ProviderBinderTest {
     @Test
     public void testProvidersMbrInstance() {
         ServiceLocator locator = Injections.createLocator(initBinders());
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindInstances(Sets.<Object>newHashSet(new MyProvider()));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(locator, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
@@ -192,7 +192,7 @@ public class ProviderBinderTest {
     @Test
     public void testProvidersMbwInstance() {
         ServiceLocator locator = Injections.createLocator(initBinders());
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindInstances(Sets.newHashSet((Object) new MyProvider()));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(locator,MessageBodyWriter.class);
@@ -218,9 +218,9 @@ public class ProviderBinderTest {
 
     @Test
     public void testCustomRegistration() {
-        ServiceLocator locator = Injections.createLocator(new ProviderBinder.ProviderBinderBinder());
+        ServiceLocator locator = Injections.createLocator();
 
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(Child.class);
         providerBinder.bindClasses(NotFilterChild.class);
 

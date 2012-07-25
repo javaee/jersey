@@ -39,12 +39,10 @@
  */
 package org.glassfish.jersey.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,19 +50,15 @@ import java.util.logging.Logger;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -83,38 +77,9 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      */
     public static class Binder extends AbstractBinder {
 
-        private static class InjectionFactory extends ReferencingFactory<ExceptionMappers> {
-
-            @Inject
-            public InjectionFactory(Provider<Ref<ExceptionMappers>> referenceFactory) {
-                super(referenceFactory);
-            }
-
-            @Override
-            @RequestScoped
-            public ExceptionMappers provide() {
-                return super.provide();
-            }
-        }
-
-        //
-        private final Class<? extends Annotation> refScope;
-
-        /**
-         * Create exception mapper factory injection binder.
-         *
-         * @param refScope scope of the injectable exception mapper factory
-         *                 {@link Ref reference}.
-         */
-        public Binder(Class<? extends Annotation> refScope) {
-            this.refScope = refScope;
-        }
-
         @Override
         protected void configure() {
-            bindFactory(InjectionFactory.class).to(ExceptionMappers.class).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<ExceptionMappers>referenceFactory()).to(new TypeLiteral<Ref<ExceptionMappers>>() {
-            }).in(refScope);
+            bindAsContract(ExceptionMapperFactory.class).to(ExceptionMappers.class).in(Singleton.class);
         }
     }
 
@@ -132,28 +97,20 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     private Set<ExceptionMapperType> exceptionMapperTypes = new HashSet<ExceptionMapperType>();
 
     /**
-     * Create new exception mapper factory initialized with a set of exception mappers.
+     * Create new exception mapper factory initialized with {@link ServiceLocator
+     * HK2 service locator} instance that will be used to look up all providers implementing
+     * {@link ExceptionMapper} interface.
      *
-     * @param mappers exception mappers.
+     * @param locator HK2 service locator.
      */
-    public ExceptionMapperFactory(List<ExceptionMapper> mappers) {
-        for (ExceptionMapper<?> mapper : mappers) {
+    @Inject
+    public ExceptionMapperFactory(ServiceLocator locator) {
+        for (ExceptionMapper<?> mapper : Providers.getAllProviders(locator, ExceptionMapper.class)) {
             Class<? extends Throwable> c = getExceptionType(mapper.getClass());
             if (c != null) {
                 exceptionMapperTypes.add(new ExceptionMapperType(mapper, c));
             }
         }
-    }
-
-    /**
-     * Create new exception mapper factory initialized with {@link ProviderBinder
-     * service providers} instance that will be used to look up all providers implementing
-     * {@link ExceptionMapper} interface.
-     *
-     * @param locator HK2 service locator.
-     */
-    public ExceptionMapperFactory(ServiceLocator locator) {
-        this(Providers.getAllProviders(locator, ExceptionMapper.class));
     }
 
     @Override

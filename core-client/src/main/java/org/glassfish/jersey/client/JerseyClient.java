@@ -41,39 +41,17 @@ package org.glassfish.jersey.client;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.internal.ProviderBinder;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
-import org.glassfish.jersey.spi.ResponseExecutorsProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.Binder;
-
-import com.google.common.collect.Sets;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -83,13 +61,26 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
+    private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig configuration;
-    private final AtomicBoolean closedFlag;
-    private Inflector<ClientRequest, ClientResponse> connector;
-    private RequestInvoker<ClientRequest, ClientResponse> invoker;
+    private final LinkedBlockingDeque<LifecycleListener> listeners = new LinkedBlockingDeque<LifecycleListener>();
 
-    @Inject
-    private RequestScope requestScope;
+    /**
+     * Client life-cycle event listener contract.
+     */
+    static interface LifecycleListener {
+        /**
+         * Invoked when the client is closed.
+         */
+        public void onClose();
+    }
+
+    /**
+     * Create a new Jersey client instance using a default configuration.
+     */
+    protected JerseyClient() {
+        this.configuration = new ClientConfig(this);
+    }
 
     /**
      * Create a new Jersey client instance.
@@ -97,135 +88,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * @param configuration jersey client configuration.
      */
     protected JerseyClient(final Configuration configuration) {
-        this.configuration = configuration instanceof ClientConfig ? (ClientConfig) configuration :
-                new ClientConfig(configuration);
-        this.closedFlag = new AtomicBoolean(false);
-
-        this.configuration.lock();
-        this.connector = this.configuration.getConnector() == null ? new HttpUrlConnector() :
-                this.configuration.getConnector();
-        initialize(this.configuration.getCustomBinders());
-    }
-
-    /**
-     * Initialize the newly constructed client instance.
-     *
-     * @param customBinders list of custom {@link Binder HK2 binders}.
-     */
-    private void initialize(final List<Binder> customBinders) {
-        final Binder[] jerseyBinders = new Binder[]{
-                new ClientBinder()
-        };
-
-        final ServiceLocator serviceLocator;
-        if (customBinders.isEmpty()) {
-            serviceLocator = Injections.createLocator(jerseyBinders);
-        } else {
-            final Binder[] customBinderArray = customBinders.toArray(new Binder[customBinders.size()]);
-
-            Binder[] binders = new Binder[jerseyBinders.length + customBinderArray.length];
-            System.arraycopy(jerseyBinders, 0, binders, 0, jerseyBinders.length);
-            System.arraycopy(customBinderArray, 0, binders, jerseyBinders.length, customBinderArray.length);
-
-            serviceLocator = Injections.createLocator(binders);
-        }
-
-        final RequestProcessingInitializationStage workersInitializationStage =
-                serviceLocator.createAndInitialize(RequestProcessingInitializationStage.class);
-        final ClientFilteringStage filteringStage = serviceLocator.createAndInitialize(ClientFilteringStage.class);
-
-        Stage<ClientRequest> rootStage = Stages
-                .chain(workersInitializationStage)
-                .to(filteringStage)
-                .build(Stages.asStage(connector));
-
-        bindExecutors(serviceLocator);
-        this.invoker = Injections.getOrCreate(serviceLocator, ClientBinder.RequestInvokerBuilder.class).build(rootStage);
-        serviceLocator.inject(this);
-    }
-
-    /**
-     * Binds {@link RequestExecutorsProvider request executors} and {@link ResponseExecutorsProvider response executors}
-     * to all provider interfaces.
-     *
-     * @param locator HK2 service locator.
-     */
-    private void bindExecutors(ServiceLocator locator) {
-        ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
-        Set<Class<?>> executors = Sets.newHashSet();
-        for (Class<?> clazz : this.configuration.getProviderClasses()) {
-            final Set<Class<?>> providerContracts = Providers.getProviderContracts(clazz);
-            if (providerContracts.contains(RequestExecutorsProvider.class)
-                    || providerContracts.contains(ResponseExecutorsProvider.class)) {
-                executors.add(clazz);
-            }
-        }
-        providerBinder.bindClasses(executors);
-
-
-        Set<Object> executorInstances = Sets.newHashSet();
-        for (Object instance : this.configuration.getProviderInstances()) {
-            final Set<Class<?>> providerInterfaces = Providers.getProviderContracts(instance.getClass());
-            if (providerInterfaces.contains(RequestExecutorsProvider.class)
-                    || providerInterfaces.contains(ResponseExecutorsProvider.class)) {
-                executorInstances.add(instance);
-            }
-        }
-        providerBinder.bindInstances(executorInstances);
-    }
-
-    /**
-     * Submit a configured invocation for processing.
-     *
-     * @param requestContext request context to be processed (invoked).
-     * @param callback       callback receiving invocation processing notifications.
-     */
-    /*package*/ void submit(final ClientRequest requestContext,
-                            final javax.ws.rs.client.InvocationCallback<Response> callback) {
-
-        requestScope.runInScope(
-                new Runnable() {
-
-                    @Override
-                    public void run() {
-                        invoker.apply(requestContext, new InvocationCallback<ClientResponse>() {
-
-                            @Override
-                            public void result(ClientResponse responseContext) {
-                                final InboundJaxrsResponse jaxrsResponse = new InboundJaxrsResponse(responseContext);
-                                callback.completed(jaxrsResponse);
-                            }
-
-                            @Override
-                            public void failure(Throwable exception) {
-                                // need to be fixed
-                                callback.failed(exception instanceof InvocationException ?
-                                        (InvocationException) exception
-                                        : new InvocationException(exception.getMessage(), exception));
-                            }
-
-                            @Override
-                            public void cancelled() {
-                                // TODO implement client-side suspend event logic
-                            }
-
-                            @Override
-                            public void suspended(long time, TimeUnit unit, InvocationContext context) {
-                                // TODO implement client-side suspend event logic
-                            }
-
-                            @Override
-                            public void suspendTimeoutChanged(long time, TimeUnit unit) {
-                                // TODO implement client-side suspend timeout change event logic
-                            }
-
-                            @Override
-                            public void resumed() {
-                                // TODO implement client-side resume event logic
-                            }
-                        });
-                    }
-                });
+        this.configuration = new ClientConfig(this, configuration);
     }
 
     @Override
@@ -236,7 +99,20 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     private void release() {
-        // TODO release resources
+        LifecycleListener listener;
+        while ((listener = listeners.pollFirst()) != null) {
+            listener.onClose();
+        }
+    }
+
+    /**
+     * Add a new client lifecycle listener.
+     *
+     * @param listener client lifecycle listener.
+     */
+    public void addListener(LifecycleListener listener) {
+        checkNotClosed();
+        listeners.push(listener);
     }
 
     /**
@@ -249,43 +125,48 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         return closedFlag.get();
     }
 
-    void checkClosed() {
+    /**
+     * Check that the client instance has not been closed.
+     *
+     * @throws IllegalStateException in case the client instance has been closed already.
+     */
+    void checkNotClosed() throws IllegalStateException {
         checkState(!closedFlag.get(), "Client instance has been closed.");
     }
 
     @Override
     public ClientConfig configuration() {
-        checkClosed();
+        checkNotClosed();
         return configuration;
     }
 
     @Override
     public WebTarget target(String uri) throws IllegalArgumentException, NullPointerException {
-        checkClosed();
+        checkNotClosed();
         return new WebTarget(uri, this);
     }
 
     @Override
     public WebTarget target(URI uri) throws NullPointerException {
-        checkClosed();
+        checkNotClosed();
         return new WebTarget(uri, this);
     }
 
     @Override
     public WebTarget target(UriBuilder uriBuilder) throws NullPointerException {
-        checkClosed();
+        checkNotClosed();
         return new WebTarget(uriBuilder, this);
     }
 
     @Override
     public WebTarget target(Link link) throws NullPointerException {
-        checkClosed();
+        checkNotClosed();
         return new WebTarget(link, this);
     }
 
     @Override
-    public javax.ws.rs.client.Invocation invocation(Link link) throws NullPointerException, IllegalArgumentException {
-        checkClosed();
+    public JerseyInvocation invocation(Link link) throws NullPointerException, IllegalArgumentException {
+        checkNotClosed();
         String method = link.getMethod();
         if (method == null) {
             throw new IllegalArgumentException("Cannot create invocation from link " + link);
@@ -300,9 +181,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public javax.ws.rs.client.Invocation invocation(Link link, Entity<?> entity)
+    public JerseyInvocation invocation(Link link, Entity<?> entity)
             throws NullPointerException, IllegalArgumentException {
-        checkClosed();
+        checkNotClosed();
         String method = link.getMethod();
         if (method == null) {
             throw new IllegalArgumentException("Cannot create invocation from link " + link);

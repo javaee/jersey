@@ -52,7 +52,6 @@ import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -218,10 +217,9 @@ class ClientBinder extends AbstractBinder {
                 new ContextInjectionResolver.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessagingBinders.HeaderDelegateProviders(),
-                new ProviderBinder.ProviderBinderBinder(),
-                new MessageBodyFactory.Binder(RequestScoped.class),
-                new ExceptionMapperFactory.Binder(RequestScoped.class),
-                new ContextResolverFactory.Binder(RequestScoped.class),
+                new MessageBodyFactory.Binder(),
+                new ExceptionMapperFactory.Binder(),
+                new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ClientFilteringStage.Binder(),
                 new ExceptionWrapperInterceptor.Binder(),

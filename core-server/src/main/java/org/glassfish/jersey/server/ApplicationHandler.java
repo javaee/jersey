@@ -71,24 +71,22 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.InvocationContext;
@@ -111,8 +109,6 @@ import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
@@ -122,8 +118,6 @@ import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 /**
  * Jersey server-side application handler.
@@ -168,16 +162,6 @@ public final class ApplicationHandler {
         }
     };
 
-    private static class References {
-
-        @Inject
-        private Ref<ExceptionMappers> mappers;
-        @Inject
-        private Ref<MessageBodyWorkers> workers;
-        @Inject
-        private Ref<ContextResolvers> resolvers;
-    }
-
     private class ApplicationBinder extends AbstractBinder {
 
         private class JaxrsApplicationProvider implements Factory<Application> {
@@ -217,7 +201,7 @@ public final class ApplicationHandler {
 
     @Inject
     private Factory<CloseableService> closeableServiceFactory;
-    private ServiceLocator serviceLocator;
+    private ServiceLocator locator;
     /**
      * Request invoker.
      */
@@ -266,7 +250,7 @@ public final class ApplicationHandler {
 
     private void initServiceLocator() {
         // TODO parent/child serviceLocator - when HK2 is ready
-        serviceLocator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
     }
 
     /**
@@ -320,12 +304,10 @@ public final class ApplicationHandler {
             }
         }
 
-        References refs = serviceLocator.createAndInitialize(References.class);
-
         final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
 
         for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-            provider.initialize(serviceLocator);
+            provider.initialize(locator);
             componentProviders.add(provider);
         }
 
@@ -336,12 +318,12 @@ public final class ApplicationHandler {
                 ReflectionHelper.getAnnotationTypes(configuration.getApplication().getClass(), NameBinding.class);
 
         // find all filters, interceptors and dynamic binders
-        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(serviceLocator,
+        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(locator,
                 ContainerResponseFilter.class);
         final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters
                 = filterNameBound(responseFilters, null, applicationNameBindings);
         final List<ContainerRequestFilter> preMatchFilters = Providers.getAllProviders(
-                serviceLocator,
+                locator,
                 ContainerRequestFilter.class,
                 new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING)
         );
@@ -349,24 +331,20 @@ public final class ApplicationHandler {
         final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters
                 = filterNameBound(preMatchFilters, requestFilters, applicationNameBindings);
 
-        final List<ReaderInterceptor> readerInterceptors = serviceLocator.getAllServices(ReaderInterceptor.class);
+        final List<ReaderInterceptor> readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors
                 = filterNameBound(readerInterceptors, null, applicationNameBindings);
 
-        final List<WriterInterceptor> writerInterceptors = serviceLocator.getAllServices(WriterInterceptor.class);
+        final List<WriterInterceptor> writerInterceptors = locator.getAllServices(WriterInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors
                 = filterNameBound(writerInterceptors, null, applicationNameBindings);
-        final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(serviceLocator, DynamicBinder.class);
+        final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(locator, DynamicBinder.class);
 
         // build the models
-        final MessageBodyFactory workers = new MessageBodyFactory(serviceLocator);
-        refs.workers.set(workers);
-        refs.mappers.set(new ExceptionMapperFactory(serviceLocator));
-        refs.resolvers.set(new ContextResolverFactory(serviceLocator));
-
+        MessageBodyWorkers workers = locator.getService(MessageBodyWorkers.class);
         List<Resource> resources = buildAndValidate(resourcesBuilders, resourceModelIssues, workers);
 
-        final RuntimeModelBuilder runtimeModelBuilder = serviceLocator.getService(RuntimeModelBuilder.class);
+        final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setWorkers(workers);
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors, nameBoundWriterInterceptors, dynamicBinders);
@@ -382,29 +360,29 @@ public final class ApplicationHandler {
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(false);
 
         final ContainerFilteringStage preMatchRequestFilteringStage =
-                serviceLocator.createAndInitialize(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
+                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
         final RoutingStage routingStage =
-                serviceLocator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
+                locator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
         final ContainerFilteringStage resourceFilteringStage =
-                serviceLocator.createAndInitialize(ContainerFilteringStage.Builder.class).build(requestFilters, null);
+                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(requestFilters, null);
         final RoutedInflectorExtractorStage routedInflectorExtractorStage =
-                serviceLocator.createAndInitialize(RoutedInflectorExtractorStage.class);
+                locator.createAndInitialize(RoutedInflectorExtractorStage.class);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
         final Stage<ContainerRequest> rootStage = Stages
-                .chain(serviceLocator.createAndInitialize(ReferencesInitializer.class))
-                .to(serviceLocator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
+                .chain(locator.createAndInitialize(ReferencesInitializer.class))
+                .to(locator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
 
-        this.invoker = serviceLocator.createAndInitialize(ServerBinder.RequestInvokerBuilder.class)
+        this.invoker = locator.createAndInitialize(ServerBinder.RequestInvokerBuilder.class)
                 .build(rootStage);
 
         // inject self
-        serviceLocator.inject(this);
+        locator.inject(this);
     }
 
     /**
@@ -523,14 +501,14 @@ public final class ApplicationHandler {
             }
         }
 
-        final ProviderBinder providerBinder = serviceLocator.getService(ProviderBinder.class);
+        final ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(cleanProviders);
         providerBinder.bindClasses(resourcesAndProviders, true);
 
-        final SingletonResourceBinder singletonResourceBinder = serviceLocator.getService(SingletonResourceBinder.class);
+        final SingletonResourceBinder singletonResourceBinder = locator.getService(SingletonResourceBinder.class);
         for (Class<?> res : cleanResources) {
             if (!res.isAnnotationPresent(javax.inject.Singleton.class)) {
-                final DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+                final DynamicConfiguration dc = Injections.getConfiguration(locator);
                 Injections.addBinding(Injections.newBinder(res).in(PerLookup.class), dc);
                 dc.commit();
             } else {
@@ -552,7 +530,7 @@ public final class ApplicationHandler {
         } else if (applicationClass == Application.class) {
             return new Application();
         } else {
-            return serviceLocator.createAndInitialize(applicationClass);
+            return locator.createAndInitialize(applicationClass);
         }
     }
 
@@ -562,7 +540,7 @@ public final class ApplicationHandler {
      * @param binders binders to be registered.
      */
     public void registerAdditionalBinders(final Set<Binder> binders) {
-        final DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         for (Binder binder : binders) {
             binder.bind(dc);
@@ -779,7 +757,8 @@ public final class ApplicationHandler {
     private void releaseRequestProcessing(final ContainerRequest requestContext, ContainerResponse responseContext) {
         closeableServiceFactory.provide().close();
         // Commit the container response writer if not in chunked mode
-        if (!responseContext.isChunked()) {
+        // responseContext may be null in case the request processing was cancelled.
+        if (responseContext != null && !responseContext.isChunked()) {
             responseContext.close();
         }
     }
@@ -937,7 +916,7 @@ public final class ApplicationHandler {
      * @return {@link ServiceLocator} instance.
      */
     public ServiceLocator getServiceLocator() {
-        return serviceLocator;
+        return locator;
     }
 
     /**

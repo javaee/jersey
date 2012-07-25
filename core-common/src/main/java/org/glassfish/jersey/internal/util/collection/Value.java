@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,21 +39,17 @@
  */
 package org.glassfish.jersey.internal.util.collection;
 
-import com.google.common.base.Supplier;
-import java.util.LinkedList;
-
 /**
- * Supplies the {@link LinkedList linked list} instances holding elements of
- * type {@code E}.
+ * A generic value provider.
  *
- * @param <E> the type of elements held in the supplied collection.
+ * @param <T> value type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class LinkedListSupplier<E> implements Supplier<LinkedList<E>> {
-
-    @Override
-    public LinkedList<E> get() {
-        return new LinkedList<E>();
-    }
-
+public interface Value<T> {
+    /**
+     * Get the stored value.
+     *
+     * @return stored value.
+     */
+    public T get();
 }

@@ -71,6 +71,8 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -106,7 +108,8 @@ public class WebComponent {
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
         @Override
-        public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) throws IllegalStateException {
+        public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit,
+                            final TimeoutHandler timeoutHandler) throws IllegalStateException {
             throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
         }
 
@@ -178,41 +181,41 @@ public class WebComponent {
 
             if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
                 bindFactory(new Factory<ServletConfig>() {
-                            @Override
-                            public ServletConfig provide() {
-                                return webConfig.getServletConfig();
-                            }
+                    @Override
+                    public ServletConfig provide() {
+                        return webConfig.getServletConfig();
+                    }
 
-                            @Override
-                            public void dispose(ServletConfig instance) {
-                                //not used
-                            }
-                        }).to(ServletConfig.class).in(Singleton.class);
+                    @Override
+                    public void dispose(ServletConfig instance) {
+                        //not used
+                    }
+                }).to(ServletConfig.class).in(Singleton.class);
             } else {
                 bindFactory(new Factory<FilterConfig>() {
-                            @Override
-                            public FilterConfig provide() {
-                                return webConfig.getFilterConfig();
-                            }
+                    @Override
+                    public FilterConfig provide() {
+                        return webConfig.getFilterConfig();
+                    }
 
-                            @Override
-                            public void dispose(FilterConfig instance) {
-                                //not used
-                            }
-                        }).to(FilterConfig.class).in(Singleton.class);
+                    @Override
+                    public void dispose(FilterConfig instance) {
+                        //not used
+                    }
+                }).to(FilterConfig.class).in(Singleton.class);
             }
 
             bindFactory(new Factory<WebConfig>() {
-                        @Override
-                        public WebConfig provide() {
-                            return webConfig;
-                        }
+                @Override
+                public WebConfig provide() {
+                    return webConfig;
+                }
 
-                        @Override
-                        public void dispose(WebConfig instance) {
-                            //not used
-                        }
-                    }).to(WebConfig.class).in(Singleton.class);
+                @Override
+                public void dispose(WebConfig instance) {
+                    //not used
+                }
+            }).to(WebConfig.class).in(Singleton.class);
             install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
         }
     }
@@ -265,14 +268,14 @@ public class WebComponent {
      * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} object that
      *                        contains the response the Web component returns
      *                        to the client.
-     * @return the status code of the response.
+     * @return lazily initialized response status code {@link Value value provider}.
      * @throws java.io.IOException            if an input or output error occurs
      *                                        while the Web component is handling the
      *                                        HTTP request.
      * @throws javax.servlet.ServletException if the HTTP request cannot
      *                                        be handled.
      */
-    public int service(
+    public Value<Integer> service(
             final URI baseUri,
             final URI requestUri,
             final HttpServletRequest servletRequest,
@@ -305,7 +308,12 @@ public class WebComponent {
 
             appHandler.handle(requestContext);
 
-            return responseWriter.getResponseStatus();
+            return Values.lazy(new Value<Integer>() {
+                @Override
+                public Integer get() {
+                    return responseWriter.getResponseStatus();
+                }
+            });
         } catch (Exception e) {
             // TODO: proper error handling.
             throw new ServletException(e);
@@ -357,7 +365,8 @@ public class WebComponent {
         }
 
         try {
-            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException(jaxrsApplicationClassName);
+            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException
+                    (jaxrsApplicationClassName);
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
                         .addProperties(initParams);

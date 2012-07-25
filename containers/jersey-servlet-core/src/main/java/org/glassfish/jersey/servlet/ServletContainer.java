@@ -63,6 +63,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -333,15 +334,15 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @param response   the {@link javax.servlet.http.HttpServletResponse} object that
      *                   contains the response the Web component returns
      *                   to the client.
-     * @return the status code of the response.
+     * @return lazily initialized response status code {@link Value value provider}.
      * @throws IOException      if an input or output error occurs
      *                          while the Web component is handling the
      *                          HTTP request.
      * @throws ServletException if the HTTP request cannot
      *                          be handled.
      */
-    public int service(URI baseUri, URI requestUri, final HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    public Value<Integer> service(URI baseUri, URI requestUri, final HttpServletRequest request,
+                                  HttpServletResponse response) throws ServletException, IOException {
         return webComponent.service(baseUri, requestUri, request, response);
     }
 
@@ -356,9 +357,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             try {
                 staticContentPattern = Pattern.compile(regex);
             } catch (PatternSyntaxException ex) {
-                throw new ContainerException(
-                        "The syntax is invalid for the regular expression, " + regex +
-                                ", associated with the initialization parameter " + ServletProperties.FILTER_STATIC_CONTENT_REGEX, ex);
+                throw new ContainerException(LocalizationMessages.INIT_PARAM_REGEX_SYNTAX_INVALID(
+                        regex, ServletProperties.FILTER_STATIC_CONTENT_REGEX), ex);
             }
         }
 
@@ -378,7 +378,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
         try {
             doFilter((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
         } catch (ClassCastException e) {
@@ -422,7 +423,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @throws javax.servlet.ServletException in case of an error while executing the
      *                                        filter chain.
      */
-    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         if (request.getAttribute("javax.servlet.include.request_uri") != null) {
             final String includeRequestURI = (String) request.getAttribute("javax.servlet.include.request_uri");
 
@@ -494,7 +496,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 replaceQuery(queryString).
                 build();
 
-        final int status = service(baseUri, requestUri, request, response);
+        final int status = service(baseUri, requestUri, request, response).get();
 
         // If forwarding is configured and response is a 404 with no entity
         // body then call the next filter in the chain

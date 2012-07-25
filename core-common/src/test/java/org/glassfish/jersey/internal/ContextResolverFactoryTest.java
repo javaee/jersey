@@ -47,6 +47,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -58,6 +59,8 @@ import static org.junit.Assert.assertNull;
 import com.google.common.collect.Sets;
 
 /**
+ * Context resolvers factory unit test.
+ *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ContextResolverFactoryTest {
@@ -127,11 +130,11 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final ServiceLocator locator = Injections.createLocator(new Binder(), new ProviderBinder.ProviderBinderBinder());
-        final ProviderBinder providerBinder = locator.getService(ProviderBinder.class);
+        final ServiceLocator locator = Injections.createLocator(new ContextResolverFactory.Binder(), new Binder());
+        final ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(Sets.<Class<?>>newHashSet(CustomIntegerResolverC.class));
 
-        crf = new ContextResolverFactory(locator);
+        crf = locator.getService(ContextResolverFactory.class);
     }
 
     @Test

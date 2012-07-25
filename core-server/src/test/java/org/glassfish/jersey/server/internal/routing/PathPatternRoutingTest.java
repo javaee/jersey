@@ -49,12 +49,8 @@ import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -64,11 +60,9 @@ import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
-import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -126,13 +120,6 @@ public class PathPatternRoutingTest {
                 bindAsContract(LastPathSegmentTracingFilter.class);
             }
         });
-
-        final Ref<MessageBodyWorkers> workers = locator.getService((new TypeLiteral<Ref<MessageBodyWorkers>>() {
-        }).getType());
-        workers.set(new MessageBodyFactory(locator));
-        final Ref<ExceptionMappers> mappers = locator.getService((new TypeLiteral<Ref<ExceptionMappers>>() {
-        }).getType());
-        mappers.set(new ExceptionMapperFactory(locator));
 
         locator.inject(this);
 

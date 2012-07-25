@@ -45,21 +45,14 @@ import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -70,34 +63,15 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public class ProcessingTestBinder extends AbstractBinder {
 
-    private static final class Refs {
-
-        @Inject
-        public Ref<ExceptionMappers> exceptionMappers;
-        @Inject
-        public Ref<MessageBodyWorkers> messageBodyWorkers;
-        @Inject
-        public Ref<ContextResolvers> contextResolvers;
-    }
-
     public static void initProviders(final ServiceLocator locator) throws IllegalStateException {
         initProviders(locator, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
     }
 
     public static void initProviders(final ServiceLocator locator, final Set<Class<?>> providerClasses,
                                      final Set<Object> providerInstances) throws IllegalStateException {
-        ProcessingTestBinder.Refs refs = locator.createAndInitialize(ProcessingTestBinder.Refs.class);
-
-        final ProviderBinder providers = locator.createAndInitialize(ProviderBinder.class);
-        providers.bindClasses(providerClasses);
-        providers.bindInstances(providerInstances);
-        final MessageBodyWorkers workers = new MessageBodyFactory(locator);
-        final ExceptionMappers mappers = new ExceptionMapperFactory(locator);
-        final ContextResolvers resolvers = new ContextResolverFactory(locator);
-
-        refs.messageBodyWorkers.set(workers);
-        refs.exceptionMappers.set(mappers);
-        refs.contextResolvers.set(resolvers);
+        final ProviderBinder providerBinder = new ProviderBinder(locator);
+        providerBinder.bindClasses(providerClasses);
+        providerBinder.bindInstances(providerInstances);
     }
 
     @Override
@@ -107,10 +81,9 @@ public class ProcessingTestBinder extends AbstractBinder {
                 new ProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
-                new ProviderBinder.ProviderBinderBinder(),
-                new MessageBodyFactory.Binder(Singleton.class),
-                new ExceptionMapperFactory.Binder(Singleton.class),
-                new ContextResolverFactory.Binder(Singleton.class),
+                new MessageBodyFactory.Binder(),
+                new ExceptionMapperFactory.Binder(),
+                new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new TestExecutorsFactory.TestExecutorsBinder());
 

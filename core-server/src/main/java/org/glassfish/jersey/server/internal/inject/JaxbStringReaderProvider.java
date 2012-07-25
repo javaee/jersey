@@ -44,11 +44,11 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import javax.inject.Provider;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Provider;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
@@ -60,14 +60,13 @@ import javax.xml.transform.sax.SAXSource;
 
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.StringValueReader;
 import org.glassfish.jersey.spi.StringValueReaderProvider;
 
 import org.xml.sax.InputSource;
-
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 
 /**
  * String reader provider producing {@link StringValueReader string readers} that
@@ -79,8 +78,8 @@ import com.google.common.base.Suppliers;
 public class JaxbStringReaderProvider {
 
     private static final Map<Class, JAXBContext> jaxbContexts = new WeakHashMap<Class, JAXBContext>();
-    private final Supplier<ContextResolver<JAXBContext>> mtContext;
-    private final Supplier<ContextResolver<Unmarshaller>> mtUnmarshaller;
+    private final Value<ContextResolver<JAXBContext>> mtContext;
+    private final Value<ContextResolver<Unmarshaller>> mtUnmarshaller;
 
     /**
      * Create JAXB string reader provider.
@@ -88,7 +87,7 @@ public class JaxbStringReaderProvider {
      * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
      */
     public JaxbStringReaderProvider(final Providers ps) {
-        this.mtContext = Suppliers.memoize(new Supplier<ContextResolver<JAXBContext>>() {
+        this.mtContext = Values.lazy(new Value<ContextResolver<JAXBContext>>() {
 
             @Override
             public ContextResolver<JAXBContext> get() {
@@ -96,7 +95,7 @@ public class JaxbStringReaderProvider {
             }
         });
 
-        this.mtUnmarshaller = Suppliers.memoize(new Supplier<ContextResolver<Unmarshaller>>() {
+        this.mtUnmarshaller = Values.lazy(new Value<ContextResolver<Unmarshaller>>() {
             @Override
             public ContextResolver<Unmarshaller> get() {
                 return ps.getContextResolver(Unmarshaller.class, null);

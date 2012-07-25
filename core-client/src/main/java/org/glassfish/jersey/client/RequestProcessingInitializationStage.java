@@ -40,17 +40,10 @@
 package org.glassfish.jersey.client;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ProviderBinder;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 
@@ -63,57 +56,35 @@ import com.google.common.base.Function;
  */
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
 
-    private static final class References {
-        @Inject
-        private Ref<ClientConfig> configuration;
-        @Inject
-        private Ref<ExceptionMappers> exceptionMappers;
-        @Inject
-        private Ref<MessageBodyWorkers> messageBodyWorkers;
-        @Inject
-        private Ref<ContextResolvers> contextResolvers;
-        @Inject
-        Ref<ClientRequest> requestContextRef;
-    }
-
-    private final ServiceLocator locator;
-    private final ProviderBinder providerBinder;
+    private final Provider<Ref<ClientConfig>> configRefProvider;
+    private final Provider<Ref<ClientRequest>> requestRefProvider;
+    private final Provider<MessageBodyWorkers> workersProvider;
 
     /**
      * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function
      * for requests and responses.
      *
-     * @param locator       HK2 locator.
-     * @param providerBinder Jersey provider binder.
+     * @param configRefProvider client configuration reference injection provider.
+     * @param requestRefProvider client request context reference injection provider.
+     * @param workersProvider message body workers injection provider.
      */
     @Inject
     public RequestProcessingInitializationStage(
-            ServiceLocator locator,
-            ProviderBinder providerBinder) {
-        this.locator = locator;
-        this.providerBinder = providerBinder;
+            Provider<Ref<ClientConfig>> configRefProvider,
+            Provider<Ref<ClientRequest>> requestRefProvider,
+            Provider<MessageBodyWorkers> workersProvider) {
+        this.configRefProvider = configRefProvider;
+        this.requestRefProvider = requestRefProvider;
+        this.workersProvider = workersProvider;
     }
 
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
-        References refs = locator.createAndInitialize(References.class); // request-scoped
+        configRefProvider.get().set(requestContext.getConfiguration());
+        requestRefProvider.get().set(requestContext);
 
-        final ClientConfig cfg = requestContext.getConfiguration();
-        providerBinder.bindClasses(cfg.getProviderClasses());
-        providerBinder.bindInstances(cfg.getProviderInstances());
-        final ExceptionMapperFactory mappers = new ExceptionMapperFactory(locator);
-        final MessageBodyWorkers workers = new MessageBodyFactory(locator);
-        final ContextResolvers resolvers = new ContextResolverFactory(locator);
-
-        refs.configuration.set(cfg);
-
-        refs.exceptionMappers.set(mappers);
-        refs.messageBodyWorkers.set(workers);
-        refs.contextResolvers.set(resolvers);
-        refs.requestContextRef.set(requestContext);
-
-        requestContext.setWorkers(workers);
+        requestContext.setWorkers(workersProvider.get());
 
         return requestContext;
     }

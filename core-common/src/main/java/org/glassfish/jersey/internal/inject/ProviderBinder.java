@@ -37,20 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Custom;
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.ScopedBindingBuilder;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -77,8 +69,17 @@ import org.glassfish.hk2.utilities.BuilderHelper;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ProviderBinder {
-    @Inject
-    private ServiceLocator locator;
+    private final ServiceLocator locator;
+
+    /**
+     * Create new provider binder instance.
+     *
+     * @param locator HK2 service locator the binder will use to bind the
+     *                providers into.
+     */
+    public ProviderBinder(ServiceLocator locator) {
+        this.locator = locator;
+    }
 
     /**
      * Register/bind custom provider instances. Registered providers will be handled
@@ -131,9 +132,9 @@ public class ProviderBinder {
      * as resources.
      * </p>
      *
-     * @param classes         custom provider classes.
+     * @param classes       custom provider classes.
      * @param bindResources if {@code true}, the provider classes will also be bound as
-     *                        resources.
+     *                      resources.
      */
     public void bindClasses(Iterable<Class<?>> classes, boolean bindResources) {
         if (classes == null || !classes.iterator().hasNext()) {
@@ -185,16 +186,5 @@ public class ProviderBinder {
             hk2Scope = PerLookup.class;
         }
         return hk2Scope;
-    }
-
-    /**
-     * Injection binder for {@link ProviderBinder}.
-     */
-    public static class ProviderBinderBinder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-            bindAsContract(ProviderBinder.class).in(PerLookup.class);
-        }
     }
 }

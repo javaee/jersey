@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,22 +51,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ContextResolvers;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.collect.Maps;
 
@@ -85,37 +80,9 @@ public class ContextResolverFactory implements ContextResolvers {
      */
     public static class Binder extends AbstractBinder {
 
-        private static class InjectionFactory extends ReferencingFactory<ContextResolvers> {
-            @Inject
-            public InjectionFactory(Provider<Ref<ContextResolvers>> referenceFactory) {
-                super(referenceFactory);
-            }
-
-            @Override
-            @RequestScoped
-            public ContextResolvers provide() {
-                return super.provide();
-            }
-        }
-
-        //
-        private final Class<? extends Annotation> refScope;
-
-        /**
-         * Create new context resolver factory injection binder.
-         *
-         * @param refScope scope of the {@link Ref Ref&lt;ContextResolvers&gt;} value
-         *                 injection.
-         */
-        public Binder(Class<? extends Annotation> refScope) {
-            this.refScope = refScope;
-        }
-
         @Override
         protected void configure() {
-            bindFactory(InjectionFactory.class).to(ContextResolvers.class).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<ContextResolvers>referenceFactory()).to(new TypeLiteral<Ref<ContextResolvers>>() {
-            }).in(refScope);
+            bindAsContract(ContextResolverFactory.class).to(ContextResolvers.class).in(Singleton.class);
         }
     }
 
@@ -124,11 +91,11 @@ public class ContextResolverFactory implements ContextResolvers {
     private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache = Maps.newHashMapWithExpectedSize(3);
 
     /**
-     * Create new context resolver factory backed by the supplied {@link ProviderBinder
-     * service providers}.
+     * Create new context resolver factory backed by the supplied {@link ServiceLocator HK2 service locator}.
      *
      * @param locator HK2 service locator.
      */
+    @Inject
     public ContextResolverFactory(ServiceLocator locator) {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();

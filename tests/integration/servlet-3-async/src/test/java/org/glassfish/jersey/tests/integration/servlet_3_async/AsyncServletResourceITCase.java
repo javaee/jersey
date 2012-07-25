@@ -60,7 +60,6 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -72,7 +71,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// FIXME unignore - async tests are temporarily ignored until the intermittent failure issue is resolved.
 public class AsyncServletResourceITCase extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(AsyncServletResourceITCase.class.getName());
 
@@ -107,7 +105,6 @@ public class AsyncServletResourceITCase extends JerseyTest {
      * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
      */
     @Test
-    @Ignore // TODO: JERSEY-1269 async tests are failing sometimes
     public void testAsyncServlet() throws InterruptedException {
         final WebTarget resourceTarget = target("async");
         resourceTarget.configuration().register(new LoggingFilter());
@@ -160,7 +157,8 @@ public class AsyncServletResourceITCase extends JerseyTest {
             if (debugMode) {
                 getRequestLatch.await();
             } else {
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT,
+                        TimeUnit.SECONDS));
             }
         } finally {
             executor.shutdownNow();
@@ -191,7 +189,6 @@ public class AsyncServletResourceITCase extends JerseyTest {
      * @throws InterruptedException in case the waiting for all requests to complete was interrupted.
      */
     @Test
-    @Ignore // TODO: JERSEY-1269 async tests are failing sometimes
     public void testAsyncRequestCanceling() throws InterruptedException {
         final WebTarget resourceTarget = target("async/canceled");
         resourceTarget.configuration().register(new LoggingFilter());
@@ -272,8 +269,10 @@ public class AsyncServletResourceITCase extends JerseyTest {
                 postRequestLatch.await();
                 getRequestLatch.await();
             } else {
-                assertTrue("Waiting for all POST requests to complete has timed out.", postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                assertTrue("Waiting for all POST requests to complete has timed out.",
+                        postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT,
+                        TimeUnit.SECONDS));
             }
         } finally {
             executor.shutdownNow();

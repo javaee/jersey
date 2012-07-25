@@ -42,15 +42,14 @@ package org.glassfish.jersey.internal.util.collection;
 import com.google.common.base.Objects;
 
 /**
- * Utility class with methods for working with references.
+ * A collection of {@link Ref reference} factory & utility methods.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class Refs {
 
     private Refs() {
-        // preventing istantiation
+        // preventing instantiation
     }
 
     /**
@@ -157,12 +156,10 @@ public final class Refs {
      * Constructs a new mutable {@link Ref} instance referencing the given
      * input reference.
      *
-     * @param <T> type of the referenced instance
+     * @param <T>   type of the referenced instance
      * @param value reference of the newly constructed reference
-     *
      * @return a new mutable {@link Ref} instance referencing the given
      *         input reference.
-     *
      * @see #immutableRef(java.lang.Object)
      * @see #emptyRef()
      */
@@ -175,7 +172,6 @@ public final class Refs {
      *
      * @param <T> type of the referenced instance
      * @return a new mutable empty {@link Ref} instance
-     *
      * @see #immutableRef(java.lang.Object)
      * @see #of(java.lang.Object)
      */
@@ -190,12 +186,10 @@ public final class Refs {
      * Invoking a {@link Ref#set(java.lang.Object)} on the returned instance
      * will result in a {@link IllegalStateException} being thrown.
      *
-     * @param <T> type of the referenced instance
+     * @param <T>   type of the referenced instance
      * @param value reference of the newly constructed reference
-     *
      * @return a new immutable {@link Ref} instance referencing the given
      *         input reference.
-     *
      * @see #emptyRef()
      * @see #of(java.lang.Object)
      */

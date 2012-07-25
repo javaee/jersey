@@ -45,13 +45,26 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
+import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.InvocationCallback;
+import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.BiMap;
@@ -66,27 +79,15 @@ import com.google.common.collect.Lists;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class ClientConfig implements Configuration, Config {
+    /**
+     * Internal configuration state.
+     */
+    private State state;
 
     /**
      * Default encapsulation of the internal configuration state.
      */
     private static class State implements Configuration {
-
-        /**
-         * Configuration state change strategy.
-         */
-        private static interface StateChangeStrategy {
-
-            /**
-             * Invoked whenever a mutator method is called in the given configuration
-             * state.
-             *
-             * @param state configuration state to be mutated.
-             * @return state instance that will be mutated and returned from the
-             *     invoked configuration state mutator method.
-             */
-            public State onChange(final State state);
-        }
 
         /**
          * Strategy that returns the same state instance.
@@ -108,71 +109,121 @@ public class ClientConfig implements Configuration, Config {
                 return state.copy();
             }
         };
+
         private transient StateChangeStrategy strategy;
         private final Map<String, Object> properties;
         private final Map<String, Object> immutablePropertiesView;
         private final Set<Class<?>> providerClasses;
+
         private final Set<Class<?>> immutableClassesView;
         private final Set<Object> providerInstances;
         private final Set<Object> immutableInstancesView;
-        private final BiMap<Class<? extends Feature>, Feature> features;
-        private final Set<Feature> featuresSetView;
-        private final List<Binder> binders;
-        private Inflector<ClientRequest, ClientResponse> connector;
+        private final Set<Feature> immutableFeatureSetView;
 
-        private volatile boolean locked = false;
+        private final BiMap<Class<? extends Feature>, Feature> features;
+        private final List<Binder> binders;
+
+        private final JerseyClient client;
+        private Inflector<ClientRequest, ClientResponse> connector;
+        private ServiceLocator locator;
+        private RequestInvoker<ClientRequest, ClientResponse> invoker;
+        private RequestScope requestScope;
+
+        private volatile boolean initialized = false;
+        private final Object initLock = new Object();
+
+        /**
+         * Configuration state change strategy.
+         */
+        private static interface StateChangeStrategy {
+
+            /**
+             * Invoked whenever a mutator method is called in the given configuration
+             * state.
+             *
+             * @param state configuration state to be mutated.
+             * @return state instance that will be mutated and returned from the
+             *         invoked configuration state mutator method.
+             */
+            public State onChange(final State state);
+        }
 
         /**
          * Default configuration state constructor with {@link StateChangeStrategy "identity"}
          * state change strategy.
+         *
+         * @param client bound parent Jersey client.
          */
-        public State() {
+        State(JerseyClient client) {
+            this.client = client;
             this.strategy = IDENTITY;
 
-            this.properties = new HashMap<String, Object>();
-            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+            this.locator = null;
 
+            this.properties = new HashMap<String, Object>();
             this.providerClasses = new LinkedHashSet<Class<?>>();
-            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.providerInstances = new LinkedHashSet<Object>();
+            this.features = HashBiMap.create();
+
+            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
+            this.immutableFeatureSetView = Collections.unmodifiableSet(features.values());
 
             this.binders = Lists.newLinkedList();
-
-            this.features = HashBiMap.create();
-            this.featuresSetView = Collections.unmodifiableSet(features.values());
+            this.connector = null;
         }
 
         /**
          * Copy the original configuration state while using the default state change
          * strategy.
          *
+         * @param client new Jersey client parent for the state.
          * @param original configuration strategy to be copied.
          */
-        private State(State original) {
+        private State(JerseyClient client, State original) {
+            this.client = client;
             this.strategy = IDENTITY;
 
-            this.properties = new HashMap<String, Object>(original.properties);
-            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+            this.locator = null;
 
+            this.properties = new HashMap<String, Object>(original.properties);
             this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
-            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.providerInstances = new LinkedHashSet<Object>(original.providerInstances);
+            this.features = HashBiMap.create(original.features);
+
+
+            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
+            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
             this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
+            this.immutableFeatureSetView = Collections.unmodifiableSet(this.features.values());
 
             this.binders = Lists.newLinkedList(original.binders);
-
-            this.features = HashBiMap.create(original.features);
-            this.featuresSetView = Collections.unmodifiableSet(this.features.values());
-
             this.connector = original.connector;
         }
 
-        private State copy() {
-            return new State(this);
+        /**
+         * Create a copy of the configuration state within the same parent Jersey
+         * client instance scope.
+         *
+         * @return configuration state copy.
+         */
+        State copy() {
+            return new State(this.client, this);
         }
 
-        public void markAsShared() {
+        /**
+         * Create a copy of the configuration state in a scope of the given
+         * parent Jersey client instance.
+         *
+         * @param client parent Jersey client instance.
+         * @return configuration state copy.
+         */
+        State copy(JerseyClient client) {
+            return new State(client, this);
+        }
+
+        void markAsShared() {
             strategy = COPY_ON_CHANGE;
         }
 
@@ -201,7 +252,7 @@ public class ClientConfig implements Configuration, Config {
 
         @Override
         public Set<Feature> getFeatures() {
-            return featuresSetView;
+            return immutableFeatureSetView;
         }
 
         public boolean isEnabled(final Class<? extends Feature> featureClass) {
@@ -220,7 +271,7 @@ public class ClientConfig implements Configuration, Config {
 
         @Override
         public State update(final javax.ws.rs.client.Configuration configuration) {
-            return new State(((ClientConfig) configuration).state);
+            return ((ClientConfig) configuration).state.copy(this.client);
         }
 
         @Override
@@ -267,34 +318,128 @@ public class ClientConfig implements Configuration, Config {
             return state;
         }
 
-        void binders(Binder... binders) {
-            checkLocked();
+        public State binders(Binder... binders) {
             if (binders != null && binders.length > 0) {
-                Collections.addAll(this.binders, binders);
+                final State state = strategy.onChange(this);
+                Collections.addAll(state.binders, binders);
+                return state;
             }
+            return this;
         }
 
-        List<Binder> getCustomBinders() {
-            return binders;
-        }
-
-        void setConnector(Inflector<ClientRequest, ClientResponse> connector) {
-            checkLocked();
-            this.connector = connector;
+        public State setConnector(Inflector<ClientRequest, ClientResponse> connector) {
+            final State state = strategy.onChange(this);
+            state.connector = connector;
+            return state;
         }
 
         Inflector<ClientRequest, ClientResponse> getConnector() {
             return connector;
         }
 
-        void lock() {
-            locked = true;
+        JerseyClient getClient() {
+            return client;
         }
 
-        private void checkLocked() {
-            if (locked) {
-                throw new IllegalStateException();
+        /**
+         * Initialize the newly constructed client instance.
+         */
+        private void initRuntime() {
+            if (initialized) {
+                return;
             }
+            synchronized (initLock) {
+                if (initialized) {
+                    return;
+                }
+
+                /**
+                 * Ensure that any attempt to add a new provider, feature, binder or modify the connector
+                 * will cause a copy of the current state.
+                 */
+                markAsShared();
+
+                if (binders.isEmpty()) {
+                    locator = Injections.createLocator(new ClientBinder());
+                } else {
+                    final Binder[] binderArray = binders.toArray(new Binder[binders.size() + 1]);
+                    binderArray[binderArray.length - 1] = new ClientBinder();
+                    locator = Injections.createLocator(binderArray);
+                }
+
+                final ProviderBinder providerBinder = new ProviderBinder(locator);
+                providerBinder.bindClasses(getProviderClasses());
+                providerBinder.bindInstances(getProviderInstances());
+
+                client.addListener(new JerseyClient.LifecycleListener() {
+                    @Override
+                    public void onClose() {
+                        ServiceLocatorFactory.getInstance().destroy(locator.getName());
+                    }
+                });
+
+                final RequestProcessingInitializationStage processingInitializationStage =
+                        locator.createAndInitialize(RequestProcessingInitializationStage.class);
+                final ClientFilteringStage filteringStage = locator.createAndInitialize(ClientFilteringStage.class);
+
+
+                Stage<ClientRequest> rootStage = Stages
+                        .chain(processingInitializationStage)
+                        .to(filteringStage)
+                        .build(Stages.asStage(getConnector()));
+
+                this.invoker = Injections.getOrCreate(locator, ClientBinder.RequestInvokerBuilder.class).build(rootStage);
+                this.requestScope = locator.getService(RequestScope.class);
+
+                initialized = true;
+            }
+        }
+
+        void submit(final ClientRequest requestContext, final javax.ws.rs.client.InvocationCallback<Response> callback) {
+            initRuntime();
+
+            requestScope.runInScope(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            invoker.apply(requestContext, new InvocationCallback<ClientResponse>() {
+
+                                @Override
+                                public void result(ClientResponse responseContext) {
+                                    final InboundJaxrsResponse jaxrsResponse = new InboundJaxrsResponse(responseContext);
+                                    callback.completed(jaxrsResponse);
+                                }
+
+                                @Override
+                                public void failure(Throwable exception) {
+                                    // need to be fixed
+                                    callback.failed(exception instanceof InvocationException ?
+                                            (InvocationException) exception
+                                            : new InvocationException(exception.getMessage(), exception));
+                                }
+
+                                @Override
+                                public void cancelled() {
+                                    // TODO implement client-side suspend event logic
+                                }
+
+                                @Override
+                                public void suspended(long time, TimeUnit unit, InvocationContext context) {
+                                    // TODO implement client-side suspend event logic
+                                }
+
+                                @Override
+                                public void suspendTimeoutChanged(long time, TimeUnit unit) {
+                                    // TODO implement client-side suspend timeout change event logic
+                                }
+
+                                @Override
+                                public void resumed() {
+                                    // TODO implement client-side resume event logic
+                                }
+                            });
+                        }
+                    });
         }
 
         @Override
@@ -326,20 +471,16 @@ public class ClientConfig implements Configuration, Config {
     }
 
     /**
-     * Internal configuration state.
-     */
-    private State state;
-
-    /**
      * Construct a new Jersey configuration instance with the default features
      * and property values.
      */
     public ClientConfig() {
-        this.state = new State();
+        this.state = new State(null);
     }
 
     /**
      * Construct a new Jersey configuration instance and register the provided list of provider classes.
+     *
      * @param providerClasses provider classes to be registered with this client configuration.
      */
     public ClientConfig(Class<?>... providerClasses) {
@@ -351,6 +492,7 @@ public class ClientConfig implements Configuration, Config {
 
     /**
      * Construct a new Jersey configuration instance and register the provided list of provider instances.
+     *
      * @param providers provider instances to be registered with this client configuration.
      */
     public ClientConfig(Object... providers) {
@@ -364,24 +506,42 @@ public class ClientConfig implements Configuration, Config {
      * Construct a new Jersey configuration instance with the features as well as
      * property values copied from the supplied JAX-RS configuration instance.
      *
-     * @param that original {@link javax.ws.rs.client.Configuration}.
-     *
+     * @param parent parent Jersey client instance.
      */
-    ClientConfig(javax.ws.rs.client.Configuration that) {
-        this.state = new State();
+    ClientConfig(JerseyClient parent) {
+        this.state = new State(parent);
+        this.state.setConnector(new HttpUrlConnector());
+    }
 
-        state = state.setProperties(that.getProperties());
+    /**
+     * Construct a new Jersey configuration instance with the features as well as
+     * property values copied from the supplied JAX-RS configuration instance.
+     *
+     * @param parent parent Jersey client instance.
+     * @param that original {@link javax.ws.rs.client.Configuration}.
+     */
+    ClientConfig(JerseyClient parent, Configuration that) {
+        if (that instanceof ClientConfig) {
+            state = ((ClientConfig) that).state.copy(parent);
+            if (state.getConnector() == null) {
+                state.setConnector(new HttpUrlConnector());
+            }
+        } else {
+            state = new State(parent);
+            state.setConnector(new HttpUrlConnector());
 
-        for (Object provider : that.getProviderInstances()) {
-            state = state.register(provider);
-        }
-        for (Class<?> providerClass : that.getProviderClasses()) {
-            state = state.register(providerClass);
-        }
+            state = state.setProperties(that.getProperties());
 
+            for (Object provider : that.getProviderInstances()) {
+                state = state.register(provider);
+            }
+            for (Class<?> providerClass : that.getProviderClasses()) {
+                state = state.register(providerClass);
+            }
 
-        for (Feature feature : that.getFeatures()) {
-            state = state.enable(feature);
+            for (Feature feature : that.getFeatures()) {
+                state = state.enable(feature);
+            }
         }
     }
 
@@ -429,6 +589,12 @@ public class ClientConfig implements Configuration, Config {
         return state.getFeatures();
     }
 
+    /**
+     * Check if the given feature is enabled or not.
+     *
+     * @param feature tested feature.
+     * @return {@code true} in case
+     */
     public boolean isEnabled(final Class<? extends Feature> feature) {
         return state.isEnabled(feature);
     }
@@ -486,7 +652,7 @@ public class ClientConfig implements Configuration, Config {
      * @return this client config instance.
      */
     public ClientConfig connector(Inflector<ClientRequest, ClientResponse> connector) {
-        state.setConnector(connector);
+        state = state.setConnector(connector);
         return this;
     }
 
@@ -497,20 +663,53 @@ public class ClientConfig implements Configuration, Config {
      * @return this client config instance.
      */
     public ClientConfig binders(Binder... binders) {
-        state.binders(binders);
+        state = state.binders(binders);
         return this;
     }
 
-    void lock() {
-        state.lock();
-    }
-
-    Inflector<ClientRequest, ClientResponse> getConnector() {
+    /**
+     * Get the client transport connector.
+     *
+     * May return {@code null} if no connector has been set.
+     *
+     * @return client transport connector or {code null} if not set.
+     */
+    public Inflector<ClientRequest, ClientResponse> getConnector() {
         return state.getConnector();
     }
 
-    List<Binder> getCustomBinders() {
-        return state.getCustomBinders();
+    /**
+     * Get the parent Jersey client this configuration is bound to.
+     *
+     * May return {@code null} if no parent client has been bound.
+     *
+     * @return bound parent Jersey client or {@code null} if not bound.
+     */
+    public JerseyClient getClient() {
+        return state.getClient();
+    }
+
+    /**
+     * Check that the configuration instance has a parent client set.
+     *
+     * @throws IllegalStateException in case no parent Jersey client has been
+     *                               bound to the configuration instance yet.
+     */
+    void checkClient() throws IllegalStateException {
+        if (getClient() == null) {
+            throw new IllegalStateException("Client configuration does not contain a parent client instance.");
+        }
+    }
+
+    /**
+     * Submit a configured invocation for processing.
+     *
+     * @param requestContext request context to be processed (invoked).
+     * @param callback       callback receiving invocation processing notifications.
+     */
+    void submit(final ClientRequest requestContext,
+                final javax.ws.rs.client.InvocationCallback<Response> callback) {
+        state.submit(requestContext, callback);
     }
 
     @Override

@@ -53,7 +53,7 @@ public class JerseyClientFactory extends ClientFactory {
 
     @Override
     protected Client getClient() {
-        return getClient(new ClientConfig());
+        return new JerseyClient();
     }
 
     @Override

@@ -59,16 +59,15 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
-import org.glassfish.hk2.api.Factory;
-
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.XmlHeader;
 
-import org.xml.sax.InputSource;
+import org.glassfish.hk2.api.Factory;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import org.xml.sax.InputSource;
 
 /**
  * A base class for implementing JAXB-based readers and writers.
@@ -84,11 +83,11 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             new WeakHashMap<Class, JAXBContext>();
     private final Providers ps;
     private final boolean fixedMediaType;
-    private final Supplier<ContextResolver<JAXBContext>> mtContext;
-    private final Supplier<ContextResolver<Unmarshaller>> mtUnmarshaller;
-    private final Supplier<ContextResolver<Marshaller>> mtMarshaller;
-    private Supplier<Boolean> formattedOutput = Suppliers.ofInstance(Boolean.FALSE);
-    private Supplier<Boolean> xmlRootElementProcessing = Suppliers.ofInstance(Boolean.FALSE);
+    private final Value<ContextResolver<JAXBContext>> mtContext;
+    private final Value<ContextResolver<Unmarshaller>> mtUnmarshaller;
+    private final Value<ContextResolver<Marshaller>> mtMarshaller;
+    private Value<Boolean> formattedOutput = Values.of(Boolean.FALSE);
+    private Value<Boolean> xmlRootElementProcessing = Values.of(Boolean.FALSE);
 
     public AbstractJaxbProvider(final Providers ps) {
         this(ps, null);
@@ -99,21 +98,21 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
         fixedMediaType = mt != null;
         if (fixedMediaType) {
-            this.mtContext = Suppliers.memoize(new Supplier<ContextResolver<JAXBContext>>() {
+            this.mtContext = Values.lazy(new Value<ContextResolver<JAXBContext>>() {
 
                 @Override
                 public ContextResolver<JAXBContext> get() {
                     return ps.getContextResolver(JAXBContext.class, mt);
                 }
             });
-            this.mtUnmarshaller = Suppliers.memoize(new Supplier<ContextResolver<Unmarshaller>>() {
+            this.mtUnmarshaller = Values.lazy(new Value<ContextResolver<Unmarshaller>>() {
 
                 @Override
                 public ContextResolver<Unmarshaller> get() {
                     return ps.getContextResolver(Unmarshaller.class, mt);
                 }
             });
-            this.mtMarshaller = Suppliers.memoize(new Supplier<ContextResolver<Marshaller>>() {
+            this.mtMarshaller = Values.lazy(new Value<ContextResolver<Marshaller>>() {
 
                 @Override
                 public ContextResolver<Marshaller> get() {
@@ -129,7 +128,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
     @Context
     public void setConfiguration(final Factory<Config> fp) {
-        formattedOutput = Suppliers.memoize(new Supplier<Boolean>() {
+        formattedOutput = Values.lazy(new Value<Boolean>() {
 
             @Override
             public Boolean get() {
@@ -137,7 +136,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             }
         });
 
-        xmlRootElementProcessing = Suppliers.memoize(new Supplier<Boolean>() {
+        xmlRootElementProcessing = Values.lazy(new Value<Boolean>() {
 
             @Override
             public Boolean get() {
