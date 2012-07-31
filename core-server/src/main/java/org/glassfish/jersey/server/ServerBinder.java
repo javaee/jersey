@@ -62,17 +62,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
-import org.glassfish.jersey.process.internal.ProcessingBinder;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.*;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
@@ -82,6 +72,7 @@ import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.TypeLiteral;
 
@@ -101,12 +92,25 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
-    private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
+    private static class HttpHeadersFactory implements Factory<HttpHeaders> {
+        private final Provider<ContainerRequest> containerRequestContextProvider;
+
         @Inject
-        public HttpHeadersReferencingFactory(Provider<Ref<HttpHeaders>> referenceFactory) {
-            super(referenceFactory);
+        public HttpHeadersFactory(Provider<ContainerRequest> containerRequestContextProvider) {
+            this.containerRequestContextProvider = containerRequestContextProvider;
+        }
+
+        @Override
+        public HttpHeaders provide() {
+            return containerRequestContextProvider.get();
+        }
+
+        @Override
+        public void dispose(HttpHeaders httpHeaders) {
+            // nothing to dispose
         }
     }
+
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
@@ -241,9 +245,7 @@ public class ServerBinder extends AbstractBinder {
         }).in(RequestScoped.class);
 
 
-        bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
-        }).in(RequestScoped.class);
+        bindFactory(HttpHeadersFactory.class, Singleton.class).to(HttpHeaders.class).in(PerLookup.class);
 
         // server-side processing chain
         bindFactory(RequestContextInjectionFactory.class).to(ContainerRequest.class).in(RequestScoped.class);

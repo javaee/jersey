@@ -42,6 +42,7 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.security.Principal;
 
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -49,8 +50,9 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
+import javax.inject.Provider;
+
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -63,9 +65,11 @@ import static junit.framework.Assert.assertEquals;
 public class SecurityContextTest {
 
     private static final String PRINCIPAL_NAME = "SetByFilter";
+    private static final String PRINCIPAL_NAME_SECOND = "SetByFilterSecond";
     private static final String SKIP_FILTER = "skipFilter";
     private static final String PRINCIPAL_IS_NULL = "principalIsNull";
 
+    @BindingPriority(100)
     private static class SecurityContextFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext rc) throws IOException {
@@ -110,20 +114,70 @@ public class SecurityContextTest {
         }
     }
 
+
+    @BindingPriority(101)
+    private static class SecurityContextFilterSecondInChain implements ContainerRequestFilter {
+        @Context
+        Provider<SecurityContext> sc;
+
+        @Override
+        public void filter(ContainerRequestContext rc) throws IOException {
+            Assert.assertNotNull(sc);
+            Assert.assertNotNull(sc.get());
+            assertEquals(sc.get().getUserPrincipal().getName(), PRINCIPAL_NAME);
+            assertEquals(sc.get(), rc.getSecurityContext());
+
+            String header = rc.getHeaders().getFirst(SKIP_FILTER);
+            if ("true".equals(header)) {
+                return;
+            }
+
+            // set new Security Context
+            rc.setSecurityContext(new SecurityContext() {
+
+                @Override
+                public boolean isUserInRole(String role) {
+                    return false;
+                }
+
+                @Override
+                public boolean isSecure() {
+                    return false;
+                }
+
+                @Override
+                public Principal getUserPrincipal() {
+                    return new Principal() {
+
+                        @Override
+                        public String getName() {
+                            return PRINCIPAL_NAME_SECOND;
+                        }
+                    };
+                }
+
+                @Override
+                public String getAuthenticationScheme() {
+                    return null;
+                }
+            });
+        }
+    }
+
     /**
      * Tests SecurityContext injection into a resource method.
      *
      * @throws Exception Thrown when request processing fails in the application.
      */
     @Test
-    @Ignore // TODO: (MM) security context injection does not work (JERSEY-1282)
     public void testSecurityContextInjection() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, SecurityContextFilter.class,
+                SecurityContextFilterSecondInChain.class);
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         ContainerResponse response = application.apply(RequestContextBuilder.from("/test/2", "GET").build()).get();
         assertEquals(200, response.getStatus());
-        assertEquals(PRINCIPAL_NAME, response.getEntity());
+        assertEquals(PRINCIPAL_NAME_SECOND, response.getEntity());
     }
 
     /**

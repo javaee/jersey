@@ -39,18 +39,17 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScoped;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * {@link SecurityContext Security Context} HK2 injection binder.
@@ -58,27 +57,31 @@ import org.glassfish.hk2.api.TypeLiteral;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 
-// TODO: (MM) this binder is wrong - the SecurityContext should be taken from the ContainerRequestContext
-// TODO: when I tried to fix this by creating Factory<SecurityContext> that injects ContainerRequest and calls
-// TODO: getSecurityContext() on it, HK2 suddenly started to inject my SecurityContextFactory into
-// TODO: ResourceMethodInvoker.Builder.invocationContextFactory.
 class SecurityContextBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bindFactory(SecurityContextReferencingFactory.class).to(SecurityContext.class).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<SecurityContext>referenceFactory()).to(new TypeLiteral<Ref<SecurityContext>>() {
-        }).in(RequestScoped.class);
-
+        bindFactory(SecurityContextFactory.class, Singleton.class).to(SecurityContext.class).in(PerLookup.class);
     }
 
     /**
-     * Referencing factory for SecurityContext.
+     * Factory for {@link SecurityContext security context}.
      */
-    private static class SecurityContextReferencingFactory extends ReferencingFactory<SecurityContext> {
-        @Inject
-        public SecurityContextReferencingFactory(Provider<Ref<SecurityContext>> referenceFactory) {
-            super(referenceFactory);
+    private static class SecurityContextFactory implements Factory<SecurityContext> {
+        private final Provider<ContainerRequestContext> requestProvider;
+
+        public SecurityContextFactory(@Context Provider<ContainerRequestContext> requestContextProvider) {
+            this.requestProvider = requestContextProvider;
+        }
+
+        @Override
+        public SecurityContext provide() {
+            return requestProvider.get().getSecurityContext();
+        }
+
+        @Override
+        public void dispose(SecurityContext securityContext) {
+            // nothing to dispose
         }
     }
 }

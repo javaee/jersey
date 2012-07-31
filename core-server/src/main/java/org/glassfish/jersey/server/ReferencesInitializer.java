@@ -39,9 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import javax.inject.Inject;
@@ -68,10 +66,6 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
     @Inject
     private Provider<Ref<ContainerRequest>> requestContextReference;
     @Inject
-    private Provider<Ref<HttpHeaders>> httpHeadersReference;
-    @Inject
-    private Provider<Ref<SecurityContext>> securityContextReference;
-    @Inject
     private Provider<UriInfo> uriInfoFactory;
 
     /**
@@ -87,8 +81,6 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
     public ContainerRequest apply(final ContainerRequest requestContext) {
         requestReference.get().set(requestContext.getRequest());
         requestContextReference.get().set(requestContext);
-        httpHeadersReference.get().set(requestContext);
-        securityContextReference.get().set(requestContext.getSecurityContext());
 
         final RequestScopedInitializer requestScopedInitializer = requestContext.getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
