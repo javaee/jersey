@@ -193,7 +193,7 @@ public class UriBuilderImpl extends UriBuilder {
         }
 
         if (parser.getAuthority() != null) {
-            if (parser.getAuthority() == null && parser.getHost() == null && parser.getPort() == null) {
+            if (parser.getUserInfo() == null && parser.getHost() == null && parser.getPort() == null) {
                 this.authority = parser.getAuthority();
                 this.userInfo = null;
                 this.host = null;

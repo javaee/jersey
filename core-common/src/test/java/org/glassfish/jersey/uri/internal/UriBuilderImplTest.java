@@ -95,6 +95,19 @@ public class UriBuilderImplTest {
     }
 
     @Test
+    // See JAX_RS_SPEC-245
+    public void testReplacingUserInfo() {
+        final String userInfo = "foo:foo";
+
+        URI uri;
+        uri = UriBuilder.fromUri("http://foo2:foo2@localhost:8080").userInfo(userInfo).build();
+        assertEquals(userInfo, uri.getRawUserInfo());
+
+        uri = UriBuilder.fromUri("http://localhost:8080").userInfo(userInfo).build();
+        assertEquals(userInfo, uri.getRawUserInfo());
+    }
+
+    @Test
     public void testPathTemplateValueEncoding() throws URISyntaxException {
         String result;
         result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("a/b").path("a/b").segment

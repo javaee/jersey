@@ -116,7 +116,7 @@ class UriParser {
                 squareBracketsCount--;
                 sb.append(c);
 
-                // test IPv6 or reqular expressions in the template params
+                // test IPv6 or regular expressions in the template params
             } else if ((delimiters != null && delimiters.indexOf(c) >= 0) &&
                     (!isIp || squareBracketsCount == 0) && (curlyBracketsCount == 0)) {
                 return sb.length() == 0 ? null : sb.toString();
@@ -194,7 +194,7 @@ class UriParser {
 
     private void parseAuthority() {
         int start = ci.pos();
-        String comp = parseComponentWithIP("@:/?#", true);
+        String comp = parseComponentWithIP("@/?#", true);
         if (ci.current() == '@') {
             this.userInfo = comp;
             if (!ci.hasNext()) {
@@ -202,6 +202,9 @@ class UriParser {
             }
             ci.next();
             comp = parseComponentWithIP(":/?#", true);
+        } else {
+            ci.setPosition(start);
+            comp = parseComponentWithIP("@:/?#", true);
         }
 
         this.host = comp;
