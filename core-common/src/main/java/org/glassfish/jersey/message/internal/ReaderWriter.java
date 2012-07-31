@@ -185,7 +185,7 @@ public final class ReaderWriter {
             MediaType type) throws IOException {
         Writer osw = new BufferedWriter(new OutputStreamWriter(out,
                 getCharset(type)));
-        osw.write(s);
+        osw.write(s, 0, s.length()); // MUCH faster than BufferedWriter.write(s) on JDK 1.6
         osw.flush();
     }
 
