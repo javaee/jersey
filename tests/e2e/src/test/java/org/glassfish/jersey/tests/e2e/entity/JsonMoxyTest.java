@@ -68,8 +68,8 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.json.JsonMoxyBinder;
-import org.glassfish.jersey.media.json.JsonMoxyFeature;
+import org.glassfish.jersey.moxy.json.MoxyBinder;
+import org.glassfish.jersey.moxy.json.MoxyFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Ignore;
@@ -137,13 +137,13 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new JsonMoxyBinder());
+        return ((ResourceConfig) super.configure()).addBinders(new MoxyBinder());
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.register(new JsonMoxyFeature());
+        clientConfig.register(new MoxyFeature());
     }
 
     @Path("JAXBElementBeanJSONResource")

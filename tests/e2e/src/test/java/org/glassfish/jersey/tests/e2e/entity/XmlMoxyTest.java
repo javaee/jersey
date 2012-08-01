@@ -72,8 +72,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.xml.XmlMoxyBinder;
-import org.glassfish.jersey.media.xml.XmlMoxyFeature;
+import org.glassfish.jersey.moxy.xml.MoxyBinder;
+import org.glassfish.jersey.moxy.xml.MoxyFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -232,13 +232,13 @@ public class XmlMoxyTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new XmlMoxyBinder());
+        return ((ResourceConfig) super.configure()).addBinders(new MoxyBinder());
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.register(new XmlMoxyFeature());
+        clientConfig.register(new MoxyFeature());
     }
 
     @Test

@@ -58,6 +58,8 @@
     <description>Jersey examples</description>
 
     <modules>
+        <module>bookmark</module>
+        <module>bookmark-em</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
         <module>exception-mapping</module>
@@ -71,7 +73,7 @@
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
         <module>json-jackson</module>
-        <module>json-jaxb</module>
+        <module>json-jettison</module>
         <module>json-moxy</module>
         <module>json-with-padding</module>
         <module>xml-moxy</module>
@@ -82,6 +84,7 @@
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-sent-events</module>
+        <module>simple-console</module>
         <module>system-properties-example</module>
     </modules>
 

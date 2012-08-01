@@ -78,7 +78,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.glassfish.jersey.media.json.*</Export-Package>
+                        <Export-Package>org.glassfish.jersey.moxy.*</Export-Package>
                         <Import-Package>
                             org.eclipse.persistence.jaxb.rs,
                             *
@@ -118,7 +118,6 @@
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.moxy</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.antlr</artifactId>

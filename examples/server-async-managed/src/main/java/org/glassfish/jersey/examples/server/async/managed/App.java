@@ -48,7 +48,7 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonJacksonBinder;
+import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
@@ -67,20 +67,20 @@ public class App {
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
     public static final String ASYNC_LONG_RUNNING_MANAGED_OP_PATH = "managedasync/longrunning";
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void main(String[] args) {
         try {
             System.out.println("\"Custom Executor Managed Async Resources\" Jersey Example App");
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
 
-            System.out.println(String.format(
-                    "Application started.\n"
-                            + "To test long-running asynchronous operation resource, try %s%s\n"
-                            + "To test async chat resource, try %s%s\n"
-                            + "Hit enter to stop it...",
-                    BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH,
-                    BASE_URI, "chat"));
+            System.out.println(String.format("Application started.\n" +
+                    "To test long-running asynchronous operation resource, try %s%s\n" +
+                    "To test async chat resource, try %s%s\n" +
+                    "Hit enter to stop it...", BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH, BASE_URI, "chat"));
+
             System.in.read();
+
             server.stop();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
@@ -89,19 +89,17 @@ public class App {
     }
 
     public static ResourceConfig create() {
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class, RequestExecProvider.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
-                .addBinders(new JsonJacksonBinder(), new ServerExecutorsFactory.ServerExecutorBinder());
-
-        return resourceConfig;
+        return new ResourceConfig().
+                addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class, RequestExecProvider.class).
+                addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true)).
+                addBinders(new JacksonBinder(), new ServerExecutorsFactory.ServerExecutorBinder());
     }
 
     public static class RequestExecProvider implements RequestExecutorsProvider {
+
         @Override
         public ExecutorService getRequestingExecutor() {
-            return Executors.newCachedThreadPool(
-                    new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
+            return Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
         }
     }
 }

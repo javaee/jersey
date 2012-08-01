@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.jackson;
 /**
  * TODO javadoc.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class NonJaxbBean {
 

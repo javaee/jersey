@@ -54,7 +54,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
  * Utility class which creates {@link MyApplication} instances and provides support
  * for running this sample from command line.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class App {
 

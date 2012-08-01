@@ -101,7 +101,7 @@ public class JaxbTest extends JerseyTest {
         String e1 = target().path("jaxb/XmlRootElement").request().get(String.class);
 
         String e2 = target().path("jaxb/XmlRootElementWithHeader").request().get(String.class);
-        assertTrue(e2.contains("<?xml-stylesheet type='text/xsl' href='foobar.xsl' ?>") && e2.contains(e1.substring(e1.indexOf("?>") + 2)));
+        assertTrue(e2.contains("<?xml-stylesheet type='text/xsl' href='foobar.xsl' ?>") && e2.contains(e1.substring(e1.indexOf("?>") + 2).trim()));
     }
 
     @Test

@@ -59,7 +59,8 @@
     </description>
 
     <modules>
-        <module>json</module>
+        <module>json-jackson</module>
+        <module>json-jettison</module>
         <module>moxy</module>
         <module>multipart</module>
         <module>sse</module>

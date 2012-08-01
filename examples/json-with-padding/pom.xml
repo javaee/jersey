@@ -76,11 +76,15 @@
             <artifactId>jersey-container-grizzly2-http</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json</artifactId>
+            <artifactId>jersey-media-json-jettison</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
         </dependency>
 
         <dependency>

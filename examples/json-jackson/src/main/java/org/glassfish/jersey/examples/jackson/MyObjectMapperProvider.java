@@ -54,7 +54,7 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 /**
  * TODO javadoc.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Provider
 public class MyObjectMapperProvider implements ContextResolver<ObjectMapper> {

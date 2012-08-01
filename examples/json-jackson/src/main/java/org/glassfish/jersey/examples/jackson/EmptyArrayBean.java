@@ -44,7 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * TODO javadoc.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @XmlRootElement
 public class EmptyArrayBean {

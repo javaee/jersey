@@ -57,10 +57,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.json.JsonConfiguration;
-import org.glassfish.jersey.media.json.JsonJaxbContext;
-import org.glassfish.jersey.media.json.JsonJaxbFeature;
-import org.glassfish.jersey.media.json.JsonJaxbBinder;
+import org.glassfish.jersey.jettison.JettisonBinder;
+import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonFeature;
+import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -72,15 +72,17 @@ import org.junit.runner.RunWith;
 import static junit.framework.Assert.assertEquals;
 
 /**
- *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
 @RunWith(Enclosed.class)
 public class EmptyRequestWithJaxbTest {
+
+    @SuppressWarnings("UnusedParameters")
     @Path("/")
     @Ignore
     public static class Resource {
+
         @POST
         public void bean(JaxbBean b) {
         }
@@ -113,14 +115,15 @@ public class EmptyRequestWithJaxbTest {
     }
 
     public static class EmptyRequestTest extends JerseyTest {
+
         @Override
         protected Application configure() {
-            return new ResourceConfig(Resource.class).addBinders(new JsonJaxbBinder());
+            return new ResourceConfig(Resource.class).addBinders(new JettisonBinder());
         }
 
         @Override
         protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JsonJaxbFeature.class);
+            clientConfig.register(JettisonFeature.class);
         }
 
         @Test
@@ -159,7 +162,7 @@ public class EmptyRequestWithJaxbTest {
 
         private final Class[] classes = {JaxbBean.class, JaxbBeanType.class};
 
-        private final Set<Class> types = new HashSet(Arrays.asList(classes));
+        private final Set<Class> types = new HashSet<Class>(Arrays.asList(classes));
 
         public CR() {
             try {
@@ -176,44 +179,22 @@ public class EmptyRequestWithJaxbTest {
         }
     }
 
-
-    public static class EmptyJsonRequestNaturalTest extends JerseyTest {
-        @Override
-        protected Application configure() {
-            return new ResourceConfig(NaturalCR.class, Resource.class).addBinders(new JsonJaxbBinder());
-        }
-
-        @Override
-        protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JsonJaxbFeature.class);
-        }
-
-        public static class NaturalCR extends CR {
-            protected JAXBContext configure(Class[] classes) throws JAXBException {
-                return new JsonJaxbContext(JsonConfiguration.natural().build(), classes);
-            }
-        }
-
-        @Test
-        public void testEmptyRequestNatural() {
-            _test(target());
-        }
-    }
-
     public static class MappedJettisonCRTest extends JerseyTest {
+
         @Override
         protected Application configure() {
-            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addBinders(new JsonJaxbBinder());
+            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addBinders(new JettisonBinder());
         }
 
         @Override
         protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JsonJaxbFeature.class);
+            clientConfig.register(JettisonFeature.class);
         }
 
         public static class MappedJettisonCR extends CR {
+
             protected JAXBContext configure(Class[] classes) throws JAXBException {
-                return new JsonJaxbContext(JsonConfiguration.mappedJettison().build(), classes);
+                return new JettisonJaxbContext(JettisonConfiguration.mappedJettison().build(), classes);
             }
         }
 
@@ -224,19 +205,21 @@ public class EmptyRequestWithJaxbTest {
     }
 
     public static class BadgerFishCRTest extends JerseyTest {
+
         @Override
         protected Application configure() {
-            return new ResourceConfig(BadgerFishCR.class, Resource.class).addBinders(new JsonJaxbBinder());
+            return new ResourceConfig(BadgerFishCR.class, Resource.class).addBinders(new JettisonBinder());
         }
 
         @Override
         protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JsonJaxbFeature.class);
+            clientConfig.register(JettisonFeature.class);
         }
 
         public static class BadgerFishCR extends CR {
+
             protected JAXBContext configure(Class[] classes) throws JAXBException {
-                return new JsonJaxbContext(JsonConfiguration.badgerFish().build(), classes);
+                return new JettisonJaxbContext(JettisonConfiguration.badgerFish().build(), classes);
             }
         }
 

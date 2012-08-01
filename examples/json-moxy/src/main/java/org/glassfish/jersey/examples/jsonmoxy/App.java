@@ -41,17 +41,24 @@ package org.glassfish.jersey.examples.jsonmoxy;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
+
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.json.JsonMoxyBinder;
+import org.glassfish.jersey.moxy.json.MoxyBinder;
+import org.glassfish.jersey.moxy.json.MoxyConfiguration;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class App {
 
@@ -64,8 +71,7 @@ public class App {
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
 
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
-                    BASE_URI));
+            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...", BASE_URI));
             System.in.read();
             server.stop();
         } catch (IOException ex) {
@@ -74,10 +80,27 @@ public class App {
     }
 
     public static ResourceConfig createApp() {
-        final ResourceConfig rc = new ResourceConfig()
-                .packages("org.glassfish.jersey.examples.jsonmoxy").addBinders(new JsonMoxyBinder());
+        return new ResourceConfig().
+                packages("org.glassfish.jersey.examples.jsonmoxy").
+                addBinders(new MoxyBinder()).
+                addSingletons(new JsonMoxyConfigurationContextResolver());
+    }
 
-        return rc;
+    @Provider
+    final static class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyConfiguration> {
+
+        @Override
+        public MoxyConfiguration getContext(Class<?> objectType) {
+            final MoxyConfiguration configuration = new MoxyConfiguration();
+
+            Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+            namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+
+            configuration.setNamespacePrefixMapper(namespacePrefixMapper);
+            configuration.setNamespaceSeparator(':');
+
+            return configuration;
+        }
     }
 }
 

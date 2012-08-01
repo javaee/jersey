@@ -45,7 +45,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * TODO javadoc.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @XmlRootElement(name = "account")
 public class CombinedAnnotationBean {

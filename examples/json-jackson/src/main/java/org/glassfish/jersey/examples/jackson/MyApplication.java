@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
-import org.glassfish.jersey.media.json.JsonJacksonBinder;
+import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -47,7 +47,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  *
  * Used to set resource and providers classes.
  *
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class MyApplication extends ResourceConfig {
     public MyApplication() {
@@ -58,6 +58,6 @@ public class MyApplication extends ResourceConfig {
                 // register Jackson ObjectMapper resolver
                 MyObjectMapperProvider.class
         );
-        addBinders(new JsonJacksonBinder());
+        addBinders(new JacksonBinder());
     }
 }
