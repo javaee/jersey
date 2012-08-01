@@ -51,6 +51,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.InboundMessageContext;
+import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
 
 /**
@@ -70,16 +71,17 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
      */
     public ClientResponse(final ClientRequest requestContext, final Response response) {
         this(response.getStatusInfo(), requestContext);
+        this.headers(OutboundJaxrsResponse.unwrap(response).getContext().getStringHeaders());
 
         final Object entity = response.getEntity();
-        if(entity != null) {
+        if (entity != null) {
             InputStream entityStream = new InputStream() {
 
                 ByteArrayInputStream byteArrayInputStream = null;
 
                 @Override
                 public int read() throws IOException {
-                    if(byteArrayInputStream == null) {
+                    if (byteArrayInputStream == null) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         OutputStream stream = null;
                         try {
