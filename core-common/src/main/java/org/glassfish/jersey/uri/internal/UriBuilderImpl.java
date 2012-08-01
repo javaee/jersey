@@ -728,26 +728,8 @@ public class UriBuilderImpl extends UriBuilder {
         return _build(false, false, values);
     }
 
-    private URI _build(boolean encode, boolean encodeSlashInPath, Object... values) {
-        if (values == null || values.length == 0) {
-            return createURI(create());
-        }
-
-        if (ssp != null) {
-            throw new IllegalArgumentException("Schema specific part is opaque");
-        }
-
-        encodeMatrix();
-        encodeQuery();
-
-        String uri = UriTemplate.createURI(
-                scheme, authority,
-                userInfo, host, port,
-                path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
-        return createURI(uri);
-    }
-
-    private String create() {
+    // @Override
+    public String toTemplate() {
         encodeMatrix();
         encodeQuery();
 
@@ -802,7 +784,30 @@ public class UriBuilderImpl extends UriBuilder {
             sb.append('#').append(fragment);
         }
 
-        return UriComponent.encodeTemplateNames(sb.toString());
+        return sb.toString();
+    }
+
+    private URI _build(boolean encode, boolean encodeSlashInPath, Object... values) {
+        if (values == null || values.length == 0) {
+            return createURI(create());
+        }
+
+        if (ssp != null) {
+            throw new IllegalArgumentException("Schema specific part is opaque");
+        }
+
+        encodeMatrix();
+        encodeQuery();
+
+        String uri = UriTemplate.createURI(
+                scheme, authority,
+                userInfo, host, port,
+                path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
+        return createURI(uri);
+    }
+
+    private String create() {
+        return UriComponent.encodeTemplateNames(toTemplate());
     }
 
     private URI createURI(String uri) {

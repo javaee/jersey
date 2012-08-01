@@ -108,6 +108,21 @@ public class UriBuilderImplTest {
     }
 
     @Test
+    public void testToTemplate() throws URISyntaxException {
+        UriBuilderImpl ub = new UriBuilderImpl()
+                .uri(new URI("http://examples.jersey.java.net/"))
+                .userInfo("{T1}")
+                .path("{T2}")
+                .segment("{T3}")
+                .queryParam("a", "{T4}", "v1")
+                .queryParam("b", "v2");
+        assertEquals("http://{T1}@examples.jersey.java.net/{T2}/{T3}?a={T4}&a=v1&b=v2", ub.toTemplate());
+
+        ub.queryParam("a", "v3").queryParam("c", "v4");
+        assertEquals("http://{T1}@examples.jersey.java.net/{T2}/{T3}?a={T4}&a=v1&b=v2&a=v3&c=v4", ub.toTemplate());
+    }
+
+    @Test
     public void testPathTemplateValueEncoding() throws URISyntaxException {
         String result;
         result = new UriBuilderImpl().uri(new URI("http://examples.jersey.java.net/")).userInfo("a/b").path("a/b").segment
