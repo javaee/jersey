@@ -52,6 +52,7 @@ import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -143,30 +144,35 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     @Override
     public WebTarget target(String uri) throws IllegalArgumentException, NullPointerException {
         checkNotClosed();
+        checkNotNull(uri, "URI template of the newly created target must not be 'null'.");
         return new WebTarget(uri, this);
     }
 
     @Override
     public WebTarget target(URI uri) throws NullPointerException {
         checkNotClosed();
+        checkNotNull(uri, "URI of the newly created target must not be 'null'.");
         return new WebTarget(uri, this);
     }
 
     @Override
     public WebTarget target(UriBuilder uriBuilder) throws NullPointerException {
         checkNotClosed();
+        checkNotNull(uriBuilder, "URI builder of the newly created target must not be 'null'.");
         return new WebTarget(uriBuilder, this);
     }
 
     @Override
     public WebTarget target(Link link) throws NullPointerException {
         checkNotClosed();
+        checkNotNull(link, "Link to the newly created target must not be 'null'.");
         return new WebTarget(link, this);
     }
 
     @Override
     public JerseyInvocation invocation(Link link) throws NullPointerException, IllegalArgumentException {
         checkNotClosed();
+        checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
         String method = link.getMethod();
         if (method == null) {
             throw new IllegalArgumentException("Cannot create invocation from link " + link);
@@ -184,6 +190,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     public JerseyInvocation invocation(Link link, Entity<?> entity)
             throws NullPointerException, IllegalArgumentException {
         checkNotClosed();
+        checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
         String method = link.getMethod();
         if (method == null) {
             throw new IllegalArgumentException("Cannot create invocation from link " + link);
