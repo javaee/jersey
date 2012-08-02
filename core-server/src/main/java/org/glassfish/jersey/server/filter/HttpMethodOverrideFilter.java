@@ -56,11 +56,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
+import static org.glassfish.jersey.internal.util.Tokenizer.COMMON_DELIMITERS;
 
 /**
  * A pre-matching filter to support HTTP method replacing of a POST request to a request
@@ -205,9 +206,9 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
         } else {
             String[] stringValues;
             if (config instanceof String) {
-                stringValues = ResourceConfig.getElements((String) config, COMMON_DELIMITERS);
+                stringValues = Tokenizer.tokenize((String) config, COMMON_DELIMITERS);
             } else if (config instanceof String[]) {
-                stringValues = ResourceConfig.getElements((String[]) config, COMMON_DELIMITERS);
+                stringValues = Tokenizer.tokenize((String[]) config, COMMON_DELIMITERS);
             } else {
                 return new Source[0];
             }

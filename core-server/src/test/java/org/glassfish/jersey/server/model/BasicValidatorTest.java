@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -184,6 +185,25 @@ public class BasicValidatorTest {
         }
     }
 
+    @Path("rootRelaxedParser")
+    @Produces(" a/b, c/d ")
+    @Consumes({"e/f,g/h", " i/j"})
+    public static class TestRelaxedProducesConsumesParserRules {
+
+        @GET
+        @Produces({"e/f,g/h", " i/j"})
+        @Consumes(" a/b, c/d ")
+        public String getIt(@QueryParam("q") String queryParam) {
+            return "it";
+        }
+    }
+
+    @Test
+    public void testRelaxedProducesConsumesParserRules() throws Exception {
+        System.out.println("---\nAn issue should not be reported with the relaxed Produces/Consumes values parser.");
+        List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectMethodParamsForSingleton.class);
+        assertTrue(issues.isEmpty());
+    }
 
     @Test
     public void testSingletonFieldsInjection() throws Exception {

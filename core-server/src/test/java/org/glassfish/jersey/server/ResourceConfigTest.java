@@ -48,6 +48,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.util.Tokenizer;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -59,7 +60,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault1() {
-        final String[] elements = ResourceConfig.getElements(new String[]{"a b,c;d\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -70,7 +71,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault2() {
-        final String[] elements = ResourceConfig.getElements(new String[]{"a    b, ,c;d\n\n\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[]{"a    b, ,c;d\n\n\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -81,7 +82,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsExplicitDelimiter() {
-        final String[] elements = ResourceConfig.getElements(new String[]{"a b,c;d\ne"}, " ;");
+        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"}, " ;");
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b,c");

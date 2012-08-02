@@ -41,24 +41,21 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-import static org.glassfish.jersey.server.ServerProperties.COMMON_DELIMITERS;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
@@ -425,9 +422,9 @@ public class ResourceConfig extends Application implements Config {
         final Object o = properties.get(propertyName);
         if (o != null) {
             if (o instanceof String) {
-                classNames = ResourceConfig.getElements((String) o, COMMON_DELIMITERS);
+                classNames = Tokenizer.tokenize((String) o);
             } else if (o instanceof String[]) {
-                classNames = ResourceConfig.getElements((String[]) o, COMMON_DELIMITERS);
+                classNames = Tokenizer.tokenize((String[]) o);
             }
         }
         return classNames;
@@ -551,76 +548,6 @@ public class ResourceConfig extends Application implements Config {
      */
     ResourceConfig _setApplication(Application app) {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Get a canonical array of String elements from a String array
-     * where each entry may contain zero or more elements separated by ';'.
-     *
-     * @param elements an array where each String entry may contain zero or more
-     *                 {@link ServerProperties#COMMON_DELIMITERS} separated elements.
-     * @return the array of elements, each element is trimmed, the array will
-     *         not contain any empty or null entries.
-     */
-    public static String[] getElements(String[] elements) {
-        return getElements(elements, COMMON_DELIMITERS);
-    }
-
-    /**
-     * Get a canonical array of String elements from a String array
-     * where each entry may contain zero or more elements separated by characters
-     * in delimiters string.
-     *
-     * @param elements   an array where each String entry may contain zero or more
-     *                   delimiters separated elements.
-     * @param delimiters string with delimiters, every character represents one
-     *                   delimiter.
-     * @return the array of elements, each element is trimmed, the array will
-     *         not contain any empty or null entries.
-     */
-    public static String[] getElements(String[] elements, String delimiters) {
-        List<String> es = new LinkedList<String>();
-        for (String element : elements) {
-            if (element == null) {
-                continue;
-            }
-            element = element.trim();
-            if (element.length() == 0) {
-                continue;
-            }
-            for (String subElement : getElements(element, delimiters)) {
-                if (subElement == null || subElement.length() == 0) {
-                    continue;
-                }
-                es.add(subElement);
-            }
-        }
-        return es.toArray(new String[es.size()]);
-    }
-
-    /**
-     * Get a canonical array of String elements from a String
-     * that may contain zero or more elements separated by characters in
-     * delimiters string.
-     *
-     * @param elements   a String that may contain zero or more
-     *                   delimiters separated elements.
-     * @param delimiters string with delimiters, every character represents one
-     *                   delimiter.
-     * @return the array of elements, each element is trimmed.
-     */
-    public static String[] getElements(String elements, String delimiters) {
-        String regex = "[";
-        for (char c : delimiters.toCharArray()) {
-            regex += Pattern.quote(String.valueOf(c));
-        }
-        regex += "]";
-
-        String[] es = elements.split(regex);
-        for (int i = 0; i < es.length; i++) {
-            es[i] = es[i].trim();
-        }
-        return es;
     }
 
     private interface InternalState {

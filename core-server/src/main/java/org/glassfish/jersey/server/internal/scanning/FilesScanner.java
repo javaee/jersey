@@ -47,9 +47,8 @@ import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ResourceFinder;
-import org.glassfish.jersey.server.ServerProperties;
 
 /**
  * A scanner that recursively scans directories and jar files.
@@ -78,7 +77,7 @@ public class FilesScanner implements ResourceFinder {
      * @param fileNames an array of package names.
      */
     public FilesScanner(final String[] fileNames) {
-        files = new File[ResourceConfig.getElements(fileNames, ServerProperties.COMMON_DELIMITERS).length];
+        files = new File[Tokenizer.tokenize(fileNames, Tokenizer.COMMON_DELIMITERS).length];
         for (int i = 0; i < files.length; i++) {
             files[i] = new File(fileNames[i]);
         }

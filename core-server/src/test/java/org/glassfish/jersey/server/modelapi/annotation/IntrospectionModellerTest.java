@@ -40,14 +40,19 @@
 package org.glassfish.jersey.server.modelapi.annotation;
 
 import java.util.LinkedList;
-import org.glassfish.jersey.server.model.Resource;
-import org.junit.Test;
+import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -59,11 +64,19 @@ public class IntrospectionModellerTest {
     static String data;
 
     @Path("/helloworld")
+    @Produces(" a/b, c/d ")
+    @Consumes({"e/f,g/h", " i/j"})
     public class HelloWorldResource {
 
-        @GET
-        @Produces("text/plain")
-        public String getMethod() {
+        @POST
+        @Consumes(" a/b, c/d ")
+        @Produces({"e/f,g/h", " i/j"})
+        public String postA(final String data) {
+            return data;
+        }
+
+        @POST
+        public String postB(final String data) {
             return data;
         }
     }
@@ -79,7 +92,30 @@ public class IntrospectionModellerTest {
     public void testCreateResource() {
         Class<?> resourceClass = HelloWorldResource.class;
         Resource result = Resource.builder(resourceClass, new LinkedList<ResourceModelIssue>()).build();
-        assertEquals(result.getResourceMethods().size(), 1);
-        System.out.println("Resource = " + result.toString());
+        final List<ResourceMethod> resourceMethods = result.getResourceMethods();
+        assertEquals("Unexpected number of resource methods in the resource model.", 2, resourceMethods.size());
+
+        ResourceMethod resourceMethod;
+        resourceMethod = find(resourceMethods, "postA");
+        assertEquals("Unexpected number of produced media types in the resource method model",
+                3, resourceMethod.getProducedTypes().size());
+        assertEquals("Unexpected number of consumed media types in the resource method model",
+                2, resourceMethod.getConsumedTypes().size());
+
+        resourceMethod = find(resourceMethods, "postB");
+        assertEquals("Unexpected number of inherited produced media types in the resource method model",
+                2, resourceMethod.getProducedTypes().size());
+        assertEquals("Unexpected number of inherited consumed media types in the resource method model",
+                3, resourceMethod.getConsumedTypes().size());
+    }
+
+    private ResourceMethod find(List<ResourceMethod> methods, String javaMethodName) {
+        for (ResourceMethod method : methods) {
+            if (method.getInvocable().getHandlingMethod().getName().equals(javaMethodName)) {
+                return method;
+            }
+        }
+
+        return null;
     }
 }

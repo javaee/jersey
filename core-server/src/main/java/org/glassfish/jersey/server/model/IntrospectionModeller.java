@@ -63,6 +63,7 @@ import javax.ws.rs.Suspend;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
@@ -290,8 +291,10 @@ final class IntrospectionModeller {
         }
 
         final List<MediaType> types = new ArrayList<MediaType>(values.length);
-        for (final String mt : values) {
-            types.add(MediaType.valueOf(mt));
+        for (final String mtEntry : values) {
+            for (final String mt : Tokenizer.tokenize(mtEntry, ",")) {
+                types.add(MediaType.valueOf(mt));
+            }
         }
 
         return types;

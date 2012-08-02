@@ -48,11 +48,6 @@ package org.glassfish.jersey.server;
 public final class ServerProperties {
 
     /**
-     * Common delimiters used by various properties.
-     */
-    public static final String COMMON_DELIMITERS = " ,;\n";
-
-    /**
      * Defines one or more packages that contain application-specific resources and
      * providers. If the property is set, the specified packages will be scanned for
      * JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path}) and
@@ -60,7 +55,8 @@ public final class ServerProperties {
      * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more package names
-     * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
+     * that MUST be separated only by characters declared in common delimiters:
+     * {@code " ,;\n"}.
      * </p>
      * <p>
      * A default value is not set.
@@ -71,6 +67,7 @@ public final class ServerProperties {
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_PACKAGES = "jersey.config.server.provider.packages";
 
     /**
@@ -84,7 +81,8 @@ public final class ServerProperties {
      * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more paths
-     * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
+     * that MUST be separated only by characters declared in common delimiters:
+     * {@code " ,;\n"}.
      * </p>
      * <p>
      * A default value is not set.
@@ -95,6 +93,7 @@ public final class ServerProperties {
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_CLASSPATH = "jersey.config.server.provider.classpath";
 
     /**
@@ -106,7 +105,8 @@ public final class ServerProperties {
      * <p>
      * The property value MUST be an instance of {@link String} or {@code String[]}
      * array. Each {@code String} instance represents one or more class names
-     * that MUST be separated only by characters declared in {@link #COMMON_DELIMITERS}.
+     * that MUST be separated only by characters declared in common delimiters:
+     * {@code " ,;\n"}.
      * </p>
      * <p>
      * A default value is not set.
@@ -116,6 +116,7 @@ public final class ServerProperties {
      * </p>
      */
     // TODO implement generic support
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_CLASSNAMES = "jersey.config.server.provider.classnames";
 
     /**
@@ -136,6 +137,7 @@ public final class ServerProperties {
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String MEDIA_TYPE_MAPPINGS = "jersey.config.server.mediaTypeMappings";
 
     /**
@@ -157,6 +159,7 @@ public final class ServerProperties {
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String LANGUAGE_MAPPINGS = "jersey.config.server.languageMappings";
 
     /**
@@ -166,19 +169,20 @@ public final class ServerProperties {
      * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} enum lists the allowed property
      * values.
      * <p>
-     *     The property value must be an instance of {@link String}, {@code String[]},
-     *     {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} or
-     *     {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source[]}.
-     *     Each {@code String} instance represents one or more class names separated by characters declared in
-     *     {@link #COMMON_DELIMITERS}.
+     * The property value must be an instance of {@link String}, {@code String[]},
+     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} or
+     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source[]}.
+     * Each {@code String} instance represents one or more class names separated by characters declared in
+     * common delimiters: {@code " ,;\n"}.
      * </p>
      * <p>
-     *     The default value is {@code "HEADER,QUERY"}.
+     *     The default value is {@code "HEADER, QUERY"}.
      * </p>
      * <p>
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_METHOD_OVERRIDE = "jersey.config.server.httpMethodOverride";
 
     private ServerProperties() {

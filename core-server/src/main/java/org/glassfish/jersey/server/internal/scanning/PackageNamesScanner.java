@@ -50,9 +50,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ResourceFinder;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -97,7 +96,7 @@ public class PackageNamesScanner implements ResourceFinder {
      * @param packages an array of package names.
      */
     public PackageNamesScanner(final String[] packages) {
-        this(ReflectionHelper.getContextClassLoader(), ResourceConfig.getElements(packages, ServerProperties.COMMON_DELIMITERS));
+        this(ReflectionHelper.getContextClassLoader(), Tokenizer.tokenize(packages, Tokenizer.COMMON_DELIMITERS));
     }
 
     /**
