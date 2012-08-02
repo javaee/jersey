@@ -62,7 +62,12 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.CoreOptions.equinox;
+import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
@@ -74,28 +79,31 @@ public abstract class AbstractWebAppTest {
     public abstract List<Option> osgiRuntimeOptions();
 
     public List<Option> genericOsgiOptions() {
-
-        String bundleLocation = mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp").artifactId("war-bundle").type("war").versionAsInProject().getURL().toString();
+        @SuppressWarnings("RedundantStringToString")
+        final String bundleLocation = mavenBundle().
+                groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp").
+                artifactId("war-bundle").
+                type("war").versionAsInProject().getURL().toString();
 
         return Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
-                systemProperty("jersey.test.port").value(String.valueOf(port)),
+                systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
 
                 // do not remove the following line
-//                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
+                // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
 
                 repositories("http://repo1.maven.org/maven2",
-                                "http://repository.apache.org/content/groups/snapshots-group",
-                                "http://repository.ops4j.org/maven2",
-                                "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                                "http://repository.springsource.com/maven/bundles/release",
-                                "http://repository.springsource.com/maven/bundles/external",
-                                "http://maven.java.net/content/repositories/snapshots"),
+                        "http://repository.apache.org/content/groups/snapshots-group",
+                        "http://repository.ops4j.org/maven2",
+                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
+                        "http://repository.springsource.com/maven/bundles/release",
+                        "http://repository.springsource.com/maven/bundles/external",
+                        "http://maven.java.net/content/repositories/snapshots"),
 
                 // uncomment for logging (do not remove the following two lines)
-//                mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
-//                mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
+                // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
+                // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
 
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").versionAsInProject(),
@@ -124,12 +132,10 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").versionAsInProject()
 
-//                // Debug
-//                vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
-
+                // Debug
+                // vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
         ));
     }
-
 
     public List<Option> felixOptions() {
         return Arrays.asList(options(
@@ -149,6 +155,7 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-extender-war").versionAsInProject()));
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public class WebEventHandler implements EventHandler {
 
         @Override
@@ -168,23 +175,23 @@ public abstract class AbstractWebAppTest {
 
     final Semaphore semaphore = new Semaphore(0);
 
-    private static final int port = getProperty("jersey.test.port", 8080);
+    private static final int port = getProperty("jersey.config.test.container.port", 8080);
     private static final String CONTEXT = "/helloworld";
     private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
     private static final String BundleLocationProperty = "jersey.bundle.location";
 
     @Inject BundleContext bundleContext;
 
+    @SuppressWarnings("UnusedDeclaration")
     @Configuration
     public Option[] configuration() {
-
         List<Option> options = new LinkedList<Option>();
 
         options.addAll(genericOsgiOptions());
         options.addAll(jettyOptions());
         options.addAll(osgiRuntimeOptions());
 
-        return options.toArray(new Option[0]);
+        return options.toArray(new Option[options.size()]);
     }
 
     public void defaultMandatoryBeforeMethod() {
@@ -230,7 +237,7 @@ public abstract class AbstractWebAppTest {
         return defaultValue;
     }
 
-    @SuppressWarnings("UseOfObsoleteCollectionType")
+    @SuppressWarnings({"UseOfObsoleteCollectionType", "unchecked"})
     private Dictionary getHandlerServiceProperties(String... topics) {
         Dictionary result = new Hashtable();
         result.put(EventConstants.EVENT_TOPIC, topics);
