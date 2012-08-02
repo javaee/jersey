@@ -40,7 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 /**
- * Quality factor for acceptable header types.
+ * Quality factor for acceptable header types represented as a ppt (per mille) value.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)

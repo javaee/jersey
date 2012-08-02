@@ -54,14 +54,34 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
 
     private final int q;
 
-    public AcceptableMediaType(String p, String s) {
-        super(p, s);
+    /**
+     * Create new acceptable media type instance with a {@link QualityFactor#DEFAULT_QUALITY_FACTOR
+     * default quality factor} value.
+     *
+     * @param type    the primary type, null is equivalent to
+     *                {@link #MEDIA_TYPE_WILDCARD}
+     * @param subtype the subtype, null is equivalent to
+     *                {@link #MEDIA_TYPE_WILDCARD}
+     */
+    public AcceptableMediaType(String type, String subtype) {
+        super(type, subtype);
         q = DEFAULT_QUALITY_FACTOR;
     }
 
-    public AcceptableMediaType(String p, String s, int q, Map<String, String> parameters) {
-        super(p, s, parameters);
-        this.q = q;
+    /**
+     * Create new acceptable media type instance.
+     *
+     * @param type       the primary type, null is equivalent to
+     *                   {@link #MEDIA_TYPE_WILDCARD}
+     * @param subtype    the subtype, null is equivalent to
+     *                   {@link #MEDIA_TYPE_WILDCARD}
+     * @param quality    quality factor ppt value. See {@link QualityFactor}.
+     * @param parameters a map of media type parameters, {@code null} is the same as an
+     *                   empty map.
+     */
+    public AcceptableMediaType(String type, String subtype, int quality, Map<String, String> parameters) {
+        super(type, subtype, parameters);
+        this.q = quality;
     }
 
     @Override
@@ -69,6 +89,14 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
         return q;
     }
 
+    /**
+     * Create new acceptable media type instance from the supplied
+     * {@link HttpHeaderReader HTTP header reader}.
+     *
+     * @param reader HTTP header reader.
+     * @return new acceptable media type instance.
+     * @throws ParseException in case the input data parsing failed.
+     */
     public static AcceptableMediaType valueOf(HttpHeaderReader reader) throws ParseException {
         // Skip any white space
         reader.hasNext();
@@ -100,23 +128,23 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AcceptableMediaType)) {
-            return false;
-        }
         if (!super.equals(obj)) {
             return false;
         }
-        final AcceptableMediaType other = (AcceptableMediaType) obj;
-        if (this.q != other.q) {
-            return false;
+
+        if (obj instanceof AcceptableMediaType) {
+            final AcceptableMediaType other = (AcceptableMediaType) obj;
+            return this.q == other.q;
+        } else {
+            // obj is a plain MediaType instance
+            // with a quality factor set to default (1.0)
+            return this.q == DEFAULT_QUALITY_FACTOR;
         }
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 47 * hash + this.q;
-        return hash;
+        int hash = super.hashCode();
+        return (this.q == DEFAULT_QUALITY_FACTOR)? hash : 47 * hash + this.q;
     }
 }
