@@ -58,7 +58,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class UriRoutingContextTest {
@@ -94,14 +93,28 @@ public class UriRoutingContextTest {
 
     @Test
     public void testGetAbsolutePath() throws URISyntaxException {
-        assertEquals(URI.create("http://example.org/app/resource"),
-                createContext("http://example.org/app/resource?foo1=bar1&foo2=bar2", "GET").getAbsolutePath());
+        UriRoutingContext context;
+
+        context = createContext("http://example.org/app/", "http://example.org/app/resource?foo1=bar1&foo2=bar2", "GET");
+        assertEquals(URI.create("http://example.org/app/resource"), context.getAbsolutePath());
+
+        context = createContext("http://example.org/app/", "http://example.org/app/resource%20decoded?foo1=bar1", "GET");
+        assertEquals(URI.create("http://example.org/app/resource%20decoded"), context.getAbsolutePath());
     }
 
     @Test
     public void testGetPath() throws URISyntaxException {
-        assertEquals("/my app/resource",
-                createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET").getAbsolutePath().getPath());
+        UriRoutingContext context;
+
+        context = createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        assertEquals("/my app/resource", context.getPath());
+
+        context = createContext("http://example.org/my%20app", "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        assertEquals("/resource", context.getPath());
+
+        context = createContext("http://example.org/my%20app/",
+                "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        assertEquals("/resource", context.getPath());
     }
 
     @Test
@@ -113,14 +126,15 @@ public class UriRoutingContextTest {
 
     @Test
     public void testGetPathBuilder() throws URISyntaxException {
-        UriRoutingContext ctx = createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        UriRoutingContext ctx = createContext("http://example.org/my%20app/",
+                "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
         assertEquals(URI.create("http://example.org/my%20app/resource"), ctx.getAbsolutePathBuilder().build());
     }
 
     @Test
     public void testGetPathSegments() throws URISyntaxException {
-        List<PathSegment> lps =
-                createContext("http://example.org/app/", "http://example.org/app/my%20resource/my%20subresource", "GET").getPathSegments();
+        List<PathSegment> lps = createContext("http://example.org/app/",
+                "http://example.org/app/my%20resource/my%20subresource", "GET").getPathSegments();
         assertEquals(2, lps.size());
         assertEquals("my resource", lps.get(0).getPath());
         assertEquals("my subresource", lps.get(1).getPath());
@@ -128,8 +142,8 @@ public class UriRoutingContextTest {
 
     @Test
     public void testGetPathSegments2() throws URISyntaxException {
-        List<PathSegment> lps =
-                createContext("http://example.org/app/", "http://example.org/app/my%20resource/my%20subresource", "GET").getPathSegments(false);
+        List<PathSegment> lps = createContext("http://example.org/app/",
+                "http://example.org/app/my%20resource/my%20subresource", "GET").getPathSegments(false);
         assertEquals(2, lps.size());
         assertEquals("my%20resource", lps.get(0).getPath());
         assertEquals("my%20subresource", lps.get(1).getPath());
