@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,6 +50,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 /**
@@ -66,7 +68,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Create new web target instance.
      *
-     * @param uri target URI.
+     * @param uri    target URI.
      * @param parent parent client.
      */
     /*package*/ WebTarget(String uri, JerseyClient parent) {
@@ -76,7 +78,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Create new web target instance.
      *
-     * @param uri target URI.
+     * @param uri    target URI.
      * @param parent parent client.
      */
     /*package*/ WebTarget(URI uri, JerseyClient parent) {
@@ -87,7 +89,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * Create new web target instance.
      *
      * @param uriBuilder builder for the target URI.
-     * @param parent parent client.
+     * @param parent     parent client.
      */
     /*package*/ WebTarget(UriBuilder uriBuilder, JerseyClient parent) {
         this(uriBuilder.clone(), null, parent.configuration().snapshot());
@@ -96,7 +98,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Create new web target instance.
      *
-     * @param link link to the target URI.
+     * @param link   link to the target URI.
      * @param parent parent client.
      */
     /*package*/ WebTarget(Link link, JerseyClient parent) {
@@ -108,7 +110,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * Create new web target instance.
      *
      * @param uriBuilder builder for the target URI.
-     * @param that original target to copy the internal data from.
+     * @param that       original target to copy the internal data from.
      */
     protected WebTarget(UriBuilder uriBuilder, WebTarget that) {
         this(uriBuilder, that.pathParams, that.configuration.snapshot());
@@ -117,8 +119,8 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Create new web target instance.
      *
-     * @param uriBuilder builder for the target URI.
-     * @param pathParams map of path parameter names to values.
+     * @param uriBuilder   builder for the target URI.
+     * @param pathParams   map of path parameter names to values.
      * @param clientConfig target configuration.
      */
     protected WebTarget(UriBuilder uriBuilder, Map<String, Object> pathParams, ClientConfig clientConfig) {
@@ -136,9 +138,9 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Set value of a path parameter.
      *
-     * @param name path parameter name.
+     * @param name  path parameter name.
      * @param value path parameter value. If {@code null}, any existing mapping
-     *     for the path parameter name will be removed.
+     *              for the path parameter name will be removed.
      */
     protected final void setPathParam(String name, Object value) {
         if (value == null) {
@@ -151,19 +153,29 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     /**
      * Replace path parameter values.
      *
-     * @param valueMap path parameter name to value map.
+     * @param valueMap        path parameter name to value map.
+     * @param discardExisting if {@code true}, all existing parameters will be discarded.
      */
-    protected final void replacePathParams(Map<String, Object> valueMap) {
-        pathParams.clear();
-        if (valueMap != null) {
-            pathParams.putAll(valueMap);
+    protected final void replacePathParams(Map<String, Object> valueMap, boolean discardExisting) {
+        if (valueMap == null) {
+            throw new NullPointerException("New parameter value map must not be null.");
+        }
+        if (discardExisting) {
+            pathParams.clear();
+        }
+        for (Entry<String, Object> entry : valueMap.entrySet()) {
+            setPathParam(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
     public URI getUri() {
         configuration.getClient().checkNotClosed();
-        return targetUri.buildFromMap(pathParams);
+        try {
+            return targetUri.buildFromMap(pathParams);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException(ex.getMessage(), ex);
+        }
     }
 
     private void checkNotClosed() {
@@ -189,7 +201,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public WebTarget pathParam(String name, Object value) throws IllegalArgumentException, NullPointerException {
+    public WebTarget pathParam(String name, Object value) throws NullPointerException {
         checkNotClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
         result.setPathParam(name, value);
@@ -197,32 +209,72 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public WebTarget pathParams(Map<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
+    public WebTarget pathParams(Map<String, Object> parameters) throws NullPointerException {
         checkNotClosed();
         WebTarget result = new WebTarget(getUriBuilder(), this);
-        result.replacePathParams(parameters);
+        result.replacePathParams(parameters, false);
         return result;
     }
 
     @Override
     public WebTarget matrixParam(String name, Object... values) throws NullPointerException {
         checkNotClosed();
+        Preconditions.checkNotNull(name, "Matrix parameter name must not be 'null'.");
+
+        if (values == null || values.length == 0 || (values.length == 1 && values[0] == null)) {
+            return new WebTarget(getUriBuilder().replaceMatrixParam(name, (Object[]) null), this);
+        }
+
+        checkForNullValues(name, values);
         return new WebTarget(getUriBuilder().matrixParam(name, values), this);
     }
 
     @Override
     public WebTarget queryParam(String name, Object... values) throws NullPointerException {
         checkNotClosed();
-        return new WebTarget(getUriBuilder().queryParam(name, values), this);
+        return new WebTarget(WebTarget.setQueryParam(getUriBuilder(), name, values), this);
+    }
+
+    private static UriBuilder setQueryParam(UriBuilder uriBuilder, String name, Object[] values) {
+        if (values == null || values.length == 0 || (values.length == 1 && values[0] == null)) {
+            return uriBuilder.replaceQueryParam(name, (Object[]) null);
+        }
+
+        checkForNullValues(name, values);
+        return uriBuilder.queryParam(name, values);
+    }
+
+    private static void checkForNullValues(String name, Object[] values) {
+        List<Integer> indexes = new LinkedList<Integer>();
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == null) {
+                indexes.add(i);
+            }
+        }
+        final int failedIndexCount = indexes.size();
+        if (failedIndexCount > 0) {
+            final String valueTxt;
+            final String indexTxt;
+            if (failedIndexCount == 1) {
+                valueTxt = "value";
+                indexTxt = "index";
+            } else {
+                valueTxt = "values";
+                indexTxt = "indexes";
+            }
+
+            throw new NullPointerException(
+                    String.format("'null' %s detected for parameter '%s' on %s : %s",
+                            valueTxt, name, indexTxt, indexes.toString()));
+        }
     }
 
     @Override
     public WebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
-        // TODO move the implementation to a proprietary Jersey uri builder or leave it here?
         checkNotClosed();
         UriBuilder ub = getUriBuilder(); // clone
         for (Entry<String, List<Object>> e : parameters.entrySet()) {
-            ub.queryParam(e.getKey(), e.getValue().toArray());
+            ub = WebTarget.setQueryParam(ub, e.getKey(), e.getValue().toArray());
         }
 
         return new WebTarget(ub, this);
@@ -230,14 +282,12 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public JerseyInvocation.Builder request() {
-        // TODO values
         checkNotClosed();
         return new JerseyInvocation.Builder(getUri(), configuration.snapshot());
     }
 
     @Override
     public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
-        // TODO values
         checkNotClosed();
         JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
         b.request().accept(acceptedResponseTypes);
@@ -246,7 +296,6 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
 
     @Override
     public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
-        // TODO values
         checkNotClosed();
         JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
         b.request().accept(acceptedResponseTypes);
