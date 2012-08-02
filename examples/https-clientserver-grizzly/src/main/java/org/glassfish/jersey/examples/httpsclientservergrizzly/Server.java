@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
 import java.io.IOException;
@@ -53,7 +52,6 @@ import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 
 /**
- *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class Server {
@@ -68,11 +66,14 @@ public class Server {
     }
 
     private static int getPort(int defaultPort) {
-        String port = System.getProperty("jersey.test.port");
+        final String port = System.getProperty("jersey.config.test.container.port");
         if (null != port) {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
+                System.out.println("Value of jersey.config.test.container.port property" +
+                        " is not a valid positive integer [" + port + "]." +
+                        " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;
@@ -93,7 +94,6 @@ public class Server {
         rc.addClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         try {
-
             webServer = GrizzlyHttpServerFactory.createHttpServer(
                     getBaseURI(),
                     rc,
@@ -114,6 +114,7 @@ public class Server {
         webServer.stop();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void main(String[] args) throws InterruptedException, IOException {
         startServer();
 

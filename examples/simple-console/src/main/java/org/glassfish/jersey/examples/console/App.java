@@ -55,12 +55,14 @@ import org.glassfish.grizzly.http.server.HttpServer;
 public class App {
 
     private static int getPort(int defaultPort) {
-        String port = System.getProperty("jersey.test.port");
+        final String port = System.getProperty("jersey.config.test.container.port");
         if (null != port) {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                // Do nothing.
+                System.out.println("Value of jersey.config.test.container.port property" +
+                        " is not a valid positive integer [" + port + "]." +
+                        " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;
