@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -46,8 +48,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Uri;
 import javax.ws.rs.client.WebTarget;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -109,6 +114,25 @@ public class UriTest extends AbstractTest {
         public String doGet2(@Uri("{param}") WebTarget webTarget2) {
             return webTarget2.getUri().toString();
         }
+    }
+
+    @Path("test")
+    public static class Resource4 {
+
+        @Uri("http://oracle.com") WebTarget webTarget1;
+
+        @GET
+        @Path("1")
+        public String doGet1() {
+            return (String) webTarget1.configuration().getProperties().get("test-property");
+        }
+
+        @GET
+        @Path("2")
+        public String doGet2(@Uri("http://oracle.com") WebTarget webTarget2) {
+            return (String) webTarget2.configuration().getProperties().get("test-property");
+        }
+
     }
 
 
@@ -184,5 +208,43 @@ public class UriTest extends AbstractTest {
         );
 
         assertEquals("/parameter", response.getEntity());
+    }
+
+    @Test
+    public void testConfiguredInjection1() throws ExecutionException, InterruptedException {
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
+        final ClientConfig clientConfig = new ClientConfig();
+        clientConfig.setProperty("test-property", "test-value");
+        Map<String, ClientConfig> clientConfigMap = new HashMap<String, ClientConfig>();
+        clientConfigMap.put("http://oracle.com", clientConfig);
+        resourceConfig.setProperty(ServerProperties.WEBTARGET_CONFIGURATION, clientConfigMap);
+
+        initiateWebApplication(resourceConfig);
+
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/test/1", "GET").
+                        build()
+        );
+
+        assertEquals("test-value", response.getEntity());
+    }
+
+    @Test
+    public void testConfiguredInjection2() throws ExecutionException, InterruptedException {
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
+        final ClientConfig clientConfig = new ClientConfig();
+        clientConfig.setProperty("test-property", "test-value");
+        Map<String, ClientConfig> clientConfigMap = new HashMap<String, ClientConfig>();
+        clientConfigMap.put("http://oracle.com", clientConfig);
+        resourceConfig.setProperty(ServerProperties.WEBTARGET_CONFIGURATION, clientConfigMap);
+
+        initiateWebApplication(resourceConfig);
+
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/test/2", "GET").
+                        build()
+        );
+
+        assertEquals("test-value", response.getEntity());
     }
 }

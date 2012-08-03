@@ -41,14 +41,19 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Uri;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
@@ -63,6 +68,9 @@ import com.google.common.collect.Maps;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<Uri> {
+
+    @Context
+    private ResourceConfig resourceConfig;
 
     /**
      * {@link Uri} injection resolver.
@@ -80,10 +88,13 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<U
     private static final class WebTargetValueFactory extends AbstractHttpContextValueFactory<WebTarget> {
 
         private final String uriValue;
+        private final ClientConfig clientConfig;
 
-        WebTargetValueFactory(String uriValue) {
+        WebTargetValueFactory(String uriValue, ClientConfig clientConfig) {
             this.uriValue = uriValue;
+            this.clientConfig = clientConfig;
         }
+
 
         @Override
         protected WebTarget get(HttpContext context) {
@@ -103,7 +114,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<U
                 uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path(uri.toString()).build();
             }
 
-            return ClientFactory.newClient().target(uri);
+            if(clientConfig == null) {
+                return ClientFactory.newClient().target(uri);
+            } else {
+                return ClientFactory.newClient(clientConfig).target(uri);
+            }
         }
     }
 
@@ -127,7 +142,14 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<U
 
         final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == WebTarget.class) {
-            return new WebTargetValueFactory(parameterName);
+            final Object o = resourceConfig.getProperties().get(ServerProperties.WEBTARGET_CONFIGURATION);
+            ClientConfig clientConfig = null;
+            if(o != null && (o instanceof Map)) {
+                Map<String, ClientConfig> clientConfigMap = (Map<String, ClientConfig>) o;
+                clientConfig = clientConfigMap.get(parameterName);
+            }
+
+            return new WebTargetValueFactory(parameterName, clientConfig);
         }
 
         return null;

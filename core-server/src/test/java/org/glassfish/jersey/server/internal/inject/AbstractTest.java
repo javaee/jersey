@@ -65,6 +65,10 @@ public abstract class AbstractTest {
         app = new ApplicationHandler(new ResourceConfig(classes));
     }
 
+    protected void initiateWebApplication(ResourceConfig resourceConfig) {
+        app = new ApplicationHandler(resourceConfig);
+    }
+
     protected ContainerResponse apply(ContainerRequest request)
             throws ExecutionException, InterruptedException {
 

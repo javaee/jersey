@@ -226,7 +226,7 @@ public class ServerSentEventsTest extends JerseyTest {
             }
         });
 
-        executorService.awaitTermination(5, TimeUnit.SECONDS);
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
         assertEquals(28, doneCount.get());
     }
 }
