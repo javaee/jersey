@@ -48,8 +48,8 @@ import org.eclipse.persistence.oxm.XMLConstants;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@SuppressWarnings("UnusedDeclaration")
-public class MoxyConfiguration {
+@SuppressWarnings("JavaDoc")
+public class MoxyJsonConfiguration {
 
     private String attributePrefix = null;
     private boolean formattedOutput = false;

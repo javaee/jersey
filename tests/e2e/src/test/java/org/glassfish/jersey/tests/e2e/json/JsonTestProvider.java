@@ -54,9 +54,9 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonConfiguration;
 import org.glassfish.jersey.jettison.JettisonFeature;
-import org.glassfish.jersey.moxy.json.MoxyBinder;
-import org.glassfish.jersey.moxy.json.MoxyConfiguration;
-import org.glassfish.jersey.moxy.json.MoxyFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 import org.glassfish.hk2.utilities.Binder;
 
@@ -119,8 +119,8 @@ public abstract class JsonTestProvider {
     public static class MoxyJsonTestProvider extends JsonTestProvider {
 
         public MoxyJsonTestProvider() {
-            setBinder(new MoxyBinder());
-            setFeature(new MoxyFeature());
+            setBinder(new MoxyJsonBinder());
+            setFeature(new MoxyJsonFeature());
             getProviders().add(new MoxyJsonConfigurationContextResolver());
         }
 
@@ -160,11 +160,11 @@ public abstract class JsonTestProvider {
     }
 
     @Provider
-    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyConfiguration> {
+    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
 
         @Override
-        public MoxyConfiguration getContext(Class<?> objectType) {
-            final MoxyConfiguration configuration = new MoxyConfiguration();
+        public MoxyJsonConfiguration getContext(Class<?> objectType) {
+            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
 
             Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");

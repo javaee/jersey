@@ -50,8 +50,8 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.moxy.json.MoxyBinder;
-import org.glassfish.jersey.moxy.json.MoxyConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -82,16 +82,16 @@ public class App {
     public static ResourceConfig createApp() {
         return new ResourceConfig().
                 packages("org.glassfish.jersey.examples.jsonmoxy").
-                addBinders(new MoxyBinder()).
+                addBinders(new MoxyJsonBinder()).
                 addSingletons(new JsonMoxyConfigurationContextResolver());
     }
 
     @Provider
-    final static class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyConfiguration> {
+    final static class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
 
         @Override
-        public MoxyConfiguration getContext(Class<?> objectType) {
-            final MoxyConfiguration configuration = new MoxyConfiguration();
+        public MoxyJsonConfiguration getContext(Class<?> objectType) {
+            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
 
             Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");

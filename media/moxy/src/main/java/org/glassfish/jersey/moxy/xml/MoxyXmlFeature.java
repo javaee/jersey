@@ -45,12 +45,10 @@ import java.util.Map;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 
-import org.glassfish.jersey.moxy.xml.internal.MoxyContextResolver;
-
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class MoxyFeature implements Feature {
+public class MoxyXmlFeature implements Feature {
 
     private final Map properties;
     private final ClassLoader classLoader;
@@ -61,19 +59,21 @@ public class MoxyFeature implements Feature {
      * Default constructor creates standard {@link org.eclipse.persistence.jaxb.JAXBContext} without any activated features
      * and properties. Current context {@link ClassLoader} will be used.
      */
-    public MoxyFeature() {
+    public MoxyXmlFeature() {
         this(Collections.EMPTY_MAP, Thread.currentThread().getContextClassLoader(), false);
     }
 
     /**
      * Constructor which allows MOXy {@link org.eclipse.persistence.jaxb.JAXBContext} customization.
      *
-     * @param properties properties to be passed to {@link org.eclipse.persistence.jaxb.JAXBContextFactory#createContext(Class[], java.util.Map, ClassLoader)}. Can be {@code null}.
-     * @param classLoader will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
+     * @param properties       properties to be passed to
+     *                         {@link org.eclipse.persistence.jaxb.JAXBContextFactory#createContext(Class[], java.util.Map,
+     *                         ClassLoader)}. May be {@code null}.
+     * @param classLoader      will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
      * @param oxmMappingLookup if {@code true}, lookup for file with custom mappings will be performed.
-     * @param classes additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
+     * @param classes          additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
      */
-    public MoxyFeature(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
+    public MoxyXmlFeature(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
         this.properties = (properties == null ? Collections.EMPTY_MAP : properties);
         this.classLoader = (classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
         this.oxmMappingLookup = oxmMappingLookup;

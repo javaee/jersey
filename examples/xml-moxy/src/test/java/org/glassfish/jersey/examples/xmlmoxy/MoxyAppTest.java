@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.examples.xmlmoxy.beans.Customer;
-import org.glassfish.jersey.moxy.xml.MoxyFeature;
+import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -70,7 +70,7 @@ public class MoxyAppTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(new MoxyFeature());
+        clientConfig.register(new MoxyXmlFeature());
     }
 
     /**

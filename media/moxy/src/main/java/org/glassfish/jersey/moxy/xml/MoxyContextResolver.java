@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.moxy.xml.internal;
+package org.glassfish.jersey.moxy.xml;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -57,16 +57,16 @@ import org.eclipse.persistence.jaxb.JAXBContextProperties;
 /**
  * {@link ContextResolver} implementation which creates MOXy {@link JAXBContext}.
  *
- * TODO: deal with classes NOT annot ated with @XmlRootElement/@XmlType
+ * TODO: deal with classes NOT annotated with @XmlRootElement/@XmlType
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class MoxyContextResolver implements ContextResolver<JAXBContext> {
+class MoxyContextResolver implements ContextResolver<JAXBContext> {
 
     private final static String MOXY_OXM_MAPPING_FILE_NAME = "eclipselink-oxm.xml";
 
     private final boolean oxmMappingLookup;
-    private final Map properties;
+    private final Map<String, Object> properties;
     private final ClassLoader classLoader;
     private final Class[] classes;
 
@@ -76,19 +76,24 @@ public class MoxyContextResolver implements ContextResolver<JAXBContext> {
      * and properties. Current context {@link ClassLoader} will be used.
      */
     public MoxyContextResolver() {
-        this(Collections.EMPTY_MAP, Thread.currentThread().getContextClassLoader(), false);
+        this(Collections.<String, Object>emptyMap(), Thread.currentThread().getContextClassLoader(), false);
     }
 
     /**
      * Constructor which allows MOXy {@link JAXBContext} customization.
      *
-     * @param properties properties to be passed to {@link JAXBContextFactory#createContext(Class[], java.util.Map, ClassLoader)}. Can be {@code null}.
-     * @param classLoader will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
+     * @param properties       properties to be passed to
+     *                         {@link JAXBContextFactory#createContext(Class[], java.util.Map, ClassLoader)}. May be {@code null}.
+     * @param classLoader      will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
      * @param oxmMappingLookup if {@code true}, lookup for file with custom mappings will be performed.
-     * @param classes additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
+     * @param classes          additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
      */
-    public MoxyContextResolver(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
-        this.properties = (properties == null ? Collections.EMPTY_MAP : properties);
+    public MoxyContextResolver(
+            Map<String, Object> properties,
+            ClassLoader classLoader,
+            boolean oxmMappingLookup,
+            Class... classes) {
+        this.properties = properties == null ? Collections.<String, Object>emptyMap() : properties;
         this.classLoader = (classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
         this.oxmMappingLookup = oxmMappingLookup;
         this.classes = classes;
@@ -96,12 +101,12 @@ public class MoxyContextResolver implements ContextResolver<JAXBContext> {
 
     @Override
     public JAXBContext getContext(Class<?> type) {
-        Map propertiesCopy = new HashMap(properties);
+        Map<String, Object> propertiesCopy = new HashMap<String, Object>(properties);
 
-        if(oxmMappingLookup) {
-            final InputStream eclipselinkOxm = type.getResourceAsStream(MOXY_OXM_MAPPING_FILE_NAME);
-            if(eclipselinkOxm != null && !propertiesCopy.containsKey(JAXBContextProperties.OXM_METADATA_SOURCE)) {
-                propertiesCopy.put(JAXBContextProperties.OXM_METADATA_SOURCE, eclipselinkOxm);
+        if (oxmMappingLookup) {
+            final InputStream eclipseLinkOxm = type.getResourceAsStream(MOXY_OXM_MAPPING_FILE_NAME);
+            if (eclipseLinkOxm != null && !propertiesCopy.containsKey(JAXBContextProperties.OXM_METADATA_SOURCE)) {
+                propertiesCopy.put(JAXBContextProperties.OXM_METADATA_SOURCE, eclipseLinkOxm);
             }
         }
 

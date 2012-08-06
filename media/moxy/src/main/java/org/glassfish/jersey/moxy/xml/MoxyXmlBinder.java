@@ -45,16 +45,15 @@ import java.util.Map;
 import javax.ws.rs.ext.ContextResolver;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.moxy.xml.internal.MoxyContextResolver;
 
 /**
  * Moxy XML injection binder.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class MoxyBinder extends AbstractBinder {
+public class MoxyXmlBinder extends AbstractBinder {
 
-    private final Map properties;
+    private final Map<String, Object> properties;
     private final ClassLoader classLoader;
     private final boolean oxmMappingLookup;
     private final Class[] classes;
@@ -63,20 +62,22 @@ public class MoxyBinder extends AbstractBinder {
      * Default constructor creates standard {@link org.eclipse.persistence.jaxb.JAXBContext} without any activated features
      * and properties. Current context {@link ClassLoader} will be used.
      */
-    public MoxyBinder() {
-        this(Collections.EMPTY_MAP, Thread.currentThread().getContextClassLoader(), false);
+    public MoxyXmlBinder() {
+        this(Collections.<String, Object>emptyMap(), Thread.currentThread().getContextClassLoader(), false);
     }
 
     /**
      * Constructor which allows MOXy {@link org.eclipse.persistence.jaxb.JAXBContext} customization.
      *
-     * @param properties properties to be passed to {@link org.eclipse.persistence.jaxb.JAXBContextFactory#createContext(Class[], java.util.Map, ClassLoader)}. Can be {@code null}.
-     * @param classLoader will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
+     * @param properties       properties to be passed to
+     *                         {@link org.eclipse.persistence.jaxb.JAXBContextFactory#createContext(Class[],
+     *                         java.util.Map, ClassLoader)}. May be {@code null}.
+     * @param classLoader      will be used to load classes. If {@code null}, current context {@link ClassLoader} will be used.
      * @param oxmMappingLookup if {@code true}, lookup for file with custom mappings will be performed.
-     * @param classes additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
+     * @param classes          additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
      */
-    public MoxyBinder(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
-        this.properties = (properties == null ? Collections.EMPTY_MAP : properties);
+    public MoxyXmlBinder(Map<String, Object> properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
+        this.properties = properties == null ? Collections.<String, Object>emptyMap() : properties;
         this.classLoader = (classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
         this.oxmMappingLookup = oxmMappingLookup;
         this.classes = classes;

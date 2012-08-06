@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.moxy.json.internal;
+package org.glassfish.jersey.moxy.json;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -48,15 +48,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
-
-import org.glassfish.jersey.moxy.json.MoxyConfiguration;
 
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.eclipse.persistence.jaxb.UnmarshallerProperties;
@@ -65,7 +62,7 @@ import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
  * <p/>
- * Note: Preconfigured default values
+ * Note: Pre-configured default values
  * <ul>
  *     <li>Attribute prefix - {@code @}</li>
  *     <li>Value wrapper - {@code $}</li>
@@ -74,26 +71,28 @@ import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Provider
 @Produces("*/*")
 @Consumes("*/*")
-public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
+class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
 
     @Context
-    protected Providers providers;
+    private Providers providers;
 
-    public ConfigurableMoxyJsonProvider() {
+    /**
+     * Create new configurable moxy JSON provider instance.
+     */
+    ConfigurableMoxyJsonProvider() {
         setAttributePrefix("@");
         setValueWrapper("$");
         setNamespaceSeparator(':');
     }
 
     private void initializeProperties() {
-        final ContextResolver<MoxyConfiguration> contextResolver =
-                providers.getContextResolver(MoxyConfiguration.class, MediaType.APPLICATION_JSON_TYPE);
+        final ContextResolver<MoxyJsonConfiguration> contextResolver =
+                providers.getContextResolver(MoxyJsonConfiguration.class, MediaType.APPLICATION_JSON_TYPE);
 
         if (contextResolver != null) {
-            final MoxyConfiguration jsonConfiguration = contextResolver.getContext(MoxyConfiguration.class);
+            final MoxyJsonConfiguration jsonConfiguration = contextResolver.getContext(MoxyJsonConfiguration.class);
 
             if (jsonConfiguration.getAttributePrefix() != null) {
                 setAttributePrefix(jsonConfiguration.getAttributePrefix());

@@ -42,14 +42,12 @@ package org.glassfish.jersey.moxy.json;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 
-import org.glassfish.jersey.moxy.json.internal.ConfigurableMoxyJsonProvider;
-
 /**
  * Feature used to register MOXy JSON providers with Client.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class MoxyFeature implements Feature {
+public class MoxyJsonFeature implements Feature {
 
     @Override
     public boolean onEnable(Configuration c) {
