@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -86,23 +87,20 @@ public final class Tokenizer {
      *         not contain any empty or {@code null} entries.
      */
     public static String[] tokenize(String[] entries, String delimiters) {
-        List<String> es = new LinkedList<String>();
-        for (String element : entries) {
-            if (element == null) {
+        final List<String> tokens = new LinkedList<String>();
+
+        for (String entry : entries) {
+            if (entry == null || entry.isEmpty()) {
                 continue;
             }
-            element = element.trim();
-            if (element.length() == 0) {
+            entry = entry.trim();
+            if (entry.isEmpty()) {
                 continue;
             }
-            for (String subElement : tokenize(element, delimiters)) {
-                if (subElement == null || subElement.length() == 0) {
-                    continue;
-                }
-                es.add(subElement);
-            }
+            tokenize(entry, delimiters, tokens);
         }
-        return es.toArray(new String[es.size()]);
+
+        return tokens.toArray(new String[tokens.size()]);
     }
 
     /**
@@ -131,16 +129,31 @@ public final class Tokenizer {
      *         not contain any empty or {@code null} entries.
      */
     public static String[] tokenize(String entry, String delimiters) {
+        final Collection<String> tokens = tokenize(entry, delimiters, new LinkedList<String>());
+        return tokens.toArray(new String[tokens.size()]);
+    }
+
+    private static Collection<String> tokenize(String entry, String delimiters, Collection<String> tokens) {
         String regex = "[";
         for (char c : delimiters.toCharArray()) {
             regex += Pattern.quote(String.valueOf(c));
         }
         regex += "]";
 
-        String[] es = entry.split(regex);
-        for (int i = 0; i < es.length; i++) {
-            es[i] = es[i].trim();
+        String[] tokenArray = entry.split(regex);
+        for (String token : tokenArray) {
+            if (token == null || token.isEmpty()) {
+                continue;
+            }
+
+            token = token.trim();
+            if (token.isEmpty()) {
+                continue;
+            }
+
+            tokens.add(token);
         }
-        return es;
+
+        return tokens;
     }
 }
