@@ -73,8 +73,6 @@ import org.glassfish.jersey.server.JSONP;
 @BindingPriority(BindingPriority.HEADER_DECORATOR)
 public class JsonWithPaddingInterceptor implements WriterInterceptor {
 
-    private static final String DEFAULT_CALLBACK_NAME = "callback";
-
     private final Map<String, Set<String>> javascriptTypes;
     private Provider<ContainerRequest> containerRequestProvider;
 
@@ -125,24 +123,24 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
 
     /**
      * Returns a JavaScript callback name to wrap the JSON result into. The callback name is determined either from the {@link
-     * JSONP} annotation or is set to the {@value JsonWithPaddingInterceptor#DEFAULT_CALLBACK_NAME} if the name cannot be
-     * obtained from the {@link JSONP} annotation.
+     * JSONP} annotation or is set to the {@value JSONP#DEFAULT_CALLBACK} if the name cannot be obtained from the {@link
+     * JSONP} annotation.
      *
      * @param context context to determine the callback name from.
      * @return a JavaScript callback name.
      */
     private String getCallbackName(final InterceptorContext context) {
-        String callback = DEFAULT_CALLBACK_NAME;
+        String callback = JSONP.DEFAULT_CALLBACK;
 
         JSONP jsonp = getJsonpAnnotation(context);
         if (jsonp != null) {
             callback = jsonp.callback();
 
-            if (jsonp.isQueryParam()) {
+            if (!"".equals(jsonp.queryParam())) {
                 final ContainerRequest containerRequest = containerRequestProvider.get();
                 final UriInfo uriInfo = containerRequest.getUriInfo();
                 final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-                final List<String> queryParameter = queryParameters.get(callback);
+                final List<String> queryParameter = queryParameters.get(jsonp.queryParam());
 
                 callback = (queryParameter != null && !queryParameter.isEmpty()) ? queryParameter.get(0) : callback;
             }

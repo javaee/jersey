@@ -67,8 +67,8 @@ public class ChangeList {
     }
 
     @GET
-    @JSONP(callback = "callback", isQueryParam = true)
-    public List<ChangeRecordBean> getChanges(@QueryParam("callback") String callback, @QueryParam("type") int type) {
+    @JSONP(queryParam = JSONP.DEFAULT_QUERY)
+    public List<ChangeRecordBean> getChanges(@QueryParam(JSONP.DEFAULT_QUERY) String callback, @QueryParam("type") int type) {
         return changes;
     }
 

@@ -55,7 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Jakub Podlesak
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class JsonpTest extends JerseyTest {
 
@@ -125,7 +125,7 @@ public class JsonpTest extends JerseyTest {
     @Test
     public void testGetOnLatestChangeJavascriptFormatDifferentCallback() {
         WebTarget target = target();
-        String js = target.path("changes").queryParam("callback", "parse").request("application/x-javascript").get(String.class);
+        String js = target.path("changes").queryParam("__callback", "parse").request("application/x-javascript").get(String.class);
         assertTrue(js.startsWith("parse"));
     }
 }

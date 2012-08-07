@@ -60,6 +60,9 @@ import java.lang.annotation.Target;
  * <li>text/ecmascript</li>
  * <li>text/jscript</li>
  * </ul>
+ * <p/>
+ * Note: Determining the JavaScript callback function name from a query parameter ({@link #queryParam}) takes precedence over
+ * the {@link #callback()} value.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -69,15 +72,24 @@ import java.lang.annotation.Target;
 public @interface JSONP {
 
     /**
-     * Name of the JavaScript callback function to which the JSON result should be wrapped into. If the {@code #isQueryParam}
-     * value is {@code true} then the actual callback function name is determined from the query parameter name (defined by the
-     * value of this property), otherwise the value of this property is used as the JavaScript callback function name.
+     * Default JavaScript callback function name.
      */
-    String callback() default "callback";
+    public static final String DEFAULT_CALLBACK = "callback";
 
     /**
-     * A flag to determine whether the {@code #callback} should be treated as a query parameter name (present in {@link java
-     * .net.URI}).
+     * Default query parameter name to obtain the JavaScript callback function name from.
      */
-    boolean isQueryParam() default false;
+    public static final String DEFAULT_QUERY = "__callback";
+
+    /**
+     * Name of the JavaScript callback function to which the JSON result should be wrapped into.
+     */
+    String callback() default DEFAULT_CALLBACK;
+
+    /**
+     * If set then the JavaScript callback function name is obtained from a query parameter with the given name. If this query
+     * parameter is not present in the request then the value of {@link #callback()} property is used as the JavaScript callback
+     * function name.
+     */
+    String queryParam() default "";
 }

@@ -115,16 +115,16 @@ public class JsonWithPaddingTest extends JerseyTest {
         }
 
         @GET
-        @JSONP(isQueryParam = true)
-        @Path("JsonWithPaddingQueryParamTrue")
-        public JsonBean getJsonWithPaddingQueryParamTrue() {
+        @JSONP(queryParam = "eval")
+        @Path("JsonWithPaddingQueryCallbackParam")
+        public JsonBean getJsonWithPaddingQueryCallbackParam() {
             return JsonBean.createTestInstance();
         }
 
         @GET
-        @JSONP(callback = "eval", isQueryParam = true)
-        @Path("JsonWithPaddingCallbackQueryParamTrue")
-        public JsonBean getJsonWithPaddingCallbackQueryParamTrue() {
+        @JSONP(callback = "parse", queryParam = "eval")
+        @Path("JsonWithPaddingCallbackAndQueryCallbackParam")
+        public JsonBean getJsonWithPaddingCallbackAndQueryCallbackParam() {
             return JsonBean.createTestInstance();
         }
 
@@ -198,23 +198,43 @@ public class JsonWithPaddingTest extends JerseyTest {
     }
 
     @Test
-    public void testJsonWithPaddingQueryParamTrue() throws Exception {
-        test("JsonWithPaddingQueryParamTrue", "callback", "parse");
+    public void testJsonWithPaddingQueryCallbackParam() throws Exception {
+        test("JsonWithPaddingQueryCallbackParam", "eval", "parse");
     }
 
     @Test
-    public void testJsonWithPaddingQueryParamTrueNegative() throws Exception {
-        test("JsonWithPaddingQueryParamTrue", "call", "parse", true);
+    public void testJsonWithPaddingQueryCallbackParamDefaultQueryParam() throws Exception {
+        test("JsonWithPaddingQueryCallbackParam", "callback", "parse", "callback");
     }
 
     @Test
-    public void testJsonWithPaddingCallbackQueryParamTrue() throws Exception {
-        test("JsonWithPaddingCallbackQueryParamTrue", "eval", "parse");
+    public void testJsonWithPaddingQueryCallbackParamDefaultCallback() throws Exception {
+        test("JsonWithPaddingQueryCallbackParam", null, "callback");
     }
 
     @Test
-    public void testJsonWithPaddingCallbackQueryParamTrueNegative() throws Exception {
-        test("JsonWithPaddingCallbackQueryParamTrue", "call", "parse", true);
+    public void testJsonWithPaddingQueryCallbackParamNegative() throws Exception {
+        test("JsonWithPaddingQueryCallbackParam", "call", "parse", true);
+    }
+
+    @Test
+    public void testJsonWithPaddingCallbackAndQueryCallbackParam() throws Exception {
+        test("JsonWithPaddingCallbackAndQueryCallbackParam", "eval", "run");
+    }
+
+    @Test
+    public void testJsonWithPaddingCallbackAndQueryCallbackParamNegative() throws Exception {
+        test("JsonWithPaddingCallbackAndQueryCallbackParam", "eval", "run", "parse", true);
+    }
+
+    @Test
+    public void testJsonWithPaddingCallbackAndQueryCallbackParamDefault() throws Exception {
+        test("JsonWithPaddingCallbackAndQueryCallbackParam", "evalx", "parse");
+    }
+
+    @Test
+    public void testJsonWithPaddingCallbackAndQueryCallbackParamDefaultNegative() throws Exception {
+        test("JsonWithPaddingCallbackAndQueryCallbackParam", "evalx", "xlave", "eval", true);
     }
 
     @Test
@@ -228,17 +248,26 @@ public class JsonWithPaddingTest extends JerseyTest {
     }
 
     private void test(final String path, final String callback) {
-        test(path, null, callback, false);
+        test(path, null, null, callback);
     }
 
-    private void test(final String path, final String callbackParam, final String callback) {
-        test(path, callbackParam, callback, false);
+    private void test(final String path, final String queryParamName, final String callback) {
+        test(path, queryParamName, callback, callback, false);
     }
 
-    private void test(final String path, final String callbackParam, final String callback, final boolean isNegative) {
+    private void test(final String path, final String queryParamName, final String callback, final boolean isNegative) {
+        test(path, queryParamName, callback, callback, isNegative);
+    }
+
+    private void test(final String path, final String queryParamName, final String queryParamValue, final String callback) {
+        test(path, queryParamName, queryParamValue, callback, false);
+    }
+
+    private void test(final String path, final String queryParamName, final String queryParamValue, final String callback,
+                      final boolean isNegative) {
         final MultivaluedMap<String, Object> params = new MultivaluedHashMap<String, Object>() {{
-            if (callbackParam != null) {
-                add(callbackParam, callback);
+            if (queryParamName != null) {
+                add(queryParamName, queryParamValue);
             }
         }};
 
