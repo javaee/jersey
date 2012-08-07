@@ -1,0 +1,1 @@
+{"animalList":{"animals":[{"@xmlns":{"xsi":"http:\/\/www.w3.org\/2001\/XMLSchema-instance"},"@xsi:type":"dog","name":{"$":"Fifi"}},{"@xmlns":{"xsi":"http:\/\/www.w3.org\/2001\/XMLSchema-instance"},"@xsi:type":"cat","name":{"$":"Daisy"}}]}}
