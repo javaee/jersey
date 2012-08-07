@@ -44,11 +44,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import javax.inject.Singleton;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.inject.Singleton;
 
 /**
  *
@@ -57,7 +59,7 @@ import javax.ws.rs.core.MultivaluedMap;
 @Produces({"text/plain", "*/*"})
 @Consumes({"text/plain", "*/*"})
 @Singleton
-public final class StringMessageProvider extends AbstractMessageReaderWriterProvider<String> {
+final class StringMessageProvider extends AbstractMessageReaderWriterProvider<String> {
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {

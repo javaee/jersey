@@ -39,17 +39,19 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.lang.annotation.Annotation;
+import java.lang.annotation.*;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Request;
+import javax.ws.rs.*;
+import javax.ws.rs.container.*;
+import javax.ws.rs.core.*;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.model.Parameter;
+import javax.inject.*;
+
+import org.glassfish.jersey.server.*;
+import org.glassfish.jersey.server.internal.*;
+import org.glassfish.jersey.server.model.*;
+
+import org.glassfish.hk2.api.*;
 
 /**
  * Provides injection of {@link Request} entity value or {@link Request} instance
@@ -83,11 +85,20 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annot
             final ContainerRequest requestContext = context.getRequestContext();
 
             final Class<?> rawType = parameter.getRawType();
-            return (Request.class.isAssignableFrom(rawType)
-                    || ContainerRequestContext.class.isAssignableFrom(rawType)) &&
-                    rawType.isInstance(requestContext)
-                    ? requestContext
-                    : requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
+
+            Object value;
+            if ((Request.class.isAssignableFrom(rawType) || ContainerRequestContext.class.isAssignableFrom(rawType))
+                    && rawType.isInstance(requestContext)) {
+                value = requestContext;
+            } else {
+                value = requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
+                if (rawType.isPrimitive() && value == null) {
+                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(LocalizationMessages
+                            .ERROR_PRIMITIVE_TYPE_NULL()).build());
+                }
+            }
+            return value;
+
         }
     }
 

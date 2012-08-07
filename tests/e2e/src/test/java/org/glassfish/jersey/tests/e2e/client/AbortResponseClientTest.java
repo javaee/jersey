@@ -111,6 +111,7 @@ public class AbortResponseClientTest extends JerseyTest {
                 Assert.assertEquals("cookie2", map.get("cookie2").getValue());
                 final MultivaluedMap<String, String> headers = responseContext.getHeaders();
                 Assert.assertEquals("head1", headers.get("head1").get(0));
+                Assert.assertEquals(date.getTime(), responseContext.getDate().getTime());
             }
         };
 
@@ -129,6 +130,7 @@ public class AbortResponseClientTest extends JerseyTest {
 //        Assert.assertEquals("uri", r.getLink("link")); TODO: not supported yet
         Assert.assertEquals("www.oracle.com", r.getLocation().toString());
         Assert.assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
+        Assert.assertEquals(99, r.getLength());
 
         Assert.assertEquals(200, r.getStatus());
     }

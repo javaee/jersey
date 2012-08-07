@@ -44,17 +44,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
@@ -73,6 +73,9 @@ import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
+
 /**
  * Value factory provider supporting the {@link FormDataParam} injection annotation.
  *
@@ -89,9 +92,14 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
     }
 
-    @Singleton
-    public static final class InjectionResolver extends ParamInjectionResolver<FormDataParam> {
+    /**
+     * {@link FormDataParam} injection resolver.
+     */
+    static final class InjectionResolver extends ParamInjectionResolver<FormDataParam> {
 
+        /**
+         * Create new {@link FormDataParam} injection resolver.
+         */
         public InjectionResolver() {
             super(FormDataParamValueFactoryProvider.class);
         }
@@ -204,7 +212,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                     parameter.getAnnotations(),
                     mediaType);
 
-            if (reader != null) {
+            if (reader != null && !isPrimitiveType(parameter.getRawType())) {
                 InputStream in = null;
                 if (formDataBodyPart == null) {
                     if (parameter.getDefaultValue() != null) {
@@ -262,6 +270,33 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             }
         }
 
+    }
+
+    private static final Set<Class<?>> types = initializeTypes();
+
+    private static Set<Class<?>> initializeTypes() {
+        Set<Class<?>> newSet = new HashSet<Class<?>>();
+        newSet.add(Byte.class);
+        newSet.add(byte.class);
+        newSet.add(Short.class);
+        newSet.add(short.class);
+        newSet.add(Integer.class);
+        newSet.add(int.class);
+        newSet.add(Long.class);
+        newSet.add(long.class);
+        newSet.add(Float.class);
+        newSet.add(float.class);
+        newSet.add(Double.class);
+        newSet.add(double.class);
+        newSet.add(Boolean.class);
+        newSet.add(boolean.class);
+        newSet.add(Character.class);
+        newSet.add(char.class);
+        return newSet;
+    }
+
+    private static boolean isPrimitiveType(Class<?> type) {
+        return types.contains(type);
     }
 
     private final class FormDataMultiPartValueFactory extends AbstractHttpContextValueFactory<Object> {

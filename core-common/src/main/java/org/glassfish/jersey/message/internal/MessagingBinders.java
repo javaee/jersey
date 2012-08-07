@@ -78,6 +78,7 @@ public class MessagingBinders {
             bindSingletonWorker(FormMultivaluedMapProvider.class);
             bindSingletonWorker(FormProvider.class);
             bindSingletonWorker(InputStreamProvider.class);
+            bindSingletonWorker(PrimitiveTypesMessageProvider.class);
             bindSingletonWorker(ReaderProvider.class);
             bindSingletonWorker(RenderedImageProvider.class);
             bindSingletonWorker(StringMessageProvider.class);

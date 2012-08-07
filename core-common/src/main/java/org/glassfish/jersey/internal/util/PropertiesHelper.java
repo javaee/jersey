@@ -45,7 +45,7 @@ import java.util.Map;
 
 /**
  * Helper class containing convenience methods for reading
- * {@link org.glassfish.jersey.server.ResourceConfig} and {@link javax.ws.rs.client.Configuration} properties.
+ * {@code org.glassfish.jersey.server.ResourceConfig} and {@link javax.ws.rs.client.Configuration} properties.
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
