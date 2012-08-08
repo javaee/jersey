@@ -541,10 +541,7 @@ public class UriBuilderImpl extends UriBuilder {
                     throw new IllegalArgumentException("One or more of query value parameters are null");
                 }
 
-                final String stringValue = value.toString();
-                if (stringValue.length() > 0) {
-                    query.append('=').append(encode(stringValue, UriComponent.Type.QUERY_PARAM));
-                }
+                query.append('=').append(encode(value.toString(), UriComponent.Type.QUERY_PARAM));
             }
         } else {
             for (Object value : values) {
@@ -669,11 +666,7 @@ public class UriBuilderImpl extends UriBuilder {
                 if (query.length() > 0) {
                     query.append('&');
                 }
-                query.append(name);
-
-                if (value.length() > 0) {
-                    query.append('=').append(value);
-                }
+                query.append(name).append('=').append(value);
             }
         }
         queryParams = null;
