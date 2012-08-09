@@ -39,32 +39,19 @@
  */
 package org.glassfish.jersey.server.model;
 
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.Uri;
-import javax.ws.rs.core.Context;
-
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 
 /**
  * Method parameter model.
@@ -278,9 +265,12 @@ public class Parameter implements AnnotatedElement {
             } else if (DefaultValue.class == annotation.annotationType()) {
                 paramDefault = ((DefaultValue) annotation).value();
             } else {
-                paramAnnotation = annotation;
-                paramSource = Source.UNKNOWN;
-                paramName = getValue(annotation);
+                // lets only clear things down if we've not found a ANOT_HELPER_MAP annotation already
+                if (paramAnnotation == null) {
+                    paramAnnotation = annotation;
+                    paramSource = Source.UNKNOWN;
+                    paramName = getValue(annotation);
+                }
             }
         }
 
