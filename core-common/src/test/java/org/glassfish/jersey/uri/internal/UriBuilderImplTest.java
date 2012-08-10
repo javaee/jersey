@@ -200,6 +200,13 @@ public class UriBuilderImplTest {
         assertEquals("http://localhost/?foo=test", uri.toString());
     }
 
+    // regression test for JERSEY-1341
+    @Test
+    public void testEmptyQueryParamValue() {
+        URI uri = new UriBuilderImpl().path("http://localhost/").queryParam("test", "").build();
+        assertEquals("http://localhost/?test=", uri.toString());
+    }
+
     @Test
     public void testUriBuilderTemplatesSimple() {
         testUri("a:/path");
