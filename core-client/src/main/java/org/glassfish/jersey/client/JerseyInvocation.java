@@ -646,7 +646,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
-        final Type callbackType = ReflectionHelper.getTypeArgument(callback.getClass(), 0);
+        Type invocationCallbackType = null;
+        for (Type interfaceType : callback.getClass().getGenericInterfaces()) {
+            if (InvocationCallback.class.isAssignableFrom(ReflectionHelper.erasure(interfaceType))) {
+                invocationCallbackType = interfaceType;
+                break;
+            }
+        }
+        final Type callbackType = ReflectionHelper.getTypeArgument(invocationCallbackType, 0);
         final Class<T> rawType = ReflectionHelper.erasure(callbackType);
 
         configuration().submit(requestContext, new InvocationCallback<Response>() {
