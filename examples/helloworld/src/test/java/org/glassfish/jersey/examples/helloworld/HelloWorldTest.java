@@ -41,10 +41,15 @@ package org.glassfish.jersey.examples.helloworld;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -67,9 +72,15 @@ public class HelloWorldTest extends JerseyTest {
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
         // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
         enable(TestProperties.LOG_TRAFFIC);
-//        register(TestProperties.DUMP_ENTITY);
+        // enable(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(HelloWorldResource.class);
     }
+
+//    Uncomment to use Grizzly async client
+//    @Override
+//    protected void configureClient(ClientConfig clientConfig) {
+//        clientConfig.connector(new GrizzlyConnector(clientConfig));
+//    }
 
     @Test
     @Ignore("not compatible with test framework (doesn't use client())")
@@ -97,6 +108,36 @@ public class HelloWorldTest extends JerseyTest {
     public void testClientStringResponse() {
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
+    }
+
+    @Test
+    public void testAsyncClientRequests() throws InterruptedException {
+        final int REQUESTS = 10;
+        final CountDownLatch latch = new CountDownLatch(REQUESTS);
+        final long tic = System.currentTimeMillis();
+        for (int i = 0; i < REQUESTS; i++) {
+            final int id = i;
+            target().path(App.ROOT_PATH).request().async().get(new InvocationCallback<Response>() {
+                @Override
+                public void completed(Response response) {
+                    try {
+                        final String result = response.readEntity(String.class);
+                        assertEquals(HelloWorldResource.CLICHED_MESSAGE, result);
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+
+                @Override
+                public void failed(InvocationException error) {
+                    error.printStackTrace();
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await(10, TimeUnit.SECONDS);
+        final long toc = System.currentTimeMillis();
+        Logger.getLogger(HelloWorldTest.class.getName()).info("Executed in: " + (toc - tic));
     }
 
     @Test
