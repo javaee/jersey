@@ -76,6 +76,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.glassfish.jersey.server.*;version=${project.version}</Export-Package>
+                        <Import-Package>javax.annotation.*;resolution:=optional;version="${range;[==,+);${javax.annotation.version}}", *</Import-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
