@@ -114,11 +114,23 @@ public abstract class AbstractJsonTest extends JerseyTest {
                         // Check if the JSON is the same as in the previous version.
                         containerRequest.bufferEntity();
                         try {
-                            final String json = JsonTestHelper.getResourceAsString(PKG_NAME,
-                                    providerName + "_" + testName + ".json");
+                            String json = JsonTestHelper.getResourceAsString(PKG_NAME,
+                                    providerName + "_" + testName + (isMoxyJaxbProvider() || isRunningOnJdk7() ? "_MOXy" : "") + ".json");
+
                             final InputStream entityStream = containerRequest.getEntityStream();
-                            final String retrievedJson = JsonTestHelper.getEntityAsString(entityStream);
+                            String retrievedJson = JsonTestHelper.getEntityAsString(entityStream);
                             entityStream.reset();
+
+                            // JAXB-RI and MOXy generate namespace prefixes differently - unify them (ns1/ns2 into ns0)
+                            if (jsonTestSetup.getJsonProvider() instanceof JsonTestProvider.JettisonBadgerfishJsonTestProvider) {
+                                if (retrievedJson.contains("\"ns1\"")) {
+                                    json = json.replace("ns1", "ns0");
+                                    retrievedJson = retrievedJson.replace("ns1", "ns0");
+                                } else if (retrievedJson.contains("\"ns2\"")) {
+                                    json = json.replace("ns2", "ns0");
+                                    retrievedJson = retrievedJson.replace("ns2", "ns0");
+                                }
+                            }
 
                             assertEquals(json, retrievedJson);
                         } catch (IOException e) {
@@ -140,6 +152,14 @@ public abstract class AbstractJsonTest extends JerseyTest {
         }
 
         return resourceConfig;
+    }
+
+    private static boolean isRunningOnJdk7() {
+        return System.getProperty("java.version").startsWith("1.7");
+    }
+
+    private static boolean isMoxyJaxbProvider() {
+        return "org.eclipse.persistence.jaxb.JAXBContextFactory".equals(System.getProperty("javax.xml.bind.JAXBContext"));
     }
 
     /**

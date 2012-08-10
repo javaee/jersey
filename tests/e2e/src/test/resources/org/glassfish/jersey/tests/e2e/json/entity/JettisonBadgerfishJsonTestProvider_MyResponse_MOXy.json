@@ -1,0 +1,1 @@
+{"myResponse":{"@xmlns":{"ns0":"http:\/\/test.jaxb.com"},"ns0:myMessage":[{"id":{"$":"0"},"text":{"$":"ok"}},{"id":{"$":"1"},"text":{"$":"ok"}}],"ns0:myError":{"id":{"$":"-1"},"desc":{"$":"error"}}}}

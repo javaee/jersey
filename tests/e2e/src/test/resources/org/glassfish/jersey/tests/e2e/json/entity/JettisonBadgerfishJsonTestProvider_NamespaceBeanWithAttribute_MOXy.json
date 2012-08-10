@@ -1,0 +1,1 @@
+{"namespaceBeanWithAttribute":{"@xmlns":{"ns0":"http:\/\/example.com"},"@ns0:attr":"value","a":{"$":"foo"},"ns0:b":{"$":"bar"}}}
