@@ -48,11 +48,13 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import javax.inject.Singleton;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.inject.Singleton;
 
 /**
  *
@@ -94,10 +96,13 @@ public final class ReaderProvider extends AbstractMessageReaderWriterProvider<Re
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {
         try {
-            writeTo(t, new OutputStreamWriter(entityStream,
-                    getCharset(mediaType)));
+            final OutputStreamWriter out = new OutputStreamWriter(entityStream,
+                    getCharset(mediaType));
+            writeTo(t, out);
+            out.flush();
         } finally {
             t.close();
         }
+
     }
 }
