@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
@@ -62,9 +63,9 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
 import org.glassfish.jersey.process.internal.DefaultRespondingContext;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.ProcessingBinder;
 import org.glassfish.jersey.process.internal.ProcessingCallback;
 import org.glassfish.jersey.process.internal.ProcessingContext;
-import org.glassfish.jersey.process.internal.ProcessingBinder;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
