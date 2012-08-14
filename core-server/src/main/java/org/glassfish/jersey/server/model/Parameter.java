@@ -278,9 +278,12 @@ public class Parameter implements AnnotatedElement {
             } else if (DefaultValue.class == annotation.annotationType()) {
                 paramDefault = ((DefaultValue) annotation).value();
             } else {
-                paramAnnotation = annotation;
-                paramSource = Source.UNKNOWN;
-                paramName = getValue(annotation);
+                // lets only clear things down if we've not found a ANOT_HELPER_MAP annotation already
+                if (paramAnnotation == null) {
+                    paramAnnotation = annotation;
+                    paramSource = Source.UNKNOWN;
+                    paramName = getValue(annotation);
+                }
             }
         }
 
