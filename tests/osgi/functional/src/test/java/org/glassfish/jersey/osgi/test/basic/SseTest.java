@@ -41,6 +41,7 @@ package org.glassfish.jersey.osgi.test.basic;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -103,7 +104,7 @@ public class SseTest {
 
     @Configuration
     public static Option[] configuration() {
-        return options(
+        List<Option> options = Arrays.asList(options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
 
@@ -164,7 +165,10 @@ public class SseTest {
                 mavenBundle().groupId("org.glassfish.external").artifactId("management-api").versionAsInProject(),
 
                 // start felix framework
-                felix());
+                felix()));
+
+        options = Helper.addPaxExamMavenLocalRepositoryProperty(options);
+        return options.toArray(new Option[options.size()]);
     }
 
     @Path("/sse")

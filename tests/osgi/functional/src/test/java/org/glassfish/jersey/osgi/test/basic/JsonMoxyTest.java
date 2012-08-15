@@ -65,7 +65,7 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
     public static Option[] configuration() {
         List<Option> options = new ArrayList<Option>();
 
-        options.addAll(Arrays.asList(getCommonOsgiIntegrationTestOptions()));
+        options.addAll(getCommonOsgiIntegrationTestOptions());
         options.addAll(Arrays.asList(
            options(
                    bootDelegationPackage("javax.xml.bind"),

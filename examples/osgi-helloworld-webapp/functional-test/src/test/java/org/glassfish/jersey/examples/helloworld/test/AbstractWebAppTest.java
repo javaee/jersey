@@ -41,6 +41,7 @@
 package org.glassfish.jersey.examples.helloworld.test;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -85,7 +86,7 @@ public abstract class AbstractWebAppTest {
                 artifactId("war-bundle").
                 type("war").versionAsInProject().getURL().toString();
 
-        return Arrays.asList(options(
+        List<Option> options = Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
@@ -130,11 +131,20 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").versionAsInProject()
+                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
+                        .versionAsInProject()
 
                 // Debug
                 // vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
         ));
+
+        final String localRepository = System.getProperty("localRepository");
+        if (localRepository != null) {
+            options = new ArrayList<Option>(options);
+            options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
+        }
+
+        return options;
     }
 
     public List<Option> felixOptions() {

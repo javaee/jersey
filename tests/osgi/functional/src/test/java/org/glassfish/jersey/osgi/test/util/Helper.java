@@ -40,6 +40,12 @@
 
 package org.glassfish.jersey.osgi.test.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.ops4j.pax.exam.Option;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+
 /**
  * Helper class to be used by individual tests.
  *
@@ -69,5 +75,24 @@ public class Helper {
             }
         }
         return defaultValue;
+    }
+
+    /**
+     * Adds a system property for Maven local repository location to the PaxExam OSGi runtime if a "localRepository" property
+     * is present in the map of the system properties.
+     *
+     * @param options list of options to add the local repository property to.
+     * @return list of options enhanced by the local repository property if this property is set or the given list if the
+     *         previous condition is not met.
+     */
+    public static List<Option> addPaxExamMavenLocalRepositoryProperty(List<Option> options) {
+        final String localRepository = System.getProperty("localRepository");
+
+        if (localRepository != null) {
+            options = new ArrayList<Option>(options);
+            options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
+        }
+
+        return options;
     }
 }

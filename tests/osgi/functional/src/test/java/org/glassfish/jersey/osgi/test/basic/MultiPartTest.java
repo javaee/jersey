@@ -43,6 +43,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -93,7 +95,7 @@ public class MultiPartTest {
 
     @Configuration
     public static Option[] configuration() {
-        return options(
+        List<Option> options = Arrays.asList(options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
 
@@ -157,7 +159,10 @@ public class MultiPartTest {
                 mavenBundle().groupId("org.jvnet.mimepull").artifactId("mimepull").versionAsInProject(),
 
                 // start felix framework
-                felix());
+                felix()));
+
+        options = Helper.addPaxExamMavenLocalRepositoryProperty(options);
+        return options.toArray(new Option[options.size()]);
     }
 
     @Path("/multipart-simple")

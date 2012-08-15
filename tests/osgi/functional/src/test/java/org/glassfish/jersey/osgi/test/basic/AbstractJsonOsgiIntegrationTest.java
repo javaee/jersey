@@ -40,6 +40,8 @@
 package org.glassfish.jersey.osgi.test.basic;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
@@ -86,15 +88,13 @@ public abstract class AbstractJsonOsgiIntegrationTest {
     @Inject
     protected BundleContext bundleContext;
 
-    protected static Option[] getCommonOsgiIntegrationTestOptions() {
-        return options(
+    protected static List<Option> getCommonOsgiIntegrationTestOptions() {
+        final List<Option> options = Arrays.asList(options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-                systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
-                rawPaxRunnerOption("clean"),
+                systemProperty("org.osgi.service.http.port").value(String.valueOf(port)), rawPaxRunnerOption("clean"),
 
                 // define maven repositories
-                repositories(
-                        "http://repo1.maven.org/maven2",
+                repositories("http://repo1.maven.org/maven2",
                         "http://repository.apache.org/content/groups/snapshots-group",
                         "http://repository.ops4j.org/maven2",
                         "http://svn.apache.org/repos/asf/servicemix/m2-repo",
@@ -137,7 +137,8 @@ public abstract class AbstractJsonOsgiIntegrationTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
+                        .versionAsInProject(),
 
                 // Grizzly
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-server").versionAsInProject(),
@@ -148,7 +149,9 @@ public abstract class AbstractJsonOsgiIntegrationTest {
                 mavenBundle().groupId("org.glassfish.external").artifactId("management-api").versionAsInProject(),
 
                 // start felix framework
-                felix());
+                felix()));
+
+        return Helper.addPaxExamMavenLocalRepositoryProperty(options);
     }
 
     protected abstract Feature getJsonProviderFeature();

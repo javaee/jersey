@@ -40,6 +40,7 @@
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -83,7 +84,7 @@ public abstract class AbstractHttpServiceTest {
                 artifactId("bundle").
                 versionAsInProject().getURL().toString();
 
-        return Arrays.asList(options(
+        List<Option> options = Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
@@ -129,6 +130,14 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").versionAsInProject()
         ));
+
+        final String localRepository = System.getProperty("localRepository");
+        if (localRepository != null) {
+            options = new ArrayList<Option>(options);
+            options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
+        }
+
+        return options;
     }
 
 
