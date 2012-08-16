@@ -48,23 +48,18 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.ext</groupId>
+    <groupId>org.glassfish.jersey.incubator</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <name>jersey-extensions</name>
+    <name>jersey-incubator</name>
 
     <description>
-        Jersey extension modules providing utilities, filters as well as integrations
-        with external frameworks (Guice, Spring, Freemarker, etc.) and languages
-        (Scala, Groovy, etc.).
-
-        NOTE: Jersey security extensions have their own dedicated security umbrella
-        project.
+        Jersey incubator for experimental modules that are in a prototyping or research stage,
+        not ready to be released as part of Jersey (yet).
     </description>
 
     <modules>
-        <module>servlet-portability</module>
-        <module>proxy-client</module>
+        <!--module>name</module-->
     </modules>
 
     <dependencies>
