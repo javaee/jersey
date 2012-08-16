@@ -40,14 +40,13 @@
 package org.glassfish.jersey.message.internal;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
 
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageProperties;
+
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerThread;
 
 /**
  * Thread-scoped injection provider of {@link DocumentBuilderFactory document
@@ -58,16 +57,16 @@ import org.glassfish.jersey.message.MessageProperties;
  */
 public class DocumentBuilderFactoryInjectionProvider implements Factory<DocumentBuilderFactory> {
 
-    private final Provider<Config> featuresAndPropertiesFactory;
+    private final Config config;
 
     /**
      * Create new document builder factory provider.
      *
-     * @param featuresAndPropertiesFactory features and properties provider.
+     * @param config Jersey configuration properties.
      */
     @Inject
-    public DocumentBuilderFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
-        this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
+    public DocumentBuilderFactoryInjectionProvider(Config config) {
+        this.config = config;
     }
 
     @Override
@@ -77,7 +76,7 @@ public class DocumentBuilderFactoryInjectionProvider implements Factory<Document
 
         f.setNamespaceAware(true);
 
-        if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
+        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
             f.setExpandEntityReferences(false);
         }
 

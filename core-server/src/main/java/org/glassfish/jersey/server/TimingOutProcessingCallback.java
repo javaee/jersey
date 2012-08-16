@@ -48,8 +48,8 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingCallback;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 
 import com.google.common.util.concurrent.AbstractFuture;
 
@@ -58,20 +58,20 @@ import com.google.common.util.concurrent.AbstractFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerResponse>
-        implements InvocationCallback<ContainerResponse> {
+abstract class TimingOutProcessingCallback extends AbstractFuture<ContainerResponse>
+        implements ProcessingCallback<ContainerResponse> {
 
-    private static final Logger logger = Logger.getLogger(TimingOutInvocationCallback.class.getName());
+    private static final Logger logger = Logger.getLogger(TimingOutProcessingCallback.class.getName());
     private static final Timer TIMER = new Timer("Jersey application request timer");
     private final Object suspendLock = new Object();
     private final AtomicBoolean done = new AtomicBoolean(false);
-    private InvocationContext invocationCtx = null;
+    private ProcessingContext processingCtx = null;
     private TimerTask timeoutTask = null;
 
     /**
      * Construct a new invocation callback with a time-out support for a given request context.
      */
-    protected TimingOutInvocationCallback() {
+    protected TimingOutProcessingCallback() {
     }
 
     @Override
@@ -120,14 +120,14 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerRespo
     }
 
     @Override
-    public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
+    public void suspended(final long time, final TimeUnit unit, final ProcessingContext context) {
         final TimerTask task = new TimerTask() {
 
             @Override
             public void run() {
                 if (done.compareAndSet(false, true)) {
                     try {
-                        set(handleTimeout(invocationCtx));
+                        set(handleTimeout(processingCtx));
                     } catch (Throwable t) {
                         setException(t);
                     } finally {
@@ -137,10 +137,10 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerRespo
             }
         };
         synchronized (suspendLock) {
-            if (invocationCtx != null) {
+            if (processingCtx != null) {
                 throw new IllegalStateException("Already suspended");
             }
-            invocationCtx = context;
+            processingCtx = context;
             if (time <= 0) {
                 return; // never time out
             }
@@ -160,7 +160,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerRespo
      * @param context invocation context that has timed out.
      * @return timeout response context.
      */
-    protected abstract ContainerResponse handleTimeout(final InvocationContext context);
+    protected abstract ContainerResponse handleTimeout(final ProcessingContext context);
 
     @Override
     public void suspendTimeoutChanged(final long time, final TimeUnit unit) {
@@ -171,7 +171,7 @@ abstract class TimingOutInvocationCallback extends AbstractFuture<ContainerRespo
                 public void run() {
                     if (done.compareAndSet(false, true)) {
                         try {
-                            set(handleTimeout(invocationCtx));
+                            set(handleTimeout(processingCtx));
                         } catch (Throwable t) {
                             setException(t);
                         }

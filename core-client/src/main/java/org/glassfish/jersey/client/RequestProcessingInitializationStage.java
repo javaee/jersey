@@ -55,8 +55,6 @@ import com.google.common.base.Function;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
-
-    private final Provider<Ref<ClientConfig>> configRefProvider;
     private final Provider<Ref<ClientRequest>> requestRefProvider;
     private final Provider<MessageBodyWorkers> workersProvider;
 
@@ -64,16 +62,13 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function
      * for requests and responses.
      *
-     * @param configRefProvider client configuration reference injection provider.
      * @param requestRefProvider client request context reference injection provider.
      * @param workersProvider message body workers injection provider.
      */
     @Inject
     public RequestProcessingInitializationStage(
-            Provider<Ref<ClientConfig>> configRefProvider,
             Provider<Ref<ClientRequest>> requestRefProvider,
             Provider<MessageBodyWorkers> workersProvider) {
-        this.configRefProvider = configRefProvider;
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
     }
@@ -81,9 +76,7 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
-        configRefProvider.get().set(requestContext.getConfiguration());
         requestRefProvider.get().set(requestContext);
-
         requestContext.setWorkers(workersProvider.get());
 
         return requestContext;

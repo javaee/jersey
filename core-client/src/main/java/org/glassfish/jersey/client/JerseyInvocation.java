@@ -60,6 +60,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.process.internal.RequestScope;
 
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -565,11 +566,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(Response response) {
-                responseFuture.set(response);
+            public void completed(ClientResponse response, RequestScope scope) {
+                responseFuture.set(new ScopedJaxrsResponse(response, scope));
             }
 
             @Override
@@ -584,25 +585,25 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(Response response) {
+            public void completed(ClientResponse response, RequestScope scope) {
                 if (responseType == Response.class) {
-                    responseFuture.set(responseType.cast(response));
+                    responseFuture.set(responseType.cast(new ScopedJaxrsResponse(response, scope)));
                     return;
                 }
 
                 if (response.getStatus() < 300) {
                     try {
-                        T entity = response.readEntity(responseType);
+                        T entity = new InboundJaxrsResponse(response).readEntity(responseType);
                         responseFuture.set(entity);
                     } catch (Exception e) {
                         failed(e instanceof InvocationException ? (InvocationException) e
                                 : new InvocationException(e.getMessage(), e));
                     }
                 } else {
-                    failed(convertToException(response));
+                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
                 }
             }
 
@@ -618,18 +619,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(Response response) {
+            public void completed(ClientResponse response, RequestScope scope) {
                 if (response.getStatus() < 300) {
                     try {
-                        responseFuture.set(response.readEntity(responseType));
+                        responseFuture.set(new InboundJaxrsResponse(response).readEntity(responseType));
                     } catch (Exception e) {
                         failed(new InvocationException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), e));
                     }
                 } else {
-                    failed(convertToException(response));
+                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
                 }
             }
 
@@ -656,21 +657,21 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         final Type callbackType = ReflectionHelper.getTypeArgument(invocationCallbackType, 0);
         final Class<T> rawType = ReflectionHelper.erasure(callbackType);
 
-        configuration().submit(requestContext, new InvocationCallback<Response>() {
+        configuration().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(Response response) {
+            public void completed(ClientResponse response, RequestScope scope) {
                 if (response.getStatus() < 300) {
                     final T result;
                     if (rawType == Response.class) {
-                        result = rawType.cast(response);
+                        result = rawType.cast(new ScopedJaxrsResponse(response, scope));
                     } else {
-                        result = response.readEntity(new GenericType<T>(callbackType));
+                        result = new InboundJaxrsResponse(response).readEntity(new GenericType<T>(callbackType));
                     }
                     responseFuture.set(result);
                     callback.completed(result);
                 } else {
-                    failed(convertToException(response));
+                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
                 }
             }
 

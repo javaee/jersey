@@ -169,12 +169,6 @@ public class RequestScope implements Context<RequestScoped> {
         return true;
     }
 
-    public <U> U find(ActiveDescriptor<U> activeDescriptor) {
-        Instance instance = current();
-
-        return instance.get(activeDescriptor);
-    }
-
     @Override
     public boolean isActive() {
         return true;
@@ -185,6 +179,9 @@ public class RequestScope implements Context<RequestScoped> {
         currentScopeInstance = null;
     }
 
+    /**
+     * Request scope injection binder.
+     */
     public static class Binder extends AbstractBinder {
 
         @Override
@@ -193,7 +190,29 @@ public class RequestScope implements Context<RequestScoped> {
         }
     }
 
-    public Instance current() {
+    /**
+     * Get a new reference for to currently running request scope instance. This call
+     * prevents automatic {@link RequestScope.Instance#release() release} of the scope
+     * instance once the task that runs in the scope has finished.
+     * <p>
+     * The returned scope instance may be used to run additional task(s) in the
+     * same request scope using one of the {@code #runInScope(Instance, ...)} methods.
+     * </p>
+     * <p>
+     * Note that the returned instance must be {@link RequestScope.Instance#release()
+     * released} manually once not needed anymore to prevent memory leaks.
+     * </p>
+     *
+     * @return currently active {@link RequestScope.Instance request scope instance}.
+     * @throws IllegalStateException in case there is no active request scope associated
+     *                               with the current thread.
+     * @see #suspendCurrent()
+     */
+    public Instance referenceCurrent() throws IllegalStateException {
+        return current().getReference();
+    }
+
+    private Instance current() {
         Instance scopeInstance = currentScopeInstance.get();
         checkState(scopeInstance != null, "Not inside a request scope.");
         return scopeInstance;
@@ -216,6 +235,7 @@ public class RequestScope implements Context<RequestScoped> {
      * @return currently active {@link RequestScope.Instance request scope instance}
      *         that was suspended or {@code null} if the thread is not currently running
      *         in an active request scope.
+     * @see #referenceCurrent()
      */
     public Instance suspendCurrent() {
         final Instance scopeInstance = currentScopeInstance.get();
@@ -440,29 +460,58 @@ public class RequestScope implements Context<RequestScoped> {
             this.referenceCounter = new AtomicInteger(1);
         }
 
+        /**
+         * Get a "new" reference of the scope instance. This will increase
+         * the internal reference counter which prevents the scope instance
+         * to be destroyed until a {@link #release()} method is explicitly
+         * called (once per each {@code getReference()} method call).
+         *
+         * @return referenced scope instance.
+         */
         private Instance getReference() {
             // TODO: replace counter with a phantom reference + reference queue-based solution
             referenceCounter.incrementAndGet();
             return this;
         }
 
+        /**
+         * Get an inhabitant stored in the scope instance that matches the active descriptor .
+         *
+         * @param <T>        inhabitant type.
+         * @param descriptor inhabitant descriptor.
+         * @return matched inhabitant stored in the scope instance or {@code null} if not matched.
+         */
         @SuppressWarnings("unchecked")
-        public <T> T get(ActiveDescriptor<T> inhabitant) {
-            return (T) store.get(inhabitant);
+        <T> T get(ActiveDescriptor<T> descriptor) {
+            return (T) store.get(descriptor);
         }
 
+        /**
+         * Store a new inhabitant for the given descriptor.
+         *
+         * @param <T>        inhabitant type.
+         * @param descriptor inhabitant descriptor.
+         * @param value      inhabitant value.
+         * @return old inhabitant previously stored for the given descriptor or
+         *         {@code null} if none stored.
+         */
         @SuppressWarnings("unchecked")
-        public <T> T put(ActiveDescriptor<T> descriptor, T value) {
+        <T> T put(ActiveDescriptor<T> descriptor, T value) {
             checkState(!store.containsKey(descriptor), "An instance for the descriptor %s was "
                     + "already seeded in this scope. Old instance: %s New instance: %s", descriptor, store.get(descriptor), value);
 
             return (T) store.put(descriptor, value);
         }
 
-        public <T> boolean contains(ActiveDescriptor<T> provider) {
+        private <T> boolean contains(ActiveDescriptor<T> provider) {
             return store.containsKey(provider);
         }
 
+        /**
+         * Release a single reference to the current request scope instance.
+         *
+         * Once all instance references are released, the instance will be recycled.
+         */
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {

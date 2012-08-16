@@ -59,7 +59,7 @@ import com.google.common.util.concurrent.Monitor;
 /**
  * Suspendable, asynchronous {@link Inflector inflector} adapter
  * that provides implementation of the request suspend/resume capabilities of the
- * {@link InvocationContext invocation context} and returns
+ * {@link ProcessingContext invocation context} and returns
  * a {@link ListenableFuture listenable response future} instead of a plain response
  * object.
  *
@@ -68,7 +68,7 @@ import com.google.common.util.concurrent.Monitor;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractFuture<RESPONSE>
-        implements Inflector<REQUEST, ListenableFuture<RESPONSE>>, InvocationContext {
+        implements Inflector<REQUEST, ListenableFuture<RESPONSE>>, ProcessingContext {
 
     /**
      * Asynchronous inflector adapter factory.
@@ -86,7 +86,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
          * @return new asynchronous inflector adapter for an inflector.
          */
         public AsyncInflectorAdapter<REQUEST, RESPONSE> create(
-                Inflector<REQUEST, RESPONSE> wrapped, InvocationCallback<RESPONSE> callback);
+                Inflector<REQUEST, RESPONSE> wrapped, ProcessingCallback<RESPONSE> callback);
     }
 
     private static final Logger LOGGER = Logger.getLogger(AsyncInflectorAdapter.class.getName());
@@ -129,7 +129,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     private AtomicReference<REQUEST> originatingRequest = new AtomicReference<REQUEST>();
     //
     private final Inflector<REQUEST, RESPONSE> wrapped;
-    private final InvocationCallback<RESPONSE> callback;
+    private final ProcessingCallback<RESPONSE> callback;
 
     /**
      * Construct and initialize asynchronous inflector adapter for an inflector.
@@ -137,7 +137,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
      * @param wrapped  wrapped inflector.
      * @param callback invocation callback.
      */
-    protected AsyncInflectorAdapter(final Inflector<REQUEST, RESPONSE> wrapped, final InvocationCallback<RESPONSE> callback) {
+    protected AsyncInflectorAdapter(final Inflector<REQUEST, RESPONSE> wrapped, final ProcessingCallback<RESPONSE> callback) {
         this.wrapped = wrapped;
         this.callback = callback;
     }

@@ -49,7 +49,6 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.spi.ContentEncoder;
@@ -63,15 +62,17 @@ import org.glassfish.jersey.spi.ContentEncoder;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class DeflateEncoder extends ContentEncoder {
-    private final Provider<Config> configProvider;
+    private final Config config;
 
     /**
      * Initialize DeflateEncoder.
+     *
+     * @param config Jersey configuration properties.
      */
     @Inject
-    public DeflateEncoder(Provider<Config> configProvider) {
+    public DeflateEncoder(Config config) {
         super("deflate");
-        this.configProvider = configProvider;
+        this.config = config;
     }
 
     @Override
@@ -103,7 +104,7 @@ public class DeflateEncoder extends ContentEncoder {
         // some implementations don't support the correct deflate
         // so we have a property to configure the incorrect deflate (no zlib wrapper) should be used
         // let's check that
-        Object value = configProvider.get().getProperty(MessageProperties.DEFLATE_WITHOUT_ZLIB);
+        Object value = config.getProperty(MessageProperties.DEFLATE_WITHOUT_ZLIB);
         boolean deflateWithoutZLib;
         if (value instanceof String) {
             deflateWithoutZLib = Boolean.valueOf((String) value);

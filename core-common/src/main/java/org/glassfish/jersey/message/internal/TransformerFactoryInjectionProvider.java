@@ -40,7 +40,6 @@
 package org.glassfish.jersey.message.internal;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.xml.transform.TransformerFactory;
 
 import org.glassfish.jersey.Config;
@@ -56,18 +55,23 @@ import org.glassfish.hk2.api.Factory;
  */
 public class TransformerFactoryInjectionProvider implements Factory<TransformerFactory> {
 
-    private final Provider<Config> featuresAndPropertiesFactory;
+    private final Config config;
 
+    /**
+     * Create new transformer factory provider.
+     *
+     * @param config Jersey configuration properties.
+     */
     @Inject
-    public TransformerFactoryInjectionProvider(Provider<Config> featuresAndPropertiesFactory) {
-        this.featuresAndPropertiesFactory = featuresAndPropertiesFactory;
+    public TransformerFactoryInjectionProvider(Config config) {
+        this.config = config;
     }
 
     @Override
     public TransformerFactory provide() {
         TransformerFactory f = TransformerFactory.newInstance();
 
-        if (!featuresAndPropertiesFactory.get().isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
+        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
             // TODO ?
         }
 

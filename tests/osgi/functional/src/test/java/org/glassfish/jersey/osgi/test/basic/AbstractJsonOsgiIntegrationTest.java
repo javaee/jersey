@@ -58,7 +58,6 @@ import org.glassfish.hk2.utilities.Binder;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
@@ -175,8 +174,6 @@ public abstract class AbstractJsonOsgiIntegrationTest {
     }
 
     @Test
-    @Ignore("Un-ignore once the JERSEY-1083 gets resolved")
-    // TODO un-ignore
     public void testJsonViaResponse() throws Exception {
         final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class).addBinders(getJsonProviderBinder());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);

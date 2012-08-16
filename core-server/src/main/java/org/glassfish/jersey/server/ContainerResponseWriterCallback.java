@@ -41,8 +41,8 @@ package org.glassfish.jersey.server;
 
 import java.util.concurrent.TimeUnit;
 
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingCallback;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
@@ -50,14 +50,14 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class ContainerResponseWriterCallback implements InvocationCallback<ContainerResponse> {
+abstract class ContainerResponseWriterCallback implements ProcessingCallback<ContainerResponse> {
 
     private boolean suspended;
     private boolean autosuspend;
     private boolean done;
     private boolean timeoutCancelled;
     private final Object stateUpdateLock;
-    private InvocationContext invocationContext;
+    private ProcessingContext processingContext;
 
     /**
      * Request data.
@@ -125,9 +125,9 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Con
     }
 
     @Override
-    public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
+    public void suspended(final long time, final TimeUnit unit, final ProcessingContext context) {
         synchronized (stateUpdateLock) {
-            invocationContext = context;
+            processingContext = context;
             if (autosuspend) {
                 suspendTimeoutChanged(time, unit);
             } else {
@@ -155,7 +155,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Con
                     }
                     done = true;
                 }
-                writeTimeoutResponse(invocationContext);
+                writeTimeoutResponse(processingContext);
             }
         });
         suspended = true;
@@ -212,7 +212,7 @@ abstract class ContainerResponseWriterCallback implements InvocationCallback<Con
      *
      * @param context invocation context.
      */
-    protected abstract void writeTimeoutResponse(InvocationContext context);
+    protected abstract void writeTimeoutResponse(ProcessingContext context);
 
     /**
      * Release all resources as the request processing is truly over now.

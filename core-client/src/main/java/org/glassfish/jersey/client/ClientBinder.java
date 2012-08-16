@@ -48,7 +48,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
@@ -63,8 +62,8 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
 import org.glassfish.jersey.process.internal.DefaultRespondingContext;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingCallback;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.ProcessingBinder;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -85,29 +84,10 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 class ClientBinder extends AbstractBinder {
 
-    private static class ConfigurationInjectionFactory extends ReferencingFactory<ClientConfig> {
-        @Inject
-        public ConfigurationInjectionFactory(Provider<Ref<ClientConfig>> referenceFactory) {
-            super(referenceFactory);
-        }
-
-        @Override
-        @RequestScoped
-        public ClientConfig provide() {
-            return super.provide();
-        }
-    }
-
     private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
         @Inject
         public RequestContextInjectionFactory(Provider<Ref<ClientRequest>> referenceFactory) {
             super(referenceFactory);
-        }
-
-        @Override
-        @RequestScoped
-        public ClientRequest provide() {
-            return super.provide();
         }
     }
 
@@ -120,7 +100,7 @@ class ClientBinder extends AbstractBinder {
         @Inject
         private ResponseProcessor.Builder<ClientResponse> responseProcessorBuilder;
         @Inject
-        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
         @Inject
         private ExecutorsFactory<ClientRequest> executorsFactory;
 
@@ -138,13 +118,12 @@ class ClientBinder extends AbstractBinder {
                     new AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse>() {
                         @Override
                         public AsyncInflectorAdapter<ClientRequest, ClientResponse> create(
-                                Inflector<ClientRequest, ClientResponse> wrapped, InvocationCallback<ClientResponse> callback) {
+                                Inflector<ClientRequest, ClientResponse> wrapped, ProcessingCallback<ClientResponse> callback) {
                             return new AsyncInflectorAdapter<ClientRequest, ClientResponse>(
                                     wrapped, callback) {
 
                                 @Override
-                                protected ClientResponse convertResponse(
-                                        ClientRequest requestContext, Response response) {
+                                protected ClientResponse convertResponse(ClientRequest requestContext, Response response) {
                                     // TODO get rid of this code on the client side
                                     return new ClientResponse(requestContext, response);
                                 }
@@ -188,7 +167,7 @@ class ClientBinder extends AbstractBinder {
         public ResponseProcessor<ClientResponse> build(
                 final Future<ClientResponse> inflectedResponse,
                 final SettableFuture<ClientResponse> processedResponse,
-                final InvocationCallback<ClientResponse> callback,
+                final ProcessingCallback<ClientResponse> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<ClientResponse>(
@@ -224,11 +203,6 @@ class ClientBinder extends AbstractBinder {
                 new ClientFilteringStage.Binder(),
                 new ExceptionWrapperInterceptor.Binder(),
                 new ClientExecutorsFactory.ClientExecutorBinder());
-
-        bindFactory(ConfigurationInjectionFactory.class).
-                to(javax.ws.rs.client.Configuration.class).
-                to(Config.class).
-                in(RequestScoped.class);
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);

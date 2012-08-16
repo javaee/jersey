@@ -54,7 +54,7 @@ import javax.inject.Inject;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
@@ -108,7 +108,7 @@ public class PatternRoutingAsyncInflectorTest {
     private static class AsyncInflector implements Inflector<ContainerRequest, ContainerResponse> {
 
         @Inject
-        private InvocationContext invocationContext;
+        private ProcessingContext processingContext;
         @Inject
         private RespondingContext<ContainerResponse> respondingCtx;
         @Inject
@@ -125,7 +125,7 @@ public class PatternRoutingAsyncInflectorTest {
         public ContainerResponse apply(final ContainerRequest req) {
             i.inject(this);
             // Suspend current request
-            invocationContext.suspend();
+            processingContext.suspend();
 
             Executors.newSingleThreadExecutor().submit(new Runnable() {
 
@@ -138,7 +138,7 @@ public class PatternRoutingAsyncInflectorTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Response.ok().entity("B").build());
+                    processingContext.resume(Response.ok().entity("B").build());
                 }
             });
 

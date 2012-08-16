@@ -57,16 +57,16 @@ import org.glassfish.hk2.api.TypeLiteral;
  */
 public class ProcessingBinder extends AbstractBinder {
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<InvocationContext> {
+    private static class InvocationContextReferencingFactory extends ReferencingFactory<ProcessingContext> {
 
         @Inject
-        public InvocationContextReferencingFactory(Provider<Ref<InvocationContext>> referenceFactory) {
+        public InvocationContextReferencingFactory(Provider<Ref<ProcessingContext>> referenceFactory) {
             super(referenceFactory);
         }
 
         @Override
         @RequestScoped
-        public InvocationContext provide() {
+        public ProcessingContext provide() {
             return super.provide();
         }
     }
@@ -76,10 +76,10 @@ public class ProcessingBinder extends AbstractBinder {
         // Invocation context
         bindFactory(InvocationContextReferencingFactory.class).in(RequestScoped.class);
 
-        bindFactory(InvocationContextReferencingFactory.class).to(InvocationContext.class).to(ExecutionContext.class)
+        bindFactory(InvocationContextReferencingFactory.class).to(ProcessingContext.class).to(ExecutionContext.class)
                 .in(RequestScoped.class);
 
-        bindFactory(ReferencingFactory.<InvocationContext>referenceFactory()).to(new TypeLiteral<Ref<InvocationContext>>() {
+        bindFactory(ReferencingFactory.<ProcessingContext>referenceFactory()).to(new TypeLiteral<Ref<ProcessingContext>>() {
         }).in(RequestScoped.class);
     }
 }

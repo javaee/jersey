@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.client;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -50,14 +51,14 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Feature;
 import javax.ws.rs.client.InvocationException;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationCallback;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingCallback;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -87,7 +88,7 @@ public class ClientConfig implements Configuration, Config {
     /**
      * Default encapsulation of the internal configuration state.
      */
-    private static class State implements Configuration {
+    private static class State implements Configuration, Config {
 
         /**
          * Strategy that returns the same state instance.
@@ -178,7 +179,7 @@ public class ClientConfig implements Configuration, Config {
          * Copy the original configuration state while using the default state change
          * strategy.
          *
-         * @param client new Jersey client parent for the state.
+         * @param client   new Jersey client parent for the state.
          * @param original configuration strategy to be copied.
          */
         private State(JerseyClient client, State original) {
@@ -359,12 +360,20 @@ public class ClientConfig implements Configuration, Config {
                  */
                 markAsShared();
 
+                final AbstractBinder configBinder = new AbstractBinder() {
+                    @Override
+                    protected void configure() {
+                        bind(State.this).to(Configuration.class).to(Config.class);
+                    }
+                };
                 if (binders.isEmpty()) {
-                    locator = Injections.createLocator(new ClientBinder());
+                    locator = Injections.createLocator(configBinder, new ClientBinder());
                 } else {
-                    final Binder[] binderArray = binders.toArray(new Binder[binders.size() + 1]);
-                    binderArray[binderArray.length - 1] = new ClientBinder();
-                    locator = Injections.createLocator(binderArray);
+                    final ArrayList<Binder> allBinders = new ArrayList<Binder>(binders.size() + 2);
+                    allBinders.add(configBinder);
+                    allBinders.add(new ClientBinder());
+                    allBinders.addAll(binders);
+                    locator = Injections.createLocator(allBinders.toArray(new Binder[allBinders.size()]));
                 }
 
                 final ProviderBinder providerBinder = new ProviderBinder(locator);
@@ -395,51 +404,50 @@ public class ClientConfig implements Configuration, Config {
             }
         }
 
-        void submit(final ClientRequest requestContext, final javax.ws.rs.client.InvocationCallback<Response> callback) {
+        void submit(final ClientRequest requestContext, final ResponseCallback callback) {
             initRuntime();
 
             requestScope.runInScope(new Runnable() {
 
+                @Override
+                public void run() {
+                    invoker.apply(requestContext, new ProcessingCallback<ClientResponse>() {
+
                         @Override
-                        public void run() {
-                            invoker.apply(requestContext, new InvocationCallback<ClientResponse>() {
+                        public void result(ClientResponse responseContext) {
+                            callback.completed(responseContext, requestScope);
+                        }
 
-                                @Override
-                                public void result(ClientResponse responseContext) {
-                                    final InboundJaxrsResponse jaxrsResponse = new InboundJaxrsResponse(responseContext);
-                                    callback.completed(jaxrsResponse);
-                                }
+                        @Override
+                        public void failure(Throwable exception) {
+                            // need to be fixed
+                            callback.failed(exception instanceof InvocationException ?
+                                    (InvocationException) exception
+                                    : new InvocationException(exception.getMessage(), exception));
+                        }
 
-                                @Override
-                                public void failure(Throwable exception) {
-                                    // need to be fixed
-                                    callback.failed(exception instanceof InvocationException ?
-                                            (InvocationException) exception
-                                            : new InvocationException(exception.getMessage(), exception));
-                                }
+                        @Override
+                        public void cancelled() {
+                            // TODO implement client-side suspend event logic
+                        }
 
-                                @Override
-                                public void cancelled() {
-                                    // TODO implement client-side suspend event logic
-                                }
+                        @Override
+                        public void suspended(long time, TimeUnit unit, ProcessingContext context) {
+                            // TODO implement client-side suspend event logic
+                        }
 
-                                @Override
-                                public void suspended(long time, TimeUnit unit, InvocationContext context) {
-                                    // TODO implement client-side suspend event logic
-                                }
+                        @Override
+                        public void suspendTimeoutChanged(long time, TimeUnit unit) {
+                            // TODO implement client-side suspend timeout change event logic
+                        }
 
-                                @Override
-                                public void suspendTimeoutChanged(long time, TimeUnit unit) {
-                                    // TODO implement client-side suspend timeout change event logic
-                                }
-
-                                @Override
-                                public void resumed() {
-                                    // TODO implement client-side resume event logic
-                                }
-                            });
+                        @Override
+                        public void resumed() {
+                            // TODO implement client-side resume event logic
                         }
                     });
+                }
+            });
         }
 
         @Override
@@ -518,7 +526,7 @@ public class ClientConfig implements Configuration, Config {
      * property values copied from the supplied JAX-RS configuration instance.
      *
      * @param parent parent Jersey client instance.
-     * @param that original {@link javax.ws.rs.client.Configuration}.
+     * @param that   original {@link javax.ws.rs.client.Configuration}.
      */
     ClientConfig(JerseyClient parent, Configuration that) {
         if (that instanceof ClientConfig) {
@@ -707,8 +715,7 @@ public class ClientConfig implements Configuration, Config {
      * @param requestContext request context to be processed (invoked).
      * @param callback       callback receiving invocation processing notifications.
      */
-    void submit(final ClientRequest requestContext,
-                final javax.ws.rs.client.InvocationCallback<Response> callback) {
+    void submit(final ClientRequest requestContext, final ResponseCallback callback) {
         state.submit(requestContext, callback);
     }
 

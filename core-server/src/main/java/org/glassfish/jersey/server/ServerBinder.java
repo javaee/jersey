@@ -136,7 +136,7 @@ public class ServerBinder extends AbstractBinder {
         @Inject
         private ResponseProcessor.Builder<ContainerResponse> responseProcessorBuilder;
         @Inject
-        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
         @Inject
         private ExecutorsFactory<ContainerRequest> executorsFactory;
 
@@ -157,7 +157,7 @@ public class ServerBinder extends AbstractBinder {
                         @Override
                         public AsyncInflectorAdapter<ContainerRequest, ContainerResponse> create(
                                 Inflector<ContainerRequest, ContainerResponse> wrapped,
-                                InvocationCallback<ContainerResponse> callback) {
+                                ProcessingCallback<ContainerResponse> callback) {
                             return new AsyncInflectorAdapter<ContainerRequest, ContainerResponse>(
                                     wrapped, callback) {
 
@@ -200,7 +200,7 @@ public class ServerBinder extends AbstractBinder {
         public ResponseProcessor<ContainerResponse> build(
                 final Future<ContainerResponse> inflectedResponse,
                 final SettableFuture<ContainerResponse> processedResponse,
-                final InvocationCallback<ContainerResponse> callback,
+                final ProcessingCallback<ContainerResponse> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<ContainerResponse>(

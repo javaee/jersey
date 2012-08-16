@@ -67,13 +67,13 @@ import javax.inject.Provider;
  * into a {@link AsyncInflectorAdapter suspendable inflector} which is subsequently
  * invoked. Once a response data from the inflector is available, it is processed by
  * a {@link ResponseProcessor response processor} before it is made available in the
- * response future returned by the request invoker. If a {@link InvocationCallback response callback}
+ * response future returned by the request invoker. If a {@link ProcessingCallback response callback}
  * is supplied, it is invoked at the end of the response processing chain.
  * <p/>
  * Request and response processing flows are executed in the context of dedicated customizable
  * {@link ExecutorService executors}, one for request and the other one for response
  * data processing. By default, the request processing is executed on the caller thread.
- * If the request processing is not {@link InvocationContext#suspend() suspended}
+ * If the request processing is not {@link ProcessingContext#suspend() suspended}
  * in the inflector, the response processing is by default executed synchronously
  * on the caller thread too. In case the request processing is suspended, the response
  * processing is resumed in the thread executing the code that resumed the response
@@ -86,7 +86,7 @@ import javax.inject.Provider;
  */
 public class RequestInvoker<REQUEST, RESPONSE> {
 
-    private static final InvocationCallback EMPTY_CALLBACK = new InvocationCallback() {
+    private static final ProcessingCallback EMPTY_CALLBACK = new ProcessingCallback() {
 
         @Override
         public void result(final Object response) {
@@ -97,7 +97,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
         }
 
         @Override
-        public void suspended(final long time, final TimeUnit unit, final InvocationContext context) {
+        public void suspended(final long time, final TimeUnit unit, final ProcessingContext context) {
         }
 
         @Override
@@ -117,7 +117,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
     private final RequestScope requestScope;
     private final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder;
     private final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder;
-    private final Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+    private final Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
     private final ExecutorsFactory<REQUEST> executorsFactory;
 
     /**
@@ -136,7 +136,7 @@ public class RequestInvoker<REQUEST, RESPONSE> {
             final RequestScope requestScope,
             final AsyncInflectorAdapter.Builder<REQUEST, RESPONSE> asyncAdapterBuilder,
             final ResponseProcessor.Builder<RESPONSE> responseProcessorBuilder,
-            final Provider<Ref<InvocationContext>> invocationContextReferenceFactory,
+            final Provider<Ref<ProcessingContext>> invocationContextReferenceFactory,
             final ExecutorsFactory<REQUEST> executorsFactory) {
 
         this.requestScope = requestScope;
@@ -155,23 +155,23 @@ public class RequestInvoker<REQUEST, RESPONSE> {
      */
     @SuppressWarnings("unchecked")
     public ListenableFuture<RESPONSE> apply(final REQUEST request) {
-        return apply(request, (InvocationCallback<RESPONSE>) EMPTY_CALLBACK);
+        return apply(request, (ProcessingCallback<RESPONSE>) EMPTY_CALLBACK);
     }
 
     /**
      * Transform request data of a given type into a response result of the
      * different type.
      * <p/>
-     * After the result is produced the provided {@link InvocationCallback result callback}
+     * After the result is produced the provided {@link ProcessingCallback result callback}
      * is invoked. The result callback can be invoked on a different thread but
-     * still in the same {@link InvocationContext request invocation context}.
+     * still in the same {@link ProcessingContext request invocation context}.
      *
      * @param request  request data to be transformed into a response result.
      * @param callback result callback called when the request transformation is
      *                 done. Must not be {@code null}.
      * @return future response.
      */
-    public ListenableFuture<RESPONSE> apply(final REQUEST request, final InvocationCallback<RESPONSE> callback) {
+    public ListenableFuture<RESPONSE> apply(final REQUEST request, final ProcessingCallback<RESPONSE> callback) {
         final Instance instance = requestScope.createInstance();
         final SettableFuture<RESPONSE> result = SettableFuture.create();
 

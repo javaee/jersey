@@ -49,7 +49,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -139,13 +138,13 @@ public abstract class ResponseProcessor<DATA> implements Runnable {
         public ResponseProcessor<DATA> build(
                 final Future<DATA> inflectedResponse,
                 final SettableFuture<DATA> processedResponse,
-                final InvocationCallback<DATA> callback,
+                final ProcessingCallback<DATA> callback,
                 final RequestScope.Instance scopeInstance);
     }
 
     private final RequestScope requestScope;
     private volatile RequestScope.Instance scopeInstance;
-    private final InvocationCallback<DATA> callback;
+    private final ProcessingCallback<DATA> callback;
     private final Future<DATA> inflectedResponse;
     private final SettableFuture<DATA> processedResponse;
     private final Provider<RespondingContext<DATA>> respondingCtxProvider;
@@ -166,7 +165,7 @@ public abstract class ResponseProcessor<DATA> implements Runnable {
      * @param exceptionMappersProvider exception mappers provide.
      */
     protected ResponseProcessor(
-            final InvocationCallback<DATA> callback,
+            final ProcessingCallback<DATA> callback,
             final Future<DATA> inflectedResponse,
             SettableFuture<DATA> processedResponse, final Provider<RespondingContext<DATA>> respondingCtxProvider,
             final RequestScope.Instance scopeInstance,

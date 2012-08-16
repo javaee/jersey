@@ -44,64 +44,64 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.ExecutionContext;
 
 /**
- * Injectable invocation context that can be used to control various aspects
- * of the invocation, e.g. the threading model.
+ * Injectable processing context that can be used to control various aspects
+ * of a single request processing, e.g. the threading model.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface InvocationContext extends javax.ws.rs.core.ExecutionContext {
+public interface ProcessingContext extends javax.ws.rs.core.ExecutionContext {
 
     /**
-     * Invocation context state.
+     * Processing context state.
      */
     public static enum State {
 
         /**
-         * Indicates the invocation context is running. This is a default state
-         * the invocation context is in case the invocation execution flow
+         * Indicates the processing context is running. This is a default state
+         * the processing context is in case the processing execution flow
          * has not been explicitly modified (yet).
          */
         RUNNING,
         /**
-         * Indicates the invocation running in the invocation context has been
+         * Indicates the processing running in the processing context has been
          * canceled.
          */
         CANCELLED,
         /**
-         * Indicates the invocation running in the invocation context has been
+         * Indicates the processing running in the processing context has been
          * suspended.
          *
-         * @see InvocationContext#suspend()
-         * @see InvocationContext#suspend(long)
-         * @see InvocationContext#suspend(long, TimeUnit)
+         * @see ProcessingContext#suspend()
+         * @see ProcessingContext#suspend(long)
+         * @see ProcessingContext#suspend(long, TimeUnit)
          */
         SUSPENDED,
         /**
-         * Indicates the invocation running in the invocation context has been
+         * Indicates the processing running in the processing context has been
          * resumed.
          *
-         * @see InvocationContext#resume(Object)
-         * @see InvocationContext#resume(Exception)
+         * @see ProcessingContext#resume(Object)
+         * @see ProcessingContext#resume(Throwable)
          */
         RESUMED
     }
 
     /**
-     * Get the current state of the invocation context.
+     * Get the current state of the processing context.
      *
-     * @return current state of the invocation context
+     * @return current state of the processing context.
      */
     public State state();
 
     /**
-     * Try to {@link ExecutionContext#suspend() suspend} the request invocation.
+     * Try to {@link ExecutionContext#suspend() suspend} the current request processing.
      *
      * Unlike the {@code suspend()} method, this method does not throw an exception
      * in case the suspend operation fails. Instead, the method returns {@code true}
-     * if the invocation has been suspended successfully, returns {@code false}
+     * if the request processing has been suspended successfully, returns {@code false}
      * otherwise.
      *
-     * @return {@code true} if the invocation has been suspended successfully,
+     * @return {@code true} if the request processing has been suspended successfully,
      * returns {@code false} otherwise.
      */
     public boolean trySuspend();

@@ -96,7 +96,7 @@ public class RequestInvokerTest {
         @Inject
         ServiceLocator locator;
         @Inject
-        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
         @Inject
         private Provider<ExecutorsFactory<String>> executorsFactory;
 
@@ -106,7 +106,7 @@ public class RequestInvokerTest {
 
                 @Override
                 public AsyncInflectorAdapter<String, Integer> create(Inflector<String, Integer> wrapped,
-                                                                     InvocationCallback<Integer> callback) {
+                                                                     ProcessingCallback<Integer> callback) {
                     return new AsyncInflectorAdapter<String, Integer>(wrapped, callback) {
 
                         @Override
@@ -151,7 +151,7 @@ public class RequestInvokerTest {
         public ResponseProcessor<Integer> build(
                 final Future<Integer> inflectedResponse,
                 final SettableFuture<Integer> processedResponse,
-                final InvocationCallback<Integer> callback,
+                final ProcessingCallback<Integer> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<Integer>(
@@ -178,7 +178,7 @@ public class RequestInvokerTest {
         final RequestScope requestScope = locator.getService(RequestScope.class);
 
         invoker.apply("",
-                new AbstractInvocationCallback<Integer>() {
+                new AbstractProcessingCallback<Integer>() {
 
                     @Override
                     public void result(Integer response) {
@@ -195,7 +195,7 @@ public class RequestInvokerTest {
         assertEquals(123, result.get().intValue());
 
         invoker.apply("text",
-                new AbstractInvocationCallback<Integer>() {
+                new AbstractProcessingCallback<Integer>() {
 
                     @Override
                     public void result(Integer response) {
@@ -224,7 +224,7 @@ public class RequestInvokerTest {
             public void run() {
 
                 invoker.apply("",
-                        new AbstractInvocationCallback<Integer>() {
+                        new AbstractProcessingCallback<Integer>() {
 
                             @Override
                             public void result(Integer response) {
@@ -262,7 +262,7 @@ public class RequestInvokerTest {
             public void run() {
 
                 invoker.apply("",
-                        new AbstractInvocationCallback<Integer>() {
+                        new AbstractProcessingCallback<Integer>() {
 
                             @Override
                             public void result(Integer response) {

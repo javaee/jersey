@@ -65,8 +65,6 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.XmlHeader;
 
-import org.glassfish.hk2.api.Factory;
-
 import org.xml.sax.InputSource;
 
 /**
@@ -127,12 +125,12 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
     }
 
     @Context
-    public void setConfiguration(final Factory<Config> fp) {
+    public void setConfiguration(final Config config) {
         formattedOutput = Values.lazy(new Value<Boolean>() {
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(fp.provide().isProperty(MessageProperties.XML_FORMAT_OUTPUT));
+                return Boolean.valueOf(config.isProperty(MessageProperties.XML_FORMAT_OUTPUT));
             }
         });
 
@@ -140,7 +138,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(fp.provide().isProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
+                return Boolean.valueOf(config.isProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
             }
         });
     }

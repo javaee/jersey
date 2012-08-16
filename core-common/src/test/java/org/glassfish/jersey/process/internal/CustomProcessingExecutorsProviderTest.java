@@ -119,7 +119,7 @@ public class CustomProcessingExecutorsProviderTest {
         @Inject
         ServiceLocator locator;
         @Inject
-        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
         @Inject
         private Provider<ExecutorsFactory<String>> executorsFactoryProvider;
 
@@ -129,7 +129,7 @@ public class CustomProcessingExecutorsProviderTest {
 
                 @Override
                 public AsyncInflectorAdapter<String, String> create(Inflector<String, String> wrapped,
-                                                                    InvocationCallback<String> callback) {
+                                                                    ProcessingCallback<String> callback) {
                     return new AsyncInflectorAdapter<String, String>(wrapped, callback) {
 
                         @Override
@@ -174,7 +174,7 @@ public class CustomProcessingExecutorsProviderTest {
         public ResponseProcessor<String> build(
                 final Future<String> inflectedResponse,
                 final SettableFuture<String> processedResponse,
-                final InvocationCallback<String> callback,
+                final ProcessingCallback<String> callback,
                 final RequestScope.Instance scopeInstance) {
 
             return new ResponseProcessor<String>(
@@ -201,7 +201,7 @@ public class CustomProcessingExecutorsProviderTest {
         @Inject
         ServiceLocator locator;
         @Inject
-        private Provider<Ref<InvocationContext>> invocationContextReferenceFactory;
+        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
         @Inject
         private Provider<ExecutorsFactory<String>> executorsFactory;
 
@@ -211,7 +211,7 @@ public class CustomProcessingExecutorsProviderTest {
 
                         @Override
                         public AsyncInflectorAdapter<String, Response> create(Inflector<String, Response> wrapped,
-                                                                              InvocationCallback<Response> callback) {
+                                                                              ProcessingCallback<Response> callback) {
                             return new AsyncInflectorAdapter<String, Response>(wrapped, callback) {
 
                                 @Override
@@ -256,7 +256,7 @@ public class CustomProcessingExecutorsProviderTest {
         public ResponseProcessor<Response> build(
                 final Future<Response> inflectedResponse,
                 final SettableFuture<Response> processedResponse,
-                final InvocationCallback<Response> callback,
+                final ProcessingCallback<Response> callback,
                 final RequestScope.Instance scopeInstance) {
             return new ResponseProcessor<Response>(
                     callback,
@@ -293,7 +293,7 @@ public class CustomProcessingExecutorsProviderTest {
         final AtomicBoolean passed = new AtomicBoolean(false);
 
         invoker.apply("",
-                new AbstractInvocationCallback<Response>() {
+                new AbstractProcessingCallback<Response>() {
 
                     @Override
                     public void result(Response response) {

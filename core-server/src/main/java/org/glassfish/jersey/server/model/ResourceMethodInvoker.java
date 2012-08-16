@@ -64,7 +64,7 @@ import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
 import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -82,7 +82,7 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerP
 public class ResourceMethodInvoker implements Inflector<ContainerRequest, ContainerResponse>, ResourceInfo {
 
     private final Provider<RoutingContext> routingContextFactory;
-    private final Provider<InvocationContext> invocationContextFactory;
+    private final Provider<ProcessingContext> invocationContextFactory;
     private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
@@ -103,7 +103,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
         @Inject
         private Provider<RoutingContext> routingContextFactory;
         @Inject
-        private Provider<InvocationContext> invocationContextFactory;
+        private Provider<ProcessingContext> invocationContextFactory;
         @Inject
         private ResourceMethodDispatcherFactory dispatcherProviderFactory;
         @Inject
@@ -145,7 +145,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
 
     private ResourceMethodInvoker(
             Provider<RoutingContext> routingContextFactory,
-            Provider<InvocationContext> invocationContextFactory,
+            Provider<ProcessingContext> invocationContextFactory,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             ResourceMethod method,
@@ -253,17 +253,17 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     public ContainerResponse apply(final ContainerRequest requestContext) {
         final Object resource = routingContextFactory.get().peekMatchedResource();
 
-        final InvocationContext invocationCtx = invocationContextFactory.get();
+        final ProcessingContext processingCtx = invocationContextFactory.get();
         if (method.isSuspendDeclared()) {
-            invocationCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
+            processingCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
         }
         requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS, getReaderInterceptors());
         requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS, getWriterInterceptors());
         final Response response = dispatcher.dispatch(resource, requestContext);
 
         if (method.isSuspendDeclared()) {
-            invocationCtx.setResponse(resource);
-            invocationCtx.trySuspend();
+            processingCtx.setResponse(resource);
+            processingCtx.trySuspend();
         }
 
         final ContainerResponse responseContext = new ContainerResponse(requestContext, response);

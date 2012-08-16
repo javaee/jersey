@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
  * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractInvocationCallback<DATA> implements InvocationCallback<DATA> {
+abstract class AbstractProcessingCallback<DATA> implements ProcessingCallback<DATA> {
 
     @Override
     public void cancelled() {
@@ -68,7 +68,7 @@ abstract class AbstractInvocationCallback<DATA> implements InvocationCallback<DA
     }
 
     @Override
-    public void suspended(long time, TimeUnit unit, InvocationContext context) {
+    public void suspended(long time, TimeUnit unit, ProcessingContext context) {
     }
 
     @Override

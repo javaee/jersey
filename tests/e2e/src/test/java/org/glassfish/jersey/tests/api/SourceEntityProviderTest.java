@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.tests.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -55,6 +52,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -72,11 +70,13 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Ignore;
+
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test of {@link javax.xml.transform.Source Source} MessageBody Provider
@@ -86,9 +86,9 @@ import org.xml.sax.SAXException;
  */
 public class SourceEntityProviderTest extends JerseyTest {
 
-    private static final String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    private static final String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"";
     private static final String xdkPrefix = "<?xml version = '1.0' encoding = 'UTF-8'?>";
-    private static final String entity = prefix + "<test><aaa/></test>";
+    private static final String entity = prefix + "?><test><aaa/></test>";
 
     @Override
     protected ResourceConfig configure() {
@@ -161,24 +161,22 @@ public class SourceEntityProviderTest extends JerseyTest {
         assertTrue(content.startsWith(prefix) || content.startsWith(xdkPrefix));
     }
 
-    // TODO: following two tests do not work (therefore @Ignore). readEntity fails as it is not executed in the request scope
-    // (SaxParserFactoryInjectionProvider and DocumentBuilderFactoryInjectionProvider need injections from RequestScope):
-    @Ignore
     @Test
     public void getSaxSourceTest() throws Exception {
         Response response = target().path("test").path("sax").request().get();
         assertEquals(Status.OK.getStatusCode(), response.getStatus());
         String content = extractContent(response.readEntity(SAXSource.class));
-        assertTrue(content.startsWith(prefix));
+        assertTrue("Content '" + content + "' does not start with the expected prefix '" + prefix + "'",
+                content.startsWith(prefix));
     }
 
-    @Ignore
     @Test
     public void getDomSourceTest() throws Exception {
         Response response = target().path("test").path("dom").request().get();
         assertEquals(Status.OK.getStatusCode(), response.getStatus());
         String content = extractContent(response.readEntity(DOMSource.class));
-        assertTrue(content.startsWith(prefix));
+        assertTrue("Content '" + content + "' does not start with the expected prefix '" + prefix + "'",
+                content.startsWith(prefix));
     }
 
     private static SAXSource createSAXSource(String content) throws SAXException, ParserConfigurationException {

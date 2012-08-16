@@ -42,7 +42,7 @@ package org.glassfish.jersey.process.internal;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Request transformation callback used by a {@link RequestInvoker request invoker}
+ * Request processing callback used by a {@link RequestInvoker request invoker}
  * to provide asynchronous notifications about the request processing.
  * <p/>
  * The callback is invoked when the request transformation is suspended or completed
@@ -51,21 +51,21 @@ import java.util.concurrent.TimeUnit;
  * @param <DATA> supported data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface InvocationCallback<DATA> {
+public interface ProcessingCallback<DATA> {
 
     /**
      * Request processing suspend event notification.
      *
      * {@link RequestInvoker Request invoker} invokes the {@code suspended(...)}
      * callback method when it receives an instruction to suspend the current
-     * request processing via one of the {@link InvocationContext invocation
+     * request processing via one of the {@link ProcessingContext processing
      * context} {@code suspend(...)} methods.
      *
      * @param time suspend time-out value.
      * @param unit suspend time-out time unit.
-     * @param context suspended invocation context.
+     * @param context suspended processing context.
      */
-    public void suspended(final long time, final TimeUnit unit, final InvocationContext context);
+    public void suspended(final long time, final TimeUnit unit, final ProcessingContext context);
 
     /**
      * Request processing suspend timeout change event notification.
@@ -85,11 +85,11 @@ public interface InvocationCallback<DATA> {
      *
      * {@link RequestInvoker Request invoker} invokes the {@code resumed()}
      * callback method when it receives an instruction to resume the current
-     * <b>suspended</b> request processing via one of the {@link InvocationContext
-     * invocation context} {@code resume(...)} methods.
+     * <b>suspended</b> request processing via one of the {@link ProcessingContext
+     * processing context} {@code resume(...)} methods.
      * <p />
      * Note that the {@code resumed()} callback method will not be invoked in
-     * case the invocation context has not been in a suspended state when the
+     * case the processing context has not been in a suspended state when the
      * {@code resume(...)} method was invoked.
      */
     public void resumed();
@@ -99,7 +99,7 @@ public interface InvocationCallback<DATA> {
      *
      * {@link RequestInvoker Request invoker} invokes the {@code cancelled()}
      * callback method when it receives an instruction to cancel the current
-     * request processing via invocation context {@link InvocationContext#cancel()
+     * request processing via processing context {@link ProcessingContext#cancel()
      * cancel()} method.
      */
     public void cancelled();

@@ -66,7 +66,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 
@@ -89,7 +89,7 @@ public class AsyncApplicationBuildingTest {
     private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Inject
-        private InvocationContext invocationContext;
+        private ProcessingContext processingContext;
         @Inject
         ServiceLocator serviceLocator;
         private final String responseContent;
@@ -105,7 +105,7 @@ public class AsyncApplicationBuildingTest {
         @Override
         public Response apply(final ContainerRequestContext req) {
             // Suspend current request
-            invocationContext.suspend();
+            processingContext.suspend();
 
             Executors.newSingleThreadExecutor().submit(new Runnable() {
 
@@ -118,7 +118,7 @@ public class AsyncApplicationBuildingTest {
                     }
 
                     // Returning will enter the suspended request
-                    invocationContext.resume(Response.ok().entity(responseContent).build());
+                    processingContext.resume(Response.ok().entity(responseContent).build());
                 }
             });
 

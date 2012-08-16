@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,51 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.client;
 
-import javax.inject.Inject;
-import javax.xml.stream.XMLInputFactory;
+import javax.ws.rs.client.InvocationException;
 
-import org.glassfish.jersey.Config;
-import org.glassfish.jersey.message.MessageProperties;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
- * Thread-scoped injection provider of {@link XMLInputFactory transformer factories}.
+ * Client response processing callback.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class XmlInputFactoryInjectionProvider implements Factory<XMLInputFactory> {
-
-    private final Config config;
+interface ResponseCallback {
 
     /**
-     * Create new XML input factory provider.
+     * Called when the client invocation was successfully completed with a response.
      *
-     * @param config Jersey configuration properties.
+     * @param response response data.
      */
-    @Inject
-    public XmlInputFactoryInjectionProvider(Config config) {
-        this.config = config;
-    }
+    public void completed(ClientResponse response, RequestScope scope);
 
-    @Override
-    @PerThread
-    public XMLInputFactory provide() {
-        XMLInputFactory factory = XMLInputFactory.newInstance();
-
-        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
-            factory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
-        }
-
-        return factory;
-    }
-
-    @Override
-    public void dispose(XMLInputFactory instance) {
-        //not used
-    }
+    /**
+     * Called when the invocation has failed for any reason.
+     *
+     * @param error contains failure details.
+     */
+    public void failed(InvocationException error);
 }

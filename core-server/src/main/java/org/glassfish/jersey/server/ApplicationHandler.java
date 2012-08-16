@@ -89,7 +89,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
-import org.glassfish.jersey.process.internal.InvocationContext;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stage;
@@ -652,7 +652,7 @@ public final class ApplicationHandler {
             }
         });
 
-        final TimingOutInvocationCallback callback = new TimingOutInvocationCallback() {
+        final TimingOutProcessingCallback callback = new TimingOutProcessingCallback() {
             private ContainerResponse responseContext;
 
             @Override
@@ -673,7 +673,7 @@ public final class ApplicationHandler {
             }
 
             @Override
-            protected ContainerResponse handleTimeout(InvocationContext context) {
+            protected ContainerResponse handleTimeout(ProcessingContext context) {
                 return responseContext = ApplicationHandler.this.writeResponse(
                         requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
             }
@@ -738,7 +738,7 @@ public final class ApplicationHandler {
             }
 
             @Override
-            protected void writeTimeoutResponse(InvocationContext context) {
+            protected void writeTimeoutResponse(ProcessingContext context) {
                 responseContext = ApplicationHandler.this.writeResponse(
                         requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
             }
@@ -774,7 +774,7 @@ public final class ApplicationHandler {
     }
 
     private static ContainerResponse prepareTimeoutResponse(
-            final InvocationContext context, ContainerRequest requestContext) {
+            final ProcessingContext context, ContainerRequest requestContext) {
 
         Response response = context.getResponse();
         if (response == null) {
