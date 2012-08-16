@@ -39,28 +39,39 @@
  */
 package org.glassfish.jersey.examples.httptrace;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TraceSupportTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
+        enable(TestProperties.DUMP_ENTITY);
+        enable(TestProperties.LOG_TRAFFIC);
         return App.create();
     }
     private String[] expectedFragmentsProgrammatic = new String[]{
-        "TRACE http://localhost:" + this.getPort() + "/tracing/programmatic"
+            "TRACE http://localhost:" + this.getPort() + "/tracing/programmatic"
     };
     private String[] expectedFragmentsAnnotated = new String[]{
-        "TRACE http://localhost:" + this.getPort() + "/tracing/annotated"
+            "TRACE http://localhost:" + this.getPort() + "/tracing/annotated"
     };
 
     private WebTarget prepareTarget(String path) {
@@ -95,5 +106,53 @@ public class TraceSupportTest extends JerseyTest {
                     // toLowerCase - http header field names are case insensitive
                     responseEntity.contains(expectedFragment));
         }
+    }
+
+    @Test
+    public void testTraceWithEntity() throws Exception {
+        _testTraceWithEntity(false, false);
+    }
+
+    @Test
+    public void testAsyncTraceWithEntity() throws Exception {
+        _testTraceWithEntity(true, false);
+    }
+
+    @Test
+    @Ignore("Un-ignore once the JERSEY-1376 is fixed.")
+    // TODO Un-ignore once the JERSEY-1376 is fixed.
+    public void testTraceWithEntityGrizzlyConnector() throws Exception {
+        _testTraceWithEntity(false, true);
+    }
+
+    @Test
+    @Ignore("Un-ignore once the JERSEY-1376 is fixed.")
+    // TODO Un-ignore once the JERSEY-1376 is fixed.
+    public void testAsyncTraceWithEntityGrizzlyConnector() throws Exception {
+        _testTraceWithEntity(true, true);
+    }
+
+    private void _testTraceWithEntity(final boolean isAsync, final boolean useGrizzlyConnection) throws Exception {
+        try {
+            WebTarget target = useGrizzlyConnection ? getGrizzlyClient().target(target().getUri()) : target();
+            target = target.path(App.ROOT_PATH_ANNOTATED);
+
+            final Entity<String> entity = Entity.entity("trace", MediaType.WILDCARD_TYPE);
+
+            Response response;
+            if (!isAsync) {
+                response = target.request().method(TRACE.NAME, entity);
+            } else {
+                response = target.request().async().method(TRACE.NAME, entity).get();
+            }
+
+            fail("A TRACE request MUST NOT include an entity. (response=" + response + ")");
+        } catch (Exception e) {
+            // OK
+        }
+    }
+
+    private Client getGrizzlyClient() {
+        return ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().configuration())));
     }
 }
