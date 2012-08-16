@@ -44,16 +44,21 @@ import java.io.IOException;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.UriBuilder;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClientTest {
@@ -134,5 +139,60 @@ public class JerseyClientTest {
         });
 
         assertEquals(1, target.configuration().getProviderInstances().size());
+    }
+
+    /**
+     * Regression test for JERSEY-1192.
+     */
+    @Test
+    public void testCreateLinkBasedInvocation() {
+        JerseyClient client = new JerseyClient();
+
+        try {
+            client.invocation(null, Entity.text("Test."));
+            fail("NullPointerException expected.");
+        } catch (NullPointerException ex) {
+            // success.
+        }
+
+        try {
+            client.invocation(null);
+            fail("NullPointerException expected.");
+        } catch (NullPointerException ex) {
+            // success.
+        }
+
+        Link link1 =
+                Link.fromUri(UriBuilder.fromPath("http://localhost:8080/").build())
+                        .method("POST")
+                        .build();
+        Link link2 =
+                Link.fromUri(UriBuilder.fromPath("http://localhost:8080/").build())
+                        .method("POST")
+                        .consumes("text/plain")
+                        .build();
+        try {
+            client.invocation(link1, null);
+            fail("NullPointerException expected.");
+        } catch (NullPointerException ex) {
+            // success.
+        }
+        try {
+            client.invocation(link2, null);
+            fail("NullPointerException expected.");
+        } catch (NullPointerException ex) {
+            // success.
+        }
+
+        assertNotNull(client.invocation(link1, Entity.text("Test.")));
+        assertNotNull(client.invocation(link2, Entity.text("Test.")));
+
+        assertNotNull(client.invocation(link1, Entity.xml("Test.")));
+        try {
+            client.invocation(link2, Entity.xml("Test."));
+            fail("IllegalArgumentException expected.");
+        } catch (IllegalArgumentException ex) {
+            // success.
+        }
     }
 }

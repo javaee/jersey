@@ -191,19 +191,22 @@ public class JerseyClient implements javax.ws.rs.client.Client {
             throws NullPointerException, IllegalArgumentException {
         checkNotClosed();
         checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
+        checkNotNull(entity, "Entity of the newly created invocation must not be 'null'.");
+
         String method = link.getMethod();
         if (method == null) {
             throw new IllegalArgumentException("Cannot create invocation from link " + link);
         }
-        boolean isCompatible = false;
-        for (String mt : link.getConsumes()) {
+        final List<String> consumedTypes = link.getConsumes();
+        boolean isCompatible = consumedTypes.isEmpty();
+        for (String mt : consumedTypes) {
             if (entity.getMediaType().isCompatible(MediaType.valueOf(mt))) {
                 isCompatible = true;
                 break;
             }
         }
         if (!isCompatible) {
-            throw new IllegalArgumentException("Entity type incompatible with link produces parameter");
+            throw new IllegalArgumentException("Entity type incompatible with link consumes parameter");
         }
         WebTarget t = new WebTarget(link, this);
         List<String> ps = link.getProduces();
