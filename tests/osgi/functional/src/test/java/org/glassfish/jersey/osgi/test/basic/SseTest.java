@@ -41,7 +41,6 @@ package org.glassfish.jersey.osgi.test.basic;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -75,12 +74,7 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
  * Basic test for SSE module OSGification.
@@ -104,71 +98,14 @@ public class SseTest {
 
     @Configuration
     public static Option[] configuration() {
-        List<Option> options = Arrays.asList(options(
-                // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-                systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
+        List<Option> options = Helper.getCommonOsgiOptions();
 
-                // define maven repository
-                repositories("http://repo1.maven.org/maven2",
-                        "http://repository.apache.org/content/groups/snapshots-group",
-                        "http://repository.ops4j.org/maven2",
-                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                        "http://repository.springsource.com/maven/bundles/release",
-                        "http://repository.springsource.com/maven/bundles/external",
-                        "http://maven.java.net/content/repositories/snapshots"),
-
-                // log
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
-
-                // felix config admin
-                // mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.4"),
-
-                // felix preference service
-                // mavenBundle("org.apache.felix", "org.apache.felix.prefs","1.0.2"),
-
-                // HTTP SPEC
-                // mavenBundle("org.apache.geronimo.specs","geronimo-servlet_2.5_spec","1.1.2"),
-
-                // Google Guava
-                mavenBundle().groupId("com.googlecode.guava-osgi").artifactId("guava-osgi").versionAsInProject(),
-
-                // HK2
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("osgi-resource-locator").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-locator").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
-
-                // JAX-RS API
-                mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
-
-                // javax.annotation
-                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
-
-                // Jersey bundles
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
-                        .versionAsInProject(),
-
-                // Grizzly
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-server").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-rcm").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-framework").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.gmbal").artifactId("gmbal-api-only").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.external").artifactId("management-api").versionAsInProject(),
-
-                // start felix framework
-                felix()));
+        options.addAll(Helper.expandedList(
+                // Jersey SSE dependencies
+                mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject()));
 
         options = Helper.addPaxExamMavenLocalRepositoryProperty(options);
-        return options.toArray(new Option[options.size()]);
+        return Helper.asArray(options);
     }
 
     @Path("/sse")

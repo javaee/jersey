@@ -107,7 +107,7 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").versionAsInProject(),
 
                 // Google Guava
-                mavenBundle().groupId("com.googlecode.guava-osgi").artifactId("guava-osgi").versionAsInProject(),
+                mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
 
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),

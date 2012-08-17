@@ -719,9 +719,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.googlecode.guava-osgi</groupId>
-                <artifactId>guava-osgi</artifactId>
-                <version>11.0.1</version>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>13.0</version>
             </dependency>
 
             <dependency>

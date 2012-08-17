@@ -122,7 +122,7 @@
                                ,org.glassfish.jersey.containers.glassfish,
                                ,org.glassfish.jersey.media,
                                ,javax.ws.rs,
-                               ,com.googlecode.guava-osgi,
+                               ,com.google.guava,
                                ,org.codehaus.jackson,
                                ,org.codehaus.jettison</includeGroupIds>
                         </configuration>

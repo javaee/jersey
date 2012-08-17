@@ -40,13 +40,13 @@
 package org.glassfish.jersey.osgi.test.basic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.client.Feature;
 
 import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.osgi.test.util.Helper;
 
 import org.glassfish.hk2.utilities.Binder;
 
@@ -54,7 +54,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -65,23 +64,20 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
     public static Option[] configuration() {
         List<Option> options = new ArrayList<Option>();
 
-        options.addAll(getCommonOsgiIntegrationTestOptions());
-        options.addAll(Arrays.asList(
-           options(
-                   bootDelegationPackage("javax.xml.bind"),
-                   bootDelegationPackage("javax.xml.bind.*"),
+        options.addAll(Helper.getCommonOsgiOptions());
+        options.addAll(Helper.expandedList(
+                bootDelegationPackage("javax.xml.bind"),
+                bootDelegationPackage("javax.xml.bind.*"),
 
-                   mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-moxy").versionAsInProject(),
-
-                   // jersey-json deps
-                   mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.moxy").versionAsInProject(),
-                   mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.antlr").versionAsInProject(),
-                   mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.core").versionAsInProject(),
-                   mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.asm").versionAsInProject()
-           )
+                // jersey-json dependencies
+                mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-moxy").versionAsInProject(),
+                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.moxy").versionAsInProject(),
+                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.antlr").versionAsInProject(),
+                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.core").versionAsInProject(),
+                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.asm").versionAsInProject()
         ));
 
-        return options.toArray(new Option[options.size()]);
+        return Helper.asArray(options);
     }
 
     @Override

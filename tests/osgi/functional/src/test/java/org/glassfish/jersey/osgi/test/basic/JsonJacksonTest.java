@@ -40,20 +40,19 @@
 package org.glassfish.jersey.osgi.test.basic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.client.Feature;
 
 import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.osgi.test.util.Helper;
 
 import org.glassfish.hk2.utilities.Binder;
 
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -64,18 +63,18 @@ public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
     public static Option[] configuration() {
         List<Option> options = new ArrayList<Option>();
 
-        options.addAll(getCommonOsgiIntegrationTestOptions());
-        options.addAll(Arrays.asList(options(
+        options.addAll(Helper.getCommonOsgiOptions());
+        options.addAll(Helper.expandedList(
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-json-jackson").versionAsInProject(),
 
-                // jersey-json deps
+                // jersey-json dependencies
                 mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-core-asl").versionAsInProject(),
                 mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-mapper-asl").versionAsInProject(),
                 mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-jaxrs").versionAsInProject(),
                 mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-xc").versionAsInProject()
-        )));
+        ));
 
-        return options.toArray(new Option[options.size()]);
+        return Helper.asArray(options);
     }
 
     @Override
