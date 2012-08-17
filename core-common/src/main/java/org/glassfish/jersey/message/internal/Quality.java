@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,66 +39,28 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import java.text.ParseException;
-
 /**
- * An acceptable language tag.
+ * Quality parameter constants.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class AcceptableLanguageTag extends LanguageTag implements Qualified {
-
-    private final int quality;
-
-    public AcceptableLanguageTag(String primaryTag, String subTags) {
-        super(primaryTag, subTags);
-        this.quality = Quality.DEFAULT_QUALITY;
+public final class Quality {
+    /**
+     * Prevents instantiation.
+     */
+    private Quality() {
     }
 
-    public AcceptableLanguageTag(String header) throws ParseException {
-        this(HttpHeaderReader.newInstance(header));
-    }
-
-    public AcceptableLanguageTag(HttpHeaderReader reader) throws ParseException {
-        // Skip any white space
-        reader.hasNext();
-
-        tag = reader.nextToken();
-        if (!tag.equals("*")) {
-            parse(tag);
-        } else {
-            primaryTag = tag;
-        }
-
-        if (reader.hasNext()) {
-            quality = HttpHeaderReader.readQualityFactorParameter(reader);
-        } else {
-            quality = Quality.DEFAULT_QUALITY;
-        }
-    }
-
-    @Override
-    public int getQuality() {
-        return quality;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        final AcceptableLanguageTag other = (AcceptableLanguageTag) obj;
-        if (this.quality != other.quality) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 47 * hash + this.quality;
-        return hash;
-    }
+    /**
+     * Minimum quality value.
+     */
+    public static final int MINIMUM_QUALITY = 0;
+    /**
+     * Maximum quality value.
+     */
+    public static final int MAXIMUM_QUALITY = 1000;
+    /**
+     * Default quality value.
+     */
+    public static final int DEFAULT_QUALITY = MAXIMUM_QUALITY;
 }

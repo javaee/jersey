@@ -50,32 +50,32 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class AcceptableMediaType extends MediaType implements QualityFactor {
+public class AcceptableMediaType extends MediaType implements Qualified {
 
     private final int q;
 
     /**
-     * Create new acceptable media type instance with a {@link QualityFactor#DEFAULT_QUALITY_FACTOR
+     * Create new acceptable media type instance with a {@link Quality#DEFAULT_QUALITY
      * default quality factor} value.
      *
-     * @param type    the primary type, null is equivalent to
+     * @param type    the primary type, {@code null} is equivalent to
      *                {@link #MEDIA_TYPE_WILDCARD}
      * @param subtype the subtype, null is equivalent to
      *                {@link #MEDIA_TYPE_WILDCARD}
      */
     public AcceptableMediaType(String type, String subtype) {
         super(type, subtype);
-        q = DEFAULT_QUALITY_FACTOR;
+        q = Quality.DEFAULT_QUALITY;
     }
 
     /**
      * Create new acceptable media type instance.
      *
-     * @param type       the primary type, null is equivalent to
+     * @param type       the primary type, {@code null} is equivalent to
      *                   {@link #MEDIA_TYPE_WILDCARD}
-     * @param subtype    the subtype, null is equivalent to
+     * @param subtype    the subtype, {@code null} is equivalent to
      *                   {@link #MEDIA_TYPE_WILDCARD}
-     * @param quality    quality factor ppt value. See {@link QualityFactor}.
+     * @param quality    quality factor value in [ppt]. See {@link Qualified}.
      * @param parameters a map of media type parameters, {@code null} is the same as an
      *                   empty map.
      */
@@ -112,11 +112,11 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
         }
 
         Map<String, String> parameters = null;
-        int quality = DEFAULT_QUALITY_FACTOR;
+        int quality = Quality.DEFAULT_QUALITY;
         if (reader.hasNext()) {
             parameters = HttpHeaderReader.readParameters(reader);
             if (parameters != null) {
-                String v = parameters.get(QUALITY_FACTOR);
+                String v = parameters.get(QUALITY_PARAMETER_NAME);
                 if (v != null) {
                     quality = HttpHeaderReader.readQualityFactor(v);
                 }
@@ -138,13 +138,13 @@ public class AcceptableMediaType extends MediaType implements QualityFactor {
         } else {
             // obj is a plain MediaType instance
             // with a quality factor set to default (1.0)
-            return this.q == DEFAULT_QUALITY_FACTOR;
+            return this.q == Quality.DEFAULT_QUALITY;
         }
     }
 
     @Override
     public int hashCode() {
         int hash = super.hashCode();
-        return (this.q == DEFAULT_QUALITY_FACTOR)? hash : 47 * hash + this.q;
+        return (this.q == Quality.DEFAULT_QUALITY)? hash : 47 * hash + this.q;
     }
 }

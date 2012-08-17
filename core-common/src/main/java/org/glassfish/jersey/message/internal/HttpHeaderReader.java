@@ -202,7 +202,7 @@ public abstract class HttpHeaderReader {
             if (value > 0) {
                 throw new ParseException("The Quality value, " + q + ", is greater than 1", index);
             }
-            return QualityFactor.DEFAULT_QUALITY_FACTOR;
+            return Quality.DEFAULT_QUALITY;
         } else {
             return value;
         }
@@ -215,7 +215,7 @@ public abstract class HttpHeaderReader {
 
             // Ignore a ';' with no parameters
             if (!reader.hasNext()) {
-                return QualityFactor.DEFAULT_QUALITY_FACTOR;
+                return Quality.DEFAULT_QUALITY;
             }
 
             // Get the parameter name
@@ -224,12 +224,12 @@ public abstract class HttpHeaderReader {
             // Get the parameter value
             String value = reader.nextTokenOrQuotedString();
 
-            if (q == -1 && name.equalsIgnoreCase(QualityFactor.QUALITY_FACTOR)) {
+            if (q == -1 && name.equalsIgnoreCase(Qualified.QUALITY_PARAMETER_NAME)) {
                 q = readQualityFactor(value);
             }
         }
 
-        return (q == -1) ? QualityFactor.DEFAULT_QUALITY_FACTOR : q;
+        return (q == -1) ? Quality.DEFAULT_QUALITY : q;
     }
 
     public static Map<String, String> readParameters(HttpHeaderReader reader) throws ParseException {
@@ -384,9 +384,9 @@ public abstract class HttpHeaderReader {
                     @Override
                     public int compare(AcceptableMediaType o1, AcceptableMediaType o2) {
                         boolean q_o1_set = false;
-                        int q_o1 = QualitySourceMediaType.DEFAULT_QUALITY_SOURCE_FACTOR * QualitySourceMediaType.DEFAULT_QUALITY_SOURCE_FACTOR;
+                        int q_o1 = Quality.DEFAULT_QUALITY * Quality.DEFAULT_QUALITY;
                         boolean q_o2_set = false;
-                        int q_o2 = QualitySourceMediaType.DEFAULT_QUALITY_SOURCE_FACTOR * QualitySourceMediaType.DEFAULT_QUALITY_SOURCE_FACTOR;
+                        int q_o2 = Quality.DEFAULT_QUALITY * Quality.DEFAULT_QUALITY;
                         for (QualitySourceMediaType m : priorityMediaTypes) {
                             if (!q_o1_set && MediaTypes.typeEqual(o1, m)) {
                                 q_o1 = o1.getQuality() * m.getQualitySource();
@@ -436,15 +436,15 @@ public abstract class HttpHeaderReader {
     public static List<AcceptableLanguageTag> readAcceptLanguage(String header) throws ParseException {
         return HttpHeaderReader.readAcceptableList(LANGUAGE_CREATOR, header);
     }
-    private static final Comparator<QualityFactor> QUALITY_COMPARATOR = new Comparator<QualityFactor>() {
+    private static final Comparator<Qualified> QUALITY_COMPARATOR = new Comparator<Qualified>() {
 
         @Override
-        public int compare(QualityFactor o1, QualityFactor o2) {
+        public int compare(Qualified o1, Qualified o2) {
             return o2.getQuality() - o1.getQuality();
         }
     };
 
-    public static <T extends QualityFactor> List<T> readAcceptableList(
+    public static <T extends Qualified> List<T> readAcceptableList(
             ListElementCreator<T> c,
             String header) throws ParseException {
         List<T> l = readList(c, header);

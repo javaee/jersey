@@ -45,12 +45,16 @@ package org.glassfish.jersey.message.internal;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface QualityFactor {
+public interface Qualified {
+    /**
+     * Name of a quality parameter in a header value.
+     */
+    public static final String QUALITY_PARAMETER_NAME = "q";
 
-    static final String QUALITY_FACTOR = "q";
-    static final int MINUMUM_QUALITY = 0;
-    static final int MAXIMUM_QUALITY = 1000;
-    static final int DEFAULT_QUALITY_FACTOR = MAXIMUM_QUALITY;
-
+    /**
+     * Get quality factor value (in [ppt]).
+     *
+     * @return quality factor value.
+     */
     int getQuality();
 }

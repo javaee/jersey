@@ -45,35 +45,66 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 /**
- * An quality source media type.
+ * A quality source media type.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class QualitySourceMediaType extends MediaType {
+    /**
+     * Quality source header value parameter name.
+     */
+    public static final String QUALITY_SOURCE_PARAMETER_NAME = "qs";
 
-    public static final String QUALITY_SOURCE_FACTOR = "qs";
-    public static final int DEFAULT_QUALITY_SOURCE_FACTOR = 1000;
     private final int qs;
 
-    public QualitySourceMediaType(String p, String s) {
-        super(p, s);
-        qs = DEFAULT_QUALITY_SOURCE_FACTOR;
+    /**
+     * Create new quality source media type instance with a {@link Quality#DEFAULT_QUALITY
+     * default quality factor} value.
+     *
+     * @param type    the primary type, {@code null} is equivalent to
+     *                {@link #MEDIA_TYPE_WILDCARD}
+     * @param subtype the subtype, {@code null} is equivalent to
+     *                {@link #MEDIA_TYPE_WILDCARD}
+     */
+    public QualitySourceMediaType(String type, String subtype) {
+        super(type, subtype);
+        qs = Quality.DEFAULT_QUALITY;
     }
 
-    public QualitySourceMediaType(String p, String s, int qs, Map<String, String> parameters) {
-        super(p, s, parameters);
-        this.qs = qs;
+    /**
+     * Create new quality source media type instance.
+     *
+     * @param type       the primary type, {@code null} is equivalent to
+     *                   {@link #MEDIA_TYPE_WILDCARD}
+     * @param subtype    the subtype, {@code null} is equivalent to
+     *                   {@link #MEDIA_TYPE_WILDCARD}
+     * @param quality    quality source factor value in [ppt]. See {@link Qualified}.
+     * @param parameters a map of media type parameters, {@code null} is the same as an
+     *                   empty map.
+     */
+    public QualitySourceMediaType(String type, String subtype, int quality, Map<String, String> parameters) {
+        super(type, subtype, parameters);
+        this.qs = quality;
     }
 
-    public QualitySourceMediaType(MediaType mt) {
-        this(mt.getType(), mt.getSubtype(), getQs(mt), mt.getParameters());
-    }
-
+    /**
+     * Get quality source factor value (in [ppt]).
+     *
+     * @return quality source factor value.
+     */
     public int getQualitySource() {
         return qs;
     }
 
+    /**
+     * Create new quality source media type instance from the supplied
+     * {@link HttpHeaderReader HTTP header reader}.
+     *
+     * @param reader HTTP header reader.
+     * @return new acceptable media type instance.
+     * @throws ParseException in case the input data parsing failed.
+     */
     public static QualitySourceMediaType valueOf(HttpHeaderReader reader) throws ParseException {
         // Skip any white space
         reader.hasNext();
@@ -84,30 +115,41 @@ public class QualitySourceMediaType extends MediaType {
         // Get the subtype
         String subType = reader.nextToken();
 
-        int qs = DEFAULT_QUALITY_SOURCE_FACTOR;
+        int qs = Quality.DEFAULT_QUALITY;
         Map<String, String> parameters = null;
         if (reader.hasNext()) {
             parameters = HttpHeaderReader.readParameters(reader);
             if (parameters != null) {
-                qs = getQs(parameters.get(QUALITY_SOURCE_FACTOR));
+                qs = getQs(parameters.get(QUALITY_SOURCE_PARAMETER_NAME));
             }
         }
 
         return new QualitySourceMediaType(type, subType, qs, parameters);
     }
 
-    public static int getQualitySource(MediaType mt) {
-        if (mt instanceof QualitySourceMediaType) {
-            QualitySourceMediaType qsmt = (QualitySourceMediaType) mt;
+    /**
+     * Extract quality source information from the supplied {@link MediaType} value.
+     *
+     * If no quality source parameter is present in the media type, {@link Quality#DEFAULT_QUALITY
+     * default quality} is returned.
+     *
+     * @param mediaType media type.
+     * @return quality source parameter value or {@link Quality#DEFAULT_QUALITY default quality},
+     *         if no quality source parameter is present.
+     * @throws IllegalArgumentException in case the quality source parameter value could not be parsed.
+     */
+    public static int getQualitySource(MediaType mediaType) throws IllegalArgumentException {
+        if (mediaType instanceof QualitySourceMediaType) {
+            QualitySourceMediaType qsmt = (QualitySourceMediaType) mediaType;
             return qsmt.getQualitySource();
         } else {
-            return getQs(mt);
+            return getQs(mediaType);
         }
     }
 
-    private static int getQs(MediaType mt) {
+    private static int getQs(MediaType mt) throws IllegalArgumentException {
         try {
-            return getQs(mt.getParameters().get(QUALITY_SOURCE_FACTOR));
+            return getQs(mt.getParameters().get(QUALITY_SOURCE_PARAMETER_NAME));
         } catch (ParseException ex) {
             throw new IllegalArgumentException(ex);
         }
@@ -115,7 +157,7 @@ public class QualitySourceMediaType extends MediaType {
 
     private static int getQs(String v) throws ParseException {
         if (v == null) {
-            return DEFAULT_QUALITY_SOURCE_FACTOR;
+            return Quality.DEFAULT_QUALITY;
         }
 
         try {
@@ -131,26 +173,25 @@ public class QualitySourceMediaType extends MediaType {
         }
     }
 
-
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof QualitySourceMediaType)) {
-            return false;
-        }
         if (!super.equals(obj)) {
             return false;
         }
-        final QualitySourceMediaType other = (QualitySourceMediaType) obj;
-        if (this.qs != other.qs) {
-            return false;
+
+        if (obj instanceof QualitySourceMediaType) {
+            final QualitySourceMediaType other = (QualitySourceMediaType) obj;
+            return this.qs == other.qs;
+        } else {
+            // obj is a plain MediaType instance
+            // with a quality source factor set to default (1.0)
+            return this.qs == Quality.DEFAULT_QUALITY;
         }
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 47 * hash + this.qs;
-        return hash;
+        int hash = super.hashCode();
+        return (this.qs == Quality.DEFAULT_QUALITY) ? hash : 47 * hash + this.qs;
     }
 }

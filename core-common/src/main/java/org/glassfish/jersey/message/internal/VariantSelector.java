@@ -141,7 +141,7 @@ public final class VariantSelector {
 
                 @Override
                 public int getQualitySource(VariantHolder qsv, Locale u) {
-                    return QualityFactor.MINUMUM_QUALITY;
+                    return Quality.MINIMUM_QUALITY;
                 }
 
                 @Override
@@ -165,7 +165,7 @@ public final class VariantSelector {
 
                 @Override
                 public int getQualitySource(VariantHolder qsv, String u) {
-                    return QualityFactor.MINUMUM_QUALITY;
+                    return Quality.MINIMUM_QUALITY;
                 }
 
                 @Override
@@ -188,7 +188,7 @@ public final class VariantSelector {
 
                 @Override
                 public int getQualitySource(VariantHolder qsv, String u) {
-                    return QualityFactor.MINUMUM_QUALITY;
+                    return Quality.MINIMUM_QUALITY;
                 }
 
                 @Override
@@ -207,13 +207,13 @@ public final class VariantSelector {
      * @param dimensionChecker the dimension checker
      * @param vary             output list of generated vary headers.
      */
-    private static <T extends QualityFactor, U> LinkedList<VariantHolder> selectVariants(
+    private static <T extends Qualified, U> LinkedList<VariantHolder> selectVariants(
             List<VariantHolder> variantHolders,
             List<T> acceptableValues,
             DimensionChecker<T, U> dimensionChecker,
             Set<String> vary) {
-        int cq = QualityFactor.MINUMUM_QUALITY;
-        int cqs = QualityFactor.MINUMUM_QUALITY;
+        int cq = Quality.MINIMUM_QUALITY;
+        int cqs = Quality.MINIMUM_QUALITY;
 
         final LinkedList<VariantHolder> selected = new LinkedList<VariantHolder>();
 
@@ -272,7 +272,7 @@ public final class VariantSelector {
         private final int mediaTypeQs;
 
         public VariantHolder(Variant v) {
-            this(v, QualitySourceMediaType.DEFAULT_QUALITY_SOURCE_FACTOR);
+            this(v, Quality.DEFAULT_QUALITY);
         }
 
         public VariantHolder(Variant v, int mediaTypeQs) {
@@ -287,7 +287,7 @@ public final class VariantSelector {
             final MediaType mt = v.getMediaType();
             if (mt != null) {
                 if (mt instanceof QualitySourceMediaType || mt.getParameters().
-                        containsKey(QualitySourceMediaType.QUALITY_SOURCE_FACTOR)) {
+                        containsKey(QualitySourceMediaType.QUALITY_SOURCE_PARAMETER_NAME)) {
                     int qs = QualitySourceMediaType.getQualitySource(mt);
                     l.add(new VariantHolder(v, qs));
                 } else {

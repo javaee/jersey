@@ -346,13 +346,13 @@ public class MediaTypes {
      */
     public static int getQuality(MediaType mt) {
 
-        final String qParam = mt.getParameters().get(QualityFactor.QUALITY_FACTOR);
+        final String qParam = mt.getParameters().get(Qualified.QUALITY_PARAMETER_NAME);
         return readQualityFactor(qParam);
     }
 
     private static int readQualityFactor(final String qParam) throws IllegalArgumentException {
         if (qParam == null) {
-            return QualityFactor.DEFAULT_QUALITY_FACTOR;
+            return Quality.DEFAULT_QUALITY;
         } else {
             try {
                 return HttpHeaderReader.readQualityFactor(qParam);
@@ -376,8 +376,8 @@ public class MediaTypes {
         }
         Map<String, String> newParameters = new HashMap<String, String>();
         for (Map.Entry<String, String> e : oldParameters.entrySet()) {
-            final boolean isQs = e.getKey().equals(QualitySourceMediaType.QUALITY_SOURCE_FACTOR);
-            final boolean isQ = e.getKey().equals(QualityFactor.QUALITY_FACTOR);
+            final boolean isQs = e.getKey().equals(QualitySourceMediaType.QUALITY_SOURCE_PARAMETER_NAME);
+            final boolean isQ = e.getKey().equals(Qualified.QUALITY_PARAMETER_NAME);
             if (!isQ && !isQs) {
                 newParameters.put(e.getKey(), e.getValue());
             }

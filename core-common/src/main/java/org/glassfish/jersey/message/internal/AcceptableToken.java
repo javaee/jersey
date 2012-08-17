@@ -47,9 +47,9 @@ import java.text.ParseException;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class AcceptableToken extends Token implements QualityFactor {
+public class AcceptableToken extends Token implements Qualified {
 
-    protected int quality = DEFAULT_QUALITY_FACTOR;
+    protected int quality = Quality.DEFAULT_QUALITY;
 
     public AcceptableToken(String header) throws ParseException {
         this(HttpHeaderReader.newInstance(header));
