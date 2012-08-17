@@ -55,14 +55,16 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 
+import com.google.common.net.InetAddresses;
+
 /**
- * An implementation of {@link UriBuilder}.
+ * A Jersey implementation of {@link UriBuilder}.
  *
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class UriBuilderImpl extends UriBuilder {
+public class JerseyUriBuilder extends UriBuilder {
 
     // All fields should be in the percent-encoded form
     private String scheme;
@@ -80,12 +82,12 @@ public class UriBuilderImpl extends UriBuilder {
     /**
      * Create new implementation of {@code UriBuilder}.
      */
-    public UriBuilderImpl() {
+    public JerseyUriBuilder() {
         path = new StringBuilder();
         query = new StringBuilder();
     }
 
-    private UriBuilderImpl(UriBuilderImpl that) {
+    private JerseyUriBuilder(JerseyUriBuilder that) {
         this.scheme = that.scheme;
         this.ssp = that.ssp;
         this.authority = that.authority;
@@ -101,12 +103,12 @@ public class UriBuilderImpl extends UriBuilder {
 
     @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
-    public UriBuilderImpl clone() {
-        return new UriBuilderImpl(this);
+    public JerseyUriBuilder clone() {
+        return new JerseyUriBuilder(this);
     }
 
     @Override
-    public UriBuilderImpl uri(URI uri) {
+    public JerseyUriBuilder uri(URI uri) {
         if (uri == null) {
             throw new IllegalArgumentException("URI parameter is null");
         }
@@ -167,7 +169,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl uri(String uriTemplate) {
+    public JerseyUriBuilder uri(String uriTemplate) {
         if (uriTemplate == null) {
             throw new IllegalArgumentException("URI parameter is null");
         }
@@ -175,58 +177,66 @@ public class UriBuilderImpl extends UriBuilder {
         UriParser parser = new UriParser(uriTemplate);
         parser.parse();
 
-        if (parser.getFragment() != null) {
-            this.fragment = parser.getFragment();
-        }
+        scheme(parser.getScheme());
 
+        schemeSpecificPart(parser);
+
+        fragment(parser.getFragment());
+
+        return this;
+    }
+
+    /**
+     * Set scheme specific part from the URI parser.
+     *
+     * @param parser initialized URI parser.
+     * @return {@code true} if the parser data has been fully consumed, {@code false} otherwise.
+     */
+    private void schemeSpecificPart(UriParser parser) {
         if (parser.isOpaque()) {
-            this.ssp = parser.getSsp();
-            this.scheme = parser.getScheme();
-            return this;
-        }
+            if (parser.getSsp() != null) {
+                this.authority = this.host = this.port = null;
+                this.path.setLength(0);
+                this.query.setLength(0);
 
-        if (parser.getScheme() == null && this.ssp != null && parser.getSsp() != null) {
-            // relative uri with ssp
-            this.ssp = parser.getSsp();
-        } else {
-            this.scheme = parser.getScheme();
+                // TODO encode or validate scheme specific part
+                this.ssp = parser.getSsp();
+            }
+            return;
         }
 
         if (parser.getAuthority() != null) {
             if (parser.getUserInfo() == null && parser.getHost() == null && parser.getPort() == null) {
-                this.authority = parser.getAuthority();
+                this.authority = encode(parser.getAuthority(), UriComponent.Type.AUTHORITY);
                 this.userInfo = null;
                 this.host = null;
                 this.port = null;
             } else {
                 this.authority = null;
                 if (parser.getUserInfo() != null) {
-                    this.userInfo = parser.getUserInfo();
+                    userInfo(parser.getUserInfo());
                 }
                 if (parser.getHost() != null) {
-                    this.host = parser.getHost();
+                    host(parser.getHost());
                 }
                 if (parser.getPort() != null) {
                     this.port = parser.getPort();
                 }
             }
-
         }
 
         if (parser.getPath() != null) {
             this.path.setLength(0);
-            this.path.append(parser.getPath());
+            path(parser.getPath());
         }
         if (parser.getQuery() != null) {
             this.query.setLength(0);
             this.query.append(parser.getQuery());
         }
-
-        return this;
     }
 
     @Override
-    public UriBuilderImpl scheme(String scheme) {
+    public JerseyUriBuilder scheme(String scheme) {
         if (scheme != null) {
             this.scheme = scheme;
             UriComponent.validate(scheme, UriComponent.Type.SCHEME, true);
@@ -237,53 +247,32 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl schemeSpecificPart(String ssp) {
+    public JerseyUriBuilder schemeSpecificPart(String ssp) {
         if (ssp == null) {
-            throw new IllegalArgumentException("Scheme specific part parameter is null");
+            throw new IllegalArgumentException("Supplied scheme-specific part parameter is null");
         }
 
-        // TODO encode or validate scheme specific part
-        // This will not work for template variables present in the ssp
-        StringBuilder sb = new StringBuilder();
-        if (scheme != null) {
-            sb.append(scheme).append(':');
+        UriParser parser = new UriParser((scheme != null) ? scheme + ":" + ssp : ssp);
+        parser.parse();
+
+        if (parser.getScheme() != null && !parser.getScheme().equals(scheme)) {
+            throw new IllegalStateException(String.format(
+                    "Supplied scheme-specific URI part '%s' contains unexpected URI Scheme component: '%s'",
+                    ssp, parser.getScheme()));
         }
-        sb.append(ssp);
-        if (fragment != null && fragment.length() > 0) {
-            sb.append('#').append(fragment);
+        if (parser.getFragment() != null) {
+            throw new IllegalStateException(String.format(
+                    "Supplied scheme-specific URI part '%s' contains URI Fragment component: '%s'",
+                    ssp, parser.getFragment()));
         }
-        URI uri = createURI(sb.toString());
 
-        if (uri.getRawSchemeSpecificPart() != null && uri.getRawPath() == null) {
-            this.ssp = uri.getRawSchemeSpecificPart();
-        } else {
-            this.ssp = null;
+        schemeSpecificPart(parser);
 
-            if (uri.getRawAuthority() != null) {
-                if (uri.getRawUserInfo() == null && uri.getHost() == null && uri.getPort() == -1) {
-                    authority = uri.getRawAuthority();
-                    userInfo = null;
-                    host = null;
-                    port = null;
-                } else {
-                    authority = null;
-                    userInfo = uri.getRawUserInfo();
-                    host = uri.getHost();
-                    port = uri.getPort() == -1 ? null : String.valueOf(uri.getPort());
-                }
-            }
-
-            path.setLength(0);
-            path.append(replaceNull(uri.getRawPath()));
-
-            query.setLength(0);
-            query.append(replaceNull(uri.getRawQuery()));
-        }
         return this;
     }
 
     @Override
-    public UriBuilderImpl userInfo(String ui) {
+    public JerseyUriBuilder userInfo(String ui) {
         checkSsp();
         this.userInfo = (ui != null)
                 ? encode(ui, UriComponent.Type.USER_INFO) : null;
@@ -291,22 +280,26 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl host(String host) {
+    public JerseyUriBuilder host(String host) {
         checkSsp();
         if (host != null) {
-            if (host.length() == 0) // null is used to reset host setting
-            {
+            if (host.length() == 0) {
                 throw new IllegalArgumentException("Invalid host name");
             }
-            this.host = encode(host, UriComponent.Type.HOST);
+            if (InetAddresses.isMappedIPv4Address(host) || InetAddresses.isUriInetAddress(host)) {
+                this.host = host;
+            } else {
+                this.host = encode(host, UriComponent.Type.HOST);
+            }
         } else {
+            // null is used to reset host setting
             this.host = null;
         }
         return this;
     }
 
     @Override
-    public UriBuilderImpl port(int port) {
+    public JerseyUriBuilder port(int port) {
         checkSsp();
         if (port < -1) // -1 is used to reset port setting and since URI allows
         // as port any positive integer, so do we.
@@ -318,7 +311,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl replacePath(String path) {
+    public JerseyUriBuilder replacePath(String path) {
         checkSsp();
         this.path.setLength(0);
         if (path != null) {
@@ -328,14 +321,14 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl path(String path) {
+    public JerseyUriBuilder path(String path) {
         checkSsp();
         appendPath(path);
         return this;
     }
 
     @Override
-    public UriBuilderImpl path(Class<?> resource) {
+    public JerseyUriBuilder path(Class<?> resource) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
@@ -350,7 +343,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl path(Class resource, String methodName) {
+    public JerseyUriBuilder path(Class resource, String methodName) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
@@ -382,7 +375,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl path(Method method) {
+    public JerseyUriBuilder path(Method method) {
         checkSsp();
         if (method == null) {
             throw new IllegalArgumentException("Method is null");
@@ -401,7 +394,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl segment(String... segments) throws IllegalArgumentException {
+    public JerseyUriBuilder segment(String... segments) throws IllegalArgumentException {
         checkSsp();
         if (segments == null) {
             throw new IllegalArgumentException("Segments parameter is null");
@@ -414,7 +407,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl replaceMatrix(String matrix) {
+    public JerseyUriBuilder replaceMatrix(String matrix) {
         checkSsp();
         int i = path.lastIndexOf("/");
         if (i != -1) {
@@ -434,7 +427,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl matrixParam(String name, Object... values) {
+    public JerseyUriBuilder matrixParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException("Name parameter is null");
@@ -473,7 +466,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl replaceMatrixParam(String name, Object... values) {
+    public JerseyUriBuilder replaceMatrixParam(String name, Object... values) {
         checkSsp();
 
         if (name == null) {
@@ -507,7 +500,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl replaceQuery(String query) {
+    public JerseyUriBuilder replaceQuery(String query) {
         checkSsp();
         this.query.setLength(0);
         if (query != null) {
@@ -517,7 +510,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl queryParam(String name, Object... values) {
+    public JerseyUriBuilder queryParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException("Name parameter is null");
@@ -556,7 +549,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl replaceQueryParam(String name, Object... values) {
+    public JerseyUriBuilder replaceQueryParam(String name, Object... values) {
         checkSsp();
 
         if (queryParams == null) {
@@ -582,7 +575,7 @@ public class UriBuilderImpl extends UriBuilder {
     }
 
     @Override
-    public UriBuilderImpl fragment(String fragment) {
+    public JerseyUriBuilder fragment(String fragment) {
         this.fragment = (fragment != null)
                 ? encode(fragment, UriComponent.Type.FRAGMENT)
                 : null;

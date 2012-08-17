@@ -60,7 +60,7 @@ import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-import org.glassfish.jersey.uri.internal.UriBuilderImpl;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -113,7 +113,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
 
     @Override
     public UriBuilder createUriBuilder() {
-        return new UriBuilderImpl();
+        return new JerseyUriBuilder();
     }
 
     @Override

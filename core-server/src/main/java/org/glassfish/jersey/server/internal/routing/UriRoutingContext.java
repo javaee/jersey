@@ -69,7 +69,7 @@ import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
-import org.glassfish.jersey.uri.internal.UriBuilderImpl;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -225,7 +225,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public UriBuilder getAbsolutePathBuilder() {
-        return new UriBuilderImpl().uri(getAbsolutePath());
+        return new JerseyUriBuilder().uri(getAbsolutePath());
     }
 
     @Override
@@ -235,7 +235,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public UriBuilder getBaseUriBuilder() {
-        return new UriBuilderImpl().uri(getBaseUri());
+        return new JerseyUriBuilder().uri(getBaseUri());
     }
 
     @Override
