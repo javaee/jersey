@@ -276,6 +276,7 @@ public class UriComponent {
 
     private static String _encode(String s, Type t, boolean template, boolean contextualEncode) {
         final boolean[] table = ENCODING_TABLES[t.ordinal()];
+        boolean insideTemplateParam = false;
 
         StringBuilder sb = null;
         for (int i = 0; i < s.length(); i++) {
@@ -285,12 +286,23 @@ public class UriComponent {
                     sb.append(c);
                 }
             } else {
-                if (template && (c == '{' || c == '}')) {
-                    if (sb != null) {
-                        sb.append(c);
+                if (template) {
+                    boolean leavingTemplateParam = false;
+                    if (c == '{') {
+                        insideTemplateParam = true;
+                    } else if (c == '}') {
+                        insideTemplateParam = false;
+                        leavingTemplateParam = true;
                     }
-                    continue;
-                } else if (contextualEncode) {
+                    if (insideTemplateParam || leavingTemplateParam) {
+                        if (sb != null) {
+                            sb.append(c);
+                        }
+                        continue;
+                    }
+                }
+
+                if (contextualEncode) {
                     if (c == '%' && i + 2 < s.length()) {
                         if (isHexCharacter(s.charAt(i + 1))
                                 && isHexCharacter(s.charAt(i + 2))) {
@@ -686,7 +698,8 @@ public class UriComponent {
         if (equals > 0) {
             params.add(
                     UriComponent.decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
-                    (decode) ? UriComponent.decode(param.substring(equals + 1), UriComponent.Type.MATRIX_PARAM) : param.substring(equals + 1));
+                    (decode) ? UriComponent.decode(param.substring(equals + 1), UriComponent.Type.MATRIX_PARAM) : param
+                            .substring(equals + 1));
         } else if (equals == 0) {
             // no key declared, ignore
         } else if (param.length() > 0) {

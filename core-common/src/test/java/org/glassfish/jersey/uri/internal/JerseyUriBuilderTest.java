@@ -769,6 +769,24 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testWhitespacesInPathParams() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}/").path("bbb/{  par2   }/ccc").build("1param", "2param");
+        assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2param/ccc"), uri);
+    }
+
+    @Test
+    public void testWhitespacesInPathParams2() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}").path("bbb/{  par2 : \\d*  }/ccc").build("1param", "2");
+        assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2/ccc"), uri);
+    }
+
+    @Test
+    public void testWhitespacesInQueryParams() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa?a={      param   : \\.d*  }").build("5");
+        assertEquals(URI.create("http://localhost:80/aaa?a=5"), uri);
+    }
+
+    @Test
     public void testRelativeFromUri() {
         URI uri = UriBuilder.fromUri("a/b/c").
                 build();
