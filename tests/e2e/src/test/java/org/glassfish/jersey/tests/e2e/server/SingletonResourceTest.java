@@ -48,12 +48,17 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 
@@ -68,7 +73,8 @@ public class SingletonResourceTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(SingletonResource.class, ChildInheritsParentAnnotation.class,
-                ChildImplementsInterfaceAnnotation.class);
+                ChildImplementsInterfaceAnnotation.class, TestResource.class, RequestScopeResource.class,
+                PerLookupScopeResource.class, SingletonScopeResource.class);
 
         final Resource.Builder resourceBuilder1 = Resource.builder();
         resourceBuilder1.name("resource-programmatic/instance/").path("programmatic/instance/").addMethod("GET")
@@ -185,6 +191,81 @@ public class SingletonResourceTest extends JerseyTest {
         str = target().path("interface").request().get().readEntity(String.class);
         Assert.assertEquals("interface:1", str);
 
+    }
+
+    /**
+     * Tests that resources are by default managed in {@link org.glassfish.jersey.process.internal.RequestScope request scope}.
+     */
+    @Test
+    public void testResourceInRequestScope() {
+        String str = target().path("testScope/request").request().get().readEntity(String.class);
+        Assert.assertEquals("same-instances", str);
+    }
+
+    @Test
+    public void testResourceInPerLookupScope() {
+        String str = target().path("testScope/perlookup").request().get().readEntity(String.class);
+        Assert.assertEquals("different-instances", str);
+    }
+
+    @Test
+    public void testResourceInSingletonScope() {
+        String str = target().path("testScope/singleton").request().get().readEntity(String.class);
+        Assert.assertEquals("same-instances", str);
+    }
+
+
+    @Path("test-requestScope")
+    public static class RequestScopeResource {
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Path("test-perlookupScope")
+    @PerLookup
+    public static class PerLookupScopeResource {
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Path("test-singletonScope")
+    @Singleton
+    public static class SingletonScopeResource {
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Path("testScope")
+    public static class TestResource {
+        @Inject
+        ServiceLocator locator;
+
+        private String compareInstances(Class<?> clazz) {
+            final Object res1 = Injections.getOrCreate(locator, clazz);
+            final Object res2 = Injections.getOrCreate(locator, clazz);
+            return (res1 == res2) ? "same-instances" : "different-instances";
+        }
+
+        @GET
+        @Path("request")
+        public String compareRequestScopedInstances() {
+            return compareInstances(RequestScopeResource.class);
+        }
+
+        @GET
+        @Path("perlookup")
+        public String comparePerLookupScopedInstances() {
+            return compareInstances(PerLookupScopeResource.class);
+        }
+
+        @GET
+        @Path("singleton")
+        public String compareSingletonInstances() {
+            return compareInstances(SingletonScopeResource.class);
+        }
     }
 
 

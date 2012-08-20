@@ -89,9 +89,10 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
-import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.PriorityComparator;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -347,7 +348,8 @@ public final class ApplicationHandler {
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setWorkers(workers);
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
-        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors, nameBoundWriterInterceptors, dynamicBinders);
+        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
+                nameBoundWriterInterceptors, dynamicBinders);
         for (Resource resource : resources) {
             runtimeModelBuilder.process(resource, false);
         }
@@ -386,15 +388,18 @@ public final class ApplicationHandler {
     }
 
     /**
-     * Takes collection of all filters/interceptors (either request/reader or response/writer) and separates out all name-bound filters/interceptors, returns
+     * Takes collection of all filters/interceptors (either request/reader or response/writer) and separates out all name-bound
+     * filters/interceptors, returns
      * them as a separate MultivaluedMap, mapping the name-bound annotation to the list of name-bound filters/interceptors.
      * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
-     * If non-null collection is passed in the postMatching parameter (applicable for filters only), this method also removes all the global
+     * If non-null collection is passed in the postMatching parameter (applicable for filters only),
+     * this method also removes all the global
      * postMatching filters from the original collection and adds them to the collection passed in the postMatching
      * parameter.
      *
      * @param all                     Collection of all filters to be processed.
-     * @param postMatching            Collection where this method should move all global post-matching filters, or {@code null} if
+     * @param postMatching            Collection where this method should move all global post-matching filters,
+     *                                or {@code null} if
      *                                separating out global post-matching filters is not desirable.
      * @param applicationNameBindings collection of name binding annotations attached to the JAX-RS application.
      * @param <T>                     Filter type (either {@link ContainerRequestFilter} or {@link ContainerResponseFilter}).
@@ -506,13 +511,14 @@ public final class ApplicationHandler {
         providerBinder.bindClasses(resourcesAndProviders, true);
 
         final SingletonResourceBinder singletonResourceBinder = locator.getService(SingletonResourceBinder.class);
-        for (Class<?> res : cleanResources) {
-            if (!res.isAnnotationPresent(javax.inject.Singleton.class)) {
-                final DynamicConfiguration dc = Injections.getConfiguration(locator);
-                Injections.addBinding(Injections.newBinder(res).in(PerLookup.class), dc);
-                dc.commit();
-            } else {
+        for (Class res : cleanResources) {
+            if (res.isAnnotationPresent(javax.inject.Singleton.class)) {
                 singletonResourceBinder.bindResourceClassAsSingleton(res);
+            } else {
+                Class scope = res.isAnnotationPresent(PerLookup.class) ? PerLookup.class : RequestScoped.class;
+                final DynamicConfiguration dc = Injections.getConfiguration(locator);
+                Injections.addBinding(Injections.newBinder(res).to(res).in(scope), dc);
+                dc.commit();
             }
         }
 
@@ -680,7 +686,7 @@ public final class ApplicationHandler {
 
             @Override
             protected void release() {
-                releaseRequestProcessing(requestContext, responseContext);
+                releaseRequestProcessing(responseContext);
             }
         };
 
@@ -745,7 +751,7 @@ public final class ApplicationHandler {
 
             @Override
             protected void release() {
-                releaseRequestProcessing(requestContext, responseContext);
+                releaseRequestProcessing(responseContext);
             }
         };
 
@@ -754,7 +760,7 @@ public final class ApplicationHandler {
         callback.suspendWriterIfRunning();
     }
 
-    private void releaseRequestProcessing(final ContainerRequest requestContext, ContainerResponse responseContext) {
+    private void releaseRequestProcessing(ContainerResponse responseContext) {
         closeableServiceFactory.provide().close();
         // Commit the container response writer if not in chunked mode
         // responseContext may be null in case the request processing was cancelled.
