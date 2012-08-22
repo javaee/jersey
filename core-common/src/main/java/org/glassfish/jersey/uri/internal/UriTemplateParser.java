@@ -50,6 +50,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.glassfish.jersey.uri.UriComponent;
+
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
  *
@@ -61,11 +63,11 @@ public class UriTemplateParser {
 
     private static Set<Character> initReserved() {
         char[] reserved = {
-            '.', '^', '&', '!',
-            '?', '-', ':', '<',
-            '(', '[', '$', '=',
-            ')', ']', ',', '>',
-            '*', '+', '|'};
+                '.', '^', '&', '!',
+                '?', '-', ':', '<',
+                '(', '[', '$', '=',
+                ')', ']', ',', '>',
+                '*', '+', '|'};
 
         Set<Character> s = new HashSet<Character>(reserved.length);
         for (char c : reserved) {
@@ -73,6 +75,7 @@ public class UriTemplateParser {
         }
         return s;
     }
+
     private static final Pattern TEMPLATE_VALUE_PATTERN = Pattern.compile("[^/]+?");
 
     private final String template;
@@ -236,7 +239,7 @@ public class UriTemplateParser {
         } catch (NoSuchElementException ex) {
             throw new IllegalArgumentException(
                     "Invalid syntax for the template, \"" + template
-                    + "\". Check if a path parameter is terminated with a '}'.",
+                            + "\". Check if a path parameter is terminated with a '}'.",
                     ex);
         }
     }
@@ -254,13 +257,42 @@ public class UriTemplateParser {
                 char c = s.charAt(i);
                 if (RESERVED_REGEX_CHARACTERS.contains(c)) {
                     regex.append("\\");
+                    regex.append(c);
+                } else if (c == '%') {
+                    final char c1 = s.charAt(i + 1);
+                    final char c2 = s.charAt(i + 2);
+                    if (UriComponent.isHexCharacter(c1) && UriComponent.isHexCharacter(c2)) {
+                        regex.append("%").append(HEX_TO_UPPERCASE_REGEX[c1]).append(HEX_TO_UPPERCASE_REGEX[c2]);
+                        i += 2;
+                    }
+                } else {
+                    regex.append(c);
                 }
-                regex.append(c);
             }
-
             literalCharactersBuffer.setLength(0);
         }
     }
+
+    private final static String[] HEX_TO_UPPERCASE_REGEX = initHexToUpperCaseRegex();
+
+    private static String[] initHexToUpperCaseRegex() {
+        String[] table = new String[0x80];
+        for (int i = 0; i < table.length; i++) {
+            table[i] = String.valueOf((char) i);
+        }
+
+        for (char c = 'a'; c <= 'f'; c++) {
+            // initialize table values: table[a] = ([aA]) ...
+            table[c] = new StringBuffer().append("[").append(c).append((char) (c - 'a' + 'A')).append("]").toString();
+        }
+
+        for (char c = 'A'; c <= 'F'; c++) {
+            // initialize table values: table[A] = ([aA]) ...
+            table[c] = new StringBuffer().append("[").append((char) (c - 'A' + 'a')).append(c).append("]").toString();
+        }
+        return table;
+    }
+
 
     private void parseName(final CharacterIterator ci) {
         char c = consumeWhiteSpace(ci);

@@ -254,6 +254,7 @@ public class UriTemplate {
         return template;
     }
 
+
     /**
      * Get the URI pattern.
      *

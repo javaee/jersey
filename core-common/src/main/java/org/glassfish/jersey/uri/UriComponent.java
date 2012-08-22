@@ -860,11 +860,17 @@ public class UriComponent {
         return table;
     }
 
+
     private static int decodeHex(char c) {
         return (c < 128) ? HEX_TABLE[c] : -1;
     }
 
-    private static boolean isHexCharacter(char c) {
+    /**
+     * Checks whether the character {@code c} is hexadecimal character.
+     * @param c Any character
+     * @return The is {@code c} is a hexadecimal character (e.g. 0, 5, a, A, f, ...)
+     */
+    public static boolean isHexCharacter(char c) {
         return c < 128 && HEX_TABLE[c] != -1;
     }
 }

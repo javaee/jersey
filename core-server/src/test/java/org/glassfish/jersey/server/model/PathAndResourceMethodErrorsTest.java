@@ -257,8 +257,7 @@ public class PathAndResourceMethodErrorsTest {
     @Test
     public void testAmbiguousSubResourceMethodsGET() {
         final List<ResourceModelIssue> issues = initiateWebApplication(AmbiguousSubResourceMethodsGET.class);
-        // TODO: do we want @Path("{million}/") to clash with @Path("{million}") ?
-        assertEquals(3, issues.size());
+        assertEquals(6, issues.size());
     }
 
     @Path("/")

@@ -67,7 +67,6 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.uri.UriTemplate;
 
 import org.glassfish.hk2.api.PerLookup;
 
@@ -529,7 +528,7 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
     private boolean samePath(Routed m1, Routed m2) {
-        return new UriTemplate(m1.getPath()).equals(new UriTemplate(m2.getPath()));
+        return m1.getPathPattern().equals(m2.getPathPattern());
     }
 
 }

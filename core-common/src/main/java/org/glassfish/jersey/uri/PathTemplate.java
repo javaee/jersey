@@ -66,6 +66,7 @@ public final class PathTemplate extends UriTemplate {
 
         @Override
         protected String encodeLiteralCharacters(final String literalCharacters) {
+
             return UriComponent.contextualEncode(
                     literalCharacters,
                     UriComponent.Type.PATH);
