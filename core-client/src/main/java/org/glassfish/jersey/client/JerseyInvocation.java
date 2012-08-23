@@ -45,6 +45,17 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAcceptableException;
+import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.NotSupportedException;
+import javax.ws.rs.RedirectionException;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
@@ -690,8 +701,51 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     private ClientException convertToException(Response response) {
         try {
-            // TODO proper exception selection
-            return new ClientException(new WebApplicationException(response));
+            WebApplicationException webAppException = null;
+            final int statusCode = response.getStatus();
+            switch (Response.Status.fromStatusCode(statusCode)) {
+                case BAD_REQUEST:
+                    webAppException = new BadRequestException(response);
+                    break;
+                case UNAUTHORIZED:
+                    webAppException = new NotAuthorizedException(response);
+                    break;
+                case NOT_FOUND:
+                    webAppException = new NotFoundException(response);
+                    break;
+                case METHOD_NOT_ALLOWED:
+                    webAppException = new NotAllowedException(response);
+                    break;
+                case NOT_ACCEPTABLE:
+                    webAppException = new NotAcceptableException(response);
+                    break;
+                case UNSUPPORTED_MEDIA_TYPE:
+                    webAppException = new NotSupportedException(response);
+                    break;
+                case MOVED_PERMANENTLY:
+                case FOUND:
+                case SEE_OTHER:
+                case TEMPORARY_REDIRECT:
+                    webAppException = new RedirectionException(response);
+                    break;
+                case INTERNAL_SERVER_ERROR:
+                    webAppException = new InternalServerErrorException(response);
+                    break;
+                case SERVICE_UNAVAILABLE:
+                    webAppException = new ServiceUnavailableException(response);
+                    break;
+                default:
+                    if (299 < statusCode && statusCode < 400) {
+                        webAppException = new RedirectionException(response);
+                    } else if (399 < statusCode && statusCode < 500) {
+                        webAppException = new ClientErrorException(response);
+                    } else if (499 < statusCode && statusCode < 600) {
+                        webAppException = new ServerErrorException(response);
+                    } else {
+                        webAppException = new WebApplicationException(response);
+                    }
+            }
+            return new ClientException(webAppException);
         } catch (Throwable t) {
             return new ClientException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }

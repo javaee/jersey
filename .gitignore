@@ -21,3 +21,8 @@ nbactions.xml
 .settings/*
 .project
 .classpath
+examples/helloworld-pure-jax-rs/nb-configuration.xml
+examples/helloworld/nb-configuration.xml
+examples/osgi-http-service/bundle/nb-configuration.xml
+examples/osgi-http-service/functional-test/nb-configuration.xml
+tests/e2e/nb-configuration.xml
