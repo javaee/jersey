@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +56,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -75,7 +78,7 @@ import org.osgi.framework.SynchronousBundleListener;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-final class OsgiRegistry implements SynchronousBundleListener {
+public final class OsgiRegistry implements SynchronousBundleListener {
 
     private static final String CoreBundleSymbolicNAME = "org.glassfish.jersey.core.jersey-common";
     private static final Logger LOGGER = Logger.getLogger(OsgiRegistry.class.getName());
@@ -84,6 +87,23 @@ final class OsgiRegistry implements SynchronousBundleListener {
     private final Map<Long, Map<String, Callable<List<Class<?>>>>> factories =
                                                         new HashMap<Long, Map<String, Callable<List<Class<?>>>>>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private static OsgiRegistry instance;
+
+    private Map<String, Bundle> classToBundleMapping = new HashMap<String, Bundle>();
+
+    /**
+     * Returns an {@code OsgiRegistry} instance. Call this method only if sure that the application is running in OSGi
+     * environment, otherwise a call to this method can lead to an {@link ClassNotFoundException}.
+     *
+     * @return an {@code OsgiRegistry} instance.
+     */
+    public static synchronized OsgiRegistry getInstance() {
+        if (instance == null) {
+            instance = new OsgiRegistry(ReflectionHelper.class.getClassLoader());
+        }
+        return instance;
+    }
 
     private final class OsgiServiceFinder extends ServiceFinder.ServiceIteratorProvider {
 
@@ -238,6 +258,47 @@ final class OsgiRegistry implements SynchronousBundleListener {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public Enumeration<URL> getPackageResources(final String packagePath) {
+        List<URL> result = new LinkedList<URL>();
+        classToBundleMapping.clear();
+
+        for (Bundle b : bundleContext.getBundles()) {
+            final Enumeration<URL> enumeration = (Enumeration<URL>)b.findEntries(packagePath, "*", false);
+            if (enumeration != null) {
+                while (enumeration.hasMoreElements()) {
+                    final URL url = enumeration.nextElement();
+                    final String className = url.getPath().substring(1).replace('/', '.').replace(".class", "");
+                    classToBundleMapping.put(className, b);
+
+                    result.add(url);
+                }
+            }
+        }
+
+        return Collections.enumeration(result);
+    }
+
+    /**
+     * Get the Class from the class name.
+     * <p>
+     * The context class loader will be utilized if accessible and non-null.
+     * Otherwise the defining class loader of this class will
+     * be utilized.
+     *
+     * @param className the class name.
+     * @return the Class, otherwise null if the class cannot be found.
+     * @throws ClassNotFoundException if the class cannot be found.
+     */
+    public Class<?> classForNameWithException(final String className) throws ClassNotFoundException {
+        final Bundle bundle = classToBundleMapping.get(className);
+
+        if (bundle == null) {
+            throw new ClassNotFoundException(className);
+        }
+        return bundle.loadClass(className);
+    }
+
     /**
      * Creates a new OsgiRegistry instance bound to a particular OSGi runtime.
      * The only parameter must be an instance of a {@link BundleReference}.
@@ -246,7 +307,7 @@ final class OsgiRegistry implements SynchronousBundleListener {
      *
      * @param bundleReference must be a non-null instance of a BundleReference
      */
-    OsgiRegistry(Object bundleReference) {
+    private OsgiRegistry(Object bundleReference) {
         BundleReference br = (BundleReference)bundleReference;
         bundleContext = br.getBundle().getBundleContext();
     }

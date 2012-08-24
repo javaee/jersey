@@ -50,6 +50,7 @@ import java.util.Set;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -158,11 +159,8 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
 
     // ScannerListener
     public boolean accept(String name) {
-        if(name == null || name.isEmpty()) {
-            return false;
-        }
+        return !(name == null || name.isEmpty()) && name.endsWith(".class");
 
-        return name.endsWith(".class");
     }
 
     public void process(String name, InputStream in) throws IOException {
@@ -249,7 +247,13 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
 
         private Class getClassForName(String className) {
             try {
-                return ReflectionHelper.classForNameWithException(className, classloader);
+                final OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
+
+                if (osgiRegistry != null) {
+                    return osgiRegistry.classForNameWithException(className);
+                } else {
+                    return ReflectionHelper.classForNameWithException(className, classloader);
+                }
             } catch (ClassNotFoundException ex) {
                 String s = "A class file of the class name, " +
                         className +

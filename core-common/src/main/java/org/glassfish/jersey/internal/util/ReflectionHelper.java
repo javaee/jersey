@@ -65,6 +65,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 
 import com.google.common.base.Function;
@@ -1031,6 +1032,25 @@ public class ReflectionHelper {
             }
         }
         return true;
+    }
+
+    /**
+     * Returns an {@link OsgiRegistry} instance.
+     *
+     * @return an {@link OsgiRegistry} instance or {@code null} if the class cannot be instantiated (not in OSGi environment).
+     */
+    public static OsgiRegistry getOsgiRegistryInstance() {
+        try {
+            final Class<?> bundleReferenceClass = Class.forName("org.osgi.framework.BundleReference");
+
+            if (bundleReferenceClass != null) {
+                return OsgiRegistry.getInstance();
+            }
+        } catch (Exception e) {
+            // Do nothing - instance is null.
+        }
+
+        return null;
     }
 
     /**

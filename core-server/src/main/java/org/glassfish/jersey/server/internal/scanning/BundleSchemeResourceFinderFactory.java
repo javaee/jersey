@@ -87,7 +87,6 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         @Override
         public String next() {
             if(!accessed) {
-                accessed = true;
                 return uri.getPath();
             }
 
@@ -103,6 +102,7 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         public InputStream open() {
             if(!accessed) {
                 try {
+                    accessed = true;
                     return uri.toURL().openStream();
                 } catch (MalformedURLException e) {
                     throw new ResourceFinderException(e);

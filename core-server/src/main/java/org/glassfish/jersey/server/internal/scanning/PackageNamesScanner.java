@@ -49,6 +49,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ResourceFinder;
@@ -113,11 +114,23 @@ public class PackageNamesScanner implements ResourceFinder {
         add(new JarZipSchemeResourceFinderFactory());
         add(new FileSchemeResourceFinderFactory());
         add(new VfsSchemeResourceFinderFactory());
+        add(new BundleSchemeResourceFinderFactory());
 
 //        TODO - Services?
 //        for (UriSchemeResourceFinderFactory s : ServiceFinder.find(UriSchemeResourceFinderFactory.class)) {
 //            add(s);
 //        }
+
+        final OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
+        if (osgiRegistry != null) {
+            setResourcesProvider(new PackageNamesScanner.ResourcesProvider() {
+
+                @Override
+                public Enumeration<URL> getResources(String name, ClassLoader cl) throws IOException {
+                    return osgiRegistry.getPackageResources(name);
+                }
+            });
+        }
 
         init();
     }

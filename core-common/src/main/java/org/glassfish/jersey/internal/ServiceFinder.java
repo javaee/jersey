@@ -173,17 +173,13 @@ public final class ServiceFinder<T> implements Iterable<T> {
     private final boolean ignoreOnClassNotFound;
 
     static {
-        try {
-            Class<?> bundleReferenceClass = Class.forName("org.osgi.framework.BundleReference");
-            final ClassLoader contextClassLoader = ReflectionHelper.getContextClassLoader();
-            if (bundleReferenceClass.isAssignableFrom(contextClassLoader.getClass())) {
-                LOGGER.log(Level.CONFIG, "Running in an OSGi environment");
-                OsgiRegistry registry = new OsgiRegistry(contextClassLoader);
-                registry.hookUp();
-            } else {
-                LOGGER.log(Level.CONFIG, "Running in a non-OSGi environment");
-            }
-        } catch (ClassNotFoundException ex) {
+        final OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
+
+        if (osgiRegistry != null) {
+            LOGGER.log(Level.CONFIG, "Running in an OSGi environment");
+
+            osgiRegistry.hookUp();
+        } else {
             LOGGER.log(Level.CONFIG, "Running in a non-OSGi environment");
         }
     }
