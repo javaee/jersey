@@ -59,7 +59,7 @@ import static org.junit.Assert.assertEquals;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @SuppressWarnings("unchecked")
-@Ignore // TODO: blocked by JERSEY-1224
+@Ignore // TODO: the test does not pass -> JERSEY-1389
 public class EncodedParamsTest extends AbstractTest {
 
     @Encoded
