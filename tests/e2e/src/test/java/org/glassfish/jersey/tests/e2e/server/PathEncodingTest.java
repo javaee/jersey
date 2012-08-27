@@ -60,10 +60,10 @@ import junit.framework.Assert;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
 
  */
-public class PathEncoding extends JerseyTest {
+public class PathEncodingTest extends JerseyTest {
     @Override
     protected Application configure() {
-        return new ResourceConfig(PercentEncodedTest.class);
+        return new ResourceConfig(PercentEncodedTest.class, AsteriskResource.class);
     }
 
     @Test
@@ -119,6 +119,20 @@ public class PathEncoding extends JerseyTest {
         Assert.assertEquals("ok", target().path("test/slash").request().get(String.class));
     }
 
+    @Test
+    public void testAsteriskInPath() {
+        Response response = target().path("*").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("ok", response.readEntity(String.class));
+    }
+
+    @Path("*")
+    public static class AsteriskResource {
+        @GET
+        public String get() {
+            return "ok";
+        }
+    }
 
     @Path("test")
     public static class PercentEncodedTest {
