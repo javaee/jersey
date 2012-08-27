@@ -42,10 +42,14 @@ package org.glassfish.jersey.message.internal;
 import java.text.ParseException;
 
 import javax.inject.Singleton;
+
 import javax.ws.rs.core.EntityTag;
 
-import org.glassfish.jersey.spi.HeaderDelegateProvider;
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.HttpHeaderReader.Event;
+import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * {@code ETag} {@link HeaderDelegateProvider header delegate provider}.
@@ -63,6 +67,9 @@ public class EntityTagProvider implements HeaderDelegateProvider<EntityTag> {
 
     @Override
     public String toString(EntityTag header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.ENTITY_TAG_IS_NULL());
+
         StringBuilder b = new StringBuilder();
         if (header.isWeak()) {
             b.append("W/");
@@ -73,9 +80,8 @@ public class EntityTagProvider implements HeaderDelegateProvider<EntityTag> {
 
     @Override
     public EntityTag fromString(String header) {
-        if (header == null) {
-            throw new IllegalArgumentException("Entity tag is null");
-        }
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.ENTITY_TAG_IS_NULL());
 
         try {
             HttpHeaderReader reader = HttpHeaderReader.newInstance(header);

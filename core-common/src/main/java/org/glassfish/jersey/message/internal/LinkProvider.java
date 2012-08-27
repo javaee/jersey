@@ -42,11 +42,17 @@ package org.glassfish.jersey.message.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+
 import javax.inject.Singleton;
+
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * Provider for Link Headers.
@@ -64,6 +70,9 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public Link fromString(String value) throws IllegalArgumentException {
+
+        throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
+
         Builder lb;
         StringTokenizer st = new StringTokenizer(value.trim(), "<>;=\"", true);
         try {
@@ -100,6 +109,9 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public String toString(Link value) {
+
+        throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
+
         MultivaluedMap<String, String> map = value.getParams();
         StringBuilder sb = new StringBuilder();
         sb.append('<').append(value.getUri()).append('>');

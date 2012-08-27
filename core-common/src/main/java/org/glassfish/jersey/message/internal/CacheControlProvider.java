@@ -48,8 +48,11 @@ import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 import javax.ws.rs.core.CacheControl;
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * {@code Cache-Control} {@link HeaderDelegateProvider header delegate provider}.
@@ -71,6 +74,9 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
 
     @Override
     public String toString(CacheControl header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.CACHE_CONTROL_IS_NULL());;
+
         StringBuilder b = new StringBuilder();
         if (header.isPrivate()) {
             appendQuotedWithSeparator(b, "private", buildListValue(header.getPrivateFields()));
@@ -163,9 +169,9 @@ public final class CacheControlProvider implements HeaderDelegateProvider<CacheC
 
     @Override
     public CacheControl fromString(String header) {
-        if (header == null) {
-            throw new IllegalArgumentException("Cache control is null");
-        }
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.CACHE_CONTROL_IS_NULL());;
+
         try {
             HttpHeaderReader reader = HttpHeaderReader.newInstance(header);
             CacheControl cacheControl = new CacheControl();
