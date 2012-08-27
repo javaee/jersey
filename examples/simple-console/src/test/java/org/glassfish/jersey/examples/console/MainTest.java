@@ -58,7 +58,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.codehaus.jettison.json.JSONArray;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -85,7 +84,6 @@ public class MainTest extends JerseyTest {
      * "application.wadl".
      */
     @Test
-    @Ignore
     public void testApplicationWadl() {
         String serviceWadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
         assertTrue(serviceWadl.length() > 0);

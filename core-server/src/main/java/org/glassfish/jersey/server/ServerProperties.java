@@ -204,6 +204,35 @@ public final class ServerProperties {
      */
     public static final String WEBTARGET_CONFIGURATION = "jersey.config.server.webTargetConfiguration";
 
+    /**
+     * If set the wadl generator configuration that provides a {@link org.glassfish.jersey.server.wadl.WadlGenerator}.
+     * <p>
+     * The type of this property must be a subclass or an instance of a subclass of
+     * {@link org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig}.
+     * </p>
+     * <p>
+     * If this property is not set the default wadl generator will be used for generating wadl.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    public static final String PROPERTY_WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
+
+    /**
+     * If true then disable WADL generation.
+     * <p>
+     * By default WADL generation is automatically enabled, if JAXB is
+     * present in the classpath.
+     * <p>
+     * The default value is false.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
+
     private ServerProperties() {
         // prevents instantiation
     }

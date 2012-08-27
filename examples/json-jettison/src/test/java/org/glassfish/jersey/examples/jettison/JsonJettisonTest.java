@@ -51,7 +51,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -86,10 +85,8 @@ public class JsonJettisonTest extends JerseyTest {
     /**
      * Test checks that the application.wadl is reachable.
      * <p/>
-     * TODO: un-ignore once WADL support is available.
      */
     @Test
-    @Ignore
     public void testApplicationWadl() {
         String applicationWadl = target().path("application.wadl").request().get(String.class);
         assertTrue("Something wrong. Returned wadl length is not > 0", applicationWadl.length() > 0);

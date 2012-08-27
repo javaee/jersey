@@ -127,10 +127,8 @@ public class JacksonTest extends JerseyTest {
      * Test if a WADL document is available at the relative path
      * "application.wadl".
      * <p/>
-     * TODO: un-ignore once WADL is supported.
      */
     @Test
-    @Ignore
     public void testApplicationWadl() {
         WebTarget target = target();
         String serviceWadl = target.path("application.wadl").request(MediaTypes.WADL).get(String.class);

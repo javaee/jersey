@@ -530,6 +530,11 @@
                     <artifactId>xslt-maven-plugin</artifactId>
                     <version>1.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>com.sun.tools.xjc.maven2</groupId>
+                    <artifactId>maven-jaxb-plugin</artifactId>
+                    <version>1.1.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <extensions>

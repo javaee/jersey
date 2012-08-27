@@ -73,11 +73,8 @@ public class JsonpTest extends JerseyTest {
     /**
      * Test checks that the application.wadl is reachable.
      * <p/>
-     * TODO: un-ignore once WADL is supported.
      */
     @Test
-    @Ignore
-    // TODO un-igonre
     public void testApplicationWadl() {
         WebTarget target = target();
         String applicationWadl = target.path("application.wadl").request().get(String.class);

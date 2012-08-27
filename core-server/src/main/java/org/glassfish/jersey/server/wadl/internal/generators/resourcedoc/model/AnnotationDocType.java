@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlType;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * The documentation type for annotations.<br>
+ * Created on: Jun 12, 2008<br>
+ * 
+ * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "annotationDoc", propOrder = {
 
-    /**
-     * Parent resource.
-     */
-    final Resource parentResource;
+})
+public class AnnotationDocType {
+    
+    private String annotationTypeName;
 
-    /**
-     * Resource method router.
-     */
-    final Router router;
+    @XmlElementWrapper(name = "attributes")
+    protected List<NamedValueType> attribute;
 
-    /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
-     */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    public List<NamedValueType> getAttributeDocs() {
+        if (attribute == null) {
+            attribute = new ArrayList<NamedValueType>();
+        }
+        return this.attribute;
     }
+    
+    public boolean hasAttributeDocs() {
+        return attribute != null && !attribute.isEmpty();
+    }
+
+    /**
+     * @return the annotationTypeName
+     */
+    public String getAnnotationTypeName() {
+        return annotationTypeName;
+    }
+
+    /**
+     * @param annotationTypeName the annotationTypeName to set
+     */
+    public void setAnnotationTypeName( String annotationTypeName ) {
+        this.annotationTypeName = annotationTypeName;
+    }
+    
 }

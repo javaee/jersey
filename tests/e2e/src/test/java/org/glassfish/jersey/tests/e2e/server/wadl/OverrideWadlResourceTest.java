@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.tests.e2e.server.wadl;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Paul.Sandoz@Sun.Com
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+public class OverrideWadlResourceTest extends JerseyTest {
 
-    /**
-     * Parent resource.
-     */
-    final Resource parentResource;
+    @Path("application.wadl")
+    public static class OverrideWadlApplicationResource {
+        @GET
+        public String get() {
+            return "OVERRIDE";
+        }
+    }
 
-    /**
-     * Resource method router.
-     */
-    final Router router;
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(OverrideWadlApplicationResource.class);
+    }
 
-    /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
-     */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    @Test
+    public void testOverride() {
+        WebTarget target = target("/application.wadl");
+
+        assertEquals("OVERRIDE", target.request().get(String.class));
     }
 }

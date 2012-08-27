@@ -44,3 +44,4 @@ nb-configuration.xml
 /examples/https-clientserver-grizzly/truststore_client
 /examples/https-clientserver-grizzly/truststore_server
 /examples/reload/resources
+/core-server/etc

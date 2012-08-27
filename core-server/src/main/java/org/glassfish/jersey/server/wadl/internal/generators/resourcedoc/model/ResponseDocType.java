@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,66 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlType;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * The documentation type for a response.<br>
+ * Created on: Jun 16, 2008<br>
+ * 
+ * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "responseDoc", propOrder = {
 
-    /**
-     * Parent resource.
-     */
-    final Resource parentResource;
+})
+public class ResponseDocType {
 
-    /**
-     * Resource method router.
-     */
-    final Router router;
+    private String returnDoc;
 
-    /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
-     */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    @XmlElementWrapper(name = "wadlParams")
+    protected List<WadlParamType> wadlParam;
+
+    public List<WadlParamType> getWadlParams() {
+        if (wadlParam == null) {
+            wadlParam = new ArrayList<WadlParamType>();
+        }
+        return this.wadlParam;
     }
+
+    @XmlElementWrapper(name = "representations")
+    protected List<RepresentationDocType> representation;
+
+    public List<RepresentationDocType> getRepresentations() {
+        if (representation == null) {
+            representation = new ArrayList<RepresentationDocType>();
+        }
+        return this.representation;
+    }
+    
+    public boolean hasRepresentations() {
+        return this.representation != null && !this.representation.isEmpty();
+    }
+
+    /**
+     * @return the returnDoc
+     */
+    public String getReturnDoc() {
+        return returnDoc;
+    }
+
+    /**
+     * @param returnDoc the returnDoc to set
+     */
+    public void setReturnDoc( String returnDoc ) {
+        this.returnDoc = returnDoc;
+    }
+    
 }

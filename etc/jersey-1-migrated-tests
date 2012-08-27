@@ -92,6 +92,8 @@ tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegLa
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/filter/UriConnegMediaTypeTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/ReloadTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/server/GrizzlyInjectionTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/wadl/OverrideWadlResourceTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/wadl/WadlResourceTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/BasicOsgiIntegrationTest.java
 tests/osgi/functional/src/test/java/org/glassfish/jersey/osgi/test/basic/JsonTest.java
 
@@ -523,9 +525,7 @@ jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriComponentEncodeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriComponentValidateTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriPathHttpRequestTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/util/UriHelperTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/wadl/OverrideWadlResourceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/wadl/WadlJAXBContentModelTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/wadl/WadlResourceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/xml/XmlHeaderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/xml/XmlListTest.java
 jersey-tests/src/test/java/com/sun/jersey/spi/monitoring/MonitoringProviderTest.java

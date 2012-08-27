@@ -43,7 +43,6 @@ import java.util.Collection;
 
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
-
 import static javax.ws.rs.client.Entity.xml;
 
 import javax.xml.bind.JAXBElement;
@@ -53,9 +52,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -79,7 +76,6 @@ public class JaxbTest extends JerseyTest {
      * Test checks that the application.wadl is reachable.
      */
     @Test
-    @Ignore
     public void testApplicationWadl() {
         String applicationWadl = target().path("application.wadl").request().get(String.class);
         assertTrue("Something wrong. Returned wadl length is not > 0",

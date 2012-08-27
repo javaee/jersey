@@ -109,6 +109,9 @@ import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.wadl.WadlApplicationContext;
+import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
+import org.glassfish.jersey.server.wadl.internal.WadlResource;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -274,9 +277,16 @@ public final class ApplicationHandler {
         final ProviderBag.Builder providerBagBuilder = new ProviderBag.Builder();
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
         final List<ResourceModelIssue> resourceModelIssues = new LinkedList<ResourceModelIssue>();
+        final Set<Class<?>> classes = new HashSet<Class<?>>(configuration.getClasses());
 
-        for (Class<?> c : configuration.getClasses()) {
+        boolean wadlDisabled = configuration.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
+        if(!wadlDisabled) {
+            classes.add(WadlResource.class);
+        }
+
+        for (Class<?> c : classes) {
             boolean isResource = false;
+
             try {
                 Resource resource = Resource.from(c, resourceModelIssues);
                 isResource = resource != null;
@@ -356,6 +366,10 @@ public final class ApplicationHandler {
         validate(resourceBag.models, resourceModelIssues, locator.<MessageBodyWorkers>getService(MessageBodyWorkers.class));
 
         // create a router
+        DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
+        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.models, configuration)).to(WadlApplicationContext.class), dynamicConfiguration);
+        dynamicConfiguration.commit();
+
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
@@ -364,6 +378,8 @@ public final class ApplicationHandler {
             runtimeModelBuilder.process(resource, false);
         }
 
+
+        // assembly request processing chain
         /**
          * Root hierarchical request matching acceptor.
          * Invoked in a single linear stage as part of the main linear accepting chain.

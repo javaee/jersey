@@ -37,41 +37,46 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.tests.e2e.server.wadl;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import java.util.Iterator;
+
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * TODO this most likely should be in a more common location.
+ * @author Gerard Davison
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+class NsResolver implements NamespaceContext {
+    private String prefix;
+    private String nsURI;
 
-    /**
-     * Parent resource.
-     */
-    final Resource parentResource;
+    public NsResolver(String prefix, String nsURI) {
+        this.prefix = prefix;
+        this.nsURI = nsURI;
+    }
 
-    /**
-     * Resource method router.
-     */
-    final Router router;
+    @Override
+    public String getNamespaceURI(String prefix) {
+        if (prefix.equals(this.prefix)) {
+            return this.nsURI;
+        } else {
+            return XMLConstants.NULL_NS_URI;
+        }
+    }
 
-    /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
-     */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    @Override
+    public String getPrefix(String namespaceURI) {
+        if (namespaceURI.equals(this.nsURI)) {
+            return this.prefix;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Iterator getPrefixes(String namespaceURI) {
+        return null;
     }
 }

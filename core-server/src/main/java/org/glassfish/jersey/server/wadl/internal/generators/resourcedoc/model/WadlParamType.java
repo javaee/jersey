@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,87 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.namespace.QName;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * The documentation type for wadl params.<br>
+ * Created on: Jun 12, 2008<br>
+ * 
+ * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "wadlParam", propOrder = {
+
+})
+public class WadlParamType {
+    
+    @XmlAttribute
+    private String name;
+    @XmlAttribute
+    private String style;
+    @XmlAttribute
+    private QName type;
+    private String doc;
 
     /**
-     * Parent resource.
+     * @return the commentText
      */
-    final Resource parentResource;
+    public String getDoc() {
+        return doc;
+    }
 
     /**
-     * Resource method router.
+     * @param commentText the commentText to set
      */
-    final Router router;
+    public void setDoc( String commentText ) {
+        this.doc = commentText;
+    }
 
     /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
+     * @return the className
      */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param paramName the className to set
+     */
+    public void setName( String paramName ) {
+        this.name = paramName;
+    }
+
+    /**
+     * @return the style
+     */
+    public String getStyle() {
+        return style;
+    }
+
+    /**
+     * @param style the style to set
+     */
+    public void setStyle( String style ) {
+        this.style = style;
+    }
+
+    /**
+     * @return the type
+     */
+    public QName getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType( QName type ) {
+        this.type = type;
     }
 }

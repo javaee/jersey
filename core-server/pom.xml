@@ -81,6 +81,25 @@
                     <unpackBundle>true</unpackBundle>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.sun.tools.xjc.maven2</groupId>
+                <artifactId>maven-jaxb-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generatePackage>com.sun.research.ws.wadl</generatePackage>
+                    <catalog>${basedir}/etc/catalog.xml</catalog>
+                    <schemaDirectory>${basedir}/etc</schemaDirectory>
+                    <includeSchemas>
+                        <includeSchema>wadl.xsd</includeSchema>
+                    </includeSchemas>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

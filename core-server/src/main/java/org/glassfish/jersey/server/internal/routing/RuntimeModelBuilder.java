@@ -151,7 +151,7 @@ public final class RuntimeModelBuilder {
                     new Function<ResourceMethod, MethodAcceptorPair>() {
                         @Override
                         public MethodAcceptorPair apply(ResourceMethod methodModel) {
-                            return new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel, subResourceMode));
+                            return new MethodAcceptorPair(methodModel, resource, createSingleMethodAcceptor(methodModel, subResourceMode));
                         }
                     }));
         }
@@ -169,16 +169,17 @@ public final class RuntimeModelBuilder {
             }
 
             for (ResourceMethod methodModel : resource.getSubResourceMethods()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel, subResourceMode);
+                updateSubResourceMethodMap(sameResourcePathMap, methodModel, resource, subResourceMode);
             }
             for (ResourceMethod methodModel : resource.getSubResourceLocators()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel, subResourceMode);
+                updateSubResourceMethodMap(sameResourcePathMap, methodModel, resource, subResourceMode);
             }
         }
     }
 
     private void updateSubResourceMethodMap(
-            final TreeMap<PathPattern, List<MethodAcceptorPair>> subResourceMethodMap, final ResourceMethod methodModel, boolean subResourceMode) {
+            final TreeMap<PathPattern, List<MethodAcceptorPair>> subResourceMethodMap, final ResourceMethod methodModel,
+            final Resource resource, boolean subResourceMode) {
 
         PathPattern openMethodPattern = new PathPattern(methodModel.getPath());
 
@@ -187,7 +188,7 @@ public final class RuntimeModelBuilder {
             samePathMethodAcceptorPairs = Lists.newLinkedList();
             subResourceMethodMap.put(openMethodPattern, samePathMethodAcceptorPairs);
         }
-        samePathMethodAcceptorPairs.add(new MethodAcceptorPair(methodModel, createSingleMethodAcceptor(methodModel, subResourceMode)));
+        samePathMethodAcceptorPairs.add(new MethodAcceptorPair(methodModel, resource, createSingleMethodAcceptor(methodModel, subResourceMode)));
     }
 
     private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod, boolean subResourceMode) {

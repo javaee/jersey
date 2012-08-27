@@ -37,41 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.wadl.internal;
 
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import java.io.InputStream;
+import java.util.Properties;
 
 /**
- * A pair of resource method model and a corresponding resource method router.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Paul Sandoz
  */
-final class MethodAcceptorPair {
-    /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
+public final class BuildId {
+    private static String buildId = _initiateBuildId();
 
-    /**
-     * Parent resource.
-     */
-    final Resource parentResource;
+    private static String _initiateBuildId() {
+        String id = "Jersey";
 
-    /**
-     * Resource method router.
-     */
-    final Router router;
+        final InputStream in = getIntputStream();
+        if (in != null) {
+            try {
+                Properties p = new Properties();
+                p.load(in);
+                String _id = p.getProperty("Build-Id");
+                if (_id != null)
+                    id = id + ": " + _id;
+            } catch (Exception e){
+                // Ignore
+            } finally {
+                close(in);
+            }
+        }
+        return id;
+    }
 
-    /**
-     * Create a new [resource method model, resource method router] pair.
-     *
-     * @param model  resource method model.
-     * @param router resource method router.
-     */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
-        this.model = model;
-        this.router = router;
+    private static void close(InputStream in) {
+        try {
+            in.close();
+        } catch (Exception ex) {
+            // Ignore
+        }
+    }
+
+    private static InputStream getIntputStream() {
+        try {
+            return BuildId.class.getResourceAsStream("build.properties");
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static String getBuildId() {
+        return buildId;
     }
 }

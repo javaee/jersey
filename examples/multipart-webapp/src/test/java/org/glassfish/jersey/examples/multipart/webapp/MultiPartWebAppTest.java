@@ -65,7 +65,6 @@ import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.message.internal.FormDataContentDisposition;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import static org.junit.Assert.assertEquals;
@@ -94,7 +93,6 @@ public class MultiPartWebAppTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("wadl does not exist so far")
     public void testApplicationWadl() throws Exception {
         final WebTarget target = target().path("application.wadl");
 
@@ -116,7 +114,7 @@ public class MultiPartWebAppTest extends JerseyTest {
         String val = (String) xp.evaluate(
                 "//wadl:resource[@path='part']/wadl:method/wadl:request/wadl:representation/@mediaType", d, XPathConstants.STRING);
 
-        assertEquals(val, "multipart/form-data");
+        assertEquals("multipart/form-data", val);
     }
 
     @Test
