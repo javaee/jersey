@@ -48,6 +48,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -81,16 +82,18 @@ public class LinkTest {
 
     @Test
     public void testInvocationFromLinkNoEntity() {
-        Link l = Link.fromUri("http://examples.org/app").method("GET").build();
-        javax.ws.rs.client.Invocation i = client.invocation(l);
-        assertTrue(i != null);
+        Link l = Link.fromUri("http://examples.org/app").type("text/plain").build();
+        assertNotNull(l);
+
+        javax.ws.rs.client.Invocation i = client.invocation(l).buildGet();
+        assertNotNull(i);
     }
 
     @Test
     public void testInvocationFromLinkWithEntity() {
-        Link l = Link.fromUri("http://examples.org/app").method("POST").consumes("*/*").build();
+        Link l = Link.fromUri("http://examples.org/app").type("*/*").build();
         Entity<String> e = Entity.text("hello world");
-        javax.ws.rs.client.Invocation i = client.invocation(l, e);
+        javax.ws.rs.client.Invocation i = client.invocation(l).buildPost(e);
         assertTrue(i != null);
     }
 }

@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.client;
 
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.ClientException;
 
 import org.glassfish.jersey.process.internal.RequestScope;
 
@@ -54,6 +54,7 @@ interface ResponseCallback {
      * Called when the client invocation was successfully completed with a response.
      *
      * @param response response data.
+     * @param scope request processing scope.
      */
     public void completed(ClientResponse response, RequestScope scope);
 
@@ -62,5 +63,5 @@ interface ResponseCallback {
      *
      * @param error contains failure details.
      */
-    public void failed(InvocationException error);
+    public void failed(ClientException error);
 }

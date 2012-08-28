@@ -40,17 +40,12 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import static javax.ws.rs.HttpMethod.POST;
-import static javax.ws.rs.HttpMethod.PUT;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -88,7 +83,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      *
      * @param configuration jersey client configuration.
      */
-    protected JerseyClient(final Configuration configuration) {
+    protected JerseyClient(final Configurable configuration) {
         this.configuration = new ClientConfig(this, configuration);
     }
 
@@ -170,47 +165,11 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public JerseyInvocation invocation(Link link) throws NullPointerException, IllegalArgumentException {
+    public JerseyInvocation.Builder invocation(Link link) throws NullPointerException, IllegalArgumentException {
         checkNotClosed();
         checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
-        String method = link.getMethod();
-        if (method == null) {
-            throw new IllegalArgumentException("Cannot create invocation from link " + link);
-        }
-        if (POST.equals(method) || PUT.equals(method)) {
-            throw new IllegalArgumentException("Missing entity in invocation created from link " + link);
-        }
         WebTarget t = new WebTarget(link, this);
-        List<String> ps = link.getProduces();
-        JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
-        return ib.build(method);
-    }
-
-    @Override
-    public JerseyInvocation invocation(Link link, Entity<?> entity)
-            throws NullPointerException, IllegalArgumentException {
-        checkNotClosed();
-        checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
-        checkNotNull(entity, "Entity of the newly created invocation must not be 'null'.");
-
-        String method = link.getMethod();
-        if (method == null) {
-            throw new IllegalArgumentException("Cannot create invocation from link " + link);
-        }
-        final List<String> consumedTypes = link.getConsumes();
-        boolean isCompatible = consumedTypes.isEmpty();
-        for (String mt : consumedTypes) {
-            if (entity.getMediaType().isCompatible(MediaType.valueOf(mt))) {
-                isCompatible = true;
-                break;
-            }
-        }
-        if (!isCompatible) {
-            throw new IllegalArgumentException("Entity type incompatible with link consumes parameter");
-        }
-        WebTarget t = new WebTarget(link, this);
-        List<String> ps = link.getProduces();
-        JerseyInvocation.Builder ib = t.request(ps.toArray(new String[ps.size()]));
-        return ib.build(method, entity);
+        final String acceptType = link.getType();
+        return (acceptType != null) ? t.request(acceptType) : t.request();
     }
 }

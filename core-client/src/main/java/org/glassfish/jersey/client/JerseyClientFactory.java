@@ -43,6 +43,7 @@ package org.glassfish.jersey.client;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Configuration;
+import javax.ws.rs.core.Configurable;
 
 /**
  * Jersey provider of {@link ClientFactory JAX-RS client factory}.
@@ -57,7 +58,7 @@ public class JerseyClientFactory extends ClientFactory {
     }
 
     @Override
-    protected Client getClient(Configuration configuration) {
+    protected Client getClient(Configurable configuration) {
         return new JerseyClient(configuration);
     }
 

@@ -120,7 +120,7 @@ public class AbortResponseClientTest extends JerseyTest {
         Invocation i = target.request().buildGet();
         Response r = i.invoke();
 
-        Assert.assertEquals("head1", r.getHeader("head1"));
+        Assert.assertEquals("head1", r.getHeaderString("head1"));
         Assert.assertEquals("cookie1", r.getCookies().get("cookie1").getValue());
         Assert.assertEquals("cookie2", r.getCookies().get("cookie2").getValue());
         Assert.assertEquals(date.getTime(), r.getDate().getTime());

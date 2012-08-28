@@ -45,7 +45,6 @@ import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.DynamicBinder;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Response;
 
@@ -54,6 +53,8 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import org.glassfish.jersey.server.model.AnnotatedMethod;
+
+import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * A {@link DynamicBinder} supporting the {@link RolesAllowed},
@@ -108,7 +109,7 @@ public class RolesAllowedDynamicBinder implements DynamicBinder<ContainerRequest
         return null;
     }
 
-    @BindingPriority(BindingPriority.SECURITY + 50) // authorization filter - should go after any authentication filters
+    @BindingPriority(BindingPriority.AUTHORIZATION) // authorization filter - should go after any authentication filters
     private static class RolesAllowedRequestFilter implements ContainerRequestFilter {
         private final boolean denyAll;
         private final String[] rolesAllowed;

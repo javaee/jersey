@@ -40,7 +40,8 @@
 package org.glassfish.jersey.client.filter;
 
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.spi.ContentEncoder;
@@ -79,8 +80,9 @@ public class EncodingFeature implements Feature {
         this.encodingProviders = encoders;
     }
 
+
     @Override
-    public boolean onEnable(Configuration configuration) {
+    public boolean configure(Configurable configuration) {
         if (useEncoding != null) {
             // properties take precedence over the constructor value
             if (!configuration.getProperties().containsKey(ClientProperties.USE_ENCODING)) {

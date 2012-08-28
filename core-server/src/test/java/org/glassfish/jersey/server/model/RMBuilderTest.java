@@ -53,7 +53,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.DynamicBinder;
+import deprecated.javax.ws.rs.DynamicBinder;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;

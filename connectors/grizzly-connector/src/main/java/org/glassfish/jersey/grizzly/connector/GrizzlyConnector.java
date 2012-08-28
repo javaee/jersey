@@ -51,8 +51,8 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -123,9 +123,9 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<ClientR
             ningResponse = respFuture.get();
         } catch (ExecutionException ex) {
             Throwable e = ex.getCause() == null ? ex : ex.getCause();
-            throw new InvocationException(e.getMessage(), e);
+            throw new ClientException(e.getMessage(), e);
         } catch (Exception ex) {
-            throw new InvocationException(ex.getMessage(), ex);
+            throw new ClientException(ex.getMessage(), ex);
         } finally {
             client.close();
         }

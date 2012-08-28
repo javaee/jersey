@@ -71,8 +71,8 @@ public class EncodingFilterTest {
         ).connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
-        assertEquals("deflate,gzip,x-gzip", r.getHeader(HttpHeaders.ACCEPT_ENCODING));
-        assertNull(r.getHeader(HttpHeaders.CONTENT_ENCODING));
+        assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));
+        assertNull(r.getHeaderString(HttpHeaders.CONTENT_ENCODING));
     }
 
     @Test
@@ -84,8 +84,8 @@ public class EncodingFilterTest {
         ).setProperty(ClientProperties.USE_ENCODING, "gzip").connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
-        assertEquals("deflate,gzip,x-gzip", r.getHeader(HttpHeaders.ACCEPT_ENCODING));
-        assertEquals("gzip", r.getHeader(HttpHeaders.CONTENT_ENCODING));
+        assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));
+        assertEquals("gzip", r.getHeaderString(HttpHeaders.CONTENT_ENCODING));
     }
 
     @Test
@@ -95,8 +95,8 @@ public class EncodingFilterTest {
                 .register(new EncodingFeature("gzip", GZipEncoder.class, DeflateEncoder.class)));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
-        assertEquals("deflate,gzip,x-gzip", r.getHeader(HttpHeaders.ACCEPT_ENCODING));
-        assertEquals("gzip", r.getHeader(HttpHeaders.CONTENT_ENCODING));
+        assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));
+        assertEquals("gzip", r.getHeaderString(HttpHeaders.CONTENT_ENCODING));
     }
 
     @Test
@@ -108,8 +108,8 @@ public class EncodingFilterTest {
         ).setProperty(ClientProperties.USE_ENCODING, "non-gzip").connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
-        assertEquals("deflate,gzip,x-gzip", r.getHeader(HttpHeaders.ACCEPT_ENCODING));
-        assertNull(r.getHeader(HttpHeaders.CONTENT_ENCODING));
+        assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));
+        assertNull(r.getHeaderString(HttpHeaders.CONTENT_ENCODING));
     }
 
     private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {

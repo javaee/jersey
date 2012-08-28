@@ -149,7 +149,7 @@ public class JerseyClientTest {
         JerseyClient client = new JerseyClient();
 
         try {
-            client.invocation(null, Entity.text("Test."));
+            client.invocation(null);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // success.
@@ -164,35 +164,20 @@ public class JerseyClientTest {
 
         Link link1 =
                 Link.fromUri(UriBuilder.fromPath("http://localhost:8080/").build())
-                        .method("POST")
                         .build();
         Link link2 =
                 Link.fromUri(UriBuilder.fromPath("http://localhost:8080/").build())
-                        .method("POST")
-                        .consumes("text/plain")
+                        .type("text/plain")
                         .build();
-        try {
-            client.invocation(link1, null);
-            fail("NullPointerException expected.");
-        } catch (NullPointerException ex) {
-            // success.
-        }
-        try {
-            client.invocation(link2, null);
-            fail("NullPointerException expected.");
-        } catch (NullPointerException ex) {
-            // success.
-        }
 
-        assertNotNull(client.invocation(link1, Entity.text("Test.")));
-        assertNotNull(client.invocation(link2, Entity.text("Test.")));
 
-        assertNotNull(client.invocation(link1, Entity.xml("Test.")));
-        try {
-            client.invocation(link2, Entity.xml("Test."));
-            fail("IllegalArgumentException expected.");
-        } catch (IllegalArgumentException ex) {
-            // success.
-        }
+        assertNotNull(client.invocation(link1).buildPost(null));
+        assertNotNull(client.invocation(link2).buildPost(null));
+
+        assertNotNull(client.invocation(link1).buildPost(Entity.text("Test.")));
+        assertNotNull(client.invocation(link2).buildPost(Entity.text("Test.")));
+
+        assertNotNull(client.invocation(link1).buildPost(Entity.xml("Test.")));
+        assertNotNull(client.invocation(link2).buildPost(Entity.xml("Test.")));
     }
 }

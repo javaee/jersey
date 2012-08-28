@@ -42,8 +42,8 @@ package org.glassfish.jersey.moxy.xml;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -81,7 +81,7 @@ public class MoxyXmlFeature implements Feature {
     }
 
     @Override
-    public boolean onEnable(Configuration configuration) {
+    public boolean configure(Configurable configuration) {
         configuration.register(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
         return true;
     }

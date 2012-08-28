@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Suspend;
+import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.LocalizationMessages;

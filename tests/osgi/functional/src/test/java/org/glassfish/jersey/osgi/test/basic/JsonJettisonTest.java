@@ -42,7 +42,7 @@ package org.glassfish.jersey.osgi.test.basic;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonFeature;

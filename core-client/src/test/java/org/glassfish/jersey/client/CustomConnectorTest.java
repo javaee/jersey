@@ -68,7 +68,7 @@ public class CustomConnectorTest {
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
         } catch (ClientException ce) {
-            assertEquals("test", ce.getMessage());
+            assertEquals("java.lang.RuntimeException: test", ce.getMessage());
         }
     }
 }

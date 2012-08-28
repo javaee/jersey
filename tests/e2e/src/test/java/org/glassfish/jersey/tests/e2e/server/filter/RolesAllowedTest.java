@@ -48,6 +48,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -69,8 +70,8 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class RolesAllowedTest extends JerseyTest {
-    // TODO: @PreMatching
-    @BindingPriority(BindingPriority.SECURITY)
+    @PreMatching
+    @BindingPriority(BindingPriority.AUTHENTICATION)
     public static class SecurityFilter implements ContainerRequestFilter {
         public void filter(ContainerRequestContext request) {
             String user = request.getHeaders().getFirst("X-USER");

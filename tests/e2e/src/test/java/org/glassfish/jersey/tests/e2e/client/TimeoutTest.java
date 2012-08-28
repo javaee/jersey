@@ -43,7 +43,7 @@ import java.net.SocketTimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -100,7 +100,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
-        } catch (InvocationException e) {
+        } catch (ClientException e) {
             if (!(e.getCause() instanceof SocketTimeoutException)) {
                 e.printStackTrace();
                 fail();

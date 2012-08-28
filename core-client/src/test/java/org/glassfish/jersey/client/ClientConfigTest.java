@@ -44,7 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.ext.Provider;
 
 import org.junit.After;
@@ -53,7 +53,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -176,7 +182,7 @@ public class ClientConfigTest {
         ClientConfig clientConfig = null;
         ClientConfig instance = new ClientConfig();
         ClientConfig expResult = null;
-        ClientConfig result = instance.update(clientConfig);
+        ClientConfig result = instance.updateFrom(clientConfig);
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }

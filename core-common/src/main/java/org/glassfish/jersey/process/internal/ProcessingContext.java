@@ -41,7 +41,7 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.ExecutionContext;
+import deprecated.javax.ws.rs.ExecutionContext;
 
 /**
  * Injectable processing context that can be used to control various aspects
@@ -49,7 +49,7 @@ import javax.ws.rs.core.ExecutionContext;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ProcessingContext extends javax.ws.rs.core.ExecutionContext {
+public interface ProcessingContext extends ExecutionContext {
 
     /**
      * Processing context state.

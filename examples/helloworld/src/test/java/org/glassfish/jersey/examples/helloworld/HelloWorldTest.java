@@ -46,10 +46,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -129,7 +129,7 @@ public class HelloWorldTest extends JerseyTest {
                 }
 
                 @Override
-                public void failed(InvocationException error) {
+                public void failed(ClientException error) {
                     error.printStackTrace();
                     latch.countDown();
                 }
@@ -151,7 +151,7 @@ public class HelloWorldTest extends JerseyTest {
     public void testFooBarOptions() {
         Response response = target().path(App.ROOT_PATH).request().header("Accept", "foo/bar").options();
         assertEquals(200, response.getStatus());
-        final String allowHeader = response.getHeader("Allow");
+        final String allowHeader = response.getHeaderString("Allow");
         _checkAllowContent(allowHeader);
         assertEquals("foo/bar", response.getMediaType().toString());
         assertEquals(0, response.getLength());
@@ -161,7 +161,7 @@ public class HelloWorldTest extends JerseyTest {
     public void testTextPlainOptions() {
         Response response = target().path(App.ROOT_PATH).request().header("Accept", MediaType.TEXT_PLAIN).options();
         assertEquals(200, response.getStatus());
-        final String allowHeader = response.getHeader("Allow");
+        final String allowHeader = response.getHeaderString("Allow");
         _checkAllowContent(allowHeader);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
         final String responseBody = response.readEntity(String.class);
@@ -255,7 +255,7 @@ public class HelloWorldTest extends JerseyTest {
     public void testConfigurationUpdate() {
         Client client = client();
         client.configuration().register(CustomLoggingFilter.class).setProperty("foo", "bar");
-        client.configuration().update(ClientFactory.newClient().configuration());
+        client.configuration().updateFrom(ClientFactory.newClient().configuration());
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);

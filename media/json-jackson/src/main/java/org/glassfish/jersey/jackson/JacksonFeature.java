@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.jackson;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 /**
  * Feature used to register Jackson JSON providers with Client.
@@ -50,7 +50,7 @@ import javax.ws.rs.client.Feature;
 public class JacksonFeature implements Feature {
 
     @Override
-    public boolean onEnable(Configuration c) {
+    public boolean configure(Configurable c) {
         for (Class<?> provider : JacksonBinder.getProviders()) {
             c.register(provider);
         }

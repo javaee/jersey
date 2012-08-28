@@ -48,9 +48,9 @@ import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Suspend;
+import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.ExecutionContext;
+import deprecated.javax.ws.rs.ExecutionContext;
 
 /**
  * Example of a simple resource with a long-running operation executed in a

@@ -96,7 +96,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public void checkHeadersAndStatus(Response response) {
-                assertEquals("gzip", response.getHeader(HttpHeaders.CONTENT_ENCODING));
+                assertEquals("gzip", response.getHeaderString(HttpHeaders.CONTENT_ENCODING));
             }
 
             @Override
@@ -116,7 +116,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public void checkHeadersAndStatus(Response response) {
-                assertEquals("deflate", response.getHeader(HttpHeaders.CONTENT_ENCODING));
+                assertEquals("deflate", response.getHeaderString(HttpHeaders.CONTENT_ENCODING));
             }
 
             @Override
@@ -136,7 +136,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public void checkHeadersAndStatus(Response response) {
-                assertEquals("x-gzip", response.getHeader(HttpHeaders.CONTENT_ENCODING));
+                assertEquals("x-gzip", response.getHeaderString(HttpHeaders.CONTENT_ENCODING));
             }
 
             @Override
@@ -157,7 +157,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public void checkHeadersAndStatus(Response response) {
-                assertEquals("gzip", response.getHeader(HttpHeaders.CONTENT_ENCODING));
+                assertEquals("gzip", response.getHeaderString(HttpHeaders.CONTENT_ENCODING));
             }
         });
     }
@@ -179,7 +179,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public void checkHeadersAndStatus(Response response) {
-                assertEquals("deflate", response.getHeader(HttpHeaders.CONTENT_ENCODING));
+                assertEquals("deflate", response.getHeaderString(HttpHeaders.CONTENT_ENCODING));
             }
         });
     }

@@ -42,7 +42,7 @@ package org.glassfish.jersey.tests.e2e.entity;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.ClientException;
 
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 
@@ -67,7 +67,7 @@ public class InvalidEntityTest extends AbstractTypeTester {
         Throwable exception = null;
         try {
             target().request("foo/bar").get(Integer.class);
-        } catch (InvocationException e) {
+        } catch (ClientException e) {
             exception = e.getCause();
         } catch (Exception e) {
             exception = e;

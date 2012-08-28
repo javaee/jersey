@@ -62,8 +62,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.DynamicBinder;
-import javax.ws.rs.container.PostMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -119,6 +117,9 @@ import org.glassfish.hk2.utilities.Binder;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import deprecated.javax.ws.rs.DynamicBinder;
+import deprecated.javax.ws.rs.PostMatching;
 
 /**
  * Jersey server-side application handler.
@@ -388,9 +389,10 @@ public final class ApplicationHandler {
     }
 
     /**
-     * Takes collection of all filters/interceptors (either request/reader or response/writer) and separates out all name-bound
-     * filters/interceptors, returns
-     * them as a separate MultivaluedMap, mapping the name-bound annotation to the list of name-bound filters/interceptors.
+     * Takes collection of all filters/interceptors (either request/reader or response/writer)
+     * and separates out all name-bound filters/interceptors, returns them as a separate MultivaluedMap,
+     * mapping the name-bound annotation to the list of name-bound filters/interceptors.
+     *
      * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
      * If non-null collection is passed in the postMatching parameter (applicable for filters only),
      * this method also removes all the global
@@ -399,8 +401,7 @@ public final class ApplicationHandler {
      *
      * @param all                     Collection of all filters to be processed.
      * @param postMatching            Collection where this method should move all global post-matching filters,
-     *                                or {@code null} if
-     *                                separating out global post-matching filters is not desirable.
+     *                                or {@code null} if separating out global post-matching filters is not desirable.
      * @param applicationNameBindings collection of name binding annotations attached to the JAX-RS application.
      * @param <T>                     Filter type (either {@link ContainerRequestFilter} or {@link ContainerResponseFilter}).
      * @return {@link MultivaluedMap} of all name-bound filters.
@@ -425,8 +426,8 @@ public final class ApplicationHandler {
                     post = true;
                 } else {
                     if (postMatching == null && applicationNameBindings.contains(annotation.annotationType())) {
-                        // treat NameBindings attached to annotation as global filters (if no need to distinguish
-                        // as post-matching - i.e. postMatching == null)
+                        // treat NameBindings attached to annotation as global filters
+                        // (if no need to distinguish as post-matching - i.e. postMatching == null)
                         continue outer;
                     }
                     for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {

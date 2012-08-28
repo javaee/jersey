@@ -40,8 +40,9 @@
 package org.glassfish.jersey.client;
 
 import java.util.Collection;
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
+
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 /**
  * Feature to provide the single-line registration of custom providers.
@@ -62,14 +63,10 @@ public class CustomProvidersFeature implements Feature {
     }
 
     @Override
-    public boolean onEnable(Configuration c) {
+    public boolean configure(Configurable configuration) {
         for (Class<?> provider : providers) {
-            c.register(provider);
+            configuration.register(provider);
         }
         return true;
-    }
-
-    public void onDisable(Configuration c) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

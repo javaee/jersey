@@ -103,7 +103,7 @@ public class VariantsTest extends JerseyTest {
                 .get();
         assertEquals("en", r.readEntity(String.class));
         assertEquals("en", r.getLanguage().toString());
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(!contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -119,7 +119,7 @@ public class VariantsTest extends JerseyTest {
         assertEquals("zh", r.readEntity(String.class));
         assertEquals("zh", r.getLanguage().toString());
         System.out.println(r.getMetadata().getFirst("Vary"));
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(!contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -135,7 +135,7 @@ public class VariantsTest extends JerseyTest {
                 .get();
         assertEquals("fr", r.readEntity(String.class));
         assertEquals("fr", r.getLanguage().toString());
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(!contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -180,7 +180,7 @@ public class VariantsTest extends JerseyTest {
         assertEquals(MediaType.valueOf("text/xml"), r.getMediaType());
         assertEquals("en", r.getLanguage().getLanguage());
         assertEquals("US", r.getLanguage().getCountry());
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -202,7 +202,7 @@ public class VariantsTest extends JerseyTest {
         assertEquals("GET", r.readEntity(String.class));
         assertEquals(MediaType.valueOf("text/xml"), r.getMediaType());
         assertEquals("en", r.getLanguage().toString());
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -225,7 +225,7 @@ public class VariantsTest extends JerseyTest {
         assertEquals(MediaType.valueOf("application/xml"), r.getMediaType());
         assertEquals("en", r.getLanguage().getLanguage());
         assertEquals("US", r.getLanguage().getCountry());
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -238,7 +238,7 @@ public class VariantsTest extends JerseyTest {
         Response r = rp.request("application/atom+xml")
                 .header("Accept-Language", "en-us,en")
                 .get();
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -247,7 +247,7 @@ public class VariantsTest extends JerseyTest {
         r = rp.request("application/xml")
                 .header("Accept-Language", "fr")
                 .get();
-        vary = r.getHeader("Vary");
+        vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
         assertTrue(contains(vary, "Accept-Language"));
@@ -281,7 +281,7 @@ public class VariantsTest extends JerseyTest {
                 "text/html;q=0.9")
                 .get();
         assertTrue(MediaTypes.typeEqual(MediaType.valueOf("text/html"), r.getMediaType()));
-        String vary = r.getHeader("Vary");
+        String vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
 
@@ -290,7 +290,7 @@ public class VariantsTest extends JerseyTest {
                 "application/xml")
                 .get();
         assertTrue(MediaTypes.typeEqual(MediaType.valueOf("text/html"), r.getMediaType()));
-        vary = r.getHeader("Vary");
+        vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
 
@@ -299,7 +299,7 @@ public class VariantsTest extends JerseyTest {
                 "text/html")
                 .get();
         assertTrue(MediaTypes.typeEqual(MediaType.valueOf("text/html"), r.getMediaType()));
-        vary = r.getHeader("Vary");
+        vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
 
@@ -307,7 +307,7 @@ public class VariantsTest extends JerseyTest {
                 "application/xml")
                 .get();
         assertTrue(MediaTypes.typeEqual(MediaType.valueOf("application/xml"), r.getMediaType()));
-        vary = r.getHeader("Vary");
+        vary = r.getHeaderString("Vary");
         assertNotNull(vary);
         assertTrue(contains(vary, "Accept"));
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,29 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey;
+package org.glassfish.jersey.internal;
+
+import javax.ws.rs.core.Application;
+import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 
 /**
- * A configurable feature.
- * <p />
- * Typically encapsulates concepts that involve multiple filters, handlers and/or
- * configuration properties.
+ * Default implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
+ * The {@link javax.ws.rs.ext.RuntimeDelegate} class looks for the implementations registered
+ * in META-INF/services. If no such implementation is found, this one is picked
+ * as the default. Server injection binder should override this (using META-INF/services)
+ * to provide an implementation that supports {@link #createEndpoint(javax.ws.rs.core.Application, java.lang.Class)}
+ * method.
  *
+ * @author Jakub Podlesak
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
  */
-public interface Feature {
-    /**
-     * Called when the feature is enabled. The responsibility of the feature is
-     * to properly update the supplied configuration.
-     *
-     * @param configuration configuration where the feature should be enabled.
-     */
-    public void onEnable(Config configuration);
-    /**
-     * Called when the feature is disabled. The responsibility of the feature is
-     * to properly update the supplied configuration.
-     *
-     * @param configuration configuration where the feature should be disabled.
-     */
-    public void onDisable(Config configuration);
+public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
+    public RuntimeDelegateImpl() {
+        super(Injections.createLocator("jersey-common-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
+    }
+
+    @Override
+    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+        throw new UnsupportedOperationException(LocalizationMessages.NO_CONTAINER_AVAILABLE());
+    }
 }

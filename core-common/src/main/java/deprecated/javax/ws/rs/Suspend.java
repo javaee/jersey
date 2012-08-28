@@ -37,33 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package com.sun.ws.rs.ext;
+package deprecated.javax.ws.rs;
 
-import javax.ws.rs.core.Application;
-import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
-import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.message.internal.MessagingBinders;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Default implementation of JAX-RS {@link javax.ws.rs.ext.RuntimeDelegate}.
- * The {@link javax.ws.rs.ext.RuntimeDelegate} class looks for the implementations registered
- * in META-INF/services. If no such implementation is found, this one is picked
- * as the default. Server injection binder should override this (using META-INF/services)
- * to provide an implementation that supports {@link #createEndpoint(javax.ws.rs.core.Application, java.lang.Class)}
- * method.
+ * TODO remove.
  *
- * @author Jakub Podlesak
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar
+ * @since 2.0
  */
-public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
-    public RuntimeDelegateImpl() {
-        super(Injections.createLocator("jersey-common-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
-    }
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Suspend {
 
-    @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        throw new UnsupportedOperationException(LocalizationMessages.NO_CONTAINER_AVAILABLE());
-    }
+    /**
+     * Constant specifying no suspend timeout value.
+     */
+    public static final long NEVER = 0;
+
+    /**
+     * Suspend timeout value in the given {@link #timeUnit() time unit}. A default
+     * value is {@link #NEVER no timeout}. Similarly, any explicitly set value
+     * lower then or equal to zero will be treated as a "no timeout" value.
+     */
+    long timeOut() default NEVER;
+
+    /**
+     * The suspend timeout time unit. Defaults to {@link TimeUnit#MILLISECONDS}.
+     */
+    TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
 }

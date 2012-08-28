@@ -134,8 +134,13 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
-    public String getHeader(String name) {
+    public String getHeaderString(String name) {
         return context.getHeaderString(name);
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getStringHeaders() {
+        return context.getHeaders();
     }
 
     @Override

@@ -64,7 +64,7 @@ public interface Suspendable {
      *
      * @return suspend timeout value.
      *
-     * @see javax.ws.rs.Suspend#timeOut() &#64;Suspend.timeOut()
+     * @see deprecated.javax.ws.rs.Suspend#timeOut() &#64;Suspend.timeOut()
      */
     public long getSuspendTimeout();
 
@@ -73,7 +73,7 @@ public interface Suspendable {
      *
      * @return time unit of the suspend timeout value.
      *
-     * @see javax.ws.rs.Suspend#timeUnit() &#64;Suspend.timeUnit()
+     * @see deprecated.javax.ws.rs.Suspend#timeUnit() &#64;Suspend.timeUnit()
      */
     public TimeUnit getSuspendTimeoutUnit();
 }

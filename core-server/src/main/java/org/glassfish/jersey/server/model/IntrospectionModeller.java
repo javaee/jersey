@@ -59,7 +59,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Suspend;
+import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;

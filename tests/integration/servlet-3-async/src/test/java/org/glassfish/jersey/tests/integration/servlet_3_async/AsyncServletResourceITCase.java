@@ -48,8 +48,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -140,7 +141,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final Response response = resourceTarget.request().get();
                             getResponses.put(
@@ -227,11 +228,11 @@ public class AsyncServletResourceITCase extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
                             getResponses.put(requestId, response);
-                        } catch (InvocationException ex) {
+                        } catch (WebApplicationException ex) {
                             final Response response = ex.getResponse();
                             getResponses.put(requestId, response.getStatus() + ": " + response.readEntity(String.class));
                         } finally {
@@ -253,7 +254,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
                         }
                     }
 
-                    private void post() throws InvocationException {
+                    private void post() throws ClientException {
                         try {
                             final String response = resourceTarget.request().post(Entity.text("" + requestId), String.class);
                             postResponses.put(requestId, response);

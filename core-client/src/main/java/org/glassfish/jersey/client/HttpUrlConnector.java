@@ -49,7 +49,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import javax.net.ssl.HostnameVerifier;
@@ -58,7 +58,6 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 import org.glassfish.jersey.process.Inflector;
@@ -87,7 +86,7 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<ClientR
         try {
             return _apply(request);
         } catch (IOException ex) {
-            throw new InvocationException(ex.getMessage(), ex);
+            throw new ClientException(ex);
         }
     }
 

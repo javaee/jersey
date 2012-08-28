@@ -45,6 +45,7 @@ import java.util.Map;
  * Provides access to properties and features.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * TODO remove - replace with JAX-RS configurable
  */
 public interface Config {
 

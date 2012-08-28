@@ -42,15 +42,14 @@ package org.glassfish.jersey.client;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -174,13 +173,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Builder allow(String... methods) {
-            throw new UnsupportedOperationException("Method will be removed from the API since it is response-only.");
-        }
-
-        @Override
-        public Builder allow(Set<String> methods) {
-            throw new UnsupportedOperationException("Method will be removed from the API since it is response-only.");
+        public Invocation.Builder cookie(String name, String value) {
+            requestContext.cookie(new Cookie(name, value));
+            return this;
         }
 
         @Override
@@ -207,134 +202,136 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Response get() throws InvocationException {
+        public Response get() throws ClientException {
             return method("GET");
         }
 
         @Override
-        public <T> T get(Class<T> responseType) throws InvocationException {
+        public <T> T get(Class<T> responseType) throws ClientException, WebApplicationException {
             return method("GET", responseType);
         }
 
         @Override
-        public <T> T get(GenericType<T> responseType) throws InvocationException {
+        public <T> T get(GenericType<T> responseType) throws ClientException, WebApplicationException {
             return method("GET", responseType);
         }
 
         @Override
-        public Response put(Entity<?> entity) throws InvocationException {
+        public Response put(Entity<?> entity) throws ClientException {
             return method("PUT", entity);
         }
 
         @Override
-        public <T> T put(Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> T put(Entity<?> entity, Class<T> responseType) throws ClientException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> T put(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> T put(Entity<?> entity, GenericType<T> responseType) throws ClientException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public Response post(Entity<?> entity) throws InvocationException {
+        public Response post(Entity<?> entity) throws ClientException {
             return method("POST", entity);
         }
 
         @Override
-        public <T> T post(Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> T post(Entity<?> entity, Class<T> responseType) throws ClientException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> T post(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> T post(Entity<?> entity, GenericType<T> responseType) throws ClientException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public Response delete() throws InvocationException {
+        public Response delete() throws ClientException {
             return method("DELETE");
         }
 
         @Override
-        public <T> T delete(Class<T> responseType) throws InvocationException {
+        public <T> T delete(Class<T> responseType) throws ClientException, WebApplicationException {
             return method("DELETE", responseType);
         }
 
         @Override
-        public <T> T delete(GenericType<T> responseType) throws InvocationException {
+        public <T> T delete(GenericType<T> responseType) throws ClientException, WebApplicationException {
             return method("DELETE", responseType);
         }
 
         @Override
-        public Response head() throws InvocationException {
+        public Response head() throws ClientException {
             return method("HEAD");
         }
 
         @Override
-        public Response options() throws InvocationException {
+        public Response options() throws ClientException {
             return method("OPTIONS");
         }
 
         @Override
-        public <T> T options(Class<T> responseType) throws InvocationException {
+        public <T> T options(Class<T> responseType) throws ClientException, WebApplicationException {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public <T> T options(GenericType<T> responseType) throws InvocationException {
+        public <T> T options(GenericType<T> responseType) throws ClientException, WebApplicationException {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public Response trace(Entity<?> entity) throws InvocationException {
-            return method("TRACE", entity);
+        public Response trace() throws ClientException {
+            return method("TRACE");
         }
 
         @Override
-        public <T> T trace(Entity<?> entity, Class<T> responseType) throws InvocationException {
-            return method("TRACE", entity, responseType);
+        public <T> T trace(Class<T> responseType) throws ClientException, WebApplicationException {
+            return method("TRACE", responseType);
         }
 
         @Override
-        public <T> T trace(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
-            return method("TRACE", entity, responseType);
+        public <T> T trace(GenericType<T> responseType) throws ClientException, WebApplicationException {
+            return method("TRACE", responseType);
         }
 
         @Override
-        public Response method(String name) throws InvocationException {
+        public Response method(String name) throws ClientException {
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
-        public <T> T method(String name, Class<T> responseType) throws InvocationException {
+        public <T> T method(String name, Class<T> responseType) throws ClientException, WebApplicationException {
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
-        public <T> T method(String name, GenericType<T> responseType) throws InvocationException {
+        public <T> T method(String name, GenericType<T> responseType) throws ClientException, WebApplicationException {
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
-        public Response method(String name, Entity<?> entity) throws InvocationException {
+        public Response method(String name, Entity<?> entity) throws ClientException {
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
-        public <T> T method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> T method(String name, Entity<?> entity, Class<T> responseType)
+                throws ClientException, WebApplicationException {
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
-        public <T> T method(String name, Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> T method(String name, Entity<?> entity, GenericType<T> responseType)
+                throws ClientException, WebApplicationException {
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
@@ -351,17 +348,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> get() throws InvocationException {
+        public Future<Response> get() {
             return method("GET");
         }
 
         @Override
-        public <T> Future<T> get(Class<T> responseType) throws InvocationException {
+        public <T> Future<T> get(Class<T> responseType) {
             return method("GET", responseType);
         }
 
         @Override
-        public <T> Future<T> get(GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> get(GenericType<T> responseType) {
             return method("GET", responseType);
         }
 
@@ -371,17 +368,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> put(Entity<?> entity) throws InvocationException {
+        public Future<Response> put(Entity<?> entity) {
             return method("PUT", entity);
         }
 
         @Override
-        public <T> Future<T> put(Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> Future<T> put(Entity<?> entity, Class<T> responseType) {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> put(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> put(Entity<?> entity, GenericType<T> responseType) {
             return method("PUT", entity, responseType);
         }
 
@@ -391,17 +388,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> post(Entity<?> entity) throws InvocationException {
+        public Future<Response> post(Entity<?> entity) {
             return method("POST", entity);
         }
 
         @Override
-        public <T> Future<T> post(Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> Future<T> post(Entity<?> entity, Class<T> responseType) {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> post(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> post(Entity<?> entity, GenericType<T> responseType) {
             return method("POST", entity, responseType);
         }
 
@@ -411,17 +408,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> delete() throws InvocationException {
+        public Future<Response> delete() {
             return method("DELETE");
         }
 
         @Override
-        public <T> Future<T> delete(Class<T> responseType) throws InvocationException {
+        public <T> Future<T> delete(Class<T> responseType) {
             return method("DELETE", responseType);
         }
 
         @Override
-        public <T> Future<T> delete(GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> delete(GenericType<T> responseType) {
             return method("DELETE", responseType);
         }
 
@@ -431,7 +428,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> head() throws InvocationException {
+        public Future<Response> head() {
             return method("HEAD");
         }
 
@@ -441,17 +438,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> options() throws InvocationException {
+        public Future<Response> options() {
             return method("OPTIONS");
         }
 
         @Override
-        public <T> Future<T> options(Class<T> responseType) throws InvocationException {
+        public <T> Future<T> options(Class<T> responseType) {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public <T> Future<T> options(GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> options(GenericType<T> responseType) {
             return method("OPTIONS", responseType);
         }
 
@@ -461,39 +458,39 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> trace(Entity<?> entity) throws InvocationException {
-            return method("TRACE", entity);
+        public Future<Response> trace() {
+            return method("TRACE");
         }
 
         @Override
-        public <T> Future<T> trace(Entity<?> entity, Class<T> responseType) throws InvocationException {
-            return method("TRACE", entity, responseType);
+        public <T> Future<T> trace(Class<T> responseType) {
+            return method("TRACE", responseType);
         }
 
         @Override
-        public <T> Future<T> trace(Entity<?> entity, GenericType<T> responseType) throws InvocationException {
-            return method("TRACE", entity, responseType);
+        public <T> Future<T> trace(GenericType<T> responseType) {
+            return method("TRACE", responseType);
         }
 
         @Override
-        public <T> Future<T> trace(Entity<?> entity, InvocationCallback<T> callback) {
-            return method("TRACE", entity, callback);
+        public <T> Future<T> trace(InvocationCallback<T> callback) {
+            return method("TRACE", callback);
         }
 
         @Override
-        public Future<Response> method(String name) throws InvocationException {
+        public Future<Response> method(String name) {
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
-        public <T> Future<T> method(String name, Class<T> responseType) throws InvocationException {
+        public <T> Future<T> method(String name, Class<T> responseType) {
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
-        public <T> Future<T> method(String name, GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> method(String name, GenericType<T> responseType) {
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
@@ -505,21 +502,21 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> method(String name, Entity<?> entity) throws InvocationException {
+        public Future<Response> method(String name, Entity<?> entity) {
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
-        public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) throws InvocationException {
+        public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) {
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
-        public <T> Future<T> method(String name, Entity<?> entity, GenericType<T> responseType) throws InvocationException {
+        public <T> Future<T> method(String name, Entity<?> entity, GenericType<T> responseType) {
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
@@ -534,21 +531,21 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public Response invoke() throws InvocationException {
+    public Response invoke() throws ClientException, WebApplicationException  {
         return retrieveResponse(submit());
     }
 
     @Override
-    public <T> T invoke(final Class<T> responseType) throws InvocationException {
+    public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException  {
         return retrieveResponse(submit(responseType));
     }
 
     @Override
-    public <T> T invoke(final GenericType<T> responseType) throws InvocationException {
+    public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException  {
         return retrieveResponse(submit(responseType));
     }
 
-    private <T> T retrieveResponse(Future<T> responseFuture) {
+    private <T> T retrieveResponse(Future<T> responseFuture) throws ClientException, WebApplicationException {
         try {
             return responseFuture.get();
         } catch (InterruptedException ex) {
@@ -557,6 +554,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             final Throwable cause = ex.getCause();
             if (cause instanceof ClientException) {
                 throw (ClientException) cause;
+            } else if (cause instanceof WebApplicationException) {
+                throw (WebApplicationException) cause;
             } else {
                 throw new ClientException(cause);
             }
@@ -574,7 +573,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             @Override
-            public void failed(InvocationException error) {
+            public void failed(ClientException error) {
                 responseFuture.setException(error);
             }
         });
@@ -599,8 +598,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                         T entity = new InboundJaxrsResponse(response).readEntity(responseType);
                         responseFuture.set(entity);
                     } catch (Exception e) {
-                        failed(e instanceof InvocationException ? (InvocationException) e
-                                : new InvocationException(e.getMessage(), e));
+                        failed(e instanceof ClientException ? (ClientException) e
+                                : new ClientException(e.getMessage(), e));
                     }
                 } else {
                     failed(convertToException(new ScopedJaxrsResponse(response, scope)));
@@ -608,8 +607,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             @Override
-            public void failed(InvocationException error) {
-                responseFuture.setException(error);
+            public void failed(ClientException error) {
+                if (error.getCause() instanceof WebApplicationException) {
+                    responseFuture.setException(error.getCause());
+                } else {
+                    responseFuture.setException(error);
+                }
             }
         });
 
@@ -627,7 +630,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     try {
                         responseFuture.set(new InboundJaxrsResponse(response).readEntity(responseType));
                     } catch (Exception e) {
-                        failed(new InvocationException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), e));
+                        failed(new ClientException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), e));
                     }
                 } else {
                     failed(convertToException(new ScopedJaxrsResponse(response, scope)));
@@ -635,7 +638,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             @Override
-            public void failed(InvocationException error) {
+            public void failed(ClientException error) {
                 responseFuture.setException(error);
             }
         });
@@ -676,7 +679,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             @Override
-            public void failed(InvocationException error) {
+            public void failed(ClientException error) {
                 responseFuture.setException(error);
                 callback.failed(error);
             }
@@ -685,11 +688,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
-    private InvocationException convertToException(Response response) {
+    private ClientException convertToException(Response response) {
         try {
-            return new InvocationException(response, true);
+            // TODO proper exception selection
+            return new ClientException(new WebApplicationException(response));
         } catch (Throwable t) {
-            return new InvocationException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
+            return new ClientException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }
     }
 

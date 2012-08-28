@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -50,6 +51,8 @@ import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+
+import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
 import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
@@ -109,23 +112,25 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public String toString(Link value) {
-
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
 
-        MultivaluedMap<String, String> map = value.getParams();
+        Map<String, String> map = value.getParams();
         StringBuilder sb = new StringBuilder();
         sb.append('<').append(value.getUri()).append('>');
 
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            sb.append("; ").append(entry.getKey()).append("=\"");
-            boolean first = true;
-            for (String v : entry.getValue()) {
-                sb.append(first ? "" : " ");
-                sb.append(v);
-                first = false;
-            }
-            sb.append("\"");
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            sb.append("; ").append(entry.getKey()).append("=\"").append(entry.getValue()).append("\"");
         }
         return sb.toString();
+    }
+
+    /**
+     * Extract the list of link relations from the string value of a {@link Link#REL} attribute.
+     *
+     * @param rel string value of the link {@code "rel"} attribute.
+     * @return list of relations in the {@code "rel"} attribute string value.
+     */
+    static List<String> getLinkRelations(final String rel) {
+        return (rel == null) ? null : Arrays.asList(Tokenizer.tokenize(rel, "\" "));
     }
 }

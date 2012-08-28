@@ -64,7 +64,7 @@ import com.google.common.collect.Sets;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-@BindingPriority(BindingPriority.DECODER)
+@BindingPriority(BindingPriority.ENTITY_CODER)
 @Contract
 public abstract class ContentEncoder implements ReaderInterceptor, WriterInterceptor {
     private final Set<String> supportedEncodings;

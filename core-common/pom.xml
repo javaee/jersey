@@ -76,7 +76,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.glassfish.jersey.*;version=${project.version},
-                            com.sun.ws.rs.ext;version=${project.version}
+                            deprecated.javax.ws.rs;version=${project.version}
                         </Export-Package>
                         <Private-Package>org.glassfish.jersey.osgi</Private-Package>
                     </instructions>

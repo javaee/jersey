@@ -73,13 +73,13 @@ public class CsrfProtectionFilterTest {
     @Test
     public void testGet() {
         Response r = invBuilder.get();
-        assertNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
+        assertNull(r.getHeaderString(CsrfProtectionFilter.HEADER_NAME));
     }
 
     @Test
     public void testPut() {
         Response r = invBuilder.put(null);
-        assertNotNull(r.getHeader(CsrfProtectionFilter.HEADER_NAME));
+        assertNotNull(r.getHeaderString(CsrfProtectionFilter.HEADER_NAME));
     }
 
     private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {

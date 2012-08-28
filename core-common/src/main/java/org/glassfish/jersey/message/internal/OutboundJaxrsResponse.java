@@ -40,7 +40,6 @@
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
@@ -167,7 +166,12 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public String getHeader(String name) {
+    public MultivaluedMap<String, String> getStringHeaders() {
+        return context.getStringHeaders();
+    }
+
+    @Override
+    public String getHeaderString(String name) {
         return context.getHeaderString(name);
     }
 
@@ -514,12 +518,6 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
                 append(allow, true, m);
             }
             return header("Allow", allow, true);
-        }
-
-        @Override
-        public ResponseBuilder entity(Object entity, Type genericType, Annotation[] annotations) {
-            context.setEntity(entity,  genericType, annotations);
-            return this;
         }
 
         @Override

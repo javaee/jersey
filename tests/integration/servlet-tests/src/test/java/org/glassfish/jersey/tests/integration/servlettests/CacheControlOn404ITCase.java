@@ -75,6 +75,6 @@ public class CacheControlOn404ITCase extends JerseyTest {
         Response r = target("servlet").path("404").request().get();
         assertEquals(404, r.getStatus());
         assertEquals("404 Not Found", r.readEntity(String.class));
-        assertEquals("no-transform, max-age=10", r.getHeader(HttpHeaders.CACHE_CONTROL));
+        assertEquals("no-transform, max-age=10", r.getHeaderString(HttpHeaders.CACHE_CONTROL));
     }
 }

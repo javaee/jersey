@@ -138,7 +138,7 @@ public class MessageBodyWriterTest extends JerseyTest {
                 header(HEADER_NAME, HEADER_VALUE_CLIENT).post(Entity.entity("content", "text/plain"));
 
         assertEquals("content", response.readEntity(String.class));
-        assertEquals(HEADER_VALUE_SERVER, response.getHeader(HEADER_NAME));
+        assertEquals(HEADER_VALUE_SERVER, response.getHeaderString(HEADER_NAME));
     }
 
 }

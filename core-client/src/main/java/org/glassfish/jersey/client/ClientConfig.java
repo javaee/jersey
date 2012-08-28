@@ -48,9 +48,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -79,7 +80,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ClientConfig implements Configuration, Config {
+public class ClientConfig implements Configuration, Config, Configurable {
     /**
      * Internal configuration state.
      */
@@ -88,7 +89,7 @@ public class ClientConfig implements Configuration, Config {
     /**
      * Default encapsulation of the internal configuration state.
      */
-    private static class State implements Configuration, Config {
+    private static class State implements Configuration, Config, Configurable {
 
         /**
          * Strategy that returns the same state instance.
@@ -238,6 +239,7 @@ public class ClientConfig implements Configuration, Config {
             return properties.get(name);
         }
 
+        @Override
         public boolean isProperty(final String name) {
             if (properties.containsKey(name)) {
                 Object value = properties.get(name);
@@ -271,7 +273,7 @@ public class ClientConfig implements Configuration, Config {
         }
 
         @Override
-        public State update(final javax.ws.rs.client.Configuration configuration) {
+        public State updateFrom(Configurable configuration) {
             return ((ClientConfig) configuration).state.copy(this.client);
         }
 
@@ -289,6 +291,48 @@ public class ClientConfig implements Configuration, Config {
             return state;
         }
 
+        @Override
+        public State register(Class<?> providerClass, int bindingPriority) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
+        @Override
+        public <T> State register(Class<T> providerClass, Class<? super T>... contracts) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
+        @Override
+        public <T> State register(Class<T> providerClass, int bindingPriority, Class<? super T>... contracts) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
+        @Override
+        public State register(Object provider, int bindingPriority) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
+        @Override
+        public <T> State register(Object provider, Class<? super T>... contracts) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
+        @Override
+        public <T> State register(Object provider, int bindingPriority, Class<? super T>... contracts) {
+            final State state = strategy.onChange(this);
+            // TODO: implement method.
+            return state;
+        }
+
         public State enable(final Feature feature) {
             final Class<? extends Feature> featureClass = feature.getClass();
             if (features.containsKey(featureClass)) {
@@ -296,7 +340,7 @@ public class ClientConfig implements Configuration, Config {
             }
 
             final State state = strategy.onChange(this);
-            boolean success = feature.onEnable(state);
+            boolean success = feature.configure(state);
             if (success) {
                 state.features.put(featureClass, feature);
             }
@@ -420,10 +464,10 @@ public class ClientConfig implements Configuration, Config {
 
                         @Override
                         public void failure(Throwable exception) {
-                            // need to be fixed
-                            callback.failed(exception instanceof InvocationException ?
-                                    (InvocationException) exception
-                                    : new InvocationException(exception.getMessage(), exception));
+                            // TODO needs to be reviewed / fixed
+                            callback.failed(exception instanceof ClientException ?
+                                    (ClientException) exception
+                                    : new ClientException(exception));
                         }
 
                         @Override
@@ -528,7 +572,7 @@ public class ClientConfig implements Configuration, Config {
      * @param parent parent Jersey client instance.
      * @param that   original {@link javax.ws.rs.client.Configuration}.
      */
-    ClientConfig(JerseyClient parent, Configuration that) {
+    ClientConfig(JerseyClient parent, Configurable that) {
         if (that instanceof ClientConfig) {
             state = ((ClientConfig) that).state.copy(parent);
             if (state.getConnector() == null) {
@@ -618,8 +662,8 @@ public class ClientConfig implements Configuration, Config {
     }
 
     @Override
-    public ClientConfig update(final javax.ws.rs.client.Configuration configuration) {
-        state = state.update(configuration);
+    public ClientConfig updateFrom(Configurable configuration) {
+        state = state.updateFrom(configuration);
         return this;
     }
 
@@ -638,6 +682,42 @@ public class ClientConfig implements Configuration, Config {
         } else {
             state = state.register(provider);
         }
+        return this;
+    }
+
+    @Override
+    public ClientConfig register(Class<?> providerClass, int bindingPriority) {
+        state = state.register(providerClass, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public <T> ClientConfig register(Class<T> providerClass, Class<? super T>... contracts) {
+        state = state.register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public <T> ClientConfig register(Class<T> providerClass, int bindingPriority, Class<? super T>... contracts) {
+        state = state.register(providerClass, bindingPriority, contracts);
+        return this;
+    }
+
+    @Override
+    public ClientConfig register(Object provider, int bindingPriority) {
+        state = state.register(provider, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public <T> ClientConfig register(Object provider, Class<? super T>... contracts) {
+        state = state.register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public <T> ClientConfig register(Object provider, int bindingPriority, Class<? super T>... contracts) {
+        state = state.register(provider, bindingPriority, contracts);
         return this;
     }
 

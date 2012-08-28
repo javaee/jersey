@@ -156,4 +156,25 @@ public final class Tokenizer {
 
         return tokens;
     }
+
+    /**
+     * Remove any beginning or trailing quotes from a trimmed entry and return the
+     * updated entry.
+     *
+     * @param entry a potentially quoted string entry.
+     * @return a trimmed, unquoted string entry.
+     */
+    public static String unqote(String entry) {
+        if (entry == null || entry.isEmpty()) {
+            return entry;
+        }
+
+        entry = entry.trim();
+        if (entry.isEmpty()) {
+            return entry;
+        }
+
+        entry = (entry.startsWith("\"")) ? entry.substring(1) : entry;
+        return (entry.endsWith("\"")) ? entry.substring(0, entry.length() - 1) : entry;
+    }
 }

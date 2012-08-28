@@ -149,22 +149,7 @@ public class ContainerResponse implements ContainerResponseContext {
         return messageContext;
     }
 
-    /**
-     * Get a message header as a single string value.
-     *
-     * Each single header value is converted to String using a
-     * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
-     * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
-     * for the header value class or using its {@code toString} method  if a header
-     * delegate is not available.
-     *
-     * @param name the message header.
-     * @return the message header value. If the message header is not present then
-     *         {@code null} is returned. If the message header is present but has no
-     *         value then the empty string is returned. If the message header is present
-     *         more than once then the values of joined together and separated by a ','
-     *         character.
-     */
+    @Override
     public String getHeaderString(String name) {
         return messageContext.getHeaderString(name);
     }
@@ -174,7 +159,7 @@ public class ContainerResponse implements ContainerResponseContext {
         return messageContext.getHeaders();
     }
 
-    //@Override
+    @Override
     public MultivaluedMap<String, String> getStringHeaders() {
         return messageContext.getStringHeaders();
     }
@@ -285,11 +270,6 @@ public class ContainerResponse implements ContainerResponseContext {
     @Override
     public void setEntity(Object entity, Annotation[] annotations, MediaType mediaType) {
         messageContext.setEntity(entity, annotations, mediaType);
-    }
-
-    @Override
-    public void setEntity(Object entity, Type type, Annotation[] annotations, MediaType mediaType) {
-        messageContext.setEntity(entity, type, annotations, mediaType);
     }
 
     /**

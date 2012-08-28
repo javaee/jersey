@@ -41,6 +41,7 @@ package org.glassfish.jersey.internal.util;
 
 import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tokenizer utility unit test.
@@ -86,5 +87,22 @@ public class TokenizerTest {
         final String[] actual = Tokenizer.tokenize(input, "k");
 
         assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    public void testUnqote() throws Exception {
+        assertEquals(null, Tokenizer.unqote(null));
+        assertEquals("", Tokenizer.unqote(""));
+        assertEquals("", Tokenizer.unqote("   "));
+        assertEquals("", Tokenizer.unqote("\"   "));
+        assertEquals("", Tokenizer.unqote(" \"\"  "));
+        assertEquals(" ", Tokenizer.unqote("\" \"  "));
+        assertEquals(" ", Tokenizer.unqote(" \" \"  "));
+        assertEquals("a b", Tokenizer.unqote(" \"a b\"  "));
+        assertEquals("a b", Tokenizer.unqote("\"a b\""));
+        assertEquals("a b", Tokenizer.unqote(" a b\"  "));
+        assertEquals("a b", Tokenizer.unqote("a b\""));
+        assertEquals("a b", Tokenizer.unqote(" \"a b  "));
+        assertEquals("a b", Tokenizer.unqote("\"a b"));
     }
 }

@@ -745,7 +745,8 @@ public class InboundMessageContext {
      */
     public boolean hasLink(String relation) {
         for (Link link : getLinks()) {
-            List<String> relations = link.getRel();
+            List<String> relations = LinkProvider.getLinkRelations(link.getRel());
+
             if (relations != null && relations.contains(relation)) {
                 return true;
             }
@@ -761,7 +762,7 @@ public class InboundMessageContext {
      */
     public Link getLink(String relation) {
         for (Link link : getLinks()) {
-            List<String> relations = link.getRel();
+            List<String> relations = LinkProvider.getLinkRelations(link.getRel());
             if (relations != null && relations.contains(relation)) {
                 return link;
             }

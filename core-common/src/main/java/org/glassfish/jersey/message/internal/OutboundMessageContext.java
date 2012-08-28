@@ -560,7 +560,7 @@ public class OutboundMessageContext {
      */
     public boolean hasLink(String relation) {
         for (Link link : getLinks()) {
-            List<String> relations = link.getRel();
+            List<String> relations = LinkProvider.getLinkRelations(link.getRel());
             if (relations != null && relations.contains(relation)) {
                 return true;
             }
@@ -576,7 +576,7 @@ public class OutboundMessageContext {
      */
     public Link getLink(String relation) {
         for (Link link : getLinks()) {
-            List<String> relations = link.getRel();
+            List<String> relations = LinkProvider.getLinkRelations(link.getRel());
             if (relations != null && relations.contains(relation)) {
                 return link;
             }
@@ -701,20 +701,6 @@ public class OutboundMessageContext {
      */
     public void setEntity(Object entity, Annotation[] annotations, MediaType mediaType) {
         setEntity(entity, annotations);
-        setMediaType(mediaType);
-    }
-
-    /**
-     * Set a new message message entity.
-     *
-     * @param entity      entity object.
-     * @param type        declared generic entity type.
-     * @param annotations annotations attached to the entity.
-     * @param mediaType   entity media type.
-     * @see javax.ws.rs.ext.MessageBodyWriter
-     */
-    public void setEntity(Object entity, Type type, Annotation[] annotations, MediaType mediaType) {
-        setEntity(entity, type, annotations);
         setMediaType(mediaType);
     }
 

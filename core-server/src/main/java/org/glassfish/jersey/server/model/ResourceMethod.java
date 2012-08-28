@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NameBinding;
-import javax.ws.rs.Suspend;
+import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 

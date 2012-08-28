@@ -79,6 +79,11 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     }
 
     @Override
+    public boolean equalsIgnoreValueOrder(MultivaluedMap<K, V> otherMap) {
+        return delegate.equalsIgnoreValueOrder(otherMap);
+    }
+
+    @Override
     public void putSingle(K key, V value) {
         throw new UnsupportedOperationException();
     }

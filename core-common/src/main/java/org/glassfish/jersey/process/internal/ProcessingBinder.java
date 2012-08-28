@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.process.internal;
 
-import javax.ws.rs.core.ExecutionContext;
+import deprecated.javax.ws.rs.ExecutionContext;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

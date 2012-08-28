@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
+package deprecated.javax.ws.rs;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import javax.ws.rs.NameBinding;
+
 /**
- * Default runtime delegate implementation classes.
+ * TODO: remove.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-package com.sun.ws.rs.ext;
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@NameBinding
+public @interface PostMatching {
+}

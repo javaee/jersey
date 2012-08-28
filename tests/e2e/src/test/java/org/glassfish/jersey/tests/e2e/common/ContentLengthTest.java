@@ -111,7 +111,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testGetContentLengthCustomWriter() throws Exception {
         Response response = target().request().get(Response.class);
         assertEquals(200, response.getStatus());
-        assertEquals(STR.length(), Integer.parseInt(response.getHeader("Content-Length")));
+        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString("Content-Length")));
         assertTrue(response.hasEntity());
     }
 
@@ -120,7 +120,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testHeadContentLengthCustomWriter() throws Exception {
         Response response = target().request().head();
         assertEquals(200, response.getStatus());
-        assertEquals(STR.length(), Integer.parseInt(response.getHeader("Content-Length")));
+        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString("Content-Length")));
         assertFalse(response.hasEntity());
     }
 
@@ -137,7 +137,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testGetByte() throws Exception {
         Response response = target().path("byte").request().get(Response.class);
         assertEquals(200, response.getStatus());
-        assertEquals(3, Integer.parseInt(response.getHeader("Content-Length")));
+        assertEquals(3, Integer.parseInt(response.getHeaderString("Content-Length")));
         assertTrue(response.hasEntity());
     }
 
@@ -145,7 +145,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testHeadByte() throws Exception {
         Response response = target().path("byte").request().head();
         assertEquals(200, response.getStatus());
-        assertEquals(3, Integer.parseInt(response.getHeader("Content-Length")));
+        assertEquals(3, Integer.parseInt(response.getHeaderString("Content-Length")));
         assertFalse(response.hasEntity());
     }
 }

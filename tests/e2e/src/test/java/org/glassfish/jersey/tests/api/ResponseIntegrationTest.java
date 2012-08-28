@@ -165,6 +165,6 @@ public class ResponseIntegrationTest extends JerseyTest {
         final Response response = target().path("ResponseTest").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
 
         assertEquals(204, response.getStatus());
-        assertNull(response.getHeader("Content-Type"));
+        assertNull(response.getHeaderString("Content-Type"));
     }
 }

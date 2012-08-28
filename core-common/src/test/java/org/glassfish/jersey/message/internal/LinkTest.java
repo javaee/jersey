@@ -90,14 +90,14 @@ public class LinkTest {
     @Test
     public void testFromResourceMethod1() {
         Link l1 = Link.fromResourceMethod(MyResource.class, "self").build();
-        Link l2 = Link.fromUri("/myresource").rel("self").produces("text/plain").method("GET").build();
+        Link l2 = Link.fromUri("/myresource").rel("self").type("text/plain").build();
         assertEquals(l1, l2);
     }
 
     @Test
     public void testFromResourceMethod2() {
         Link l1 = Link.fromResourceMethod(MyResource.class, "notSelf", "self").build();
-        Link l2 = Link.fromUri("/myresource").rel("self").produces("application/xml").method("GET").build();
+        Link l2 = Link.fromUri("/myresource").rel("self").type("application/xml").build();
         assertEquals(l1, l2);
     }
 
@@ -112,13 +112,10 @@ public class LinkTest {
     @Test
     public void testGetters() {
         Link l1 = Link.fromResourceMethod(MyResource.class, "self").build();
-        assertEquals(l1.getUri(), URI.create("/myresource"));
-        assertEquals(l1.getRel().get(0), "self");
-        assertEquals(l1.getProduces().get(0), "text/plain");
-        assertEquals(l1.getMethod(), "GET");
-        assertEquals(l1.getTitle(), null);
-        assertEquals(l1.getType(), null);
-        assertEquals(l1.getConsumes().size(), 0);
-        assertEquals(l1.getParams().size(), 3);
+        assertEquals(URI.create("/myresource"), l1.getUri());
+        assertEquals("self", l1.getRel());
+        assertEquals(null, l1.getTitle());
+        assertEquals("text/plain", l1.getType());
+        assertEquals(2, l1.getParams().size());
     }
 }

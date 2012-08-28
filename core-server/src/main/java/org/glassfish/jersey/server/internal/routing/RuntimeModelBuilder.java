@@ -48,7 +48,7 @@ import javax.inject.Inject;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.DynamicBinder;
+import deprecated.javax.ws.rs.DynamicBinder;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;

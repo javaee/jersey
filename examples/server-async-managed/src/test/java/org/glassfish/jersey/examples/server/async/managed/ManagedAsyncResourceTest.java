@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -126,7 +125,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
                             getResponses.put(requestId, response);
@@ -196,7 +195,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void post() throws InvocationException {
+                    private void post() {
                         try {
                             Response response = resourceTarget.request().post(Entity.json(new Message("" + requestId, "" + requestId)));
                             postResponses.put(requestId, response.getStatus());
@@ -218,7 +217,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final Message response = resourceTarget.request("application/json").get(Message.class);
                             getResponses.put(requestId, response);

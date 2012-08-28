@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationException;
 import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -121,7 +120,7 @@ public class AsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void post() throws InvocationException {
+                    private void post() {
                         try {
                             final String response = resourceTarget.request().post(Entity.text("" + requestId), String.class);
                             postResponses.put(requestId, response);
@@ -143,7 +142,7 @@ public class AsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
                             getResponses.put(requestId, response);
@@ -227,7 +226,7 @@ public class AsyncResourceTest extends JerseyTest {
                         }
                     }
 
-                    private void get() throws InvocationException {
+                    private void get() {
                         try {
                             final String response = resourceTarget.request().get(String.class);
                             getResponses.put(requestId, response);

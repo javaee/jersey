@@ -49,7 +49,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.InvocationException;
+import javax.ws.rs.client.ClientException;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -125,13 +125,13 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new InvocationException("In-memory transport can't process incoming request", e);
+            throw new ClientException("In-memory transport can't process incoming request", e);
         } catch (ExecutionException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new InvocationException("In-memory transport can't process incoming request", e);
+            throw new ClientException("In-memory transport can't process incoming request", e);
         }
 
-        throw new InvocationException("In-memory transport can't process incoming request");
+        throw new ClientException("In-memory transport can't process incoming request");
     }
 
     private void outboundToInbound(final OutboundMessageContext outboundContext,
@@ -172,7 +172,7 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
                     outboundContext.setEntityStream(entityStream);
                     outboundContext.commitStream();
                 } catch (IOException e) {
-                    throw new InvocationException(e.getMessage(), e);
+                    throw new ClientException(e.getMessage(), e);
                 } finally {
                     if (entityStream != null) {
                         try {

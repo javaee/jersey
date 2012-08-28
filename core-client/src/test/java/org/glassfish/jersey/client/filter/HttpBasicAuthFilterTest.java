@@ -75,7 +75,7 @@ public class HttpBasicAuthFilterTest {
     @Test
     public void testGet() {
         Response r = invBuilder.get();
-        assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeader(HttpHeaders.AUTHORIZATION));
+        assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeaderString(HttpHeaders.AUTHORIZATION));
     }
 
     private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {

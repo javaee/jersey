@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.jettison;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.client.Feature;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.Configurable;
 
 /**
  * Feature used to register Jettison JSON providers with Client.
@@ -50,7 +50,7 @@ import javax.ws.rs.client.Feature;
 public class JettisonFeature implements Feature {
 
     @Override
-    public boolean onEnable(Configuration c) {
+    public boolean configure(Configurable c) {
         for (Class<?> provider : JettisonBinder.getProviders()) {
             c.register(provider);
         }
