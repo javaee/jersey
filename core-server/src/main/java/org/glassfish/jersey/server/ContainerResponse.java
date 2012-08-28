@@ -71,6 +71,7 @@ public class ContainerResponse implements ContainerResponseContext {
     private Response.StatusType status;
     private final ContainerRequest requestContext;
     private final OutboundMessageContext messageContext;
+    private boolean mappedFromException;
 
     /**
      * Create a new Jersey container response context.
@@ -101,6 +102,24 @@ public class ContainerResponse implements ContainerResponseContext {
              */
             this.messageContext.getHeaders().add(HttpHeaders.VARY, varyValue);
         }
+    }
+
+    /**
+     * Returns true if the response is result of the exception (for example created during {@link javax.ws.rs.ext
+     * .ExceptionMapper exception mapping}).
+     * @return True if this response was created based on the exception, false otherwise.
+     */
+    public boolean isMappedFromException() {
+        return mappedFromException;
+    }
+
+    /**
+     * Sets the flag indicating whether the response was created based on the exception.
+     * @param mappedFromException True if this exception if result of the exception (for example result of
+     *                      {@link javax.ws.rs.ext.ExceptionMapper exception mapping}).
+     */
+    public void setMappedFromException(boolean mappedFromException) {
+        this.mappedFromException = mappedFromException;
     }
 
     @Override

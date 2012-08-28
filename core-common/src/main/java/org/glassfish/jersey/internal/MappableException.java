@@ -67,6 +67,16 @@ public class MappableException extends ProcessingException {
         super(unwrap(cause));
     }
 
+    /**
+     * Construct a new mappable exception with the supplied message and cause.
+     *
+     * @param message the exception message.
+     * @param cause the exception cause.
+     */
+    public MappableException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     private static Throwable unwrap(Throwable cause) {
         if (cause instanceof MappableException) {
             do {

@@ -63,7 +63,18 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.*;
+import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
+import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.ProcessingBinder;
+import org.glassfish.jersey.process.internal.ProcessingCallback;
+import org.glassfish.jersey.process.internal.ProcessingContext;
+import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
@@ -71,7 +82,6 @@ import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
-import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.Factory;
@@ -214,8 +224,14 @@ public class ServerBinder extends AbstractBinder {
 
                 @Override
                 protected ContainerResponse convertResponse(Response exceptionResponse) {
-                    return (exceptionResponse == null) ? null :
-                            new ContainerResponse(requestContextFactory.get(), exceptionResponse);
+                    if (exceptionResponse == null) {
+                        return null;
+                    } else {
+                        final ContainerResponse containerResponse = new ContainerResponse(requestContextFactory.get(),
+                                exceptionResponse);
+                        containerResponse.setMappedFromException(true);
+                        return containerResponse;
+                    }
                 }
             };
         }

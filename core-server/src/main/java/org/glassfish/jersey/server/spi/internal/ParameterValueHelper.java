@@ -49,6 +49,7 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
@@ -87,7 +88,7 @@ public final class ParameterValueHelper {
         } catch (ProcessingException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new ProcessingException("Exception obtaining parameters", e);
+            throw new MappableException("Exception obtaining parameters", e);
         }
     }
 

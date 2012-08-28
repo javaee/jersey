@@ -69,6 +69,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
@@ -76,6 +77,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -108,6 +111,7 @@ import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
@@ -676,7 +680,7 @@ public final class ApplicationHandler {
             @Override
             protected ContainerResponse handleFailure(Throwable exception) {
                 return responseContext = ApplicationHandler.this.writeResponse(requestContext,
-                        ApplicationHandler.handleFailure(exception, requestContext));
+                        ApplicationHandler.handleFailure(exception, requestContext, responseContext, locator));
             }
 
             @Override
@@ -741,7 +745,7 @@ public final class ApplicationHandler {
             @Override
             protected void writeResponse(Throwable exception) {
                 responseContext = ApplicationHandler.this.writeResponse(
-                        requestContext, ApplicationHandler.handleFailure(exception, requestContext));
+                        requestContext, ApplicationHandler.handleFailure(exception, requestContext, responseContext, locator));
             }
 
             @Override
@@ -790,24 +794,45 @@ public final class ApplicationHandler {
         return new ContainerResponse(requestContext, response);
     }
 
-    private static ContainerResponse handleFailure(Throwable failure, ContainerRequest requestContext) {
+    private static ContainerResponse handleFailure(Throwable failure, ContainerRequest requestContext,
+                                                   ContainerResponse containerResponse, ServiceLocator locator) {
+        if (failure instanceof MappableException) {
+            failure = failure.getCause();
+        }
         Response.StatusType statusCode = Response.Status.INTERNAL_SERVER_ERROR;
         String message = failure.getMessage();
+
+        if (containerResponse != null && containerResponse.isMappedFromException()) {
+            // an exception was already thrown and mapped to the response. We don't not map it again.
+            return new ContainerResponse(
+                    requestContext,
+                    Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        } else {
+            ExceptionMappers mappers = locator.getService(ExceptionMappers.class);
+            ExceptionMapper mapper = mappers.find(failure.getClass());
+            if (mapper != null) {
+                try {
+                    return new ContainerResponse(
+                            requestContext,
+                            mapper.toResponse(failure));
+                } catch (Exception e) {
+                    return new ContainerResponse(
+                            requestContext,
+                            Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+                }
+            }
+        }
 
         if (failure instanceof ProcessingException) {
             if (failure instanceof HeaderValueException) {
                 statusCode = Response.Status.BAD_REQUEST;
-                // keep exception message
             } else if (failure instanceof InflectorNotFoundException) {
                 statusCode = Response.Status.NOT_FOUND;
                 message = "Requested resource not found.";
+            } else if (failure instanceof ExtractorException) {
+                statusCode = Response.Status.BAD_REQUEST;
             }
-
-            // TODO better handle other processing exception
         } else if (failure instanceof WebApplicationException) {
-            // TODO: (MM) should actually handle the full exception mapping here
-            // TODO: as we will get here even if an interceptor or MessageBodyWriter
-            // TODO: throws something before any bytes are written to the stream
             WebApplicationException wae = (WebApplicationException) failure;
             return new ContainerResponse(requestContext, wae.getResponse());
         }
@@ -896,7 +921,8 @@ public final class ApplicationHandler {
                 LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY(), ex);
             } else {
                 skipFinally = true;
-                return writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext));
+                return writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext, responseContext,
+                        locator));
             }
         } finally {
             if (!skipFinally) {
