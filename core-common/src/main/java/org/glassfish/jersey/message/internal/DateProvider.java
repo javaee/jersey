@@ -41,9 +41,13 @@ package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
 import java.util.Date;
-import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
 import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * {@code Date} {@link HeaderDelegateProvider header delegate provider}.
@@ -61,11 +65,15 @@ public class DateProvider implements HeaderDelegateProvider<Date> {
 
     @Override
     public String toString(Date header) {
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.DATE_IS_NULL());
         return HttpDateFormat.getPreferedDateFormat().format(header);
     }
 
     @Override
     public Date fromString(String header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.DATE_IS_NULL());
+
         try {
             return HttpHeaderReader.readDate(header);
         } catch (ParseException ex) {

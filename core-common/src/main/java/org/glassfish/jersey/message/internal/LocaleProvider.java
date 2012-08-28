@@ -41,9 +41,13 @@ package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
 import java.util.Locale;
-import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
 import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * {@code Locale} {@link HeaderDelegateProvider header delegate provider}.
@@ -61,6 +65,9 @@ public class LocaleProvider implements HeaderDelegateProvider<Locale> {
 
     @Override
     public String toString(Locale header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.LOCALE_IS_NULL());
+
         if (header.getCountry().length() == 0) {
             return header.getLanguage();
         } else {
@@ -71,6 +78,9 @@ public class LocaleProvider implements HeaderDelegateProvider<Locale> {
 
     @Override
     public Locale fromString(String header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.LOCALE_IS_NULL());
+
         try {
             LanguageTag lt = new LanguageTag(header);
             return lt.getAsLocale();

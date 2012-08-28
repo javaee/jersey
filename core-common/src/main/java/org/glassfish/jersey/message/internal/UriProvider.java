@@ -41,9 +41,13 @@ package org.glassfish.jersey.message.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
 import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * {@code URI} {@link HeaderDelegateProvider header delegate provider}.
@@ -61,11 +65,13 @@ public class UriProvider implements HeaderDelegateProvider<URI> {
 
     @Override
     public String toString(URI header) {
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.URI_IS_NULL());
         return header.toASCIIString();
     }
 
     @Override
     public URI fromString(String header) {
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.URI_IS_NULL());
         try {
             return new URI(header);
         } catch (URISyntaxException e) {

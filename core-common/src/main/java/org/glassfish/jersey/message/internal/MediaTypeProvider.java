@@ -45,7 +45,10 @@ import java.util.Map;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  *
@@ -63,6 +66,9 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
 
     @Override
     public String toString(MediaType header) {
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.MEDIA_TYPE_IS_NULL());
+
         StringBuilder b = new StringBuilder();
         b.append(header.getType()).append('/').append(header.getSubtype());
         for (Map.Entry<String, String> e : header.getParameters().entrySet()) {
@@ -74,9 +80,8 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
 
     @Override
     public MediaType fromString(String header) {
-        if (header == null) {
-            throw new IllegalArgumentException("Media type is null");
-        }
+
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.MEDIA_TYPE_IS_NULL());
 
         try {
             return valueOf(HttpHeaderReader.newInstance(header));

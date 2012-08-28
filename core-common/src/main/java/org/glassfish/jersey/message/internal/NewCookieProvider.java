@@ -39,9 +39,15 @@
  */
 package org.glassfish.jersey.message.internal;
 
+
 import javax.inject.Singleton;
+
 import javax.ws.rs.core.NewCookie;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
+
+import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
  * Response {@code Set-Cookie} {@link HeaderDelegateProvider header delegate provider}.
@@ -59,6 +65,9 @@ public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
 
     @Override
     public String toString(NewCookie cookie) {
+
+        throwIllegalArgumentExceptionIfNull(cookie, LocalizationMessages.NEW_COOKIE_IS_NULL());
+
         StringBuilder b = new StringBuilder();
 
         b.append(cookie.getName()).append('=');
@@ -90,10 +99,7 @@ public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
 
     @Override
     public NewCookie fromString(String header) {
-        if (header == null) {
-            throw new IllegalArgumentException("NewCookie is null");
-        }
-
+        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.NEW_COOKIE_IS_NULL());
         return HttpHeaderReader.readNewCookie(header);
     }
 }

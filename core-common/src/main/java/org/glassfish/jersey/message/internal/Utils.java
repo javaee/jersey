@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,41 +39,31 @@
  */
 package org.glassfish.jersey.message.internal;
 
-
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.HeaderDelegateProvider;
-
-import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
-
 /**
- * {@code String} {@link HeaderDelegateProvider header delegate provider}.
+ * Utility class. So far contains a single utility method
+ * for HeaderDelegateProvider implementations.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Singleton
-public class StringHeaderProvider implements HeaderDelegateProvider<String> {
+class Utils {
 
-    @Override
-    public boolean supports(Class<?> type) {
-        return type == String.class;
+    /**
+     * Prevents instantiation.
+     */
+    private Utils() {
     }
 
-    @Override
-    public String toString(String header) {
-
-        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.STRING_IS_NULL());
-
-        return header;
+    /**
+     * Throws an IllegalArgumentException with given error message if the first, toCheck,
+     * parameter is null.
+     *
+     * @param toCheck an instance to check.
+     * @param errorMessage message to set to the IllegalArgumentException thrown.
+     */
+    static void throwIllegalArgumentExceptionIfNull(Object toCheck, String errorMessage) {
+        if (toCheck == null) {
+            throw new IllegalArgumentException(errorMessage);
+        }
     }
 
-    @Override
-    public String fromString(String header) {
-
-        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.STRING_IS_NULL());
-
-        return header;
-    }
 }
