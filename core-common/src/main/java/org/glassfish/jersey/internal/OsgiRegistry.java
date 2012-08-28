@@ -100,7 +100,10 @@ public final class OsgiRegistry implements SynchronousBundleListener {
      */
     public static synchronized OsgiRegistry getInstance() {
         if (instance == null) {
-            instance = new OsgiRegistry(ReflectionHelper.class.getClassLoader());
+            final ClassLoader classLoader = ReflectionHelper.class.getClassLoader();
+            if (classLoader instanceof BundleReference) {
+                instance = new OsgiRegistry(classLoader);
+            }
         }
         return instance;
     }
