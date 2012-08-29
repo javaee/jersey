@@ -40,6 +40,7 @@
 package org.glassfish.jersey.tests.e2e.entity;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -74,6 +75,22 @@ public class MediaTypeSelectionTest extends AbstractTypeTester {
         }
     }
 
+    @Path("text")
+    public static class TextResource {
+        @GET
+        @Produces("text/*")
+        public String getText() {
+            return "text";
+        }
+
+        @GET
+        @Produces("*/*")
+        @Path("any")
+        public String getAny() {
+            return "text";
+        }
+    }
+
     @Path("wildcard")
     public static class WildCardResource {
         @POST
@@ -94,6 +111,25 @@ public class MediaTypeSelectionTest extends AbstractTypeTester {
     public void testAmbiguousWildcard() {
         Response r = target("foo").request().post(Entity.entity("test", "foo/plain"));
         assertEquals(406, r.getStatus());
+    }
+
+    @Test
+    public void testWildcardInSubType() {
+        Response r = target("text").request("text/*").get();
+        assertEquals(406, r.getStatus());
+    }
+
+    @Test
+    public void testWildcardInSubType2() {
+        Response r = target("text").request("*/*").get();
+        assertEquals(406, r.getStatus());
+    }
+
+    @Test
+    public void testWildcardsInTypeAndSubType() {
+        Response r = target("text/any").request("*/*").get();
+        assertEquals(200, r.getStatus());
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, r.getMediaType());
     }
 
     @Test
