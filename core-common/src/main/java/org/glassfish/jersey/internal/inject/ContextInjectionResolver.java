@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
-import java.util.Set;
 
 import javax.ws.rs.core.Context;
 
@@ -58,6 +55,7 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.InjecteeImpl;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
@@ -67,6 +65,9 @@ import org.glassfish.hk2.api.TypeLiteral;
 @Singleton
 public class ContextInjectionResolver implements InjectionResolver<Context> {
 
+    /**
+     * Context injection resolver HK2 binder.
+     */
     public static final class Binder extends AbstractBinder {
 
         @Override
@@ -78,7 +79,7 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     @Inject
-    ServiceLocator serviceLocator;
+    private ServiceLocator serviceLocator;
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
@@ -120,40 +121,9 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     private Injectee getInjectee(final Injectee injectee, final Type requiredType) {
-        return new Injectee() {
-            @Override
-            public Type getRequiredType() {
-                return requiredType;
-            }
-
-            @Override
-            public Set<Annotation> getRequiredQualifiers() {
-                return injectee.getRequiredQualifiers();
-            }
-
-            @Override
-            public int getPosition() {
-                return injectee.getPosition();
-            }
-
-            @Override
-            public Class<?> getInjecteeClass() {
-                return injectee.getInjecteeClass();
-            }
-
-            @Override
-            public AnnotatedElement getParent() {
-                return injectee.getParent();
-            }
-
-            @Override
-            public boolean isOptional() {
-                return injectee.isOptional();
-            }
-
-            @Override
-            public boolean isSelf() {
-                return injectee.isSelf();
+        return new InjecteeImpl(injectee) {
+            {
+                setRequiredType(requiredType);
             }
         };
     }

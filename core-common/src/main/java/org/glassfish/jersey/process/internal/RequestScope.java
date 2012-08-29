@@ -148,7 +148,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
-        Instance instance = current();
+        final Instance instance = current();
 
         U retVal = instance.get(activeDescriptor);
         if (retVal == null) {
@@ -172,6 +172,12 @@ public class RequestScope implements Context<RequestScoped> {
     @Override
     public boolean isActive() {
         return true;
+    }
+
+    @Override
+    public void destroyOne(ActiveDescriptor<?> descriptor) {
+        final Instance instance = current();
+        instance.remove(descriptor);
     }
 
     @Override
@@ -497,10 +503,22 @@ public class RequestScope implements Context<RequestScoped> {
          */
         @SuppressWarnings("unchecked")
         <T> T put(ActiveDescriptor<T> descriptor, T value) {
-            checkState(!store.containsKey(descriptor), "An instance for the descriptor %s was "
-                    + "already seeded in this scope. Old instance: %s New instance: %s", descriptor, store.get(descriptor), value);
+            checkState(!store.containsKey(descriptor),
+                    "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
+                    descriptor,
+                    store.get(descriptor),
+                    value);
 
             return (T) store.put(descriptor, value);
+        }
+
+        /**
+         * Remove a value for the descriptor if present in the scope instance store.
+         *
+         * @param descriptor key for the value to be removed.
+         */
+        void remove(ActiveDescriptor<?> descriptor) {
+            store.remove(descriptor);
         }
 
         private <T> boolean contains(ActiveDescriptor<T> provider) {

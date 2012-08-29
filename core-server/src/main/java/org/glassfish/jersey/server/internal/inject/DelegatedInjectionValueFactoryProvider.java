@@ -40,10 +40,7 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -58,6 +55,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.InjecteeImpl;
 
 
 /**
@@ -71,6 +69,11 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
 
     private final ContextInjectionResolver resolver;
 
+    /**
+     * Injection constructor.
+     *
+     * @param locator HK2 service locator.
+     */
     @Inject
     public DelegatedInjectionValueFactoryProvider(ServiceLocator locator) {
         ContextInjectionResolver result = null;
@@ -108,40 +111,15 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
     }
 
     private static Injectee getInjectee(final Parameter parameter) {
-        return new Injectee() {
-            @Override
-            public Type getRequiredType() {
-                return parameter.getType();
-            }
-
-            @Override
-            public Set<Annotation> getRequiredQualifiers() {
-                return Collections.emptySet();
-            }
-
-            @Override
-            public int getPosition() {
-                return 0;
+        return new InjecteeImpl() {
+            {
+                setRequiredType(parameter.getType());
+                setRequiredQualifiers(Collections.<Annotation>emptySet());
             }
 
             @Override
             public Class<?> getInjecteeClass() {
                 return parameter.getRawType();
-            }
-
-            @Override
-            public AnnotatedElement getParent() {
-                return null;
-            }
-
-            @Override
-            public boolean isOptional() {
-                return false;
-            }
-
-            @Override
-            public boolean isSelf() {
-                return false;
             }
         };
     }
