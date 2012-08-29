@@ -74,6 +74,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+            <artifactId>lib-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>2.0-m09</version>
@@ -138,8 +143,12 @@
                     </supportedProjectTypes>
                     <instructions>
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        <Bundle-ClassPath>.,WEB-INF/classes</Bundle-ClassPath>
                         <Import-Package>org.glassfish.jersey.servlet,*</Import-Package>
-                        <Export-Package>org.glassfish.jersey.examples.osgi.helloworld</Export-Package>
+                        <Export-Package>org.glassfish.jersey.examples.osgi.helloworld,org.glassfish.jersey.examples.osgi.helloworld.resource</Export-Package>
+                        <Embed-Directory>WEB-INF/lib</Embed-Directory>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                         <Webapp-Context>helloworld</Webapp-Context>
                         <Web-ContextPath>helloworld</Web-ContextPath>
                         <Bundle-Activator>org.glassfish.jersey.examples.osgi.helloworld.WebAppContextListener</Bundle-Activator>

@@ -126,8 +126,8 @@ public class PackageNamesScanner implements ResourceFinder {
             setResourcesProvider(new PackageNamesScanner.ResourcesProvider() {
 
                 @Override
-                public Enumeration<URL> getResources(String name, ClassLoader cl) throws IOException {
-                    return osgiRegistry.getPackageResources(name);
+                public Enumeration<URL> getResources(String packagePath, ClassLoader classLoader) throws IOException {
+                    return osgiRegistry.getPackageResources(packagePath, classLoader);
                 }
             });
         }

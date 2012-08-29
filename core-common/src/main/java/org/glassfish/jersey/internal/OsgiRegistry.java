@@ -40,6 +40,7 @@
 package org.glassfish.jersey.internal;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -54,6 +55,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -262,19 +265,49 @@ public final class OsgiRegistry implements SynchronousBundleListener {
     }
 
     @SuppressWarnings("unchecked")
-    public Enumeration<URL> getPackageResources(final String packagePath) {
+    public Enumeration<URL> getPackageResources(final String packagePath, final ClassLoader classLoader) {
         List<URL> result = new LinkedList<URL>();
         classToBundleMapping.clear();
 
-        for (Bundle b : bundleContext.getBundles()) {
-            final Enumeration<URL> enumeration = (Enumeration<URL>)b.findEntries(packagePath, "*", false);
-            if (enumeration != null) {
-                while (enumeration.hasMoreElements()) {
-                    final URL url = enumeration.nextElement();
-                    final String className = url.getPath().substring(1).replace('/', '.').replace(".class", "");
-                    classToBundleMapping.put(className, b);
+        for (Bundle bundle : bundleContext.getBundles()) {
+            // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
+            for (String bundlePackagePath : new String[] {packagePath, "WEB-INF/classes/" + packagePath}) {
+                final Enumeration<URL> enumeration = (Enumeration<URL>) bundle.findEntries(bundlePackagePath, "*", false);
 
-                    result.add(url);
+                if (enumeration != null) {
+                    while (enumeration.hasMoreElements()) {
+                        final URL url = enumeration.nextElement();
+                        final String path = url.getPath();
+
+                        final String className = (packagePath + path.substring(path.lastIndexOf('/'))).
+                                replace('/', '.').replace(".class", "");
+
+                        classToBundleMapping.put(className, bundle);
+                        result.add(url);
+                    }
+                }
+            }
+
+            // Now interested only in .jar provided by current bundle.
+            final Enumeration<URL> jars = bundle.findEntries("/", "*.jar", true);
+            if (jars != null) {
+                while (jars.hasMoreElements()) {
+                    try {
+                        final InputStream inputStream = classLoader.getResourceAsStream(jars.nextElement().getPath());
+                        final JarInputStream jarInputStream = new JarInputStream(inputStream);
+
+                        JarEntry jarEntry;
+                        while ((jarEntry = jarInputStream.getNextJarEntry()) != null) {
+                            final String jarEntryName = jarEntry.getName();
+
+                            if (jarEntryName.endsWith(".class") && jarEntryName.contains(packagePath)) {
+                                classToBundleMapping.put(jarEntryName.replace(".class", "").replace('/', '.'), bundle);
+                                result.add(bundle.getResource(jarEntryName));
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Ignore.
+                    }
                 }
             }
         }

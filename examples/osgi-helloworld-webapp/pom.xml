@@ -57,6 +57,7 @@
     <modules>
         <module>war-bundle</module>
         <module>functional-test</module>
+        <module>lib-bundle</module>
     </modules>
 
 </project>

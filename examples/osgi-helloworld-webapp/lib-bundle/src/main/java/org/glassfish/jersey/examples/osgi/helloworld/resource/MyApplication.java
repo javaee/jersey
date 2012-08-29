@@ -38,17 +38,23 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.osgi.helloworld;
+package org.glassfish.jersey.examples.osgi.helloworld.resource;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Produces;
-import javax.ws.rs.Path;
+import java.util.HashSet;
+import java.util.Set;
 
-@Path("/helloworld")
-public class HelloWorldResource {
+import javax.ws.rs.core.Application;
 
-    @GET @Produces("text/plain")
-    public String getClichedMessage() {
-        return "Hello World";
+public class MyApplication extends Application {
+
+    static final Set<Class<?>> classes = new HashSet<Class<?>>() {
+        {
+            add(HelloWorldResource.class);
+            add(AnotherResource.class);
+        }};
+
+    @Override
+    public Set<Class<?>> getClasses() {
+        return classes;
     }
 }

@@ -87,6 +87,8 @@ public abstract class AbstractWebAppTest {
                 type("war").versionAsInProject().getURL().toString();
 
         List<Option> options = Arrays.asList(options(
+                // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),

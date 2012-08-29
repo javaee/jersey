@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,22 +38,18 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.osgi.helloworld;
+package org.glassfish.jersey.examples.osgi.helloworld.resource;
 
-import java.util.HashSet;
-import java.util.Set;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
-public class MyApplication extends Application {
+@Path("/another")
+public class AnotherResource {
 
-    static final Set<Class<?>> classes = new HashSet<Class<?>>(){{
-            add(HelloWorldResource.class);
-            add(AnotherResource.class);
-        }
-    };
-
-    @Override
-    public Set<Class<?>> getClasses() {
-        return classes;
+    @GET
+    @Produces("text/plain")
+    public String getAnotherMessage() {
+        return "Another";
     }
 }
