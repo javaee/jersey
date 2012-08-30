@@ -40,14 +40,17 @@
 package org.glassfish.jersey.media.multipart.internal;
 
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartBinder;
 import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 
 /**
  * Common parent class for MultiPart test cases.
@@ -55,12 +58,19 @@ import org.glassfish.jersey.test.JerseyTest;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 abstract class MultiPartJerseyTest extends JerseyTest {
+
+    private static final Logger LOGGER = Logger.getLogger(MultiPartJerseyTest.class.getName());
+
     @Override
     protected Application configure() {
-        return new ResourceConfig()
-                .addClasses(getResourceClasses())
-                .addClasses(MultiPartBeanProvider.class)
-                .addBinders(new MultiPartBinder());
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
+
+        return new ResourceConfig().
+                addClasses(getResourceClasses()).
+                addClasses(MultiPartBeanProvider.class).
+                addSingletons(new LoggingFilter(LOGGER, true)).
+                addBinders(new MultiPartBinder());
     }
 
     /**

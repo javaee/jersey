@@ -41,7 +41,10 @@ package org.glassfish.jersey.media.multipart.internal;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -614,6 +617,35 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         Invocation.Builder request = target().path("MediaTypeWithBoundaryResource").request("text/plain");
         String response = request.put(Entity.entity(entity, mediaType), String.class);
         assertEquals("OK", response);
+    }
+
+    @Test
+    public void testMediaTypeWithQuotedBoundaryResource() throws Exception {
+        final URL url = new URL(getBaseUri().toString() + "MediaTypeWithBoundaryResource");
+        final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Accept", "text/plain");
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=\"XXXX_YYYY\"");
+
+        connection.setDoOutput(true);
+        connection.connect();
+
+        final OutputStream outputStream = connection.getOutputStream();
+        outputStream.write("--XXXX_YYYY".getBytes());
+        outputStream.write('\n');
+        outputStream.write("Content-Type: text/plain".getBytes());
+        outputStream.write('\n');
+        outputStream.write("Content-Disposition: form-data; name=\"submit\"".getBytes());
+        outputStream.write('\n');
+        outputStream.write('\n');
+        outputStream.write("OK".getBytes());
+        outputStream.write('\n');
+        outputStream.write("--XXXX_YYYY--".getBytes());
+        outputStream.write('\n');
+        outputStream.flush();
+
+        assertEquals("OK", connection.getResponseMessage());
     }
 
     private void checkEntity(String expected, BodyPartEntity entity) throws IOException {
