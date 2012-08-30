@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Set;
 
@@ -92,6 +93,13 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
 
         AnnotatedElement annotated = injectee.getParent();
+        Annotation[] annotations;
+        if (annotated.getClass().equals(Constructor.class)) {
+            annotations = ((Constructor) annotated).getParameterAnnotations()[injectee.getPosition()];
+        } else {
+            annotations = annotated.getDeclaredAnnotations();
+        }
+
         Class componentClass = injectee.getInjecteeClass();
         Type genericType = injectee.getRequiredType();
         boolean isHk2Factory = ReflectionHelper.isSubClassOf(genericType, Factory.class);
@@ -104,7 +112,8 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
         }
         final Class<?> targetType = ReflectionHelper.erasure(targetGenericType);
 
-        Set<ValueFactoryProvider> providers = Sets.filter(Providers.getProviders(locator, ValueFactoryProvider.class), concreteValueFactoryClassFilter);
+        Set<ValueFactoryProvider> providers = Sets.filter(Providers.getProviders(locator, ValueFactoryProvider.class),
+                concreteValueFactoryClassFilter);
         final ValueFactoryProvider valueFactoryProvider = providers.iterator().next(); // get first provider in the set
         final Parameter parameter = Parameter.create(
                 componentClass,
@@ -112,7 +121,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
                 false,
                 targetType,
                 targetGenericType,
-                annotated.getDeclaredAnnotations());
+                annotations);
 
         final Factory<?> valueFactory = valueFactoryProvider.getValueFactory(parameter);
         if (valueFactory != null) {
