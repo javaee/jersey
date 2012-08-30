@@ -523,7 +523,11 @@ public class InboundMessageContext {
         return singleHeader(HttpHeaders.CONTENT_TYPE, new Function<String, MediaType>() {
             @Override
             public MediaType apply(String input) {
-                return MediaType.valueOf(input);
+                try {
+                    return MediaType.valueOf(input);
+                } catch (IllegalArgumentException iae) {
+                    throw new ProcessingException(iae);
+                }
             }
         }, false);
     }

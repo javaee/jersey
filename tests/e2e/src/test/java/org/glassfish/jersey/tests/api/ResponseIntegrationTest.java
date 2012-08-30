@@ -40,11 +40,9 @@
 package org.glassfish.jersey.tests.api;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -53,7 +51,6 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -112,13 +109,6 @@ public class ResponseIntegrationTest extends JerseyTest {
             res = resp.header("TESTHEADER", sb.toString()).build();
             return res;
         }
-
-        @POST
-        @Produces(value = "text/plain")
-        @SuppressWarnings("UnusedParameters")
-        public void postTest(final String str) {
-            // Ignore to generate response 204 - NoContent.
-        }
     }
 
     private void testStatus(int status) {
@@ -160,11 +150,4 @@ public class ResponseIntegrationTest extends JerseyTest {
         }
     }
 
-    @Test
-    public void testContentTypeHeaderForNoContentResponse() {
-        final Response response = target().path("ResponseTest").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-
-        assertEquals(204, response.getStatus());
-        assertNull(response.getHeaderString("Content-Type"));
-    }
 }
