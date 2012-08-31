@@ -136,14 +136,15 @@ public class InboundMessageContext {
             return type;
         }
 
-        void invalidateContentStream() {
+        void invalidateContentStream() throws IOException {
             if (this.contentStream != null) {
                 try {
                     this.contentStream.close();
                 } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                    throw new IOException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                } finally {
+                    this.contentStream = null;
                 }
-                this.contentStream = null;
             }
         }
 
