@@ -52,6 +52,7 @@ import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
@@ -75,6 +76,7 @@ class SubResourceLocatorRouter implements Router {
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
     private final RuntimeModelBuilder runtimeModelBuilder;
+    private final JerseyResourceContext resourceContext;
 
     /**
      * Create a new sub-resource locator router.
@@ -91,6 +93,7 @@ class SubResourceLocatorRouter implements Router {
         this.runtimeModelBuilder = runtimeModelBuilder;
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
+        this.resourceContext = locator.getService(JerseyResourceContext.class);
     }
 
     @Override
@@ -101,15 +104,17 @@ class SubResourceLocatorRouter implements Router {
         if (subResource == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
+
         if (subResource.getClass().isAssignableFrom(Class.class)) {
             final Class<?> clazz = (Class<?>) subResource;
-            SingletonResourceBinder binder = locator.getService(SingletonResourceBinder.class);
-            binder.bindResourceClassAsSingleton(clazz);
+            resourceContext.bindResource(clazz);
             subResource = Injections.getOrCreate(locator, clazz);
         }
+        resourceContext.bindResourceIfSingleton(subResource);
 
+        final Resource subResourceModel;
         // TODO: what to do with the issues?
-        final Resource subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
+        subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
         runtimeModelBuilder.process(subResourceModel, true);
 
         // TODO: implement generated sub-resource methodAcceptorPair caching

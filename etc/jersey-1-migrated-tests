@@ -73,6 +73,7 @@ media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultipartMedi
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultiPartTest.java
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/ParameterizedHeadersMapTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/api/VariantsTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/api/ResourceContextTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/GenericTypeAndEntityTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/BeanStreamingTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/entity/CharsetTest.java
@@ -314,7 +315,6 @@ jersey-tests/src/test/java/com/sun/jersey/api/core/ClassNamesResourceConfigTest.
 jersey-tests/src/test/java/com/sun/jersey/api/core/DefaultResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/core/reflection/GenericMethodListTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/core/reflection/MethodListTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/core/ResourceContextTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/model/AbstractResourceMethodTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/wadl/config/WadlGeneratorConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/wadl/config/WadlGeneratorConfigurationLoaderTest.java

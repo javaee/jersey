@@ -50,6 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
@@ -58,7 +59,6 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import javax.inject.Singleton;
@@ -169,7 +169,7 @@ public class BasicValidator extends ResourceModelValidator {
      */
     public static boolean isSingleton(Class<?> resourceClass) {
         return resourceClass.isAnnotationPresent(Singleton.class)
-                || (isProvider(resourceClass) && !resourceClass.isAnnotationPresent(PerLookup.class));
+                || (Providers.isProvider(resourceClass) && !resourceClass.isAnnotationPresent(PerLookup.class));
     }
 
     @Override
@@ -178,7 +178,7 @@ public class BasicValidator extends ResourceModelValidator {
         Class resClass = invocable.getHandler().getHandlerClass();
         if (resClass != null && !checkedClasses.contains(resClass)) {
             checkedClasses.add(resClass);
-            final boolean provider = isProvider(resClass);
+            final boolean provider = Providers.isProvider(resClass);
             int counter = 0;
             for (Annotation annotation : resClass.getAnnotations()) {
                 if (SCOPE_ANNOTATIONS.contains(annotation.annotationType())) {
@@ -193,12 +193,6 @@ public class BasicValidator extends ResourceModelValidator {
             }
         }
     }
-
-
-    private static boolean isProvider(Class resClass) {
-        return !Providers.getProviderContracts(resClass).isEmpty();
-    }
-
 
     @Override
     public void visitMethodHandler(MethodHandler methodHandler) {
@@ -299,12 +293,12 @@ public class BasicValidator extends ResourceModelValidator {
 
     private static Set<Class> createParamAnnotationSet() {
         Set<Class> set = new HashSet<Class>(6);
-        set.add(Context.class);
         set.add(HeaderParam.class);
         set.add(CookieParam.class);
         set.add(MatrixParam.class);
         set.add(QueryParam.class);
         set.add(PathParam.class);
+        set.add(BeanParam.class);
         return Collections.unmodifiableSet(set);
     }
 
@@ -316,8 +310,8 @@ public class BasicValidator extends ResourceModelValidator {
      * @param source                parameter source; used for issue reporting.
      * @param reportedSourceName    source name; used for issue reporting.
      * @param reportedParameterName parameter name; used for issue reporting.
-     * @param injectionsForbidden   true if parameters cannnot be injected by
-     *                              annotations, eg. {@link HeaderParam @HeaderParam}.
+     * @param injectionsForbidden   true if parameters cannot be injected by
+     *                              parameter annotations, eg. {@link HeaderParam @HeaderParam}.
      */
     static void validateParameter(final List<ResourceModelIssue> issueList,
                                   final Parameter parameter,

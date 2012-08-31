@@ -49,11 +49,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NameBinding;
-import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.uri.PathPattern;
 
@@ -61,6 +61,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Model of a method available on a resource. Covers resource method, sub-resource
@@ -595,6 +597,11 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     }
 
     // NameBound
+    @Override
+    public boolean isNameBound() {
+        return !nameBindings.isEmpty();
+    }
+
     @Override
     public Collection<Class<? extends Annotation>> getNameBindings() {
         return nameBindings;

@@ -37,25 +37,21 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+
+package org.glassfish.jersey.model;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 
 /**
- * Model component that can be name bound (i.e. be associated with name bound filters and interceptors).
+ * Scoped Jersey application model component.
  *
- * A component implementing this interface provides additional information about
- * the name bindings attached to it.
- *
- * @author Martin Matula (martin.matula at oracle.com)
- * @see javax.ws.rs.NameBinding
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface NameBound {
+public interface Scoped {
     /**
-     * Get the collection of name bindings attached to this component.
+     * Get model component scope.
      *
-     * @return collection of name binding annotation types.
+     * @return model component scope.
      */
-    Collection<Class<? extends Annotation>> getNameBindings();
+    public Class<? extends Annotation> getScope();
 }

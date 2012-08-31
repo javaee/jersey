@@ -58,8 +58,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
@@ -294,9 +296,14 @@ public class BasicValidatorTest {
 
     public static class TestNonPublicRM {
 
+        @POST
+        public String publicPost() {
+            return "public";
+        }
+
         @GET
-        private String getIt() {
-            return "this";
+        private String privateGet() {
+            return "private";
         }
     }
 
@@ -306,28 +313,6 @@ public class BasicValidatorTest {
 
         List<ResourceModelIssue> issues = testResourceValidation(TestNonPublicRM.class);
         assertTrue(!issues.isEmpty());
-        // TODO: there might still be an implicit viewable associated with it
-        // assertTrue(validator.getIssueList().get(0).isFatal());
-    }
-
-    public static class TestNonPublicRM1 {
-
-        @GET
-        private String getThis() {
-            return "this";
-        }
-
-        @PUT
-        public void putThis(String t) {
-        }
-    }
-
-    @Test
-    public void testNonPublicRM1() throws Exception {
-        System.out.println("---\nAn issue should be reported if a resource method is not public:");
-        List<ResourceModelIssue> issues = testResourceValidation(TestNonPublicRM1.class);
-        assertTrue(!issues.isEmpty());
-
     }
 
     public static class TestMoreThanOneEntity {
@@ -337,9 +322,9 @@ public class BasicValidatorTest {
         }
     }
 
-    // should be probably validated at runtime rather then at the validation phase
-    @Ignore
     @Test
+    @Ignore("Multiple entity validation not implemented yet.")
+    // TODO implement validation
     public void suspendedTestMoreThanOneEntity() throws Exception {
         System.out.println("---\nAn issue should be reported if a resource method takes more than one entity params:");
         List<ResourceModelIssue> issues = testResourceValidation(TestMoreThanOneEntity.class);
@@ -354,13 +339,28 @@ public class BasicValidatorTest {
         }
     }
 
-    @Ignore
     @Test
     public void testGetRMReturningVoid() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get method returns void:");
+        System.out.println("---\nAn issue should be reported if a non-async get method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMReturningVoid.class);
         assertTrue(!issues.isEmpty());
         assertTrue(!issues.get(0).isFatal());
+    }
+
+    public static class TestAsyncGetRMReturningVoid {
+
+        @GET
+        public void getMethod(@Suspended AsyncResponse ar) {
+        }
+    }
+
+    @Test
+    @Ignore("Async GET void validation not updated to new API.")
+    // TODO update validation
+    public void testAsyncGetRMReturningVoid() throws Exception {
+        System.out.println("---\nAn issue should NOT be reported if a async get method returns void:");
+        List<ResourceModelIssue> issues = testResourceValidation(TestAsyncGetRMReturningVoid.class);
+        assertTrue(issues.isEmpty());
     }
 
     public static class TestGetRMConsumingEntity {

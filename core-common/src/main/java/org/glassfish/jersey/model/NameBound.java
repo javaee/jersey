@@ -37,45 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
 
 /**
- * Resource model validation exception.
+ * Model component that can be name bound.
  *
- * Indicates the issues with the model.
+ * A component implementing this interface provides additional information about
+ * the name bindings attached to it.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Martin Matula (martin.matula at oracle.com)
+ * @see javax.ws.rs.NameBinding
  */
-public class ModelValidationException extends RuntimeException {
-
-    private static final long serialVersionUID = 4076015716487596210L;
-    private final List<ResourceModelIssue> issues;
+public interface NameBound {
+    /**
+     * Check if the component is bound or not.
+     *
+     * @return {@code true} if the component is bound, {@code false} otherwise.
+     */
+    public boolean isNameBound();
 
     /**
-     * Create new resource model validation exception with the list of validation issues.
+     * Get the collection of name bindings attached to this component.
      *
-     * @param issues validation issues.
+     * @return collection of name binding annotation types.
      */
-    public ModelValidationException(List<ResourceModelIssue> issues) {
-        this.issues = Collections.unmodifiableList(new ArrayList<ResourceModelIssue>(issues));
-    }
-
-    /**
-     * Get validation issues.
-     *
-     * @return validation issues.
-     */
-    public List<ResourceModelIssue> getIssues() {
-        return issues;
-    }
-
-    @Override
-    public String getMessage() {
-        return issues.toString();
-    }
+    Collection<Class<? extends Annotation>> getNameBindings();
 }

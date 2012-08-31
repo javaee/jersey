@@ -45,7 +45,9 @@ import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +60,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
-import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -89,24 +90,22 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
+import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.internal.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
-import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.BasicValidator;
-import org.glassfish.jersey.server.model.MethodHandler;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
 import org.glassfish.jersey.server.spi.ComponentProvider;
@@ -115,12 +114,8 @@ import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import deprecated.javax.ws.rs.DynamicBinder;
 import deprecated.javax.ws.rs.PostMatching;
@@ -255,7 +250,6 @@ public final class ApplicationHandler {
     }
 
     private void initServiceLocator() {
-        // TODO parent/child serviceLocator - when HK2 is ready
         locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
     }
 
@@ -278,46 +272,65 @@ public final class ApplicationHandler {
 
         configuration.lock();
 
-        final List<ResourceModelIssue> resourceModelIssues = Lists.newLinkedList();
-        final Map<String, Resource.Builder> pathToResourceBuilderMap = Maps.newHashMap();
-        final List<Resource.Builder> resourcesBuilders = new LinkedList<Resource.Builder>();
+        // Introspecting classes & instances
+        final Map<Class<?>, ContractProvider> providerClasses = new IdentityHashMap<Class<?>, ContractProvider>();
+        final Map<Object, ContractProvider> providerInstances = new IdentityHashMap<Object, org.glassfish.jersey.model.ContractProvider>();
+
+        final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
+
+        final List<ResourceModelIssue> resourceModelIssues = new LinkedList<ResourceModelIssue>();
+
         for (Class<?> c : configuration.getClasses()) {
-            Path path = Resource.getPath(c);
-            if (path != null) { // root resource
-                try {
-                    final String pathValue = path.value();
-                    final Resource.Builder builder = Resource.builder(c, resourceModelIssues);
+            org.glassfish.jersey.model.ContractProvider contractProvider = ContractProvider.from(c);
+            if (contractProvider != null) {
+                providerClasses.put(c, contractProvider);
+            }
 
-                    Resource.Builder existing = pathToResourceBuilderMap.get(pathValue);
-                    if (existing != null) {
-                        existing.mergeWith(builder);
-                    } else {
-                        resourcesBuilders.add(builder);
-                        pathToResourceBuilderMap.put(pathValue, builder);
-                    }
-                } catch (IllegalArgumentException ex) {
-                    LOGGER.warning(ex.getMessage());
+            try {
+                Resource resource = Resource.from(c, resourceModelIssues);
+                if (resource != null) {
+                    resourceBagBuilder.registerResource(c, resource);
                 }
+            } catch (IllegalArgumentException ex) {
+                LOGGER.warning(ex.getMessage());
+            }
+
+        }
+
+        for (Object o : configuration.getSingletons()) {
+            ContractProvider contractProvider = ContractProvider.from(o);
+            if (contractProvider != null) {
+                providerInstances.put(o, contractProvider);
+            }
+
+            try {
+                Resource resource = Resource.from(o, resourceModelIssues);
+                if (resource != null) {
+                    resourceBagBuilder.registerResource(o, resource);
+                }
+            } catch (IllegalArgumentException ex) {
+                LOGGER.warning(ex.getMessage());
             }
         }
 
+        // Adding programmatic resource models
         for (Resource programmaticResource : configuration.getResources()) {
-            Resource.Builder builder = pathToResourceBuilderMap.get(programmaticResource.getPath());
-            if (builder != null) {
-                builder.mergeWith(programmaticResource);
-            } else {
-                resourcesBuilders.add(Resource.builder(programmaticResource));
-            }
+            resourceBagBuilder.registerProgrammaticResource(programmaticResource);
         }
 
+        ResourceBag resourceBag = resourceBagBuilder.build();
+
+        // Registering Injection Bindings
         final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
 
         for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
             provider.initialize(locator);
             componentProviders.add(provider);
         }
-
-        registerProvidersAndSingletonResources(componentProviders);
+        registerProvidersAndResources(componentProviders, providerClasses, providerInstances, resourceBag);
+        for (ComponentProvider componentProvider : componentProviders) {
+            componentProvider.done();
+        }
 
         // scan for NameBinding annotations attached to the application class
         Collection<Class<? extends Annotation>> applicationNameBindings =
@@ -346,20 +359,18 @@ public final class ApplicationHandler {
                 = filterNameBound(writerInterceptors, null, applicationNameBindings);
         final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(locator, DynamicBinder.class);
 
-        // build the models
-        MessageBodyWorkers workers = locator.getService(MessageBodyWorkers.class);
-        List<Resource> resources = buildAndValidate(resourcesBuilders, resourceModelIssues, workers);
+        // validate the models
+        validate(resourceBag.models, resourceModelIssues, locator.<MessageBodyWorkers>getService(MessageBodyWorkers.class));
 
+        // create a router
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
-        runtimeModelBuilder.setWorkers(workers);
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
                 nameBoundWriterInterceptors, dynamicBinders);
-        for (Resource resource : resources) {
+        for (Resource resource : resourceBag.models) {
             runtimeModelBuilder.process(resource, false);
         }
 
-        // assembly request processing chain
         /**
          * Root hierarchical request matching acceptor.
          * Invoked in a single linear stage as part of the main linear accepting chain.
@@ -384,6 +395,14 @@ public final class ApplicationHandler {
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
+
+        // Inject instances.
+        for (Object instance : providerInstances.keySet()) {
+            locator.inject(instance);
+        }
+        for (Object instance : resourceBag.instances) {
+            locator.inject(instance);
+        }
 
         this.invoker = locator.createAndInitialize(ServerBinder.RequestInvokerBuilder.class)
                 .build(rootStage);
@@ -413,8 +432,8 @@ public final class ApplicationHandler {
     private static <T> MultivaluedMap<Class<? extends Annotation>, T> filterNameBound(
             final Collection<T> all,
             final Collection<ContainerRequestFilter> postMatching,
-            final Collection<Class<? extends Annotation>> applicationNameBindings
-    ) {
+            final Collection<Class<? extends Annotation>> applicationNameBindings) {
+
         final MultivaluedMap<Class<? extends Annotation>, T> result
                 = new MultivaluedHashMap<Class<? extends Annotation>, T>();
 
@@ -456,81 +475,59 @@ public final class ApplicationHandler {
         return result;
     }
 
-    private void registerProvidersAndSingletonResources(Set<ComponentProvider> componentProviders) {
-        Set<Class<?>> cleanProviders = new HashSet<Class<?>>();
-        Set<Class<?>> cleanResources = new HashSet<Class<?>>();
-        Set<Class<?>> resourcesAndProviders = new HashSet<Class<?>>();
+    private void registerProvidersAndResources(
+            final Set<ComponentProvider> componentProviders,
+            final Map<Class<?>, org.glassfish.jersey.model.ContractProvider> providerClasses,
+            final Map<Object, org.glassfish.jersey.model.ContractProvider> providerInstances,
+            final ResourceBag resourceBag) {
 
+        final JerseyResourceContext resourceContext = locator.getService(JerseyResourceContext.class);
+        DynamicConfiguration dc = Injections.getConfiguration(locator);
 
-        for (Class<?> clazz : configuration.getClasses()) {
+        // Bind resource classes
+        for (Class<?> resourceClass : resourceBag.classes) {
+            final ContractProvider providerModel = providerClasses.remove(resourceClass);
 
-            if (bindWithComponentProvider(clazz, componentProviders)) {
+            if (bindWithComponentProvider(resourceClass, providerModel, componentProviders)) {
+                continue;
+            }
+            if (!Resource.isAcceptable(resourceClass)) {
+                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(resourceClass));
                 continue;
             }
 
-            if (!Resource.isAcceptable(clazz)) {
-                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(clazz));
-                continue;
-            }
-
-            final boolean isProvider = Providers.isProvider(clazz);
-            final boolean isResource = Resource.getPath(clazz) != null;
-
-            if (isProvider && isResource) {
-                resourcesAndProviders.add(clazz);
-            } else if (isProvider) {
-                cleanProviders.add(clazz);
-            } else if (isResource) {
-                cleanResources.add(clazz);
-            }
+            resourceContext.unsafeBindResource(resourceClass, providerModel, dc);
+        }
+        // Bind resource instances
+        for (Object resourceInstance : resourceBag.instances) {
+            final ContractProvider providerModel = providerInstances.remove(resourceInstance);
+            // TODO Try to bind resource instances using component providers?
+            resourceContext.unsafeBindResource(resourceInstance, providerModel, dc);
+        }
+        // Bind pure provider classes
+        for (ContractProvider provider : providerClasses.values()) {
+            ProviderBinder.bindProvider(provider, dc);
+        }
+        // Bind pure provider instances
+        for (ContractProvider provider : providerInstances.values()) {
+            ProviderBinder.bindProvider(provider, dc);
         }
 
+        dc.commit();
+    }
 
-        for (Resource programmaticResource : configuration.getResources()) {
+    private boolean bindWithComponentProvider(
+            final Class<?> component,
+            final ContractProvider providerModel,
+            final Collection<ComponentProvider> componentProviders) {
 
-            if (!programmaticResource.getResourceMethods().isEmpty()) {
-                for (ResourceMethod resourceMethod : programmaticResource.getResourceMethods()) {
-                    MethodHandler handler = resourceMethod.getInvocable().getHandler();
-                    if (!handler.isClassBased()) {
-                        continue;
-                    }
-                    Class<?> handlerClass = handler.getHandlerClass();
-                    if (handlerClass != null) {
-                        if (cleanProviders.contains(handlerClass)) {
-                            cleanProviders.remove(handlerClass);
-                            resourcesAndProviders.add(handlerClass);
-                        } else if (cleanResources.contains(handlerClass)) {
-
-                        } else if (resourcesAndProviders.contains(handlerClass)) {
-
-                        } else {
-                            cleanResources.add(handlerClass);
-                        }
-                    }
-                }
+        final Set<Class<?>> contracts = providerModel == null ? Collections.<Class<?>>emptySet() : providerModel.getContracts();
+        for (ComponentProvider provider : componentProviders) {
+            if (provider.bind(component, contracts)) {
+                return true;
             }
         }
-
-        final ProviderBinder providerBinder = new ProviderBinder(locator);
-        providerBinder.bindClasses(cleanProviders);
-        providerBinder.bindClasses(resourcesAndProviders, true);
-
-        final SingletonResourceBinder singletonResourceBinder = locator.getService(SingletonResourceBinder.class);
-        for (Class res : cleanResources) {
-            if (res.isAnnotationPresent(javax.inject.Singleton.class)) {
-                singletonResourceBinder.bindResourceClassAsSingleton(res);
-            } else {
-                Class scope = res.isAnnotationPresent(PerLookup.class) ? PerLookup.class : RequestScoped.class;
-                final DynamicConfiguration dc = Injections.getConfiguration(locator);
-                Injections.addBinding(Injections.newBinder(res).to(res).in(scope), dc);
-                dc.commit();
-            }
-        }
-
-        providerBinder.bindInstances(configuration.getSingletons());
-        for (ComponentProvider componentProvider : componentProviders) {
-            componentProvider.done();
-        }
+        return false;
     }
 
     private Application createApplication(Class<? extends Application> applicationClass) {
@@ -559,20 +556,14 @@ public final class ApplicationHandler {
         dc.commit();
     }
 
-    private List<Resource> buildAndValidate(List<Resource.Builder> resources, List<ResourceModelIssue> modelIssues,
-                                            MessageBodyWorkers workers) {
-        final List<Resource> result = new ArrayList<Resource>(resources.size());
-
+    private void validate(List<Resource> resources, List<ResourceModelIssue> modelIssues, MessageBodyWorkers workers) {
         ResourceModelValidator validator = new BasicValidator(modelIssues, workers);
 
-        for (Resource.Builder rb : resources) {
-            final Resource r = rb.build();
-            result.add(r);
+        for (Resource r : resources) {
             validator.validate(r);
         }
-        processIssues(validator);
 
-        return result;
+        processIssues(validator);
     }
 
     private void processIssues(ResourceModelValidator validator) {
@@ -812,9 +803,8 @@ public final class ApplicationHandler {
             ExceptionMapper mapper = mappers.find(failure.getClass());
             if (mapper != null) {
                 try {
-                    return new ContainerResponse(
-                            requestContext,
-                            mapper.toResponse(failure));
+                    //noinspection unchecked
+                    return new ContainerResponse(requestContext, mapper.toResponse(failure));
                 } catch (Exception e) {
                     return new ContainerResponse(
                             requestContext,
@@ -959,17 +949,5 @@ public final class ApplicationHandler {
      */
     public ResourceConfig getConfiguration() {
         return configuration;
-    }
-
-    private boolean bindWithComponentProvider(Class<?> component, Collection<ComponentProvider> componentProviders) {
-
-        Set<Class<?>> contracts = org.glassfish.jersey.internal.inject.Providers.getProviderContracts(component);
-
-        for (ComponentProvider provider : componentProviders) {
-            if (provider.bind(component, contracts)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

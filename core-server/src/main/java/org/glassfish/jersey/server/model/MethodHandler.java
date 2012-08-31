@@ -189,6 +189,11 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
+        protected Object getHandlerInstance() {
+            return null;
+        }
+
+        @Override
         public List<? extends ResourceModelComponent> getComponents() {
             return handlerConstructors;
         }
@@ -222,8 +227,12 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
+        protected Object getHandlerInstance() {
+            return handler;
+        }
+
+        @Override
         public Object getInstance(final ServiceLocator locator) {
-            locator.inject(handler);
             return handler;
         }
 
@@ -232,4 +241,12 @@ public abstract class MethodHandler implements ResourceModelComponent {
             return false;
         }
     }
+
+    /**
+     * Get the raw handler instance that is backing this method handler.
+     *
+     * @return raw handler instance. May return {@code null} if the handler is
+     *         {@link #isClassBased() class-based}.
+     */
+    protected abstract Object getHandlerInstance();
 }

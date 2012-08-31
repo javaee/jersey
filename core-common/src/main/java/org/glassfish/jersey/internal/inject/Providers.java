@@ -40,16 +40,11 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,20 +53,18 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import deprecated.javax.ws.rs.DynamicBinder;
-
 import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.BuilderHelper;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
@@ -83,28 +76,6 @@ import com.google.common.collect.Sets;
 public class Providers {
 
     private Providers() {
-    }
-
-    /**
-     * Wrap HK2 service provider into a HK2 service factory.
-     *
-     * @param <T> Java type if the contract produced by the provider and factory.
-     * @param provider HK2 service provider to be wrapped.
-     * @return HK2 service factory wrapping the HK2 service provider.
-     */
-    public static <T> Factory<T> asFactory(final ServiceHandle<T> provider) {
-        return new Factory<T>() {
-
-            @Override
-            public T provide() {
-                return provider.getService();
-            }
-
-            @Override
-            public void dispose(T instance) {
-                //not used
-            }
-        };
     }
 
     /**
@@ -127,103 +98,6 @@ public class Providers {
                 //not used
             }
         };
-    }
-
-    private static void exploreType(Type type, StringBuilder builder) {
-        if (type instanceof ParameterizedType) {
-            builder.append(TypeLiteral.getRawType(type).getName());
-
-            // we ignore wildcard types.
-            Collection<Type> types = Arrays.asList(((ParameterizedType) type).getActualTypeArguments());
-            Iterator<Type> typesEnum = types.iterator();
-            List<Type> nonWildcards = new ArrayList<Type>();
-            while (typesEnum.hasNext()) {
-                Type genericType = typesEnum.next();
-                if (!(genericType instanceof WildcardType)) {
-                    nonWildcards.add(genericType);
-                }
-            }
-            if (!nonWildcards.isEmpty()) {
-                builder.append("<");
-                Iterator<Type> typesItr = nonWildcards.iterator();
-                while (typesItr.hasNext()) {
-                    exploreType(typesItr.next(), builder);
-                    if (typesItr.hasNext()) {
-                        builder.append(",");
-                    }
-                }
-                builder.append(">");
-            }
-        } else {
-            builder.append(TypeLiteral.getRawType(type).getName());
-        }
-    }
-
-    private static String exploreType(Type type) {
-        StringBuilder builder = new StringBuilder();
-        exploreType(type, builder);
-        return builder.toString();
-    }
-
-    /**
-     * Build a string definition for a generic contract.
-     *
-     * @param rawType raw generic type.
-     * @param types actual generic type arguments.
-     * @return string definition for a generic contract.
-     */
-    public static String contractStringFor(Class<?> rawType, Type... types) {
-        StringBuilder builder = new StringBuilder(rawType.getName());
-
-        if (types != null && types.length > 0) {
-            builder.append('<').append(exploreType(types[0]));
-            for (int i = 1; i < types.length; i++) {
-                builder.append(',').append(exploreType(types[i]));
-            }
-            builder.append('>');
-        }
-
-        return builder.toString();
-    }
-
-    /**
-     * Get a typed service instance for a contract specified as a string.
-     *
-     * @param <T> expected contract type.
-     * @param locator HK2 service locator.
-     * @param contract string definition of the contract Java type.
-     * @return typed service instance for the contract.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T getContract(ServiceLocator locator, String contract) {
-        return Providers.<T>getProvider(locator, contract).getService();
-    }
-
-    /**
-     * Get a typed HK2 service provider for a contract specified as string.
-     *
-     * @param <T> expected contract type.
-     * @param locator HK2 service locator.
-     * @param contract string definition of the contract Java type.
-     * @return typed HK2 service provider for the contract.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> ServiceHandle<T> getProvider(final ServiceLocator locator, final String contract) {
-        ActiveDescriptor descriptor = locator.getBestDescriptor(BuilderHelper.createContractFilter(contract));
-        return locator.getServiceHandle(descriptor);
-    }
-
-    /**
-     * Get a typed HK2 service factory for a contract specified as string.
-     *
-     * @param <T> expected contract type.
-     * @param locator HK2 service locator.
-     * @param contract string definition of the contract Java type.
-     * @return typed HK2 service factory for the contract.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> Factory<T> getFactory(final ServiceLocator locator, final String contract) {
-        return (Factory<T>) asFactory(getProvider(locator, contract));
     }
 
     /**
@@ -276,9 +150,8 @@ public class Providers {
                 providerMap.put(key, provider);
             }
         }
-        ArrayList<T> ts = new ArrayList<T>(getClasses(providerMap.values()));
 
-        return ts;
+        return new ArrayList<T>(getClasses(providerMap.values()));
     }
 
     private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract, Annotation... qualifiers) {
@@ -289,6 +162,7 @@ public class Providers {
 
         ArrayList<ServiceHandle<T>> serviceHandles = new ArrayList<ServiceHandle<T>>();
         for (ServiceHandle handle : allServiceHandles) {
+            //noinspection unchecked
             serviceHandles.add((ServiceHandle<T>) handle);
         }
         return serviceHandles;
@@ -301,6 +175,7 @@ public class Providers {
      * @param <T> service provider contract Java type.
      * @param locator underlying HK2 service locator.
      * @param contract service provider contract.
+     * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
      * {@link Comparator comparator}.
      */
@@ -388,7 +263,8 @@ public class Providers {
         interfaces.add(javax.ws.rs.client.ClientResponseFilter.class);
         interfaces.add(javax.ws.rs.client.ClientRequestFilter.class);
 
-        interfaces.add(DynamicBinder.class);
+        interfaces.add(DynamicBinder.class); // TODO remove
+        interfaces.add(javax.ws.rs.container.DynamicFeature.class);
 
         return interfaces;
     }
@@ -415,6 +291,18 @@ public class Providers {
      * @return {@code true} if the class is provider, {@code false} otherwise.
      */
     public static boolean isProvider(Class<?> clazz) {
-        return !getProviderContracts(clazz).isEmpty();
+        return findFirstProviderContract(clazz);
+    }
+
+    private static boolean findFirstProviderContract(Class<?> clazz) {
+        for (Class<?> contract : getImplementedContracts(clazz)) {
+            if (isProviderContract(contract)) {
+                return true;
+            }
+            if (findFirstProviderContract(contract)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
