@@ -39,7 +39,11 @@
  */
 package org.glassfish.jersey.tests.integration.servlettests;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 import javax.ws.rs.Consumes;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -57,6 +61,15 @@ public class FormConsumptionResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public String postIt(@FormParam("text") String text) {
         return text;
+    }
+
+
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("encoding")
+    public String postEncoding(@Encoded @FormParam("text") String text) throws UnsupportedEncodingException {
+        return URLDecoder.decode(text, "UTF-8");
     }
 
     @PUT

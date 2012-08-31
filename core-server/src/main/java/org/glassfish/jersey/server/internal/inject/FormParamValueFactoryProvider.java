@@ -39,19 +39,33 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.Encoded;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ExtractorException;
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Value factory provider supporting the {@link FormParam} injection annotation.
@@ -80,19 +94,27 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
     private static final class FormParamValueFactory extends AbstractHttpContextValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
+        private final boolean decode;
 
-        FormParamValueFactory(MultivaluedParameterExtractor<?> extractor) {
+        FormParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
+            this.decode = decode;
         }
 
         @Override
         public Object get(HttpContext context) {
 
-            Form form = getCachedForm(context);
+            Form form = getCachedForm(context, decode);
 
             if (form == null) {
-                form = getForm(context);
-                cacheForm(context, form);
+                Form otherForm = getCachedForm(context, !decode);
+                if (otherForm != null) {
+                    form = switchUrlEncoding(context, otherForm, decode);
+                    cacheForm(context, form);
+                } else {
+                    form = getForm(context);
+                    cacheForm(context, form);
+                }
             }
 
             try {
@@ -103,16 +125,44 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
             }
         }
 
+        private Form switchUrlEncoding(final HttpContext context, final Form otherForm, final boolean decode) {
+            final Set<Map.Entry<String, List<String>>> entries = otherForm.asMap().entrySet();
+            Form newForm = new Form();
+            for (Map.Entry<String, List<String>> entry : entries) {
+                final String charsetName = ReaderWriter.getCharset(MediaType.valueOf(context.getRequestContext()
+                        .getHeaderString(HttpHeaders.CONTENT_TYPE))).name();
+
+                String key;
+                try {
+                    key = decode ? URLDecoder.decode(entry.getKey(), charsetName) : URLEncoder.encode(entry.getKey(),
+                            charsetName);
+
+                    for (String value : entry.getValue()) {
+                        newForm.asMap().add(key, decode ? URLDecoder.decode(value, charsetName) : URLEncoder.encode(value,
+                                charsetName));
+                    }
+
+                } catch (UnsupportedEncodingException uee) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_UNSUPPORTED_ENCODING(charsetName,
+                            extractor.getName()), uee);
+                }
+            }
+            return newForm;
+        }
+
+
         private void cacheForm(final HttpContext context, final Form form) {
-            context.getRequestContext().setProperty(HttpContext.FORM_PROPERTY, form);
+            context.getRequestContext().setProperty(decode ? HttpContext
+                    .FORM_DECODED_PROPERTY : HttpContext.FORM_PROPERTY, form);
         }
 
         private Form getForm(HttpContext context) {
             return getFormParameters(ensureValidRequest(context.getRequestContext()));
         }
 
-        private Form getCachedForm(final HttpContext context) {
-            return (Form) context.getRequestContext().getProperty(HttpContext.FORM_PROPERTY);
+        private Form getCachedForm(final HttpContext context, boolean decode) {
+            return (Form) context.getRequestContext().getProperty(decode ? HttpContext
+                    .FORM_DECODED_PROPERTY : HttpContext.FORM_PROPERTY);
         }
 
         private ContainerRequest ensureValidRequest(
@@ -129,11 +179,28 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
             return requestContext;
         }
 
+        private final static Annotation encodedAnnotation = getEncodedAnnotation();
+
+        private static Annotation getEncodedAnnotation() {
+            @Encoded
+            final class EncodedAnnotationTemp {
+            }
+            return EncodedAnnotationTemp.class.getAnnotation(Encoded.class);
+        }
+
         private Form getFormParameters(ContainerRequest requestContext) {
             if (requestContext.getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
                 requestContext.bufferEntity();
-                Form f = requestContext.readEntity(Form.class);
-                return (f == null ? new Form() : f);
+                Form form;
+                if (decode) {
+                    form = requestContext.readEntity(Form.class);
+                } else {
+                    Annotation[] annotations = new Annotation[1];
+                    annotations[0] = encodedAnnotation;
+                    form = requestContext.readEntity(Form.class, annotations);
+                }
+
+                return (form == null ? new Form() : form);
             } else {
                 return new Form();
             }
@@ -164,6 +231,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         if (e == null) {
             return null;
         }
-        return new FormParamValueFactory(e);
+        return new FormParamValueFactory(e, !parameter.isEncoded());
     }
 }

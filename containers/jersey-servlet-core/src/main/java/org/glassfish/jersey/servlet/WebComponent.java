@@ -447,19 +447,16 @@ public class WebComponent {
     private void filterFormParameters(HttpServletRequest hsr, ContainerRequest request) throws IOException {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())
                 && !request.hasEntity()) {
-
             Form f = new Form();
-
             Enumeration e = hsr.getParameterNames();
             while (e.hasMoreElements()) {
                 String name = (String) e.nextElement();
                 String[] values = hsr.getParameterValues(name);
-
                 f.asMap().put(name, Arrays.asList(values));
             }
 
             if (!f.asMap().isEmpty()) {
-                request.setProperty(HttpContext.FORM_PROPERTY, f);
+                request.setProperty(HttpContext.FORM_DECODED_PROPERTY, f);
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.log(Level.WARNING, LocalizationMessages.FORM_PARAM_CONSUMED(request.getRequestUri()));
                 }

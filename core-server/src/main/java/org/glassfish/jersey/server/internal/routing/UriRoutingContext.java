@@ -335,7 +335,7 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-        return UriComponent.decodeQuery(getRequestUri(), true);
+        return UriComponent.decodeQuery(getRequestUri(), decode);
     }
 
     @Override

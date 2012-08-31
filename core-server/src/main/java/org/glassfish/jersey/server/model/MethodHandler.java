@@ -44,6 +44,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.Encoded;
+
 import org.glassfish.jersey.internal.inject.Injections;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -154,7 +156,7 @@ public abstract class MethodHandler implements ResourceModelComponent {
         private final List<HandlerConstructor> handlerConstructors;
 
         public ClassBasedMethodHandler(final Class<?> handlerClass) {
-            this(handlerClass, false);
+            this(handlerClass, handlerClass.isAnnotationPresent(Encoded.class));
         }
 
         public ClassBasedMethodHandler(final Class<?> handlerClass, final boolean disableParamDecoding) {

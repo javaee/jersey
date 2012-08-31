@@ -43,15 +43,22 @@ package org.glassfish.jersey.server.internal.inject;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.Encoded;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 
-import org.junit.Ignore;
+import org.glassfish.jersey.server.RequestContextBuilder;
+
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import junit.framework.Assert;
 
 /**
  *
@@ -59,8 +66,67 @@ import static org.junit.Assert.assertEquals;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @SuppressWarnings("unchecked")
-@Ignore // TODO: the test does not pass -> JERSEY-1389
+
 public class EncodedParamsTest extends AbstractTest {
+
+    @Path("/{u}")
+    public static class EncodedOnPostClass {
+        public EncodedOnPostClass(
+                @PathParam("u") String u,
+                @QueryParam("q") String q,
+                @MatrixParam("m") String m,
+                @FormParam("f") String f) {
+            assertEquals(" u", u);
+            assertEquals(" q", q);
+            assertEquals(" m", m);
+            assertEquals(":f", f);
+        }
+
+        @POST
+        @Encoded
+        public String doPost(
+                @PathParam("u") String u,
+                @QueryParam("q") String q,
+                @MatrixParam("m") String m,
+                @FormParam("f") String f) {
+            assertEquals("%20u", u);
+            assertEquals("%20q", q);
+            assertEquals("%20m", m);
+            assertEquals("%3Af", f);
+            return "content";
+        }
+
+        @POST
+        @Path("combined")
+        public String doPostCombined(
+                @Encoded @FormParam("f") String f,
+                @FormParam("f2") String f2) {
+            assertEquals("%3Af", f);
+            assertEquals(":f2", f2);
+            return "content";
+        }
+    }
+
+    @Test
+    public void testEncodedOnPostClass() throws ExecutionException, InterruptedException {
+        initiateWebApplication(EncodedOnPostClass.class);
+        Form form = new Form();
+        form.param("f", ":f");
+        RequestContextBuilder requestBuilder = RequestContextBuilder.from("/%20u;m=%20m?q=%20q",
+                "POST").type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).entity(form);
+        Assert.assertEquals("content", apply(requestBuilder.build()).getEntity());
+    }
+
+    @Test
+    public void testCombinedEncodedOnPostClass() throws ExecutionException, InterruptedException {
+        initiateWebApplication(EncodedOnPostClass.class);
+        Form form = new Form();
+        form.param("f", ":f");
+        form.param("f2", ":f2");
+        RequestContextBuilder requestBuilder = RequestContextBuilder.from("/%20u/combined;m=%20m?q=%20q",
+                "POST").type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).entity(form);
+        Assert.assertEquals("content", apply(requestBuilder.build()).getEntity());
+    }
 
     @Encoded
     @Path("/{u}")
@@ -92,6 +158,7 @@ public class EncodedParamsTest extends AbstractTest {
 
         _test("/%20u;m=%20m?q=%20q");
     }
+
 
     @Path("/{u}")
     public static class EncodedOnAccessibleObject {

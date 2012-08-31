@@ -64,9 +64,9 @@ import javax.ws.rs.core.Response.Status;
  */
 public abstract class AbstractFormProvider<T> extends AbstractMessageReaderWriterProvider<T> {
 
-    public <M  extends MultivaluedMap<String, String>> M readFrom(M map,
-            MediaType mediaType,
-            InputStream entityStream) throws IOException {
+    public <M extends MultivaluedMap<String, String>> M readFrom(M map,
+                                                                 MediaType mediaType, boolean decode,
+                                                                 InputStream entityStream) throws IOException {
         final String encoded = readFromAsString(entityStream, mediaType);
 
         final String charsetName = ReaderWriter.getCharset(mediaType).name();
@@ -78,10 +78,14 @@ public abstract class AbstractFormProvider<T> extends AbstractMessageReaderWrite
                 token = tokenizer.nextToken();
                 int idx = token.indexOf('=');
                 if (idx < 0) {
-                    map.add(URLDecoder.decode(token, charsetName), null);
+                    map.add(decode ? URLDecoder.decode(token, charsetName) : token, null);
                 } else if (idx > 0) {
-                    map.add(URLDecoder.decode(token.substring(0, idx), charsetName),
-                            URLDecoder.decode(token.substring(idx + 1), charsetName));
+                    if (decode) {
+                        map.add(URLDecoder.decode(token.substring(0, idx), charsetName),
+                                URLDecoder.decode(token.substring(idx + 1), charsetName));
+                    } else {
+                        map.add(token.substring(0, idx), token.substring(idx + 1));
+                    }
                 }
             }
             return map;
@@ -90,7 +94,7 @@ public abstract class AbstractFormProvider<T> extends AbstractMessageReaderWrite
         }
     }
 
-    public <M  extends MultivaluedMap<String, String>> void writeTo(
+    public <M extends MultivaluedMap<String, String>> void writeTo(
             M t,
             MediaType mediaType,
             OutputStream entityStream) throws IOException {

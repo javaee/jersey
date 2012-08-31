@@ -45,13 +45,15 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.inject.Singleton;
 
 /**
  * Provider for marshalling/un-marshalling of {@code application/x-www-form-urlencoded}
@@ -78,7 +80,18 @@ public final class FormProvider extends AbstractFormProvider<Form> {
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream entityStream) throws IOException {
-        return new Form(readFrom(new MultivaluedHashMap<String, String>(), mediaType, entityStream));
+
+        return new Form(readFrom(new MultivaluedHashMap<String, String>(), mediaType, decode(annotations), entityStream));
+    }
+
+
+    private boolean decode(Annotation annotations[]) {
+        for (Annotation annotation : annotations) {
+            if (annotation.annotationType().equals(Encoded.class)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
