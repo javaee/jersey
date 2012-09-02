@@ -54,8 +54,6 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 /**
  * Writer for {@link OutboundEvent}.
  *
@@ -63,8 +61,6 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
 
-    @Inject
-    private ServiceLocator locator;
     @Inject
     private Provider<MessageBodyWorkers> workersProvider;
 
@@ -86,8 +82,9 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
         }
 
         if(outboundEvent.getType() != null) {
+            final MediaType eventMediaType = outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
             final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
-                    null, annotations, (outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType()));
+                    outboundEvent.getType(), annotations, eventMediaType);
             if(outboundEvent.getName() != null) {
                 entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());
             }
@@ -95,7 +92,7 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                 entityStream.write(String.format("id: %s\n", outboundEvent.getId()).getBytes());
             }
 
-            messageBodyWriter.writeTo(outboundEvent.getData(), outboundEvent.getClass(), null, annotations, mediaType, httpHeaders, new OutputStream() {
+            messageBodyWriter.writeTo(outboundEvent.getData(), outboundEvent.getType(), outboundEvent.getType(), annotations, eventMediaType, httpHeaders, new OutputStream() {
 
                 private boolean start = true;
 
