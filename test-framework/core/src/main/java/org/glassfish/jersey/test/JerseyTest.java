@@ -78,7 +78,7 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("UnusedDeclaration")
 public abstract class JerseyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(TestContainerFactory.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JerseyTest.class.getName());
     /**
      * Holds the default test container factory class to be used for running the
      * tests.
