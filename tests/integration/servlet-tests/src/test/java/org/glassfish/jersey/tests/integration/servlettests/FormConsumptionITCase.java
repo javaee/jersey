@@ -82,4 +82,12 @@ public class FormConsumptionITCase extends JerseyTest {
         String result = target("form-consumption/form-consumption").request().post(Entity.form(form), String.class);
         assertEquals(form.asMap().getFirst("text"), result);
     }
+
+    @Test
+    public void testPostWithEncoding() {
+        Form form = new Form();
+        form.param("text", "this is an encoding test +-*/=");
+        String result = target("form-consumption/form-consumption/encoding").request().post(Entity.form(form), String.class);
+        assertEquals(form.asMap().getFirst("text"), result);
+    }
 }

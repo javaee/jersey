@@ -59,12 +59,13 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+
+import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -189,7 +190,7 @@ final class IntrospectionModeller {
             Parameter p = Parameter.create(
                     handlerClass,
                     method.getMethod().getDeclaringClass(),
-                    encodedFlag,
+                    encodedFlag || method.isAnnotationPresent(Encoded.class),
                     method.getParameterTypes()[0],
                     method.getGenericParameterTypes()[0],
                     method.getAnnotations());
@@ -206,12 +207,13 @@ final class IntrospectionModeller {
                 Parameter p = Parameter.create(
                         handlerClass,
                         field.getDeclaringClass(),
-                        encodedFlag,
+                        encodedFlag || field.isAnnotationPresent(Encoded.class),
                         field.getType(),
                         field.getGenericType(),
                         field.getAnnotations());
                 if (null != p) {
-                    BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName(), isInSingleton);
+                    BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName(),
+                            isInSingleton);
                 }
             }
         }
@@ -321,7 +323,7 @@ final class IntrospectionModeller {
                     resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
                             .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
-                            .encodedParameters(encodedParameters)
+                            .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
@@ -344,7 +346,7 @@ final class IntrospectionModeller {
                             .path(am.getAnnotation(Path.class).value())
                             .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
-                            .encodedParameters(encodedParameters)
+                            .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
@@ -360,7 +362,7 @@ final class IntrospectionModeller {
 
         for (AnnotatedMethod am : methodList.withoutMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
             resourceBuilder.addMethod().path(am.getAnnotation(Path.class).value())
-                    .encodedParameters(encodedParameters)
+                    .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                     .handledBy(handlerClass, am.getMethod());
         }
     }

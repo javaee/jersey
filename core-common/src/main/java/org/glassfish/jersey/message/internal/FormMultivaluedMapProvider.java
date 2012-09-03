@@ -46,12 +46,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.inject.Singleton;
 
 /**
  * Provider for marshalling/un-marshalling of {@code application/x-www-form-urlencoded}
@@ -87,7 +88,7 @@ public final class FormMultivaluedMapProvider extends AbstractFormProvider<Multi
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream entityStream) throws IOException {
-        return readFrom(new MultivaluedHashMap<String, String>(), mediaType, entityStream);
+        return readFrom(new MultivaluedHashMap<String, String>(), mediaType, true, entityStream);
     }
 
     @Override

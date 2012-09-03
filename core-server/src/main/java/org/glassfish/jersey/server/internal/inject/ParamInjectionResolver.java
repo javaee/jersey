@@ -42,8 +42,11 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Set;
+
+import javax.ws.rs.Encoded;
 
 import javax.inject.Inject;
 
@@ -118,7 +121,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
         final Parameter parameter = Parameter.create(
                 componentClass,
                 componentClass,
-                false,
+                hasEncodedAnnotation(injectee),
                 targetType,
                 targetGenericType,
                 annotations);
@@ -134,6 +137,44 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
 
         return null;
     }
+
+    private boolean hasEncodedAnnotation(Injectee injectee) {
+        AnnotatedElement element = injectee.getParent();
+
+        final boolean isConstructor = element instanceof Constructor;
+        final boolean isMethod = element instanceof Method;
+
+        // if injectee is method or constructor, check its parameters
+        if (isConstructor || isMethod) {
+            Annotation annotations[] = null;
+
+            if (isMethod) {
+                annotations = ((Method) element).getParameterAnnotations()[injectee.getPosition()];
+            } else if (isConstructor) {
+                annotations = ((Constructor) element).getParameterAnnotations()[injectee.getPosition()];
+            }
+
+            for (Annotation annotation : annotations) {
+                if (annotation.annotationType().equals(Encoded.class)) {
+                    return true;
+                }
+            }
+        }
+
+        // check injectee itself (method, constructor or field)
+        if (element.isAnnotationPresent(Encoded.class)) {
+            return true;
+        }
+
+        // check class which contains injectee
+        Class clazz = injectee.getInjecteeClass();
+        if (clazz.isAnnotationPresent(Encoded.class)) {
+            return true;
+        }
+
+        return false;
+    }
+
 
     @Override
     public boolean isConstructorParameterIndicator() {

@@ -54,10 +54,16 @@ import org.glassfish.jersey.uri.ExtendedUriInfo;
  */
 public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
     /**
-     * Used internally for storing {@link javax.ws.rs.core.Form} instance in {@link HttpContext}
-     * properties.
+     * Used internally for storing {@link javax.ws.rs.core.Form} instance with original (not url-decoded) values in {@link
+     * HttpContext} properties.
      */
     String FORM_PROPERTY = "jersey.config.server.representation.form";
+
+    /**
+     * Used internally for storing {@link javax.ws.rs.core.Form} instance with url-decoded values in {@link HttpContext}
+     * properties.
+     */
+    String FORM_DECODED_PROPERTY = "jersey.config.server.representation.decoded.form";
 
     /**
      * Get the extended URI information.
