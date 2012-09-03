@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.util.Map;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,6 +54,8 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import junit.framework.Assert;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -90,5 +94,15 @@ public class LinkTest extends JerseyTest {
     public void testFromResourceMethod() {
         Link link = Link.fromResourceMethod(Resource.class, "producesXml").build();
         assertEquals("resource/producesxml", link.getUri().toString());
+    }
+
+    @Test
+    public void testDelimiters() {
+        Link.Builder builder = new Link.Builder().uri("http://localhost:80");
+        final String value = "param1value1    param1value2";
+        builder = builder.param("param1", value);
+        Link link = builder.build();
+        final Map<String, String> params = link.getParams();
+        Assert.assertEquals(value, params.get("param1"));
     }
 }
