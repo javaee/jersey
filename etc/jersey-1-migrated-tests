@@ -72,6 +72,7 @@ media/multipart/src/test/java/org/glassfish/jersey/media/multipart/internal/Mult
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultipartMediaTypesTest.java
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/MultiPartTest.java
 media/multipart/src/test/java/org/glassfish/jersey/media/multipart/ParameterizedHeadersMapTest.java
+tests/e2e/src/test/java/org/glassfish/jersey/tests/api/ExceptionTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/api/VariantsTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/api/ResourceContextTest.java
 tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/GenericTypeAndEntityTest.java
@@ -347,7 +348,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/ResourceFilterFa
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/UriModificationFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/CanonicalizationFeatureTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ExceptionTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/GZIPContentEncodingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/HeadTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/HttpMethodTest.java
@@ -361,7 +361,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/Application
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ApplicationTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/CanonicalizationFeatureTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ExceptionTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/FixedRequestSizeTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/GrizzlyWebProviderLifecycleTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/GZIPContentEncodingTest.java
@@ -385,7 +384,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/AcceptableXM
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ApplicationConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/CanonicalizationFeatureTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ExceptionTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/GZIPContentEncodingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HandlerContextTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HeadTest.java
