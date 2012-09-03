@@ -47,8 +47,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -131,6 +134,7 @@ public class ConsumeProduceSimpleTest  {
         }
 
         @POST
+        @SuppressWarnings("UnusedParameters")
         public String doPostHtml(String data) {
             assertEquals("text/html", httpHeaders.getRequestHeader("Content-Type").get(0));
             assertEquals("text/html", httpHeaders.getRequestHeader("Accept").get(0));
@@ -140,6 +144,7 @@ public class ConsumeProduceSimpleTest  {
         @POST
         @Consumes("text/xhtml")
         @Produces("text/xhtml")
+        @SuppressWarnings("UnusedParameters")
         public String doPostXHtml(String data) {
             assertEquals("text/xhtml", httpHeaders.getRequestHeader("Content-Type").get(0));
             assertEquals("text/xhtml", httpHeaders.getRequestHeader("Accept").get(0));
@@ -181,6 +186,7 @@ public class ConsumeProduceSimpleTest  {
         @Context HttpHeaders h;
 
         @POST
+        @SuppressWarnings("UnusedParameters")
         public String post(String in) {
             return h.getMediaType().getParameters().toString();
         }
@@ -191,5 +197,30 @@ public class ConsumeProduceSimpleTest  {
         ApplicationHandler app = createApplication(ConsumeProduceWithParameters.class);
 
         assertEquals("{a=b, c=d}", app.apply(RequestContextBuilder.from("/", "POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().getEntity());
+    }
+
+    @Path("/")
+    public static class ImplicitProducesResource {
+
+        @GET
+        public Response getPlain() {
+            return Response.ok("text/plain").header("HEAD", "text-plain").build();
+        }
+
+        @GET
+        @Produces(value = "text/html")
+        public Response getHtml() {
+            return Response.ok("<html></html>").header("HEAD", "text-html").build();
+        }
+    }
+
+    @Test
+    public void testImplicitProduces() throws Exception {
+        final ApplicationHandler application = createApplication(ImplicitProducesResource.class);
+        final ContainerResponse response = application.
+                apply(RequestContextBuilder.from("/", "GET").accept(MediaType.TEXT_PLAIN_TYPE).build()).get();
+
+        assertEquals("text/plain", response.getEntity());
+        assertEquals("text-plain", response.getHeaderString("HEAD"));
     }
 }
