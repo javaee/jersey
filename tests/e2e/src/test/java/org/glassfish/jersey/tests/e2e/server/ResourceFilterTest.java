@@ -51,8 +51,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import deprecated.javax.ws.rs.DynamicBinder;
-import deprecated.javax.ws.rs.PostMatching;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -63,6 +62,8 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -159,7 +160,6 @@ public class ResourceFilterTest extends JerseyTest {
         }
     }
 
-    @PostMatching
     public static class PostMatchingFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -168,6 +168,7 @@ public class ResourceFilterTest extends JerseyTest {
     }
 
     @BindingPriority(1)
+    @PreMatching
     private static class DbFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {

@@ -151,21 +151,41 @@ public class ProviderBinder {
     }
 
     /**
-     * Bind contract provider model using the supplied HK2 dynamic configuration.
+     * Bind contract provider model to a provider class using the supplied HK2 dynamic configuration.
      *
      * @param provider contract provider model.
      * @param dc HK2 dynamic service locator configuration.
      */
-    public static void bindProvider(final ContractProvider provider, final DynamicConfiguration dc) {
-        final ScopedBindingBuilder bindingBuilder;
-        if (provider.getServiceInstance() != null) {
-            bindingBuilder = Injections.newBinder(provider.getServiceInstance())
-                    .qualifiedBy(new CustomAnnotationImpl());
-        } else {
-            bindingBuilder = Injections.newBinder(provider.getServiceClass())
+    public static void bindProvider(
+            final Class<?> providerClass, final ContractProvider provider, final DynamicConfiguration dc) {
+        final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
                     .in(provider.getScope())
                     .qualifiedBy(new CustomAnnotationImpl());
+
+        for (Class contract : provider.getContracts()) {
+            //noinspection unchecked
+            bindingBuilder.to(contract);
         }
+
+        Injections.addBinding(bindingBuilder, dc);
+    }
+
+    /**
+     * Bind contract provider model to a provider instance using the supplied
+     * HK2 dynamic configuration.
+     *
+     * Scope value specified in the {@link ContractProvider contract provider model}
+     * is ignored as instances can only be bound as "singletons".
+     *
+     * @param providerInstance provider instance.
+     * @param provider contract provider model.
+     * @param dc HK2 dynamic service locator configuration.
+     */
+    public static void bindProvider(
+            final Object providerInstance, final ContractProvider provider, final DynamicConfiguration dc) {
+
+        final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerInstance)
+                    .qualifiedBy(new CustomAnnotationImpl());
 
         for (Class contract : provider.getContracts()) {
             //noinspection unchecked

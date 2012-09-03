@@ -87,9 +87,7 @@ public final class ContractProvider implements Scoped, NameBound {
      *         implement any recognized provider contracts.
      */
     public static ContractProvider from(final Object service) {
-        @SuppressWarnings("unchecked")
-        Builder<Object> builder = (Builder<Object>) introspectService(service.getClass());
-        return (builder == null) ? null : builder.serviceInstance(service).build();
+        return from(service.getClass());
     }
 
     private static Builder<?> introspectService(Class<?> serviceClass) {
@@ -98,7 +96,7 @@ public final class ContractProvider implements Scoped, NameBound {
             return null;
         }
 
-        Builder<?> builder = builder(serviceClass).addContracts(providerContracts);
+        Builder<?> builder = builder().addContracts(providerContracts);
 
         for (Annotation annotation : serviceClass.getAnnotations()) {
             if (annotation instanceof BindingPriority) {
@@ -120,21 +118,10 @@ public final class ContractProvider implements Scoped, NameBound {
     /**
      * Create new contract provider model builder.
      *
-     * @param serviceClass contract provider implementation/service class.
      * @return new contract provider builder.
      */
-    public static <T> Builder<T> builder(final Class<T> serviceClass) {
-        return new Builder<T>(serviceClass);
-    }
-
-    /**
-     * Create new contract provider model builder.
-     *
-     * @param service contract provider implementation/service instance.
-     * @return new contract provider builder.
-     */
-    public static <T> Builder<T> builder(final T service) {
-        return new Builder<T>(service);
+    public static <T> Builder<T> builder() {
+        return new Builder<T>();
     }
 
     /**
@@ -152,26 +139,15 @@ public final class ContractProvider implements Scoped, NameBound {
      */
     public static final class Builder<T> {
 
-        private final Class<?> serviceClass;
-        private Object serviceInstance;
         private Class<? extends Annotation> scope = Singleton.class;
         private Set<Class<?>> contracts = Sets.newIdentityHashSet();
         private int priority = NO_PRIORITY;
         private Set<Class<? extends Annotation>> nameBindings = Sets.newIdentityHashSet();
 
-        private Builder(final Class<T> service) {
-            this.serviceClass = service;
-            this.serviceInstance = null;
-        }
-
-        private Builder(final T serviceInstance) {
-            this.serviceClass = serviceInstance.getClass();
-            this.serviceInstance = serviceInstance;
+        private Builder() {
         }
 
         private Builder(final ContractProvider original) {
-            this.serviceClass = original.serviceClass;
-            this.serviceInstance = original.serviceInstance;
             this.scope = original.scope;
             this.contracts.addAll(original.contracts);
             this.priority = original.priority;
@@ -179,36 +155,12 @@ public final class ContractProvider implements Scoped, NameBound {
         }
 
         /**
-         * Set a service instance for the contract provider.
-         *
-         * The method updates the provider scope to {@link Singleton}, overriding any scope
-         * previously set.
-         *
-         * @param instance service instance.
-         * @return updated builder.
-         */
-        public Builder<T> serviceInstance(final T instance) {
-            if (instance != null) {
-                // override any scope previously set
-                this.scope = Singleton.class;
-            }
-            this.serviceInstance = instance;
-            return this;
-        }
-
-        /**
          * Change contract provider scope. (Default scope is {@link Singleton}.)
          *
          * @param scope contract provider scope.
          * @return updated builder.
-         * @throws IllegalStateException in case the contract provider being built is backed by an
-         *                               instance and the scope being set is not {@code Singleton}.
          */
-        public Builder<T> scope(final Class<? extends Annotation> scope) throws IllegalStateException {
-            if (serviceInstance != null && scope != Singleton.class) {
-                throw new IllegalStateException(String.format("Instance-based contract provider cannot live in %s scope", scope));
-            }
-
+        public Builder<T> scope(final Class<? extends Annotation> scope) {
             this.scope = scope;
             return this;
         }
@@ -263,27 +215,21 @@ public final class ContractProvider implements Scoped, NameBound {
          * @return new contract provider model.
          */
         public ContractProvider build() {
-            return new ContractProvider(serviceClass, serviceInstance, scope, contracts, priority, nameBindings);
+            return new ContractProvider(scope, contracts, priority, nameBindings);
         }
     }
 
-    private final Class<?> serviceClass;
-    private final Object serviceInstance;
     private final Set<Class<?>> contracts;
     private final int priority;
     private final Set<Class<? extends Annotation>> nameBindings;
     private final Class<? extends Annotation> scope;
 
     private ContractProvider(
-            final Class<?> serviceClass,
-            final Object serviceInstance,
             final Class<? extends Annotation> scope,
             final Set<Class<?>> contracts,
             final int priority,
             final Set<Class<? extends Annotation>> nameBindings) {
 
-        this.serviceClass = serviceClass;
-        this.serviceInstance = serviceInstance;
         this.scope = scope;
         this.contracts = contracts;
         this.priority = priority;
@@ -293,27 +239,6 @@ public final class ContractProvider implements Scoped, NameBound {
     @Override
     public Class<? extends Annotation> getScope() {
         return scope;
-    }
-
-    /**
-     * Get contract provider implementation/service class.
-     *
-     * @return contract provider implementation/service class.
-     */
-    public Class<?> getServiceClass() {
-        return serviceClass;
-    }
-
-    /**
-     * Get contract provider implementation/service instance.
-     *
-     * The method returns {@code null} if the contract provider model is not backed by
-     * an (externally provided) service instance.
-     *
-     * @return contract provider implementation/service instance. May return {@code null}.
-     */
-    public Object getServiceInstance() {
-        return serviceInstance;
     }
 
     /**

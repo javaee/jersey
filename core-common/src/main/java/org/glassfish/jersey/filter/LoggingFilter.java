@@ -60,6 +60,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
@@ -74,6 +75,7 @@ import org.glassfish.jersey.message.internal.HeadersFactory;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
+@PreMatching
 @BindingPriority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
 public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,

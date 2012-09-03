@@ -48,6 +48,7 @@ import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -90,7 +91,7 @@ import static org.glassfish.jersey.internal.util.Tokenizer.COMMON_DELIMITERS;
  * @author Fredy Nagy
  * @author Florian Hars (florian at hars.de)
  */
-// TODO: @PreMatching
+@PreMatching
 @BindingPriority(BindingPriority.HEADER_DECORATOR + 50) // must go after UriConnegFilter (if present)
 public class HttpMethodOverrideFilter implements ContainerRequestFilter {
 

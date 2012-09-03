@@ -48,6 +48,7 @@ import java.util.Map;
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -95,7 +96,7 @@ import com.google.common.collect.Maps;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  */
-// TODO: @PreMatching
+@PreMatching
 @BindingPriority(BindingPriority.HEADER_DECORATOR)
 public class UriConnegFilter implements ContainerRequestFilter {
 

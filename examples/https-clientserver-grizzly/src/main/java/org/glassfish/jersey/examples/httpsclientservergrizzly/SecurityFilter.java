@@ -42,15 +42,17 @@ package org.glassfish.jersey.examples.httpsclientservergrizzly;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -64,6 +66,7 @@ import org.glassfish.jersey.server.ContainerRequest;
  * @see ContainerRequestFilter
  */
 @Provider
+@PreMatching
 public class SecurityFilter implements ContainerRequestFilter {
 
     @Inject

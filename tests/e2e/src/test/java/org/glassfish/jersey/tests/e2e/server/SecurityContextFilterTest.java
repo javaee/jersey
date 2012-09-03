@@ -45,6 +45,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -77,6 +78,7 @@ public class SecurityContextFilterTest extends JerseyTest {
     /**
      * Test security context container request filter.
      */
+    @PreMatching
     public static class SecurityContextFilter implements ContainerRequestFilter {
 
         // TODO: won't work until we have proxiable scope

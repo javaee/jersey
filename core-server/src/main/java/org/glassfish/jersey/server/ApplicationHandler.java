@@ -47,11 +47,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +61,7 @@ import javax.ws.rs.NameBinding;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -118,7 +117,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 
 import deprecated.javax.ws.rs.DynamicBinder;
-import deprecated.javax.ws.rs.PostMatching;
 
 /**
  * Jersey server-side application handler.
@@ -273,52 +271,46 @@ public final class ApplicationHandler {
         configuration.lock();
 
         // Introspecting classes & instances
-        final Map<Class<?>, ContractProvider> providerClasses = new IdentityHashMap<Class<?>, ContractProvider>();
-        final Map<Object, ContractProvider> providerInstances = new IdentityHashMap<Object, org.glassfish.jersey.model.ContractProvider>();
-
+        final ProviderBag.Builder providerBagBuilder = new ProviderBag.Builder();
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
-
         final List<ResourceModelIssue> resourceModelIssues = new LinkedList<ResourceModelIssue>();
 
         for (Class<?> c : configuration.getClasses()) {
-            org.glassfish.jersey.model.ContractProvider contractProvider = ContractProvider.from(c);
-            if (contractProvider != null) {
-                providerClasses.put(c, contractProvider);
-            }
-
+            boolean isResource = false;
             try {
                 Resource resource = Resource.from(c, resourceModelIssues);
-                if (resource != null) {
+                isResource = resource != null;
+                if (isResource) {
                     resourceBagBuilder.registerResource(c, resource);
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warning(ex.getMessage());
             }
-
+            providerBagBuilder.register(c, isResource);
         }
 
         for (Object o : configuration.getSingletons()) {
-            ContractProvider contractProvider = ContractProvider.from(o);
-            if (contractProvider != null) {
-                providerInstances.put(o, contractProvider);
-            }
-
+            boolean isResource = false;
             try {
                 Resource resource = Resource.from(o, resourceModelIssues);
-                if (resource != null) {
+                isResource = resource != null;
+                if (isResource) {
                     resourceBagBuilder.registerResource(o, resource);
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warning(ex.getMessage());
             }
+            providerBagBuilder.register(o, isResource);
         }
+
+        final ProviderBag providerBag = providerBagBuilder.build();
 
         // Adding programmatic resource models
         for (Resource programmaticResource : configuration.getResources()) {
             resourceBagBuilder.registerProgrammaticResource(programmaticResource);
         }
 
-        ResourceBag resourceBag = resourceBagBuilder.build();
+        final ResourceBag resourceBag = resourceBagBuilder.build();
 
         // Registering Injection Bindings
         final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
@@ -327,7 +319,7 @@ public final class ApplicationHandler {
             provider.initialize(locator);
             componentProviders.add(provider);
         }
-        registerProvidersAndResources(componentProviders, providerClasses, providerInstances, resourceBag);
+        registerProvidersAndResources(componentProviders, providerBag, resourceBag);
         for (ComponentProvider componentProvider : componentProviders) {
             componentProvider.done();
         }
@@ -337,26 +329,27 @@ public final class ApplicationHandler {
                 ReflectionHelper.getAnnotationTypes(configuration.getApplication().getClass(), NameBinding.class);
 
         // find all filters, interceptors and dynamic binders
-        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(locator,
+        final List<ContainerResponseFilter> responseFilters = Providers.getAllProviders(
+                locator,
                 ContainerResponseFilter.class);
         final MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters
-                = filterNameBound(responseFilters, null, applicationNameBindings);
-        final List<ContainerRequestFilter> preMatchFilters = Providers.getAllProviders(
+                = filterNameBound(responseFilters, null, providerBag, applicationNameBindings);
+
+        final List<ContainerRequestFilter> requestFilters = Providers.getAllProviders(
                 locator,
                 ContainerRequestFilter.class,
-                new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING)
-        );
-        final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
+                new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
+        final List<ContainerRequestFilter> preMatchFilters = new ArrayList<ContainerRequestFilter>();
         final MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters
-                = filterNameBound(preMatchFilters, requestFilters, applicationNameBindings);
+                = filterNameBound(requestFilters, preMatchFilters, providerBag, applicationNameBindings);
 
         final List<ReaderInterceptor> readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors
-                = filterNameBound(readerInterceptors, null, applicationNameBindings);
+                = filterNameBound(readerInterceptors, null, providerBag, applicationNameBindings);
 
         final List<WriterInterceptor> writerInterceptors = locator.getAllServices(WriterInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors
-                = filterNameBound(writerInterceptors, null, applicationNameBindings);
+                = filterNameBound(writerInterceptors, null, providerBag, applicationNameBindings);
         final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(locator, DynamicBinder.class);
 
         // validate the models
@@ -397,7 +390,7 @@ public final class ApplicationHandler {
                 .build(routedInflectorExtractorStage);
 
         // Inject instances.
-        for (Object instance : providerInstances.keySet()) {
+        for (Object instance : providerBag.instances) {
             locator.inject(instance);
         }
         for (Object instance : resourceBag.instances) {
@@ -423,51 +416,46 @@ public final class ApplicationHandler {
      * parameter.
      *
      * @param all                     Collection of all filters to be processed.
-     * @param postMatching            Collection where this method should move all global post-matching filters,
-     *                                or {@code null} if separating out global post-matching filters is not desirable.
      * @param applicationNameBindings collection of name binding annotations attached to the JAX-RS application.
-     * @param <T>                     Filter type (either {@link ContainerRequestFilter} or {@link ContainerResponseFilter}).
      * @return {@link MultivaluedMap} of all name-bound filters.
      */
     private static <T> MultivaluedMap<Class<? extends Annotation>, T> filterNameBound(
             final Collection<T> all,
-            final Collection<ContainerRequestFilter> postMatching,
+            final Collection<ContainerRequestFilter> preMatching,
+            final ProviderBag providerBag,
             final Collection<Class<? extends Annotation>> applicationNameBindings) {
 
         final MultivaluedMap<Class<? extends Annotation>, T> result
                 = new MultivaluedHashMap<Class<? extends Annotation>, T>();
 
-        outer:
         for (Iterator<T> it = all.iterator(); it.hasNext(); ) {
-            T filter = it.next();
-            boolean post = false;
-            HashSet<Class<? extends Annotation>> nameBindings = new HashSet<Class<? extends Annotation>>();
-            for (Annotation annotation : filter.getClass().getAnnotations()) {
-                if (postMatching != null && (annotation instanceof PostMatching ||
-                        // treat NameBindings attached to application as global post-matching filters
-                        applicationNameBindings.contains(annotation.annotationType()))) {
-                    post = true;
-                } else {
-                    if (postMatching == null && applicationNameBindings.contains(annotation.annotationType())) {
-                        // treat NameBindings attached to annotation as global filters
-                        // (if no need to distinguish as post-matching - i.e. postMatching == null)
-                        continue outer;
-                    }
-                    for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {
-                        if (metaAnnotation instanceof NameBinding) {
-                            nameBindings.add(annotation.annotationType());
-                        }
+            T provider = it.next();
+            final Class<?> providerClass = provider.getClass();
+
+            if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
+                it.remove();
+                preMatching.add((ContainerRequestFilter) provider);
+            }
+
+            ContractProvider model = providerBag.models.get(providerClass);
+            if (model == null) {
+                // the provider was (most likely) bound in HK2 externally
+                model = ContractProvider.from(providerClass);
+            }
+            boolean nameBound = model.isNameBound();
+            if (nameBound && !applicationNameBindings.isEmpty()) {
+                for (Class<? extends Annotation> binding : model.getNameBindings()) {
+                    if (applicationNameBindings.contains(binding)) {
+                        // override the name-bound flag
+                        nameBound = false;
+                        break;
                     }
                 }
             }
-
-            if (post) {
+            if (nameBound) { // not application-bound
                 it.remove();
-                postMatching.add((ContainerRequestFilter) filter);
-            } else if (!nameBindings.isEmpty()) {
-                it.remove();
-                for (Class<? extends Annotation> nameBinding : nameBindings) {
-                    result.add(nameBinding, filter);
+                for (Class<? extends Annotation> binding : model.getNameBindings()) {
+                    result.add(binding, provider);
                 }
             }
         }
@@ -477,8 +465,7 @@ public final class ApplicationHandler {
 
     private void registerProvidersAndResources(
             final Set<ComponentProvider> componentProviders,
-            final Map<Class<?>, org.glassfish.jersey.model.ContractProvider> providerClasses,
-            final Map<Object, org.glassfish.jersey.model.ContractProvider> providerInstances,
+            final ProviderBag providerBag,
             final ResourceBag resourceBag) {
 
         final JerseyResourceContext resourceContext = locator.getService(JerseyResourceContext.class);
@@ -486,8 +473,7 @@ public final class ApplicationHandler {
 
         // Bind resource classes
         for (Class<?> resourceClass : resourceBag.classes) {
-            final ContractProvider providerModel = providerClasses.remove(resourceClass);
-
+            final ContractProvider providerModel = providerBag.models.get(resourceClass);
             if (bindWithComponentProvider(resourceClass, providerModel, componentProviders)) {
                 continue;
             }
@@ -500,17 +486,19 @@ public final class ApplicationHandler {
         }
         // Bind resource instances
         for (Object resourceInstance : resourceBag.instances) {
-            final ContractProvider providerModel = providerInstances.remove(resourceInstance);
+            final ContractProvider providerModel = providerBag.models.get(resourceInstance.getClass());
             // TODO Try to bind resource instances using component providers?
             resourceContext.unsafeBindResource(resourceInstance, providerModel, dc);
         }
         // Bind pure provider classes
-        for (ContractProvider provider : providerClasses.values()) {
-            ProviderBinder.bindProvider(provider, dc);
+        for (Class<?> providerClass : providerBag.classes) {
+            final ContractProvider model = providerBag.models.get(providerClass);
+            ProviderBinder.bindProvider(providerClass, model, dc);
         }
         // Bind pure provider instances
-        for (ContractProvider provider : providerInstances.values()) {
-            ProviderBinder.bindProvider(provider, dc);
+        for (Object provider : providerBag.instances) {
+            final ContractProvider model = providerBag.models.get(provider.getClass());
+            ProviderBinder.bindProvider(provider, model, dc);
         }
 
         dc.commit();

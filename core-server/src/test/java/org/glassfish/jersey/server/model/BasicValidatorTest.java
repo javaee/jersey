@@ -135,8 +135,6 @@ public class BasicValidatorTest {
     public static interface ChildOfContainerRequestFilter extends ContainerRequestFilter {
     }
 
-    ;
-
     @Path("rootSingleton/{p}")
     public static class TestCantInjectFieldsForProvider implements ChildOfContainerRequestFilter {
 
