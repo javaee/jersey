@@ -89,42 +89,59 @@ resourceConfig.getSingletons().add(
             </para>
 
             <para>Jersey 2.0 HK2 Module:
-            <programlisting language="java" linenumbering="unnumbered">public static class MyHK2Module implements Module {
+            <programlisting language="java" linenumbering="unnumbered">public static class MyBinder extends AbstractBinder {
 
     @Override
-    public void configure(BinderFactory binderFactory) {
+    protected void configure() {
         // request scope binding
-        binderFactory.bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
         // singleton binding
-        binderFactory.bind().to(MyInjectableSingleton.class).in(Singleton.class);
+        bind(MyInjectableSingleton.class).in(Singleton.class);
         // singleton instance binding
-        binderFactory.bind().toInstance(new MyInjectableSingleton());
+        bind(new MyInjectableSingleton()).to(MyInjectableSingleton.class);
     }
+
 }
 
 // register module to ResourceConfig (can be done also in constructor)
 ResourceConfig rc = new ResourceConfig();
 rc.addClasses(/* ... */);
-rc.addModules(new MyHK2Module());</programlisting></para>
+rc.addBinders(new MyBinder());</programlisting></para>
 
             <para>Jersey 2.0 dynamic binding:
             <programlisting language="java" linenumbering="unnumbered">public static class MyApplication extends Application {
 
-    public MyApplication(@Inject Services services) {
-        System.out.println("Registering injectables...");
+        @Inject
+        public MyApplication(ServiceLocator serviceLocator) {
+            System.out.println("Registering injectables...");
 
-        final DynamicBinderFactory dynamicBinderFactory = services.bindDynamically();
+            DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
 
-        // request scope binding
-        dynamicBinderFactory.bind().to(MyInjectablePerRequest.class).in(RequestScope.class);
-        // singleton binding
-        dynamicBinderFactory.bind().to(MyInjectableSingleton.class).in(Singleton.class);
-        // singleton instance binding
-        dynamicBinderFactory.bind().toInstance(new MyInjectableSingleton());
+            // request scope binding
+            Injections.addBinding(
+                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class),
+                    dc);
 
-        // commits changes
-        dynamicBinderFactory.commit();
-    }
+            // singleton binding
+            Injections.addBinding(
+                    Injections.newBinder(MyInjectableSingleton.class).to(MyInjectableSingleton.class).in(Singleton.class),
+                    dc);
+
+            // singleton instance binding
+            Injections.addBinding(
+                    Injections.newBinder(new MyInjectableSingleton()).to(MyInjectableSingleton.class),
+                    dc);
+
+            // request scope binding with specified custom annotation
+            Injections.addBinding(
+                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class)
+                            .qualifiedBy(new MyAnnotationImpl())
+                            .in(RequestScoped.class),
+                    dc);
+
+            // commits changes
+            dc.commit();
+        }
 
     @Override
     public Set&lt;Class&lt;?&gt;&gt; getClasses() {
@@ -241,6 +258,14 @@ rc.addModules(new MyHK2Module());</programlisting></para>
             </para>
 
         </section>
+
+        <section id="mig-server-provider-ordering">
+            <title>MessageBodyReaders and MessageBodyWriters ordering</title>
+            <para>JAX-RS 2.0 defines new order of MessageBodyWorkers - whole set is sorted by declaration distance,
+            media type and source (custom providers have smaller priority than Jersey provided). JAX-RS 1.x ordering
+            can still be forced by setting parameter MessageProperties.LEGACY_WORKERS_ORDERING
+            ("jersey.config.workers.legacyOrdering") to true in ResourceConfig or ClientConfig properties.</para>
+        </section>
     </section>
 
     <section id="mig-client-api">
@@ -262,7 +287,7 @@ rc.addModules(new MyHK2Module());</programlisting></para>
         <tbody>
         <row>
           <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/Client.html">com.sun.jersey.api.client.Client</ulink></entry>
-          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/ext/ClientFactory.html">javax.ws.rs.ext.ClientFactory</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/ClientFactory.html">javax.ws.rs.client.ClientFactory</ulink></entry>
           <entry>For the static factory methods and constructors.</entry>
         </row>
         <row>
@@ -272,13 +297,13 @@ rc.addModules(new MyHK2Module());</programlisting></para>
         </row>
         <row>
           <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/WebResource.html">com.sun.jersey.api.client.WebResource</ulink></entry>
-          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Target.html">javax.ws.rs.client.Target</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/WebTarget.html">javax.ws.rs.client.WebTarget</ulink></entry>
           <entry></entry>
         </row>
         <row>
           <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/AsyncWebResource.html">com.sun.jersey.api.client.AsyncWebResource</ulink></entry>
-          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Target.html">javax.ws.rs.client.Target</ulink></entry>
-          <entry>You can access async versions of the async methods by calling Target.request().async()</entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/WebTarget.html">javax.ws.rs.client.WebTarget</ulink></entry>
+          <entry>You can access async versions of the async methods by calling WebTarget.request().async()</entry>
         </row>
         </tbody>
         </tgroup>
@@ -297,7 +322,7 @@ String result = webResource.pathParam("param", "value").get(String.class);</prog
             </para>
             <para>JAX-RS 2.0 way:
             <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-Target target = client.target(restURL).path("myresource/{param}");
+WebTarget target = client.target(restURL).path("myresource/{param}");
 String result = target.pathParam("param", "value").get(String.class);</programlisting>
             </para>
         </section>
@@ -311,7 +336,7 @@ webResource.addFilter(new HTTPBasicAuthFilter(username, password));</programlist
             </para>
             <para>JAX-RS 2.0 way:
             <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-Target target = client.target(restURL);
+WebTarget target = client.target(restURL);
 target.configuration().register(new HttpBasicAuthFilter(username, password));</programlisting>
             </para>
         </section>
@@ -325,7 +350,7 @@ ClientResponse response = webResource.get(ClientResponse.class);</programlisting
             </para>
             <para>JAX-RS 2.0 way:
             <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-Target target = client.target(restURL);
+WebTarget target = client.target(restURL);
 Response response = target.request("text/plain").get(Response.class);</programlisting>
             </para>
         </section>
@@ -339,7 +364,7 @@ ClientResponse response = webResource.post(ClientResponse.class, "payload");</pr
             </para>
             <para>JAX-RS 2.0 way:
             <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-Target target = client.target(restURL);
+WebTarget target = client.target(restURL);
 Response response = target.request().post(Entity.text("payload"), Response.class);</programlisting>
             </para>
         </section>
