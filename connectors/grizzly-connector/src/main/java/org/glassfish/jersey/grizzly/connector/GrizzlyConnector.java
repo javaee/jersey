@@ -60,11 +60,16 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.RequestWriter;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.process.Inflector;
 
+import com.google.common.util.concurrent.SettableFuture;
+
+import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 
@@ -73,28 +78,29 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-public class GrizzlyConnector extends RequestWriter implements Inflector<ClientRequest, ClientResponse> {
+public class GrizzlyConnector extends RequestWriter implements Connector {
 
     private AsyncHttpClient client;
-    private AsyncHttpClientConfig config;
-    private final ExecutorService executorService;
 
-    /*
-     * Constructs the new transport.
+    /**
+     * Create the new Grizzly async client connector.
+     *
+     * @param configuration client configuration.
      */
     public GrizzlyConnector(Configuration configuration) {
         AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
+        ExecutorService executorService;
         if (configuration != null) {
-            final Object threadpoolSize = configuration.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
+            final Object threadPoolSize = configuration.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
 
-            if (threadpoolSize != null && threadpoolSize instanceof Integer && (Integer) threadpoolSize > 0) {
-                this.executorService = Executors.newFixedThreadPool((Integer) threadpoolSize);
+            if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
+                executorService = Executors.newFixedThreadPool((Integer) threadPoolSize);
             } else {
-                this.executorService = Executors.newCachedThreadPool();
+                executorService = Executors.newCachedThreadPool();
             }
 
-            builder = builder.setExecutorService(this.executorService);
+            builder = builder.setExecutorService(executorService);
 
             builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
                     ClientProperties.CONNECT_TIMEOUT, 0));
@@ -102,11 +108,11 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<ClientR
             builder.setRequestTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
                     ClientProperties.READ_TIMEOUT, 0));
         } else {
-            this.executorService = Executors.newCachedThreadPool();
-            builder.setExecutorService(this.executorService);
+            executorService = Executors.newCachedThreadPool();
+            builder.setExecutorService(executorService);
         }
 
-        this.config = builder.setAllowPoolingConnection(true).build();
+        AsyncHttpClientConfig config = builder.setAllowPoolingConnection(true).build();
         this.client = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(config), config);
     }
 
@@ -115,26 +121,66 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<ClientR
      */
     @Override
     public ClientResponse apply(ClientRequest requestContext) {
-        com.ning.http.client.Response ningResponse = null;
+        com.ning.http.client.Response connectorResponse;
 
         try {
-            com.ning.http.client.Request grizzlyRequest = this.getRequest(requestContext);
-            Future<com.ning.http.client.Response> respFuture = client.executeRequest(grizzlyRequest);
-            ningResponse = respFuture.get();
+            com.ning.http.client.Request connectorRequest = translate(requestContext);
+            Future<com.ning.http.client.Response> respFuture = client.executeRequest(connectorRequest);
+            connectorResponse = respFuture.get();
         } catch (ExecutionException ex) {
             Throwable e = ex.getCause() == null ? ex : ex.getCause();
             throw new ClientException(e.getMessage(), e);
-        } catch (Exception ex) {
+        } catch (InterruptedException ex) {
             throw new ClientException(ex.getMessage(), ex);
-        } finally {
-            client.close();
+        } catch (IOException ex) {
+            throw new ClientException(ex.getMessage(), ex);
         }
-        ClientResponse responseContext = getClientResponse(requestContext, ningResponse);
 
-        return responseContext;
+        return translate(requestContext, connectorResponse);
     }
 
-    private ClientResponse getClientResponse(ClientRequest requestContext, final com.ning.http.client.Response original) {
+    @Override
+    public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
+        final Request connectorRequest = translate(request);
+
+        Throwable failure;
+        try {
+            return client.executeRequest(connectorRequest, new AsyncCompletionHandler<ClientResponse>() {
+                @Override
+                public ClientResponse onCompleted(com.ning.http.client.Response connectorResponse) throws Exception {
+                    final ClientResponse response = translate(request, connectorResponse);
+                    try {
+                        return response;
+                    } finally {
+                        callback.response(response);
+                    }
+                }
+
+                @Override
+                public void onThrowable(Throwable t) {
+                    t = t instanceof IOException ? new ClientException(t.getMessage(), t) : t;
+                    callback.failure(t);
+                }
+            });
+        } catch (IOException ex) {
+            failure = ex;
+            callback.failure(new ClientException(ex.getMessage(), ex.getCause()));
+        } catch (Throwable t) {
+            failure = t;
+            callback.failure(t);
+        }
+
+        final SettableFuture<Object> errorFuture = SettableFuture.create();
+        errorFuture.setException(failure);
+        return errorFuture;
+    }
+
+    @Override
+    public void close() {
+        client.close();
+    }
+
+    private ClientResponse translate(ClientRequest requestContext, final com.ning.http.client.Response original) {
 
         final ClientResponse responseContext = new ClientResponse(new Response.StatusType() {
             @Override
@@ -169,7 +215,7 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<ClientR
         return responseContext;
     }
 
-    private com.ning.http.client.Request getRequest(final ClientRequest requestContext) {
+    private com.ning.http.client.Request translate(final ClientRequest requestContext) {
         final String strMethod = requestContext.getMethod();
         final URI uri = requestContext.getUri();
 
@@ -190,7 +236,7 @@ public class GrizzlyConnector extends RequestWriter implements Inflector<ClientR
         return result;
     }
 
-    protected static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final com.ning.http.client.Request request) {
+    private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final com.ning.http.client.Request request) {
         for (Map.Entry<String, List<Object>> e : headers.entrySet()) {
             List<Object> vs = e.getValue();
             if (vs.size() == 1) {

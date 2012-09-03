@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client;
+package org.glassfish.jersey.client.spi;
 
-import java.util.concurrent.Future;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.ClientFactory;
-import javax.ws.rs.core.UriBuilder;
-
-import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
-import org.glassfish.jersey.client.spi.Connector;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.glassfish.jersey.client.ClientResponse;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Asynchronous connector response processing callback contract.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class CustomConnectorTest {
+public interface AsyncConnectorCallback {
 
-    public static class NullConnector implements Connector {
+    /**
+     * Invoked when a response for the asynchronously invoked request is available.
+     *
+     * @param response asynchronously received client response.
+     */
+    public void response(ClientResponse response);
 
-        @Override
-        public ClientResponse apply(ClientRequest request) {
-            throw new ClientException("test");
-        }
-
-        @Override
-        public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-            throw new ClientException("test-async");
-        }
-
-        @Override
-        public void close() {
-            // do nothing
-        }
-    }
-
-    @Test
-    public void testNullConnector() {
-        Client client = ClientFactory.newClient(new ClientConfig().connector(new NullConnector()));
-        try {
-            client.target(UriBuilder.fromUri("/").build()).request().get();
-        } catch (ClientException ce) {
-            assertEquals("test", ce.getMessage());
-        }
-        try {
-            client.target(UriBuilder.fromUri("/").build()).request().async().get();
-        } catch (ClientException ce) {
-            assertEquals("test-async", ce.getMessage());
-        }
-    }
+    /**
+     * Invoked in case the asynchronous request invocation failed.
+     *
+     * @param failure cause of the asynchronous request invocation failure.
+     */
+    public void failure(Throwable failure);
 }

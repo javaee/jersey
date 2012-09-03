@@ -42,87 +42,84 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
+import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Client filtering stage responsible for execution of request and response filters
- * on each request-response message exchange.
+ * Client filtering stage factory.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
-    private final Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory;
-    private final ServiceLocator locator;
+class ClientFilteringStages {
 
-    /**
-     * Injection constructor.
-     *
-     * @param locator                 HK2 service locator.
-     * @param respondingContextFactory responding context factory.
-     */
-    @Inject
-    ClientFilteringStage(
-            Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingContextFactory,
-            ServiceLocator locator) {
-
-        this.locator = locator;
-        this.respondingContextFactory = respondingContextFactory;
+    private ClientFilteringStages() {
+        // Prevents instantiation
     }
 
-
-    @Override
-    public Continuation<ClientRequest> apply(ClientRequest requestContext) {
-
-        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(locator, ClientResponseFilter.class,
-                new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
-        if (!responseFilters.isEmpty()) {
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters));
-        }
-
+    /**
+     * Create client request filtering stage using the service locator. May return {@code null}.
+     *
+     * @param locator HK2 service locator to be used.
+     * @return configured request filtering stage, or {@code null} in case there are no
+     *         {@link ClientRequestFilter client request filters} registered in the service
+     *         locator.
+     */
+    static ChainableStage<ClientRequest> createRequestFilteringStage(ServiceLocator locator) {
         final List<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class,
                 new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
-        if (!requestFilters.isEmpty()) {
+
+        return !requestFilters.isEmpty() ? new RequestFilteringStage(requestFilters) : null;
+    }
+
+    /**
+     * Create client response filtering stage using the service locator. May return {@code null}.
+     *
+     * @param locator HK2 service locator to be used.
+     * @return configured response filtering stage, or {@code null} in case there are no
+     *         {@link ClientResponseFilter client response filters} registered in the service
+     *         locator.
+     */
+    static ChainableStage<ClientResponse> createResponseFilteringStage(ServiceLocator locator) {
+        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(
+                locator,
+                ClientResponseFilter.class,
+                new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
+
+        return !responseFilters.isEmpty() ? new ResponseFilterStage(responseFilters) : null;
+    }
+
+    private static final class RequestFilteringStage extends AbstractChainableStage<ClientRequest> {
+        private final List<ClientRequestFilter> requestFilters;
+
+        private RequestFilteringStage(final List<ClientRequestFilter> requestFilters) {
+            this.requestFilters = requestFilters;
+        }
+
+
+        @Override
+        public Continuation<ClientRequest> apply(ClientRequest requestContext) {
             for (ClientRequestFilter filter : requestFilters) {
                 try {
                     filter.filter(requestContext);
                     final Response abortResponse = requestContext.getAbortResponse();
                     if (abortResponse != null) {
-                        // abort accepting & return response
-                        return Continuation.of(requestContext,
-                                Stages.asStage(new Inflector<ClientRequest, ClientResponse>() {
-                                    @Override
-                                    public ClientResponse apply(final ClientRequest requestContext) {
-                                        return new ClientResponse(requestContext, abortResponse);
-                                    }
-                                }));
+                        throw new AbortException(new ClientResponse(requestContext, abortResponse));
                     }
                 } catch (IOException ex) {
-                    final Response abortResponse = requestContext.getAbortResponse();
-                    if (abortResponse == null) {
-                        throw new WebApplicationException(ex);
-                    } else {
-                        throw new WebApplicationException(ex, abortResponse);
-                    }
+                    throw new ClientException(ex);
                 }
             }
+            return Continuation.of(requestContext, getDefaultNext());
         }
-        return Continuation.of(requestContext, getDefaultNext());
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ClientResponse> {
@@ -139,21 +136,10 @@ class ClientFilteringStage extends AbstractChainableStage<ClientRequest> {
                     filter.filter(responseContext.getRequestContext(), responseContext);
                 }
             } catch (IOException ex) {
-                throw new WebApplicationException(ex);
+                throw new ClientException(ex);
             }
 
             return Continuation.of(responseContext, getDefaultNext());
-        }
-    }
-
-    /**
-     * Client filter processing injection binder.
-     */
-    static class Binder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-            bindAsContract(ClientFilteringStage.class);
         }
     }
 }

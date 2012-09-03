@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import java.util.concurrent.Future;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
@@ -48,7 +50,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +85,7 @@ public class CsrfProtectionFilterTest {
         assertNotNull(r.getHeaderString(CsrfProtectionFilter.HEADER_NAME));
     }
 
-    private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {
+    private static class TestConnector implements Connector {
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(
@@ -93,6 +96,16 @@ public class CsrfProtectionFilterTest {
                 responseContext.header(CsrfProtectionFilter.HEADER_NAME, headerValue);
             }
             return responseContext;
+        }
+
+        @Override
+        public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
+            throw new UnsupportedOperationException("Asynchronous execution not supported.");
+        }
+
+        @Override
+        public void close() {
+            // do nothing
         }
     }
 }

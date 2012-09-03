@@ -42,7 +42,6 @@ package org.glassfish.jersey.client;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
@@ -542,41 +541,59 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public Response invoke() throws ClientException, WebApplicationException  {
-        return retrieveResponse(submit());
-    }
-
-    @Override
-    public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException  {
-        return retrieveResponse(submit(responseType));
-    }
-
-    @Override
-    public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException  {
-        return retrieveResponse(submit(responseType));
-    }
-
-    private <T> T retrieveResponse(Future<T> responseFuture) throws ClientException, WebApplicationException {
-        try {
-            return responseFuture.get();
-        } catch (InterruptedException ex) {
-            throw new ClientException(ex);
-        } catch (ExecutionException ex) {
-            final Throwable cause = ex.getCause();
-            if (cause instanceof ClientException) {
-                throw (ClientException) cause;
-            } else if (cause instanceof WebApplicationException) {
-                throw (WebApplicationException) cause;
-            } else {
-                throw new ClientException(cause);
+    public Response invoke() throws ClientException, WebApplicationException {
+        final Runtime runtime = configuration().getRuntime();
+        final RequestScope requestScope = runtime.getRequestScope();
+        return requestScope.runInScope(new RequestScope.Producer<Response>() {
+            @Override
+            public Response call() throws ClientException {
+                return new ScopedJaxrsResponse(runtime.invoke(requestContext), requestScope);
             }
-        }
+        });
+    }
+
+    @Override
+    public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException {
+        final Runtime runtime = configuration().getRuntime();
+        final RequestScope requestScope = runtime.getRequestScope();
+        return requestScope.runInScope(new RequestScope.Producer<T>() {
+            @Override
+            public T call() throws ClientException {
+                try {
+                    return translate(runtime.invoke(requestContext), requestScope, responseType);
+                } catch (ClientException ex) {
+                    if (ex.getCause() instanceof WebApplicationException) {
+                        throw (WebApplicationException) ex.getCause();
+                    }
+                    throw ex;
+                }
+            }
+        });
+    }
+
+    @Override
+    public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException {
+        final Runtime runtime = configuration().getRuntime();
+        final RequestScope requestScope = runtime.getRequestScope();
+        return requestScope.runInScope(new RequestScope.Producer<T>() {
+            @Override
+            public T call() throws ClientException {
+                try {
+                    return translate(runtime.invoke(requestContext), requestScope, responseType);
+                } catch (ClientException ex) {
+                    if (ex.getCause() instanceof WebApplicationException) {
+                        throw (WebApplicationException) ex.getCause();
+                    }
+                    throw ex;
+                }
+            }
+        });
     }
 
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new ResponseCallback() {
+        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
@@ -595,25 +612,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new ResponseCallback() {
+        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
-                if (responseType == Response.class) {
-                    responseFuture.set(responseType.cast(new ScopedJaxrsResponse(response, scope)));
-                    return;
-                }
-
-                if (response.getStatus() < 300) {
-                    try {
-                        T entity = new InboundJaxrsResponse(response).readEntity(responseType);
-                        responseFuture.set(entity);
-                    } catch (Exception e) {
-                        failed(e instanceof ClientException ? (ClientException) e
-                                : new ClientException(e.getMessage(), e));
-                    }
-                } else {
-                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
+                try {
+                    responseFuture.set(translate(response, scope, responseType));
+                } catch (ClientException ex) {
+                    failed(ex);
                 }
             }
 
@@ -630,78 +636,136 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
+    private <T> T translate(ClientResponse response, RequestScope scope, Class<T> responseType)
+            throws ClientException {
+        if (responseType == Response.class) {
+            return responseType.cast(new ScopedJaxrsResponse(response, scope));
+        }
+
+        if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            try {
+                return new InboundJaxrsResponse(response).readEntity(responseType);
+            } catch (ClientException ex) {
+                throw ex;
+            } catch (WebApplicationException ex) {
+                throw new ClientException(ex);
+            } catch (Exception ex) {
+                throw new ClientException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
+            }
+        } else {
+            throw convertToException(new ScopedJaxrsResponse(response, scope));
+        }
+    }
+
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().submit(requestContext, new ResponseCallback() {
+        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
-                if (response.getStatus() < 300) {
-                    try {
-                        responseFuture.set(new InboundJaxrsResponse(response).readEntity(responseType));
-                    } catch (Exception e) {
-                        failed(new ClientException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), e));
-                    }
-                } else {
-                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
+                try {
+                    responseFuture.set(translate(response, scope, responseType));
+                } catch (ClientException ex) {
+                    failed(ex);
                 }
             }
 
             @Override
             public void failed(ClientException error) {
-                responseFuture.setException(error);
+                if (error.getCause() instanceof WebApplicationException) {
+                    responseFuture.setException(error.getCause());
+                } else {
+                    responseFuture.setException(error);
+                }
             }
         });
 
         return responseFuture;
+    }
+
+
+    private <T> T translate(ClientResponse response, RequestScope scope, GenericType<T> responseType)
+            throws ClientException {
+        if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            try {
+                return new InboundJaxrsResponse(response).readEntity(responseType);
+            } catch (ClientException ex) {
+                throw ex;
+            } catch (WebApplicationException ex) {
+                throw new ClientException(ex);
+            } catch (Exception ex) {
+                throw new ClientException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
+            }
+        } else {
+            throw convertToException(new ScopedJaxrsResponse(response, scope));
+        }
     }
 
     @Override
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
-        Type invocationCallbackType = null;
-        for (Type interfaceType : callback.getClass().getGenericInterfaces()) {
-            if (InvocationCallback.class.isAssignableFrom(ReflectionHelper.erasure(interfaceType))) {
-                invocationCallbackType = interfaceType;
-                break;
-            }
-        }
-        final Type callbackType = ReflectionHelper.getTypeArgument(invocationCallbackType, 0);
-        final Class<T> rawType = ReflectionHelper.erasure(callbackType);
+        try {
 
-        configuration().submit(requestContext, new ResponseCallback() {
+            ReflectionHelper.DeclaringClassInterfacePair pair =
+                    ReflectionHelper.getClass(callback.getClass(), InvocationCallback.class);
+            final Type callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
+            final Class<T> callbackParamClass = ReflectionHelper.erasure(callbackParamType);
 
-            @Override
-            public void completed(ClientResponse response, RequestScope scope) {
-                if (response.getStatus() < 300) {
+            final ResponseCallback responseCallback = new ResponseCallback() {
+
+                @Override
+                public void completed(ClientResponse response, RequestScope scope) {
                     final T result;
-                    if (rawType == Response.class) {
-                        result = rawType.cast(new ScopedJaxrsResponse(response, scope));
+                    if (callbackParamClass == Response.class) {
+                        result = callbackParamClass.cast(new ScopedJaxrsResponse(response, scope));
+                        responseFuture.set(result);
+                        callback.completed(result);
+                    } else if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                        result = new InboundJaxrsResponse(response).readEntity(new GenericType<T>(callbackParamType));
+                        responseFuture.set(result);
+                        callback.completed(result);
                     } else {
-                        result = new InboundJaxrsResponse(response).readEntity(new GenericType<T>(callbackType));
+                        failed(convertToException(new ScopedJaxrsResponse(response, scope)));
                     }
-                    responseFuture.set(result);
-                    callback.completed(result);
-                } else {
-                    failed(convertToException(new ScopedJaxrsResponse(response, scope)));
                 }
-            }
 
-            @Override
-            public void failed(ClientException error) {
+                @Override
+                public void failed(ClientException error) {
+                    try {
+                        if (error.getCause() instanceof WebApplicationException) {
+                            responseFuture.setException(error.getCause());
+                        } else {
+                            responseFuture.setException(error);
+                        }
+                    } finally {
+                        callback.failed(error);
+                    }
+                }
+            };
+            configuration().getRuntime().submit(requestContext, responseCallback);
+        } catch (Throwable error) {
+            ClientException ce;
+            if (error instanceof ClientException) {
+                ce = (ClientException) error;
+                responseFuture.setException(ce);
+            } else if (error instanceof WebApplicationException) {
+                ce = new ClientException(error);
                 responseFuture.setException(error);
-                callback.failed(error);
+            } else {
+                ce = new ClientException(error);
+                responseFuture.setException(ce);
             }
-        });
+            callback.failed(ce);
+        }
 
         return responseFuture;
     }
 
     private ClientException convertToException(Response response) {
         try {
-            WebApplicationException webAppException = null;
+            WebApplicationException webAppException;
             final int statusCode = response.getStatus();
             switch (Response.Status.fromStatusCode(statusCode)) {
                 case BAD_REQUEST:
@@ -735,14 +799,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     webAppException = new ServiceUnavailableException(response);
                     break;
                 default:
-                    if (299 < statusCode && statusCode < 400) {
-                        webAppException = new RedirectionException(response);
-                    } else if (399 < statusCode && statusCode < 500) {
-                        webAppException = new ClientErrorException(response);
-                    } else if (499 < statusCode && statusCode < 600) {
-                        webAppException = new ServerErrorException(response);
-                    } else {
-                        webAppException = new WebApplicationException(response);
+                    switch (response.getStatusInfo().getFamily()) {
+                        case REDIRECTION:
+                            webAppException = new RedirectionException(response);
+                            break;
+                        case CLIENT_ERROR:
+                            webAppException = new ClientErrorException(response);
+                            break;
+                        case SERVER_ERROR:
+                            webAppException = new ServerErrorException(response);
+                            break;
+                        default:
+                            webAppException = new WebApplicationException(response);
                     }
             }
             return new ClientException(webAppException);

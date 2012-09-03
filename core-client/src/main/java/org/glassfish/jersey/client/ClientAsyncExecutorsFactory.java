@@ -42,38 +42,31 @@ package org.glassfish.jersey.client;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
- * {@link ExecutorsFactory Executors factory} used on the client side. The class returns
- * the {@link ExecutorService requesting
- * executor} based on the request data.
+ * {@link ExecutorsFactory Executors factory} used on the client side for asynchronous request
+ * processing.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientExecutorsFactory extends ExecutorsFactory<ClientRequest> {
+class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
-    private final ExecutorService sameThreadExecutor;
 
     /**
      * Creates a new instance.
      *
      * @param locator Injected HK2 service locator.
      */
-    @Inject
-    public ClientExecutorsFactory(ServiceLocator locator) {
+    public ClientAsyncExecutorsFactory(ServiceLocator locator) {
         super(locator);
         this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
 
@@ -86,36 +79,18 @@ class ClientExecutorsFactory extends ExecutorsFactory<ClientRequest> {
 
             @Override
             public ExecutorService getRespondingExecutor() {
-                return Executors.newCachedThreadPool();
+                return MoreExecutors.sameThreadExecutor();
             }
         });
-        this.sameThreadExecutor = MoreExecutors.sameThreadExecutor();
     }
-
 
     @Override
     public ExecutorService getRequestingExecutor(ClientRequest request) {
-        if (request.isAsynchronous()) {
-            return requestingExecutor;
-        } else {
-            return sameThreadExecutor;
-        }
+        return requestingExecutor;
     }
 
     @Override
-    public ExecutorService getRespondingExecutor(ClientRequest clientRequest) {
+    public ExecutorService getRespondingExecutor(ClientRequest request) {
         return respondingExecutor;
-    }
-
-    /**
-     * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
-     * {@link ClientExecutorsFactory client executor factory}.
-     */
-    public static class ClientExecutorBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bind(ClientExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<ClientRequest>>() {
-            }).in(Singleton.class);
-        }
     }
 }

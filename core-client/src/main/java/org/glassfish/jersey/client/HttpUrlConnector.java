@@ -46,6 +46,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,20 +58,22 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.client.spi.*;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
-import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Default client transport connector using {@link HttpURLConnection}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpUrlConnector extends RequestWriter implements Inflector<ClientRequest, ClientResponse> {
+public class HttpUrlConnector extends RequestWriter implements Connector {
 
     private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
         if (uc.getResponseCode() < 300) {
@@ -90,13 +93,34 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<ClientR
         }
     }
 
-    private ClientResponse _apply(final ClientRequest requestContext) throws IOException {
+    @Override
+    public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
+        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    callback.response(_apply(request));
+                } catch (IOException ex) {
+                    callback.failure(new ClientException(ex));
+                } catch (Throwable t) {
+                    callback.failure(t);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void close() {
+        // do nothing
+    }
+
+    private ClientResponse _apply(final ClientRequest request) throws IOException {
         final HttpURLConnection uc;
         // TODO introduce & leverage optional connection factory to support customized connections
-        uc = (HttpURLConnection) requestContext.getUri().toURL().openConnection();
-        uc.setRequestMethod(requestContext.getMethod());
+        uc = (HttpURLConnection) request.getUri().toURL().openConnection();
+        uc.setRequestMethod(request.getMethod());
 
-        final Map<String,Object> configurationProperties = requestContext.getConfiguration().getProperties();
+        final Map<String,Object> configurationProperties = request.getConfiguration().getProperties();
         uc.setInstanceFollowRedirects(PropertiesHelper.getValue(configurationProperties,
                 ClientProperties.FOLLOW_REDIRECTS, true));
 
@@ -118,18 +142,18 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<ClientR
             }
         }
 
-        final Object entity = requestContext.getEntity();
+        final Object entity = request.getEntity();
         if (entity != null) {
             uc.setDoOutput(true);
 
-            if(requestContext.getMethod().equalsIgnoreCase("GET")) {
+            if(request.getMethod().equalsIgnoreCase("GET")) {
                 final Logger logger = Logger.getLogger(HttpUrlConnector.class.getName());
                 if(logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, LocalizationMessages.HTTPURLCONNECTION_REPLACES_GET_WITH_ENTITY());
                 }
             }
 
-            writeRequestEntity(requestContext, new RequestEntityWriterListener() {
+            writeRequestEntity(request, new RequestEntityWriterListener() {
                 @Override
                 public void onRequestEntitySize(long size) {
                     if (size != -1 && size < Integer.MAX_VALUE) {
@@ -162,18 +186,18 @@ public class HttpUrlConnector extends RequestWriter implements Inflector<ClientR
 
                         @Override
                         public void commit() throws IOException {
-                            writeOutBoundHeaders(requestContext.getStringHeaders(), uc);
+                            writeOutBoundHeaders(request.getStringHeaders(), uc);
                         }
                     };
                 }
 
             });
         } else {
-            writeOutBoundHeaders(requestContext.getStringHeaders(), uc);
+            writeOutBoundHeaders(request.getStringHeaders(), uc);
         }
 
         ClientResponse responseContext = new ClientResponse(
-                Statuses.from(uc.getResponseCode()), requestContext);
+                Statuses.from(uc.getResponseCode()), request);
         responseContext.setEntityStream(getInputStream(uc));
         responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
 

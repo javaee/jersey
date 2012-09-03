@@ -39,18 +39,12 @@
  */
 package org.glassfish.jersey.client;
 
-import java.util.concurrent.Future;
-
 import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
@@ -59,23 +53,10 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.process.internal.ProcessingBinder;
-import org.glassfish.jersey.process.internal.ProcessingCallback;
-import org.glassfish.jersey.process.internal.ProcessingContext;
-import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.TypeLiteral;
-
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -92,134 +73,25 @@ class ClientBinder extends AbstractBinder {
         }
     }
 
-    /**
-     * Injection-enabled client side {@link RequestInvoker} instance builder.
-     */
-    static final class RequestInvokerBuilder {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private ResponseProcessor.Builder<ClientResponse> responseProcessorBuilder;
-        @Inject
-        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
-        @Inject
-        private ExecutorsFactory<ClientRequest> executorsFactory;
-
-        /**
-         * Build a new {@link RequestInvoker request invoker} configured to use
-         * the supplied request processor for processing requests.
-         *
-         * @param rootStage root processing stage.
-         * @return new request invoker instance.
-         */
-        public RequestInvoker<ClientRequest, ClientResponse> build(
-                final Stage<ClientRequest> rootStage) {
-
-            final AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse> asyncAdapterBuilder =
-                    new AsyncInflectorAdapter.Builder<ClientRequest, ClientResponse>() {
-                        @Override
-                        public AsyncInflectorAdapter<ClientRequest, ClientResponse> create(
-                                Inflector<ClientRequest, ClientResponse> wrapped, ProcessingCallback<ClientResponse> callback) {
-                            return new AsyncInflectorAdapter<ClientRequest, ClientResponse>(
-                                    wrapped, callback) {
-
-                                @Override
-                                protected ClientResponse convertResponse(ClientRequest requestContext, Response response) {
-                                    // TODO get rid of this code on the client side
-                                    return new ClientResponse(requestContext, response);
-                                }
-                            };
-                        }
-                    };
-
-            return new RequestInvoker<ClientRequest, ClientResponse>(
-                    rootStage,
-                    requestScope,
-                    asyncAdapterBuilder,
-                    responseProcessorBuilder,
-                    invocationContextReferenceFactory,
-                    executorsFactory);
-        }
-
-    }
-
-
-    /**
-     * Injection-enabled client side {@link ResponseProcessor} instance builder.
-     */
-    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<ClientResponse> {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private Provider<ResponseProcessor.RespondingContext<ClientResponse>> respondingCtxProvider;
-        @Inject
-        private Provider<ExceptionMappers> exceptionMappersProvider;
-        @Inject
-        private Provider<ClientRequest> requestContextFactory;
-
-        /**
-         * Default constructor meant to be used by injection framework.
-         */
-        public ResponseProcessorBuilder() {
-            // Injection constructor
-        }
-
-        @Override
-        public ResponseProcessor<ClientResponse> build(
-                final Future<ClientResponse> inflectedResponse,
-                final SettableFuture<ClientResponse> processedResponse,
-                final ProcessingCallback<ClientResponse> callback,
-                final RequestScope.Instance scopeInstance) {
-
-            return new ResponseProcessor<ClientResponse>(
-                    callback,
-                    inflectedResponse,
-                    processedResponse,
-                    respondingCtxProvider,
-                    scopeInstance,
-                    requestScope,
-                    exceptionMappersProvider) {
-
-                @Override
-                protected ClientResponse convertResponse(Response exceptionResponse) {
-                    return (exceptionResponse == null) ? null : new ClientResponse(
-                            exceptionResponse.getStatusInfo(),
-                            requestContextFactory.get());
-                }
-            };
-        }
-    }
-
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new ProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),
-                new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ClientFilteringStage.Binder(),
-                new ExceptionWrapperInterceptor.Binder(),
-                new ClientExecutorsFactory.ClientExecutorBinder());
+                new ExceptionWrapperInterceptor.Binder());
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
-        // Client-side processing chain
         bindFactory(RequestContextInjectionFactory.class).
                 to(ClientRequest.class).
                 in(RequestScoped.class);
 
         bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new TypeLiteral<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);
-
-        bind(DefaultRespondingContext.class)
-                .to(new TypeLiteral<ResponseProcessor.RespondingContext<ClientResponse>>() {}).in(RequestScoped.class);
-
-        bind(ResponseProcessorBuilder.class).to(new TypeLiteral<ResponseProcessor.Builder<ClientResponse>>() {
-                }).in(Singleton.class);
     }
 }

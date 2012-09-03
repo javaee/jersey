@@ -104,7 +104,6 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
         return respondingExecutor;
     }
 
-
     /**
      * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
      * {@link ServerExecutorsFactory server executor factory}.

@@ -40,6 +40,8 @@
 package org.glassfish.jersey.client.filter;
 
 
+import java.util.concurrent.Future;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
@@ -50,8 +52,9 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.Base64;
-import org.glassfish.jersey.process.Inflector;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +81,7 @@ public class HttpBasicAuthFilterTest {
         assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeaderString(HttpHeaders.AUTHORIZATION));
     }
 
-    private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {
+    private static class TestConnector implements Connector {
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(
@@ -89,6 +92,16 @@ public class HttpBasicAuthFilterTest {
                 responseContext.header(HttpHeaders.AUTHORIZATION, headerValue);
             }
             return responseContext;
+        }
+
+        @Override
+        public Future<?> apply(ClientRequest clientRequest, AsyncConnectorCallback callback) {
+            throw new UnsupportedOperationException("Asynchronous execution not supported.");
+        }
+
+        @Override
+        public void close() {
+            // do nothing
         }
     }
 }

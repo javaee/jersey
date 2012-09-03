@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import java.util.concurrent.Future;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Invocation;
@@ -50,9 +52,10 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.message.DeflateEncoder;
 import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.process.Inflector;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -112,7 +115,7 @@ public class EncodingFilterTest {
         assertNull(r.getHeaderString(HttpHeaders.CONTENT_ENCODING));
     }
 
-    private static class TestConnector implements Inflector<ClientRequest, ClientResponse> {
+    private static class TestConnector implements Connector {
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(
@@ -127,6 +130,16 @@ public class EncodingFilterTest {
                 responseContext.header(HttpHeaders.CONTENT_ENCODING, headerValue);
             }
             return responseContext;
+        }
+
+        @Override
+        public Future<?> apply(ClientRequest clientRequest, AsyncConnectorCallback callback) {
+            throw new UnsupportedOperationException("Asynchronous execution not supported.");
+        }
+
+        @Override
+        public void close() {
+            // do nothing
         }
     }
 }

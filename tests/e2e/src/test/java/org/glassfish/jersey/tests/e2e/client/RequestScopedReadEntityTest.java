@@ -134,8 +134,6 @@ public class RequestScopedReadEntityTest extends JerseyTest {
         return new ResourceConfig(SimpleResource.class);
     }
 
-
-
     @Test
     public void testReadAfterClose() {
         final Invocation.Builder request = target().path("simple").request();

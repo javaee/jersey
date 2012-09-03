@@ -54,24 +54,27 @@ import javax.ws.rs.client.ClientException;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestInvoker;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * In-memory client connector.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class InMemoryConnector implements Inflector<ClientRequest, ClientResponse> {
+public class InMemoryConnector implements Connector {
 
     private final ApplicationHandler appHandler;
     private final URI baseUri;
@@ -134,12 +137,32 @@ public class InMemoryConnector implements Inflector<ClientRequest, ClientRespons
         throw new ClientException("In-memory transport can't process incoming request");
     }
 
+    @Override
+    public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
+        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    callback.response(apply(request));
+                } catch (ClientException ex) {
+                    throw ex;
+                } catch (Throwable t) {
+                    callback.failure(t);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void close() {
+        // do nothing
+    }
+
     private void outboundToInbound(final OutboundMessageContext outboundContext,
                                    final InboundMessageContext inboundContext,
                                    final PropertiesDelegate propertiesDelegate,
                                    final MessageBodyWorkers workers,
-                                   final ByteArrayOutputStream entityBaos
-    ) {
+                                   final ByteArrayOutputStream entityBaos) {
         if (entityBaos == null) {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

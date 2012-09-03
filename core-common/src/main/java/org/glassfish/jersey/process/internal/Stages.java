@@ -52,6 +52,14 @@ import com.google.common.base.Function;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class Stages {
+    private static final ChainableStage IDENTITY = new AbstractChainableStage() {
+
+        @Override
+        public Continuation apply(Object o) {
+            //noinspection unchecked
+            return Continuation.of(o, getDefaultNext());
+        }
+    };
 
     /**
      * Prevents instantiation.
@@ -60,10 +68,26 @@ public final class Stages {
     }
 
     /**
+     * Get a chainable "identity" stage.
+     *
+     * This stage, when applied returns the unmodified input data object
+     * as part of it's continuation.
+     *
+     * @param <DATA>   data type transformable by the stage.
+     * @return identity stage.
+     */
+    public static <DATA> ChainableStage<DATA> identity() {
+        //noinspection unchecked
+        return IDENTITY;
+    }
+
+    /**
      * Creates a terminal {@link Stage} that implements {@link Inflecting}
      * interface and returns the provided {@link Inflector} instance
      * when the {@link Inflecting#inflector()} method is called.
      *
+     * @param <DATA>   data type transformable by the stage and returned inflector.
+     * @param <RESULT> type of result produced by a successful inflector data transformation.
      * @param inflector a request to response transformation to be wrapped in
      *                  a stage.
      * @return a stage that wraps the supplied {@code Inflector}.

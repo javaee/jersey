@@ -46,24 +46,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.ProcessingCallback;
-import org.glassfish.jersey.process.internal.ProcessingContext;
-import org.glassfish.jersey.process.internal.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
@@ -112,7 +106,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
             }
         };
 
-        private transient StateChangeStrategy strategy;
+        private volatile StateChangeStrategy strategy;
         private final Map<String, Object> properties;
         private final Map<String, Object> immutablePropertiesView;
         private final Set<Class<?>> providerClasses;
@@ -126,13 +120,14 @@ public class ClientConfig implements Configuration, Config, Configurable {
         private final List<Binder> binders;
 
         private final JerseyClient client;
-        private Inflector<ClientRequest, ClientResponse> connector;
-        private ServiceLocator locator;
-        private RequestInvoker<ClientRequest, ClientResponse> invoker;
-        private RequestScope requestScope;
+        private Connector connector;
 
-        private volatile boolean initialized = false;
-        private final Object initLock = new Object();
+        private Value<Runtime> runtime = Values.lazy(new Value<Runtime>() {
+            @Override
+            public Runtime get() {
+                return initRuntime();
+            }
+        });
 
         /**
          * Configuration state change strategy.
@@ -160,8 +155,6 @@ public class ClientConfig implements Configuration, Config, Configurable {
             this.client = client;
             this.strategy = IDENTITY;
 
-            this.locator = null;
-
             this.properties = new HashMap<String, Object>();
             this.providerClasses = new LinkedHashSet<Class<?>>();
             this.providerInstances = new LinkedHashSet<Object>();
@@ -186,8 +179,6 @@ public class ClientConfig implements Configuration, Config, Configurable {
         private State(JerseyClient client, State original) {
             this.client = client;
             this.strategy = IDENTITY;
-
-            this.locator = null;
 
             this.properties = new HashMap<String, Object>(original.properties);
             this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
@@ -372,13 +363,13 @@ public class ClientConfig implements Configuration, Config, Configurable {
             return this;
         }
 
-        public State setConnector(Inflector<ClientRequest, ClientResponse> connector) {
+        public State setConnector(Connector connector) {
             final State state = strategy.onChange(this);
             state.connector = connector;
             return state;
         }
 
-        Inflector<ClientRequest, ClientResponse> getConnector() {
+        Connector getConnector() {
             return connector;
         }
 
@@ -389,109 +380,47 @@ public class ClientConfig implements Configuration, Config, Configurable {
         /**
          * Initialize the newly constructed client instance.
          */
-        private void initRuntime() {
-            if (initialized) {
-                return;
+        private Runtime initRuntime() {
+            /**
+             * Ensure that any attempt to add a new provider, feature, binder or modify the connector
+             * will cause a copy of the current state.
+             */
+            markAsShared();
+
+            final AbstractBinder configBinder = new AbstractBinder() {
+                @Override
+                protected void configure() {
+                    bind(State.this).to(Configuration.class).to(Config.class);
+                }
+            };
+            final ServiceLocator locator;
+            if (binders.isEmpty()) {
+                locator = Injections.createLocator(configBinder, new ClientBinder());
+            } else {
+                final ArrayList<Binder> allBinders = new ArrayList<Binder>(binders.size() + 2);
+                allBinders.add(configBinder);
+                allBinders.add(new ClientBinder());
+                allBinders.addAll(binders);
+                locator = Injections.createLocator(allBinders.toArray(new Binder[allBinders.size()]));
             }
-            synchronized (initLock) {
-                if (initialized) {
-                    return;
-                }
 
-                /**
-                 * Ensure that any attempt to add a new provider, feature, binder or modify the connector
-                 * will cause a copy of the current state.
-                 */
-                markAsShared();
+            final ProviderBinder providerBinder = new ProviderBinder(locator);
+            providerBinder.bindClasses(getProviderClasses());
+            providerBinder.bindInstances(getProviderInstances());
 
-                final AbstractBinder configBinder = new AbstractBinder() {
-                    @Override
-                    protected void configure() {
-                        bind(State.this).to(Configuration.class).to(Config.class);
-                    }
-                };
-                if (binders.isEmpty()) {
-                    locator = Injections.createLocator(configBinder, new ClientBinder());
-                } else {
-                    final ArrayList<Binder> allBinders = new ArrayList<Binder>(binders.size() + 2);
-                    allBinders.add(configBinder);
-                    allBinders.add(new ClientBinder());
-                    allBinders.addAll(binders);
-                    locator = Injections.createLocator(allBinders.toArray(new Binder[allBinders.size()]));
-                }
-
-                final ProviderBinder providerBinder = new ProviderBinder(locator);
-                providerBinder.bindClasses(getProviderClasses());
-                providerBinder.bindInstances(getProviderInstances());
-
-                client.addListener(new JerseyClient.LifecycleListener() {
-                    @Override
-                    public void onClose() {
+            final Runtime runtime = new Runtime(connector, locator);
+            client.addListener(new JerseyClient.LifecycleListener() {
+                @Override
+                public void onClose() {
+                    try {
+                        runtime.close();
+                    } finally {
                         ServiceLocatorFactory.getInstance().destroy(locator.getName());
                     }
-                });
-
-                final RequestProcessingInitializationStage processingInitializationStage =
-                        locator.createAndInitialize(RequestProcessingInitializationStage.class);
-                final ClientFilteringStage filteringStage = locator.createAndInitialize(ClientFilteringStage.class);
-
-
-                Stage<ClientRequest> rootStage = Stages
-                        .chain(processingInitializationStage)
-                        .to(filteringStage)
-                        .build(Stages.asStage(getConnector()));
-
-                this.invoker = Injections.getOrCreate(locator, ClientBinder.RequestInvokerBuilder.class).build(rootStage);
-                this.requestScope = locator.getService(RequestScope.class);
-
-                initialized = true;
-            }
-        }
-
-        void submit(final ClientRequest requestContext, final ResponseCallback callback) {
-            initRuntime();
-
-            requestScope.runInScope(new Runnable() {
-
-                @Override
-                public void run() {
-                    invoker.apply(requestContext, new ProcessingCallback<ClientResponse>() {
-
-                        @Override
-                        public void result(ClientResponse responseContext) {
-                            callback.completed(responseContext, requestScope);
-                        }
-
-                        @Override
-                        public void failure(Throwable exception) {
-                            // TODO needs to be reviewed / fixed
-                            callback.failed(exception instanceof ClientException ?
-                                    (ClientException) exception
-                                    : new ClientException(exception));
-                        }
-
-                        @Override
-                        public void cancelled() {
-                            // TODO implement client-side suspend event logic
-                        }
-
-                        @Override
-                        public void suspended(long time, TimeUnit unit, ProcessingContext context) {
-                            // TODO implement client-side suspend event logic
-                        }
-
-                        @Override
-                        public void suspendTimeoutChanged(long time, TimeUnit unit) {
-                            // TODO implement client-side suspend timeout change event logic
-                        }
-
-                        @Override
-                        public void resumed() {
-                            // TODO implement client-side resume event logic
-                        }
-                    });
                 }
             });
+
+            return runtime;
         }
 
         @Override
@@ -739,7 +668,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
      * @param connector client transport connector.
      * @return this client config instance.
      */
-    public ClientConfig connector(Inflector<ClientRequest, ClientResponse> connector) {
+    public ClientConfig connector(Connector connector) {
         state = state.setConnector(connector);
         return this;
     }
@@ -762,8 +691,17 @@ public class ClientConfig implements Configuration, Config, Configurable {
      *
      * @return client transport connector or {code null} if not set.
      */
-    public Inflector<ClientRequest, ClientResponse> getConnector() {
+    public Connector getConnector() {
         return state.getConnector();
+    }
+
+    /**
+     * Get the configured runtime.
+     *
+     * @return configured runtime.
+     */
+    Runtime getRuntime() {
+        return state.runtime.get();
     }
 
     /**
@@ -787,16 +725,6 @@ public class ClientConfig implements Configuration, Config, Configurable {
         if (getClient() == null) {
             throw new IllegalStateException("Client configuration does not contain a parent client instance.");
         }
-    }
-
-    /**
-     * Submit a configured invocation for processing.
-     *
-     * @param requestContext request context to be processed (invoked).
-     * @param callback       callback receiving invocation processing notifications.
-     */
-    void submit(final ClientRequest requestContext, final ResponseCallback callback) {
-        state.submit(requestContext, callback);
     }
 
     @Override

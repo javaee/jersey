@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import deprecated.javax.ws.rs.Suspend;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -55,6 +54,8 @@ import com.google.common.base.Objects;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Monitor;
+
+import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Suspendable, asynchronous {@link Inflector inflector} adapter
