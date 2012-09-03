@@ -50,6 +50,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -58,8 +60,6 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -97,9 +97,7 @@ public class ContextBasedInjectionTest {
     private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Context
-        private ProcessingContext processingContext;
-        @Context
-        ServiceLocator locator;
+        private Provider<ProcessingContext> processingContextProvider;
         private final String responseContent;
 
         public AsyncInflector() {
@@ -113,6 +111,7 @@ public class ContextBasedInjectionTest {
         @Override
         public Response apply(final ContainerRequestContext req) {
             // Suspend current request
+            final ProcessingContext processingContext = processingContextProvider.get();
             processingContext.suspend();
 
             Executors.newSingleThreadExecutor().submit(new Runnable() {

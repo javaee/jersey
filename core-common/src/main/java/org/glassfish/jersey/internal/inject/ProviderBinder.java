@@ -44,6 +44,8 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.model.ContractProvider;
+
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.PerLookup;
@@ -148,6 +150,31 @@ public class ProviderBinder {
         dc.commit();
     }
 
+    /**
+     * Bind contract provider model using the supplied HK2 dynamic configuration.
+     *
+     * @param provider contract provider model.
+     * @param dc HK2 dynamic service locator configuration.
+     */
+    public static void bindProvider(final ContractProvider provider, final DynamicConfiguration dc) {
+        final ScopedBindingBuilder bindingBuilder;
+        if (provider.getServiceInstance() != null) {
+            bindingBuilder = Injections.newBinder(provider.getServiceInstance())
+                    .qualifiedBy(new CustomAnnotationImpl());
+        } else {
+            bindingBuilder = Injections.newBinder(provider.getServiceClass())
+                    .in(provider.getScope())
+                    .qualifiedBy(new CustomAnnotationImpl());
+        }
+
+        for (Class contract : provider.getContracts()) {
+            //noinspection unchecked
+            bindingBuilder.to(contract);
+        }
+
+        Injections.addBinding(bindingBuilder, dc);
+    }
+
     @SuppressWarnings("unchecked")
     private <T> void bindInstance(T instance, DynamicConfiguration dc) {
         for (Class contract : Providers.getProviderContracts(instance.getClass())) {
@@ -177,7 +204,6 @@ public class ProviderBinder {
             }
             Injections.addBinding(bindingBuilder, dc);
         }
-
     }
 
     private Class<? extends Annotation> getProviderScope(Class<?> clazz) {

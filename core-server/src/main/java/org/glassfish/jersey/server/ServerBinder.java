@@ -74,12 +74,12 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
-import org.glassfish.jersey.server.internal.routing.SingletonResourceBinder;
 import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -254,7 +254,7 @@ public class ServerBinder extends AbstractBinder {
                 new RouterBinder(),
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceBinder(),
-                new SingletonResourceBinder.SingletonResourceBinderBinder(),
+                new JerseyResourceContext.Binder(),
                 new ServerExecutorsFactory.ServerExecutorBinder());
 
         // Request/Response injection interfaces

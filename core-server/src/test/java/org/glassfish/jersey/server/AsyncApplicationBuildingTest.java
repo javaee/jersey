@@ -64,13 +64,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -89,9 +88,7 @@ public class AsyncApplicationBuildingTest {
     private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Inject
-        private ProcessingContext processingContext;
-        @Inject
-        ServiceLocator serviceLocator;
+        private Provider<ProcessingContext> processingContextProvider;
         private final String responseContent;
 
         public AsyncInflector() {
@@ -105,6 +102,7 @@ public class AsyncApplicationBuildingTest {
         @Override
         public Response apply(final ContainerRequestContext req) {
             // Suspend current request
+            final ProcessingContext processingContext = processingContextProvider.get();
             processingContext.suspend();
 
             Executors.newSingleThreadExecutor().submit(new Runnable() {

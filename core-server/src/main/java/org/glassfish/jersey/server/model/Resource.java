@@ -136,6 +136,9 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final List<ResourceMethod> subResourceMethods;
         private final List<ResourceMethod> locators;
 
+        private final Set<Class<?>> handlerClasses;
+        private final Set<Object> handlerInstances;
+
         private Builder() {
             this.methodBuilders = Sets.newIdentityHashSet();
 
@@ -143,12 +146,23 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.subResourceMethods = Lists.newLinkedList();
             this.locators = Lists.newLinkedList();
 
+            this.handlerClasses = Sets.newIdentityHashSet();
+            this.handlerInstances = Sets.newIdentityHashSet();
+
             name("[unnamed]");
         }
 
         private Builder(final String path) {
             this();
             path(path);
+        }
+
+        private boolean isEmpty() {
+            return !isRoot &&
+                    methodBuilders.isEmpty() &&
+                    resourceMethods.isEmpty() &&
+                    subResourceMethods.isEmpty() &&
+                    locators.isEmpty();
         }
 
         /**
@@ -162,7 +176,7 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @see org.glassfish.jersey.server.model.Resource#getName()
          */
         public Builder name(final String name) {
-            this.names =  Lists.newArrayList(name);
+            this.names = Lists.newArrayList(name);
             return this;
         }
 
@@ -227,6 +241,9 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.subResourceMethods.addAll(resource.getSubResourceMethods());
             this.locators.addAll(resource.getSubResourceLocators());
 
+            this.handlerClasses.addAll(resource.getHandlerClasses());
+            this.handlerInstances.addAll(resource.getHandlerInstances());
+
             this.names.addAll(resource.names);
 
             return this;
@@ -251,6 +268,9 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.resourceMethods.addAll(resourceBuilder.resourceMethods);
             this.subResourceMethods.addAll(resourceBuilder.subResourceMethods);
             this.locators.addAll(resourceBuilder.locators);
+
+            this.handlerClasses.addAll(resourceBuilder.handlerClasses);
+            this.handlerInstances.addAll(resourceBuilder.handlerInstances);
 
             this.names.addAll(resourceBuilder.names);
 
@@ -284,6 +304,13 @@ public final class Resource implements Routed, ResourceModelComponent {
                     locators.add(method);
                     break;
             }
+
+            final MethodHandler methodHandler = method.getInvocable().getHandler();
+            if (methodHandler.isClassBased()) {
+                handlerClasses.add(methodHandler.getHandlerClass());
+            } else {
+                handlerInstances.add(methodHandler.getHandlerInstance());
+            }
         }
 
         /**
@@ -295,12 +322,28 @@ public final class Resource implements Routed, ResourceModelComponent {
             processMethodBuilders();
 
             return new Resource(
-                    Collections.unmodifiableList(Lists.newArrayList(names)),
+                    immutableCopy(names),
                     path,
                     isRoot,
-                    Collections.unmodifiableList(Lists.newArrayList(resourceMethods)),
-                    Collections.unmodifiableList(Lists.newArrayList(subResourceMethods)),
-                    Collections.unmodifiableList(Lists.newArrayList(locators)));
+                    immutableCopy(resourceMethods),
+                    immutableCopy(subResourceMethods),
+                    immutableCopy(locators),
+                    immutableCopy(handlerClasses),
+                    immutableCopy(handlerInstances));
+        }
+
+        private static <T> List<T> immutableCopy(List<T> list) {
+            return list.isEmpty() ? Collections.<T>emptyList() : Collections.unmodifiableList(Lists.newArrayList(list));
+        }
+
+        private static <T> Set<T> immutableCopy(Set<T> set) {
+            if (set.isEmpty()) {
+                return Collections.emptySet();
+            }
+
+            final Set<T> result = Sets.newIdentityHashSet();
+            result.addAll(set);
+            return set;
         }
 
         private void processMethodBuilders() {
@@ -351,12 +394,15 @@ public final class Resource implements Routed, ResourceModelComponent {
      * @param resourceClass resource class to be modelled.
      * @param issueList     mutable list of issues that will be updated with the
      *                      introspection-specific issues found in the model.
-     * @return resource model builder initialized by the class.
+     * @return resource model builder initialized by the class or {@code null} if the
+     *         class does not represent a resource.
      * @throws IllegalArgumentException in case the class is not
-     *                                  {@link #isAcceptable(java.lang.Class) acceptable} as a JAX-RS resource.
+     *                                  {@link #isAcceptable(java.lang.Class) acceptable}
+     *                                  as a JAX-RS resource.
      */
     public static Builder builder(Class<?> resourceClass, List<ResourceModelIssue> issueList) throws IllegalArgumentException {
-        return new IntrospectionModeller(resourceClass, issueList).createResourceBuilder(false);
+        final Builder builder = new IntrospectionModeller(resourceClass, issueList).createResourceBuilder(false);
+        return builder.isEmpty() ? null : builder;
     }
 
     /**
@@ -371,10 +417,53 @@ public final class Resource implements Routed, ResourceModelComponent {
      * @param resource  resource instance to be modelled.
      * @param issueList mutable list of issues that will be updated with the
      *                  introspection-specific issues found in the model.
-     * @return resource model builder initialized by instance.
+     * @return resource model builder initialized by instance or {@code null} if the
+     *         instance does not represent a resource.
      */
     public static Builder builder(Object resource, List<ResourceModelIssue> issueList) {
-        return new IntrospectionModeller(resource.getClass(), issueList).createResourceBuilder(true);
+        final Builder builder = new IntrospectionModeller(resource.getClass(), issueList).createResourceBuilder(true);
+        return builder.isEmpty() ? null : builder;
+    }
+
+    /**
+     * Create a resource model initialized by introspecting an annotated
+     * JAX-RS resource class.
+     * <p/>
+     * Method performs an {@link #isAcceptable(java.lang.Class) acceptability} check,
+     * on the resource class prior to the resource model creation.
+     *
+     * @param resourceClass resource class to be modelled.
+     * @param issueList     mutable list of issues that will be updated with the
+     *                      introspection-specific issues found in the model.
+     * @return resource model initialized by the class or {@code null} if the
+     *         class does not represent a resource.
+     * @throws IllegalArgumentException in case the class is not
+     *                                  {@link #isAcceptable(java.lang.Class) acceptable}
+     *                                  as a JAX-RS resource.
+     */
+    public static Resource from(Class<?> resourceClass, List<ResourceModelIssue> issueList) throws IllegalArgumentException {
+        final Builder builder = new IntrospectionModeller(resourceClass, issueList).createResourceBuilder(false);
+        return builder.isEmpty() ? null : builder.build();
+    }
+
+    /**
+     * Create a resource model initialized by introspecting an annotated
+     * JAX-RS resource instance.
+     * <p/>
+     * Unlike {@link #builder(Class, java.util.List)}, this method does not perform
+     * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
+     * assumed that the instance of the resource has already been created and is
+     * acceptable.
+     *
+     * @param resource  resource instance to be modelled.
+     * @param issueList mutable list of issues that will be updated with the
+     *                  introspection-specific issues found in the model.
+     * @return resource model initialized by instance or {@code null} if the
+     *         instance does not represent a resource.
+     */
+    public static Resource from(Object resource, List<ResourceModelIssue> issueList) {
+        final Builder builder = new IntrospectionModeller(resource.getClass(), issueList).createResourceBuilder(true);
+        return builder.isEmpty() ? null : builder.build();
     }
 
     /**
@@ -430,6 +519,9 @@ public final class Resource implements Routed, ResourceModelComponent {
         b.subResourceMethods.addAll(resource.subResourceMethods);
         b.locators.addAll(resource.subResourceLocators);
 
+        b.handlerClasses.addAll(resource.handlerClasses);
+        b.handlerInstances.addAll(resource.handlerInstances);
+
         return b;
     }
 
@@ -438,9 +530,13 @@ public final class Resource implements Routed, ResourceModelComponent {
     private final String path;
     private final PathPattern pathPattern;
     private final boolean isRoot;
+
     private final List<ResourceMethod> resourceMethods;
     private final List<ResourceMethod> subResourceMethods;
     private final List<ResourceMethod> subResourceLocators;
+
+    private final Set<Class<?>> handlerClasses;
+    private final Set<Object> handlerInstances;
 
     private Resource(
             final List<String> names,
@@ -448,7 +544,9 @@ public final class Resource implements Routed, ResourceModelComponent {
             final boolean isRoot,
             final List<ResourceMethod> resourceMethods,
             final List<ResourceMethod> subResourceMethods,
-            final List<ResourceMethod> subResourceLocators) {
+            final List<ResourceMethod> subResourceLocators,
+            final Set<Class<?>> handlerClasses,
+            final Set<Object> handlerInstances) {
 
         this.names = names;
         this.path = path;
@@ -460,6 +558,9 @@ public final class Resource implements Routed, ResourceModelComponent {
         this.resourceMethods = resourceMethods;
         this.subResourceMethods = subResourceMethods;
         this.subResourceLocators = subResourceLocators;
+
+        this.handlerClasses = handlerClasses;
+        this.handlerInstances = handlerInstances;
     }
 
     /**
@@ -533,6 +634,25 @@ public final class Resource implements Routed, ResourceModelComponent {
         return subResourceLocators;
     }
 
+    /**
+     * Get the method handler classes for the resource methods registered on the resource.
+     *
+     * @return resource method handler classes.
+     */
+    public Set<Class<?>> getHandlerClasses() {
+        return handlerClasses;
+    }
+
+    /**
+     * Get the method handler (singleton) instances for the resource methods registered
+     * on the resource.
+     *
+     * @return resource method handler instances.
+     */
+    public Set<Object> getHandlerInstances() {
+        return handlerInstances;
+    }
+
     @Override
     public void accept(ResourceModelVisitor visitor) {
         visitor.visitResourceClass(this);
@@ -544,7 +664,9 @@ public final class Resource implements Routed, ResourceModelComponent {
                 + ((path == null) ? "[unbound], " : "\"" + path + "\", ")
                 + resourceMethods.size() + " resource methods, "
                 + subResourceMethods.size() + " sub-resource methods, "
-                + subResourceLocators + " sub-resource locators"
+                + subResourceLocators.size() + " sub-resource locators, "
+                + handlerClasses.size() + " method handler classes, "
+                + handlerInstances.size() + " method handler instances"
                 + '}';
     }
 

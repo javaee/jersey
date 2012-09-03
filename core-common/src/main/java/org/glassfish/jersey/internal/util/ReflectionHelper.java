@@ -58,9 +58,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +71,7 @@ import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Utility methods for Java reflection.
@@ -661,7 +662,7 @@ public class ReflectionHelper {
             AnnotatedElement annotatedElement,
             Class<? extends Annotation> metaAnnotation
     ) {
-        HashSet<Class<? extends Annotation>> result = new HashSet<Class<? extends Annotation>>();
+        Set<Class<? extends Annotation>> result = Sets.newIdentityHashSet();
         for (Annotation a : annotatedElement.getAnnotations()) {
             Class<? extends Annotation> aType = a.annotationType();
             if (metaAnnotation == null || aType.getAnnotation(metaAnnotation) != null) {

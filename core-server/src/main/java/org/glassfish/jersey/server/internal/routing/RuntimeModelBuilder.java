@@ -40,20 +40,19 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.inject.Inject;
-
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import deprecated.javax.ws.rs.DynamicBinder;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -66,10 +65,13 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.uri.PathPattern;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.util.Collection;
+
+import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * This is a common base for root resource and sub-resource runtime model
@@ -90,8 +92,6 @@ public final class RuntimeModelBuilder {
     @Inject
     private MethodSelectingRouter.Builder methodSelectingAcceptorBuilder;
     @Inject
-    private SingletonResourceBinder resourceProvider;
-
     private MessageBodyWorkers workers;
     private MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters;
     private MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters;
@@ -338,15 +338,6 @@ public final class RuntimeModelBuilder {
 
     private RouteBuilder<PathPattern> routedBuilder(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
         return lastRoutedBuilder == null ? rootBuilder : lastRoutedBuilder;
-    }
-
-    /**
-     * Set the message body workers.
-     *
-     * @param workers new message body workers.
-     */
-    public void setWorkers(MessageBodyWorkers workers) {
-        this.workers = workers;
     }
 
     /**

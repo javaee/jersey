@@ -49,28 +49,30 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import deprecated.javax.ws.rs.DynamicBinder;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
 import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
-
+import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.process.internal.PriorityComparator;
+import org.glassfish.jersey.process.internal.ProcessingContext;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
+
+import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
@@ -115,6 +117,10 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
          * @param method resource method model.
          * @param nameBoundRequestFilters name bound request filters.
          * @param nameBoundResponseFilters name bound response filters.
+         * @param globalReaderInterceptors global reader interceptors.
+         * @param globalWriterInterceptors global writer interceptors.
+         * @param nameBoundReaderInterceptors name-bound reader interceptors.
+         * @param nameBoundWriterInterceptors name-bound writer interceptors.
          * @param dynamicBinders dynamic binders.
          * @return new resource method invoker instance.
          */
@@ -217,7 +223,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
             final Collection<ContainerResponseFilter> targetResponseFilters,
             final Collection<ReaderInterceptor> targetReaderInterceptors,
             final Collection<WriterInterceptor> targetWriterInterceptors,
-            NameBound target
+            final NameBound target
     ) {
         for (Class<? extends Annotation> nameBinding : target.getNameBindings()) {
             List<ContainerRequestFilter> reqF = nameBoundRequestFilters.get(nameBinding);
