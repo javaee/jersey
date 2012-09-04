@@ -771,6 +771,62 @@ public class UriTemplate {
         return v;
     }
 
+
+    /**
+     * Resolves template variables in the given {@code template} from {@code _mapValues}. Resolves only these variables which are
+     * defined in the {@code _mapValues} leaving other variables unchanged.
+     *
+     * @param type Type of the {@code template} (port, path, query, ...).
+     * @param template Input uri component to resolve.
+     * @param encode True if template values from {@code _mapValues} should be percent encoded.
+     * @param _mapValues Map with template variables as keys and template values as values. None of them should be null.
+     * @return String with resolved template variables.
+     * @throws IllegalArgumentException when {@code _mapValues} value is null.
+     */
+    @SuppressWarnings("unchecked")
+    public static String resolveTemplateValues(UriComponent.Type type,
+                                               String template,
+                                               final boolean encode,
+                                               final Map<String, ?> _mapValues) {
+
+        if (template == null || template.isEmpty() || template.indexOf('{') == -1) {
+            return template;
+        }
+
+        Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
+        StringBuilder sb = new StringBuilder();
+
+        // Find all template variables
+        template = new UriTemplateParser(template).getNormalizedTemplate();
+        final Matcher m = TEMPLATE_NAMES_PATTERN.matcher(template);
+
+        int i = 0;
+        while (m.find()) {
+            sb.append(template, i, m.start());
+            final String tVariable = m.group(1);
+            Object tValue = mapValues.get(tVariable);
+
+            if (tValue != null) {
+                if (encode) {
+                    tValue = UriComponent.encode(tValue.toString(), type);
+                } else {
+                    tValue = UriComponent.contextualEncode(tValue.toString(), type);
+                }
+                sb.append(tValue);
+            } else {
+                if (mapValues.containsKey(tVariable)) {
+                    throw new IllegalArgumentException("The value associated of the template value map for key + " + tVariable
+                            + " is null.");
+                }
+
+                sb.append(m.group());
+            }
+            i = m.end();
+        }
+        sb.append(template, i, template.length());
+        return sb.toString();
+    }
+
     private static IllegalArgumentException templateVariableHasNoValue(String tVariable) {
         return new IllegalArgumentException("The template variable, "
                 + tVariable + ", has no value");

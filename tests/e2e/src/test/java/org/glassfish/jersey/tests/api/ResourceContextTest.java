@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.tests.api;
 
-import java.net.URI;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -51,11 +49,9 @@ import javax.ws.rs.core.Context;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -66,12 +62,13 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Grotzke
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ResourceContextTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MyRootResource.class, MatchResource.class);
+        return new ResourceConfig(MyRootResource.class);
     }
 
     @Path("/")
@@ -89,7 +86,41 @@ public class ResourceContextTest extends JerseyTest {
         public PerRequestResource getPerRequestSubResource() {
             return resourceContext.getResource(PerRequestResource.class);
         }
+
+        @Path("inject/{path}")
+        public InjectResource getInjectResource() {
+            final InjectResource resource = resourceContext.getResource(InjectResource.class);
+            resource.setPath("something");
+            return resourceContext.initResource(resource);
+        }
+
+        @Path("injectFromNewResource/{path}")
+        public InjectResource getInjectResourceFromNew() {
+            final InjectResource resource = new InjectResource();
+            resource.setPath("something");
+            return resourceContext.initResource(resource);
+        }
+
     }
+
+    public static class InjectResource {
+        @PathParam("path")
+        private String path;
+
+        @GET
+        public String get() {
+            return path;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+    }
+
 
     @Singleton
     public static class SingletonResource {
@@ -122,74 +153,16 @@ public class ResourceContextTest extends JerseyTest {
     }
 
 
-    @Path("/match")
-    public static class MatchResource {
-
-        @Context ResourceContext resourceContext;
-
-        @GET
-        @Path("{uri: .+}")
-        public String get(@PathParam("uri") URI uri) {
-            Object r = resourceContext.matchResource(uri);
-            return (r != null) ? r.toString() : "null";
-        }
-
-        @GET
-        @Path("/class/{class}/{uri: .+}")
-        public String get(@PathParam("uri") URI uri, @PathParam("class") String className) {
-            Class c = ReflectionHelper.classForName(className);
-            Object r = resourceContext.matchResource(uri, c);
-            return (r != null) ? r.toString() : "null";
-        }
-
+    @Test
+    public void testInitializeResourceFromResourceContext() {
+        assertEquals("aaa", target("/inject/aaa").request().get(String.class));
+        assertEquals("bbb", target("/inject/bbb").request().get(String.class));
     }
 
     @Test
-    @Ignore
-    public void testMatchResourceWithRelativeURI() {
-        assertEquals(target("/match/singleton").request().get(String.class),
-                target("/match/singleton").request().get(String.class));
-
-        String r1 = target("/match/perrequest").request().get(String.class);
-        String r2 = target("/match/perrequest").request().get(String.class);
-        assertEquals(r1.substring(0, r1.indexOf('@')),
-                r2.substring(0, r2.indexOf('@')));
+    public void testInitializeResourceFromNewResource() {
+        assertEquals("aaa", target("/injectFromNewResource/aaa").request().get(String.class));
+        assertEquals("bbb", target("/injectFromNewResource/bbb").request().get(String.class));
     }
 
-    @Test
-    @Ignore
-    public void testMatchResourceWithAbsoluteURI() {
-        assertEquals(target("/match/test:/base/singleton").request().get(String.class),
-                target("/match/test:/base/singleton").request().get(String.class));
-
-        String r1 = target("/match/test:/base/perrequest").request().get(String.class);
-        String r2 = target("/match/test:/base/perrequest").request().get(String.class);
-        assertEquals(r1.substring(0, r1.indexOf('@')),
-                r2.substring(0, r2.indexOf('@')));
-    }
-
-    @Test
-    @Ignore
-    public void testMatchResourceWithClass() {
-        assertEquals(target("/match/class/" + SingletonResource.class.getName() + "/singleton").request().get(String.class),
-                target("/match/class/" + SingletonResource.class.getName() + "/singleton").request().get(String.class));
-
-        String r1 = target("/match/class/" + PerRequestResource.class.getName() + "/perrequest").request().get(String.class);
-        String r2 = target("/match/class/" + PerRequestResource.class.getName() + "/perrequest").request().get(String.class);
-        assertEquals(r1.substring(0, r1.indexOf('@')),
-                r2.substring(0, r2.indexOf('@')));
-    }
-
-    @Test
-    @Ignore
-    public void testMatchNotFound() {
-        assertEquals("null", target("/match/foo").request().get(String.class));
-        assertEquals(404, target("/match/foo").request().get().getStatus());
-    }
-
-    @Test
-    @Ignore
-    public void testMatchBaseBaseUri() {
-        assertEquals(404, target("/match/test:/no-base/singleton").request().get().getStatus());
-    }
 }

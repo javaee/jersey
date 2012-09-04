@@ -47,9 +47,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -141,7 +140,7 @@ public class JsonWithPaddingTest extends JerseyTest {
         final List<JsonTestProvider[]> testProviders = new LinkedList<JsonTestProvider[]>();
 
         for (JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
-            testProviders.add(new JsonTestProvider[] {jsonProvider});
+            testProviders.add(new JsonTestProvider[]{jsonProvider});
         }
 
         return testProviders;
@@ -238,7 +237,7 @@ public class JsonWithPaddingTest extends JerseyTest {
     }
 
     @Test
-     public void testJsonWithPaddingCallback() throws Exception {
+    public void testJsonWithPaddingCallback() throws Exception {
         test("JsonWithPaddingCallback", "eval", "eval");
     }
 
@@ -265,14 +264,13 @@ public class JsonWithPaddingTest extends JerseyTest {
 
     private void test(final String path, final String queryParamName, final String queryParamValue, final String callback,
                       final boolean isNegative) {
-        final MultivaluedMap<String, Object> params = new MultivaluedHashMap<String, Object>() {{
-            if (queryParamName != null) {
-                add(queryParamName, queryParamValue);
-            }
-        }};
 
+        WebTarget tempTarget = target("jsonp").path(path);
+        if (queryParamName != null) {
+            tempTarget = tempTarget.queryParam(queryParamName, queryParamValue);
+        }
         final String entity =
-                target("jsonp").path(path).queryParams(params).request("application/x-javascript").get(String.class);
+                tempTarget.request("application/x-javascript").get(String.class);
 
         assertTrue(
                 String.format("%s: Received JSON entity content does not match expected JSON entity content.",

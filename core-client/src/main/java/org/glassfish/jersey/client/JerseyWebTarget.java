@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,15 +43,12 @@ import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.WebTarget JAX-RS client target}
@@ -63,7 +60,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
 
     private final ClientConfig configuration;
     private final UriBuilder targetUri;
-    private final Map<String, Object> pathParams;
 
     /**
      * Create new web target instance.
@@ -72,8 +68,9 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(String uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.configuration().snapshot());
     }
+
 
     /**
      * Create new web target instance.
@@ -82,8 +79,9 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(URI uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.configuration().snapshot());
     }
+
 
     /**
      * Create new web target instance.
@@ -92,7 +90,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent     parent client.
      */
     /*package*/ JerseyWebTarget(UriBuilder uriBuilder, JerseyClient parent) {
-        this(uriBuilder.clone(), null, parent.configuration().snapshot());
+        this(uriBuilder.clone(), parent.configuration().snapshot());
     }
 
     /**
@@ -103,7 +101,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      */
     /*package*/ JerseyWebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
-        this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot());
+        this(UriBuilder.fromUri(link.getUri()), parent.configuration().snapshot());
     }
 
     /**
@@ -113,66 +111,27 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param that       original target to copy the internal data from.
      */
     protected JerseyWebTarget(UriBuilder uriBuilder, JerseyWebTarget that) {
-        this(uriBuilder, that.pathParams, that.configuration.snapshot());
+        this(uriBuilder, that.configuration.snapshot());
     }
 
     /**
      * Create new web target instance.
      *
      * @param uriBuilder   builder for the target URI.
-     * @param pathParams   map of path parameter names to values.
      * @param clientConfig target configuration.
      */
-    protected JerseyWebTarget(UriBuilder uriBuilder, Map<String, Object> pathParams, ClientConfig clientConfig) {
+    protected JerseyWebTarget(UriBuilder uriBuilder, ClientConfig clientConfig) {
         clientConfig.checkClient();
 
         this.targetUri = uriBuilder;
-        if (pathParams != null) {
-            this.pathParams = Maps.newHashMap(pathParams);
-        } else {
-            this.pathParams = Maps.newHashMap();
-        }
         this.configuration = clientConfig;
-    }
-
-    /**
-     * Set value of a path parameter.
-     *
-     * @param name  path parameter name.
-     * @param value path parameter value. If {@code null}, any existing mapping
-     *              for the path parameter name will be removed.
-     */
-    protected final void setPathParam(String name, Object value) {
-        if (value == null) {
-            pathParams.remove(name);
-        } else {
-            pathParams.put(name, value);
-        }
-    }
-
-    /**
-     * Replace path parameter values.
-     *
-     * @param valueMap        path parameter name to value map.
-     * @param discardExisting if {@code true}, all existing parameters will be discarded.
-     */
-    protected final void replacePathParams(Map<String, Object> valueMap, boolean discardExisting) {
-        if (valueMap == null) {
-            throw new NullPointerException("New parameter value map must not be null.");
-        }
-        if (discardExisting) {
-            pathParams.clear();
-        }
-        for (Entry<String, Object> entry : valueMap.entrySet()) {
-            setPathParam(entry.getKey(), entry.getValue());
-        }
     }
 
     @Override
     public URI getUri() {
         configuration.getClient().checkNotClosed();
         try {
-            return targetUri.buildFromMap(pathParams);
+            return targetUri.build();
         } catch (IllegalArgumentException ex) {
             throw new IllegalStateException(ex.getMessage(), ex);
         }
@@ -198,22 +157,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     public JerseyWebTarget path(String path) throws NullPointerException {
         checkNotClosed();
         return new JerseyWebTarget(getUriBuilder().path(path), this);
-    }
-
-    @Override
-    public JerseyWebTarget pathParam(String name, Object value) throws NullPointerException {
-        checkNotClosed();
-        JerseyWebTarget result = new JerseyWebTarget(getUriBuilder(), this);
-        result.setPathParam(name, value);
-        return result;
-    }
-
-    @Override
-    public JerseyWebTarget pathParams(Map<String, Object> parameters) throws NullPointerException {
-        checkNotClosed();
-        JerseyWebTarget result = new JerseyWebTarget(getUriBuilder(), this);
-        result.replacePathParams(parameters, false);
-        return result;
     }
 
     @Override
@@ -270,17 +213,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public JerseyWebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
-        checkNotClosed();
-        UriBuilder ub = getUriBuilder(); // clone
-        for (Entry<String, List<Object>> e : parameters.entrySet()) {
-            ub = JerseyWebTarget.setQueryParam(ub, e.getKey(), e.getValue().toArray());
-        }
-
-        return new JerseyWebTarget(ub, this);
-    }
-
-    @Override
     public JerseyInvocation.Builder request() {
         checkNotClosed();
         return new JerseyInvocation.Builder(getUri(), configuration.snapshot());
@@ -301,4 +233,54 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         b.request().accept(acceptedResponseTypes);
         return b;
     }
+
+    @Override
+    public JerseyWebTarget resolveTemplate(String name, Object value) throws NullPointerException {
+        return resolveTemplate(name, value, true);
+    }
+
+    @Override
+    public JerseyWebTarget resolveTemplate(String name, Object value, boolean encodeSlashInPath) throws NullPointerException {
+        checkNotClosed();
+        Preconditions.checkNotNull(name, "name is 'null'.");
+        Preconditions.checkNotNull(name, "value is 'null'.");
+
+        return new JerseyWebTarget(getUriBuilder().resolveTemplate(name, value, encodeSlashInPath), this);
+    }
+
+    @Override
+    public JerseyWebTarget resolveTemplateFromEncoded(String name, Object value)
+            throws NullPointerException {
+        checkNotClosed();
+        Preconditions.checkNotNull(name, "name is 'null'.");
+        Preconditions.checkNotNull(name, "value is 'null'.");
+
+        return new JerseyWebTarget(getUriBuilder().resolveTemplateFromEncoded(name, value), this);
+
+    }
+
+    @Override
+    public JerseyWebTarget resolveTemplates(Map<String, Object> templateValues) throws NullPointerException {
+        return resolveTemplates(templateValues, true);
+    }
+
+    @Override
+    public JerseyWebTarget resolveTemplates(Map<String, Object> templateValues, boolean encodeSlashInPath)
+            throws NullPointerException {
+        checkNotClosed();
+        Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
+
+        return new JerseyWebTarget(getUriBuilder().resolveTemplates(templateValues, encodeSlashInPath), this);
+    }
+
+
+    @Override
+    public JerseyWebTarget resolveTemplatesFromEncoded(Map<String, Object> templateValues)
+            throws NullPointerException {
+        checkNotClosed();
+        Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
+
+        return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
+    }
+
 }

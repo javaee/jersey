@@ -94,7 +94,8 @@ public final class WebResourceFactory implements InvocationHandler {
      * Creates a new client-side representation of a resource described by
      * the interface passed in the first argument.
      *
-     * Calling this method has the same effect as calling {@code WebResourceFactory.newResource(resourceInterface, rootTarget, false)}.
+     * Calling this method has the same effect as calling {@code WebResourceFactory.newResource(resourceInterface, rootTarget,
+     *false)}.
      *
      * @param <C> Type of the resource to be created.
      * @param resourceInterface Interface describing the resource to be created.
@@ -114,7 +115,8 @@ public final class WebResourceFactory implements InvocationHandler {
      * @param <C> Type of the resource to be created.
      * @param resourceInterface Interface describing the resource to be created.
      * @param target WebTarget pointing to the resource or the parent of the resource.
-     * @param ignoreResourcePath If set to true, ignores path annotation on the resource interface (this is used when creating sub-resources)
+     * @param ignoreResourcePath If set to true, ignores path annotation on the resource interface (this is used when creating
+     *                           sub-resources)
      * @param headers Header params collected from parent resources (used when creating a sub-resource)
      * @param cookies Cookie params collected from parent resources (used when creating a sub-resource)
      * @param form Form params collected from parent resources (used when creating a sub-resource)
@@ -125,7 +127,7 @@ public final class WebResourceFactory implements InvocationHandler {
     public static <C> C newResource(Class<C> resourceInterface, WebTarget target, boolean ignoreResourcePath,
                                     MultivaluedMap<String, Object> headers, List<Cookie> cookies, Form form) {
         return (C) Proxy.newProxyInstance(resourceInterface.getClassLoader(),
-                new Class[] {resourceInterface},
+                new Class[]{resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
                         headers, cookies, form));
     }
@@ -195,9 +197,10 @@ public final class WebResourceFactory implements InvocationHandler {
                 if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
                     value = ((DefaultValue) ann).value();
                 }
+
                 if (value != null) {
                     if ((ann = anns.get(PathParam.class)) != null) {
-                        newTarget = newTarget.pathParam(((PathParam) ann).value(), value);
+                        newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
                     } else if ((ann = anns.get((QueryParam.class))) != null) {
                         newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
                     } else if ((ann = anns.get((HeaderParam.class))) != null) {

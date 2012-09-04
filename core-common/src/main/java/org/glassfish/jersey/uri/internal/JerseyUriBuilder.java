@@ -55,6 +55,7 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 
+import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
 
 /**
@@ -513,10 +514,10 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder queryParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
-            throw new IllegalArgumentException("Name parameter is null");
+            throw new IllegalArgumentException("Name is null");
         }
         if (values == null) {
-            throw new IllegalArgumentException("Value parameter is null");
+            throw new IllegalArgumentException("Value is null");
         }
         if (values.length == 0) {
             return this;
@@ -573,6 +574,87 @@ public class JerseyUriBuilder extends UriBuilder {
         }
         return this;
     }
+
+    @Override
+    public JerseyUriBuilder resolveTemplate(String name, Object value) throws IllegalArgumentException {
+        resolveTemplate(name, value, true, true);
+
+        return this;
+    }
+
+    @Override
+    public JerseyUriBuilder resolveTemplate(String name, Object value, boolean encodeSlashInPath) {
+        resolveTemplate(name, value, true, encodeSlashInPath);
+        return this;
+    }
+
+    @Override
+    public JerseyUriBuilder resolveTemplateFromEncoded(String name, Object value) {
+        resolveTemplate(name, value, false, false);
+        return this;
+    }
+
+    private JerseyUriBuilder resolveTemplate(String name, Object value, boolean encode, boolean encodeSlashInPath) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name is null.");
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("Value is null.");
+        }
+
+        Map<String, Object> templateValues = Maps.newHashMap();
+        templateValues.put(name, value);
+        resolveTemplates(templateValues, encode, encodeSlashInPath);
+        return this;
+    }
+
+
+    @Override
+    public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues) throws IllegalArgumentException {
+        resolveTemplates(templateValues, true, true);
+        return this;
+    }
+
+    public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encodeSlashInPath) throws
+            IllegalArgumentException {
+        resolveTemplates(templateValues, true, encodeSlashInPath);
+        return this;
+    }
+
+    @Override
+    public JerseyUriBuilder resolveTemplatesFromEncoded(Map<String, Object> templateValues) {
+        resolveTemplates(templateValues, false, false);
+        return this;
+    }
+
+
+    private JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encode, boolean encodeSlashInPath) {
+        if (templateValues == null) {
+            throw new IllegalArgumentException("templateValues parameter is null.");
+        }
+
+        scheme = UriTemplate.resolveTemplateValues(UriComponent.Type.SCHEME, scheme, false, templateValues);
+        userInfo = UriTemplate.resolveTemplateValues(UriComponent.Type.USER_INFO, userInfo, encode, templateValues);
+        host = UriTemplate.resolveTemplateValues(UriComponent.Type.HOST, host, encode, templateValues);
+        port = UriTemplate.resolveTemplateValues(UriComponent.Type.PORT, port, false, templateValues);
+        authority = UriTemplate.resolveTemplateValues(UriComponent.Type.AUTHORITY, authority, encode, templateValues);
+
+        // path template values are treated as path segments unless encodeSlashInPath is false.
+        UriComponent.Type pathComponent = (encodeSlashInPath) ? UriComponent.Type.PATH_SEGMENT : UriComponent.Type.PATH;
+        final String newPath = UriTemplate.resolveTemplateValues(pathComponent, path.toString(), encode, templateValues);
+        path.setLength(0);
+        path.append(newPath);
+
+        final String newQuery = UriTemplate.resolveTemplateValues(UriComponent.Type.QUERY_PARAM, query.toString(), encode,
+                templateValues);
+        query.setLength(0);
+        query.append(newQuery);
+
+        fragment = UriTemplate.resolveTemplateValues(UriComponent.Type.FRAGMENT, fragment, encode, templateValues);
+
+        return this;
+    }
+
 
     @Override
     public JerseyUriBuilder fragment(String fragment) {

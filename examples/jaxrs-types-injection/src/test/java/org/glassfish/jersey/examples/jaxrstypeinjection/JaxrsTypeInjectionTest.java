@@ -54,6 +54,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     protected ResourceConfig configure() {
         return App.create();
     }
+
     private String[] expectedFragmentsProgrammatic = new String[]{
             // UriInfo
             "Absolute path : " + this.getBaseUri() + "programmatic/v1/v2",
@@ -109,7 +110,8 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
         target.configuration().register(LoggingFilter.class);
-        return target.path(path).pathParam("p1", "v1").pathParam("p2", "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
+        return target.path(path).resolveTemplate("p1", "v1").resolveTemplate("p2",
+                "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
     }
 
     @Test

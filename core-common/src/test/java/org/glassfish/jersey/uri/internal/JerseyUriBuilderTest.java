@@ -776,14 +776,37 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testWhitespacesInPathParamsByResolve() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}/").path("bbb/{  par2   }/ccc")
+                .build("1param", "2param");
+        assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2param/ccc"), uri);
+    }
+
+
+    @Test
     public void testWhitespacesInPathParams2() {
         URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}").path("bbb/{  par2 : \\d*  }/ccc").build("1param", "2");
         assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2/ccc"), uri);
     }
 
     @Test
+    public void testWhitespacesInPathParams2ByResolve() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}").path("bbb/{  par2 : \\d*  }/ccc")
+                .resolveTemplate("par1", "1param").resolveTemplate("par2", "2").build();
+        assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2/ccc"), uri);
+    }
+
+
+    @Test
     public void testWhitespacesInQueryParams() {
         URI uri = UriBuilder.fromUri("http://localhost:80/aaa?a={      param   : \\.d*  }").build("5");
+        assertEquals(URI.create("http://localhost:80/aaa?a=5"), uri);
+    }
+
+    @Test
+    public void testWhitespacesInQueryParamsByResolve() {
+        URI uri = UriBuilder.fromUri("http://localhost:80/aaa?a={      param   : \\.d*  }")
+                .resolveTemplate("param", "5").build();
         assertEquals(URI.create("http://localhost:80/aaa?a=5"), uri);
     }
 
@@ -1008,6 +1031,19 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testBuildTemplatesByResolve() {
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+
+        URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").resolveTemplates(m).build();
+
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x"), uri);
+    }
+
+    @Test
     public void testBuildTemplatesWithNameAuthority() {
         URI uri = UriBuilder.fromUri("http://x_y.com:8080/a/b/c").
                 path("/{foo}/{bar}/{baz}/{foo}").build("x", "y", "z");
@@ -1023,6 +1059,18 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testBuildTemplatesWithNameAuthorityByResolve() {
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        URI uri = UriBuilder.fromUri("http://x_y.com:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://x_y.com:8080/a/b/c/x/y/z/x"), uri);
+    }
+
+
+    @Test
     public void testBuildFromMap() {
         Map maps = new HashMap();
         maps.put("x", null);
@@ -1036,6 +1084,29 @@ public class JerseyUriBuilderTest {
         try {
             System.out.println(UriBuilder.fromPath("").path("{w}/{x}/{y}/{z}/{x}").
                     buildFromEncodedMap(maps));
+
+        } catch (IllegalArgumentException ex) {
+            caught = true;
+        }
+
+        Assert.assertTrue(caught);
+    }
+
+
+    @Test
+    public void testBuildFromMapByResolve() {
+        Map maps = new HashMap();
+        maps.put("x", null);
+        maps.put("y", "/path-absolute/test1");
+        maps.put("z", "fred@example.com");
+        maps.put("w", "path-rootless/test2");
+        maps.put("u", "extra");
+
+        boolean caught = false;
+
+        try {
+            System.out.println(UriBuilder.fromPath("").path("{w}/{x}/{y}/{z}/{x}").resolveTemplates(maps)
+                    .build());
 
         } catch (IllegalArgumentException ex) {
             caught = true;
@@ -1071,6 +1142,20 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testResolveTemplateFromEncodedQueryTemplates() {
+        URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").resolveTemplateFromEncoded("b", "=+&%xx%20").build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%20"), uri);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("b", "=+&%xx%20");
+        uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
+                queryParam("a", "{b}").resolveTemplatesFromEncoded(m).build();
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%20"), uri);
+    }
+
+
+    @Test
     public void testBuildFragmentTemplates() {
         URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
                 path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").build("x", "y", "z");
@@ -1082,6 +1167,24 @@ public class JerseyUriBuilderTest {
         m.put("baz", "z");
         uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
                 path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").buildFromMap(m);
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), uri);
+    }
+
+
+    @Test
+    public void testResolveTemplateFromFragmentTemplates() {
+        URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").resolveTemplate("foo", "x").resolveTemplate("bar",
+                "y").resolveTemplate("baz", "z").build();
+
+        Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), uri);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").fragment("{foo}").resolveTemplates(m).build();
         Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), uri);
     }
 
@@ -1099,6 +1202,22 @@ public class JerseyUriBuilderTest {
                 path("/{foo}/{bar}/{baz}/{foo}").buildFromMap(m);
         Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), uri);
     }
+
+    @Test
+    public void testResolveTemplatesDefaultPort() {
+        URI uri = UriBuilder.fromUri("http://localhost/a/b/c").path("/{foo}/{bar}/{baz}/{foo}").resolveTemplate("foo",
+                "x").resolveTemplate("bar", "y").resolveTemplate("baz" + "", "z").build();
+        Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), uri);
+
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("foo", "x");
+        m.put("bar", "y");
+        m.put("baz", "z");
+        uri = UriBuilder.fromUri("http://localhost/a/b/c").
+                path("/{foo}/{bar}/{baz}/{foo}").resolveTemplates(m).build();
+        Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), uri);
+    }
+
 
     @Test
     public void testClone() {
@@ -1221,4 +1340,157 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create("http://localhost:8080/%7Ba%7D/%7Bb%7D?q=%7Bc%7D"), uri);
     }
 
+    @Test
+    public void resolveTemplateTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").queryParam("query", "{q}");
+        uriBuilder.resolveTemplate("a", "param-a");
+        uriBuilder.resolveTemplate("q", "param-q");
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("a", "ignored-a");
+        m.put("b", "param-b");
+        m.put("q", "ignored-q");
+        Assert.assertEquals(URI.create("http://localhost:8080/param-a/param-b?query=param-q"), uriBuilder.buildFromMap(m));
+        uriBuilder.build();
+    }
+
+
+    @Test
+    public void resolveTemplateFromEncodedTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").path("{c}").queryParam("query", "{q}");
+        uriBuilder.resolveTemplateFromEncoded("a", "x/y/z%3F%20");
+        uriBuilder.resolveTemplateFromEncoded("q", "q?%20%26");
+        uriBuilder.resolveTemplate("c", "paramc1/paramc2");
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("a", "ignored-a");
+        m.put("b", "param-b/aaa");
+        m.put("q", "ignored-q");
+        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1%2Fparamc2?query=q?%20%26",
+                uriBuilder.buildFromEncodedMap(m).toString());
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplateWithoutEncodedTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").path("{c}").queryParam("query", "{q}");
+        uriBuilder.resolveTemplate("a", "x/y/z%3F%20");
+        uriBuilder.resolveTemplate("q", "q?%20%26");
+        uriBuilder.resolveTemplate("c", "paramc1/paramc2");
+        Map<String, Object> m = new HashMap<String, Object>();
+        m.put("a", "ignored-a");
+        m.put("b", "param-b/aaa");
+        m.put("q", "ignored-q");
+        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
+                uriBuilder.buildFromMap(m).toString());
+        uriBuilder.build();
+    }
+
+
+    @Test
+    public void resolveTemplateWithEncodedSlashTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").queryParam("query", "{q}");
+        uriBuilder.resolveTemplate("a", "param-a/withSlash", false);
+        uriBuilder.resolveTemplate("b", "param-b/withEncodedSlash", true);
+        uriBuilder.resolveTemplate("q", "param-q", true);
+        Assert.assertEquals(URI.create("http://localhost:8080/param-a/withSlash/param-b%2FwithEncodedSlash?query=param-q"),
+                uriBuilder.build());
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplatesTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").queryParam("query", "{q}");
+
+        Map<String, Object> resolveMap = new HashMap<String, Object>();
+        resolveMap.put("a", "param-a");
+        resolveMap.put("q", "param-q");
+        uriBuilder.resolveTemplate("a", "param-a");
+        uriBuilder.resolveTemplate("q", "param-q");
+        Map<String, Object> buildMap = new HashMap<String, Object>();
+        buildMap.put("a", "ignored-a");
+        buildMap.put("b", "param-b");
+        buildMap.put("q", "ignored-q");
+        Assert.assertEquals(URI.create("http://localhost:8080/param-a/param-b?query=param-q"), uriBuilder.buildFromMap(buildMap));
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplatesFromEncodedTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path("{b}").path("{c}")
+                .queryParam("query", "{q}");
+
+        Map<String, Object> resolveMap = new HashMap<String, Object>();
+        resolveMap.put("a", "x/y/z%3F%20");
+        resolveMap.put("q", "q?%20%26");
+        resolveMap.put("c", "paramc1/paramc2");
+        uriBuilder.resolveTemplatesFromEncoded(resolveMap);
+        Map<String, Object> buildMap = new HashMap<String, Object>();
+        buildMap.put("b", "param-b/aaa");
+        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1/paramc2?query=q?%20%26",
+                uriBuilder.buildFromEncodedMap(buildMap).toString());
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplatesFromNotEncodedTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").path("{c}").queryParam("query", "{q}");
+
+        Map<String, Object> resolveMap = new HashMap<String, Object>();
+        resolveMap.put("a", "x/y/z%3F%20");
+        resolveMap.put("q", "q?%20%26");
+        resolveMap.put("c", "paramc1/paramc2");
+        uriBuilder.resolveTemplates(resolveMap);
+        Map<String, Object> buildMap = new HashMap<String, Object>();
+        buildMap.put("b", "param-b/aaa");
+        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
+                uriBuilder.buildFromMap(buildMap).toString());
+        uriBuilder.build();
+    }
+
+
+    @Test
+    public void resolveTemplatesEncodeSlash() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").path("{c}").queryParam("query", "{q}");
+
+        Map<String, Object> resolveMap = new HashMap<String, Object>();
+        resolveMap.put("a", "x/y/z%3F%20");
+        resolveMap.put("q", "q?%20%26");
+        resolveMap.put("c", "paramc1/paramc2");
+        uriBuilder.resolveTemplates(resolveMap, false);
+        Map<String, Object> buildMap = new HashMap<String, Object>();
+        buildMap.put("b", "param-b/aaa");
+        Assert.assertEquals("http://localhost:8080/x/y/z%253F%2520/param-b/aaa/paramc1/paramc2?query=q?%2520%2526",
+                uriBuilder.buildFromMap(buildMap, false).toString());
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplatesWithEncodedSlashTest() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
+                ("{b}").queryParam("query", "{q}");
+        Map<String, Object> resolveMap = new HashMap<String, Object>();
+        resolveMap.put("a", "param-a/withSlash");
+        resolveMap.put("q", "param-q");
+        uriBuilder.resolveTemplates(resolveMap, false);
+        uriBuilder.resolveTemplate("b", "param-b/withEncodedSlash", true);
+        Assert.assertEquals(URI.create("http://localhost:8080/param-a/withSlash/param-b%2FwithEncodedSlash?query=param-q"),
+                uriBuilder.build());
+        uriBuilder.build();
+    }
+
+    @Test
+    public void resolveTemplateMultipleCall() {
+        final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{start}")
+                .path("{a}").resolveTemplate("a", "first-a").path("{a}").resolveTemplate("a",
+                        "second-a").path("{a}/{a}").resolveTemplate("a", "twice-a");
+
+        Assert.assertEquals(URI.create("http://localhost:8080/start-path/first-a/second-a/twice-a/twice-a"),
+                uriBuilder.build("start-path"));
+    }
 }

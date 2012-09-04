@@ -41,14 +41,12 @@
 package org.glassfish.jersey.server.internal;
 
 import java.lang.annotation.Annotation;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.UriInfo;
 
 import javax.inject.Inject;
 import javax.inject.Scope;
@@ -95,21 +93,6 @@ public class JerseyResourceContext implements ResourceContext {
     }
 
     @Override
-    public UriInfo matchUriInfo(URI uri) throws NullPointerException, IllegalArgumentException {
-        return null;  // TODO: implement method.
-    }
-
-    @Override
-    public Object matchResource(URI uri) throws NullPointerException, IllegalArgumentException {
-        return null;  // TODO: implement method.
-    }
-
-    @Override
-    public <T> T matchResource(URI uri, Class<T> type) throws NullPointerException, IllegalArgumentException, ClassCastException {
-        return null;  // TODO: implement method.
-    }
-
-    @Override
     public <T> T getResource(Class<T> resourceClass) {
         try {
             return Injections.getOrCreate(locator, resourceClass);
@@ -118,6 +101,12 @@ public class JerseyResourceContext implements ResourceContext {
                     LocalizationMessages.RESOURCE_LOOKUP_FAILED(resourceClass), ex);
         }
         return null;
+    }
+
+    @Override
+    public <T> T initResource(T resource) {
+        locator.inject(resource);
+        return resource;
     }
 
     /**

@@ -73,7 +73,10 @@ public class ClientPathTest extends JerseyTest {
      */
     @Test
     public void pathParamInTargetTest() {
-        Response response = client().target("http://localhost:" + getPort() + "/test/{beginBy}").pathParam("beginBy", "abc")
+
+        Response response = client().target("http://localhost:" + getPort() + "/test/{beginBy}")
+                .resolveTemplate
+                        ("beginBy", "abc")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-get,abc", response.readEntity(String.class));
@@ -96,7 +99,8 @@ public class ClientPathTest extends JerseyTest {
      */
     @Test
     public void pathConcatenationTest2() {
-        Response response = client().target("http://localhost:" + getPort()).path("/path").request(MediaType.TEXT_PLAIN_TYPE).get();
+        Response response = client().target("http://localhost:" + getPort()).path("/path").request(MediaType.TEXT_PLAIN_TYPE)
+                .get();
         assertEquals(200, response.getStatus());
         assertEquals("test-path", response.readEntity(String.class));
     }

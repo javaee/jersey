@@ -41,19 +41,19 @@ package org.glassfish.jersey.client;
 
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientFactory;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
+
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import junit.framework.Assert;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -86,32 +86,24 @@ public class JerseyWebTargetTest {
     }
 
     @Test
-    public void testPathParams() {
+    public void testResolveTemplate() {
         URI uri;
         UriBuilder uriBuilder;
 
-        uri = target.pathParam("a", "v").pathParam("a", null).getUri();
+        uri = target.resolveTemplate("a", "v").getUri();
         assertEquals("/", uri.toString());
 
-        uri = target.path("{a}").pathParam("a", "v").getUri();
+        uri = target.path("{a}").resolveTemplate("a", "v").getUri();
         assertEquals("/v", uri.toString());
 
-        uriBuilder = target.path("{a}").pathParam("a", "v").pathParam("a", null).getUriBuilder();
+        uriBuilder = target.path("{a}").resolveTemplate("qqq", "qqq").getUriBuilder();
         assertEquals("/%7Ba%7D", uriBuilder.build().toString());
 
-        final Map<String, Object> params = new HashMap<String, Object>(2);
-        params.put("a", "w1");
-        params.put("b", null);
-        try {
-            target.path("{a}").path("{b}").pathParam("a", "v1").pathParam("b", "v2")
-                    .pathParams(params).getUri();
-            fail("IllegalStateException expected - template variable 'b' should have no value.");
-        } catch (IllegalStateException ex) {
-            // expected
-        }
+        uriBuilder = target.path("{a}").resolveTemplate("a", "v").resolveTemplate("a", "x").getUriBuilder();
+        assertEquals("/v", uriBuilder.build().toString());
 
         try {
-            target.pathParams(null);
+            target.resolveTemplate(null, null);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // expected
@@ -119,15 +111,73 @@ public class JerseyWebTargetTest {
     }
 
     @Test
-    @Ignore("Un-ignore once JERSEY-1329 is fixed.")
-    // TODO un-ignore
+    public void testResolveTemplate2() {
+        final JerseyWebTarget newTarget = target.path("path/{a}").queryParam("query", "{q}").resolveTemplate("a", "param-a");
+        final JerseyUriBuilder uriBuilder = (JerseyUriBuilder) newTarget.getUriBuilder();
+        uriBuilder.resolveTemplate("q", "param-q").resolveTemplate("a", "will-be-ignored");
+        Assert.assertEquals(URI.create("/path/param-a?query=param-q"), uriBuilder.build());
+
+        final UriBuilder uriBuilderNew = newTarget.resolveTemplate("a", "will-be-ignored").resolveTemplate("q",
+                "new-q").getUriBuilder();
+        Assert.assertEquals(URI.create("/path/param-a?query=new-q"), uriBuilderNew.build());
+    }
+
+    @Test
+    public void testResolveTemplate3() {
+        final JerseyWebTarget webTarget = target.path("path/{a}").path("{b}").queryParam("query", "{q}")
+                .resolveTemplate("a", "param-a").resolveTemplate("q", "param-q");
+        Assert.assertEquals("/path/param-a/%7Bb%7D?query=param-q", webTarget.getUri().toString());
+        // resolve b in webTarget
+        Assert.assertEquals(URI.create("/path/param-a/param-b?query=param-q"), webTarget.resolveTemplate("b",
+                "param-b").getUri());
+
+        // check that original webTarget has not been changed
+        Assert.assertEquals("/path/param-a/%7Bb%7D?query=param-q", webTarget.getUri().toString());
+
+        // resolve b in UriBuilder
+        Assert.assertEquals(URI.create("/path/param-a/param-b?query=param-q"), ((JerseyUriBuilder) webTarget.getUriBuilder())
+                .resolveTemplate("b", "param-b").build());
+
+        // resolve in build method
+        Assert.assertEquals(URI.create("/path/param-a/param-b?query=param-q"), ((JerseyUriBuilder) webTarget.getUriBuilder())
+                .build("param-b"));
+    }
+
+
+    @Test
+    public void testResolveTemplateFromEncoded() {
+        final String a = "a%20%3F/*/";
+        final String b = "/b/";
+        Assert.assertEquals("/path/a%20%3F/*///b/", target.path("path/{a}/{b}").resolveTemplateFromEncoded("a",
+                a).resolveTemplateFromEncoded("b", b).getUri().toString());
+        Assert.assertEquals("/path/a%2520%253F%2F*%2F/%2Fb%2F", target.path("path/{a}/{b}").resolveTemplate("a",
+                a).resolveTemplate("b", b).getUri().toString());
+        Assert.assertEquals("/path/a%2520%253F/*///b/", target.path("path/{a}/{b}").resolveTemplate("a",
+                a, false).resolveTemplate("b", b, false).getUri().toString());
+    }
+
+
+    @Test
+    public void testResolveTemplatesFromEncoded() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("a", "a%20%3F/*/");
+        map.put("b", "/b/");
+
+        Assert.assertEquals("/path/a%20%3F/*///b/", target.path("path/{a}/{b}").resolveTemplatesFromEncoded(map).getUri()
+                .toString());
+        Assert.assertEquals("/path/a%2520%253F%2F*%2F/%2Fb%2F", target.path("path/{a}/{b}").resolveTemplates(map).getUri()
+                .toString());
+        Assert.assertEquals("/path/a%2520%253F/*///b/", target.path("path/{a}/{b}").resolveTemplates(map,
+                false).getUri().toString());
+    }
+
+
+    @Test
     public void testGetUriBuilder() {
         final Map<String, Object> params = new HashMap<String, Object>(2);
         params.put("a", "w1");
-        params.put("b", null);
-        UriBuilder uriBuilder = target.path("{a}").path("{b}").pathParam("a", "v1").pathParam("b", "v2")
-                .pathParams(params).getUriBuilder();
-        assertEquals("/w1/%7Bb%7D", uriBuilder.build().toString());
+        UriBuilder uriBuilder = target.path("{a}").resolveTemplate("a", "v1").resolveTemplates(params).getUriBuilder();
+        assertEquals("/v1", uriBuilder.build().toString());
     }
 
     @Test
@@ -160,38 +210,21 @@ public class JerseyWebTargetTest {
         }
 
         {
-            final MultivaluedMap<String, Object> params = new MultivaluedHashMap<String, Object>(2);
-            params.add("q1", "w1");
-            params.add("q1", "w2");
-            params.add("q2", null);
-            uri = target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParams(params).getUri();
+            uri = target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", "w2").queryParam("q2",
+                    null).getUri();
             assertEquals("/a?q1=v1&q1=w1&q1=w2", uri.toString());
         }
 
         try {
-            target.queryParams(null);
+            target.queryParam(null);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // expected
         }
 
         try {
-            // null-values supporting multivalued hash map
-            final MultivaluedMap<String, Object> params = new MultivaluedHashMap<String, Object>(2) {
-                @Override
-                protected void addNull(List<Object> values) {
-                    values.add(null);
-                }
+            target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", null).queryParam("q2", null);
 
-                @Override
-                protected void addFirstNull(List<Object> values) {
-                    values.add(null);
-                }
-            };
-            params.add("q1", "w1");
-            params.add("q1", null);
-            params.add("q2", null);
-            target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParams(params);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // expected
