@@ -48,8 +48,8 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.process.internal.ProcessingCallback;
-import org.glassfish.jersey.process.internal.ProcessingContext;
+import org.glassfish.jersey.server.internal.process.ProcessingCallback;
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
 
 import com.google.common.util.concurrent.AbstractFuture;
 

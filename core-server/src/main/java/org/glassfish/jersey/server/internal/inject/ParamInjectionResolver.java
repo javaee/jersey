@@ -81,7 +81,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
      *
      * @param valueFactoryProviderClass parameter value factory provider class.
      */
-    public ParamInjectionResolver(final Class<? extends AbstractValueFactoryProvider<A>> valueFactoryProviderClass) {
+    public ParamInjectionResolver(final Class<? extends ValueFactoryProvider> valueFactoryProviderClass) {
         this.concreteValueFactoryClassFilter = new Predicate<ValueFactoryProvider>() {
 
             @Override
@@ -146,11 +146,10 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
 
         // if injectee is method or constructor, check its parameters
         if (isConstructor || isMethod) {
-            Annotation annotations[] = null;
-
+            Annotation annotations[];
             if (isMethod) {
                 annotations = ((Method) element).getParameterAnnotations()[injectee.getPosition()];
-            } else if (isConstructor) {
+            } else {
                 annotations = ((Constructor) element).getParameterAnnotations()[injectee.getPosition()];
             }
 
@@ -168,11 +167,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
 
         // check class which contains injectee
         Class clazz = injectee.getInjecteeClass();
-        if (clazz.isAnnotationPresent(Encoded.class)) {
-            return true;
-        }
-
-        return false;
+        return clazz.isAnnotationPresent(Encoded.class);
     }
 
 

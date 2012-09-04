@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NameBinding;
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 
@@ -61,8 +62,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Model of a method available on a resource. Covers resource method, sub-resource
@@ -195,7 +194,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
             this.producedTypes = Sets.newLinkedHashSet();
 
             this.suspended = false;
-            this.suspendTimeout = Suspend.NEVER;
+            this.suspendTimeout = AsyncResponse.NO_TIMEOUT;
             this.suspendTimeoutUnit = TimeUnit.MILLISECONDS;
 
             this.encodedParams = false;

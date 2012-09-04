@@ -225,7 +225,7 @@ public final class Stages {
         }
     }
 
-    static class LinkedStage<DATA> implements Stage<DATA> {
+    public static class LinkedStage<DATA> implements Stage<DATA> {
 
         private final Stage<DATA> nextStage;
         private final Function<DATA, DATA> transformation;

@@ -61,6 +61,7 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.Uri;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -80,13 +81,29 @@ public class Parameter implements AnnotatedElement {
     public static enum Source {
 
         /**
+         * Context parameter injection source.
+         */
+        CONTEXT,
+        /**
+         * Cookie parameter injection source.
+         */
+        COOKIE,
+        /**
          * Entity parameter injection source.
          */
         ENTITY,
         /**
-         * Query parameter injection source.
+         * Form parameter injection source.
          */
-        QUERY,
+        FORM,
+        /**
+         * Header parameter injection source.
+         */
+        HEADER,
+        /**
+         * Uri parameter injection source.
+         */
+        URI,
         /**
          * Matrix parameter injection source.
          */
@@ -96,25 +113,13 @@ public class Parameter implements AnnotatedElement {
          */
         PATH,
         /**
-         * Cookie parameter injection source.
+         * Query parameter injection source.
          */
-        COOKIE,
+        QUERY,
         /**
-         * Header parameter injection source.
+         * Suspended async response injection source.
          */
-        HEADER,
-        /**
-         * Context parameter injection source.
-         */
-        CONTEXT,
-        /**
-         * Form parameter injection source.
-         */
-        FORM,
-        /**
-         * Uri parameter injection source.
-         */
-        URI,
+        SUSPENDED,
         /**
          * Unknown parameter injection source.
          */
@@ -128,7 +133,7 @@ public class Parameter implements AnnotatedElement {
         public Parameter.Source getSource();
     }
 
-    private static Map<Class, ParamAnnotationHelper> createParamAnotHelperMap() {
+    private static Map<Class, ParamAnnotationHelper> createParamAnnotationHelperMap() {
         Map<Class, ParamAnnotationHelper> m = new WeakHashMap<Class, ParamAnnotationHelper>();
         m.put(Context.class, new ParamAnnotationHelper<Context>() {
 
@@ -140,18 +145,6 @@ public class Parameter implements AnnotatedElement {
             @Override
             public Parameter.Source getSource() {
                 return Parameter.Source.CONTEXT;
-            }
-        });
-        m.put(HeaderParam.class, new ParamAnnotationHelper<HeaderParam>() {
-
-            @Override
-            public String getValueOf(HeaderParam a) {
-                return a.value();
-            }
-
-            @Override
-            public Parameter.Source getSource() {
-                return Parameter.Source.HEADER;
             }
         });
         m.put(CookieParam.class, new ParamAnnotationHelper<CookieParam>() {
@@ -166,6 +159,30 @@ public class Parameter implements AnnotatedElement {
                 return Parameter.Source.COOKIE;
             }
         });
+        m.put(FormParam.class, new ParamAnnotationHelper<FormParam>() {
+
+            @Override
+            public String getValueOf(FormParam a) {
+                return a.value();
+            }
+
+            @Override
+            public Parameter.Source getSource() {
+                return Parameter.Source.FORM;
+            }
+        });
+        m.put(HeaderParam.class, new ParamAnnotationHelper<HeaderParam>() {
+
+            @Override
+            public String getValueOf(HeaderParam a) {
+                return a.value();
+            }
+
+            @Override
+            public Parameter.Source getSource() {
+                return Parameter.Source.HEADER;
+            }
+        });
         m.put(MatrixParam.class, new ParamAnnotationHelper<MatrixParam>() {
 
             @Override
@@ -176,18 +193,6 @@ public class Parameter implements AnnotatedElement {
             @Override
             public Parameter.Source getSource() {
                 return Parameter.Source.MATRIX;
-            }
-        });
-        m.put(QueryParam.class, new ParamAnnotationHelper<QueryParam>() {
-
-            @Override
-            public String getValueOf(QueryParam a) {
-                return a.value();
-            }
-
-            @Override
-            public Parameter.Source getSource() {
-                return Parameter.Source.QUERY;
             }
         });
         m.put(PathParam.class, new ParamAnnotationHelper<PathParam>() {
@@ -202,16 +207,28 @@ public class Parameter implements AnnotatedElement {
                 return Parameter.Source.PATH;
             }
         });
-        m.put(FormParam.class, new ParamAnnotationHelper<FormParam>() {
+        m.put(QueryParam.class, new ParamAnnotationHelper<QueryParam>() {
 
             @Override
-            public String getValueOf(FormParam a) {
+            public String getValueOf(QueryParam a) {
                 return a.value();
             }
 
             @Override
             public Parameter.Source getSource() {
-                return Parameter.Source.FORM;
+                return Parameter.Source.QUERY;
+            }
+        });
+        m.put(Suspended.class, new ParamAnnotationHelper<Suspended>() {
+
+            @Override
+            public String getValueOf(Suspended a) {
+                return Suspended.class.getName();
+            }
+
+            @Override
+            public Parameter.Source getSource() {
+                return Parameter.Source.SUSPENDED;
             }
         });
         m.put(Uri.class, new ParamAnnotationHelper<Uri>() {
@@ -228,18 +245,19 @@ public class Parameter implements AnnotatedElement {
         });
         return Collections.unmodifiableMap(m);
     }
-    private final static Map<Class, ParamAnnotationHelper> ANOT_HELPER_MAP = createParamAnotHelperMap();
+
+    private final static Map<Class, ParamAnnotationHelper> ANNOTATION_HELPER_MAP = createParamAnnotationHelperMap();
 
     /**
      * Create a parameter model.
      *
-     * @param concreteClass concrete resource method handler implementation class.
+     * @param concreteClass  concrete resource method handler implementation class.
      * @param declaringClass declaring class of the method the parameter belongs to.
-     * @param keepEncoded set to {@code true} to disable automatic decoding
-     *     of all the constructor parameters. (See {@link Encoded}.
-     * @param rawType     raw Java parameter type.
-     * @param type        generic Java parameter type.
-     * @param annotations parameter annotations.
+     * @param keepEncoded    set to {@code true} to disable automatic decoding
+     *                       of all the constructor parameters. (See {@link Encoded}.
+     * @param rawType        raw Java parameter type.
+     * @param type           generic Java parameter type.
+     * @param annotations    parameter annotations.
      * @return new parameter model.
      */
     @SuppressWarnings("unchecked")
@@ -268,8 +286,8 @@ public class Parameter implements AnnotatedElement {
          * parameter.
          */
         for (Annotation annotation : annotations) {
-            if (ANOT_HELPER_MAP.containsKey(annotation.annotationType())) {
-                ParamAnnotationHelper helper = ANOT_HELPER_MAP.get(annotation.annotationType());
+            if (ANNOTATION_HELPER_MAP.containsKey(annotation.annotationType())) {
+                ParamAnnotationHelper helper = ANNOTATION_HELPER_MAP.get(annotation.annotationType());
                 paramAnnotation = annotation;
                 paramSource = helper.getSource();
                 paramName = helper.getValueOf(annotation);
@@ -278,7 +296,7 @@ public class Parameter implements AnnotatedElement {
             } else if (DefaultValue.class == annotation.annotationType()) {
                 paramDefault = ((DefaultValue) annotation).value();
             } else {
-                // lets only clear things down if we've not found a ANOT_HELPER_MAP annotation already
+                // lets only clear things down if we've not found a ANNOTATION_HELPER_MAP annotation already
                 if (paramAnnotation == null) {
                     paramAnnotation = annotation;
                     paramSource = Source.UNKNOWN;
@@ -337,12 +355,11 @@ public class Parameter implements AnnotatedElement {
      * Create a list of parameter models for a given resource method handler
      * injectable constructor.
      *
-     * @param concreteClass concrete resource method handler implementation class.
+     * @param concreteClass  concrete resource method handler implementation class.
      * @param declaringClass TODO ???
-     * @param ctor injectable constructor of the resource method handler.
-     * @param keepEncoded set to {@code true} to disable automatic decoding
-     *     of all the constructor parameters. (See {@link Encoded}.
-     *
+     * @param ctor           injectable constructor of the resource method handler.
+     * @param keepEncoded    set to {@code true} to disable automatic decoding
+     *                       of all the constructor parameters. (See {@link Encoded}.
      * @return a list of constructor parameter models.
      */
     public static List<Parameter> create(
@@ -373,13 +390,12 @@ public class Parameter implements AnnotatedElement {
      * Create a list of parameter models for a given Java method handling a resource
      * method, sub-resource method or a sub-resource locator.
      *
-     * @param concreteClass concrete resource method handler implementation class.
+     * @param concreteClass  concrete resource method handler implementation class.
      * @param declaringClass the class declaring the handling Java method.
-     * @param javaMethod Java method handling a resource method, sub-resource
-     *     method or a sub-resource locator.
-     * @param keepEncoded set to {@code true} to disable automatic decoding
-     *     of all the method parameters. (See {@link Encoded}.
-     *
+     * @param javaMethod     Java method handling a resource method, sub-resource
+     *                       method or a sub-resource locator.
+     * @param keepEncoded    set to {@code true} to disable automatic decoding
+     *                       of all the method parameters. (See {@link Encoded}.
      * @return a list of handling method parameter models.
      */
     public static List<Parameter> create(
@@ -403,20 +419,20 @@ public class Parameter implements AnnotatedElement {
      * of the original parameter model.
      *
      * @param original original parameter model.
-     * @param source new overriding parameter source.
+     * @param source   new overriding parameter source.
      * @return source-overridden copy of the original parameter.
      */
     public static Parameter overrideSource(Parameter original, Parameter.Source source) {
 
         return new Parameter(
-                    original.annotations,
-                    original.annotation,
-                    source,
-                    source.name(),
-                    original.rawType,
-                    original.type,
-                    original.encoded,
-                    original.defaultValue);
+                original.annotations,
+                original.annotation,
+                source,
+                source.name(),
+                original.rawType,
+                original.type,
+                original.encoded,
+                original.defaultValue);
     }
 
     private static String getValue(Annotation a) {
@@ -434,6 +450,7 @@ public class Parameter implements AnnotatedElement {
         }
         return null;
     }
+
     // Instance
     private final Annotation[] annotations;
     private final Annotation annotation;
@@ -494,7 +511,7 @@ public class Parameter implements AnnotatedElement {
      * If {@code true}, the injected parameter value should remain encoded.
      *
      * @return {@code true} if the parameter value should remain encoded,
-     *     {@code false} otherwise.
+     *         {@code false} otherwise.
      */
     public boolean isEncoded() {
         return encoded;
@@ -504,7 +521,7 @@ public class Parameter implements AnnotatedElement {
      * Check if the parameter has a default value set.
      *
      * @return {@code true} if the default parameter value has been set,
-     *     {@code false} otherwise.
+     *         {@code false} otherwise.
      */
     public boolean hasDefaultValue() {
         return defaultValue != null;
@@ -514,7 +531,7 @@ public class Parameter implements AnnotatedElement {
      * Get the default parameter value.
      *
      * @return default parameter value or {@code null} if no default value has
-     *     been set for the parameter.
+     *         been set for the parameter.
      */
     public String getDefaultValue() {
         return defaultValue;

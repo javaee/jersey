@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.regex.MatchResult;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.server.internal.process.ResponseProcessor.RespondingContext;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 

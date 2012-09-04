@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server.internal.process;
 
-package org.glassfish.jersey.process.internal;
-
-import java.util.concurrent.TimeUnit;
+import org.glassfish.jersey.internal.ProcessingException;
 
 /**
- * Helper abstract invocation callback class that provides empty implementations
- * for all invocation callback methods.
+ * Jersey processing exception signaling that the final request acceptor did not
+ * return an inflector instance.
  *
- * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractProcessingCallback<DATA> implements ProcessingCallback<DATA> {
+// TODO remove
+public class InflectorNotFoundException extends ProcessingException {
 
-    @Override
-    public void cancelled() {
-    }
+    private static final long serialVersionUID = -2023619054943423452L;
 
-    @Override
-    public void failure(Throwable exception) {
-    }
-
-    @Override
-    public void result(DATA response) {
-    }
-
-    @Override
-    public void resumed() {
-    }
-
-    @Override
-    public void suspended(long time, TimeUnit unit, ProcessingContext context) {
-    }
-
-    @Override
-    public void suspendTimeoutChanged(long time, TimeUnit unit) {
+    /**
+     * Create new processing exception indicating that an inflector has not been found.
+     *
+     * @param message error message.
+     */
+    public InflectorNotFoundException(String message) {
+        super(message);
     }
 }

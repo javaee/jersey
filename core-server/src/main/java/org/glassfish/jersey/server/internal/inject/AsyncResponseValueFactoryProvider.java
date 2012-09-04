@@ -37,72 +37,79 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
 
-import java.util.concurrent.TimeUnit;
+package org.glassfish.jersey.server.internal.inject;
 
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
+import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+
+import org.glassfish.hk2.api.Factory;
 
 /**
- * Injectable processing context that can be used to control various aspects
- * of a single request processing, e.g. the threading model.
+ * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ProcessingContext extends ExecutionContext {
+final class AsyncResponseValueFactoryProvider implements ValueFactoryProvider {
+
+    private final Provider<ProcessingContext> processingContextProvider;
 
     /**
-     * Processing context state.
+     * {@link javax.ws.rs.container.Suspended} injection resolver.
      */
-    public static enum State {
+    static final class InjectionResolver extends ParamInjectionResolver<Suspended> {
 
         /**
-         * Indicates the processing context is running. This is a default state
-         * the processing context is in case the processing execution flow
-         * has not been explicitly modified (yet).
+         * Create new injection resolver.
          */
-        RUNNING,
-        /**
-         * Indicates the processing running in the processing context has been
-         * canceled.
-         */
-        CANCELLED,
-        /**
-         * Indicates the processing running in the processing context has been
-         * suspended.
-         *
-         * @see ProcessingContext#suspend()
-         * @see ProcessingContext#suspend(long)
-         * @see ProcessingContext#suspend(long, TimeUnit)
-         */
-        SUSPENDED,
-        /**
-         * Indicates the processing running in the processing context has been
-         * resumed.
-         *
-         * @see ProcessingContext#resume(Object)
-         * @see ProcessingContext#resume(Throwable)
-         */
-        RESUMED
+        public InjectionResolver() {
+            super(AsyncResponseValueFactoryProvider.class);
+        }
     }
 
     /**
-     * Get the current state of the processing context.
+     * Initialize the provider.
      *
-     * @return current state of the processing context.
+     * @param processingContextProvider processing context provider.
      */
-    public State state();
+    @Inject
+    public AsyncResponseValueFactoryProvider(Provider<ProcessingContext> processingContextProvider) {
+        this.processingContextProvider = processingContextProvider;
+    }
 
-    /**
-     * Try to {@link ExecutionContext#suspend() suspend} the current request processing.
-     *
-     * Unlike the {@code suspend()} method, this method does not throw an exception
-     * in case the suspend operation fails. Instead, the method returns {@code true}
-     * if the request processing has been suspended successfully, returns {@code false}
-     * otherwise.
-     *
-     * @return {@code true} if the request processing has been suspended successfully,
-     * returns {@code false} otherwise.
-     */
-    public boolean trySuspend();
+    @Override
+    public Factory<?> getValueFactory(final Parameter parameter) {
+        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
+            return null;
+        }
+        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
+            return null;
+        }
+
+        return new Factory<AsyncResponse>() {
+            @Override
+            public AsyncResponse provide() {
+                final ProcessingContext processingContext = processingContextProvider.get();
+                processingContext.suspend();
+                return processingContext;
+            }
+
+            @Override
+            public void dispose(AsyncResponse instance) {
+                // not used
+            }
+        };
+    }
+
+    @Override
+    public PriorityType getPriority() {
+        return Priority.NORMAL;
+    }
 }

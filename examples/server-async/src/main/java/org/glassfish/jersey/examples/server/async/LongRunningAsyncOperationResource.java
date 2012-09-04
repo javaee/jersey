@@ -41,18 +41,15 @@ package org.glassfish.jersey.examples.server.async;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static java.util.concurrent.TimeUnit.*;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -72,8 +69,6 @@ public class LongRunningAsyncOperationResource {
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
     private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());
-    @Context
-    private ExecutionContext ctx;
 
     @GET
     @Path("basicSyncExample")
@@ -87,9 +82,8 @@ public class LongRunningAsyncOperationResource {
     }
 
     @GET
-    @Suspend(timeOut = 15, timeUnit = SECONDS)
-    @Path("suspendViaAnnotation")
-    public void suspendViaAnnotationExample() {
+    @Path("async")
+    public void suspendViaContextExample(@Suspended final AsyncResponse ar, @QueryParam("query") final String query) {
         TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
@@ -99,129 +93,7 @@ public class LongRunningAsyncOperationResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(NOTIFICATION_RESPONSE);
-            }
-        });
-
-        // default suspend;
-    }
-
-    @GET
-    @Suspend(timeOut = 15, timeUnit = SECONDS)
-    @Path("suspendViaAnnotation2")
-    public void suspendViaAnnotationExample2(@Context final ExecutionContext ctx2) {
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ctx2.resume(NOTIFICATION_RESPONSE);
-            }
-        });
-
-        // default suspend;
-    }
-
-    @GET
-    @Path("suspendViaContext")
-    public String suspendViaContextExample(@QueryParam("query") final String query) {
-        if (!isComplex(query)) {
-            return "Simple result for " + query; // process simple queries synchronously
-        }
-
-        ctx.suspend(); // programmatic suspend
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ctx.resume("Complex result for " + query);
-            }
-        });
-
-        return null; // return value ignored for suspended requests
-    }
-
-    private boolean isComplex(String query) {
-        return "complex".equalsIgnoreCase(query);
-    }
-
-    @GET
-    @Path("timeoutPropagated")
-    @Suspend(timeOut = 15000) // default time unit is milliseconds
-    public void timeoutValueConflict_PropagationExample() {
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ctx.resume(NOTIFICATION_RESPONSE);
-            }
-        });
-        ctx.suspend(); // time-out values propagated from the @Suspend annotation; the call is redundant
-    }
-
-    @GET
-    @Path("timeoutOverriden")
-    @Suspend(timeOut = 15000) // default time unit is milliseconds
-    public void timeoutValueConflict_OverridingExample(
-            @QueryParam("timeOut") Long timeOut, @QueryParam("timeUnit") TimeUnit timeUnit) {
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ctx.resume(NOTIFICATION_RESPONSE);
-            }
-        });
-        if (timeOut != null && timeUnit != null) {
-            ctx.suspend(timeOut, timeUnit); // time-out values specified in the @Suspend annotation are overriden
-        } else {
-            // suspend using annotation values
-        }
-    }
-
-    @GET
-    @Path("suspendHandleUsage")
-    public void suspendHandleUsageExample() {
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ctx.resume(NOTIFICATION_RESPONSE);
-            }
-        });
-
-        ctx.suspend(); // retrieving a handle to monitor the suspended request state
-
-        TASK_EXECUTOR.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                while (!ctx.isDone()) {
-                }
-                LOGGER.log(Level.INFO, "Context resumed with a response!");
+                ar.resume("Complex result for " + query);
             }
         });
     }

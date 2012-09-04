@@ -224,7 +224,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             try {
                 grizzlyResponse.getSuspendContext().setTimeout(timeOut, timeUnit);
             } finally {
-                logger.debugLog("{0} - setSuspendTimeout(...) called", name);
+                logger.debugLog("{0} - setTimeout(...) called", name);
             }
         }
 

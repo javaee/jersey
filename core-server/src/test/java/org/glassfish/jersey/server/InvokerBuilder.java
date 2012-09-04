@@ -42,7 +42,7 @@ package org.glassfish.jersey.server;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;

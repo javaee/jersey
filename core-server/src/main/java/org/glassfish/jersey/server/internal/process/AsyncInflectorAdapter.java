@@ -37,13 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server.internal.process;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -54,8 +57,6 @@ import com.google.common.base.Objects;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Monitor;
-
-import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Suspendable, asynchronous {@link Inflector inflector} adapter
@@ -123,7 +124,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
         }
     };
     //
-    private long defaultTimeout = Suspend.NEVER;
+    private long defaultTimeout = AsyncResponse.NO_TIMEOUT;
     private TimeUnit defaultTimeoutUnit = TimeUnit.MILLISECONDS;
     //
     private AtomicReference<Response> defaultResponse = new AtomicReference<Response>();
@@ -149,6 +150,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
      *
      * @param request request data to be processed.
      */
+    @Override
     public ListenableFuture<RESPONSE> apply(REQUEST request) {
         originatingRequest.set(request);
         final RESPONSE response;
@@ -245,7 +247,7 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     }
 
     @Override
-    public void setSuspendTimeout(long time, TimeUnit unit) {
+    public void setTimeout(long time, TimeUnit unit) {
         this.defaultTimeout = time;
         this.defaultTimeoutUnit = unit;
     }
@@ -258,16 +260,6 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     @Override
     public void suspend() {
         _suspend(defaultTimeout, defaultTimeoutUnit, true);
-    }
-
-    @Override
-    public void suspend(long millis) {
-        _suspend(millis, TimeUnit.MILLISECONDS, true);
-    }
-
-    @Override
-    public void suspend(long time, TimeUnit unit) {
-        _suspend(time, unit, true);
     }
 
     private boolean _suspend(long time, TimeUnit unit, boolean failOnError) throws IllegalStateException {
@@ -367,5 +359,40 @@ public abstract class AsyncInflectorAdapter<REQUEST, RESPONSE> extends AbstractF
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("id", id.value()).toString();
+    }
+
+    @Override
+    public void cancel(int retryAfter) {
+        // TODO: implement method.
+    }
+
+    @Override
+    public void cancel(Date retryAfter) {
+        // TODO: implement method.
+    }
+
+    @Override
+    public void setTimeoutHandler(TimeoutHandler handler) {
+        // TODO: implement method.
+    }
+
+    @Override
+    public boolean register(Class<?> callback) throws NullPointerException {
+        return false;  // TODO: implement method.
+    }
+
+    @Override
+    public boolean[] register(Class<?> callback, Class<?>... callbacks) throws NullPointerException {
+        return new boolean[0];  // TODO: implement method.
+    }
+
+    @Override
+    public boolean register(Object callback) throws NullPointerException {
+        return false;  // TODO: implement method.
+    }
+
+    @Override
+    public boolean[] register(Object callback, Object... callbacks) throws NullPointerException {
+        return new boolean[0];  // TODO: implement method.
     }
 }

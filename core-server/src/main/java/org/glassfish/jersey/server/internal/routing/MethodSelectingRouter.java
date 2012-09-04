@@ -64,7 +64,7 @@ import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.server.internal.process.ResponseProcessor;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ServerProperties;

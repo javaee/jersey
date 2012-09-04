@@ -67,7 +67,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.ProcessingContext;
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceBuilder;
 

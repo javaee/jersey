@@ -40,17 +40,18 @@
 
 package org.glassfish.jersey.examples.server.async;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Example of a simple resource with a long-running operation executed in a
@@ -69,12 +70,8 @@ public class SimpleLongRunningResource {
     private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
             new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());
 
-    @Context
-    private ExecutionContext ctx;
-
     @GET
-    @Suspend
-    public void longGet() {
+    public void longGet(@Suspended final AsyncResponse ar) {
         TASK_EXECUTOR.submit(new Runnable() {
 
             @Override
@@ -84,7 +81,7 @@ public class SimpleLongRunningResource {
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
                 }
-                ctx.resume(NOTIFICATION_RESPONSE);
+                ar.resume(NOTIFICATION_RESPONSE);
             }
         });
     }

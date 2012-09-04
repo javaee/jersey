@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.internal;
 
 import java.util.Collections;
 import java.util.Set;
@@ -45,23 +45,22 @@ import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.TestExecutorsFactory;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Processing binder for testing purposes.
+ * Binder for testing purposes.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingTestBinder extends AbstractBinder {
+public class TestBinder extends AbstractBinder {
 
     public static void initProviders(final ServiceLocator locator) throws IllegalStateException {
         initProviders(locator, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
@@ -78,7 +77,6 @@ public class ProcessingTestBinder extends AbstractBinder {
     protected void configure() {
         install(
                 new RequestScope.Binder(),
-                new ProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessageBodyFactory.Binder(),

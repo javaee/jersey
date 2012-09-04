@@ -41,8 +41,8 @@ package org.glassfish.jersey.server;
 
 import java.util.concurrent.TimeUnit;
 
-import org.glassfish.jersey.process.internal.ProcessingCallback;
-import org.glassfish.jersey.process.internal.ProcessingContext;
+import org.glassfish.jersey.server.internal.process.ProcessingCallback;
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**

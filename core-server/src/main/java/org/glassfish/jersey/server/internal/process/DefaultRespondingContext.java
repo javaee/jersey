@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,49 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server.internal.process;
 
-import deprecated.javax.ws.rs.ExecutionContext;
+import org.glassfish.jersey.process.internal.ChainableStage;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-
-import org.glassfish.hk2.api.TypeLiteral;
+import com.google.common.base.Function;
 
 /**
- * Jersey processing framework injection binder.
+ * Default implementation of the request-scoped
+ * {@link ResponseProcessor.RespondingContext responding context}.
  *
+ * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingBinder extends AbstractBinder {
+@RequestScoped
+public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<ProcessingContext> {
+    private Stage<DATA> rootStage;
 
-        @Inject
-        public InvocationContextReferencingFactory(Provider<Ref<ProcessingContext>> referenceFactory) {
-            super(referenceFactory);
-        }
-
-        @Override
-        @RequestScoped
-        public ProcessingContext provide() {
-            return super.provide();
-        }
+    @Override
+    public void push(Function<DATA, DATA> responseTransformation) {
+        rootStage = (rootStage == null)
+                ? new Stages.LinkedStage<DATA>(responseTransformation)
+                : new Stages.LinkedStage<DATA>(responseTransformation, rootStage);
     }
 
     @Override
-    protected void configure() {
-        // Invocation context
-        bindFactory(InvocationContextReferencingFactory.class).in(RequestScoped.class);
+    public void push(final ChainableStage<DATA> stage) {
+        if (rootStage != null) {
+            stage.setDefaultNext(rootStage);
+        }
 
-        bindFactory(InvocationContextReferencingFactory.class).to(ProcessingContext.class).to(ExecutionContext.class)
-                .in(RequestScoped.class);
+        rootStage = stage;
+    }
 
-        bindFactory(ReferencingFactory.<ProcessingContext>referenceFactory()).to(new TypeLiteral<Ref<ProcessingContext>>() {
-        }).in(RequestScoped.class);
+    @Override
+    public Stage<DATA> createResponderRoot() {
+        return rootStage;
     }
 }

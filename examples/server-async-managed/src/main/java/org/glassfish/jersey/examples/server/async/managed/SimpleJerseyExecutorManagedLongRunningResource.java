@@ -41,13 +41,13 @@ package org.glassfish.jersey.examples.server.async.managed;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 
 /**
  * Example of a simple resource with a long-running operation executed in a
@@ -63,17 +63,14 @@ public class SimpleJerseyExecutorManagedLongRunningResource {
     //
     private static final Logger LOGGER = Logger.getLogger(SimpleJerseyExecutorManagedLongRunningResource.class.getName());
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    @Context
-    private ExecutionContext ctx;
 
     @GET
-    @Suspend
-    public void longGet(@QueryParam("id") int requestId) {
+    public void longGet(@Suspended final AsyncResponse ar, @QueryParam("id") int requestId) {
         try {
             Thread.sleep(SLEEP_TIME_IN_MILLIS);
         } catch (InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
         }
-        ctx.resume(requestId + " - " + NOTIFICATION_RESPONSE);
+        ar.resume(requestId + " - " + NOTIFICATION_RESPONSE);
     }
 }

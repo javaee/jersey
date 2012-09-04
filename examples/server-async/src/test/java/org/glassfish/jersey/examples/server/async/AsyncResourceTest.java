@@ -87,7 +87,7 @@ public class AsyncResourceTest extends JerseyTest {
     }
 
     private void executeChatTest(final WebTarget resourceTarget, final String expectedPostResponse) throws InterruptedException {
-        final int MAX_MESSAGES = 10;
+        final int MAX_MESSAGES = 250;
         final int LATCH_WAIT_TIMEOUT = 10;
         final boolean debugMode = false;
         final boolean sequentialGet = false;
