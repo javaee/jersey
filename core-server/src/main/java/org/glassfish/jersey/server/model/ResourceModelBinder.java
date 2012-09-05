@@ -62,6 +62,6 @@ public class ResourceModelBinder extends AbstractBinder {
 
         // Dispatcher providers
         bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-        bind(MethodParamDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
+        bind(JavaResourceMethodDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
     }
 }

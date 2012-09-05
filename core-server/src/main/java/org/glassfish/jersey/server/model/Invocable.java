@@ -50,7 +50,11 @@ import javax.ws.rs.core.Request;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * A common interface for invocable resource components. This includes resource
@@ -125,6 +129,7 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     private final MethodHandler handler;
     private final Method handlingMethod;
     private final List<Parameter> parameters;
+
     private final Class<?> rawResponseType;
     private final Type responseType;
 
@@ -199,6 +204,19 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     public boolean isInflector() {
         // Method.equals(...) does not perform the identity check (in Java SE 6)
         return APPLY_INFLECTOR_METHOD == handlingMethod || APPLY_INFLECTOR_METHOD.equals(handlingMethod);
+    }
+
+    /**
+     * Returns list of {@link org.glassfish.jersey.server.spi.internal.ValueFactoryProvider value providers} which provides
+     * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
+     * order as parameters.
+     *
+     *
+     * @param locator HK2 service locator.
+     * @return Set of value providers for this Invocable.
+     */
+    public List<Factory<?>> getValueProviders(ServiceLocator locator) {
+        return ParameterValueHelper.createValueProviders(locator, this);
     }
 
     @Override

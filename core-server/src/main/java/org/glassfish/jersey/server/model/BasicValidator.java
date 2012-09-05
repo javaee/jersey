@@ -68,7 +68,9 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Performs a basic check on abstract resources.
@@ -93,6 +95,7 @@ import org.glassfish.hk2.api.PerLookup;
  */
 public class BasicValidator extends ResourceModelValidator {
     private static final Set<Class<?>> SCOPE_ANNOTATIONS = getScopeAnnotations();
+    private final ServiceLocator locator;
 
     private static Set<Class<?>> getScopeAnnotations() {
         Set<Class<?>> scopeAnnotations = new HashSet<Class<?>>();
@@ -109,30 +112,25 @@ public class BasicValidator extends ResourceModelValidator {
 
     /**
      * Construct a new basic validator with an empty issue list.
+     *
+     *  @param locator HK2 service locator.
      */
     @SuppressWarnings("UnusedDeclaration")
-    public BasicValidator() {
-        this(new LinkedList<ResourceModelIssue>(), null);
+    public BasicValidator(ServiceLocator locator) {
+        this(new LinkedList<ResourceModelIssue>(), locator);
     }
+
 
     /**
      * Construct a new basic validator.
      *
      * @param issueList validation issue list.
+     * @param locator HK2 service locator.
      */
-    public BasicValidator(List<ResourceModelIssue> issueList) {
-        this(issueList, null);
-    }
-
-    /**
-     * Construct a new basic validator.
-     *
-     * @param issueList validation issue list.
-     * @param workers   message body workers for computing effective types.
-     */
-    public BasicValidator(List<ResourceModelIssue> issueList, MessageBodyWorkers workers) {
+    public BasicValidator(List<ResourceModelIssue> issueList, ServiceLocator locator) {
         super(issueList);
-        this.workers = workers;
+        this.workers = locator.<MessageBodyWorkers>getService(MessageBodyWorkers.class);
+        this.locator = locator;
     }
 
     @Override
@@ -216,9 +214,11 @@ public class BasicValidator extends ResourceModelValidator {
 
     private void visitJaxrsResourceMethod(ResourceMethod method) {
         checkMethod(method);
+
     }
 
     private void checkMethod(ResourceMethod method) {
+        checkValueProviders(method);
         final Invocable invocable = method.getInvocable();
 
         checkParameters(method);
@@ -269,6 +269,7 @@ public class BasicValidator extends ResourceModelValidator {
     private void visitSubResourceMethod(ResourceMethod method) {
         // check the same things that are being checked for resource methods
         checkMethod(method);
+
         // and make sure the Path is not null
         if ((null == method.getPath()) || (null == method.getPath()) || (method.getPath().length() == 0)) {
             addFatalIssue(method, LocalizationMessages.SUBRES_METHOD_URI_PATH_INVALID(
@@ -276,8 +277,18 @@ public class BasicValidator extends ResourceModelValidator {
         }
     }
 
+    private void checkValueProviders(ResourceMethod method) {
+        final List<Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
+        if (valueProviders.contains(null)) {
+            int index = valueProviders.indexOf(null);
+            addFatalIssue(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index,
+                    method.getInvocable().getHandlingMethod()));
+        }
+    }
+
     private void visitSubResourceLocator(ResourceMethod locator) {
         checkParameters(locator);
+        checkValueProviders(locator);
 
         final Invocable invocable = locator.getInvocable();
         if (void.class == invocable.getRawResponseType()) {
@@ -373,12 +384,20 @@ public class BasicValidator extends ResourceModelValidator {
         final Invocable invocable = method.getInvocable();
         final Method handlingMethod = invocable.getHandlingMethod();
         int paramCount = 0;
+        int nonAnnotetedParameters = 0;
+
         for (Parameter p : invocable.getParameters()) {
             validateParameter(getIssueList(), p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount),
                     false);
             if (method.getType() == ResourceMethod.JaxrsType.SUB_RESOURCE_LOCATOR
                     && Parameter.Source.ENTITY == p.getSource()) {
                 addFatalIssue(method, LocalizationMessages.SUBRES_LOC_HAS_ENTITY_PARAM(invocable.getHandlingMethod()));
+            } else if (p.getAnnotations().length == 0) {
+                nonAnnotetedParameters++;
+                if (nonAnnotetedParameters > 1) {
+                    addFatalIssue(method, LocalizationMessages.AMBIGUOUS_NON_ANNOTATED_PARAMETER(invocable.getHandlingMethod(),
+                            invocable.getHandlingMethod().getDeclaringClass()));
+                }
             }
         }
     }

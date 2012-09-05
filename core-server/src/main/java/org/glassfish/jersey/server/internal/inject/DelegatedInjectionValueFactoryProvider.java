@@ -89,7 +89,7 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
     @Override
     public Factory<?> getValueFactory(final Parameter parameter) {
         final Source paramSource = parameter.getSource();
-        if (paramSource == Parameter.Source.CONTEXT || paramSource == Parameter.Source.UNKNOWN) {
+        if (paramSource == Parameter.Source.CONTEXT) {
             return new Factory<Object>() {
                 @Override
                 public Object provide() {

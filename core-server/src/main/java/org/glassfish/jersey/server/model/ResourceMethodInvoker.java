@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -133,12 +134,16 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
          * @return new resource method invoker instance.
          */
         public ResourceMethodInvoker build(ResourceMethod method,
-                                           MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
-                                           MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+                                           MultivaluedMap<Class<? extends Annotation>,
+                                                   ContainerRequestFilter> nameBoundRequestFilters,
+                                           MultivaluedMap<Class<? extends Annotation>,
+                                                   ContainerResponseFilter> nameBoundResponseFilters,
                                            Collection<ReaderInterceptor> globalReaderInterceptors,
                                            Collection<WriterInterceptor> globalWriterInterceptors,
-                                           MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
-                                           MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
+                                           MultivaluedMap<Class<? extends Annotation>,
+                                                   ReaderInterceptor> nameBoundReaderInterceptors,
+                                           MultivaluedMap<Class<? extends Annotation>,
+                                                   WriterInterceptor> nameBoundWriterInterceptors,
                                            Collection<DynamicBinder> dynamicBinders
         ) {
             return new ResourceMethodInvoker(
@@ -306,7 +311,17 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                 }
 
                 final Invocable invocable = method.getInvocable();
-                response.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
+                final Annotation[] entityAnn = response.getEntityAnnotations();
+                final Annotation[] methodAnn = invocable.getHandlingMethod().getDeclaredAnnotations();
+                if (methodAnn.length > 0) {
+                    if (entityAnn.length == 0) {
+                        response.setEntityAnnotations(methodAnn);
+                    } else {
+                        Annotation[] mergedAnn = Arrays.copyOf(methodAnn, methodAnn.length + entityAnn.length);
+                        System.arraycopy(entityAnn, 0, mergedAnn, methodAnn.length, entityAnn.length);
+                        response.setEntityAnnotations(mergedAnn);
+                    }
+                }
 
                 if (response.hasEntity() && !(response.getEntityType() instanceof ParameterizedType)) {
                     Type invocableType = invocable.getResponseType();
@@ -318,6 +333,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     }
                 }
                 return response;
+
             }
         });
 

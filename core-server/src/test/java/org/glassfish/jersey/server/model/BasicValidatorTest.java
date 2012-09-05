@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -66,7 +65,11 @@ import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ServerBinder;
+
 import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -106,15 +109,21 @@ public class BasicValidatorTest {
                         "but another just one is presented with more params at a root resource:");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.getIssueList().isEmpty());
     }
 
+
     public static class MyBeanParam {
         @HeaderParam("h")
         String hParam;
+    }
+
+
+    private ServiceLocator createLocator() {
+        return Injections.createLocator(new ServerBinder());
     }
 
     @Singleton
@@ -296,7 +305,7 @@ public class BasicValidatorTest {
     private List<ResourceModelIssue> testResourceValidation(Class<?> resourceClass) {
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(resourceClass, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         return issues;
@@ -391,7 +400,7 @@ public class BasicValidatorTest {
     public static class TestGetRMConsumingFormParam {
 
         @GET
-        public String getMethod(@FormParam("f") Object o, @FormParam("g") Object p) {
+        public String getMethod(@FormParam("f") String s1, @FormParam("g") String s2) {
             return "it";
         }
     }
@@ -416,7 +425,7 @@ public class BasicValidatorTest {
         System.out.println("---\nAn issue should be reported if a sub-resource locator returns void:");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestSRLReturningVoid.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -491,7 +500,7 @@ public class BasicValidatorTest {
                 "method:");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -514,7 +523,7 @@ public class BasicValidatorTest {
                 "method:");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -534,7 +543,7 @@ public class BasicValidatorTest {
         System.out.println("---\nAn issue should be reported if an entity parameter exists on a sub-resource locator:");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestEntityParamOnSRL.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
@@ -612,7 +621,7 @@ public class BasicValidatorTest {
         System.out.println("---\nA warning should be reported if ambiguous source of a parameter is seen");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestAmbiguousParams.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -634,7 +643,7 @@ public class BasicValidatorTest {
         System.out.println("---\nA warning should be reported if @Path with \"/\" or empty string value is seen");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TestEmptyPathSegment.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -654,7 +663,7 @@ public class BasicValidatorTest {
         }
 
         @GET
-        public String get(@QueryParam("v") V getV) {
+        public String get(@BeanParam() V getV) {
             return getV.toString() + fieldV.toString() + methodV.toString();
         }
 
@@ -675,7 +684,7 @@ public class BasicValidatorTest {
         System.out.println("---\n");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(TypeVariableResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -694,7 +703,7 @@ public class BasicValidatorTest {
         }
 
         @GET
-        public String get(@QueryParam("v") Map<String, List<V>> getV) {
+        public String get(@QueryParam("v") List<V> getV) {
             return "";
         }
 
@@ -718,7 +727,7 @@ public class BasicValidatorTest {
         System.out.println("---\n");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -734,11 +743,6 @@ public class BasicValidatorTest {
         @QueryParam("v")
         public void set(V[] methodV) {
             this.methodV = methodV;
-        }
-
-        @GET
-        public String get(@QueryParam("v") V[] getV) {
-            return "";
         }
 
         @POST
@@ -761,7 +765,7 @@ public class BasicValidatorTest {
         System.out.println("---\n");
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertTrue(!validator.fatalIssuesFound());
@@ -795,7 +799,7 @@ public class BasicValidatorTest {
     public void testPercentEncoded() throws Exception {
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(PercentEncodedTest.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertEquals(1, validator.getIssueList().size());
@@ -822,11 +826,31 @@ public class BasicValidatorTest {
     public void testPercentEncodedCaseSensitive() throws Exception {
         List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
         Resource resource = Resource.builder(PercentEncodedCaseSensitiveTest.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues);
+        BasicValidator validator = new BasicValidator(issues, createLocator());
         validator.validate(resource);
         printIssueList(validator);
         assertEquals(1, validator.getIssueList().size());
         assertTrue(validator.getIssueList().get(0).isFatal());
     }
+
+    @Path("ambiguous-parameter")
+    public static class AmbiguousParameterResource {
+        @POST
+        public String moreNonAnnotatedParameters(@HeaderParam("something") String header, String entity1, String entity2) {
+            return "x";
+        }
+    }
+
+    @Test
+    public void testNotAnnotatedParameters() throws Exception {
+        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
+        Resource resource = Resource.builder(AmbiguousParameterResource.class, issues).build();
+        BasicValidator validator = new BasicValidator(issues, createLocator());
+        validator.validate(resource);
+        printIssueList(validator);
+        assertEquals(1, validator.getIssueList().size());
+        assertTrue(validator.getIssueList().get(0).isFatal());
+    }
+
 
 }
