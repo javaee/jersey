@@ -283,7 +283,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         @Override
         public javax.ws.rs.core.Response.ResponseBuilder status(StatusType status) {
             if (status == null) {
-                throw new NullPointerException("Response status must not be 'null'");
+                throw new IllegalArgumentException("Response status must not be 'null'");
             }
 
             this.status = status;

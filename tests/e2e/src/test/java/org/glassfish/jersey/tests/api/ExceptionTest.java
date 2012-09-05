@@ -44,6 +44,7 @@ package org.glassfish.jersey.tests.api;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.GET;
@@ -58,6 +59,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
+import javax.ws.rs.ValidationException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -70,7 +72,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -195,5 +196,15 @@ public class ExceptionTest extends JerseyTest {
 
     private boolean is3xxCode(final int statusCode) {
         return 299 < statusCode && statusCode < 400;
+    }
+
+    @Test
+    // See JERSEY-1408
+    public void testNullStatusInValidationException() {
+        try {
+            new ValidationException((Response.Status) null);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
     }
 }
