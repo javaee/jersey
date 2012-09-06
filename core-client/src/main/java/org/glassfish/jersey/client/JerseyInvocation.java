@@ -786,12 +786,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 case UNSUPPORTED_MEDIA_TYPE:
                     webAppException = new NotSupportedException(response);
                     break;
-                case MOVED_PERMANENTLY:
-                case FOUND:
-                case SEE_OTHER:
-                case TEMPORARY_REDIRECT:
-                    webAppException = new RedirectionException(response);
-                    break;
                 case INTERNAL_SERVER_ERROR:
                     webAppException = new InternalServerErrorException(response);
                     break;

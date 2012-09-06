@@ -72,7 +72,7 @@ class Runtime {
      * Create new client request processing runtime.
      *
      * @param connector client transport connector.
-     * @param locator HK2 service locator.
+     * @param locator   HK2 service locator.
      */
     public Runtime(final Connector connector, final ServiceLocator locator) {
 
@@ -101,7 +101,7 @@ class Runtime {
      * in a context of an active {@link RequestScope.Instance request scope instance}.
      * </p>
      *
-     * @param request client request to be sent.
+     * @param request  client request to be sent.
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
@@ -109,18 +109,23 @@ class Runtime {
 
             @Override
             public void run() {
-                Stage.Continuation<ClientRequest> continuation = process(request, requestProcessingRoot);
-
                 final RequestScope.Instance currentScopeInstance = requestScope.referenceCurrent();
-                connector.apply(continuation.result(), new AsyncConnectorCallback() {
+                final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
 
                     @Override
                     public void response(final ClientResponse response) {
                         submit(asyncExecutorsFactory.getRespondingExecutor(request), currentScopeInstance, new Runnable() {
                             @Override
                             public void run() {
+                                final ClientResponse processedResponse;
                                 try {
-                                    callback.completed(process(response, responseProcessingRoot).result(), requestScope);
+                                    processedResponse = process(response, responseProcessingRoot).result();
+                                } catch (Throwable throwable) {
+                                    failure(throwable);
+                                    return;
+                                }
+                                try {
+                                    callback.completed(processedResponse, requestScope);
                                 } finally {
                                     currentScopeInstance.release();
                                 }
@@ -130,9 +135,6 @@ class Runtime {
 
                     @Override
                     public void failure(Throwable failure) {
-                        if (failure instanceof AbortException) {
-                            response(((AbortException) failure).getAbortResponse());
-                        }
                         try {
                             callback.failed(failure instanceof ClientException ?
                                     (ClientException) failure : new ClientException(failure));
@@ -140,7 +142,14 @@ class Runtime {
                             currentScopeInstance.release();
                         }
                     }
-                });
+                };
+                try {
+                    connector.apply(process(request, requestProcessingRoot).result(), connectorCallback);
+                } catch (AbortException aborted) {
+                    connectorCallback.response(aborted.getAbortResponse());
+                } catch (Throwable throwable) {
+                    connectorCallback.failure(throwable);
+                }
             }
         });
     }
@@ -181,8 +190,7 @@ class Runtime {
         ClientResponse response;
         try {
             try {
-                Stage.Continuation<ClientRequest> continuation = process(request, requestProcessingRoot);
-                response = connector.apply(continuation.result());
+                response = connector.apply(process(request, requestProcessingRoot).result());
             } catch (AbortException aborted) {
                 response = aborted.getAbortResponse();
             }
@@ -204,6 +212,9 @@ class Runtime {
         return requestScope;
     }
 
+    /**
+     * Close the client runtime and release the underlying transport connector.
+     */
     public void close() {
         connector.close();
     }
