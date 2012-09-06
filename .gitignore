@@ -26,3 +26,5 @@ examples/helloworld/nb-configuration.xml
 examples/osgi-http-service/bundle/nb-configuration.xml
 examples/osgi-http-service/functional-test/nb-configuration.xml
 tests/e2e/nb-configuration.xml
+core-server/nb-configuration.xml
+tests/integration/servlet-tests/nb-configuration.xml
