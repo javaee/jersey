@@ -58,6 +58,9 @@ import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -351,6 +354,34 @@ public class BasicClientTest extends JerseyTest {
             assertEquals(404, r.getStatus());
             assertEquals("error", r.readEntity(String.class));
         }
+    }
+
+    @Test
+    // JERSEY-1412
+    public void testAbortAsyncRequest() throws Exception {
+        Invocation invocation = abortingTarget().request().buildPost(text("entity"));
+        Future<String> future = invocation.submit(String.class);
+        assertEquals("aborted", future.get());
+    }
+
+    @Test
+    // JERSEY-1412
+    public void testAbortSyncRequest() throws Exception {
+        Invocation invocation = abortingTarget().request().buildPost(text("entity"));
+        String response = invocation.invoke(String.class);
+        assertEquals("aborted", response);
+    }
+
+    protected WebTarget abortingTarget() {
+        Client client = ClientFactory.newClient();
+        client.configuration().register(new ClientRequestFilter() {
+            @Override
+            public void filter(ClientRequestContext ctx) throws IOException {
+                Response r = Response.ok("aborted").build();
+                ctx.abortWith(r);
+            }
+        });
+        return client.target("http://any.web:888");
     }
 
     public static class CustomExecutorProvider implements RequestExecutorsProvider {
