@@ -205,6 +205,21 @@ final class GrammarUtil {
      * @return filtered substring.
      */
     public static String filterToken(final String s, final int start, final int end) {
+        return filterToken(s, start, end, false);
+    }
+
+    /**
+     * Filter a substring of a string by removing any new-line characters and
+     * un-escaping escaped characters (unless preserveBackslash is set to {@code true}).
+     *
+     * @param s string to use for substring token filtering.
+     * @param start start filtering position in the string.
+     * @param end end filtering position in the string.
+     * @param preserveBackslash if set to {@code true}, this method does not treat backslash as an escape character
+     *                         (treats it as a regular character instead)
+     * @return filtered substring.
+     */
+    public static String filterToken(final String s, final int start, final int end, final boolean preserveBackslash) {
         StringBuilder sb = new StringBuilder();
         char c;
         boolean gotEscape = false;
@@ -222,7 +237,7 @@ final class GrammarUtil {
             gotCR = false;
             if (!gotEscape) {
                 // Previous character was NOT '\'
-                if (c == '\\') { // skip this character
+                if (!preserveBackslash && c == '\\') { // skip this character
                     gotEscape = true;
                 } else if (c == '\r') { // skip this character
                     gotCR = true;

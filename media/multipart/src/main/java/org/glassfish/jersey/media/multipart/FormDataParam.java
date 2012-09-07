@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.server.model.ParamQualifier;
 
 /**

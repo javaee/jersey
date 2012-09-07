@@ -75,6 +75,8 @@ public abstract class HttpHeaderReader {
 
     public abstract Event next(boolean skipWhiteSpace) throws ParseException;
 
+    public abstract Event next(boolean skipWhiteSpace, boolean preserveBackslash) throws ParseException;
+
     public abstract String nextSeparatedString(char startSeparator, char endSeparator) throws ParseException;
 
     public abstract Event getEvent();
@@ -125,7 +127,11 @@ public abstract class HttpHeaderReader {
     }
 
     public String nextTokenOrQuotedString() throws ParseException {
-        Event e = next(false);
+        return nextTokenOrQuotedString(false);
+    }
+
+    public String nextTokenOrQuotedString(boolean preserveBackslash) throws ParseException {
+        Event e = next(false, preserveBackslash);
         if (e != Event.Token && e != Event.QuotedString) {
             throw new ParseException("Next event is not a Token or a Quoted String, "
                     + getEventValue(), getIndex());
@@ -233,6 +239,10 @@ public abstract class HttpHeaderReader {
     }
 
     public static Map<String, String> readParameters(HttpHeaderReader reader) throws ParseException {
+        return readParameters(reader, false);
+    }
+
+    public static Map<String, String> readParameters(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
         Map<String, String> m = null;
 
         while (reader.hasNext()) {
@@ -250,8 +260,14 @@ public abstract class HttpHeaderReader {
             String name = reader.nextToken();
             reader.nextSeparator('=');
             // Get the parameter value
-            String value = reader.nextTokenOrQuotedString();
-
+            String value;
+            // fix for http://java.net/jira/browse/JERSEY-759
+            if ("filename".equalsIgnoreCase(name) && fileNameFix) {
+                value = reader.nextTokenOrQuotedString(true);
+                value = value.substring(value.lastIndexOf('\\') + 1);
+            } else {
+                value = reader.nextTokenOrQuotedString(false);
+            }
             if (m == null) {
                 m = new LinkedHashMap<String, String>();
             }

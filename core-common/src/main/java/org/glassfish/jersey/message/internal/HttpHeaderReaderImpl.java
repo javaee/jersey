@@ -85,7 +85,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
         }
 
         char c = header.charAt(index);
-        return isSeparator(c) ? c == separator : false;
+        return isSeparator(c) && c == separator;
     }
 
     @Override
@@ -113,12 +113,17 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
 
     @Override
     public Event next() throws ParseException {
-        return event = process(getNextCharacter(true));
+        return next(true);
     }
 
     @Override
     public Event next(boolean skipWhiteSpace) throws ParseException {
-        return event = process(getNextCharacter(skipWhiteSpace));
+        return next(skipWhiteSpace, false);
+    }
+
+    @Override
+    public Event next(boolean skipWhiteSpace, boolean preserveBackslash) throws ParseException {
+        return event = process(getNextCharacter(skipWhiteSpace), preserveBackslash);
     }
 
     @Override
@@ -163,7 +168,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
         return header.charAt(index);
     }
 
-    private Event process(char c) throws ParseException {
+    private Event process(char c, boolean preserveBackslash) throws ParseException {
         if (c > 127) {
             index++;
             return Event.Control;
@@ -181,7 +186,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
                 return Event.Token;
             }
             case QUOTED_STRING:
-                processQuotedString();
+                processQuotedString(preserveBackslash);
                 return Event.QuotedString;
             case COMMENT:
                 if (!processComments) {
@@ -232,18 +237,18 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
                 : header.substring(start, index - 1);
     }
 
-    private void processQuotedString() throws ParseException {
+    private void processQuotedString(boolean preserveBackslash) throws ParseException {
         boolean filter = false;
         for (int start = ++index; index < length; index++) {
             char c = this.header.charAt(index);
-            if (c == '\\') {
+            if (!preserveBackslash && c == '\\') {
                 index++;
                 filter = true;
             } else if (c == '\r') {
                 filter = true;
             } else if (c == '"') {
                 value = (filter)
-                        ? filterToken(header, start, index)
+                        ? filterToken(header, start, index, preserveBackslash)
                         : header.substring(start, index);
 
                 index++;

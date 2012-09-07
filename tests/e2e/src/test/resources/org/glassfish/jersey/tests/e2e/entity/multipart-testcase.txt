@@ -1,0 +1,11 @@
+-----------------------------7dc941520888
+Content-Disposition: form-data; name="text"
+
+bhhklb
+-----------------------------7dc941520888
+Content-Disposition: form-data; name="file"; filename="C:\java\projects\multipart-testcase\pom.xml"
+Content-Type: text/xml
+
+<project/>
+
+-----------------------------7dc941520888--

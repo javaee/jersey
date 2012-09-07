@@ -45,7 +45,7 @@ import java.text.MessageFormat;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 /**
  * Represents an {@link InputStream} based file submission as a part of the

@@ -37,12 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.media.multipart;
 
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+
+import org.glassfish.jersey.message.internal.HttpDateFormat;
+import org.glassfish.jersey.message.internal.HttpHeaderReader;
 
 /**
  * A content disposition header.
@@ -54,7 +57,7 @@ import java.util.Map;
 public class ContentDisposition {
 
     private String type;
-    private Map<String, String> parameters;
+    private final Map<String, String> parameters;
     private String fileName;
     private Date creationDate;
     private Date modificationDate;
@@ -70,25 +73,29 @@ public class ContentDisposition {
         this.modificationDate = modificationDate;
         this.readDate = readDate;
         this.size = size;
+        this.parameters = Collections.emptyMap();
     }
 
     public ContentDisposition(String header) throws ParseException {
-        this(HttpHeaderReader.newInstance(header));
+        this(header, false);
     }
 
-    public ContentDisposition(HttpHeaderReader reader) throws ParseException {
+    public ContentDisposition(String header, boolean fileNameFix) throws ParseException {
+        this(HttpHeaderReader.newInstance(header), fileNameFix);
+    }
+
+    public ContentDisposition(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
         reader.hasNext();
 
         type = reader.nextToken();
 
-        if (reader.hasNext()) {
-            parameters = HttpHeaderReader.readParameters(reader);
-        }
-        if (parameters == null) {
-            parameters = Collections.emptyMap();
-        } else {
-            parameters = Collections.unmodifiableMap(parameters);
-        }
+        Map<String, String> paramsOrNull = reader.hasNext() ?
+                HttpHeaderReader.readParameters(reader, fileNameFix) :
+                null;
+
+        parameters = paramsOrNull == null ?
+                Collections.<String, String>emptyMap() :
+                Collections.unmodifiableMap(paramsOrNull);
 
         createParameters();
     }
