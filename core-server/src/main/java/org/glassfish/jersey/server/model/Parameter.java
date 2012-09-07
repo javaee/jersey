@@ -52,6 +52,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Encoded;
@@ -120,6 +121,10 @@ public class Parameter implements AnnotatedElement {
          * Suspended async response injection source.
          */
         SUSPENDED,
+        /**
+         * Bean param parameter injection source.
+         */
+        BEAN_PARAM,
         /**
          * Unknown parameter injection source.
          */
@@ -241,6 +246,18 @@ public class Parameter implements AnnotatedElement {
             @Override
             public Parameter.Source getSource() {
                 return Parameter.Source.URI;
+            }
+        });
+        m.put(BeanParam.class, new ParamAnnotationHelper<BeanParam>() {
+
+            @Override
+            public String getValueOf(BeanParam a) {
+                return null;
+            }
+
+            @Override
+            public Parameter.Source getSource() {
+                return Parameter.Source.BEAN_PARAM;
             }
         });
         return Collections.unmodifiableMap(m);

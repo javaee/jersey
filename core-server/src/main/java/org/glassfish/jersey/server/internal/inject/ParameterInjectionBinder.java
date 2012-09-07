@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
@@ -136,6 +137,7 @@ public class ParameterInjectionBinder extends AbstractBinder {
         bind(PathParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(QueryParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(WebTargetValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(BeanParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 
         // Injection resolvers
         bind(CookieParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
@@ -154,5 +156,8 @@ public class ParameterInjectionBinder extends AbstractBinder {
         }).in(Singleton.class);
         bind(WebTargetValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Uri>>() {
         }).in(Singleton.class);
+        bind(BeanParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<BeanParam>>() {
+        }).in(Singleton.class);
+
     }
 }

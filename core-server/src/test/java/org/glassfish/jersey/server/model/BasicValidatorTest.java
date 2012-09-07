@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DELETE;
@@ -111,6 +112,11 @@ public class BasicValidatorTest {
         assertTrue(validator.getIssueList().isEmpty());
     }
 
+    public static class MyBeanParam {
+        @HeaderParam("h")
+        String hParam;
+    }
+
     @Singleton
     @Path("rootSingleton/{p}")
     public static class TestCantInjectFieldsForSingleton {
@@ -125,6 +131,8 @@ public class BasicValidatorTest {
         String cParam;
         @HeaderParam("h")
         String hParam;
+        @BeanParam
+        MyBeanParam beanParam;
 
         @GET
         public String getIt() {
@@ -148,6 +156,9 @@ public class BasicValidatorTest {
         String cParam;
         @HeaderParam("h")
         String hParam;
+        @BeanParam
+        MyBeanParam beanParam;
+
 
         @GET
         public String getIt() {
@@ -210,7 +221,7 @@ public class BasicValidatorTest {
         System.out.println("---\nAn issue should be reported if injection is required for a singleton life-cycle:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForSingleton.class);
         assertTrue(!issues.isEmpty());
-        assertEquals(5, issues.size());
+        assertEquals(6, issues.size());
     }
 
 
@@ -220,7 +231,7 @@ public class BasicValidatorTest {
                 "therefore singleton:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForProvider.class);
         assertTrue(!issues.isEmpty());
-        assertEquals(6, issues.size());
+        assertEquals(7, issues.size());
     }
 
 
