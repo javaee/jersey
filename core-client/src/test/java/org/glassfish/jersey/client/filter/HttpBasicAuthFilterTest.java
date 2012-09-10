@@ -56,7 +56,6 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.Base64;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -66,19 +65,25 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class HttpBasicAuthFilterTest {
-    private Invocation.Builder invBuilder;
-
-    @Before
-    public void setUp() {
-        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
-                .connector(new TestConnector()));
-        invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-    }
 
     @Test
     public void testGet() {
+        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
+                .connector(new TestConnector()));
+        Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
+
         assertEquals("Basic " + Base64.encodeAsString("Uzivatelske jmeno:Heslo"), r.getHeaderString(HttpHeaders.AUTHORIZATION));
+    }
+
+    @Test
+    public void testBlankUsernamePassword() {
+        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter(null, null))
+                .connector(new TestConnector()));
+        Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
+        Response r = invBuilder.get();
+
+        assertEquals("Basic " + Base64.encodeAsString(":"), r.getHeaderString(HttpHeaders.AUTHORIZATION));
     }
 
     private static class TestConnector implements Connector {

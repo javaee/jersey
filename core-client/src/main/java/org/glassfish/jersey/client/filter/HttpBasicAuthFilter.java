@@ -65,7 +65,15 @@ public final class HttpBasicAuthFilter implements ClientRequestFilter {
      * @param username user name
      * @param password password
      */
-    public HttpBasicAuthFilter(final String username, final String password) {
+    public HttpBasicAuthFilter(String username, String password) {
+        if(username == null) {
+            username = "";
+        }
+
+        if(password == null) {
+            password = "";
+        }
+
         authentication = "Basic " + Base64.encodeAsString(username + ":" + password);
     }
 
