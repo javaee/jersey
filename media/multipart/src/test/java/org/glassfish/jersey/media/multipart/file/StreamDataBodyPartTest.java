@@ -45,7 +45,7 @@ import java.io.InputStream;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.BodyPartTest;
-import org.glassfish.jersey.message.internal.ContentDisposition;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
 
 import org.junit.After;
 import org.junit.Before;

@@ -100,6 +100,11 @@ import java.text.ParseException;
 
     @Override
     public HttpHeaderReader.Event next(boolean skipWhiteSpace) throws ParseException {
+        return next(skipWhiteSpace, false);
+    }
+
+    @Override
+    public HttpHeaderReader.Event next(boolean skipWhiteSpace, boolean preserveBackslash) throws ParseException {
         if (isTerminated) {
             throw new ParseException("End of header", getIndex());
         }
@@ -109,7 +114,7 @@ import java.text.ParseException;
             throw new ParseException("End of header", getIndex());
         }
 
-        return reader.next(skipWhiteSpace);
+        return reader.next(skipWhiteSpace, preserveBackslash);
     }
 
     @Override

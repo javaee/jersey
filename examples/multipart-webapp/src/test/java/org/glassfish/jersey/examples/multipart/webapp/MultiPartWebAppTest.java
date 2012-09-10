@@ -62,7 +62,7 @@ import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;

@@ -45,7 +45,7 @@ import java.util.Date;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 /**
  * An extension of {@link FormDataBodyPart} for associating

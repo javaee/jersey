@@ -41,7 +41,7 @@ package org.glassfish.jersey.media.multipart;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 import org.junit.After;
 import org.junit.Before;

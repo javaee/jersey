@@ -37,10 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.media.multipart;
 
 import java.text.ParseException;
 import java.util.Date;
+
+import org.glassfish.jersey.message.internal.HttpHeaderReader;
 
 /**
  * A form-data content disposition header.
@@ -64,7 +66,7 @@ public class FormDataContentDisposition extends ContentDisposition {
      * @param readDate the read date.
      * @param size the size.
      * @throws IllegalArgumentException if the type is not equal to "form-data"
-     *         or the name is <code>null</code>
+     *         or the name is {@code null}
      */
     protected FormDataContentDisposition(String type, String name, String fileName,
             Date creationDate, Date modificationDate, Date readDate,
@@ -82,11 +84,15 @@ public class FormDataContentDisposition extends ContentDisposition {
     }
 
     public FormDataContentDisposition(String header) throws ParseException {
-        this(HttpHeaderReader.newInstance(header));
+        this(header, false);
     }
 
-    public FormDataContentDisposition(HttpHeaderReader reader) throws ParseException {
-        super(reader);
+    public FormDataContentDisposition(String header, boolean fileNameFix) throws ParseException {
+        this(HttpHeaderReader.newInstance(header), fileNameFix);
+    }
+
+    public FormDataContentDisposition(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
+        super(reader, fileNameFix);
         if (!getType().equalsIgnoreCase("form-data")) {
             throw new IllegalArgumentException("The content dispostion type is not equal to form-data");
         }
@@ -140,8 +146,7 @@ public class FormDataContentDisposition extends ContentDisposition {
 
         @Override
         public FormDataContentDisposition build() {
-            FormDataContentDisposition cd = new FormDataContentDisposition(type, name, fileName, creationDate, modificationDate, readDate, size);
-            return cd;
+            return new FormDataContentDisposition(type, name, fileName, creationDate, modificationDate, readDate, size);
         }
     }
 }

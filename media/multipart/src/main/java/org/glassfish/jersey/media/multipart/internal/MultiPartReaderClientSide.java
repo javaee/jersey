@@ -49,6 +49,7 @@ import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
@@ -160,14 +161,8 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
                 mediaType.getParameters().get("boundary"),
                 mimeConfig);
 
-        boolean formData = false;
-        MultiPart multiPart = null;
-        if (MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE)) {
-            multiPart = new FormDataMultiPart();
-            formData = true;
-        } else {
-            multiPart = new MultiPart();
-        }
+        boolean formData = MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE);
+        MultiPart multiPart = formData ? new FormDataMultiPart() : new MultiPart();
 
         final MessageBodyWorkers workers = messageBodyWorkers.get();
         multiPart.setMessageBodyWorkers(workers);
@@ -181,18 +176,19 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
             }
         }
 
+        boolean fileNameFix;
         if (!formData) {
             multiPart.setMediaType(mediaType);
+            fileNameFix = false;
+        } else {
+            // see if the User-Agent header corresponds to some version of MS Internet Explorer
+            // if so, need to set fileNameFix to true to handle issue http://java.net/jira/browse/JERSEY-759
+            String userAgent = headers.getFirst(HttpHeaders.USER_AGENT);
+            fileNameFix = userAgent != null && userAgent.contains(" MSIE ");
         }
 
         for (MIMEPart mimePart : mimeMessage.getAttachments()) {
-            BodyPart bodyPart;
-
-            if (formData) {
-                bodyPart = new FormDataBodyPart();
-            } else {
-                bodyPart = new BodyPart();
-            }
+            BodyPart bodyPart = formData ? new FormDataBodyPart(fileNameFix) : new BodyPart();
 
             // Configure providers.
             bodyPart.setMessageBodyWorkers(workers);

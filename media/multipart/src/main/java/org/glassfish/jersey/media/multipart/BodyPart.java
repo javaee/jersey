@@ -50,7 +50,6 @@ import javax.ws.rs.ext.Providers;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.ContentDisposition;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.ParameterizedHeader;
 
@@ -141,7 +140,7 @@ public class BodyPart {
      * case-insensitive.
      * <p/>
      * Note: MIME specifications says only headers that match
-     * <code>Content-*</code> should be included on a {@link BodyPart}.
+     * {@code Content-*} should be included on a {@link BodyPart}.
      */
     public MultivaluedMap<String, String> getHeaders() {
         return this.headers;
@@ -153,7 +152,7 @@ public class BodyPart {
      * {@link BodyPart}, keyed by header name. Key comparisons in the
      * returned map must be case-insensitive. If you wish to modify the
      * headers map for this {@link BodyPart}, modify the map returned by
-     * <code>getHeaders()</code> instead.
+     * {@code getHeaders()} instead.
      */
     public MultivaluedMap<String, ParameterizedHeader> getParameterizedHeaders() throws ParseException {
         return new ImmutableMultivaluedMap<String, ParameterizedHeader>(new ParameterizedHeadersMap(headers));
@@ -195,7 +194,7 @@ public class BodyPart {
 
     /**
      * Returns the {@link MediaType} for this {@link BodyPart}. If not
-     * set, the default {@link MediaType} MUST be <code>text/plain</code>.
+     * set, the default {@link MediaType} MUST be {@code text/plain}.
      *
      * @return media type for this body part.
      */
@@ -207,7 +206,7 @@ public class BodyPart {
      * Sets the {@link MediaType} for this {@link BodyPart}.
      *
      * @param mediaType the new {@link MediaType}.
-     * @throws IllegalArgumentException if the <code>mediaType</code> is {@code null}.
+     * @throws IllegalArgumentException if the {@code mediaType} is {@code null}.
      */
     public void setMediaType(MediaType mediaType) {
         if (mediaType == null) {
@@ -277,12 +276,12 @@ public class BodyPart {
     /**
      * Returns the entity after appropriate conversion to the requested
      * type. This is useful only when the containing {@link MultiPart}
-     * instance has been received, which causes the <code>providers</code> property
+     * instance has been received, which causes the {@code providers} property
      * to have been set.
      *
      * @param clazz desired class into which the entity should be converted.
      * @throws IllegalArgumentException if no {@link MessageBodyReader} can be found to perform the requested conversion.
-     * @throws IllegalStateException if this method is called when the <code>providers</code> property has not been set or
+     * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or
      * when the entity instance is not the unconverted content of the body part entity.
      */
     public <T> T getEntityAs(Class<T> clazz) {

@@ -43,29 +43,27 @@ import java.text.ParseException;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.message.internal.ContentDisposition;
-import org.glassfish.jersey.message.internal.FormDataContentDisposition;
 import org.glassfish.jersey.message.internal.MediaTypes;
 
 /**
  * Subclass of {@link BodyPart} with specialized support for media type
- * <code>multipart/form-data</code>.  See
+ * {@code multipart/form-data}.  See
  * <a href="http://www.ietf.org/rfc/rfc2388.txt">RFC 2388</a>
  * for the formal definition of this media type.
  * <p/>
  * For a server side application wishing to process an incoming
- * <code>multipart/form-data</code> message, the following features
+ * {@code multipart/form-data} message, the following features
  * are provided:
  * <ul>
  * <li>Property accessor to retrieve the control name.</li>
  * <li>Property accessor to retrieve the field value for a simple
  * String field.</li>
  * <li>Convenience accessor to retrieve the field value after conversion
- * through an appropriate <code>MessageBodyReader</code>.</li>
+ * through an appropriate {@code MessageBodyReader}.</li>
  * </ul>
  * <p/>
  * For a client side application wishing to construct an outgoing
- * <code>multipart/form-data</code> message, the following features
+ * {@code multipart/form-data} message, the following features
  * are provided:
  * <ul>
  * <li>Convenience constructors for named fields with either
@@ -84,12 +82,27 @@ import org.glassfish.jersey.message.internal.MediaTypes;
  */
 public class FormDataBodyPart extends BodyPart {
 
+    private final boolean fileNameFix;
+
     /**
      * Instantiates an unnamed new {@link FormDataBodyPart} with a
-     * <code>mediaType</code> of <code>text/plain</code>.
+     * {@code mediaType} of {@code text/plain}.
      */
     public FormDataBodyPart() {
+        this(false);
+    }
+
+    /**
+     * Instantiates an unnamed new {@link FormDataBodyPart} with {@code mediaType} of {@code text/plain}
+     * and setting the flag for applying the fix for erroneous file name value if content disposition header of
+     * messages coming from MS Internet Explorer (see <a href="http://java.net/jira/browse/JERSEY-759">JERSEY-759</a>).
+     * @param fileNameFix If set to {@code true}, header parser will not treat backslash as an escape character
+     *                    when retrieving the value of {@code filename} parameter of
+     *                    {@code Content-Disposition} header.
+     */
+    public FormDataBodyPart(boolean fileNameFix) {
         super();
+        this.fileNameFix = fileNameFix;
     }
 
     /**
@@ -100,6 +113,7 @@ public class FormDataBodyPart extends BodyPart {
      */
     public FormDataBodyPart(MediaType mediaType) {
         super(mediaType);
+        this.fileNameFix = false;
     }
 
     /**
@@ -111,17 +125,19 @@ public class FormDataBodyPart extends BodyPart {
      */
     public FormDataBodyPart(Object entity, MediaType mediaType) {
         super(entity, mediaType);
+        this.fileNameFix = false;
     }
 
     /**
      * Instantiates a named {@link FormDataBodyPart} with a
-     * media type of <code>text/plain</code> and String value.
+     * media type of {@code text/plain} and String value.
      *
      * @param name the control name for this body part.
      * @param value the value for this body part.
      */
     public FormDataBodyPart(String name, String value) {
         super(value, MediaType.TEXT_PLAIN_TYPE);
+        this.fileNameFix = false;
         setName(name);
     }
 
@@ -135,6 +151,7 @@ public class FormDataBodyPart extends BodyPart {
      */
     public FormDataBodyPart(String name, Object entity, MediaType mediaType) {
         super(entity, mediaType);
+        this.fileNameFix = false;
         setName(name);
     }
 
@@ -147,6 +164,7 @@ public class FormDataBodyPart extends BodyPart {
      */
     public FormDataBodyPart(FormDataContentDisposition formDataContentDisposition, String value) {
         super(value, MediaType.TEXT_PLAIN_TYPE);
+        this.fileNameFix = false;
         setFormDataContentDisposition(formDataContentDisposition);
     }
 
@@ -160,6 +178,7 @@ public class FormDataBodyPart extends BodyPart {
      */
     public FormDataBodyPart(FormDataContentDisposition formDataContentDisposition, Object entity, MediaType mediaType) {
         super(entity, mediaType);
+        this.fileNameFix = false;
         setFormDataContentDisposition(formDataContentDisposition);
     }
 
@@ -169,7 +188,7 @@ public class FormDataBodyPart extends BodyPart {
      * @return the form data content disposition.
      */
     public FormDataContentDisposition getFormDataContentDisposition() {
-        return (FormDataContentDisposition)getContentDisposition();
+        return (FormDataContentDisposition) getContentDisposition();
     }
 
     /**
@@ -195,7 +214,7 @@ public class FormDataBodyPart extends BodyPart {
             String scd = getHeaders().getFirst("Content-Disposition");
             if (scd != null) {
                 try {
-                    contentDisposition = new FormDataContentDisposition(scd);
+                    contentDisposition = new FormDataContentDisposition(scd, fileNameFix);
                 } catch (ParseException ex) {
                     throw new IllegalArgumentException("Error parsing content disposition: " + scd, ex);
                 }
@@ -267,7 +286,7 @@ public class FormDataBodyPart extends BodyPart {
      * only on body parts representing simple field values.
      *
      * @return the simple field value.
-     * @throws IllegalStateException if called on a body part with a media type other than <code>text/plain</code>
+     * @throws IllegalStateException if called on a body part with a media type other than {@code text/plain}
      */
     public String getValue() {
         if (!MediaTypes.typeEqual(MediaType.TEXT_PLAIN_TYPE, getMediaType())) {
@@ -284,14 +303,14 @@ public class FormDataBodyPart extends BodyPart {
     /**
      * Gets the field value after appropriate conversion to the requested
      * type. This is useful only when the containing {@link FormDataMultiPart}
-     * instance has been received, which causes the <code>providers</code>
+     * instance has been received, which causes the {@code providers}
      * property to have been set.
      *
      * @param <T> the type of the field value.
      * @param clazz Desired class into which the field value should be converted.
      * @return the field value.
      * @throws IllegalArgumentException if no {@code MessageBodyReader} can be found to perform the requested conversion.
-     * @throws IllegalStateException if this method is called when the <code>providers</code> property has not been set or when
+     * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or when
      * the entity instance is not the unconverted content of the body part entity.
      */
     public <T> T getValueAs(Class<T> clazz) {
@@ -303,7 +322,7 @@ public class FormDataBodyPart extends BodyPart {
      * only on body parts representing simple field values.
      *
      * @param value the field value.
-     * @throws IllegalStateException if called on a body part with a media type other than <code>text/plain</code>.
+     * @throws IllegalStateException if called on a body part with a media type other than {@code text/plain}.
      */
     public void setValue(String value) {
         if (!MediaType.TEXT_PLAIN_TYPE.equals(getMediaType())) {
