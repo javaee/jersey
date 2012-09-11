@@ -50,9 +50,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
@@ -78,13 +77,12 @@ public class AsyncContentAndEntityTypeTest {
 
     @Path("/")
     public static class AsyncResource {
-        static BlockingQueue<ExecutionContext> ctxQueue = new ArrayBlockingQueue<ExecutionContext>(1);
+        static BlockingQueue<AsyncResponse> ctxQueue = new ArrayBlockingQueue<AsyncResponse>(1);
 
         @Produces("application/foo")
         @GET
-        @Suspend
-        public void getFoo(@Context ExecutionContext ctx) throws InterruptedException {
-            AsyncResource.ctxQueue.put(ctx);
+        public void getFoo(@Suspended AsyncResponse ar) throws InterruptedException {
+            AsyncResource.ctxQueue.put(ar);
         }
 
         @POST

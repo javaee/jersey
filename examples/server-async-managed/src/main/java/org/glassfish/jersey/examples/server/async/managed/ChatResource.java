@@ -41,13 +41,13 @@ package org.glassfish.jersey.examples.server.async.managed;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 
 /**
  * Example of a simple fire&forget point-to-point messaging resource.
@@ -60,20 +60,17 @@ import deprecated.javax.ws.rs.ExecutionContext;
 @Produces("application/json")
 public class ChatResource {
 
-    private static final BlockingQueue<ExecutionContext> suspended = new ArrayBlockingQueue<ExecutionContext>(5);
-    //
-    @Context ExecutionContext ctx;
+    private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<AsyncResponse>(5);
 
     @GET
-    @Suspend
-    public void getMessage() throws InterruptedException {
-        suspended.put(ctx);
+    public void getMessage(@Suspended final AsyncResponse ar) throws InterruptedException {
+        suspended.put(ar);
     }
 
     @POST
     public String postMessage(final Message message) throws InterruptedException {
-        final ExecutionContext resumeCtx = suspended.take();
-        resumeCtx.resume(message);
+        final AsyncResponse asyncResponse = suspended.take();
+        asyncResponse.resume(message);
         return "Sent!";
     }
 }

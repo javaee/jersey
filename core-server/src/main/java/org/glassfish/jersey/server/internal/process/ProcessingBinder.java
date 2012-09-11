@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,40 +37,46 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package deprecated.javax.ws.rs;
+package org.glassfish.jersey.server.internal.process;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScoped;
+
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * TODO remove.
+ * Jersey processing framework injection binder.
  *
- * @author Marek Potociar
- * @since 2.0
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Suspend {
+public class ProcessingBinder extends AbstractBinder {
 
-    /**
-     * Constant specifying no suspend timeout value.
-     */
-    public static final long NEVER = 0;
+    private static class InvocationContextReferencingFactory extends ReferencingFactory<ProcessingContext> {
 
-    /**
-     * Suspend timeout value in the given {@link #timeUnit() time unit}. A default
-     * value is {@link #NEVER no timeout}. Similarly, any explicitly set value
-     * lower then or equal to zero will be treated as a "no timeout" value.
-     */
-    long timeOut() default NEVER;
+        @Inject
+        public InvocationContextReferencingFactory(Provider<Ref<ProcessingContext>> referenceFactory) {
+            super(referenceFactory);
+        }
 
-    /**
-     * The suspend timeout time unit. Defaults to {@link TimeUnit#MILLISECONDS}.
-     */
-    TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
+        @Override
+        @RequestScoped
+        public ProcessingContext provide() {
+            return super.provide();
+        }
+    }
+
+    @Override
+    protected void configure() {
+        // Invocation context
+        bindFactory(InvocationContextReferencingFactory.class).in(RequestScoped.class);
+        bindFactory(InvocationContextReferencingFactory.class).to(ProcessingContext.class).in(RequestScoped.class);
+
+        bindFactory(ReferencingFactory.<ProcessingContext>referenceFactory()).to(new TypeLiteral<Ref<ProcessingContext>>() {
+        }).in(RequestScoped.class);
+    }
 }

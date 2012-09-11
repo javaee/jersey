@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,13 +60,13 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-
-import deprecated.javax.ws.rs.Suspend;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -303,10 +304,13 @@ final class IntrospectionModeller {
     }
 
     private static void declareSuspend(AnnotatedMethod am, ResourceMethod.Builder resourceMethodBuilder) {
-        // Override annotation is present in method
-        final Suspend suspend = am.getAnnotation(Suspend.class);
-        if (suspend != null) {
-            resourceMethodBuilder.suspended(suspend.timeOut(), suspend.timeUnit());
+        for (Annotation[] annotations : am.getParameterAnnotations()) {
+            for (Annotation annotation : annotations) {
+                if (annotation.getClass() == Suspended.class) {
+                    resourceMethodBuilder.suspended(AsyncResponse.NO_TIMEOUT, TimeUnit.MILLISECONDS);
+                    return;
+                }
+            }
         }
     }
 

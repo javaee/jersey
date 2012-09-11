@@ -65,7 +65,7 @@ import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.ProcessingContext;
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
@@ -261,7 +261,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
 
         final ProcessingContext processingCtx = invocationContextFactory.get();
         if (method.isSuspendDeclared()) {
-            processingCtx.setSuspendTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
+            processingCtx.setTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
         }
         requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS, getReaderInterceptors());
         requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS, getWriterInterceptors());

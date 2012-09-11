@@ -37,23 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server.internal.process;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
-import javax.inject.Provider;
 
 
 /**
@@ -61,7 +65,7 @@ import javax.inject.Provider;
  * request data and returns a {@link ListenableFuture listenable response data future}.
  * <p/>
  * Request invoker runs the request data through the (injected) request data processing stages
- * until a terminal request processing stage {@link Inflecting referencing} an
+ * until a terminal request processing stage {@link org.glassfish.jersey.process.internal.Inflecting referencing} an
  * {@link Inflector} is reached.
  * The inflector referenced by the terminal request processing stage is then wrapped
  * into a {@link AsyncInflectorAdapter suspendable inflector} which is subsequently

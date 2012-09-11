@@ -51,7 +51,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.ProcessingTestBinder;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -86,10 +85,10 @@ public class JaxrsProvidersTest {
 
     @Test
     public void testProviders() throws Exception {
-        final ServiceLocator locator = Injections.createLocator(new ContextInjectionResolver.Binder(), new ProcessingTestBinder(),
+        final ServiceLocator locator = Injections.createLocator(new ContextInjectionResolver.Binder(), new TestBinder(),
                 new MessagingBinders.MessageBodyProviders(), new Binder());
 
-        ProcessingTestBinder.initProviders(locator);
+        TestBinder.initProviders(locator);
         RequestScope scope = locator.getService(RequestScope.class);
 
         scope.runInScope(new Callable<Object>() {

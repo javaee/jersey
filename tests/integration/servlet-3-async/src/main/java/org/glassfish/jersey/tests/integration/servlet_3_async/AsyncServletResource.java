@@ -48,9 +48,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import deprecated.javax.ws.rs.Suspend;
-import javax.ws.rs.core.Context;
-import deprecated.javax.ws.rs.ExecutionContext;
+
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 
 /**
  * Asynchronous servlet-deployed resource.
@@ -67,16 +67,13 @@ public class AsyncServletResource {
 
     private static BlockingQueue<CanceledRequest> cancelingQueue = new ArrayBlockingQueue<CanceledRequest>(5);
 
-    @Context
-    private ExecutionContext context;
-
     private static class CanceledRequest {
         private final String id;
-        private final ExecutionContext context;
+        private final AsyncResponse asyncResponse;
 
-        private CanceledRequest(String id, ExecutionContext context) {
+        private CanceledRequest(String id, AsyncResponse asyncResponse) {
             this.id = id;
-            this.context = context;
+            this.asyncResponse = asyncResponse;
         }
     }
 
@@ -85,14 +82,13 @@ public class AsyncServletResource {
      */
     @GET
     @Produces("text/plain")
-    @Suspend
-    public void get() {
+    public void get(@Suspended final AsyncResponse ar) {
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(100);
-                    context.resume(HELLO_ASYNC_WORLD);
+                    ar.resume(HELLO_ASYNC_WORLD);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -108,10 +104,9 @@ public class AsyncServletResource {
      *                              to an internal queue for canceling.
      */
     @GET
-    @Suspend
     @Path("canceled")
-    public void getCanceled(@QueryParam("id") final String id) throws InterruptedException {
-        cancelingQueue.put(new CanceledRequest(id, context));
+    public void getCanceled(@Suspended final AsyncResponse ar, @QueryParam("id") final String id) throws InterruptedException {
+        cancelingQueue.put(new CanceledRequest(id, ar));
     }
 
     /**
@@ -126,7 +121,7 @@ public class AsyncServletResource {
     @Path("canceled")
     public String cancel(String requestId) throws InterruptedException {
         final CanceledRequest canceledRequest = cancelingQueue.take();
-        canceledRequest.context.cancel();
+        canceledRequest.asyncResponse.cancel();
 
         return CANCELED + " " + canceledRequest.id + " by POST " + requestId;
     }

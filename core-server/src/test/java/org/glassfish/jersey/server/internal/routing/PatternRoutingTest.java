@@ -53,7 +53,7 @@ import javax.inject.Inject;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;

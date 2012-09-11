@@ -37,20 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server.internal.process;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Provider;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MappableException;
+import org.glassfish.jersey.process.internal.ChainableStage;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 import com.google.common.base.Function;

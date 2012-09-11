@@ -46,6 +46,7 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.Uri;
+import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
@@ -57,7 +58,7 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Injection binder providing support for JAX-RS context injection. Namely, standard injection
+ * Injection binder providing support for JAX-RS injection annotations. Namely, standard injection
  * support for the following set of JAX-RS context annotations is provided by
  * the binder:
  * <dl>
@@ -67,6 +68,26 @@ import org.glassfish.hk2.api.TypeLiteral;
  * Generic support for the {@code @Context}-based injection is provided so that
  * the {@code @Context} annotation can be used interchangeably with e.g. standard
  * {@code @Inject} dependency injection annotation.
+ * </dd>
+ *
+ * <dt>{@link javax.ws.rs.CookieParam @CookieParam}</dt>
+ * <dd>
+ * Support for cookie parameter injection as defined by the JAX-RS specification.
+ * </dd>
+ *
+ * <dt>{@link javax.ws.rs.FormParam @FormParam}</dt>
+ * <dd>
+ * Support for form parameter injection as defined by the JAX-RS specification.
+ * </dd>
+ *
+ * <dt>{@link javax.ws.rs.HeaderParam @HeaderParam}</dt>
+ * <dd>
+ * Support for request header parameter injection as defined by the JAX-RS specification.
+ * </dd>
+ *
+ * <dt>{@link javax.ws.rs.MatrixParam @MatrixParam}</dt>
+ * <dd>
+ * Support for request URI matrix path parameter injection as defined by the JAX-RS specification.
  * </dd>
  *
  * <dt>{@link javax.ws.rs.PathParam @PathParam}</dt>
@@ -79,24 +100,9 @@ import org.glassfish.hk2.api.TypeLiteral;
  * Support for request URI query parameter injection as defined by the JAX-RS specification.
  * </dd>
  *
- * <dt>{@link javax.ws.rs.MatrixParam @MatrixParam}</dt>
+ * <dt>{@link javax.ws.rs.container.Suspended @Suspended}</dt>
  * <dd>
- * Support for request URI matrix path parameter injection as defined by the JAX-RS specification.
- * </dd>
- *
- * <dt>{@link javax.ws.rs.HeaderParam @HeaderParam}</dt>
- * <dd>
- * Support for request header parameter injection as defined by the JAX-RS specification.
- * </dd>
- *
- * <dt>{@link javax.ws.rs.FormParam @FormParam}</dt>
- * <dd>
- * Support for form parameter injection as defined by the JAX-RS specification.
- * </dd>
- *
- * <dt>{@link javax.ws.rs.CookieParam @CookieParam}</dt>
- * <dd>
- * Support for cookie parameter injection as defined by the JAX-RS specification.
+ * Support for {@link javax.ws.rs.container.AsyncResponse} injection as defined by the JAX-RS specification.
  * </dd>
  *
  * <dt>{@link javax.ws.rs.Uri @Uri}</dt>
@@ -120,29 +126,31 @@ public class ParameterInjectionBinder extends AbstractBinder {
         bind(MultivaluedParameterExtractorFactory.class).to(MultivaluedParameterExtractorProvider.class).in(Singleton.class);
 
         // Parameter injection value providers
+        bind(AsyncResponseValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(CookieParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(DelegatedInjectionValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(EntityParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(FormParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(HeaderParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(MatrixParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(PathParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(QueryParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(MatrixParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(HeaderParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(FormParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(CookieParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(EntityParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(DelegatedInjectionValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(WebTargetValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
 
         // Injection resolvers
-        // @XxxParam
-        bind(PathParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<PathParam>>() {
-        }).in(Singleton.class);
-        bind(QueryParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<QueryParam>>() {
-        }).in(Singleton.class);
-        bind(MatrixParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<MatrixParam>>() {
-        }).in(Singleton.class);
-        bind(HeaderParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<HeaderParam>>() {
+        bind(CookieParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
         }).in(Singleton.class);
         bind(FormParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormParam>>() {
         }).in(Singleton.class);
-        bind(CookieParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
+        bind(HeaderParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<HeaderParam>>() {
+        }).in(Singleton.class);
+        bind(MatrixParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<MatrixParam>>() {
+        }).in(Singleton.class);
+        bind(QueryParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<QueryParam>>() {
+        }).in(Singleton.class);
+        bind(PathParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<PathParam>>() {
+        }).in(Singleton.class);
+        bind(AsyncResponseValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Suspended>>() {
         }).in(Singleton.class);
         bind(WebTargetValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Uri>>() {
         }).in(Singleton.class);

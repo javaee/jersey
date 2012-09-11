@@ -63,16 +63,16 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.AsyncInflectorAdapter;
-import org.glassfish.jersey.process.internal.DefaultRespondingContext;
+import org.glassfish.jersey.server.internal.process.AsyncInflectorAdapter;
+import org.glassfish.jersey.server.internal.process.DefaultRespondingContext;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.process.internal.ProcessingBinder;
-import org.glassfish.jersey.process.internal.ProcessingCallback;
-import org.glassfish.jersey.process.internal.ProcessingContext;
-import org.glassfish.jersey.process.internal.RequestInvoker;
+import org.glassfish.jersey.server.internal.process.ProcessingBinder;
+import org.glassfish.jersey.server.internal.process.ProcessingCallback;
+import org.glassfish.jersey.server.internal.process.ProcessingContext;
+import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.server.internal.process.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
@@ -138,7 +138,7 @@ public class ServerBinder extends AbstractBinder {
     }
 
     /**
-     * Injection-enabled client side {@link org.glassfish.jersey.process.internal.RequestInvoker} instance builder.
+     * Injection-enabled client side {@link org.glassfish.jersey.server.internal.process.RequestInvoker} instance builder.
      */
     static final class RequestInvokerBuilder {
         @Inject
@@ -151,7 +151,7 @@ public class ServerBinder extends AbstractBinder {
         private ExecutorsFactory<ContainerRequest> executorsFactory;
 
         /**
-         * Build a new {@link org.glassfish.jersey.process.internal.RequestInvoker request invoker} configured to use
+         * Build a new {@link org.glassfish.jersey.server.internal.process.RequestInvoker request invoker} configured to use
          * the supplied request processor for processing requests.
          *
          * @param rootStage root processing stage.

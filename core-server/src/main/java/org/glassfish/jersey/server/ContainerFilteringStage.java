@@ -56,7 +56,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.ResponseProcessor;
+import org.glassfish.jersey.server.internal.process.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 
