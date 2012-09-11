@@ -75,22 +75,22 @@ class SubResourceLocatorRouter implements Router {
     private final ServiceLocator locator;
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
-    private final RuntimeModelBuilder runtimeModelBuilder;
+    private final RuntimeModelBuilder runtimeModelBuilderOriginal;
     private final JerseyResourceContext resourceContext;
 
     /**
      * Create a new sub-resource locator router.
      *
      * @param locator     HK2 locator.
-     * @param runtimeModelBuilder Runtime model builder.
+     * @param runtimeModelBuilderOriginal original runtime model builder.
      * @param locatorModel resource locator method model.
      */
     public SubResourceLocatorRouter(
             final ServiceLocator locator,
-            final RuntimeModelBuilder runtimeModelBuilder,
+            final RuntimeModelBuilder runtimeModelBuilderOriginal,
             final ResourceMethod locatorModel) {
         this.locator = locator;
-        this.runtimeModelBuilder = runtimeModelBuilder;
+        this.runtimeModelBuilderOriginal = runtimeModelBuilderOriginal;
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
         this.resourceContext = locator.getService(JerseyResourceContext.class);
@@ -115,6 +115,8 @@ class SubResourceLocatorRouter implements Router {
         final Resource subResourceModel;
         // TODO: what to do with the issues?
         subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
+
+        final RuntimeModelBuilder runtimeModelBuilder = runtimeModelBuilderOriginal.copy();
         runtimeModelBuilder.process(subResourceModel, true);
 
         // TODO: implement generated sub-resource methodAcceptorPair caching
