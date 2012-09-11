@@ -81,18 +81,13 @@ import deprecated.javax.ws.rs.DynamicBinder;
  */
 public final class RuntimeModelBuilder {
 
-    @Inject
-    private RootRouteBuilder<PathPattern> rootBuilder;
-    @Inject
-    private ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
-    @Inject
-    private ServiceLocator locator;
-    @Inject
-    private PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder;
-    @Inject
-    private MethodSelectingRouter.Builder methodSelectingAcceptorBuilder;
-    @Inject
-    private MessageBodyWorkers workers;
+    private final RootRouteBuilder<PathPattern> rootBuilder;
+    private final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
+    private final ServiceLocator locator;
+    private final PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder;
+    private final MethodSelectingRouter.Builder methodSelectingAcceptorBuilder;
+    private final MessageBodyWorkers workers;
+
     private MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters;
     private MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters;
     private Collection<ReaderInterceptor> globalReaderInterceptors;
@@ -123,6 +118,58 @@ public final class RuntimeModelBuilder {
      */
     private TreeMap<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> subResourceAcceptors =
             Maps.newTreeMap(PathPattern.COMPARATOR);
+
+    /**
+     * Injection constructor.
+     *
+     * @param rootBuilder root router builder.
+     * @param resourceMethodInvokerBuilder method invoker builder.
+     * @param locator HK2 service locator.
+     * @param pushHandlerAcceptorBuilder push handler acceptor builder.
+     * @param methodSelectingAcceptorBuilder method selecting acceptor builder.
+     * @param workers message body workers.
+     */
+    @Inject
+    public RuntimeModelBuilder(
+            final RootRouteBuilder<PathPattern> rootBuilder,
+            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder,
+            final ServiceLocator locator,
+            final PushMethodHandlerRouter.Builder pushHandlerAcceptorBuilder,
+            final MethodSelectingRouter.Builder methodSelectingAcceptorBuilder,
+            final MessageBodyWorkers workers) {
+        this.rootBuilder = rootBuilder;
+        this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
+        this.locator = locator;
+        this.pushHandlerAcceptorBuilder = pushHandlerAcceptorBuilder;
+        this.methodSelectingAcceptorBuilder = methodSelectingAcceptorBuilder;
+        this.workers = workers;
+    }
+
+    private RuntimeModelBuilder(RuntimeModelBuilder original) {
+        this.rootBuilder = original.rootBuilder;
+        this.resourceMethodInvokerBuilder = original.resourceMethodInvokerBuilder;
+        this.locator = original.locator;
+        this.pushHandlerAcceptorBuilder = original.pushHandlerAcceptorBuilder;
+        this.methodSelectingAcceptorBuilder = original.methodSelectingAcceptorBuilder;
+        this.workers = original.workers;
+
+        this.nameBoundRequestFilters = original.nameBoundRequestFilters;
+        this.nameBoundResponseFilters = original.nameBoundResponseFilters;
+        this.globalReaderInterceptors = original.globalReaderInterceptors;
+        this.globalWriterInterceptors = original.globalWriterInterceptors;
+        this.nameBoundReaderInterceptors = original.nameBoundReaderInterceptors;
+        this.nameBoundWriterInterceptors = original.nameBoundWriterInterceptors;
+        this.dynamicBinders = original.dynamicBinders;
+    }
+
+    /**
+     * Create a copy of the runtime model builder.
+     *
+     * @return copy of the runtime model builder.
+     */
+    public RuntimeModelBuilder copy() {
+        return new RuntimeModelBuilder(this);
+    }
 
     /**
      * Process a single resource model and add it to the currently build runtime
