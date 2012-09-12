@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
 
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.Consumes;
@@ -53,6 +54,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.InterceptorContext;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
@@ -66,11 +68,13 @@ import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPWriterTestIntercep
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests interceptors.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class InterceptorCustomTest extends JerseyTest {
     private static final String FROM_RESOURCE = "-from_resource";
@@ -79,14 +83,18 @@ public class InterceptorCustomTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         return new ResourceConfig(TestResource.class, GZIPWriterTestInterceptor.class, GZIPReaderTestInterceptor.class,
-                PlusOneWriterInterceptor.class, MinusOneReaderInterceptor.class);// GZIPInterceptor.class
+                PlusOneWriterInterceptor.class, MinusOneReaderInterceptor.class, AnnotationsReaderWriterInterceptor.class);
     }
 
     @Test
     public void testMoreInterceptorsAndFilter() throws IOException {
+        client().configuration().
+                register(GZIPReaderTestInterceptor.class).
+                register(GZIPWriterTestInterceptor.class).
+                register(PlusOneWriterInterceptor.class).
+                register(MinusOneReaderInterceptor.class).
+                register(AnnotationsReaderWriterInterceptor.class);
 
-        client().configuration().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class)
-                .register(PlusOneWriterInterceptor.class).register(MinusOneReaderInterceptor.class);
         WebTarget target = target().path("test");
 
         Response response = target.request().put(Entity.entity(ENTITY, MediaType.TEXT_PLAIN_TYPE));
@@ -108,8 +116,6 @@ public class InterceptorCustomTest extends JerseyTest {
 
     /**
      * Interceptor which adds +1 to each byte written into the stream.
-     *
-     * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
      */
     @Provider
     @BindingPriority(300)
@@ -135,8 +141,6 @@ public class InterceptorCustomTest extends JerseyTest {
 
     /**
      * Interceptor which adds +1 to each byte read from the stream.
-     *
-     * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
      */
     @Provider
     @BindingPriority(300)
@@ -161,6 +165,59 @@ public class InterceptorCustomTest extends JerseyTest {
             });
 
             return context.proceed();
+        }
+    }
+
+    /**
+     * Interceptor that tries to set annotations of {@link InterceptorContext} to {@code null},
+     * empty array and finally to the original value.
+     */
+    @Provider
+    @BindingPriority(300)
+    public static class AnnotationsReaderWriterInterceptor implements ReaderInterceptor, WriterInterceptor {
+
+        @Override
+        public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            final Annotation[] annotations = context.getAnnotations();
+
+            // Fails if no NPE is thrown.
+            unsetAnnotations(context);
+            // Ok.
+            setAnnotations(context, new Annotation[0]);
+            // Ok.
+            setAnnotations(context, annotations);
+
+            return context.proceed();
+        }
+
+        @Override
+        public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
+            final Annotation[] annotations = context.getAnnotations();
+
+            // Fails if no NPE is thrown.
+            unsetAnnotations(context);
+            // Ok.
+            setAnnotations(context, new Annotation[0]);
+            // Ok.
+            setAnnotations(context, annotations);
+
+            context.proceed();
+        }
+
+        private void setAnnotations(final InterceptorContext context, final Annotation[] annotations) {
+            if (context.getAnnotations() != null) {
+                context.setAnnotations(annotations);
+            }
+        }
+
+        private void unsetAnnotations(final InterceptorContext context) {
+            try {
+                context.setAnnotations(null);
+
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // OK.
+            }
         }
     }
 

@@ -111,6 +111,9 @@ abstract class InterceptorExecutor implements InterceptorContext {
 
     @Override
     public void setAnnotations(Annotation[] annotations) {
+        if (annotations == null) {
+            throw new NullPointerException("Annotations must not be null.");
+        }
         this.annotations = annotations;
     }
 
