@@ -43,7 +43,9 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -81,7 +83,7 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testPut() {
-        Response r = invBuilder.put(null);
+        Response r = invBuilder.put(Entity.entity("put", MediaType.TEXT_PLAIN_TYPE));
         assertNotNull(r.getHeaderString(CsrfProtectionFilter.HEADER_NAME));
     }
 
