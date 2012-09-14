@@ -43,15 +43,17 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  *
@@ -149,7 +151,7 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<P
             }
         }
 
-        MultivaluedParameterExtractor<?> e = getWithoutDefaultValue(parameter);
+        MultivaluedParameterExtractor<?> e = get(parameter);
         if (e == null) {
             return null;
         }
