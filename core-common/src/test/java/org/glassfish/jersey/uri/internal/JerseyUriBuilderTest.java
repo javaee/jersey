@@ -591,7 +591,8 @@ public class JerseyUriBuilderTest {
 
         // issue 257 - param is removed after setting it to null
         {
-            URI u1 = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", null).build();
+            URI u1 = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", (Object[]) null)
+                    .build();
             Assert.assertTrue(u1.toString().equals("http://localhost:8080"));
 
             URI u2 = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x").build();

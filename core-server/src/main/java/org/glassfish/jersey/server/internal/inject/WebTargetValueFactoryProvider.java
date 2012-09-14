@@ -67,7 +67,7 @@ import com.google.common.collect.Maps;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider<Uri> {
+final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
     @Context
     private ResourceConfig resourceConfig;

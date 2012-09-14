@@ -44,11 +44,13 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
@@ -66,11 +68,12 @@ import org.jvnet.mimepull.MIMEParsingException;
 @Singleton
 public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
 
-    private final CloseableService closeableService;
+    private final Provider<CloseableService> closeableServiceProvider;
 
-    public MultiPartReaderServerSide(@Context MultiPartProperties config, @Context CloseableService closeableService) {
+    @Inject
+    public MultiPartReaderServerSide(MultiPartProperties config, Provider<CloseableService> closeableServiceProvider) {
         super(config);
-        this.closeableService = closeableService;
+        this.closeableServiceProvider = closeableServiceProvider;
     }
 
     protected MultiPart readMultiPart(final Class<MultiPart> type,
@@ -80,7 +83,7 @@ public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
                                       final MultivaluedMap<String, String> headers,
                                       final InputStream stream) throws IOException, MIMEParsingException {
         MultiPart multiPart = super.readMultiPart(type, genericType, annotations, mediaType, headers, stream);
-        closeableService.add(multiPart);
+        closeableServiceProvider.get().add(multiPart);
         return multiPart;
     }
 

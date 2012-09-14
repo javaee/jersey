@@ -82,7 +82,7 @@ public class FireAndForgetChatResource {
     @GET
     public void pickUpMessage(@Suspended final AsyncResponse ar, @QueryParam("id") final String messageId)
             throws InterruptedException {
-        LOGGER.log(DEBUG, "Received GET ({0}) with context {1} on thread {2}",
+        LOGGER.log(DEBUG, "Received GET <{0}> with context {1} on thread {2}.",
                 new Object[] {messageId, ar.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
@@ -90,7 +90,7 @@ public class FireAndForgetChatResource {
             public void run() {
                 try {
                     suspended.put(ar);
-                    LOGGER.log(DEBUG, "GET ({0}) context {1} scheduled for resume.",
+                    LOGGER.log(DEBUG, "GET <{0}> context {1} scheduled for resume.",
                             new Object[] {messageId, ar.toString()});
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,
@@ -103,18 +103,20 @@ public class FireAndForgetChatResource {
 
     @POST
     public String postMessage(final String message) throws InterruptedException {
+        LOGGER.log(DEBUG, "Received POSTed message <{0}> on thread {1}.",
+                new Object[] {message, Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
             public void run() {
                 try {
                     final AsyncResponse suspendedResponse = suspended.take();
-                    LOGGER.log(DEBUG, "Resuming GET context {0}' with a message '{1}' on thread {2}",
+                    LOGGER.log(DEBUG, "Resuming GET context {0} with a message <{1}> on thread {2}.",
                             new Object[] {suspendedResponse.toString(), message, Thread.currentThread().getName()});
                     suspendedResponse.resume(message);
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,
-                            "Waiting for a sending a message '" + message + "' has been interrupted.", ex);
+                            "Waiting for a sending a message <" + message + "> has been interrupted.", ex);
                 }
             }
         });

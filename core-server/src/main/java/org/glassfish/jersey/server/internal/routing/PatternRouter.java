@@ -43,10 +43,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.glassfish.jersey.server.ContainerRequest;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * Matches the un-matched right-hand request path to a configured {@link Pattern pattern}.

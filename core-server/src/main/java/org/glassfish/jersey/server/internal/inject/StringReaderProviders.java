@@ -52,7 +52,6 @@ import javax.ws.rs.core.Context;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
@@ -198,19 +197,27 @@ class StringReaderProviders {
         }
     }
 
+    /**
+     * Aggregated string value reader provider.
+     */
     @Singleton
     public static class AggregatedProvider implements StringValueReaderProvider {
 
-        final StringValueReaderProvider[] providers;
+        private final StringValueReaderProvider[] providers;
 
+        /**
+         * Create new aggregated string value reader provider.
+         *
+         * @param locator HK2 service locator.
+         */
         public AggregatedProvider(@Context ServiceLocator locator) {
             providers = new StringValueReaderProvider[]{
-                locator.createAndInitialize(TypeFromStringEnum.class),
-                locator.createAndInitialize(TypeValueOf.class),
-                locator.createAndInitialize(TypeFromString.class),
-                locator.createAndInitialize(StringConstructor.class),
-                locator.createAndInitialize(DateProvider.class),
-                locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
+                    locator.createAndInitialize(TypeFromStringEnum.class),
+                    locator.createAndInitialize(TypeValueOf.class),
+                    locator.createAndInitialize(TypeFromString.class),
+                    locator.createAndInitialize(StringConstructor.class),
+                    locator.createAndInitialize(DateProvider.class),
+                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
             };
         }
 

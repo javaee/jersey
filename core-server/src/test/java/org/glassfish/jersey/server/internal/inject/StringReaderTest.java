@@ -44,7 +44,17 @@ import java.net.URI;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -53,8 +63,8 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ParamException;
+import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -90,7 +100,9 @@ public class StringReaderTest extends AbstractTest {
     public static class BadEnumResource {
         public enum ABC {
             A, B, C;
-        };
+        }
+
+        ;
 
         @GET
         public String doGet(@QueryParam("d") ABC d) {

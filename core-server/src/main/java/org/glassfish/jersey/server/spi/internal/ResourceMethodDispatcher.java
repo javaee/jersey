@@ -44,8 +44,8 @@ import java.lang.reflect.InvocationHandler;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
 
 /**
@@ -89,10 +89,10 @@ public interface ResourceMethodDispatcher {
          * {@link #dispatch(java.lang.Object, javax.ws.rs.core.Request) dispatch(...)}
          * method is called on that dispatcher instance.
          *
-         * @param method the invocable resource method.
+         * @param method  the invocable resource method.
          * @param handler invocation handler to be used for the resource method invocation.
          * @return the resource method dispatcher, or {@code null} if it could not be
-         *     created for the given resource method.
+         *         created for the given resource method.
          */
         public ResourceMethodDispatcher create(final Invocable method, final InvocationHandler handler);
     }
@@ -122,11 +122,10 @@ public interface ResourceMethodDispatcher {
      * that respect.
      *
      * @param resource the resource class instance.
-     * @param request request to be dispatched.
-     *
+     * @param request  request to be dispatched.
      * @return {@link Response response} for the dispatched request.
      * @throws ProcessingException (possibly {@link MappableException mappable})
-     *     container exception that will be handled by the Jersey server container.
+     *                             container exception that will be handled by the Jersey server container.
      */
     public Response dispatch(final Object resource, final Request request) throws ProcessingException;
 }

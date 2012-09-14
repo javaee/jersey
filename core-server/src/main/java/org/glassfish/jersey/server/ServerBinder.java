@@ -39,12 +39,9 @@
  */
 package org.glassfish.jersey.server;
 
-import java.util.concurrent.Future;
-
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 
@@ -62,33 +59,20 @@ import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.internal.process.AsyncInflectorAdapter;
-import org.glassfish.jersey.server.internal.process.DefaultRespondingContext;
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.server.internal.process.ProcessingBinder;
-import org.glassfish.jersey.server.internal.process.ProcessingCallback;
-import org.glassfish.jersey.server.internal.process.ProcessingContext;
-import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.internal.process.ResponseProcessor;
-import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
-import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
+import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.TypeLiteral;
-
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Server injection binder.
@@ -123,7 +107,6 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
-
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
         public RequestContextInjectionFactory(Provider<Ref<ContainerRequest>> referenceFactory) {
@@ -134,106 +117,6 @@ public class ServerBinder extends AbstractBinder {
         @RequestScoped
         public ContainerRequest provide() {
             return super.provide();
-        }
-    }
-
-    /**
-     * Injection-enabled client side {@link org.glassfish.jersey.server.internal.process.RequestInvoker} instance builder.
-     */
-    static final class RequestInvokerBuilder {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private ResponseProcessor.Builder<ContainerResponse> responseProcessorBuilder;
-        @Inject
-        private Provider<Ref<ProcessingContext>> invocationContextReferenceFactory;
-        @Inject
-        private ExecutorsFactory<ContainerRequest> executorsFactory;
-
-        /**
-         * Build a new {@link org.glassfish.jersey.server.internal.process.RequestInvoker request invoker} configured to use
-         * the supplied request processor for processing requests.
-         *
-         * @param rootStage root processing stage.
-         * @return new request invoker instance.
-         */
-        public RequestInvoker<ContainerRequest, ContainerResponse> build(
-                final Stage<ContainerRequest> rootStage) {
-
-            return new RequestInvoker<ContainerRequest, ContainerResponse>(
-                    rootStage,
-                    requestScope,
-                    new AsyncInflectorAdapter.Builder<ContainerRequest, ContainerResponse>() {
-                        @Override
-                        public AsyncInflectorAdapter<ContainerRequest, ContainerResponse> create(
-                                Inflector<ContainerRequest, ContainerResponse> wrapped,
-                                ProcessingCallback<ContainerResponse> callback) {
-                            return new AsyncInflectorAdapter<ContainerRequest, ContainerResponse>(
-                                    wrapped, callback) {
-
-                                @Override
-                                protected ContainerResponse convertResponse(
-                                        ContainerRequest requestContext, Response response) {
-                                    return new ContainerResponse(requestContext, response);
-                                }
-                            };
-                        }
-                    },
-                    responseProcessorBuilder,
-                    invocationContextReferenceFactory,
-                    executorsFactory);
-        }
-
-    }
-
-    /**
-     * Injection-enabled client side {@link ResponseProcessor} instance builder.
-     */
-    static class ResponseProcessorBuilder implements ResponseProcessor.Builder<ContainerResponse> {
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingCtxProvider;
-        @Inject
-        private Provider<ExceptionMappers> exceptionMappersProvider;
-        @Inject
-        private Provider<ContainerRequest> requestContextFactory;
-
-        /**
-         * Default constructor meant to be used by injection framework.
-         */
-        public ResponseProcessorBuilder() {
-            // Injection constructor
-        }
-
-        @Override
-        public ResponseProcessor<ContainerResponse> build(
-                final Future<ContainerResponse> inflectedResponse,
-                final SettableFuture<ContainerResponse> processedResponse,
-                final ProcessingCallback<ContainerResponse> callback,
-                final RequestScope.Instance scopeInstance) {
-
-            return new ResponseProcessor<ContainerResponse>(
-                    callback,
-                    inflectedResponse,
-                    processedResponse,
-                    respondingCtxProvider,
-                    scopeInstance,
-                    requestScope,
-                    exceptionMappersProvider) {
-
-                @Override
-                protected ContainerResponse convertResponse(Response exceptionResponse) {
-                    if (exceptionResponse == null) {
-                        return null;
-                    } else {
-                        final ContainerResponse containerResponse = new ContainerResponse(requestContextFactory.get(),
-                                exceptionResponse);
-                        containerResponse.setMappedFromException(true);
-                        return containerResponse;
-                    }
-                }
-            };
         }
     }
 
@@ -254,8 +137,7 @@ public class ServerBinder extends AbstractBinder {
                 new RouterBinder(),
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceBinder(),
-                new JerseyResourceContext.Binder(),
-                new ServerExecutorsFactory.ServerExecutorBinder());
+                new JerseyResourceContext.Binder());
 
         // Request/Response injection interfaces
         bindFactory(RequestReferencingFactory.class).to(Request.class).in(PerLookup.class);
@@ -272,11 +154,7 @@ public class ServerBinder extends AbstractBinder {
         bindFactory(ReferencingFactory.<ContainerRequest>referenceFactory()).to(new TypeLiteral<Ref<ContainerRequest>>() {
         }).in(RequestScoped.class);
 
-        bind(DefaultRespondingContext.class).to(new TypeLiteral<ResponseProcessor.RespondingContext<ContainerResponse>>() {
-        }).in(RequestScoped.class);
-
-        bind(ResponseProcessorBuilder.class).to(new TypeLiteral<ResponseProcessor.Builder<ContainerResponse>>() {
-        }).in(Singleton.class);
+        bind(DefaultRespondingContext.class).to(RespondingContext.class).in(RequestScoped.class);
 
         //ChunkedResponseWriter
         bind(ChunkedResponseWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
@@ -284,7 +162,6 @@ public class ServerBinder extends AbstractBinder {
         // JSONP
         bind(JsonWithPaddingInterceptor.class).to(WriterInterceptor.class).in(Singleton.class);
 
-        bindAsContract(RequestInvokerBuilder.class);
         bindAsContract(ReferencesInitializer.class);
     }
 }

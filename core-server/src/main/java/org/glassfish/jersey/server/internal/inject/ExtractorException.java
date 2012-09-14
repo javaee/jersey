@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.server.internal.inject;
+
+import javax.ws.rs.WebApplicationException;
+
+import org.glassfish.jersey.internal.ProcessingException;
 
 /**
  * A runtime exception that contains a cause, a checked or runtime exception,
- * that may be mapped to a {@link javax.ws.rs.core.Response} instance.
- * <p>
- * The runtime will catch such exceptions and attempt to map the cause
- * exception to a registered {@link javax.ws.rs.ext.ExceptionMapper} that
- * provides an appropriate {@link javax.ws.rs.core.Response} instance.
+ * that may be passed to the cause of a {@link WebApplicationException}.
  *
  * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MappableException extends ProcessingException {
+public class ExtractorException extends ProcessingException {
+    private static final long serialVersionUID = -4918023257104413981L;
 
-    private static final long serialVersionUID = -7326005523956892754L;
-
-    /**
-     * Construct a mappable container exception.
-     *
-     * @param cause the cause. If the cause is an instance of
-     *     {@link MappableException} then the cause of this exception
-     *     will be obtained by recursively searching though the exception
-     *     causes until a cause is obtained that is not an instance of
-     *     {@code MappableException}.
-     */
-    public MappableException(Throwable cause) {
-        super(unwrap(cause));
+    public ExtractorException() {
+        super();
     }
 
-    /**
-     * Construct a new mappable exception with the supplied message and cause.
-     *
-     * @param message the exception message.
-     * @param cause the exception cause.
-     */
-    public MappableException(String message, Throwable cause) {
+    public ExtractorException(String message) {
+        super(message);
+    }
+
+    public ExtractorException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    private static Throwable unwrap(Throwable cause) {
-        if (cause instanceof MappableException) {
-            do {
-                MappableException mce = (MappableException) cause;
-                cause = mce.getCause();
-            } while (cause instanceof MappableException);
-        }
-
-        return cause;
+    public ExtractorException(Throwable cause) {
+        super(cause);
     }
 }

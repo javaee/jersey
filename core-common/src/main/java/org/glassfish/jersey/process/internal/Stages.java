@@ -42,6 +42,7 @@ package org.glassfish.jersey.process.internal;
 import java.util.Deque;
 import java.util.LinkedList;
 
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.Inflector;
 
 import com.google.common.base.Function;
@@ -73,7 +74,7 @@ public final class Stages {
      * This stage, when applied returns the unmodified input data object
      * as part of it's continuation.
      *
-     * @param <DATA>   data type transformable by the stage.
+     * @param <DATA> data type transformable by the stage.
      * @return identity stage.
      */
     public static <DATA> ChainableStage<DATA> identity() {
@@ -86,8 +87,8 @@ public final class Stages {
      * interface and returns the provided {@link Inflector} instance
      * when the {@link Inflecting#inflector()} method is called.
      *
-     * @param <DATA>   data type transformable by the stage and returned inflector.
-     * @param <RESULT> type of result produced by a successful inflector data transformation.
+     * @param <DATA>    data type transformable by the stage and returned inflector.
+     * @param <RESULT>  type of result produced by a successful inflector data transformation.
      * @param inflector a request to response transformation to be wrapped in
      *                  a stage.
      * @return a stage that wraps the supplied {@code Inflector}.
@@ -127,9 +128,9 @@ public final class Stages {
      * @return extracted inflector if present, {@code null} otherwise.
      */
     @SuppressWarnings("unchecked")
-    public static <DATA, RESULT> Inflector<DATA, RESULT> extractInflector(Object stage) {
+    public static <DATA, RESULT, T extends Inflector<DATA, RESULT>> T extractInflector(Object stage) {
         if (stage instanceof Inflecting) {
-            return ((Inflecting<DATA, RESULT>) stage).inflector();
+            return (T) ((Inflecting<DATA, RESULT>) stage).inflector();
         }
 
         return null;
@@ -153,6 +154,52 @@ public final class Stages {
      */
     public static <DATA> Stage.Builder<DATA> chain(ChainableStage<DATA> rootStage) {
         return new StageChainBuilder<DATA>(rootStage);
+    }
+
+    /**
+     * Run the data through a chain of stages identified by the root stage.
+     *
+     * @param <DATA>    processed data type.
+     * @param data      data to be processed.
+     * @param rootStage root stage of the stage chain.
+     * @return processing result.
+     */
+    public static <DATA> DATA process(DATA data, Stage<DATA> rootStage) {
+        Stage.Continuation<DATA> continuation = Stage.Continuation.of(data, rootStage);
+        Stage<DATA> currentStage;
+        while ((currentStage = continuation.next()) != null) {
+            continuation = currentStage.apply(continuation.result());
+        }
+        return continuation.result();
+    }
+
+    /**
+     * Run the data through a chain of stages identified by the root stage.
+     *
+     * If an inflector is found in the leaf stage, it's reference is set into the {@code inflectorRef}
+     * parameter.
+     *
+     * @param <DATA>       processed data type.
+     * @param data         data to be processed.
+     * @param rootStage    root stage of the stage chain.
+     * @param inflectorRef a mutable reference to an inflector.
+     * @return processing result.
+     */
+    public static <DATA, RESULT, T extends Inflector<DATA, RESULT>> DATA process(
+            DATA data,
+            Stage<DATA> rootStage,
+            Ref<T> inflectorRef) {
+
+        Stage<DATA> lastStage = rootStage;
+        Stage.Continuation<DATA> continuation = Stage.Continuation.of(data, lastStage);
+        while (continuation.next() != null) {
+            lastStage = continuation.next();
+            continuation = lastStage.apply(continuation.result());
+        }
+
+        inflectorRef.set(Stages.<DATA, RESULT, T>extractInflector(lastStage));
+
+        return continuation.result();
     }
 
     private static class StageChainBuilder<DATA> implements Stage.Builder<DATA> {
@@ -225,6 +272,11 @@ public final class Stages {
         }
     }
 
+    /**
+     * Linked linear stage implementation.
+     *
+     * @param <DATA> processed data type.
+     */
     public static class LinkedStage<DATA> implements Stage<DATA> {
 
         private final Stage<DATA> nextStage;

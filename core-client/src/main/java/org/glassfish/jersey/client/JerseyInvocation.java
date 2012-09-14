@@ -70,6 +70,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScope;
 
@@ -578,9 +579,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public Response invoke() throws ClientException, WebApplicationException {
-        final Runtime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = configuration().getRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
-        return requestScope.runInScope(new RequestScope.Producer<Response>() {
+        return requestScope.runInScope(new Producer<Response>() {
             @Override
             public Response call() throws ClientException {
                 return new ScopedJaxrsResponse(runtime.invoke(requestContext), requestScope);
@@ -590,9 +591,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException {
-        final Runtime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = configuration().getRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
-        return requestScope.runInScope(new RequestScope.Producer<T>() {
+        return requestScope.runInScope(new Producer<T>() {
             @Override
             public T call() throws ClientException {
                 try {
@@ -609,9 +610,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException {
-        final Runtime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = configuration().getRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
-        return requestScope.runInScope(new RequestScope.Producer<T>() {
+        return requestScope.runInScope(new Producer<T>() {
             @Override
             public T call() throws ClientException {
                 try {

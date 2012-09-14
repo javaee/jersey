@@ -51,7 +51,16 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -147,7 +156,7 @@ public class ContainerRequest extends InboundMessageContext
      * the current request.
      *
      * @return custom container extensions initializer or {@code null} if not
-     *     available.
+     *         available.
      */
     public RequestScopedInitializer getRequestScopedInitializer() {
         return requestScopedInitializer;
@@ -186,8 +195,8 @@ public class ContainerRequest extends InboundMessageContext
     /**
      * Read entity from a context entity input stream.
      *
-     * @param <T>         entity Java object type.
-     * @param rawType     raw Java entity type.
+     * @param <T>     entity Java object type.
+     * @param rawType raw Java entity type.
      * @return entity read from a context entity input stream.
      */
     public <T> T readEntity(Class<T> rawType) {
@@ -256,7 +265,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @return underlying properties delegate.
      */
-    PropertiesDelegate getPropertiesDelegate() {
+    public PropertiesDelegate getPropertiesDelegate() {
         return propertiesDelegate;
     }
 
@@ -664,5 +673,18 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public MultivaluedMap<String, String> getRequestHeaders() {
         return getHeaders();
+    }
+
+    /**
+     * Check if the container request has been properly initialized for processing.
+     *
+     * @throws IllegalStateException in case the internal state is not ready for processing.
+     */
+    void checkState() throws IllegalStateException {
+        if (securityContext == null) {
+            throw new IllegalStateException("SecurityContext set in the ContainerRequestContext must not be null.");
+        } else if (responseWriter == null) {
+            throw new IllegalStateException("ResponseWriter set in the ContainerRequestContext must not be null.");
+        }
     }
 }

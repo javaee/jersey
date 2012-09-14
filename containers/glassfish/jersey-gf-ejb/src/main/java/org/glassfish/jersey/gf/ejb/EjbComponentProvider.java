@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,10 +69,10 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @SuppressWarnings("UnusedDeclaration")
-public final class EJBComponentProvider implements ComponentProvider {
+public final class EjbComponentProvider implements ComponentProvider {
 
     private static final Logger LOGGER = Logger.getLogger(
-            EJBComponentProvider.class.getName());
+            EjbComponentProvider.class.getName());
 
     private boolean ejbInterceptorRegistered = false;
 
@@ -143,7 +143,7 @@ public final class EJBComponentProvider implements ComponentProvider {
             try {
 
                 // create an interceptor instance via reflection
-                final Class<?> interceptorClass = Class.forName(EJBComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
+                final Class<?> interceptorClass = Class.forName(EjbComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
                 final Object interceptor = interceptorClass.getConstructor(ServiceLocator.class).newInstance(locator);
 
                 interceptorBinderMethod.invoke(interceptorBinder, interceptor);
@@ -208,7 +208,7 @@ public final class EJBComponentProvider implements ComponentProvider {
         if (ejbInterceptorRegistered) {
             final DynamicConfiguration dc = Injections.getConfiguration(locator);
             Injections.addBinding(
-                    Injections.newBinder(EJBExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
+                    Injections.newBinder(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
             dc.commit();
         }
     }

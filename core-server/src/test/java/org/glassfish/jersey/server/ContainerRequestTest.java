@@ -58,7 +58,9 @@ import javax.ws.rs.core.Variant;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Jersey container request context test.

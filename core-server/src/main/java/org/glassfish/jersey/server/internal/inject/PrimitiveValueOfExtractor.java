@@ -45,7 +45,6 @@ import java.lang.reflect.Method;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 
 /**
@@ -58,21 +57,28 @@ import org.glassfish.jersey.internal.ProcessingException;
  */
 final class PrimitiveValueOfExtractor implements MultivaluedParameterExtractor<Object> {
 
-    final Method valueOf;
-    final String parameter;
-    final String defaultStringValue;
-    final Object defaultValue;
-    final Object defaultDefaultValue;
+    private final Method valueOf;
+    private final String parameter;
+    private final String defaultStringValue;
+    private final Object defaultValue;
+    private final Object defaultPrimitiveTypeValue;
 
+    /**
+     * Create new primitive parameter value extractor.
+     *
+     * @param valueOf                   {@code valueOf()} method handler.
+     * @param parameter                 string parameter value.
+     * @param defaultStringValue        default string value.
+     * @param defaultPrimitiveTypeValue default primitive type value.
+     */
     public PrimitiveValueOfExtractor(Method valueOf, String parameter,
-            String defaultStringValue, Object defaultDefaultValue)
-            throws IllegalAccessException, InvocationTargetException {
+                                     String defaultStringValue, Object defaultPrimitiveTypeValue) {
         this.valueOf = valueOf;
         this.parameter = parameter;
         this.defaultStringValue = defaultStringValue;
         this.defaultValue = (defaultStringValue != null)
                 ? getValue(defaultStringValue) : null;
-        this.defaultDefaultValue = defaultDefaultValue;
+        this.defaultPrimitiveTypeValue = defaultPrimitiveTypeValue;
     }
 
     @Override
@@ -112,6 +118,6 @@ final class PrimitiveValueOfExtractor implements MultivaluedParameterExtractor<O
             return defaultValue;
         }
 
-        return defaultDefaultValue;
+        return defaultPrimitiveTypeValue;
     }
 }

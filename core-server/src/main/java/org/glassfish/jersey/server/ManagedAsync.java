@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.process;
+package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-
-import com.google.common.base.Function;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Default implementation of the request-scoped
- * {@link ResponseProcessor.RespondingContext responding context}.
+ * Indicates that the resource method to which the annotation has been applied
+ * should be executed on a separate thread managed by an internal Jersey
+ * {@link java.util.concurrent.ExecutorService executor service}.
  *
- * @param <DATA> supported processing data type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@RequestScoped
-public class DefaultRespondingContext<DATA> implements ResponseProcessor.RespondingContext<DATA> {
-
-    private Stage<DATA> rootStage;
-
-    @Override
-    public void push(Function<DATA, DATA> responseTransformation) {
-        rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<DATA>(responseTransformation)
-                : new Stages.LinkedStage<DATA>(responseTransformation, rootStage);
-    }
-
-    @Override
-    public void push(final ChainableStage<DATA> stage) {
-        if (rootStage != null) {
-            stage.setDefaultNext(rootStage);
-        }
-
-        rootStage = stage;
-    }
-
-    @Override
-    public Stage<DATA> createResponderRoot() {
-        return rootStage;
-    }
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ManagedAsync {
 }

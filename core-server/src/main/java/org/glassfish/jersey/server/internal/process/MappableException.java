@@ -42,22 +42,51 @@ package org.glassfish.jersey.server.internal.process;
 import org.glassfish.jersey.internal.ProcessingException;
 
 /**
- * Jersey processing exception signaling that the final request acceptor did not
- * return an inflector instance.
+ * A runtime exception that contains a cause, a checked or runtime exception,
+ * that may be mapped to a {@link javax.ws.rs.core.Response} instance.
+ * <p>
+ * The runtime will catch such exceptions and attempt to map the cause
+ * exception to a registered {@link javax.ws.rs.ext.ExceptionMapper} that
+ * provides an appropriate {@link javax.ws.rs.core.Response} instance.
  *
+ * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO remove
-public class InflectorNotFoundException extends ProcessingException {
+public class MappableException extends ProcessingException {
 
-    private static final long serialVersionUID = -2023619054943423452L;
+    private static final long serialVersionUID = -7326005523956892754L;
 
     /**
-     * Create new processing exception indicating that an inflector has not been found.
+     * Construct a mappable container exception.
      *
-     * @param message error message.
+     * @param cause the cause. If the cause is an instance of
+     *     {@link MappableException} then the cause of this exception
+     *     will be obtained by recursively searching though the exception
+     *     causes until a cause is obtained that is not an instance of
+     *     {@code MappableException}.
      */
-    public InflectorNotFoundException(String message) {
-        super(message);
+    public MappableException(Throwable cause) {
+        super(unwrap(cause));
+    }
+
+    /**
+     * Construct a new mappable exception with the supplied message and cause.
+     *
+     * @param message the exception message.
+     * @param cause the exception cause.
+     */
+    public MappableException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    private static Throwable unwrap(Throwable cause) {
+        if (cause instanceof MappableException) {
+            do {
+                MappableException mce = (MappableException) cause;
+                cause = mce.getCause();
+            } while (cause instanceof MappableException);
+        }
+
+        return cause;
     }
 }

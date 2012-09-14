@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import com.google.common.base.Function;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize

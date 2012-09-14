@@ -147,6 +147,8 @@ public class AsyncServletResourceITCase extends JerseyTest {
                             getResponses.put(
                                     requestId,
                                     new ResponseRecord(response.getStatus(), response.readEntity(String.class)));
+                        } catch (Throwable t) {
+                            t.printStackTrace();
                         } finally {
                             getRequestLatch.countDown();
                         }
@@ -305,7 +307,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
             assertTrue("Detected a GET message response loss: " + i, getResponseKeys.contains(i));
             final String getResponseEntry = getResponses.get(i);
             assertTrue("Unexpected canceled GET response status for request " + i,
-                    getResponseEntry.startsWith("500: "));
+                    getResponseEntry.startsWith("503: "));
         }
     }
 }

@@ -58,7 +58,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
-import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -81,6 +80,7 @@ import com.sun.net.httpserver.HttpsExchange;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
+     private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
 
     transient private ApplicationHandler appHandler;
     private final ContainerLifecycleListener containerListener;
@@ -116,9 +116,9 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                  * This is an edge case where the request path does not end in a
                  * '/' and is equal to the context path of the HTTP handler.
                  * Both the request path and base path need to end in a '/'
-                 * Currently the request path is modified. TODO support
-                 * redirection in accordance with resource configuration
-                 * feature.
+                 * Currently the request path is modified.
+                 *
+                 * TODO support redirection in accordance with resource configuration feature.
                  */
                 exchangeUri = UriBuilder.fromUri(exchangeUri).
                         path("/").build();
@@ -130,8 +130,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
          * The following is madness, there is no easy way to get the complete
          * URI of the HTTP request!!
          *
-         * TODO this is missing the user information component, how can this be
-         * obtained?
+         * TODO this is missing the user information component, how can this be obtained?
          */
         final boolean isSecure = exchange instanceof HttpsExchange;
         String scheme = isSecure ? "https" : "http";
@@ -264,7 +263,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         }
 
         @Override
-        public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
+        public boolean suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) {
             throw new UnsupportedOperationException("Method suspend is not support by the container.");
         }
 
@@ -274,8 +273,14 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         }
 
         @Override
-        public void cancel() {
-            commit();
+        public void failure(Throwable error) {
+            try {
+                exchange.sendResponseHeaders(500, getResponseLength(0));
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Unable to send a failure response.", e);
+            } finally {
+                commit();
+            }
         }
 
         @Override
@@ -293,8 +298,8 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
          */
         private void closeAndLogWarning() {
             if (closed.compareAndSet(false, true)) {
-                Logger.getLogger(JdkHttpHandlerContainer.class.getName()).log(Level.WARNING, LocalizationMessages.ERROR_RESPONSEWRITER_RESPONSE_UNCOMMITED());
                 exchange.close();
+                LOGGER.log(Level.WARNING, LocalizationMessages.ERROR_RESPONSEWRITER_RESPONSE_UNCOMMITED());
             }
         }
     }

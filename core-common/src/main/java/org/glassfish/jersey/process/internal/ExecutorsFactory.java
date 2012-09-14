@@ -53,8 +53,8 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Aggregate {@link org.glassfish.jersey.spi.RequestExecutorsProvider request executors provider} and
- * {@link org.glassfish.jersey.spi.ResponseExecutorsProvider response executors provider} used directly in the
- * {@link RequestInvoker request invoker} to get the pluggable processing executor services.
+ * {@link org.glassfish.jersey.spi.ResponseExecutorsProvider response executors provider} used by
+ * client and server-side run-times to provide support for pluggable managed/async executor services.
  *
  * @param <REQUEST> request data type.
  * @author Marek Potociar (marek.potociar at oracle.com)

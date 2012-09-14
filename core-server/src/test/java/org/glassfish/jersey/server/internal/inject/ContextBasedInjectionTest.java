@@ -53,12 +53,12 @@ import javax.ws.rs.core.Response;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.internal.process.ProcessingContext;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.model.Resource;
 
 import org.junit.Before;
@@ -97,7 +97,7 @@ public class ContextBasedInjectionTest {
     private static class AsyncInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Context
-        private Provider<ProcessingContext> processingContextProvider;
+        private Provider<AsyncContext> asyncContextProvider;
         private final String responseContent;
 
         public AsyncInflector() {
@@ -111,8 +111,8 @@ public class ContextBasedInjectionTest {
         @Override
         public Response apply(final ContainerRequestContext req) {
             // Suspend current request
-            final ProcessingContext processingContext = processingContextProvider.get();
-            processingContext.suspend();
+            final AsyncContext asyncContext = asyncContextProvider.get();
+            asyncContext.suspend();
 
             Executors.newSingleThreadExecutor().submit(new Runnable() {
 
@@ -125,7 +125,7 @@ public class ContextBasedInjectionTest {
                     }
 
                     // Returning will enter the suspended request
-                    processingContext.resume(Response.ok().entity(responseContent).build());
+                    asyncContext.resume(Response.ok().entity(responseContent).build());
                 }
             });
 

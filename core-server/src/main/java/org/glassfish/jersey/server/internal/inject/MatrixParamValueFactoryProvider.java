@@ -41,28 +41,35 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.core.PathSegment;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.ExtractorException;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 /**
- * Value factory provider supporting the {@link MatrixParam} injection annotation.
+ * Value factory provider supporting the {@link MatrixParam &#64;MatrixParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider<MatrixParam> {
+final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
+    /**
+     * {@link MatrixParam &#64;MatrixParam} injection resolver.
+     */
     @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<MatrixParam> {
 
+        /**
+         * Create new {@link MatrixParam &#64;MatrixParam} injection resolver.
+         */
         public InjectionResolver() {
             super(MatrixParamValueFactoryProvider.class);
         }
@@ -91,9 +98,15 @@ final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
     @Inject
-    public MatrixParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.MATRIX);
+    public MatrixParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.MATRIX);
     }
 
     @Override

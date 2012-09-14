@@ -49,8 +49,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;

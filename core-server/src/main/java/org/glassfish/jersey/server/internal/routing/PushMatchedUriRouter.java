@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.ContainerRequest;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * Terminal router that pushes the URI matched so far to the stack returned

@@ -48,11 +48,11 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
+import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelIssue;
@@ -81,9 +81,9 @@ class SubResourceLocatorRouter implements Router {
     /**
      * Create a new sub-resource locator router.
      *
-     * @param locator     HK2 locator.
+     * @param locator                     HK2 locator.
      * @param runtimeModelBuilderOriginal original runtime model builder.
-     * @param locatorModel resource locator method model.
+     * @param locatorModel                resource locator method model.
      */
     public SubResourceLocatorRouter(
             final ServiceLocator locator,

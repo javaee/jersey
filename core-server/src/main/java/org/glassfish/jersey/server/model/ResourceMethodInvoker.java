@@ -60,17 +60,22 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
 import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.server.internal.process.ProcessingContext;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
+
+import com.google.common.base.Function;
 
 import deprecated.javax.ws.rs.DynamicBinder;
 
@@ -81,10 +86,11 @@ import deprecated.javax.ws.rs.DynamicBinder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ResourceMethodInvoker implements Inflector<ContainerRequest, ContainerResponse>, ResourceInfo {
+public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
-    private final Provider<RoutingContext> routingContextFactory;
-    private final Provider<ProcessingContext> invocationContextFactory;
+    private final Provider<RoutingContext> routingContextProvider;
+    private final Provider<AsyncContext> asyncContextProvider;
+    private final Provider<RespondingContext> respondingContextProvider;
     private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
@@ -103,9 +109,11 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     public static class Builder {
 
         @Inject
-        private Provider<RoutingContext> routingContextFactory;
+        private Provider<RoutingContext> routingContextProvider;
         @Inject
-        private Provider<ProcessingContext> invocationContextFactory;
+        private Provider<AsyncContext> asyncContextProvider;
+        @Inject
+        private Provider<RespondingContext> respondingContextProvider;
         @Inject
         private ResourceMethodDispatcherFactory dispatcherProviderFactory;
         @Inject
@@ -114,28 +122,29 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
         /**
          * Build a new resource method invoker instance.
          *
-         * @param method resource method model.
-         * @param nameBoundRequestFilters name bound request filters.
-         * @param nameBoundResponseFilters name bound response filters.
-         * @param globalReaderInterceptors global reader interceptors.
-         * @param globalWriterInterceptors global writer interceptors.
+         * @param method                      resource method model.
+         * @param nameBoundRequestFilters     name bound request filters.
+         * @param nameBoundResponseFilters    name bound response filters.
+         * @param globalReaderInterceptors    global reader interceptors.
+         * @param globalWriterInterceptors    global writer interceptors.
          * @param nameBoundReaderInterceptors name-bound reader interceptors.
          * @param nameBoundWriterInterceptors name-bound writer interceptors.
-         * @param dynamicBinders dynamic binders.
+         * @param dynamicBinders              dynamic binders.
          * @return new resource method invoker instance.
          */
         public ResourceMethodInvoker build(ResourceMethod method,
-            MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
-            MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
-            Collection<ReaderInterceptor> globalReaderInterceptors,
-            Collection<WriterInterceptor> globalWriterInterceptors,
-            MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
-            MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
-            Collection<DynamicBinder> dynamicBinders
+                                           MultivaluedMap<Class<? extends Annotation>, ContainerRequestFilter> nameBoundRequestFilters,
+                                           MultivaluedMap<Class<? extends Annotation>, ContainerResponseFilter> nameBoundResponseFilters,
+                                           Collection<ReaderInterceptor> globalReaderInterceptors,
+                                           Collection<WriterInterceptor> globalWriterInterceptors,
+                                           MultivaluedMap<Class<? extends Annotation>, ReaderInterceptor> nameBoundReaderInterceptors,
+                                           MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
+                                           Collection<DynamicBinder> dynamicBinders
         ) {
             return new ResourceMethodInvoker(
-                    routingContextFactory,
-                    invocationContextFactory,
+                    routingContextProvider,
+                    asyncContextProvider,
+                    respondingContextProvider,
                     dispatcherProviderFactory,
                     invocationHandlerProviderFactory,
                     method,
@@ -150,8 +159,9 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
     }
 
     private ResourceMethodInvoker(
-            Provider<RoutingContext> routingContextFactory,
-            Provider<ProcessingContext> invocationContextFactory,
+            Provider<RoutingContext> routingContextProvider,
+            Provider<AsyncContext> asyncContextProvider,
+            Provider<RespondingContext> respondingContextProvider,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             ResourceMethod method,
@@ -163,8 +173,9 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
             MultivaluedMap<Class<? extends Annotation>, WriterInterceptor> nameBoundWriterInterceptors,
             Collection<DynamicBinder> dynamicBinders) {
 
-        this.routingContextFactory = routingContextFactory;
-        this.invocationContextFactory = invocationContextFactory;
+        this.routingContextProvider = routingContextProvider;
+        this.asyncContextProvider = asyncContextProvider;
+        this.respondingContextProvider = respondingContextProvider;
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
@@ -257,33 +268,60 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
 
     @Override
     public ContainerResponse apply(final ContainerRequest requestContext) {
-        final Object resource = routingContextFactory.get().peekMatchedResource();
+        final Object resource = routingContextProvider.get().peekMatchedResource();
 
-        final ProcessingContext processingCtx = invocationContextFactory.get();
-        if (method.isSuspendDeclared()) {
-            processingCtx.setTimeout(method.getSuspendTimeout(), method.getSuspendTimeoutUnit());
-        }
         requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS, getReaderInterceptors());
         requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS, getWriterInterceptors());
-        final Response response = dispatcher.dispatch(resource, requestContext);
 
-        if (method.isSuspendDeclared()) {
-            processingCtx.setResponse(resource);
-            processingCtx.trySuspend();
+        if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
+            asyncContextProvider.get().suspend();
         }
 
-        final ContainerResponse responseContext = new ContainerResponse(requestContext, response);
-        final Invocable invocable = method.getInvocable();
-        responseContext.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
+        if (method.isManagedAsyncDeclared()) {
+            asyncContextProvider.get().invokeManaged(new Producer<Response>() {
+                @Override
+                public Response call() {
+                    final Response response = invoke(requestContext, resource);
+                    if (method.isSuspendDeclared()) {
+                        // we ignore any response returned from a method that injects AsyncResponse
+                        return null;
+                    }
+                    return response;
+                }
+            });
+            return null; // return null on current thread
+        } else {
+            return new ContainerResponse(requestContext, invoke(requestContext, resource));
+        }
+    }
 
-        if (responseContext.hasEntity() && !(responseContext.getEntityType() instanceof ParameterizedType)) {
-            Type invocableType = invocable.getResponseType();
-            if (invocableType != null && Void.TYPE != invocableType && Void.class != invocableType && invocableType != Response.class) {
-                responseContext.setEntityType(invocableType);
+    private Response invoke(ContainerRequest requestContext, Object resource) {
+        final Response jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+
+        respondingContextProvider.get().push(new Function<ContainerResponse, ContainerResponse>() {
+            @Override
+            public ContainerResponse apply(final ContainerResponse response) {
+                if (response == null) {
+                    return response;
+                }
+
+                final Invocable invocable = method.getInvocable();
+                response.setEntityAnnotations(invocable.getHandlingMethod().getDeclaredAnnotations());
+
+                if (response.hasEntity() && !(response.getEntityType() instanceof ParameterizedType)) {
+                    Type invocableType = invocable.getResponseType();
+                    if (invocableType != null &&
+                            Void.TYPE != invocableType &&
+                            Void.class != invocableType &&
+                            Response.class != invocableType) {
+                        response.setEntityType(invocableType);
+                    }
+                }
+                return response;
             }
-        }
+        });
 
-        return responseContext;
+        return jaxrsResponse;
     }
 
     /**
@@ -291,7 +329,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
      * wrapped by this invoker.
      *
      * @return All bound (dynamically or by name) request filters applicable to the {@link #getResourceMethod() resource
-     * method}.
+     *         method}.
      */
     public Collection<ContainerRequestFilter> getRequestFilters() {
         return requestFilters;
@@ -302,7 +340,7 @@ public class ResourceMethodInvoker implements Inflector<ContainerRequest, Contai
      * wrapped by this invoker.
      *
      * @return All bound (dynamically or by name) response filters applicable to the {@link #getResourceMethod() resource
-     * method}.
+     *         method}.
      */
     public Collection<ContainerResponseFilter> getResponseFilters() {
         return responseFilters;

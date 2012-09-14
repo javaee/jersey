@@ -55,7 +55,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @Singleton
-final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider<BeanParam> {
+final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     @Inject
     private ServiceLocator locator;

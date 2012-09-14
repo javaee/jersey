@@ -122,9 +122,9 @@ public class ClientConfig implements Configuration, Config, Configurable {
         private final JerseyClient client;
         private Connector connector;
 
-        private Value<Runtime> runtime = Values.lazy(new Value<Runtime>() {
+        private Value<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
             @Override
-            public Runtime get() {
+            public ClientRuntime get() {
                 return initRuntime();
             }
         });
@@ -380,7 +380,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
         /**
          * Initialize the newly constructed client instance.
          */
-        private Runtime initRuntime() {
+        private ClientRuntime initRuntime() {
             /**
              * Ensure that any attempt to add a new provider, feature, binder or modify the connector
              * will cause a copy of the current state.
@@ -408,7 +408,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
             providerBinder.bindClasses(getProviderClasses());
             providerBinder.bindInstances(getProviderInstances());
 
-            final Runtime runtime = new Runtime(connector, locator);
+            final ClientRuntime runtime = new ClientRuntime(connector, locator);
             client.addListener(new JerseyClient.LifecycleListener() {
                 @Override
                 public void onClose() {
@@ -700,7 +700,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
      *
      * @return configured runtime.
      */
-    Runtime getRuntime() {
+    ClientRuntime getRuntime() {
         return state.runtime.get();
     }
 

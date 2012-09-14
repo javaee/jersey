@@ -44,6 +44,7 @@ import java.lang.annotation.Annotation;
 import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.GenericType;
 
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
@@ -70,7 +71,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
 
     @Override
     public <T> T readEntity(final Class<T> entityType) throws MessageProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new RequestScope.Producer<T>() {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
                 return ScopedJaxrsResponse.super.readEntity(entityType);
@@ -80,7 +81,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
 
     @Override
     public <T> T readEntity(final GenericType<T> entityType) throws MessageProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new RequestScope.Producer<T>() {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
                 return ScopedJaxrsResponse.super.readEntity(entityType);
@@ -90,7 +91,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
 
     @Override
     public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new RequestScope.Producer<T>() {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
                 return ScopedJaxrsResponse.super.readEntity(entityType, annotations);
@@ -100,7 +101,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
 
     @Override
     public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new RequestScope.Producer<T>() {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
                 return ScopedJaxrsResponse.super.readEntity(entityType, annotations);

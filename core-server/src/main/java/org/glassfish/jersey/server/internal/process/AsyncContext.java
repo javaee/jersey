@@ -42,85 +42,82 @@ package org.glassfish.jersey.server.internal.process;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+
+import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Value;
+
 /**
- * Injectable processing context that can be used to control various aspects
- * of a single request processing, e.g. the threading model.
+ * Injectable asynchronous processing context that can be used to control various aspects
+ * of asynchronous processing of a single request.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface ProcessingContext extends AsyncResponse {
+public interface AsyncContext extends AsyncResponse {
 
     /**
-     * TODO remove
+     * {@link AsyncContext Asynchronous processing context} injection factory.
      */
-    void setResponse(Object response);
+    static class Factory implements org.glassfish.hk2.api.Factory<AsyncContext> {
+        @Inject
+        private Ref<Value<? extends AsyncContext>> contextValueRef;
+
+        @Override
+        public AsyncContext provide() {
+            final Value<? extends AsyncContext> contextValue = contextValueRef.get();
+            return contextValue == null ? null : contextValue.get();
+        }
+
+        @Override
+        public void dispose(AsyncContext instance) {
+            // do nothing
+        }
+    }
 
     /**
-     * Returns default response to be send back to the client in case the suspended
-     * request times out. The method may return {@code null} if no default response
-     * was set in the execution context.
-     *
-     * @return default response to be sent back to the client in case the suspended
-     *     request times out or {@code null} if no default response was set.
-     * @see #setResponse(Object)
-     */
-    Response getResponse();
-
-    /**
-     * TODO remove
-     */
-    void suspend() throws IllegalStateException;
-
-    /**
-     * Processing context state.
+     * Asynchronous processing context state.
      */
     public static enum State {
 
         /**
-         * Indicates the processing context is running. This is a default state
-         * the processing context is in case the processing execution flow
-         * has not been explicitly modified (yet).
+         * Indicates the asynchronous processing context is running. This is a default state
+         * the processing context is in case the processing execution flow has not been explicitly
+         * modified (yet).
          */
         RUNNING,
         /**
-         * Indicates the processing running in the processing context has been
-         * canceled.
-         */
-        CANCELLED,
-        /**
-         * Indicates the processing running in the processing context has been
-         * suspended.
+         * Indicates the asynchronous processing context has been suspended.
          *
-         * @see ProcessingContext#suspend()
+         * @see AsyncContext#suspend()
          */
         SUSPENDED,
         /**
-         * Indicates the processing running in the processing context has been
-         * resumed.
-         *
-         * @see ProcessingContext#resume(Object)
-         * @see ProcessingContext#resume(Throwable)
+         * Indicates the asynchronous processing context has been resumed.
          */
-        RESUMED
+        RESUMED,
+        /**
+         * Indicates the processing represented by this asynchronous processing context
+         * has been completed.
+         */
+        COMPLETED,
     }
 
     /**
-     * Get the current state of the processing context.
+     * Suspend the current asynchronous processing context.
      *
-     * @return current state of the processing context.
+     * The method returns {@code true} if the context has been successfully suspended,
+     * {@code false} otherwise.
+     *
+     * @return {@code true} if the request processing has been suspended successfully suspended,
+     *         {@code false} otherwise.
      */
-    public State state();
+    public boolean suspend();
 
     /**
-     * Try to {@link ProcessingContext#suspend() suspend} the current request processing.
+     * Invoke the provided response producer in a Jersey-managed asynchronous thread.
      *
-     * Unlike the {@code suspend()} method, this method does not throw an exception
-     * in case the suspend operation fails. Instead, the method returns {@code true}
-     * if the request processing has been suspended successfully, returns {@code false}
-     * otherwise.
-     *
-     * @return {@code true} if the request processing has been suspended successfully,
-     * returns {@code false} otherwise.
+     * @param producer response producer.
      */
-    public boolean trySuspend();
+    public void invokeManaged(Producer<Response> producer);
 }

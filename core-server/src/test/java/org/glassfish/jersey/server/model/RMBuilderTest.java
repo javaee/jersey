@@ -39,39 +39,16 @@
  */
 package org.glassfish.jersey.server.model;
 
-import java.lang.annotation.Annotation;
-import java.net.URI;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
-import deprecated.javax.ws.rs.DynamicBinder;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.internal.process.RequestInvoker;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.InvokerBuilder;
 import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ServerBinder;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -81,8 +58,6 @@ import static org.junit.Assert.assertEquals;
  * @author Jakub Podlesak
  */
 public class RMBuilderTest {
-
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
 
     @Path("/helloworld")
     public static class HelloWorldResource {
@@ -106,77 +81,32 @@ public class RMBuilderTest {
             return "another";
         }
     }
-    private RequestInvoker<ContainerRequest, ContainerResponse> invoker; // will be manually injected in the setupApplication()
-    private RequestScope requestScope; // will be manually injected in the setupApplication()
 
-    @Before
-    public void setupApplication() {
-        ServiceLocator locator = Injections.createLocator(new ServerBinder(), new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bindAsContract(HelloWorldResource.class);
-            }
-        });
-
-        locator.inject(this);
-
-        final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
-        runtimeModelBuilder.setGlobalInterceptors(new HashSet<ReaderInterceptor>(), new HashSet<WriterInterceptor>());
-        runtimeModelBuilder.setBoundProviders(
-                new MultivaluedHashMap<Class<? extends Annotation>, ContainerRequestFilter>(),
-                new MultivaluedHashMap<Class<? extends Annotation>, ContainerResponseFilter>(),
-                new MultivaluedHashMap<Class<? extends Annotation>, ReaderInterceptor>(),
-                new MultivaluedHashMap<Class<? extends Annotation>, WriterInterceptor>(),
-                Collections.<DynamicBinder>emptyList()
-        );
-        runtimeModelBuilder.process(Resource.builder(HelloWorldResource.class, new LinkedList<ResourceModelIssue>()).build(), false);
-        final InvokerBuilder invokerBuilder = locator.createAndInitialize(InvokerBuilder.class);
-
-        this.invoker = invokerBuilder.build(runtimeModelBuilder.buildModel(false));
-        this.requestScope = locator.createAndInitialize(RequestScope.class);
+    private ApplicationHandler createApplication(Class<?>... classes) {
+        return new ApplicationHandler(new ResourceConfig(classes));
     }
 
     @Test
     public void testHelloWorld() throws Exception {
-        final ContainerRequest req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "GET").build();
+        ApplicationHandler app = createApplication(HelloWorldResource.class);
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld", "GET").build()).get();
 
-        Future<ContainerResponse> res = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
-
-            @Override
-            public Future<ContainerResponse> call() throws Exception {
-                return invoker.apply(req);
-            }
-        });
-
-        assertEquals("hello", res.get().getEntity());
+        assertEquals("hello", response.getEntity());
     }
 
     @Test
     public void testOptions() throws Exception {
-        final ContainerRequest req = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld"), "OPTIONS").build();
-        Future<ContainerResponse> res = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
+        ApplicationHandler app = createApplication(HelloWorldResource.class);
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld", "OPTIONS").build()).get();
 
-            @Override
-            public Future<ContainerResponse> call() throws Exception {
-                return invoker.apply(req);
-            }
-        });
-
-        assertEquals("GET", res.get().getEntity());
+        assertEquals("GET", response.getEntity());
     }
 
     @Test
     public void testSubResMethod() throws Exception {
-        final ContainerRequest req2 = RequestContextBuilder.from(BASE_URI, URI.create(BASE_URI.getPath() + "helloworld/another/b"), "GET").build();
+        ApplicationHandler app = createApplication(HelloWorldResource.class);
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld/another/b", "GET").build()).get();
 
-        Future<ContainerResponse> res2 = requestScope.runInScope(new Callable<Future<ContainerResponse>>() {
-
-            @Override
-            public Future<ContainerResponse> call() throws Exception {
-
-                return invoker.apply(req2);
-            }
-        });
-        assertEquals("another", res2.get().getEntity());
+        assertEquals("another", response.getEntity());
     }
 }

@@ -42,11 +42,11 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.List;
 import java.util.regex.MatchResult;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.uri.PathPattern;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.uri.PathPattern;
 
 /**
  * Matches the un-matched right-hand request path to a configured

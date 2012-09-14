@@ -41,8 +41,6 @@ package org.glassfish.jersey.examples.server.async.managed;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,12 +48,8 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ServerExecutorsFactory;
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Jersey example application for custom executors managed async resources.
@@ -89,17 +83,9 @@ public class App {
     }
 
     public static ResourceConfig create() {
-        return new ResourceConfig().
-                addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class, RequestExecProvider.class).
-                addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true)).
-                addBinders(new JacksonBinder(), new ServerExecutorsFactory.ServerExecutorBinder());
-    }
-
-    public static class RequestExecProvider implements RequestExecutorsProvider {
-
-        @Override
-        public ExecutorService getRequestingExecutor() {
-            return Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("custom-request-executor-%d").build());
-        }
+        return new ResourceConfig()
+                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
+                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
+                .addBinders(new JacksonBinder());
     }
 }

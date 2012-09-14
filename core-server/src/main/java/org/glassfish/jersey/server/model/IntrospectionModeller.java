@@ -66,6 +66,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
+import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
@@ -303,10 +304,14 @@ final class IntrospectionModeller {
         return types;
     }
 
-    private static void declareSuspend(AnnotatedMethod am, ResourceMethod.Builder resourceMethodBuilder) {
+    private static void introspectAsyncFeatures(AnnotatedMethod am, ResourceMethod.Builder resourceMethodBuilder) {
+        if (am.isAnnotationPresent(ManagedAsync.class)) {
+            resourceMethodBuilder.managedAsync();
+        }
+
         for (Annotation[] annotations : am.getParameterAnnotations()) {
             for (Annotation annotation : annotations) {
-                if (annotation.getClass() == Suspended.class) {
+                if (annotation.annotationType() == Suspended.class) {
                     resourceMethodBuilder.suspended(AsyncResponse.NO_TIMEOUT, TimeUnit.MILLISECONDS);
                     return;
                 }
@@ -332,7 +337,7 @@ final class IntrospectionModeller {
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
 
-            declareSuspend(am, methodBuilder);
+            introspectAsyncFeatures(am, methodBuilder);
         }
     }
 
@@ -355,7 +360,7 @@ final class IntrospectionModeller {
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod());
 
-            declareSuspend(am, methodBuilder);
+            introspectAsyncFeatures(am, methodBuilder);
         }
     }
 

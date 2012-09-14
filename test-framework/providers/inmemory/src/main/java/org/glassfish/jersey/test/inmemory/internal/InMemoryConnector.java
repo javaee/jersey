@@ -62,7 +62,6 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -93,7 +92,7 @@ public class InMemoryConnector implements Connector {
     /**
      * {@inheritDoc}
      * <p/>
-     * Transforms client-side request to server-side and invokes it on provided application ({@link RequestInvoker}
+     * Transforms client-side request to server-side and invokes it on provided application ({@link ApplicationHandler}
      * instance).
      *
      * @param requestContext client side request to be invoked.

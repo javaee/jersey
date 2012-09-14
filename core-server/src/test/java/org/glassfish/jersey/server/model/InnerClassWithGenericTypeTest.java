@@ -47,12 +47,11 @@ import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**

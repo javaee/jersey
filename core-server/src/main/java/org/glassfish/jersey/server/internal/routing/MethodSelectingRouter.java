@@ -63,12 +63,12 @@ import javax.inject.Provider;
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.internal.process.ResponseProcessor;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
@@ -96,7 +96,7 @@ final class MethodSelectingRouter implements Router {
 
     private static final Logger LOGGER = Logger.getLogger(MethodSelectingRouter.class.getName());
 
-    private final Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+    private final Provider<RespondingContext> respondingContextFactory;
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
@@ -110,15 +110,15 @@ final class MethodSelectingRouter implements Router {
      */
     static class Builder {
         @Inject
-        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+        private Provider<RespondingContext> respondingContextFactory;
 
         @Inject
         @Optional
-        Config config;
+        private Config config;
 
         @Inject
         @Optional
-        WadlApplicationContext wadlApplicationContext;
+        private WadlApplicationContext wadlApplicationContext;
 
 
         /**
@@ -135,14 +135,14 @@ final class MethodSelectingRouter implements Router {
                 final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
 
             return new MethodSelectingRouter(respondingContextFactory, workers, methodAcceptorPairs,
-                    (config != null ? config.isProperty(ServerProperties.FEATURE_DISABLE_WADL) : false),
+                    config != null && config.isProperty(ServerProperties.FEATURE_DISABLE_WADL),
                     wadlApplicationContext);
         }
 
     }
 
     private MethodSelectingRouter(
-            Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
+            Provider<RespondingContext> respondingContextFactory,
             MessageBodyWorkers msgWorkers,
             List<MethodAcceptorPair> methodAcceptorPairs,
             boolean disableWadl,
@@ -164,7 +164,7 @@ final class MethodSelectingRouter implements Router {
             }
             addAllConsumesProducesCombinations(httpMethodBoundAcceptors, methodAcceptorPair);
 
-            if(methodAcceptorPair.parentResource != null) {
+            if (methodAcceptorPair.parentResource != null) {
                 resource = methodAcceptorPair.parentResource;
             }
         }
@@ -512,10 +512,10 @@ final class MethodSelectingRouter implements Router {
         allowedMethods.add(HttpMethod.OPTIONS);
 
         List<ConsumesProducesAcceptor> optionsAcceptors = new LinkedList<ConsumesProducesAcceptor>();
-        optionsAcceptors.add(createPlainTextOptionsInflector(allowedMethods));
-        optionsAcceptors.add(createGenericOptionsInflector(allowedMethods));
-        if(!disableWadl && wadlApplicationContext != null) {
-            optionsAcceptors.add(createWadlOptionsInflector(resource, allowedMethods, wadlApplicationContext));
+        optionsAcceptors.add(createPlainTextOptionsEndpoint(allowedMethods));
+        optionsAcceptors.add(createGenericOptionsEndpoint(allowedMethods));
+        if (!disableWadl && wadlApplicationContext != null) {
+            optionsAcceptors.add(createWadlOptionsEndpoint(resource, allowedMethods, wadlApplicationContext));
         }
 
         consumesProducesAcceptors.put(HttpMethod.OPTIONS, optionsAcceptors);
@@ -543,7 +543,7 @@ final class MethodSelectingRouter implements Router {
         };
     }
 
-    private ConsumesProducesAcceptor createPlainTextOptionsInflector(final Set<String> allowedMethods) {
+    private ConsumesProducesAcceptor createPlainTextOptionsEndpoint(final Set<String> allowedMethods) {
 
         final String allowedList = allowedMethods.toString();
         final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
@@ -552,7 +552,7 @@ final class MethodSelectingRouter implements Router {
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.TEXT_PLAIN_TYPE, false),
                 new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Inflector<ContainerRequest, ContainerResponse>() {
+                        new Endpoint() {
 
                             @Override
                             public ContainerResponse apply(ContainerRequest requestContext) {
@@ -565,13 +565,13 @@ final class MethodSelectingRouter implements Router {
                         })));
     }
 
-    private ConsumesProducesAcceptor createGenericOptionsInflector(final Set<String> allowedMethods) {
+    private ConsumesProducesAcceptor createGenericOptionsEndpoint(final Set<String> allowedMethods) {
 
         return new ConsumesProducesAcceptor(
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
                 new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Inflector<ContainerRequest, ContainerResponse>() {
+                        new Endpoint() {
 
                             @Override
                             public ContainerResponse apply(ContainerRequest requestContext) {
@@ -585,24 +585,25 @@ final class MethodSelectingRouter implements Router {
                         })));
     }
 
-    private ConsumesProducesAcceptor createWadlOptionsInflector(final Resource resource,
-                                                                final Set<String> allowedMethods,
-                                                                final WadlApplicationContext wadlApplicationContext) {
+    private ConsumesProducesAcceptor createWadlOptionsEndpoint(final Resource resource,
+                                                               final Set<String> allowedMethods,
+                                                               final WadlApplicationContext wadlApplicationContext) {
 
         return new ConsumesProducesAcceptor(
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaTypes.WADL, false),
                 new CombinedClientServerMediaType.EffectiveMediaType(MediaTypes.WADL, false),
                 new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Inflector<ContainerRequest, ContainerResponse>() {
+                        new Endpoint() {
 
-                            final String lastModified = new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());;
+                            private final String lastModified =
+                                    new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());
 
                             @Override
                             public ContainerResponse apply(ContainerRequest requestContext) {
                                 Response response;
 
 
-                                if(wadlApplicationContext == null || resource == null) {
+                                if (wadlApplicationContext == null || resource == null) {
                                     response = Response.ok()
                                             .allow(allowedMethods)
                                             .header(HttpHeaders.CONTENT_LENGTH, "0")

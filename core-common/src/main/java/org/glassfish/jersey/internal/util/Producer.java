@@ -37,77 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.util;
 
-package org.glassfish.jersey.server.internal.inject;
-
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
-import org.glassfish.hk2.api.Factory;
+import java.util.concurrent.Callable;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
+ * This interface extends {@link java.util.concurrent.Callable} interface but removes the
+ * exception from {@code call} declaration.
+ * <p>
+ * This convenience interface may be used in places where a task
+ * producing a result needs to be executed in the request scope but no
+ * {@link Exception checked exceptions} are thrown during the task
+ * execution.
+ * </p>
+ *
+ * @param <T> type of the produced result.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class AsyncResponseValueFactoryProvider implements ValueFactoryProvider {
-
-    private final Provider<AsyncContext> asyncContextProvider;
-
-    /**
-     * {@link javax.ws.rs.container.Suspended} injection resolver.
-     */
-    static final class InjectionResolver extends ParamInjectionResolver<Suspended> {
-
-        /**
-         * Create new injection resolver.
-         */
-        public InjectionResolver() {
-            super(AsyncResponseValueFactoryProvider.class);
-        }
-    }
-
-    /**
-     * Initialize the provider.
-     *
-     * @param asyncContextProvider async processing context provider.
-     */
-    @Inject
-    public AsyncResponseValueFactoryProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
-    }
-
+public interface Producer<T> extends Callable<T> {
     @Override
-    public Factory<?> getValueFactory(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new Factory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-
-            @Override
-            public void dispose(AsyncResponse instance) {
-                // not used
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
-    }
+    T call();
 }

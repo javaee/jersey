@@ -49,10 +49,10 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
+import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
@@ -96,7 +96,7 @@ public final class ParameterValueHelper {
      * Create list of parameter value providers for the given {@link Parameterized
      * parameterized} resource model component.
      *
-     * @param locator HK2 service locator.
+     * @param locator       HK2 service locator.
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */

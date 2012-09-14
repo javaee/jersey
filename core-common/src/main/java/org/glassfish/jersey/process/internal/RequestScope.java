@@ -52,6 +52,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
+import org.glassfish.jersey.internal.util.Producer;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Context;
@@ -273,23 +274,6 @@ public class RequestScope implements Context<RequestScoped> {
     }
 
     /**
-     * This interface extends {@link Callable} interface but removes the
-     * exception from {@code call} declaration.
-     * <p>
-     * This convenience interface may be used in places where a task
-     * producing a result needs to be executed in the request scope but no
-     * {@link Exception checked exceptions} are thrown during the task
-     * execution.
-     * </p>
-     *
-     * @param <T> type of the produced result.
-     */
-    public interface Producer<T> extends Callable<T> {
-        @Override
-        T call();
-    }
-
-    /**
      * Runs the {@link Runnable task} in the request scope initialized from the
      * {@link RequestScope.Instance scope instance}. The {@link RequestScope.Instance
      * scope instance} is NOT released by the method (this must be done explicitly). The
@@ -390,7 +374,7 @@ public class RequestScope implements Context<RequestScoped> {
     }
 
     /**
-     * Runs the {@link RequestScope.Producer task} in the request scope initialized
+     * Runs the {@link org.glassfish.jersey.internal.util.Producer task} in the request scope initialized
      * from the {@link RequestScope.Instance scope instance}.
      * The {@link RequestScope.Instance scope instance} is NOT released by the method (this
      * must be done explicitly). The current thread might be already in any request scope
@@ -416,7 +400,7 @@ public class RequestScope implements Context<RequestScoped> {
     }
 
     /**
-     * Runs the {@link RequestScope.Producer task} in the new request scope. The
+     * Runs the {@link org.glassfish.jersey.internal.util.Producer task} in the new request scope. The
      * current thread might be already in any request scope and in that case the scope
      * will be changed to the scope defined by the {@link RequestScope.Instance scope
      * instance}. At the end of the method the request scope is returned to its original

@@ -41,9 +41,10 @@ package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.InvocationHandler;
 
-import javax.inject.Singleton;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;

@@ -56,6 +56,7 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -165,12 +166,15 @@ public class UriTest extends AbstractTest {
     public void testGetParam1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource2.class);
 
-        final ContainerResponse response = apply(
-                RequestContextBuilder.from("/test/1", "GET").
-                        build()
-        );
-
-        assertEquals(null, response.getEntity());
+        try {
+            final ContainerResponse response = apply(
+                    RequestContextBuilder.from("/test/1", "GET").
+                            build()
+            );
+            fail("Execution exception expected.");
+        } catch (ExecutionException ex) {
+            return;
+        }
     }
 
     @Test
@@ -190,12 +194,15 @@ public class UriTest extends AbstractTest {
     public void testGetRelative1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource3.class);
 
-        final ContainerResponse response = apply(
-                RequestContextBuilder.from("/test/1", "GET").
-                        build()
-        );
-
-        assertEquals(null, response.getEntity());
+        try {
+            final ContainerResponse response = apply(
+                    RequestContextBuilder.from("/test/1", "GET").
+                            build()
+            );
+            fail("Execution exception expected.");
+        } catch (ExecutionException ex) {
+            return;
+        }
     }
 
     @Test

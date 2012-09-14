@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.ContainerRequest;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * Request matching bootstrapping stage that pushes the whole request path to the routing

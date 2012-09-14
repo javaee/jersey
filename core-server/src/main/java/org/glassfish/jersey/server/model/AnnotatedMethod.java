@@ -50,7 +50,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -87,6 +98,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
         s.addAll(Arrays.asList(cs));
         return s;
     }
+
     private final Method m;
     private final Method am;
     private final Annotation[] methodAnnotations;
@@ -165,10 +177,10 @@ public final class AnnotatedMethod implements AnnotatedElement {
      * Get all instances of the specified meta-annotation type found on the method
      * annotations.
      *
-     * @param <T> meta-annotation type.
+     * @param <T>        meta-annotation type.
      * @param annotation meta-annotation class to be searched for.
      * @return meta-annotation instances of a given type annotating the method
-     *     annotations.
+     *         annotations.
      */
     public <T extends Annotation> List<T> getMetaMethodAnnotations(
             Class<T> annotation) {

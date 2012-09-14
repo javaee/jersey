@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.model;
 import java.net.URI;
 
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;

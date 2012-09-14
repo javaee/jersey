@@ -39,44 +39,41 @@
  */
 package org.glassfish.jersey.server.internal.process;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import org.glassfish.jersey.process.internal.ChainableStage;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.ContainerResponse;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScoped;
-
-import org.glassfish.hk2.api.TypeLiteral;
+import com.google.common.base.Function;
 
 /**
- * Jersey processing framework injection binder.
+ * Injectable context that can be used during the data processing for
+ * registering response processing functions that will be invoked during the
+ * response processing.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ProcessingBinder extends AbstractBinder {
+public interface RespondingContext {
 
-    private static class InvocationContextReferencingFactory extends ReferencingFactory<ProcessingContext> {
+    /**
+     * Push response transformation function that should be applied.
+     *
+     * @param responseTransformation response transformation function.
+     */
+    void push(Function<ContainerResponse, ContainerResponse> responseTransformation);
 
-        @Inject
-        public InvocationContextReferencingFactory(Provider<Ref<ProcessingContext>> referenceFactory) {
-            super(referenceFactory);
-        }
+    /**
+     * Push chainable response transformation stage that should be applied.
+     *
+     * @param stage response transformation chainable stage.
+     */
+    void push(ChainableStage<ContainerResponse> stage);
 
-        @Override
-        @RequestScoped
-        public ProcessingContext provide() {
-            return super.provide();
-        }
-    }
-
-    @Override
-    protected void configure() {
-        // Invocation context
-        bindFactory(InvocationContextReferencingFactory.class).in(RequestScoped.class);
-        bindFactory(InvocationContextReferencingFactory.class).to(ProcessingContext.class).in(RequestScoped.class);
-
-        bindFactory(ReferencingFactory.<ProcessingContext>referenceFactory()).to(new TypeLiteral<Ref<ProcessingContext>>() {
-        }).in(RequestScoped.class);
-    }
+    /**
+     * (Optionally) create a responder chain from all transformations
+     * previously pushed into the context.
+     *
+     * @return created responder chain root or {@code null} in case of no
+     *         registered transformations.
+     */
+    Stage<ContainerResponse> createRespondingRoot();
 }

@@ -49,6 +49,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 
+import org.glassfish.jersey.server.ManagedAsync;
+
 /**
  * Example of a simple resource with a long-running operation executed in a
  * custom Jersey container request processing thread.
@@ -65,6 +67,7 @@ public class SimpleJerseyExecutorManagedLongRunningResource {
     private static final int SLEEP_TIME_IN_MILLIS = 1000;
 
     @GET
+    @ManagedAsync
     public void longGet(@Suspended final AsyncResponse ar, @QueryParam("id") int requestId) {
         try {
             Thread.sleep(SLEEP_TIME_IN_MILLIS);

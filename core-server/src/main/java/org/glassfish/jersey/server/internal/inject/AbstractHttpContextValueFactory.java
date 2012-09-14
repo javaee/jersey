@@ -39,12 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.hk2.api.Factory;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import org.glassfish.hk2.api.Factory;
 
 /**
  * A value factory that provides an injectable value from the {@link HttpContext}.
@@ -87,7 +88,6 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
      *
      * @param context the context.
      * @return the value.
-     *
      */
     protected abstract T get(HttpContext context);
 }

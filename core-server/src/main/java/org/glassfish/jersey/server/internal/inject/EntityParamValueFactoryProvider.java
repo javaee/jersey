@@ -39,19 +39,20 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.lang.annotation.*;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 
-import javax.ws.rs.*;
-import javax.ws.rs.container.*;
-import javax.ws.rs.core.*;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-import javax.inject.*;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.Parameter;
 
-import org.glassfish.jersey.server.*;
-import org.glassfish.jersey.server.internal.*;
-import org.glassfish.jersey.server.model.*;
-
-import org.glassfish.hk2.api.*;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Provides injection of {@link Request} entity value or {@link Request} instance
@@ -60,11 +61,12 @@ import org.glassfish.hk2.api.*;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider<Annotation> {
+class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     /**
      * Creates new instance initialized with parameters.
-     * @param mpep Injected multivaluedParameterExtractor provider.
+     *
+     * @param mpep     Injected multivaluedParameterExtractor provider.
      * @param injector Injected HK2 injector.
      */
     @Inject

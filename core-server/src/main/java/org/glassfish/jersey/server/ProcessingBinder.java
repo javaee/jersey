@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,44 +39,37 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.ws.rs.container.AsyncResponse;
 
-import org.glassfish.jersey.server.internal.process.RequestInvoker;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
-import org.glassfish.jersey.server.internal.routing.Router;
-import org.glassfish.jersey.server.internal.routing.RoutingStage;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.process.internal.ExecutorsFactory;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.internal.process.AsyncContext;
+
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Test utility binder for testing hierarchical request accepting (i.e. resource matching).
+ * Jersey processing framework injection binder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InvokerBuilder {
+class ProcessingBinder extends AbstractBinder {
 
-    @Inject
-    private Provider<RoutingStage.Builder> matchingStageFactory;
-    @Inject
-    private Provider<RoutedInflectorExtractorStage> inflectorExtractingStageFactory;
-    @Inject
-    private ReferencesInitializer referencesInitializer;
-    @Inject
-    private ServerBinder.RequestInvokerBuilder invokerBuilder;
+    @Override
+    protected void configure() {
+        bindFactory(ReferencingFactory.<Value<AsyncContext>>referenceFactory()).to(new TypeLiteral<Ref<Value<AsyncContext>>>() {
+        }).in(RequestScoped.class);
+        bindFactory(AsyncContext.Factory.class, RequestScoped.class)
+                .to(AsyncContext.class)
+                .to(AsyncResponse.class)
+                .in(RequestScoped.class);
 
-
-    /**
-     * Build a request processor using the resource matching acceptor
-     * for testing purposes.
-     *
-     * @param matchingRoot root resource matching acceptor.
-     * @return request processor.
-     */
-    public RequestInvoker<ContainerRequest, ContainerResponse> build(final Router matchingRoot) {
-
-        return invokerBuilder.build(Stages
-                .chain(referencesInitializer)
-                .to(matchingStageFactory.get().build(matchingRoot))
-                .build(inflectorExtractingStageFactory.get()));
+        bind(ServerExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<ContainerRequest>>() {
+        }).in(Singleton.class);
     }
 }

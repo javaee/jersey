@@ -47,8 +47,8 @@ import java.lang.reflect.UndeclaredThrowableException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.MappableException;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
@@ -67,7 +67,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * Initialize common java resource method dispatcher structures.
      *
      * @param resourceMethod invocable resource class Java method.
-     * @param methodHandler method invocation handler.
+     * @param methodHandler  method invocation handler.
      */
     AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
         this.method = resourceMethod.getHandlingMethod();
@@ -76,13 +76,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
     @Override
     public final Response dispatch(Object resource, Request request) throws ProcessingException {
-        final Response response = doDispatch(resource, request);
-
-        // TODO set the annotations if no exception is thrown and there is a response entity
-        // if (response != null) {
-        //     responseContext.setResponseAnnotations(method.getDeclaredAnnotations());
-        // }
-        return response;
+        // TODO measure time spent in invocation
+        return doDispatch(resource, request);
     }
 
     /**
@@ -90,10 +85,9 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * implementation sub-class.
      *
      * @param resource resource class instance.
-     * @param request request to be dispatched.
+     * @param request  request to be dispatched.
      * @return response for the dispatched request.
      * @throws ProcessingException in case of a processing error.
-     *
      * @see ResourceMethodDispatcher#dispatch(java.lang.Object, javax.ws.rs.core.Request)
      */
     protected abstract Response doDispatch(Object resource, Request request) throws ProcessingException;
@@ -103,10 +97,10 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * with the supplied input method argument values on a given resource instance.
      *
      * @param resource resource class instance.
-     * @param args input argument values for the invoked Java method.
+     * @param args     input argument values for the invoked Java method.
      * @return invocation result.
      * @throws ProcessingException (possibly {@link MappableException mappable})
-     *     container exception in case the invocation failed.
+     *                             container exception in case the invocation failed.
      */
     final Object invoke(Object resource, Object... args) throws ProcessingException {
         try {

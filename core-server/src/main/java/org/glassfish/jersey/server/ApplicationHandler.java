@@ -51,6 +51,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -58,28 +60,20 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
-import org.glassfish.jersey.internal.ExtractorException;
-import org.glassfish.jersey.internal.MappableException;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -87,13 +81,8 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.HeaderValueException;
-import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.model.ContractProvider;
-import org.glassfish.jersey.server.internal.process.InflectorNotFoundException;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.server.internal.process.ProcessingContext;
-import org.glassfish.jersey.server.internal.process.RequestInvoker;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
@@ -112,12 +101,13 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
-import org.glassfish.jersey.spi.ExceptionMappers;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
+
+import com.google.common.util.concurrent.AbstractFuture;
 
 import deprecated.javax.ws.rs.DynamicBinder;
 
@@ -201,21 +191,16 @@ public final class ApplicationHandler {
         }
     }
 
-    @Inject
-    private Factory<CloseableService> closeableServiceFactory;
-    private ServiceLocator locator;
-    /**
-     * Request invoker.
-     */
-    private RequestInvoker<ContainerRequest, ContainerResponse> invoker;
     private final ResourceConfig configuration;
+    private final ServiceLocator locator;
+    private ServerRuntime runtime;
 
     /**
      * Create a new Jersey application handler using a default configuration.
      */
     public ApplicationHandler() {
-        initServiceLocator();
         this.configuration = new ResourceConfig();
+        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         initialize();
     }
 
@@ -228,7 +213,7 @@ public final class ApplicationHandler {
      *                              application handler.
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
-        initServiceLocator();
+        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         if (ResourceConfig.class.isAssignableFrom(jaxrsApplicationClass)) {
             this.configuration = (ResourceConfig) createApplication(jaxrsApplicationClass);
         } else {
@@ -245,13 +230,9 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        initServiceLocator();
         this.configuration = ResourceConfig.forApplication(application);
+        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         initialize();
-    }
-
-    private void initServiceLocator() {
-        locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
     }
 
     /**
@@ -280,7 +261,7 @@ public final class ApplicationHandler {
         final Set<Class<?>> classes = new HashSet<Class<?>>(configuration.getClasses());
 
         boolean wadlDisabled = configuration.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
-        if(!wadlDisabled) {
+        if (!wadlDisabled) {
             classes.add(WadlResource.class);
         }
 
@@ -413,8 +394,7 @@ public final class ApplicationHandler {
             locator.inject(instance);
         }
 
-        this.invoker = locator.createAndInitialize(ServerBinder.RequestInvokerBuilder.class)
-                .build(rootStage);
+        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage);
 
         // inject self
         locator.inject(this);
@@ -622,91 +602,128 @@ public final class ApplicationHandler {
     /**
      * Invokes a request and returns the {@link Future response future}.
      *
-     * @param requestContext request data.
-     * @param outputStream   response output stream.
+     * @param request      request data.
+     * @param outputStream response output stream.
      * @return response future.
      */
-    public Future<ContainerResponse> apply(final ContainerRequest requestContext,
+    public Future<ContainerResponse> apply(final ContainerRequest request,
                                            final OutputStream outputStream) {
-        requestContext.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
-        requestContext.setWriter(new ContainerResponseWriter() {
-            @Override
-            public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
-                    throws ContainerException {
+        final FutureResponseWriter responseFuture = new FutureResponseWriter(request.getMethod(), outputStream);
 
-                if (contentLength >= 0) {
-                    responseContext.getHeaders().putSingle("Content-Length", Long.toString(contentLength));
-                }
+        request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        request.setWriter(responseFuture);
 
-                return outputStream;
-            }
+        handle(request);
 
-            @Override
-            public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException {
-            }
-
-            @Override
-            public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
-            }
-
-            @Override
-            public void cancel() {
-            }
-
-            @Override
-            public void commit() {
-            }
-        });
-
-        final TimingOutProcessingCallback callback = new TimingOutProcessingCallback() {
-            private ContainerResponse responseContext;
-
-            @Override
-            protected ContainerResponse handleResponse(ContainerResponse responseContext) {
-                this.responseContext = ApplicationHandler.this.writeResponse(requestContext, responseContext);
-                if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
-                    // for testing purposes:
-                    // need to also strip the object entity as it was stripped writeResponse(...)
-                    stripEntity(responseContext);
-                }
-                return responseContext;
-            }
-
-            @Override
-            protected ContainerResponse handleFailure(Throwable exception) {
-                return responseContext = ApplicationHandler.this.writeResponse(requestContext,
-                        ApplicationHandler.handleFailure(exception, requestContext, responseContext, locator));
-            }
-
-            @Override
-            protected ContainerResponse handleTimeout(ProcessingContext context) {
-                return responseContext = ApplicationHandler.this.writeResponse(
-                        requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
-            }
-
-            @Override
-            protected void release() {
-                releaseRequestProcessing(responseContext);
-            }
-        };
-
-        invoker.apply(requestContext, callback);
-
-        return callback;
+        return responseFuture;
     }
 
-    /**
-     * Strips entity if present.
-     *
-     * @param responseContext processed response context.
-     * @return original response without entity.
-     */
-    private ContainerResponse stripEntity(final ContainerResponse responseContext) {
-        if (responseContext.hasEntity()) {
-            responseContext.setEntity(null);
+    private static class FutureResponseWriter extends AbstractFuture<ContainerResponse> implements ContainerResponseWriter {
+        private static final Logger LOGGER = Logger.getLogger(FutureResponseWriter.class.getName());
+        private static final Timer TIMER = new Timer("Jersey application request timer");
+
+        private ContainerResponse response = null;
+        private TimerTask timeoutTask = null;
+        private TimeoutHandler timeoutHandler = null;
+        private boolean suspended = false;
+        private final Object runtimeLock = new Object();
+
+        private final String requestMethodName;
+        private final OutputStream outputStream;
+
+        private FutureResponseWriter(String requestMethodName, OutputStream outputStream) {
+            this.requestMethodName = requestMethodName;
+            this.outputStream = outputStream;
         }
 
-        return responseContext;
+        @Override
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse response)
+                throws ContainerException {
+            this.response = response;
+
+            if (contentLength >= 0) {
+                response.getHeaders().putSingle("Content-Length", Long.toString(contentLength));
+            }
+
+            return outputStream;
+        }
+
+        @Override
+        public boolean suspend(long time, TimeUnit unit, final TimeoutHandler handler) throws IllegalStateException {
+            synchronized (runtimeLock) {
+                if (suspended) {
+                    return false;
+                }
+
+                suspended = true;
+                timeoutHandler = handler;
+
+                setSuspendTimeout(time, unit);
+                return true;
+            }
+        }
+
+        @Override
+        public void setSuspendTimeout(long time, TimeUnit unit) throws IllegalStateException {
+            final TimerTask task = new TimerTask() {
+
+                @Override
+                public void run() {
+                    try {
+                        synchronized (runtimeLock) {
+                            timeoutHandler.onTimeout(FutureResponseWriter.this);
+                        }
+                    } catch (Throwable throwable) {
+                        LOGGER.log(Level.WARNING, "Time-out handler execution failed.", throwable);
+                    }
+                }
+            };
+            synchronized (runtimeLock) {
+                if (!suspended) {
+                    throw new IllegalStateException("Not suspended.");
+                }
+
+                if (timeoutTask != null) {
+                    timeoutTask.cancel();
+                    timeoutTask = null;
+                }
+
+                if (time <= AsyncResponse.NO_TIMEOUT) {
+                    return;
+                }
+
+                timeoutTask = task;
+                try {
+                    TIMER.schedule(task, unit.toMillis(time));
+                } catch (IllegalStateException ex) {
+                    LOGGER.log(Level.WARNING, "Error while scheduling a timeout task.", ex);
+                }
+            }
+        }
+
+        @Override
+        public void commit() {
+            final ContainerResponse current = response;
+            if (current != null) {
+                if (HttpMethod.HEAD.equals(requestMethodName) && current.hasEntity()) {
+                    // for testing purposes:
+                    // need to also strip the object entity as it was stripped when writing to output
+                    current.setEntity(null);
+                }
+
+                super.set(current);
+            }
+        }
+
+        @Override
+        public void failure(Throwable error) {
+            super.setException(error);
+        }
+
+        @Override
+        protected void interruptTask() {
+            // TODO implement cancellation logic.
+        }
     }
 
     /**
@@ -727,214 +744,7 @@ public final class ApplicationHandler {
      * @param requestContext container request context of the current request.
      */
     public void handle(final ContainerRequest requestContext) {
-        checkContainerRequestContext(requestContext);
-
-        final ContainerResponseWriterCallback callback = new ContainerResponseWriterCallback(requestContext) {
-            private ContainerResponse responseContext;
-
-            @Override
-            protected void writeResponse(ContainerResponse response) {
-                responseContext = ApplicationHandler.this.writeResponse(requestContext, response);
-            }
-
-            @Override
-            protected void writeResponse(Throwable exception) {
-                responseContext = ApplicationHandler.this.writeResponse(
-                        requestContext, ApplicationHandler.handleFailure(exception, requestContext, responseContext, locator));
-            }
-
-            @Override
-            protected void writeTimeoutResponse(ProcessingContext context) {
-                responseContext = ApplicationHandler.this.writeResponse(
-                        requestContext, ApplicationHandler.prepareTimeoutResponse(context, requestContext));
-            }
-
-            @Override
-            protected void release() {
-                releaseRequestProcessing(responseContext);
-            }
-        };
-
-        invoker.apply(requestContext, callback);
-
-        callback.suspendWriterIfRunning();
-    }
-
-    private void releaseRequestProcessing(ContainerResponse responseContext) {
-        closeableServiceFactory.provide().close();
-        // Commit the container response writer if not in chunked mode
-        // responseContext may be null in case the request processing was cancelled.
-        if (responseContext != null && !responseContext.isChunked()) {
-            responseContext.close();
-        }
-    }
-
-    private void checkContainerRequestContext(final ContainerRequest requestContext) {
-        if (requestContext.getSecurityContext() == null) {
-            throw new IllegalArgumentException("SecurityContext from ContainerRequestContext must not be null.");
-        } else if (requestContext.getRequest() == null) {
-            throw new IllegalArgumentException("Request from ContainerRequestContext must not be null.");
-        } else if (requestContext.getResponseWriter() == null) {
-            throw new IllegalArgumentException("ResponseWriter from ContainerRequestContext must not be null.");
-        }
-    }
-
-    private static ContainerResponse prepareTimeoutResponse(
-            final ProcessingContext context, ContainerRequest requestContext) {
-
-        Response response = context.getResponse();
-        if (response == null) {
-            response = Response.serverError().entity("Request processing has timed out.").type(MediaType.TEXT_PLAIN).build();
-        }
-        return new ContainerResponse(requestContext, response);
-    }
-
-    private static ContainerResponse handleFailure(Throwable failure, ContainerRequest requestContext,
-                                                   ContainerResponse containerResponse, ServiceLocator locator) {
-        if (failure instanceof MappableException) {
-            failure = failure.getCause();
-        }
-        Response.StatusType statusCode = Response.Status.INTERNAL_SERVER_ERROR;
-        String message = failure.getMessage();
-
-        if (containerResponse != null && containerResponse.isMappedFromException()) {
-            // an exception was already thrown and mapped to the response. We don't not map it again.
-            return new ContainerResponse(
-                    requestContext,
-                    Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
-        } else {
-            ExceptionMappers mappers = locator.getService(ExceptionMappers.class);
-            ExceptionMapper mapper = mappers.find(failure.getClass());
-            if (mapper != null) {
-                try {
-                    //noinspection unchecked
-                    return new ContainerResponse(requestContext, mapper.toResponse(failure));
-                } catch (Exception e) {
-                    return new ContainerResponse(
-                            requestContext,
-                            Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
-                }
-            }
-        }
-
-        if (failure instanceof ProcessingException) {
-            if (failure instanceof HeaderValueException) {
-                statusCode = Response.Status.BAD_REQUEST;
-            } else if (failure instanceof InflectorNotFoundException) {
-                statusCode = Response.Status.NOT_FOUND;
-                message = "Requested resource not found.";
-            } else if (failure instanceof ExtractorException) {
-                statusCode = Response.Status.BAD_REQUEST;
-            }
-        } else if (failure instanceof WebApplicationException) {
-            WebApplicationException wae = (WebApplicationException) failure;
-            return new ContainerResponse(requestContext, wae.getResponse());
-        }
-
-        if (statusCode == Response.Status.INTERNAL_SERVER_ERROR) {
-            LOGGER.log(Level.SEVERE, message, failure);
-        } else {
-            LOGGER.log(Level.FINE, message, failure);
-        }
-
-        return new ContainerResponse(
-                requestContext,
-                Response.status(statusCode).build());
-    }
-
-    /**
-     * Used to set proper Content-Length header to outgoing {@link Response}s.
-     */
-    private class MessageBodySizeCallback implements MessageBodyWorkers.MessageBodySizeCallback {
-        private long size = -1;
-
-        @Override
-        public void onRequestEntitySize(long size) throws IOException {
-            this.size = size;
-        }
-
-        public long getSize() {
-            return size;
-        }
-    }
-
-
-    private ContainerResponse writeResponse(
-            final ContainerRequest requestContext,
-            final ContainerResponse responseContext) {
-
-        final ContainerResponseWriter writer = requestContext.getResponseWriter();
-        final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
-
-
-        if (!responseContext.hasEntity()) {
-            writer.writeResponseStatusAndHeaders(0, responseContext);
-            return responseContext;
-        }
-
-        final Object entity = responseContext.getEntity();
-        boolean skipFinally = false;
-        try {
-            responseContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-                private OutputStream output;
-
-                @Override
-                public void commit() throws IOException {
-                    final long size;
-                    if (responseContext.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING) != null) {
-                        size = -1;
-                    } else {
-                        size = messageBodySizeCallback.getSize();
-                    }
-                    output = writer.writeResponseStatusAndHeaders(size, responseContext);
-                }
-
-                @Override
-                public OutputStream getOutputStream() throws IOException {
-                    return output;
-                }
-            });
-            responseContext.setEntityStream(requestContext.getWorkers().writeTo(
-                    entity,
-                    entity.getClass(),
-                    responseContext.getEntityType(),
-                    responseContext.getEntityAnnotations(),
-                    responseContext.getMediaType(),
-                    responseContext.getHeaders(),
-                    requestContext.getPropertiesDelegate(),
-                    responseContext.getEntityStream(),
-                    messageBodySizeCallback,
-                    true,
-                    !requestContext.getMethod().equals(HttpMethod.HEAD)));
-        } catch (Exception ex) {
-            if (responseContext.isCommitted()) {
-                /**
-                 * We're done with processing here. There's nothing we can do about the exception so
-                 * let's just log it.
-                 */
-                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY(), ex);
-            } else {
-                skipFinally = true;
-                return writeResponse(requestContext, ApplicationHandler.handleFailure(ex, requestContext, responseContext,
-                        locator));
-            }
-        } finally {
-            if (!skipFinally) {
-                responseContext.commitStream();
-
-                if (responseContext.isChunked()) {
-                    try {
-                        ((ChunkedResponse) entity).setContext(requestContext, responseContext);
-                    } catch (IOException ex) {
-                        LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
-                    }
-                    // suspend the writer
-                    writer.suspend(0, TimeUnit.SECONDS, null);
-                }
-            }
-        }
-
-        return responseContext;
+        runtime.process(requestContext);
     }
 
     /**

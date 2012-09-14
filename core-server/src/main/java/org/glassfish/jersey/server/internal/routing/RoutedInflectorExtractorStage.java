@@ -39,14 +39,14 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 /**
  * Request pre-processing stage that {@link RoutingContext#getInflector() extracts
@@ -58,7 +58,6 @@ import javax.inject.Provider;
  * processing chain.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- *
  * @see RoutingStage
  */
 public class RoutedInflectorExtractorStage implements Stage<ContainerRequest> {

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.grizzly2.httpserver;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -188,16 +189,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
 
         @Override
-        public void cancel() {
-            try {
-                grizzlyResponse.cancel();
-            } finally {
-                logger.debugLog("{0} - cancel() called", name);
-            }
-        }
-
-        @Override
-        public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
+        public boolean suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
             try {
                 grizzlyResponse.suspend(timeOut, timeUnit, EMPTY_COMPLETION_HANDLER,
                         new org.glassfish.grizzly.http.server.TimeoutHandler() {
@@ -214,6 +206,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                                 return false;
                             }
                         });
+                return true;
+            } catch (IllegalStateException ex) {
+                return false;
             } finally {
                 logger.debugLog("{0} - suspend(...) called", name);
             }
@@ -245,6 +240,19 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 return grizzlyResponse.getOutputStream();
             } finally {
                 logger.debugLog("{0} - writeResponseStatusAndHeaders() called", name);
+            }
+        }
+
+        @Override
+        public void failure(Throwable error) {
+            try {
+                if (!grizzlyResponse.isCommitted()) {
+                    grizzlyResponse.sendError(500, error.getMessage());
+                }
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Unable to send 500 error response.", e);
+            } finally {
+                logger.debugLog("{0} - failure(...) called", name);
             }
         }
     }

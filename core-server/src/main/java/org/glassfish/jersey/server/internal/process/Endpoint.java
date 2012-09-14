@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,59 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.internal.process;
 
-import java.util.regex.MatchResult;
-
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.internal.process.ResponseProcessor.RespondingContext;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
-import com.google.common.base.Function;
+/**
+ * Server-side REST-ful endpoint.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
+public interface Endpoint extends Inflector<ContainerRequest, ContainerResponse> {
 
-import javax.inject.Inject;
-
-@RequestScoped
-class LastPathSegmentTracingFilter implements Router {
-
-    private final RespondingContext<ContainerResponse> respondingContext;
-    private final RoutingContext routingContext;
-
-    @Inject
-    public LastPathSegmentTracingFilter(
-             RespondingContext<ContainerResponse> respondingContext,
-             RoutingContext routingContext) {
-
-        this.respondingContext = respondingContext;
-        this.routingContext = routingContext;
-    }
-
-    @Override
-    public Router.Continuation apply(ContainerRequest request) {
-        final String wholePath = getWholeMatchedPath();
-        final String lastMatch = getLastMatch();
-        final String lastSegment = wholePath.isEmpty() ? wholePath : wholePath.substring(0, wholePath.length() - lastMatch.length());
-
-        respondingContext.push(new Function<ContainerResponse, ContainerResponse>() {
-
-            @Override
-            public ContainerResponse apply(ContainerResponse response) {
-                response.setEntity(response.getEntity() + "-" + lastSegment);
-                return response;
-            }
-        });
-        return Router.Continuation.of(request);
-    }
-
-    private String getWholeMatchedPath() {
-        final MatchResult mr = routingContext.peekMatchResult();
-        final String path = (mr == null) ? "" : mr.group();
-        return (path.startsWith("/")) ? path.substring(1) : path;
-    }
-
-    private String getLastMatch() {
-        final String match = routingContext.getFinalMatchingGroup();
-        return (match == null) ? "" : match;
-    }
 }

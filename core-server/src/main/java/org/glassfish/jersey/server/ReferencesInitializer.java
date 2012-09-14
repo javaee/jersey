@@ -71,7 +71,7 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
     /**
      * Initialize the request references using the incoming request and register
      * a response reference initialization stage in the
-     * {@link org.glassfish.jersey.server.internal.process.ResponseProcessor.RespondingContext
+     * {@link org.glassfish.jersey.server.internal.process.RespondingContext
      * responding context}.
      *
      * @param requestContext incoming request context.

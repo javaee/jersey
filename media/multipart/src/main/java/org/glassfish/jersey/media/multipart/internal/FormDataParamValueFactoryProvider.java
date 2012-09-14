@@ -59,10 +59,10 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
@@ -83,7 +83,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider<FormDataParam> {
+public final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     private static final class FormDataParamException extends ParamException {
 
@@ -213,7 +213,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                     mediaType);
 
             if (reader != null && !isPrimitiveType(parameter.getRawType())) {
-                InputStream in = null;
+                InputStream in;
                 if (formDataBodyPart == null) {
                     if (parameter.getDefaultValue() != null) {
                         // Convert default value to bytes.
@@ -227,6 +227,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
 
                 try {
+                    //noinspection unchecked
                     return reader.readFrom(
                             parameter.getRawType(),
                             parameter.getType(),
@@ -250,7 +251,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                                     parameter.getAnnotations(),
                                     mediaType);
 
-                            String value = (String) reader.readFrom(
+                            @SuppressWarnings("unchecked") String value = (String) reader.readFrom(
                                     String.class,
                                     String.class,
                                     parameter.getAnnotations(),
@@ -308,10 +309,16 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep    multi-valued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
     @Inject
     public FormDataParamValueFactoryProvider(final MultivaluedParameterExtractorProvider mpep,
-                                             final ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
+                                             final ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override

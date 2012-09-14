@@ -56,7 +56,6 @@ import javax.ws.rs.core.MediaType;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.ReaderWriter;
@@ -74,7 +73,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<FormParam> {
+final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     /**
      * {@link FormParam} injection resolver.
@@ -182,6 +181,9 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
         private final static Annotation encodedAnnotation = getEncodedAnnotation();
 
         private static Annotation getEncodedAnnotation() {
+            /**
+             * Encoded-annotated class.
+             */
             @Encoded
             final class EncodedAnnotationTemp {
             }
@@ -210,7 +212,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider<F
     /**
      * Injection constructor.
      *
-     * @param mpep extractor provider.
+     * @param mpep     extractor provider.
      * @param injector injector.
      */
     @Inject

@@ -46,15 +46,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.StringValueReader;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Implementation of {@link MultivaluedParameterExtractorProvider}. For each

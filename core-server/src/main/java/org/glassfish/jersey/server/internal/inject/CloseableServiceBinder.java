@@ -45,9 +45,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Singleton;
+import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -63,14 +64,15 @@ public class CloseableServiceBinder extends AbstractBinder {
      * {@code CloseableService} implementation that stores instances of {@code Closeable} into the properties map obtained from
      * {@code HttpContext}.
      */
-    private static class HttpContextCloseableService implements CloseableService {
+    private static class DefaultCloseableService implements CloseableService {
 
-        private final static Logger LOGGER = Logger.getLogger(HttpContextCloseableService.class.getName());
+        private final static Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
 
-        private final HttpContext context;
+        private final ContainerRequest containerRequest;
 
-        public HttpContextCloseableService(final HttpContext context) {
-            this.context = context;
+        @Inject
+        public DefaultCloseableService(final ContainerRequest containerRequest) {
+            this.containerRequest = containerRequest;
         }
 
         @Override
@@ -79,7 +81,7 @@ public class CloseableServiceBinder extends AbstractBinder {
 
             if (closeableSet == null) {
                 closeableSet = new HashSet<Closeable>();
-                context.getRequestContext().setProperty(CloseableServiceFactory.class.getName(), closeableSet);
+                containerRequest.setProperty(DefaultCloseableService.class.getName(), closeableSet);
             }
 
             closeableSet.add(c);
@@ -102,34 +104,19 @@ public class CloseableServiceBinder extends AbstractBinder {
 
         @SuppressWarnings("unchecked")
         private Set<Closeable> getCloseables() {
-            final ContainerRequest requestContext = context.getRequestContext();
-            if (requestContext == null) {
+            if (containerRequest == null) {
                 LOGGER.warning(LocalizationMessages.CLOSEABLE_INJECTED_REQUEST_CONTEXT_NULL(Thread.currentThread().getName()));
                 return null;
             }
 
-            return (Set<Closeable>) requestContext.getProperty(HttpContextCloseableService.class.getName());
-        }
-
-    }
-
-    private static class CloseableServiceFactory extends AbstractHttpContextValueFactory<CloseableService> {
-        @Override
-        @Singleton
-        public CloseableService provide() {
-            return super.provide();
-        }
-
-        @Override
-        protected CloseableService get(final HttpContext context) {
-            return new HttpContextCloseableService(context);
+            return (Set<Closeable>) containerRequest.getProperty(DefaultCloseableService.class.getName());
         }
 
     }
 
     @Override
     protected void configure() {
-        bindFactory(CloseableServiceFactory.class).to(CloseableService.class).in(Singleton.class);
+        bind(DefaultCloseableService.class).to(CloseableService.class).in(RequestScoped.class);
     }
 
 }

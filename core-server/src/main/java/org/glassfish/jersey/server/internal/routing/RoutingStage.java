@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 /**
  * Request pre-processing stage that encapsulates hierarchical resource matching

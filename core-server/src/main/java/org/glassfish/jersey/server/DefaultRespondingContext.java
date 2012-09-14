@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,32 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.server;
 
-import javax.ws.rs.WebApplicationException;
+import org.glassfish.jersey.process.internal.ChainableStage;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.process.RespondingContext;
+
+import com.google.common.base.Function;
 
 /**
- * A runtime exception that contains a cause, a checked or runtime exception,
- * that may be passed to the cause of a {@link WebApplicationException}.
+ * Default implementation of the request-scoped
+ * {@link org.glassfish.jersey.server.internal.process.RespondingContext responding context}.
  *
- * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ExtractorException extends ProcessingException {
-    private static final long serialVersionUID = -4918023257104413981L;
+@RequestScoped
+class DefaultRespondingContext implements RespondingContext {
 
-    public ExtractorException() {
-        super();
+    private Stage<ContainerResponse> rootStage;
+
+    @Override
+    public void push(Function<ContainerResponse, ContainerResponse> responseTransformation) {
+        rootStage = (rootStage == null)
+                ? new Stages.LinkedStage<ContainerResponse>(responseTransformation)
+                : new Stages.LinkedStage<ContainerResponse>(responseTransformation, rootStage);
     }
 
-    public ExtractorException(String message) {
-        super(message);
+    @Override
+    public void push(final ChainableStage<ContainerResponse> stage) {
+        if (rootStage != null) {
+            stage.setDefaultNext(rootStage);
+        }
+
+        rootStage = stage;
     }
 
-    public ExtractorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ExtractorException(Throwable cause) {
-        super(cause);
+    @Override
+    public Stage<ContainerResponse> createRespondingRoot() {
+        return rootStage;
     }
 }

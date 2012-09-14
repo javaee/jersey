@@ -53,11 +53,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.server.internal.process.ResponseProcessor;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -74,17 +74,17 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     private ServiceLocator locator;
     private final List<ContainerRequestFilter> requestFilters;
     private final List<ContainerResponseFilter> responseFilters;
-    private final Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+    private final Provider<RespondingContext> respondingContextFactory;
 
     /**
      * Injectable container filtering stage builder.
      */
     static class Builder {
         @Inject
-        ServiceLocator locator;
+        private ServiceLocator locator;
 
         @Inject
-        private Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory;
+        private Provider<RespondingContext> respondingContextFactory;
 
         /**
          * Build a new container filtering stage specifying global request and response filters. This stage class
@@ -119,7 +119,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
      *
      */
     private ContainerFilteringStage(
-            Provider<ResponseProcessor.RespondingContext<ContainerResponse>> respondingContextFactory,
+            Provider<RespondingContext> respondingContextFactory,
             ServiceLocator locator,
             List<ContainerRequestFilter> requestFilters,
             List<ContainerResponseFilter> responseFilters) {
@@ -155,7 +155,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                 if (abortResponse != null) {
                     // abort accepting & return response
                     return Continuation.of(requestContext, Stages.asStage(
-                            new Inflector<ContainerRequest, ContainerResponse>() {
+                            new Endpoint() {
                                 @Override
                                 public ContainerResponse apply(
                                         final ContainerRequest requestContext) {

@@ -37,23 +37,21 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal;
+package org.glassfish.jersey.server;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
 import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * {@link org.glassfish.jersey.process.internal.ExecutorsFactory Executors factory} used on the server side.
@@ -63,7 +61,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
+class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
 
@@ -80,7 +78,8 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return MoreExecutors.sameThreadExecutor();
+                return Executors.newCachedThreadPool(
+                        new ThreadFactoryBuilder().setNameFormat("jersey-server-managed-async-executor-%d").build());
             }
         });
         this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
@@ -90,8 +89,6 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
                 return MoreExecutors.sameThreadExecutor();
             }
         });
-
-
     }
 
     @Override
@@ -100,19 +97,7 @@ public class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
     }
 
     @Override
-    public ExecutorService getRespondingExecutor(ContainerRequest containerRequest) {
+    public ExecutorService getRespondingExecutor(ContainerRequest request) {
         return respondingExecutor;
-    }
-
-    /**
-     * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
-     * {@link ServerExecutorsFactory server executor factory}.
-     */
-    public static class ServerExecutorBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bind(ServerExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<ContainerRequest>>() {
-            }).in(Singleton.class);
-        }
     }
 }

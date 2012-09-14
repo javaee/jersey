@@ -83,7 +83,7 @@ public class BlockingPostChatResource {
 
     @GET
     public void pickUpMessage(@Suspended final AsyncResponse ar, @QueryParam("id") final String messageId) {
-        LOGGER.log(DEBUG, "Received GET ({0}) with context {1} on thread {2}",
+        LOGGER.log(DEBUG, "Received GET <{0}> with context {1} on thread {2}.",
                 new Object[] {messageId, ar.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
@@ -91,7 +91,7 @@ public class BlockingPostChatResource {
             public void run() {
                 try {
                     final String message = messages.take();
-                    LOGGER.log(DEBUG, "Resuming GET ({0}) context '{1}' with a message '{2}' on thread {3}",
+                    LOGGER.log(DEBUG, "Resuming GET <{0}> context {1} with a message {2} on thread {3}.",
                             new Object[] {messageId, ar.toString(), message, Thread.currentThread().getName()});
                     ar.resume(message);
                 } catch (InterruptedException ex) {
@@ -105,7 +105,7 @@ public class BlockingPostChatResource {
 
     @POST
     public void postMessage(@Suspended final AsyncResponse ar, final String message) {
-        LOGGER.log(DEBUG, "Received POST ({0}) with context {1} on thread {2}. Suspending the context.",
+        LOGGER.log(DEBUG, "Received POST <{0}> with context {1} on thread {2}. Suspending the context.",
                 new Object[] {message, ar.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
@@ -113,7 +113,7 @@ public class BlockingPostChatResource {
             public void run() {
                 try {
                     messages.put(message);
-                    LOGGER.log(DEBUG, "Message ({0}) successfully queued. Resuming POST with context '{1}' on thread {2}.",
+                    LOGGER.log(DEBUG, "POSTed message <{0}> successfully queued. Resuming POST with context {1} on thread {2}.",
                             new Object[] {message, ar.toString(), Thread.currentThread().getName()});
                     ar.resume(POST_NOTIFICATION_RESPONSE);
                 } catch (InterruptedException ex) {

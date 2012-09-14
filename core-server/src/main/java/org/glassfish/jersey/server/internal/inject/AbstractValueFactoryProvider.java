@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * A parameter value factory provider that provides parameter value factories
@@ -55,11 +55,10 @@ import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
  * values from the supplied {@link javax.ws.rs.core.MultivaluedMap multivalued
  * parameter map}.
  *
- * @param <A> injection annotation type that is supported by the provider.
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractValueFactoryProvider<A extends Annotation> implements ValueFactoryProvider {
+public abstract class AbstractValueFactoryProvider implements ValueFactoryProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
     private final ServiceLocator injector;
@@ -68,14 +67,15 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
     /**
      * Initialize the provider.
      *
-     * @param mpep {@link MultivaluedParameterExtractorProvider} to be used for
-     *     retrieving extractors that can parameter values from the supplied
-     *     {@link javax.ws.rs.core.MultivaluedMap multivalued parameter map}.
+     * @param mpep              multivalued map parameter extractor provider.
+     * @param locator           HK2 service locator.
+     * @param compatibleSources compatible parameter sources.
      */
-    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector,
+    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep,
+                                           ServiceLocator locator,
                                            Parameter.Source... compatibleSources) {
         this.mpep = mpep;
-        this.injector = injector;
+        this.injector = locator;
         this.compatibleSources = new HashSet<Parameter.Source>(Arrays.asList(compatibleSources));
     }
 
@@ -84,7 +84,7 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
      *
      * @param parameter parameter supported by the returned extractor.
      * @return extractor supporting the parameter. The returned instance ignores
-     *     any default values set on the parameter.
+     *         any default values set on the parameter.
      * @see #get(org.glassfish.jersey.server.model.Parameter)
      */
     protected final MultivaluedParameterExtractor<?> getWithoutDefaultValue(Parameter parameter) {
@@ -100,7 +100,7 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
      *
      * @param parameter parameter supported by the returned extractor.
      * @return extractor supporting the parameter. The returned instance ignores
-     *     any default values set on the parameter.
+     *         any default values set on the parameter.
      */
     protected final MultivaluedParameterExtractor<?> get(Parameter parameter) {
         return mpep.get(parameter);
@@ -112,7 +112,7 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
      *
      * @param parameter parameter requesting the value factory instance.
      * @return parameter value factory. Returns {@code null} if parameter is
-     *     not supported.
+     *         not supported.
      */
     protected abstract Factory<?> createValueFactory(Parameter parameter);
 
@@ -122,7 +122,7 @@ public abstract class AbstractValueFactoryProvider<A extends Annotation> impleme
      *
      * @param parameter parameter requesting the value factory instance.
      * @return injected parameter value factory. Returns {@code null} if parameter
-     *     is not supported.
+     *         is not supported.
      */
     @Override
     public final Factory<?> getValueFactory(Parameter parameter) {

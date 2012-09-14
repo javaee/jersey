@@ -42,9 +42,10 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.Collections;
 import java.util.List;
 
+import org.glassfish.hk2.api.Factory;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Request routing information. Contains a {@link #routingPattern() routing pattern}

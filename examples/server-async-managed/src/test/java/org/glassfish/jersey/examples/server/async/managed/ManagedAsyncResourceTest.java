@@ -40,12 +40,15 @@
 package org.glassfish.jersey.examples.server.async.managed;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
@@ -62,6 +65,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -70,8 +74,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// FIXME unignore - async tests are temporarily ignored until the intermittent failure issue is resolved.
-@Ignore
 public class ManagedAsyncResourceTest extends JerseyTest {
 
     private static final Logger LOGGER = Logger.getLogger(ManagedAsyncResourceTest.class.getName());
@@ -127,8 +129,25 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
                     private void get() {
                         try {
-                            final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
-                            getResponses.put(requestId, response);
+                            int attemptCounter = 0;
+                            while (true) {
+                                attemptCounter++;
+                                try {
+                                    final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
+                                    getResponses.put(requestId, response);
+                                    break;
+                                } catch (Throwable t) {
+                                    LOGGER.log(Level.SEVERE, String.format("Error sending GET request <%s> for %d. time.",
+                                            requestId, attemptCounter), t);
+                                }
+                                if (attemptCounter > 3) {
+                                    break;
+                                }
+                                Thread.sleep(10);
+                            }
+                        } catch (InterruptedException ignored) {
+                            LOGGER.log(Level.WARNING,
+                                    String.format("Error sending GET message <%s>: Interrupted", requestId), ignored);
                         } finally {
                             getRequestLatch.countDown();
                         }
@@ -139,31 +158,37 @@ public class ManagedAsyncResourceTest extends JerseyTest {
             if (debugMode) {
                 getRequestLatch.await();
             } else {
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                if (!getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS)) {
+                    LOGGER.log(Level.SEVERE, "Waiting for all GET requests to complete has timed out.");
+                }
             }
         } finally {
             executor.shutdownNow();
         }
 
-        StringBuilder messageBuilder = new StringBuilder();
+        StringBuilder messageBuilder = new StringBuilder("GET responses received: ").append(getResponses.size()).append("\n");
         for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append(getResponseEntry.getValue()).append('\n');
+            messageBuilder.append("GET response for message ")
+                    .append(getResponseEntry.getKey()).append(": ")
+                    .append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
-        assertEquals(MAX_MESSAGES, getResponses.size());
         for (Map.Entry<Integer, String> entry : getResponses.entrySet()) {
             assertTrue(
                     "Unexpected GET notification response for message " + entry.getKey(),
                     entry.getValue().contains(expectedResponse));
         }
+        assertEquals(MAX_MESSAGES, getResponses.size());
     }
 
     @Test
+    @Ignore
+    // FIXME: Un-ignore once JERSEY-1269 is fixed.
     public void testChatResource() throws InterruptedException {
         final WebTarget resourceTarget = target().path("chat");
-        final int MAX_MESSAGES = 1;
-        final int LATCH_WAIT_TIMEOUT = 100000;
+        final int MAX_MESSAGES = 100;
+        final int LATCH_WAIT_TIMEOUT = 10;
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final boolean sequentialPost = false;
@@ -197,8 +222,26 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
                     private void post() {
                         try {
-                            Response response = resourceTarget.request().post(Entity.json(new Message("" + requestId, "" + requestId)));
-                            postResponses.put(requestId, response.getStatus());
+                            int attemptCounter = 0;
+                            while (true) {
+                                attemptCounter++;
+                                try {
+                                    final Response response = resourceTarget.request()
+                                            .post(Entity.json(new Message("" + requestId, "" + requestId)));
+                                    postResponses.put(requestId, response.getStatus());
+                                    break;
+                                } catch (Throwable t) {
+                                    LOGGER.log(Level.WARNING, String.format("Error POSTING message <%s> for %d. time.",
+                                            requestId, attemptCounter), t);
+                                }
+                                if (attemptCounter > 3) {
+                                    break;
+                                }
+                                Thread.sleep(10);
+                            }
+                        } catch (InterruptedException ignored) {
+                            LOGGER.log(Level.WARNING,
+                                    String.format("Error POSTING message <%s>: Interrupted", requestId), ignored);
                         } finally {
                             postRequestLatch.countDown();
                         }
@@ -219,8 +262,25 @@ public class ManagedAsyncResourceTest extends JerseyTest {
 
                     private void get() {
                         try {
-                            final Message response = resourceTarget.request("application/json").get(Message.class);
-                            getResponses.put(requestId, response);
+                            int attemptCounter = 0;
+                            while (true) {
+                                attemptCounter++;
+                                try {
+                                    final Message response = resourceTarget.request("application/json").get(Message.class);
+                                    getResponses.put(requestId, response);
+                                    break;
+                                } catch (Throwable t) {
+                                    LOGGER.log(Level.SEVERE, String.format("Error sending GET request <%s> for %d. time.",
+                                            requestId, attemptCounter), t);
+                                }
+                                if (attemptCounter > 3) {
+                                    break;
+                                }
+                                Thread.sleep(10);
+                            }
+                        } catch (InterruptedException ignored) {
+                            LOGGER.log(Level.WARNING,
+                                    String.format("Error sending GET message <%s>: Interrupted", requestId), ignored);
                         } finally {
                             getRequestLatch.countDown();
                         }
@@ -232,34 +292,49 @@ public class ManagedAsyncResourceTest extends JerseyTest {
                 postRequestLatch.await();
                 getRequestLatch.await();
             } else {
-                assertTrue("Waiting for all POST requests to complete has timed out.", postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
+                if (!postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS)) {
+                    LOGGER.log(Level.SEVERE, "Waiting for all POST requests to complete has timed out.");
+                }
+                if (!getRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS)) {
+                    LOGGER.log(Level.SEVERE, "Waiting for all GET requests to complete has timed out.");
+                }
             }
         } finally {
             executor.shutdownNow();
         }
 
-        StringBuilder messageBuilder = new StringBuilder();
+        StringBuilder messageBuilder = new StringBuilder("POST responses received: ").append(postResponses.size()).append("\n");
         for (Map.Entry<Integer, Integer> postResponseEntry : postResponses.entrySet()) {
-            messageBuilder.append("POST response for message ").append(postResponseEntry.getKey()).append(": ").append(postResponseEntry.getValue()).append('\n');
+            messageBuilder.append("POST response for message ")
+                    .append(postResponseEntry.getKey()).append(": ")
+                    .append(postResponseEntry.getValue()).append('\n');
         }
         messageBuilder.append('\n');
+        messageBuilder.append("GET responses received: ").append(getResponses.size()).append("\n");
         for (Map.Entry<Integer, Message> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append(getResponseEntry.getValue()).append('\n');
+            messageBuilder.append("GET response for message ")
+                    .append(getResponseEntry.getKey()).append(": ")
+                    .append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
-        assertEquals(MAX_MESSAGES, postResponses.size());
         for (Map.Entry<Integer, Integer> postResponseEntry : postResponses.entrySet()) {
             assertEquals(
                     "Unexpected POST notification response for message " + postResponseEntry.getKey(),
                     200, postResponseEntry.getValue().intValue());
         }
 
-        assertEquals(MAX_MESSAGES, getResponses.size());
+        final List<Integer> lost = new LinkedList<Integer>();
         final Collection<Message> getResponseValues = getResponses.values();
         for (int i = 0; i < MAX_MESSAGES; i++) {
-            assertTrue("Detected a message loss: " + i, getResponseValues.contains(new Message("" + i, "" + i)));
+            if (!getResponseValues.contains(new Message("" + i, "" + i))) {
+                lost.add(i);
+            }
         }
+        if (!lost.isEmpty()) {
+            fail("Detected a posted message loss(es): " + lost.toString());
+        }
+        assertEquals(MAX_MESSAGES, postResponses.size());
+        assertEquals(MAX_MESSAGES, getResponses.size());
     }
 }

@@ -58,7 +58,6 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
@@ -160,6 +159,7 @@ public class JaxbStringReaderProvider {
         /**
          * Creates new instance.
          *
+         * @param spfProvider {@link SAXParserFactory SAX parser factory} injection provider.
          * @param ps used to obtain {@link JAXBContext} and {@link Unmarshaller} {@link ContextResolver ContextResolvers}
          */
         public RootElementProvider(@Context Provider<SAXParserFactory> spfProvider, @Context Providers ps) {

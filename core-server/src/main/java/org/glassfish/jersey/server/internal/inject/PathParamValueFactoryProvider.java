@@ -49,22 +49,28 @@ import javax.ws.rs.core.PathSegment;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
+ * {@link PathParam &#64;PathParam} injection value factory provider.
  *
  * @author Paul Sandoz
  */
 @Singleton
-final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<PathParam> {
+final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
+    /**
+     * {@link PathParam &#64;PathParam} injection resolver.
+     */
     @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<PathParam> {
 
+        /**
+         * Create new {@link PathParam &#64;PathParam} injection resolver.
+         */
         public InjectionResolver() {
             super(PathParamValueFactoryProvider.class);
         }
@@ -126,9 +132,15 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider<P
         }
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
     @Inject
-    public PathParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.PATH);
+    public PathParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.PATH);
     }
 
     @Override

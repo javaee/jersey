@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.junit.Test;
-
-import javax.ws.rs.PathParam;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import javax.ws.rs.PathParam;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**

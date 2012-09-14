@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.glassfish.jersey.internal.ExtractorException;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.spi.StringValueReader;
 
@@ -50,11 +49,19 @@ import org.glassfish.jersey.spi.StringValueReader;
  * Extract value of the parameter using a single parameter value and the underlying
  * string reader.
  *
+ * @param <T> extracted Java type.
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 final class SingleValueExtractor<T> extends AbstractStringReaderExtractor<T> implements MultivaluedParameterExtractor<T> {
 
+    /**
+     * Create new string value extractor.
+     *
+     * @param sr                 string value reader.
+     * @param parameter          string parameter value.
+     * @param defaultStringValue default string value.
+     */
     public SingleValueExtractor(StringValueReader<T> sr, String parameter, String defaultStringValue) {
         super(sr, parameter, defaultStringValue);
     }

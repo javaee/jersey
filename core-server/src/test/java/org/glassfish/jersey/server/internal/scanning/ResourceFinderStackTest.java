@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import org.glassfish.jersey.server.ResourceFinder;
-import org.junit.Test;
-
 import java.io.InputStream;
 import java.util.NoSuchElementException;
 
+import org.glassfish.jersey.server.ResourceFinder;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -63,7 +63,7 @@ public class ResourceFinderStackTest {
 
         @Override
         public String next() {
-            if(!iterated) {
+            if (!iterated) {
                 iterated = true;
                 return "value";
             }

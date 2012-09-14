@@ -59,6 +59,15 @@ public interface Suspendable {
     public boolean isSuspendDeclared();
 
     /**
+     * Check if the component is marked to be executed asynchronously by using
+     * an internal Jersey {@link java.util.concurrent.ExecutorService executor service}.
+     *
+     * @return {@code true} if the component is marked for managed asynchronous execution,
+     *     {@code false} otherwise.
+     */
+    public boolean isManagedAsyncDeclared();
+
+    /**
      * Get the suspend timeout value in the given {@link #getSuspendTimeoutUnit()
      * time unit}.
      *

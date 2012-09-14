@@ -40,8 +40,9 @@
 package org.glassfish.jersey.server.internal;
 
 import javax.ws.rs.ext.RuntimeDelegate;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
+import static org.junit.Assert.assertSame;
 
 /**
  * Unit test that checks that the right RuntimeDelegateImpl is loaded by JAX-RS.
@@ -49,8 +50,8 @@ import org.junit.Test;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class RuntimeDelegateImplTest {
-   @Test
-   public void testRuntimeDelegateInstance() {
-       assertEquals(RuntimeDelegateImpl.class, RuntimeDelegate.getInstance().getClass());
-   }
+    @Test
+    public void testRuntimeDelegateInstance() {
+        assertSame(RuntimeDelegateImpl.class, RuntimeDelegate.getInstance().getClass());
+    }
 }

@@ -48,15 +48,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import junit.framework.Assert;
 
 /**
  * Tests injections into constructor parameters.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ConstructorParameterInjectionTest extends AbstractTest {
     @Test

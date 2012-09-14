@@ -40,8 +40,6 @@
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -57,6 +55,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.errors.PathAndResourceMethodErrorsTest
@@ -102,7 +103,7 @@ public class PathAndResourceMethodErrorsTest {
         assertEquals(3, issues.size());
     }
 
-//   TODO: testing not yet available feature (registering explicit resources).
+    //   TODO: testing not yet available feature (registering explicit resources).
     @Path("/{one}")
     public static class PathErrorsOneResource {
     }

@@ -47,21 +47,21 @@ import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerResponse;
 
 /**
- * A suspendable, request-scoped container response writer.
+ * A suspendable, request-scoped I/O container response writer.
  *
- * Container sends a new instance of the response writer with every request as part
+ * I/O container sends a new instance of the response writer with every request as part
  * of the call to the Jersey application
  * {@link ApplicationHandler#apply(org.glassfish.jersey.server.ContainerRequest)}  apply(...)}
  * method. Each container response writer represents an open connection to the client
  * (waiting for a response).
  * <p>
  * For each request the Jersey runtime will make sure to directly call either
- * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}, {@link #cancel()}
+ * {@link #suspend(long, TimeUnit, TimeoutHandler) suspend(...)}
  * or {@code commit()} method on a response writer supplied to the
  * {@code JerseyApplication.apply(...)} method before the method has finished. Therefore
- * the container implementations may assume that when the {@code JerseyApplication.apply(...)}
+ * the I/O container implementations may assume that when the {@code JerseyApplication.apply(...)}
  * method is finished, the container response writer is either {@link #commit() commited},
- * {@link #cancel() canceled} or {@link #suspend(long, TimeUnit, TimeoutHandler) suspended}.
+ * or {@link #suspend(long, TimeUnit, TimeoutHandler) suspended}.
  * </p>
  *
  * @author Marek Potociar
@@ -98,7 +98,7 @@ public interface ContainerResponseWriter {
      * <p>
      * If the response content length is declared to be greater or equal to 0, it
      * means that the content length in bytes of the entity to be written is known,
-     * otherwise -1. Containers may use this value to determine whether the
+     * otherwise -1. I/O containers may use this value to determine whether the
      * {@code "Content-Length"} header can be set or utilize chunked transfer encoding.
      * </p>
      *
@@ -118,27 +118,31 @@ public interface ContainerResponseWriter {
     /**
      * Suspend the request/response processing.
      *
-     * Container must not automatically {@link #commit() commit} the response writer
-     * when the processing on the container thread is finished and the thread is
+     * The method returns {@code true} to indicate the response writer was suspended successfully.
+     * In case the provider has already been suspended earlier, the method returns {@code false}.
+     * <p>
+     * I/O container must not automatically {@link #commit() commit} the response writer
+     * when the processing on the I/O container thread is finished and the thread is
      * released. Instead, the Jersey runtime will make sure to manually close
-     * the container response writer instance by either calling {@link #commit()}
-     * or {@link #cancel()} method.
-     * <p />
+     * the container response writer instance by explicitly calling the {@link #commit()}
+     * or {@link #failure(Throwable)} method at some later point in time.
+     * </p>
+     * <p>
      * Once suspended, the specified suspend timeout can be further updated using
      * {@link #setSuspendTimeout(long, java.util.concurrent.TimeUnit) } method.
+     * </p>
      *
      * @param timeOut        time-out value. Value less or equal to 0, indicates that
      *                       the processing is suspended indefinitely.
      * @param timeUnit       time-out time unit.
      * @param timeoutHandler time-out handler to process a time-out event if it
      *                       occurs.
-     * @throws IllegalStateException in case the container response writer has
-     *                               already been suspended.
+     * @return {@code true} if the suspend operation completed successfully, {@code false} otherwise.
+     *
      * @see #setSuspendTimeout(long, TimeUnit)
-     * @see #cancel()
      * @see #commit()
      */
-    public void suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) throws IllegalStateException;
+    public boolean suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler);
 
     /**
      * Set the suspend timeout.
@@ -149,39 +153,37 @@ public interface ContainerResponseWriter {
      * @param timeOut  time-out value. Value less or equal to 0, indicates that
      *                 the processing is suspended indefinitely.
      * @param timeUnit time-out time unit.
-     * @throws IllegalStateException in case the container has not been suspended
+     * @throws IllegalStateException in case the response writer has not been suspended
      *                               yet.
      * @see #setSuspendTimeout(long, TimeUnit)
      */
     public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException;
 
     /**
-     * Cancel the request/response processing. This method automatically commits
-     * and closes the writer.
-     * <p />
-     * By invoking this method, {@link org.glassfish.jersey.server.ApplicationHandler
-     * Jersey application handler} indicates to the container that the request processing
-     * related to this container context has been canceled.
-     * <p />
-     * Similarly to {@link #commit()}, this enables the container context to release
-     * any resources, clean up any state, etc. The main difference is that a call
-     * to the {@code cancel()} method indicates that any unsent response data in
-     * the container buffer should be discarded.
-     *
-     * @see #commit()
-     * @see #suspend(long, TimeUnit, TimeoutHandler)
-     */
-    public void cancel();
-
-    /**
      * Commit the response & close the container response writer.
      *
-     * Indicates to the container that request has been fully processed and response
-     * has been fully written. This signals the container to finish the request/response
+     * Indicates to the I/O container that request has been fully processed and response
+     * has been fully written. This signals the I/O  container to finish the request/response
      * processing, clean up any state, flush any streams, release resources etc.
      *
-     * @see #cancel()
      * @see #suspend(long, TimeUnit, TimeoutHandler)
+     * @see #failure(Throwable)
      */
     public void commit();
+
+    /**
+     * Propagate an unhandled error to the I/O container.
+     *
+     * Indicates to the I/O container that the request processing has finished with an error
+     * that could not be processed by the Jersey runtime. The I/O container is expected to process
+     * the exception in a container-specific way. This method also signals the I/O container to
+     * finish the request/response processing, clean up any state, flush any streams, release
+     * resources etc.
+     *
+     * @param error unhandled request processing error.
+     *
+     * @see #suspend(long, TimeUnit, TimeoutHandler)
+     * @see #commit()
+     */
+    public void failure(Throwable error);
 }

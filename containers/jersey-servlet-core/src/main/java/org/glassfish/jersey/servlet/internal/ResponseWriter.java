@@ -92,8 +92,13 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public void suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) throws IllegalStateException {
-        asyncExt.suspend(this, timeOut, timeUnit, timeoutHandler);
+    public boolean suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
+        try {
+            asyncExt.suspend(this, timeOut, timeUnit, timeoutHandler);
+            return true;
+        } catch (IllegalStateException ex) {
+            return false;
+        }
     }
 
     @Override
@@ -157,16 +162,16 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public void cancel() {
+    public void failure(Throwable error) {
         if (!response.isCommitted()) {
             try {
                 response.reset();
-                response.sendError(500, "Request cancelled.");
+                response.sendError(500, "Request failed.");
             } catch (IllegalStateException ex) {
                 // a race condition externally committing the response can still occur...
-                LOGGER.log(Level.FINER, "Unable to reset cancelled response.", ex);
+                LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
             } catch (IOException ex) {
-                throw new ContainerException("I/O exception occurred while sending 'Request cancelled.' error response.", ex);
+                throw new ContainerException("I/O exception occurred while sending 'Request failed.' error response.", ex);
             } finally {
                 asyncExt.complete();
             }

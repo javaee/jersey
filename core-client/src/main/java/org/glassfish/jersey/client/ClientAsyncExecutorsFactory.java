@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.concurrent.ExecutorService;
@@ -49,6 +50,7 @@ import org.glassfish.jersey.spi.ResponseExecutorsProvider;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * {@link ExecutorsFactory Executors factory} used on the client side for asynchronous request
@@ -72,7 +74,8 @@ class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool();
+                return Executors.newCachedThreadPool(
+                        new ThreadFactoryBuilder().setNameFormat("jersey-client-async-executor-%d").build());
             }
         });
         this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {

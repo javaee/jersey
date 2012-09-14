@@ -37,77 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.gf.ejb;
 
-package org.glassfish.jersey.server.internal.inject;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Providers;
 
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
+import javax.ejb.EJBException;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
-import org.glassfish.hk2.api.Factory;
+import org.glassfish.jersey.server.internal.process.MappableException;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
+ * Helper class to handle exceptions wrapped by the EJB container with EJBException.
+ * If this mapper was not registered, no {@link WebApplicationException}
+ * would end up mapped to the corresponding response.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
-final class AsyncResponseValueFactoryProvider implements ValueFactoryProvider {
+public class EjbExceptionMapper implements ExceptionMapper<EJBException> {
 
-    private final Provider<AsyncContext> asyncContextProvider;
-
-    /**
-     * {@link javax.ws.rs.container.Suspended} injection resolver.
-     */
-    static final class InjectionResolver extends ParamInjectionResolver<Suspended> {
-
-        /**
-         * Create new injection resolver.
-         */
-        public InjectionResolver() {
-            super(AsyncResponseValueFactoryProvider.class);
-        }
-    }
+    private final Providers providers;
 
     /**
-     * Initialize the provider.
+     * Create new EJB exception mapper.
      *
-     * @param asyncContextProvider async processing context provider.
+     * @param providers JAX-RS Providers.
      */
-    @Inject
-    public AsyncResponseValueFactoryProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    public EjbExceptionMapper(@Context Providers providers) {
+        this.providers = providers;
     }
 
     @Override
-    public Factory<?> getValueFactory(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new Factory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
+    public Response toResponse(EJBException exception) {
+        final Exception cause = exception.getCausedByException();
+        if (cause != null) {
+            final ExceptionMapper mapper = providers.getExceptionMapper(cause.getClass());
+            if (mapper != null) {
+                //noinspection unchecked
+                return mapper.toResponse(cause);
+            } else if (cause instanceof WebApplicationException) {
+                return ((WebApplicationException) cause).getResponse();
             }
+        }
 
-            @Override
-            public void dispose(AsyncResponse instance) {
-                // not used
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+        // Re-throw so the exception can be passed through to the
+        // servlet container
+        throw new MappableException((cause == null) ? exception : cause);
     }
 }

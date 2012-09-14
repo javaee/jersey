@@ -50,9 +50,9 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.wadl.WadlGenerator;
+import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Grammars;
@@ -82,7 +82,7 @@ import com.sun.research.ws.wadl.Response;
  */
 public class WadlGeneratorGrammarsSupport implements WadlGenerator {
 
-    private static final Logger LOG = Logger.getLogger( WadlGeneratorGrammarsSupport.class.getName() );
+    private static final Logger LOG = Logger.getLogger(WadlGeneratorGrammarsSupport.class.getName());
 
     private WadlGenerator _delegate;
     private File _grammarsFile;
@@ -93,13 +93,13 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
     public WadlGeneratorGrammarsSupport() {
     }
 
-    public WadlGeneratorGrammarsSupport( WadlGenerator delegate,
-                                         Grammars grammars ) {
+    public WadlGeneratorGrammarsSupport(WadlGenerator delegate,
+                                        Grammars grammars) {
         _delegate = delegate;
         _grammars = grammars;
     }
 
-    public void setWadlGeneratorDelegate( WadlGenerator delegate ) {
+    public void setWadlGeneratorDelegate(WadlGenerator delegate) {
         _delegate = delegate;
     }
 
@@ -111,32 +111,32 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
         return _delegate.getRequiredJaxbContextPath();
     }
 
-    public void setGrammarsFile( File grammarsFile ) {
-        if ( _grammarsStream != null ) {
-            throw new IllegalStateException( "The grammarsStream property is already set," +
-                    " therefore you cannot set the grammarsFile property. Only one of both can be set at a time." );
+    public void setGrammarsFile(File grammarsFile) {
+        if (_grammarsStream != null) {
+            throw new IllegalStateException("The grammarsStream property is already set," +
+                    " therefore you cannot set the grammarsFile property. Only one of both can be set at a time.");
         }
         _grammarsFile = grammarsFile;
     }
 
-    public void setGrammarsStream( InputStream grammarsStream ) {
-        if ( _grammarsFile != null ) {
-            throw new IllegalStateException( "The grammarsFile property is already set," +
-                    " therefore you cannot set the grammarsStream property. Only one of both can be set at a time." );
+    public void setGrammarsStream(InputStream grammarsStream) {
+        if (_grammarsFile != null) {
+            throw new IllegalStateException("The grammarsFile property is already set," +
+                    " therefore you cannot set the grammarsStream property. Only one of both can be set at a time.");
         }
         _grammarsStream = grammarsStream;
     }
 
     public void init() throws IllegalStateException, JAXBException {
-        if ( _grammarsFile == null && _grammarsStream == null ) {
-            throw new IllegalStateException( "Neither the grammarsFile nor the grammarsStream" +
-                    " is set, one of both is required." );
+        if (_grammarsFile == null && _grammarsStream == null) {
+            throw new IllegalStateException("Neither the grammarsFile nor the grammarsStream" +
+                    " is set, one of both is required.");
         }
         _delegate.init();
-        final JAXBContext c = JAXBContext.newInstance( Grammars.class );
+        final JAXBContext c = JAXBContext.newInstance(Grammars.class);
         final Unmarshaller m = c.createUnmarshaller();
-        final Object obj = _grammarsFile != null ? m.unmarshal( _grammarsFile ) : m.unmarshal( _grammarsStream );
-        _grammars = Grammars.class.cast( obj );
+        final Object obj = _grammarsFile != null ? m.unmarshal(_grammarsFile) : m.unmarshal(_grammarsStream);
+        _grammars = Grammars.class.cast(obj);
     }
 
     /**
@@ -145,79 +145,78 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      */
     public Application createApplication() {
         final Application result = _delegate.createApplication();
-        if ( result.getGrammars() != null && !overrideGrammars) {
-            LOG.info( "The wadl application created by the delegate ("+ _delegate +") already contains a grammars element," +
-                    " we're adding elements of the provided grammars file." );
-            if ( !_grammars.getAny().isEmpty() ) {
-                result.getGrammars().getAny().addAll( _grammars.getAny() );
+        if (result.getGrammars() != null && !overrideGrammars) {
+            LOG.info("The wadl application created by the delegate (" + _delegate + ") already contains a grammars element," +
+                    " we're adding elements of the provided grammars file.");
+            if (!_grammars.getAny().isEmpty()) {
+                result.getGrammars().getAny().addAll(_grammars.getAny());
             }
-            if ( !_grammars.getDoc().isEmpty() ) {
-                result.getGrammars().getDoc().addAll( _grammars.getDoc() );
+            if (!_grammars.getDoc().isEmpty()) {
+                result.getGrammars().getDoc().addAll(_grammars.getDoc());
             }
-            if ( !_grammars.getInclude().isEmpty() ) {
-                result.getGrammars().getInclude().addAll( _grammars.getInclude() );
+            if (!_grammars.getInclude().isEmpty()) {
+                result.getGrammars().getInclude().addAll(_grammars.getInclude());
             }
-        }
-        else {
-            result.setGrammars( _grammars );
+        } else {
+            result.setGrammars(_grammars);
         }
         return result;
     }
 
     /**
-     * @param ar abstract resource
+     * @param ar  abstract resource
      * @param arm abstract resource method
      * @return method
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public Method createMethod( org.glassfish.jersey.server.model.Resource ar,
-                                org.glassfish.jersey.server.model.ResourceMethod arm ) {
-        return _delegate.createMethod( ar, arm );
+    public Method createMethod(org.glassfish.jersey.server.model.Resource ar,
+                               org.glassfish.jersey.server.model.ResourceMethod arm) {
+        return _delegate.createMethod(ar, arm);
     }
 
     /**
-     * @param ar abstract resource
+     * @param ar  abstract resource
      * @param arm abstract resource method
      * @return request
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public Request createRequest( org.glassfish.jersey.server.model.Resource ar,
-                                  org.glassfish.jersey.server.model.ResourceMethod arm ) {
-        return _delegate.createRequest( ar, arm );
+    public Request createRequest(org.glassfish.jersey.server.model.Resource ar,
+                                 org.glassfish.jersey.server.model.ResourceMethod arm) {
+        return _delegate.createRequest(ar, arm);
     }
 
     /**
      * @param ar abstract resource
      * @param am abstract method
-     * @param p parameter
+     * @param p  parameter
      * @return parameter
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
      */
-    public Param createParam( org.glassfish.jersey.server.model.Resource ar,
-                              org.glassfish.jersey.server.model.ResourceMethod am, Parameter p ) {
-        return _delegate.createParam( ar, am, p );
+    public Param createParam(org.glassfish.jersey.server.model.Resource ar,
+                             org.glassfish.jersey.server.model.ResourceMethod am, Parameter p) {
+        return _delegate.createParam(ar, am, p);
     }
 
     /**
-     * @param ar abstract resource
+     * @param ar  abstract resource
      * @param arm abstract resource method
-     * @param mt media type
+     * @param mt  media type
      * @return respresentation type
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
-            org.glassfish.jersey.server.model.Resource ar, org.glassfish.jersey.server.model.ResourceMethod arm, MediaType mt ) {
-        return _delegate.createRequestRepresentation( ar, arm, mt );
+            org.glassfish.jersey.server.model.Resource ar, org.glassfish.jersey.server.model.ResourceMethod arm, MediaType mt) {
+        return _delegate.createRequestRepresentation(ar, arm, mt);
     }
 
     /**
-     * @param ar abstract resource
+     * @param ar   abstract resource
      * @param path resource path
      * @return resource
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResource(org.glassfish.jersey.server.model.Resource, String)
      */
-    public Resource createResource( org.glassfish.jersey.server.model.Resource ar, String path ) {
-        return _delegate.createResource( ar, path );
+    public Resource createResource(org.glassfish.jersey.server.model.Resource ar, String path) {
+        return _delegate.createResource(ar, path);
     }
 
     /**
@@ -229,21 +228,21 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
     }
 
     /**
-     * @param ar abstract resource
+     * @param ar  abstract resource
      * @param arm abstract resource method
      * @return response
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
      */
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource ar,
-                                          org.glassfish.jersey.server.model.ResourceMethod arm ) {
-        return _delegate.createResponses( ar, arm );
+                                          org.glassfish.jersey.server.model.ResourceMethod arm) {
+        return _delegate.createResponses(ar, arm);
     }
 
     // ================ methods for post build actions =======================
 
     @Override
     public ExternalGrammarDefinition createExternalGrammar() {
-        if(overrideGrammars) {
+        if (overrideGrammars) {
             return new ExternalGrammarDefinition();
         }
         return _delegate.createExternalGrammar();

@@ -40,9 +40,9 @@
 package org.glassfish.jersey.server;
 
 import java.util.concurrent.ExecutionException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
@@ -51,7 +51,9 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.Tokenizer;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)

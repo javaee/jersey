@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
 
-import javax.ejb.EJBException;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Providers;
-
-import org.glassfish.jersey.internal.MappableException;
+package org.glassfish.jersey.internal.util;
 
 /**
- * Helper class to handle exceptions wrapped by the EJB container with EJBException.
- * If this mapper was not registered, no {@link WebApplicationException}
- * would end up mapped to the corresponding response.
+ * Closure interface.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @param <T> data type.
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class EJBExceptionMapper implements ExceptionMapper<EJBException> {
-
-    private final Providers providers;
-
-    public EJBExceptionMapper(@Context Providers providers) {
-        this.providers = providers;
-    }
-
-    @Override
-    public Response toResponse(EJBException exception) {
-        final Exception cause = exception.getCausedByException();
-        if (cause != null) {
-            final ExceptionMapper mapper = providers.getExceptionMapper(cause.getClass());
-            if (mapper != null) {
-                return mapper.toResponse(cause);
-            } else if (cause instanceof WebApplicationException) {
-                return ((WebApplicationException)cause).getResponse();
-            }
-        }
-
-        // Re-throw so the exception can be passed through to the
-        // servlet container
-        throw new MappableException((cause == null) ? exception : cause);
-    }
+public interface Closure<T> {
+    /**
+     * Invoke the closure on the data.
+     *
+     * @param data input data.
+     */
+    public void invoke(T data);
 }

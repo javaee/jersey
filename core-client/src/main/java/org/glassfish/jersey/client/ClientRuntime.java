@@ -55,11 +55,11 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Client request processing runtime.
+ * Client-side request processing runtime.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class Runtime {
+class ClientRuntime {
     private final Stage<ClientRequest> requestProcessingRoot;
     private final Stage<ClientResponse> responseProcessingRoot;
 
@@ -74,8 +74,7 @@ class Runtime {
      * @param connector client transport connector.
      * @param locator   HK2 service locator.
      */
-    public Runtime(final Connector connector, final ServiceLocator locator) {
-
+    public ClientRuntime(final Connector connector, final ServiceLocator locator) {
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
         final ChainableStage<ClientRequest> requestFilteringStage =
@@ -119,7 +118,7 @@ class Runtime {
                             public void run() {
                                 final ClientResponse processedResponse;
                                 try {
-                                    processedResponse = process(response, responseProcessingRoot).result();
+                                    processedResponse = Stages.process(response, responseProcessingRoot);
                                 } catch (Throwable throwable) {
                                     failure(throwable);
                                     return;
@@ -144,7 +143,7 @@ class Runtime {
                     }
                 };
                 try {
-                    connector.apply(process(request, requestProcessingRoot).result(), connectorCallback);
+                    connector.apply(Stages.process(request, requestProcessingRoot), connectorCallback);
                 } catch (AbortException aborted) {
                     connectorCallback.response(aborted.getAbortResponse());
                 } catch (Throwable throwable) {
@@ -190,12 +189,12 @@ class Runtime {
         ClientResponse response;
         try {
             try {
-                response = connector.apply(process(request, requestProcessingRoot).result());
+                response = connector.apply(Stages.process(request, requestProcessingRoot));
             } catch (AbortException aborted) {
                 response = aborted.getAbortResponse();
             }
 
-            return process(response, responseProcessingRoot).result();
+            return Stages.process(response, responseProcessingRoot);
         } catch (ClientException ex) {
             throw ex;
         } catch (Throwable t) {
@@ -217,14 +216,5 @@ class Runtime {
      */
     public void close() {
         connector.close();
-    }
-
-    private <DATA> Stage.Continuation<DATA> process(DATA data, Stage<DATA> processingRoot) {
-        Stage.Continuation<DATA> continuation = Stage.Continuation.of(data, processingRoot);
-        Stage<DATA> currentStage;
-        while ((currentStage = continuation.next()) != null) {
-            continuation = currentStage.apply(continuation.result());
-        }
-        return continuation;
     }
 }

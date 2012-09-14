@@ -66,6 +66,9 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
 
+    /**
+     * Create new chunked response.
+     */
     protected ChunkedResponse() {
     }
 
@@ -229,7 +232,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     /**
      * Set context used for writing chunks.
      *
-     * @param requestContext request context.
+     * @param requestContext  request context.
      * @param responseContext response context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */

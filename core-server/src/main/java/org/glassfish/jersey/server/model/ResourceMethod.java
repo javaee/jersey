@@ -157,6 +157,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         private final Set<MediaType> consumedTypes;
         private final Set<MediaType> producedTypes;
         // Suspendable
+        private boolean managedAsync;
         private boolean suspended;
         private long suspendTimeout;
         private TimeUnit suspendTimeoutUnit;
@@ -352,6 +353,12 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
             return this;
         }
 
+        public Builder managedAsync() {
+            managedAsync = true;
+
+            return this;
+        }
+
         /**
          * If set to {@code true}, the parameter values will not be automatically
          * decoded.
@@ -434,6 +441,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                     path,
                     consumedTypes,
                     producedTypes,
+                    managedAsync,
                     suspended,
                     suspendTimeout,
                     suspendTimeoutUnit,
@@ -470,6 +478,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     private final List<MediaType> consumedTypes;
     private final List<MediaType> producedTypes;
     // SuspendableComponent
+    private final boolean managedAsync;
     private final boolean suspended;
     private final long suspendTimeout;
     private final TimeUnit suspendTimeoutUnit;
@@ -482,12 +491,13 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                            final String path,
                            final Collection<MediaType> consumedTypes,
                            final Collection<MediaType> producedTypes,
-                           final boolean suspended,
+                           boolean managedAsync, final boolean suspended,
                            final long suspendTimeout,
                            final TimeUnit suspendTimeoutUnit,
                            final Invocable invocable,
                            final Collection<Class<? extends Annotation>> nameBindings
     ) {
+        this.managedAsync = managedAsync;
         this.type = JaxrsType.classify(httpMethod, path);
 
         this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
@@ -582,6 +592,11 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     @Override
     public boolean isSuspendDeclared() {
         return suspended;
+    }
+
+    @Override
+    public boolean isManagedAsyncDeclared() {
+        return managedAsync;
     }
 
     // ResourceModelComponent

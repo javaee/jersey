@@ -167,7 +167,7 @@ public class RequestContextBuilder {
     }
 
     public RequestContextBuilder accept(MediaType... acceptHeader) {
-        putHeaders(HttpHeaders.ACCEPT, acceptHeader);
+        putHeaders(HttpHeaders.ACCEPT, (Object[]) acceptHeader);
         return this;
     }
 
@@ -198,7 +198,7 @@ public class RequestContextBuilder {
     }
 
     public RequestContextBuilder cookies(Cookie... cookies) {
-        putHeaders(HttpHeaders.COOKIE, cookies);
+        putHeaders(HttpHeaders.COOKIE, (Object[]) cookies);
         return this;
     }
 

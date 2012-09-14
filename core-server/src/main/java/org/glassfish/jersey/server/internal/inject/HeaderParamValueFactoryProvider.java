@@ -39,32 +39,33 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.HeaderParam;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.ExtractorException;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 /**
- * Value factory provider supporting the {@link HeaderParam} injection annotation.
+ * Value factory provider supporting the {@link HeaderParam &#64;HeaderParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider<HeaderParam> {
+final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     /**
-     * HeaderParam injection resolver.
+     * {@link HeaderParam &#64;HeaderParam} injection resolver.
      */
     @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<HeaderParam> {
 
         /**
-         * Create new HeaderParam injection resolver.
+         * Create new {@link HeaderParam &#64;HeaderParam} injection resolver.
          */
         public InjectionResolver() {
             super(HeaderParamValueFactoryProvider.class);
@@ -93,12 +94,12 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
     /**
      * Injection constructor.
      *
-     * @param mpep multivalued map parameter extractor provider.
-     * @param injector HK2 injector.
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
      */
     @Inject
-    public HeaderParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.HEADER);
+    public HeaderParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.HEADER);
     }
 
     @Override

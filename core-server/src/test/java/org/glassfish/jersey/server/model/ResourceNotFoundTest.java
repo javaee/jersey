@@ -40,21 +40,20 @@
 
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ContainerResponse;
 
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -141,7 +140,7 @@ public class ResourceNotFoundTest {
         rb.addMethod("GET").handledBy(new MyInflector());
         rc.addResources(rb.build());
 
-        return  new ApplicationHandler(rc);
+        return new ApplicationHandler(rc);
     }
 
     @Test

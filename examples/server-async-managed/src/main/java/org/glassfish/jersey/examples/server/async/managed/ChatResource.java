@@ -49,6 +49,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 
+import org.glassfish.jersey.server.ManagedAsync;
+
 /**
  * Example of a simple fire&forget point-to-point messaging resource.
  *
@@ -63,11 +65,13 @@ public class ChatResource {
     private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<AsyncResponse>(5);
 
     @GET
+    @ManagedAsync
     public void getMessage(@Suspended final AsyncResponse ar) throws InterruptedException {
         suspended.put(ar);
     }
 
     @POST
+    @ManagedAsync
     public String postMessage(final Message message) throws InterruptedException {
         final AsyncResponse asyncResponse = suspended.take();
         asyncResponse.resume(message);
