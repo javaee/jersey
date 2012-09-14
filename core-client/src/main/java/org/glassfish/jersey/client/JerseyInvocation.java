@@ -41,7 +41,9 @@ package org.glassfish.jersey.client;
 
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
@@ -84,8 +86,42 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private final ClientRequest requestContext;
 
     private JerseyInvocation(Builder builder) {
+        validateHttpMethodAndEntity(builder.requestContext);
         this.requestContext = new ClientRequest(builder.requestContext);
     }
+
+    private enum EntityPresence {
+        MUST_BE_NULL,
+        MUST_BE_PRESENT,
+        OPTIONAL;
+    }
+
+    private static Map<String, EntityPresence> METHODS = initializeMap();
+
+    private static Map<String, EntityPresence> initializeMap() {
+        Map<String, EntityPresence> map = new HashMap<String, EntityPresence>();
+
+        map.put("DELETE", EntityPresence.MUST_BE_NULL);
+        map.put("GET", EntityPresence.MUST_BE_NULL);
+        map.put("HEAD", EntityPresence.MUST_BE_NULL);
+        map.put("OPTIONS", EntityPresence.MUST_BE_NULL);
+        map.put("POST", EntityPresence.OPTIONAL); // we allow to post null instead of entity
+        map.put("PUT", EntityPresence.MUST_BE_PRESENT);
+        map.put("TRACE", EntityPresence.MUST_BE_NULL);
+        return map;
+    }
+
+    private void validateHttpMethodAndEntity(ClientRequest request) {
+        final String method = request.getMethod();
+
+        final EntityPresence entityPresence = METHODS.get(method.toUpperCase());
+        if (entityPresence == EntityPresence.MUST_BE_NULL && request.hasEntity()) {
+            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+        } else if (entityPresence == EntityPresence.MUST_BE_PRESENT && !request.hasEntity()) {
+            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+        }
+    }
+
 
     /**
      * Jersey-specific {@link javax.ws.rs.client.Invocation.Builder client invocation builder}.

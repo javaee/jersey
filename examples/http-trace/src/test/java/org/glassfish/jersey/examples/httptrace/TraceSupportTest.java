@@ -53,7 +53,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -67,6 +66,7 @@ public class TraceSupportTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
         return App.create();
     }
+
     private String[] expectedFragmentsProgrammatic = new String[]{
             "TRACE http://localhost:" + this.getPort() + "/tracing/programmatic"
     };
@@ -119,15 +119,11 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("Un-ignore once the JERSEY-1376 is fixed.")
-    // TODO Un-ignore once the JERSEY-1376 is fixed.
     public void testTraceWithEntityGrizzlyConnector() throws Exception {
         _testTraceWithEntity(false, true);
     }
 
     @Test
-    @Ignore("Un-ignore once the JERSEY-1376 is fixed.")
-    // TODO Un-ignore once the JERSEY-1376 is fixed.
     public void testAsyncTraceWithEntityGrizzlyConnector() throws Exception {
         _testTraceWithEntity(true, true);
     }
