@@ -39,8 +39,10 @@
  */
 package org.glassfish.jersey.tests.e2e.client;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
@@ -49,16 +51,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -99,6 +103,12 @@ public class ResponseBufferEntityTest extends JerseyTest {
         public CorruptedInputStream corrupted() {
             return new CorruptedInputStream(ENTITY.getBytes());
         }
+
+        @GET
+        @Path("string")
+        public String string() {
+            return ENTITY;
+        }
     }
 
     @Override
@@ -109,9 +119,10 @@ public class ResponseBufferEntityTest extends JerseyTest {
         return new ResourceConfig(Resource.class).addSingletons(new LoggingFilter(LOGGER, true));
     }
 
-    @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        clientConfig.register(new ClientResponseFilter() {
+    @Test
+    public void testBufferEntityReadsOriginalStreamTest() throws Exception {
+        final WebTarget target = target("response/corrupted");
+        target.configuration().register(new ClientResponseFilter() {
 
             @Override
             public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)
@@ -122,11 +133,7 @@ public class ResponseBufferEntityTest extends JerseyTest {
             }
 
         });
-    }
-
-    @Test
-    public void testBufferEntityTest() throws Exception {
-        final Response response = target("response/corrupted").request().buildGet().invoke();
+        final Response response = target.request().buildGet().invoke();
 
         try {
             response.bufferEntity();
@@ -138,4 +145,42 @@ public class ResponseBufferEntityTest extends JerseyTest {
         fail("MessageProcessingException expected.");
     }
 
+    @Test
+    // See JERSEY-1340
+    public void testSecondUnbufferedRead() throws Exception {
+        final Response response = target("response/string").request(MediaType.TEXT_PLAIN).get();
+        String entity = response.readEntity(String.class);
+        assertEquals(Resource.ENTITY, entity);
+
+        try {
+            Reader reader = response.readEntity(Reader.class);
+            fail("IllegalStateException expected to be thrown.");
+        } catch (IllegalStateException expected) {
+            // passed.
+        }
+    }
+
+    @Test
+    // See JERSEY-1339
+    public void testSecondBufferedRead() throws Exception {
+        final Response response = target("response/string").request(MediaType.TEXT_PLAIN).get();
+        response.bufferEntity();
+
+        String entity;
+
+        entity = response.readEntity(String.class);
+        assertEquals(Resource.ENTITY, entity);
+
+        entity = response.readEntity(String.class);
+        assertEquals(Resource.ENTITY, entity);
+
+        BufferedReader buffered = new BufferedReader(response.readEntity(Reader.class));
+        String line = buffered.readLine();
+        assertEquals(Resource.ENTITY, line);
+
+        byte[] buffer = new byte[0];
+        buffer = response.readEntity(buffer.getClass());
+        String entityFromBytes = new String(buffer);
+        assertEquals(Resource.ENTITY, entityFromBytes);
+    }
 }

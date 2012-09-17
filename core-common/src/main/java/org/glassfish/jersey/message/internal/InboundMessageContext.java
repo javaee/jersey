@@ -87,7 +87,6 @@ import com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO revise - remove unused methods, fix warnings etc.
 public class InboundMessageContext {
     private static final Logger LOGGER = Logger.getLogger(InboundMessageContext.class.getName());
     private static final InputStream EMPTY = new InputStream() {
@@ -108,133 +107,97 @@ public class InboundMessageContext {
      * is used to control the execution of interceptors.
      */
     private static class ContentStream {
-        private InputStream contentStream;
-        private Type type;
+        private InputStream entityStream;
+        private boolean interceptable;
+        private boolean buffered;
         private boolean closed;
 
-        ContentStream(InputStream contentStream) {
+        ContentStream(InputStream entityStream) {
             super();
-            this.contentStream = contentStream;
-            this.type = Type.INTERNAL;
+            this.entityStream = entityStream;
+            this.interceptable = this.buffered = this.closed = false;
         }
 
         void setBufferedContentStream(InputStream bufferedInputStream) {
-            this.contentStream = bufferedInputStream;
-            this.type = (this.type == Type.EXTERNAL ? Type.EXTERNAL_BUFFERED : Type.BUFFERED);
+            entityStream = bufferedInputStream;
+            buffered = true;
+            closed = false;
         }
 
-        void setExternalContentStream(InputStream contentStream) {
-            this.contentStream = contentStream;
-            this.type = Type.EXTERNAL;
+        void setExternalContentStream(InputStream stream) {
+            entityStream = stream;
+            interceptable = true;
+            closed = false;
         }
 
         InputStream getInputStream() {
-            return contentStream;
+            return entityStream;
         }
 
-        Type getType() {
-            return type;
+        boolean isInterceptable() {
+            return interceptable;
         }
 
-        void invalidateContentStream() throws IOException {
-            if (this.contentStream != null) {
-                try {
-                    this.contentStream.close();
-                } catch (IOException ex) {
-                    throw new IOException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
-                } finally {
-                    this.contentStream = null;
-                }
+        boolean isBuffered() {
+            return buffered;
+        }
+
+        void reset() {
+            try {
+                entityStream.reset();
+            } catch (IOException ex) {
+                throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFER_RESET_FAILED(), ex);
             }
         }
 
         void close() {
-            if (!closed) {
+            if (!closed && entityStream != null) {
                 try {
-                    contentStream.close();
-                    closed = true;
+                    entityStream.close();
                 } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                    throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                } finally {
+                    closed = true;
+                    buffered = false;
+                    entityStream = null;
                 }
             }
         }
 
-
         public boolean isEmpty() {
             if (closed) {
-                throw new MessageProcessingException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
+                throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
             }
-            if (contentStream == null) {
+            if (entityStream == null) {
                 return true;
             }
             try {
-                if (contentStream.available() > 0) {
+                if (entityStream.available() > 0) {
                     return false;
-                } else if (contentStream.markSupported()) {
-                    contentStream.mark(1);
-                    int i = contentStream.read();
-                    contentStream.reset();
+                } else if (entityStream.markSupported()) {
+                    entityStream.mark(1);
+                    int i = entityStream.read();
+                    entityStream.reset();
                     return i == -1;
                 } else {
-                    int b = contentStream.read();
+                    int b = entityStream.read();
                     if (b == -1) {
                         return true;
                     }
 
                     PushbackInputStream pbis;
-                    if (contentStream instanceof PushbackInputStream) {
-                        pbis = (PushbackInputStream) contentStream;
+                    if (entityStream instanceof PushbackInputStream) {
+                        pbis = (PushbackInputStream) entityStream;
                     } else {
-                        pbis = new PushbackInputStream(contentStream, 1);
-                        contentStream = pbis;
+                        pbis = new PushbackInputStream(entityStream, 1);
+                        entityStream = pbis;
                     }
                     pbis.unread(b);
 
                     return false;
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        /**
-         * Type of the input stream.
-         *
-         * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
-         */
-        public enum Type {
-            /**
-             * External input stream "from wire" which MUST be intercepted before reading
-             * it by MBR.
-             */
-            EXTERNAL(true),
-            /**
-             * Internal input stream which MUST NOT be intercepted before reading by MBR.
-             */
-            INTERNAL(false),
-            /**
-             * Buffered input stream which MUST NOT be intercepted before reading by MBR.
-             */
-            BUFFERED(false),
-            /**
-             * Buffered input stream which MUST be intercepted before reading by MBR.
-             */
-            EXTERNAL_BUFFERED(true),
-            /**
-             * Temporary buffered input stream which MUST NOT be intercepted before
-             * reading by MBR. Temporary buffered input stream is created by buffering the
-             * already read entity in order to read it again as different type.
-             */
-            TEMP_BUFFERED(false);
-
-            private final boolean intercept;
-
-            Type(boolean intercept) {
-                this.intercept = intercept;
-            }
-
-            public boolean intercept() {
-                return intercept;
+                throw new ProcessingException(ex);
             }
         }
     }
@@ -251,8 +214,6 @@ public class InboundMessageContext {
 
     /**
      * Add a new header value.
-     *
-     *
      *
      * @param name  header name.
      * @param value header value.
@@ -320,20 +281,6 @@ public class InboundMessageContext {
         return this;
     }
 
-    /**
-     * Replace all headers.
-     *
-     * @param headers new headers.
-     * @return updated context.
-     */
-    public InboundMessageContext replaceHeaders(MultivaluedMap<String, String> headers) {
-        this.headers.clear();
-        this.headers.putAll(headers);
-
-        return this;
-    }
-
-
     private static List<String> iterableToList(final Iterable<?> values) {
         final LinkedList<String> linkedList = new LinkedList<String>();
 
@@ -382,10 +329,9 @@ public class InboundMessageContext {
     /**
      * Get a single typed header value.
      *
-     *
-     * @param name      header name.
-     * @param converter from string conversion function. Is expected to throw {@link org.glassfish.jersey.internal.ProcessingException}
-     *                  if conversion fails.
+     * @param name        header name.
+     * @param converter   from string conversion function. Is expected to throw {@link org.glassfish.jersey.internal.ProcessingException}
+     *                    if conversion fails.
      * @param convertNull if {@code true} this method calls the provided converter even for {@code null}. Otherwise this
      *                    method returns the {@code null} without calling the converter.
      * @return value of the header, or (possibly converted) {@code null} if not present.
@@ -823,7 +769,12 @@ public class InboundMessageContext {
      *         {@code false} otherwise.
      */
     public boolean hasEntity() {
-        return !contentStream.isEmpty();
+        try {
+            return !contentStream.isEmpty();
+        } catch (IllegalStateException ex) {
+            // input stream has been closed.
+            return false;
+        }
     }
 
     /**
@@ -895,6 +846,10 @@ public class InboundMessageContext {
      */
     @SuppressWarnings("unchecked")
     public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations, PropertiesDelegate propertiesDelegate) {
+        if (contentStream.isBuffered()) {
+            contentStream.reset();
+        }
+
         if (contentStream.isEmpty()) {
             return null;
         }
@@ -912,19 +867,15 @@ public class InboundMessageContext {
                     headers,
                     propertiesDelegate,
                     contentStream.getInputStream(),
-                    contentStream.getType().intercept());
+                    contentStream.isInterceptable());
 
-            if (contentStream.getType() == ContentStream.Type.BUFFERED
-                    || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
-                contentStream.getInputStream().reset();
-            } else if (!(t instanceof Closeable) && !(t instanceof Source)) {
-                contentStream.invalidateContentStream();
+            if (!contentStream.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
+                contentStream.close();
             }
             return t;
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
         }
-
         return null;
     }
 
@@ -936,8 +887,7 @@ public class InboundMessageContext {
      */
     public boolean bufferEntity() throws MessageProcessingException {
         try {
-            if (contentStream.getType() == ContentStream.Type.BUFFERED
-                    || contentStream.getType() == ContentStream.Type.EXTERNAL_BUFFERED) {
+            if (contentStream.isBuffered()) {
                 return true;
             }
 
@@ -945,7 +895,7 @@ public class InboundMessageContext {
             try {
                 ReaderWriter.writeTo(contentStream.getInputStream(), baos);
             } finally {
-                contentStream.invalidateContentStream();
+                contentStream.close();
             }
 
             contentStream.setBufferedContentStream(new ByteArrayInputStream(baos.toByteArray()));

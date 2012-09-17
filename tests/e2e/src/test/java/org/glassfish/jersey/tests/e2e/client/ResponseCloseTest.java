@@ -40,7 +40,6 @@
 package org.glassfish.jersey.tests.e2e.client;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
@@ -50,7 +49,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.junit.Assert.fail;
 
 /**
@@ -88,8 +86,8 @@ public class ResponseCloseTest extends JerseyTest {
         response.close();
         try {
             response.readEntity(String.class);
-            fail("MessageProcessingException expected when reading entity after response has been closed.");
-        } catch (MessageProcessingException ex) {
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
             // expected
         }
     }
@@ -100,8 +98,8 @@ public class ResponseCloseTest extends JerseyTest {
         response.close();
         try {
             response.readEntity(String.class);
-            fail("MessageProcessingException expected when reading entity after response has been closed.");
-        } catch (MessageProcessingException ex) {
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
             // expected
         }
     }
@@ -114,8 +112,8 @@ public class ResponseCloseTest extends JerseyTest {
         response.close();
         try {
             response.readEntity(String.class);
-            fail("MessageProcessingException expected when reading entity after response has been closed.");
-        } catch (MessageProcessingException ex) {
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
             // expected
         }
     }
@@ -127,8 +125,8 @@ public class ResponseCloseTest extends JerseyTest {
         response.close();
         try {
             response.readEntity(String.class);
-            fail("MessageProcessingException not expected when reading a buffered entity after response has been closed.");
-        } catch (MessageProcessingException ex) {
+            fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
+        } catch (IllegalStateException ex) {
             // expected
         }
     }
