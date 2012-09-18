@@ -186,6 +186,13 @@
                                 </sources>
                             </configuration>
                         </execution>
+                        <execution>
+                            <phase>initialize</phase>
+                            <id>parse-version</id>
+                            <goals>
+                                <goal>parse-version</goal>
+                            </goals>
+                        </execution>
                     </executions>
                 </plugin>
                 <plugin>
@@ -535,6 +542,7 @@
                     <artifactId>maven-jaxb-plugin</artifactId>
                     <version>1.1.1</version>
                 </plugin>
+
             </plugins>
         </pluginManagement>
         <extensions>
@@ -556,6 +564,20 @@
                 <module>incubator</module>
                 <module>tests</module>
             </modules>
+        </profile>
+        <profile>
+            <id>attach-src</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>attach-src-and-docs</id>
@@ -855,7 +877,7 @@
         <hk2.version>2.1.28</hk2.version>
         <grizzly2.version>2.2.10</grizzly2.version>
         <jackson.version>1.9.8</jackson.version>
-        <jersey1.version>1.13</jersey1.version>
+        <jersey1.version>1.14</jersey1.version>
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0</servlet3.version>
         <javax.annotation.version>1.0</javax.annotation.version>
@@ -871,6 +893,9 @@
 
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <osgi.version>4.2.0</osgi.version>
+
+        <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
+        <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
 
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
 

@@ -75,6 +75,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Export-Package>org.glassfish.jersey.*;version=${project.version},
                             deprecated.javax.ws.rs;version=${project.version}
                         </Export-Package>
