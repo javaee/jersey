@@ -38,7 +38,8 @@
  * holder.
  */
 /**
- * The container adapter between {@link HttpServer JDK HttpServer} and Jersey {@link Application Jersey Application}
+ * The container adapter between {@link com.sun.net.httpserver.HttpServer JDK HTTP server}
+ * and Jersey {@link org.glassfish.jersey.server.ApplicationHandler Jersey application handler}
  * classes.
  */
 package org.glassfish.jersey.jdkhttp;

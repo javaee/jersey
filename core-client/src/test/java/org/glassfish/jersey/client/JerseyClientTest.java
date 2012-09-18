@@ -122,14 +122,14 @@ public class JerseyClientTest {
 
     @Test
     public void testTarget() {
-        final WebTarget target = client.target("http://jersey.java.net/examples");
+        final JerseyWebTarget target = client.target("http://jersey.java.net/examples");
         assertNotNull(target);
         assertEquals(client.configuration(), target.configuration());
     }
 
     @Test
     public void testTargetConfigUpdate() {
-        final WebTarget target = client.target("http://jersey.java.net/examples");
+        final JerseyWebTarget target = client.target("http://jersey.java.net/examples");
 
         target.configuration().register(new ClientRequestFilter() {
             @Override

@@ -51,22 +51,18 @@ import javax.inject.Qualifier;
  * of the provider interfaces (for example {@link javax.ws.rs.ext.MessageBodyReader
  * Message body reader interface}).
  * <p>
- * Custom providers can be bound into the HK2 container using {@code &#64;Custom}
- * annotation via  {@link org.glassfish.hk2.NamedBinder#annotatedWith(Class)} method.
- * For example:
+ * Custom providers are bound in the HK2 injection manager using {@code &#64;Custom}
+ * annotation. Once bound, the custom providers can be injected using {@code &#64;Custom}
+ * qualifier annotation again.
  * </p>
- * <pre>
- *  binderFactory.bind(MessageBodyReader.class).annotatedWith(Custom.class).toInstance(instanceOfMbr);
- * </pre>
  * <p>
- * Once bound, the custom providers can be injected using {@code &#64;Custom} qualifier
- * annotation again. For example:
- * </p>
+ * For example:
  * <pre>
- *     &#064;Custom
- *     &#064;Inject
- *     MessageBodyReader messageBodyReader;
+ *  &#064;Inject
+ *  &#064;Custom
+ *  MessageBodyReader messageBodyReader;
  * </pre>
+ * </p>
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */

@@ -56,7 +56,7 @@ import javax.servlet.ServletResponse;
 
 /**
  * Jersey Servlet/Filter class that can be referenced in web.xml instead of Jersey 1.x specific
- * {@link com.sun.jersey.spi.container.servlet.ServletContainer} and Jersey 2.x specific
+ * {@code com.sun.jersey.spi.container.servlet.ServletContainer} and Jersey 2.x specific
  * {@link org.glassfish.jersey.servlet.ServletContainer} to enable web application portability between
  * Jersey 1.x and Jersey 2.x servlet containers.
  * <p>
@@ -96,6 +96,7 @@ public class PortableServletContainer implements Filter, Servlet {
     /**
      * Create a new servlet container.
      */
+    @SuppressWarnings("unchecked")
     public PortableServletContainer() {
         Class<Servlet> servletClass;
         boolean isJersey1 = false;

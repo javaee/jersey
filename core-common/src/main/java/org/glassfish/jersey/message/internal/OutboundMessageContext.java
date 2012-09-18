@@ -526,7 +526,7 @@ public class OutboundMessageContext {
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         boolean conversionApplied = false;
         for (final Object value : values) {
-            if (value instanceof Locale) {
+            if (value instanceof Link) {
                 result.add((Link) value);
             } else {
                 conversionApplied = true;

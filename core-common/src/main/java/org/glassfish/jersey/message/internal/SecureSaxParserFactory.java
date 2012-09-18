@@ -71,12 +71,15 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
+ * Secure SAX parser factory wrapper.
+ *
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class SecureSaxParserFactory extends SAXParserFactory {
     private static final Logger LOGGER = Logger.getLogger(SecureSaxParserFactory.class.getName());
     private static final EntityResolver EMPTY_ENTITY_RESOLVER = new EntityResolver() {
+        @Override
         public InputSource resolveEntity(String publicId, String systemId) {
             return new InputSource(new ByteArrayInputStream(new byte[0]));
         }
@@ -84,17 +87,22 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
     private final SAXParserFactory spf;
 
+    /**
+     * Create new secure SAX parser factory wrapper.
+     *
+     * @param spf SAX parser factory.
+     */
     public SecureSaxParserFactory(SAXParserFactory spf) {
         this.spf = spf;
 
         if (SaxHelper.isXdkParserFactory(spf)) {
             LOGGER.log(Level.WARNING, LocalizationMessages.SAX_XDK_NO_SECURITY_FEATURES());
-        } else{
+        } else {
             try {
                 spf.setFeature("http://xml.org/sax/features/external-general-entities", Boolean.FALSE);
                 spf.setFeature("http://xml.org/sax/features/external-parameter-entities", Boolean.FALSE);
             } catch (Exception ex) {
-                throw new RuntimeException(LocalizationMessages.SAX_CANNOT_ENABLE_SECURITY_FEATURES(),  ex);
+                throw new RuntimeException(LocalizationMessages.SAX_CANNOT_ENABLE_SECURITY_FEATURES(), ex);
             }
 
             try {
@@ -160,16 +168,6 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         return spf.getFeature(s);
     }
 
-    private boolean isXdkParserFactory(final SAXParserFactory parserFactory) {
-        try {
-            final Class<?> xdkFactoryClass = Class.forName("oracle.xml.jaxp.JXSAXParserFactory");
-            return xdkFactoryClass.isAssignableFrom(parserFactory.getClass());
-        } catch (ClassNotFoundException e) {
-            // Ignore this.
-        }
-        return false;
-    }
-
     private static final class WrappingSAXParser extends SAXParser {
         private final SAXParser sp;
 
@@ -183,11 +181,13 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void parse(InputStream inputStream, HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(inputStream, handlerBase);
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void parse(InputStream inputStream, HandlerBase handlerBase, String s) throws SAXException, IOException {
             sp.parse(inputStream, handlerBase, s);
         }
@@ -203,6 +203,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void parse(String s, HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(s, handlerBase);
         }
@@ -213,6 +214,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void parse(File file, HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(file, handlerBase);
         }
@@ -223,6 +225,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void parse(InputSource inputSource, HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(inputSource, handlerBase);
         }
@@ -233,6 +236,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Parser getParser() throws SAXException {
             return sp.getParser();
         }

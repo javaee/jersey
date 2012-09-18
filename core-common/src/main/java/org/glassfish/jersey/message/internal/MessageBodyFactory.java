@@ -55,8 +55,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -66,6 +64,9 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -360,7 +361,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    private class TypeMediaTypePair {
+    private static class TypeMediaTypePair {
         final Class<?> clazz;
         final MediaType mediaType;
 

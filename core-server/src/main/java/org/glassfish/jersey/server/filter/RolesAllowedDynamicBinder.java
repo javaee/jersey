@@ -57,19 +57,20 @@ import org.glassfish.jersey.server.model.AnnotatedMethod;
 import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
- * A {@link DynamicBinder} supporting the {@link RolesAllowed},
- * {@link PermitAll} and {@link DenyAll} on resource methods and sub-resource methods.
+ * A {@link DynamicBinder} supporting the {@code javax.annotation.security.RolesAllowed},
+ * {@code javax.annotation.security.PermitAll} and {@code javax.annotation.security.DenyAll}
+ * on resource methods and sub-resource methods.
  * <p>
  * The {@link javax.ws.rs.core.SecurityContext} is utilized, using the
  * {@link javax.ws.rs.core.SecurityContext#isUserInRole(String) } method,
  * to ascertain if the user is in one
- * of the roles declared in by a {@link RolesAllowed}. If a user is in none of
+ * of the roles declared in by a {@code &#64;RolesAllowed}. If a user is in none of
  * the declared roles then a 403 (Forbidden) response is returned.
  * <p>
- * If the {@link DenyAll} annotation is declared then a 403 (Forbidden) response
+ * If the {@code &#64;DenyAll} annotation is declared then a 403 (Forbidden) response
  * is returned.
  * <p>
- * If the {@link PermitAll} annotation is declared and is not overridden then
+ * If the {@code &#64;PermitAll} annotation is declared and is not overridden then
  * this filter will not be applied.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)

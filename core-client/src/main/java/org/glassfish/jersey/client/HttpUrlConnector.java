@@ -205,10 +205,10 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
     }
 
     private void writeOutBoundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
-        for (String key : headers.keySet()) {
-            List<String> headerValues = headers.get(key);
+        for (Map.Entry<String, List<String>> header : headers.entrySet()) {
+            List<String> headerValues = header.getValue();
             if (headerValues.size() == 1) {
-                uc.setRequestProperty(key, headerValues.get(0));
+                uc.setRequestProperty(header.getKey(), headerValues.get(0));
             } else {
                 StringBuilder b = new StringBuilder();
                 boolean add = false;
@@ -219,7 +219,7 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
                     add = true;
                     b.append(value);
                 }
-                uc.setRequestProperty(key, b.toString());
+                uc.setRequestProperty(header.getKey(), b.toString());
             }
         }
     }

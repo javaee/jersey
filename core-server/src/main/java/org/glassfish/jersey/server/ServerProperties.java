@@ -170,8 +170,8 @@ public final class ServerProperties {
      * values.
      * <p>
      * The property value must be an instance of {@link String}, {@code String[]},
-     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} or
-     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source[]}.
+     * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source Source} or
+     * {@code Source[]}.
      * Each {@code String} instance represents one or more class names separated by characters declared in
      * common delimiters: {@code " ,;\n"}.
      * </p>
@@ -191,7 +191,7 @@ public final class ServerProperties {
      * <p>
      *     The property value must be an instance of {@code Map&lt;String, }
      *     {@link org.glassfish.jersey.client.ClientConfig}{@code &gt;}.
-     *     The key represents {@link org.glassfish.jersey.client.WebTarget} URI ({@link javax.ws.rs.Uri} value) and the
+     *     The key represents {@link javax.ws.rs.client.WebTarget} URI ({@link javax.ws.rs.Uri} value) and the
      *     value is the configuration which will be used to create injected {@link javax.ws.rs.client.WebTarget}.
      *
      * </p>
@@ -202,6 +202,7 @@ public final class ServerProperties {
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String WEBTARGET_CONFIGURATION = "jersey.config.server.webTargetConfiguration";
 
     /**
@@ -217,6 +218,7 @@ public final class ServerProperties {
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROPERTY_WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
 
     /**
@@ -231,6 +233,7 @@ public final class ServerProperties {
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
 
     private ServerProperties() {

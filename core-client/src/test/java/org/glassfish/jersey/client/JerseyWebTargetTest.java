@@ -58,9 +58,9 @@ import static org.junit.Assert.fail;
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class WebTargetTest {
+public class JerseyWebTargetTest {
     private JerseyClient client;
-    private WebTarget target;
+    private JerseyWebTarget target;
 
     @Before
     public void setUp() {

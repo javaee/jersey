@@ -68,6 +68,7 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_STATIC_CONTENT_REGEX = "jersey.config.servlet.filter.staticContentRegex";
 
     /**
@@ -93,6 +94,7 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOn404";
 
     /**
@@ -116,6 +118,7 @@ public final class ServletProperties {
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
 
     /**
@@ -127,20 +130,23 @@ public final class ServletProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO implement generic support
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String JAXRS_APPLICATION_CLASS = "javax.ws.rs.Application";
 
     /**
      * Indicates that Jersey should scan the whole web app for application-specific resources and
-     * providers. If the property is present and the value is not <code>false</code>, the whole web app will be scanned
-     * for JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path})
+     * providers. If the property is present and the value is not {@code false}, the whole web app
+     * will be scanned for JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path})
      * and providers (annotated with {@link javax.ws.rs.ext.Provider @Provider}).
      * <p></p>
-     * The property value MUST be an instance of {@link String}. The allowed values are <code>true</code> and <code>false</code>.
+     * The property value MUST be an instance of {@link String}. The allowed values are {@code true}
+     * and {@code false}.
      * <p></p>
      * A default value is not set.
      * <p></p>
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
 
     private ServletProperties() {

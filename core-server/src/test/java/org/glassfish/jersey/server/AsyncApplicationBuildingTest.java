@@ -69,7 +69,6 @@ import javax.inject.Provider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceBuilder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -77,7 +76,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for creating an application with asynchronously handled request processing
- * via {@link ResourceBuilder}'s programmatic API.
+ * via {@link Resource}'s programmatic API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

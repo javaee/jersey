@@ -52,12 +52,13 @@ import java.util.concurrent.Executors;
 import javax.ws.rs.client.WebTarget;
 
 /**
- * Client for reading and processing Server Sent {@link InboundEvent}s.
- *
- * <p>When {@link EventSource} is created, it makes GET request to given {@link URI} and waits for incoming {@link InboundEvent}s.
- * Whenever any event is received, {@link EventSource#onEvent(InboundEvent)} is called and listeners (if any) are notified (see
- * {@link EventSource#addEventListener(String, EventListener)} and {@link EventSource#addEventListener(String, EventListener)}.</p>
- *
+ * Client for reading and processing Server Sent {@link InboundEvent inbound events}.
+ * <p>
+ * When {@link EventSource} is created, it makes GET request to given {@link URI} and waits for incoming inbound events.
+ * Whenever any event is received, {@link EventSource#onEvent(InboundEvent)} is called and listeners (if any) are notified
+ * (see {@link EventSource#addEventListener(String, EventListener)} and
+ * {@link EventSource#addEventListener(String, EventListener)}.
+ * </p>
  * <p>Instances of this class are thread safe.</p>
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -83,21 +84,22 @@ public class EventSource implements EventListener {
             notifyListeners(inboundEvent, generalListeners);
 
             final String eventName = inboundEvent.getName();
-            if(eventName != null) {
+            if (eventName != null) {
                 final List<EventListener> eventListeners = namedListeners.get(eventName);
-                if(eventListeners != null) {
+                if (eventListeners != null) {
                     notifyListeners(inboundEvent, eventListeners);
                 }
             }
         }
     };
 
-    private final ConcurrentSkipListSet<EventListener> generalListeners = new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
-        @Override
-        public int compare(EventListener eventListener, EventListener eventListener1) {
-            return eventListener.hashCode() - eventListener1.hashCode();
-        }
-    });
+    private final ConcurrentSkipListSet<EventListener> generalListeners =
+            new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
+                @Override
+                public int compare(EventListener eventListener, EventListener eventListener1) {
+                    return eventListener.hashCode() - eventListener1.hashCode();
+                }
+            });
 
     private final ConcurrentSkipListMap<String, List<EventListener>> namedListeners = new ConcurrentSkipListMap<String, List<EventListener>>();
 
@@ -105,7 +107,7 @@ public class EventSource implements EventListener {
      * Create new instance and start processing incoming {@link InboundEvent}s in newly created
      * {@link java.util.concurrent.Executors#newSingleThreadExecutor() single thread executor}.
      *
-     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
+     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain inbound events.
      */
     public EventSource(WebTarget target) {
         this(target, Executors.newSingleThreadExecutor());
@@ -114,7 +116,7 @@ public class EventSource implements EventListener {
     /**
      * Create new instance and start processing incoming {@link InboundEvent}s in provided {@link ExecutorService}.
      *
-     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain {@link InboundEvent}s.
+     * @param target          JAX-RS {@link WebTarget} instance which will be used to obtain inbound events.
      * @param executorService used for processing events.
      */
     public EventSource(WebTarget target, ExecutorService executorService) {
@@ -131,7 +133,7 @@ public class EventSource implements EventListener {
     /**
      * Add {@link EventListener}.
      *
-     * @param listener {@link EventListener} to add to current instance.
+     * @param listener {@code EventListener} to add to current instance.
      */
     public void addEventListener(EventListener listener) {
         addEventListener(null, listener);
@@ -140,15 +142,15 @@ public class EventSource implements EventListener {
     /**
      * Add {@link EventListener} which will be called only when {@link InboundEvent} with certain name is received.
      *
-     * @param eventName {@link InboundEvent} name.
-     * @param listener {@link EventListener} to add to current instance.
+     * @param eventName inbound event name.
+     * @param listener  event listener to register with this event source.
      */
     public void addEventListener(String eventName, EventListener listener) {
-        if(eventName == null) {
+        if (eventName == null) {
             generalListeners.add(listener);
         } else {
             final List<EventListener> eventListeners = namedListeners.get(eventName);
-            if(eventListeners == null) {
+            if (eventListeners == null) {
                 namedListeners.put(eventName, Arrays.asList(listener));
             } else {
                 eventListeners.add(listener);
@@ -169,7 +171,7 @@ public class EventSource implements EventListener {
     }
 
     private void notifyListeners(InboundEvent inboundEvent, Collection<EventListener> listeners) {
-        for(EventListener eventListener : listeners) {
+        for (EventListener eventListener : listeners) {
             eventListener.onEvent(inboundEvent);
         }
     }
@@ -178,9 +180,9 @@ public class EventSource implements EventListener {
      * {@inheritDoc}
      *
      * Empty implementations, users can override this method to handle incoming {@link InboundEvent}s. Please note that this
-     * is the ONLY way how to be absolutely sure that you won't miss any incoming {@link} InboundEvent. Initial request is made
-     * right after {@link EventSource} is created and processing starts immediately. {@link EventListener}s registered
-     * after {@link InboundEvent} is received won't be notified.
+     * is the ONLY way how to be absolutely sure that you won't miss any incoming {@code InboundEvent}. Initial request is made
+     * right after {@code EventSource} is created and processing starts immediately. {@link EventListener}s registered
+     * after {@code InboundEvent} is received won't be notified.
      *
      * @param inboundEvent received inboundEvent.
      */
@@ -190,7 +192,7 @@ public class EventSource implements EventListener {
     }
 
     /**
-     * Closes this event source.
+     * Close this event source.
      */
     public synchronized void close() {
         if (processor != null) {

@@ -51,7 +51,7 @@ import javax.ws.rs.client.ClientException;
  * @see javax.ws.rs.client.ClientRequestContext#abortWith(javax.ws.rs.core.Response)
  */
 class AbortException extends ClientException {
-    private final ClientResponse abortResponse;
+    private final transient ClientResponse abortResponse;
 
     /**
      * Create new abort exception.

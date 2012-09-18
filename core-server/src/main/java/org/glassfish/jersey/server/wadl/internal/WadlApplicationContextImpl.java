@@ -64,6 +64,7 @@ import com.sun.research.ws.wadl.Resource;
 import com.sun.research.ws.wadl.Resources;
 
 /**
+ * WADL application context implementation.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
@@ -145,11 +146,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         return a;
     }
 
-
-    /**
-     * @TODO probably no longer required
-     * @return
-     */
+    // TODO probably no longer required
     @Override
     public JAXBContext getJAXBContext() {
         return jaxbContext;

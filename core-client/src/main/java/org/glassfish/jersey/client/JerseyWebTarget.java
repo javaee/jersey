@@ -59,7 +59,7 @@ import com.google.common.collect.Maps;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class WebTarget implements javax.ws.rs.client.WebTarget {
+public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
 
     private final ClientConfig configuration;
     private final UriBuilder targetUri;
@@ -71,7 +71,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param uri    target URI.
      * @param parent parent client.
      */
-    /*package*/ WebTarget(String uri, JerseyClient parent) {
+    /*package*/ JerseyWebTarget(String uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
     }
 
@@ -81,7 +81,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param uri    target URI.
      * @param parent parent client.
      */
-    /*package*/ WebTarget(URI uri, JerseyClient parent) {
+    /*package*/ JerseyWebTarget(URI uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), null, parent.configuration().snapshot());
     }
 
@@ -91,7 +91,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param uriBuilder builder for the target URI.
      * @param parent     parent client.
      */
-    /*package*/ WebTarget(UriBuilder uriBuilder, JerseyClient parent) {
+    /*package*/ JerseyWebTarget(UriBuilder uriBuilder, JerseyClient parent) {
         this(uriBuilder.clone(), null, parent.configuration().snapshot());
     }
 
@@ -101,7 +101,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param link   link to the target URI.
      * @param parent parent client.
      */
-    /*package*/ WebTarget(Link link, JerseyClient parent) {
+    /*package*/ JerseyWebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
         this(UriBuilder.fromUri(link.getUri()), null, parent.configuration().snapshot());
     }
@@ -112,7 +112,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param uriBuilder builder for the target URI.
      * @param that       original target to copy the internal data from.
      */
-    protected WebTarget(UriBuilder uriBuilder, WebTarget that) {
+    protected JerseyWebTarget(UriBuilder uriBuilder, JerseyWebTarget that) {
         this(uriBuilder, that.pathParams, that.configuration.snapshot());
     }
 
@@ -123,7 +123,7 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
      * @param pathParams   map of path parameter names to values.
      * @param clientConfig target configuration.
      */
-    protected WebTarget(UriBuilder uriBuilder, Map<String, Object> pathParams, ClientConfig clientConfig) {
+    protected JerseyWebTarget(UriBuilder uriBuilder, Map<String, Object> pathParams, ClientConfig clientConfig) {
         clientConfig.checkClient();
 
         this.targetUri = uriBuilder;
@@ -195,44 +195,44 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public WebTarget path(String path) throws NullPointerException {
+    public JerseyWebTarget path(String path) throws NullPointerException {
         checkNotClosed();
-        return new WebTarget(getUriBuilder().path(path), this);
+        return new JerseyWebTarget(getUriBuilder().path(path), this);
     }
 
     @Override
-    public WebTarget pathParam(String name, Object value) throws NullPointerException {
+    public JerseyWebTarget pathParam(String name, Object value) throws NullPointerException {
         checkNotClosed();
-        WebTarget result = new WebTarget(getUriBuilder(), this);
+        JerseyWebTarget result = new JerseyWebTarget(getUriBuilder(), this);
         result.setPathParam(name, value);
         return result;
     }
 
     @Override
-    public WebTarget pathParams(Map<String, Object> parameters) throws NullPointerException {
+    public JerseyWebTarget pathParams(Map<String, Object> parameters) throws NullPointerException {
         checkNotClosed();
-        WebTarget result = new WebTarget(getUriBuilder(), this);
+        JerseyWebTarget result = new JerseyWebTarget(getUriBuilder(), this);
         result.replacePathParams(parameters, false);
         return result;
     }
 
     @Override
-    public WebTarget matrixParam(String name, Object... values) throws NullPointerException {
+    public JerseyWebTarget matrixParam(String name, Object... values) throws NullPointerException {
         checkNotClosed();
         Preconditions.checkNotNull(name, "Matrix parameter name must not be 'null'.");
 
         if (values == null || values.length == 0 || (values.length == 1 && values[0] == null)) {
-            return new WebTarget(getUriBuilder().replaceMatrixParam(name, (Object[]) null), this);
+            return new JerseyWebTarget(getUriBuilder().replaceMatrixParam(name, (Object[]) null), this);
         }
 
         checkForNullValues(name, values);
-        return new WebTarget(getUriBuilder().matrixParam(name, values), this);
+        return new JerseyWebTarget(getUriBuilder().matrixParam(name, values), this);
     }
 
     @Override
-    public WebTarget queryParam(String name, Object... values) throws NullPointerException {
+    public JerseyWebTarget queryParam(String name, Object... values) throws NullPointerException {
         checkNotClosed();
-        return new WebTarget(WebTarget.setQueryParam(getUriBuilder(), name, values), this);
+        return new JerseyWebTarget(JerseyWebTarget.setQueryParam(getUriBuilder(), name, values), this);
     }
 
     private static UriBuilder setQueryParam(UriBuilder uriBuilder, String name, Object[] values) {
@@ -270,14 +270,14 @@ public class WebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public WebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
+    public JerseyWebTarget queryParams(MultivaluedMap<String, Object> parameters) throws IllegalArgumentException, NullPointerException {
         checkNotClosed();
         UriBuilder ub = getUriBuilder(); // clone
         for (Entry<String, List<Object>> e : parameters.entrySet()) {
-            ub = WebTarget.setQueryParam(ub, e.getKey(), e.getValue().toArray());
+            ub = JerseyWebTarget.setQueryParam(ub, e.getKey(), e.getValue().toArray());
         }
 
-        return new WebTarget(ub, this);
+        return new JerseyWebTarget(ub, this);
     }
 
     @Override

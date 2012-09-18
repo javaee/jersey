@@ -45,8 +45,7 @@ import org.glassfish.jersey.server.model.Invocable;
 
 /**
  * Provides the {@link InvocationHandler invocation handler} instances designated
- * to handle invocations of the supplied {@link InvocableResourceMethod invocable
- * resource methods}.
+ * to handle invocations of the supplied {@link Invocable invocable resource methods}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

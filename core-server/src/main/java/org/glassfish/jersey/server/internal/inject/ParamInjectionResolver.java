@@ -65,7 +65,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 
 /**
- * Abstract base class for resolving JAX-RS {@link @XxxParam} injection.
+ * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
  *
  * @param <A> supported parameter injection annotation.
  * @author Marek Potociar (marek.potociar at oracle.com)

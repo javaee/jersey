@@ -116,7 +116,7 @@ public class RequestWriter {
     /**
      * Default {@link RequestEntityWriter} implementation.
      */
-    private final class DefaultRequestEntityWriter implements RequestEntityWriter {
+    private static final class DefaultRequestEntityWriter implements RequestEntityWriter {
 
         private final ClientRequest requestContext;
         private final long size;
@@ -135,7 +135,7 @@ public class RequestWriter {
                 throw new IllegalArgumentException("The entity of the client request is null");
             }
 
-            RequestWriter.this.ensureMediaType(requestContext);
+            RequestWriter.ensureMediaType(requestContext);
 
             final MessageBodyWorkers workers = requestContext.getWorkers();
             final MediaType mediaType = requestContext.getMediaType();
@@ -260,7 +260,7 @@ public class RequestWriter {
         }
     }
 
-    private void ensureMediaType(final ClientRequest requestContext) {
+    private static void ensureMediaType(final ClientRequest requestContext) {
         if (requestContext.getMediaType() == null) {
             // Content-Type is not present choose a default type
             final GenericType<?> entityType = new GenericType(requestContext.getEntityType());
@@ -271,7 +271,7 @@ public class RequestWriter {
         }
     }
 
-    private MediaType getMediaType(List<MediaType> mediaTypes) {
+    private static MediaType getMediaType(List<MediaType> mediaTypes) {
         if (mediaTypes.isEmpty()) {
             return MediaType.APPLICATION_OCTET_STREAM_TYPE;
         } else {

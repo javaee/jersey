@@ -134,13 +134,14 @@ public final class Tokenizer {
     }
 
     private static Collection<String> tokenize(String entry, String delimiters, Collection<String> tokens) {
-        String regex = "[";
+        final StringBuilder regexpBuilder = new StringBuilder(delimiters.length() * 3);
+        regexpBuilder.append('[');
         for (char c : delimiters.toCharArray()) {
-            regex += Pattern.quote(String.valueOf(c));
+            regexpBuilder.append(Pattern.quote(String.valueOf(c)));
         }
-        regex += "]";
+        regexpBuilder.append(']');
 
-        String[] tokenArray = entry.split(regex);
+        String[] tokenArray = entry.split(regexpBuilder.toString());
         for (String token : tokenArray) {
             if (token == null || token.isEmpty()) {
                 continue;

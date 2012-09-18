@@ -82,7 +82,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * <p />
  * The servlet or filter may be configured to have an initialization
  * parameter {@value ServletProperties#JAXRS_APPLICATION_CLASS}
- * (see {@link ServletProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
+ * (see {@link org.glassfish.jersey.servlet.ServletProperties#JAXRS_APPLICATION_CLASS}) and whose value is a
  * fully qualified name of a class that implements {@link javax.ws.rs.core.Application}.
  * The class is instantiated as a singleton component
  * managed by the runtime, and injection may be performed (the artifacts that

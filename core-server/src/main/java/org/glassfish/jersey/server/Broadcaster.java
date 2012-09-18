@@ -51,6 +51,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 /**
  * Used for broadcasting response chunks to multiple {@link ChunkedResponse} instances.
  *
+ * @param <T> broadcast type.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
@@ -87,7 +89,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
 
     /**
      * Can be used by subclasses to override the default functionality of adding self to the set of
-     * {@link BroadcasterListener listeners} by passing {@link false} as a parameter.
+     * {@link BroadcasterListener listeners} by passing {@code false} as a parameter.
      *
      * @param listen if {@code true}, registers this instance as a listener (default), otherwise it doesn't
      * @see #Broadcaster()
@@ -110,12 +112,12 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     }
 
     /**
-     * Unregister {@link ChunkedResponse} from this {@link Broadcaster} instance.
+     * Un-register {@link ChunkedResponse} from this {@link Broadcaster} instance.
      *
      * This method does not close the {@link ChunkedResponse} being unregistered.
      *
-     * @param chunkedResponse {@link ChunkedResponse} instance to unregister from this broadcaster.
-     * @return {@code true} if the instance was unregistered, {@link false} if the instance wasn't found in the list
+     * @param chunkedResponse {@link ChunkedResponse} instance to un-register from this broadcaster.
+     * @return {@code true} if the instance was unregistered, {@code false} if the instance wasn't found in the list
      * of registered chunked responses.
      */
     public final boolean remove(final ChunkedResponse<T> chunkedResponse) {
@@ -126,17 +128,17 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * Register {@link BroadcasterListener} for {@link Broadcaster} events listening.
      *
      * @param listener listener to be registered
-     * @return {@code true} if registered, {@link false} if the listener was already in the list
+     * @return {@code true} if registered, {@code false} if the listener was already in the list
      */
     public final boolean addBroadcasterListener(final BroadcasterListener<T> listener) {
         return listeners.add(listener);
     }
 
     /**
-     * Unregister {@link BroadcasterListener}.
+     * Un-register {@link BroadcasterListener}.
      *
      * @param listener listener to be unregistered
-     * @return {@code true} if unregistered, {@link false} if the listener was not found in the list of registered
+     * @return {@code true} if unregistered, {@code false} if the listener was not found in the list of registered
      * listeners
      */
     public final boolean removeBroadcasterListener(final BroadcasterListener<T> listener) {
@@ -226,7 +228,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
         }
     }
 
-    private final void fireOnException(final ChunkedResponse<T> chunkedResponse, final Exception exception) {
+    private void fireOnException(final ChunkedResponse<T> chunkedResponse, final Exception exception) {
         forEachListener(new Task<BroadcasterListener<T>>() {
             @Override
             public void run(BroadcasterListener<T> parameter) throws IOException {
@@ -235,7 +237,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
         });
     }
 
-    private final void fireOnClose(final ChunkedResponse<T> chunkedResponse) {
+    private void fireOnClose(final ChunkedResponse<T> chunkedResponse) {
         forEachListener(new Task<BroadcasterListener<T>>() {
             @Override
             public void run(BroadcasterListener<T> parameter) throws IOException {

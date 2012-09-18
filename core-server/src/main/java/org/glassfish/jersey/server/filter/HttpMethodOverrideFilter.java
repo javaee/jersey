@@ -95,13 +95,18 @@ import static org.glassfish.jersey.internal.util.Tokenizer.COMMON_DELIMITERS;
 @BindingPriority(BindingPriority.HEADER_DECORATOR + 50) // must go after UriConnegFilter (if present)
 public class HttpMethodOverrideFilter implements ContainerRequestFilter {
 
+    /**
+     * Configuration flags.
+     *
+     * Package-private for testing purposes.
+     */
     final int config;
 
     /**
      * Enumeration representing possible sources of information about the method overriding
      * the filter should look for.
      */
-    public enum Source {
+    public static enum Source {
 
         /**
          * If present in the filter configuration,

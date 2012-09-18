@@ -366,7 +366,7 @@ class ServerRuntime {
         /**
          * Used to set proper Content-Length header to outgoing {@link Response}s.
          */
-        private class MessageBodySizeCallback implements MessageBodyWorkers.MessageBodySizeCallback {
+        private static class MessageBodySizeCallback implements MessageBodyWorkers.MessageBodySizeCallback {
             private long size = -1;
 
             @Override
