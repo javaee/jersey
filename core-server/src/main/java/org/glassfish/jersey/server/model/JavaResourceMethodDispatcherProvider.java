@@ -57,17 +57,13 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * An abstract implementation of {@link ResourceMethodDispatcher.Provider} that
+ * An implementation of {@link ResourceMethodDispatcher.Provider} that
  * creates instances of {@link ResourceMethodDispatcher}.
- * <p>
- * Implementing classes are required to override the {@link #createValueProviders(Invocable)}
- * method to return {@link Factory injection providers} associated with the parameters
- * of the abstract resource method.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
+class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     @Inject
     private ServiceLocator serviceLocator;
@@ -75,23 +71,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
     @Override
     public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler invocationHandler) {
 
-        final List<Factory<?>> valueProviders = createValueProviders(resourceMethod);
-        if (valueProviders == null) {
-            return null;
-        }
-
-        if (valueProviders.contains(null)) {
-            // Missing dependency
-//
-//            TODO: missing dependency error reporting
-//
-//            for (int i = 0; i < pp.getInjectables().size(); i++) {
-//                if (pp.getInjectables().get(i) == null) {
-//                    Errors.missingDependency(abstractResourceMethod.getMethod(), i);
-//                }
-//            }
-            return null;
-        }
+        final List<Factory<?>> valueProviders = resourceMethod.getValueProviders(serviceLocator);
 
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
         if (Response.class.isAssignableFrom(returnType)) {
@@ -119,16 +99,6 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
         return serviceLocator;
     }
 
-    /**
-     * Get the injectable values provider for an abstract resource method.
-     *
-     * @param invocableResourceMethod the invocable resource method.
-     * @return the injectable values provider, or null if no injectable values
-     *         can be created for the parameters of the abstract
-     *         resource method.
-     */
-    protected abstract List<Factory<?>> createValueProviders(Invocable invocableResourceMethod);
-
     private static abstract class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {
 
         private final List<Factory<?>> valueProviders;
@@ -142,7 +112,7 @@ abstract class AbstractJavaResourceMethodDispatcherProvider implements ResourceM
         }
 
         final Object[] getParamValues() {
-                return ParameterValueHelper.getParameterValues(valueProviders);
+            return ParameterValueHelper.getParameterValues(valueProviders);
         }
     }
 

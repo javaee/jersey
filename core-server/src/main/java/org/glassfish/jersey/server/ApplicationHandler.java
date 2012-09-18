@@ -80,7 +80,6 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.internal.PriorityComparator;
 import org.glassfish.jersey.process.internal.Stage;
@@ -344,11 +343,12 @@ public final class ApplicationHandler {
         final List<DynamicBinder> dynamicBinders = Providers.getAllProviders(locator, DynamicBinder.class);
 
         // validate the models
-        validate(resourceBag.models, resourceModelIssues, locator.<MessageBodyWorkers>getService(MessageBodyWorkers.class));
+        validate(resourceBag.models, resourceModelIssues);
 
         // create a router
         DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.models, configuration)).to(WadlApplicationContext.class), dynamicConfiguration);
+        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.models,
+                configuration)).to(WadlApplicationContext.class), dynamicConfiguration);
         dynamicConfiguration.commit();
 
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
@@ -540,8 +540,8 @@ public final class ApplicationHandler {
         dc.commit();
     }
 
-    private void validate(List<Resource> resources, List<ResourceModelIssue> modelIssues, MessageBodyWorkers workers) {
-        ResourceModelValidator validator = new BasicValidator(modelIssues, workers);
+    private void validate(List<Resource> resources, List<ResourceModelIssue> modelIssues) {
+        ResourceModelValidator validator = new BasicValidator(modelIssues, locator);
 
         for (Resource r : resources) {
             validator.validate(r);
