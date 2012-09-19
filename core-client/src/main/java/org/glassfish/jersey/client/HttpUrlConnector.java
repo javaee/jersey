@@ -43,7 +43,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -53,13 +56,11 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.client.spi.*;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
@@ -74,6 +75,51 @@ import com.google.common.util.concurrent.MoreExecutors;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class HttpUrlConnector extends RequestWriter implements Connector {
+    private final ConnectionFactory connectionFactory;
+
+    /**
+     * A factory for {@link HttpURLConnection} instances.
+     * <p>
+     * A factory may be used to create a {@link HttpURLConnection} and configure
+     * it in a custom manner that is not possible using the Client API.
+     * <p>
+     * A factory instance may be registered with the constructor
+     * {@link HttpUrlConnector#HttpUrlConnector(HttpUrlConnector.ConnectionFactory)}.
+     * Then the {@link HttpUrlConnector} instance may be registered with a {@link JerseyClient}
+     * or {@link JerseyWebTarget} configuration via
+     * {@link ClientConfig#connector(org.glassfish.jersey.client.spi.Connector)}.
+     */
+    public interface ConnectionFactory {
+
+        /**
+         * Get a {@link HttpURLConnection} for a given URL.
+         * <p>
+         * Implementation of the method MUST be thread-safe and MUST ensure that
+         * a dedicated {@link HttpURLConnection} instance is returned for concurrent
+         * requests.
+         *
+         * @param url the endpoint URL.
+         * @return the {@link HttpURLConnection}.
+         * @throws java.io.IOException in case the connection cannot be provided.
+         */
+        public HttpURLConnection getConnection(URL url) throws IOException;
+    }
+
+    /**
+     * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
+     */
+    public HttpUrlConnector() {
+        connectionFactory = null;
+    }
+
+    /**
+     * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
+     *
+     * @param connectionFactory {@link HttpURLConnection} instance factory.
+     */
+    public HttpUrlConnector(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
 
     private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
         if (uc.getResponseCode() < 300) {
@@ -115,12 +161,26 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
     }
 
     private ClientResponse _apply(final ClientRequest request) throws IOException {
-        final HttpURLConnection uc;
-        // TODO introduce & leverage optional connection factory to support customized connections
-        uc = (HttpURLConnection) request.getUri().toURL().openConnection();
-        uc.setRequestMethod(request.getMethod());
+        final Map<String, Object> configurationProperties = request.getConfiguration().getProperties();
 
-        final Map<String,Object> configurationProperties = request.getConfiguration().getProperties();
+        final HttpURLConnection uc;
+
+        final URL endpointUrl = request.getUri().toURL();
+        if (this.connectionFactory == null) {
+            uc = (HttpURLConnection) endpointUrl.openConnection();
+        } else {
+            uc = this.connectionFactory.getConnection(endpointUrl);
+        }
+        uc.setDoInput(true);
+
+        final String httpMethod = request.getMethod();
+        if (PropertiesHelper.getValue(configurationProperties,
+                ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND, false)) {
+            setRequestMethodViaJreBugWorkaround(uc, httpMethod);
+        } else {
+            uc.setRequestMethod(httpMethod);
+        }
+
         uc.setInstanceFollowRedirects(PropertiesHelper.getValue(configurationProperties,
                 ClientProperties.FOLLOW_REDIRECTS, true));
 
@@ -131,24 +191,21 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
                 ClientProperties.READ_TIMEOUT, 0));
 
         if (uc instanceof HttpsURLConnection) {
-            Object o = configurationProperties.get(ClientProperties.HOSTNAME_VERIFIER);
-            if (o instanceof HostnameVerifier) {
-                ((HttpsURLConnection) uc).setHostnameVerifier((HostnameVerifier) o);
+            HttpsURLConnection suc = (HttpsURLConnection) uc;
+            SslConfig sslConfig = PropertiesHelper.getValue(configurationProperties, ClientProperties.SSL_CONFIG, SslConfig.class);
+            if (sslConfig.isHostnameVerifierSet()) {
+                suc.setHostnameVerifier(sslConfig.getHostnameVerifier());
             }
-
-            o = configurationProperties.get(ClientProperties.SSL_CONTEXT);
-            if (o instanceof SSLContext) {
-                ((HttpsURLConnection) uc).setSSLSocketFactory(((SSLContext) o).getSocketFactory());
-            }
+            suc.setSSLSocketFactory(sslConfig.getSSLContext().getSocketFactory());
         }
 
         final Object entity = request.getEntity();
         if (entity != null) {
             uc.setDoOutput(true);
 
-            if(request.getMethod().equalsIgnoreCase("GET")) {
+            if (httpMethod.equalsIgnoreCase("GET")) {
                 final Logger logger = Logger.getLogger(HttpUrlConnector.class.getName());
-                if(logger.isLoggable(Level.INFO)) {
+                if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, LocalizationMessages.HTTPURLCONNECTION_REPLACES_GET_WITH_ENTITY());
                 }
             }
@@ -220,6 +277,29 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
                     b.append(value);
                 }
                 uc.setRequestProperty(header.getKey(), b.toString());
+            }
+        }
+    }
+
+    /**
+     * Workaround for a bug in {@code HttpURLConnection.setRequestMethod(String)}
+     * The implementation of Sun/Oracle is throwing a {@code ProtocolException}
+     * when the method is other than the HTTP/1.1 default methods. So to use {@code PROPFIND}
+     * and others, we must apply this workaround.
+     *
+     * See issue http://java.net/jira/browse/JERSEY-639
+     */
+    private static void setRequestMethodViaJreBugWorkaround(final HttpURLConnection httpURLConnection, final String method) {
+        try {
+            httpURLConnection.setRequestMethod(method); // Check whether we are running on a buggy JRE
+        } catch (final ProtocolException pe) {
+            try {
+                final Class<?> httpURLConnectionClass = httpURLConnection.getClass();
+                final Field methodField = httpURLConnectionClass.getSuperclass().getDeclaredField("method");
+                methodField.setAccessible(true);
+                methodField.set(httpURLConnection, method);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
         }
     }

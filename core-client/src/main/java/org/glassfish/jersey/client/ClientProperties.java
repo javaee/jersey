@@ -56,6 +56,7 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FOLLOW_REDIRECTS =
             "jersey.config.client.followRedirects";
 
@@ -70,6 +71,7 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String READ_TIMEOUT =
             "jersey.config.client.readTimeout";
 
@@ -83,6 +85,7 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <code>{@value}</code>.
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CONNECT_TIMEOUT =
             "jersey.config.client.connectTimeout";
 
@@ -101,6 +104,7 @@ public final class ClientProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO add support (ported from Jersey 1.x).
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CHUNKED_ENCODING_SIZE =
             "jersey.config.client.chunkedEncodingSize";
 
@@ -118,6 +122,7 @@ public final class ClientProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO add support (ported from Jersey 1.x).
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String BUFFER_RESPONSE_ENTITY_ON_EXCEPTION =
             "jersey.config.client.bufferResponseEntityOnException";
 
@@ -137,32 +142,22 @@ public final class ClientProperties {
      * The name of the configuration property is <code>{@value}</code>.
      */
     // TODO add support (ported from Jersey 1.x).
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String ASYNC_THREADPOOL_SIZE =
             "jersey.config.client.async.threadPoolSize";
 
     /**
-     * Support for specifying custom {@link javax.net.ssl.HostnameVerifier}. Used only when making Https requests.
+     * Support for specifying SSL configuration for HTTPS connections. Used only when making HTTPS requests.
      *
-     * <p>The value MUST be an instance of {@link javax.net.ssl.HostnameVerifier}.</p>
-     *
-     * <p>A default value is not set.</p>
-     *
-     * <p>The name of the configuration property is <code>{@value}</code>.</p>
-     */
-    public static final String HOSTNAME_VERIFIER =
-            "jersey.config.client.ssl.hostnameVerifier";
-
-    /**
-     * Support for specifying custom {@link javax.net.ssl.SSLContext}. Used only when making Https requests.
-     *
-     * <p>The value MUST be an instance of {@link javax.net.ssl.SSLContext}.</p>
+     * <p>The value MUST be an instance of {@link SslConfig}.</p>
      *
      * <p>A default value is not set.</p>
      *
      * <p>The name of the configuration property is <code>{@value}</code>.</p>
      */
-    public static final String SSL_CONTEXT =
-            "jersey.config.client.ssl.sslContext";
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String SSL_CONFIG =
+            "jersey.config.client.ssl.sslConfig";
 
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is registered, this property indicates the value
@@ -172,8 +167,24 @@ public final class ClientProperties {
      * <p>The default value is {@code null}.</p>
      * <p>The name of the configuration property is <code>{@value}</code>.</p>
      */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String USE_ENCODING =
             "jersey.config.client.useEncoding";
+
+    /**
+     * A value of {@code true} declares that the client will try to set unsupported HTTP method
+     * to {@link java.net.HttpURLConnection} via reflection.
+     * <p>
+     * NOTE: Enabling this feature might cause security related warnings/errors and it might break when
+     * other JDK implementation is used. <b>Use only when you know what you are doing.</b>
+     * </p>
+     * <p>The value MUST be an instance of {@link java.lang.Boolean}.</p>
+     * <p>The default value is {@code false}.</p>
+     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND =
+            "jersey.config.client.httpUrlConnection.setMethodWorkaround";
 
     private ClientProperties() {
         // prevents instantiation
