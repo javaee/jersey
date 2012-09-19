@@ -70,7 +70,18 @@ public class EventProcessorReader implements MessageBodyReader<EventProcessor> {
     }
 
     @Override
-    public EventProcessor readFrom(Class<EventProcessor> eventProcessorClass, Type type, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, InputStream inputStream) throws IOException, WebApplicationException {
-        return new EventProcessor(inputStream, annotations, MediaType.TEXT_PLAIN_TYPE /* TODO: mediaType */, headers, messageBodyWorkers.get());
+    public EventProcessor readFrom(Class<EventProcessor> eventProcessorClass,
+                                   Type type,
+                                   Annotation[] annotations,
+                                   MediaType mediaType,
+                                   MultivaluedMap<String, String> headers,
+                                   InputStream inputStream) throws IOException, WebApplicationException {
+
+        return new EventProcessor(
+                inputStream,
+                annotations,
+                MediaType.TEXT_PLAIN_TYPE /* TODO: mediaType */,
+                headers,
+                messageBodyWorkers.get());
     }
 }

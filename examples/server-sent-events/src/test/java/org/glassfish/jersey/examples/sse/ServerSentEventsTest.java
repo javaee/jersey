@@ -133,18 +133,21 @@ public class ServerSentEventsTest extends JerseyTest {
 
     @Test
     public void testCreateDomain() throws InterruptedException, URISyntaxException {
+        final int MAX_COUNT = 25;
 
         // I don't really care what data are there (don't want to add too much complexity for this sample)
-        final Response response = target().path("domain/start").request().post(Entity.text("data"), Response.class);
-        final ExecutorService executorService = Executors.newFixedThreadPool(103);
+        final Response response = target().path("domain/start").queryParam("testSources", MAX_COUNT)
+                .request().post(Entity.text("data"), Response.class);
 
+        final ExecutorService executorService = Executors.newFixedThreadPool(MAX_COUNT);
         final AtomicInteger doneCount = new AtomicInteger(0);
+        final CountDownLatch doneLatch = new CountDownLatch(MAX_COUNT);
+        final EventSource[] sources = new EventSource[MAX_COUNT];
+        final String processUrl = response.getLocation().toString();
+        for (int i = 0; i < MAX_COUNT; i++) {
+            sources[i] = new EventSource(target().path(processUrl).queryParam("testSource", "true"), executorService) {
 
-        // TODO
-//        for (int i = 0; i < 25; i++) {
-            new EventSource(target().path(response.getLocation().toString()), executorService) {
-
-                int messageCount = 0;
+                private volatile int messageCount = 0;
 
                 @Override
                 public void onEvent(InboundEvent inboundEvent) {
@@ -156,78 +159,25 @@ public class ServerSentEventsTest extends JerseyTest {
                         if (inboundEvent.getData(String.class).equals("done")) {
                             assertEquals(6, messageCount);
                             doneCount.incrementAndGet();
+                            doneLatch.countDown();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             };
-//        }
+        }
 
-        final EventSource eventSource = new EventSource(target().path(response.getLocation().toString()), executorService) {
+        doneLatch.await(2, TimeUnit.SECONDS);
+        System.out.println("done");
 
-            int messageCount = 0;
+        for (EventSource source : sources) {
+            source.close();
+        }
 
-            @Override
-            public void onEvent(InboundEvent event) {
-                try {
-                    messageCount++;
-
-                    System.out.println("# Received: " + event);
-
-                    if (event.getData(String.class).equals("done")) {
-                        assertEquals(6, messageCount);
-                        doneCount.incrementAndGet();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        eventSource.addEventListener(new EventListener() {
-
-            int messageCount = 0;
-
-            @Override
-            public void onEvent(InboundEvent inboundEvent) {
-                try {
-                    messageCount++;
-
-                    System.out.println("# Received: " + inboundEvent);
-
-                    if (inboundEvent.getData(String.class).equals("done")) {
-                        assertEquals(6, messageCount);
-                        doneCount.incrementAndGet();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        eventSource.addEventListener("domain-progress", new EventListener() {
-
-            int messageCount = 0;
-
-            @Override
-            public void onEvent(InboundEvent inboundEvent) {
-                try {
-                    messageCount++;
-
-                    System.out.println("# Received: " + inboundEvent);
-
-                    if (inboundEvent.getData(String.class).equals("done")) {
-                        assertEquals(6, messageCount);
-                        doneCount.incrementAndGet();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-        assertEquals(4, doneCount.get());
+        executorService.shutdown();
+        executorService.awaitTermination(2, TimeUnit.SECONDS);
+        System.out.println("terminated");
+        assertEquals(MAX_COUNT, doneCount.get());
     }
 }

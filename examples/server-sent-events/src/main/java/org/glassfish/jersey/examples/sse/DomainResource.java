@@ -39,17 +39,23 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import java.util.HashMap;
+import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -63,41 +69,48 @@ import org.glassfish.jersey.server.ChunkedResponse;
  */
 @Path("domain")
 public class DomainResource {
-
-    private final static Map<Integer, Process> processes = new HashMap<Integer, Process>();
+    private static final Logger logger = Logger.getLogger(DomainResource.class.getName());
+    private static final Map<Integer, Process> processes = new ConcurrentHashMap<Integer, Process>();
 
     @Path("start")
     @POST
-    public Response post() {
-        final Process process = new Process();
+    public Response post(@DefaultValue("0") @QueryParam("testSources") int testSources) {
+        logger.severe("start");
+        final Process process = new Process(testSources);
         processes.put(process.getId(), process);
 
-        Executors.newCachedThreadPool().execute(process);
+        Executors.newSingleThreadExecutor().execute(process);
 
-        return Response.created(UriBuilder.fromResource(DomainResource.class).path("process/{id}").build(process.getId())).build();
+        final URI processIdUri = UriBuilder.fromResource(DomainResource.class).path("process/{id}").build(process.getId());
+        return Response.created(processIdUri).build();
     }
 
     @Path("process/{id}")
     @Produces(EventChannel.SERVER_SENT_EVENTS)
     @GET
-    public EventChannel getProgress(@PathParam("id") int id) {
+    public EventChannel getProgress(@PathParam("id") int id,
+                                    @DefaultValue("false") @QueryParam("testSource") boolean testSource) {
+        logger.severe("get");
         final Process process = processes.get(id);
 
-        if(process != null) {
+        if (process != null) {
+            if (testSource) {
+                process.release();
+            }
             final EventChannel eventChannel = new EventChannel();
             process.getBroadcaster().add(eventChannel);
             return eventChannel;
         } else {
-            throw new WebApplicationException(404);
+            throw new NotFoundException();
         }
     }
-
 
     static class Process implements Runnable {
 
         private static final AtomicInteger counter = new AtomicInteger(0);
 
         private final int id;
+        private final CountDownLatch latch;
         private final SseBroadcaster broadcaster = new SseBroadcaster() {
             @Override
             public void onException(ChunkedResponse<OutboundEvent> outboundEventChunkedResponse, Exception exception) {
@@ -105,8 +118,9 @@ public class DomainResource {
             }
         };
 
-        public Process() {
+        public Process(int testReceivers) {
             id = counter.incrementAndGet();
+            latch = testReceivers > 0 ? new CountDownLatch(testReceivers) : null;
         }
 
         public int getId() {
@@ -117,10 +131,21 @@ public class DomainResource {
             return broadcaster;
         }
 
+        public boolean release() {
+            if (latch == null) {
+                return false;
+            }
+
+            latch.countDown();
+            return true;
+        }
+
         public void run() {
             try {
-                // wait for all EventSources to be registered
-                Thread.sleep(1000);
+                if (latch != null) {
+                    // wait for all test EventSources to be registered
+                    latch.await(5, TimeUnit.SECONDS);
+                }
 
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...").build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "50%").build());
