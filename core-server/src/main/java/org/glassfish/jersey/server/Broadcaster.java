@@ -78,24 +78,24 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * Creates a new instance.
      * If this constructor is called by a subclass, it assumes the the reason for the subclass to exist is to implement
      * {@link #onClose(ChunkedResponse)} and {@link #onException(ChunkedResponse, Exception)} methods, so it adds
-     * the newly created instance as the listener. To avoid this, subclasses may call {@link #Broadcaster(boolean)}
-     * passing {@code false} as argument.
+     * the newly created instance as the listener. To avoid this, subclasses may call {@link #Broadcaster(Class)}
+     * passing their class as an argument.
      */
     public Broadcaster() {
-        if (getClass() != Broadcaster.class) {
-            listeners.add(this);
-        }
+        this(Broadcaster.class);
     }
 
     /**
      * Can be used by subclasses to override the default functionality of adding self to the set of
-     * {@link BroadcasterListener listeners} by passing {@code false} as a parameter.
+     * {@link BroadcasterListener listeners}. If creating a direct instance of a subclass passed in the parameter,
+     * the broadcaster will not register itself as a listener.
      *
-     * @param listen if {@code true}, registers this instance as a listener (default), otherwise it doesn't
+     * @param subclass subclass of Broadcaster that should not be registered as a listener - if creating a direct instance
+     *                 of this subclass, this constructor will not register the new instance as a listener.
      * @see #Broadcaster()
      */
-    protected Broadcaster(final boolean listen) {
-        if (listen) {
+    protected Broadcaster(final Class<? extends Broadcaster> subclass) {
+        if (subclass != getClass()) {
             listeners.add(this);
         }
     }
@@ -150,7 +150,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      *
      * @param chunk chunk to be sent.
      */
-    public final void broadcast(final T chunk) {
+    public void broadcast(final T chunk) {
         forEachChunkedResponse(new Task<ChunkedResponse<T>>() {
             @Override
             public void run(final ChunkedResponse<T> cr) throws IOException {
@@ -162,7 +162,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     /**
      * Close all registered {@link ChunkedResponse} instances.
      */
-    public final void closeAll() {
+    public void closeAll() {
         forEachChunkedResponse(new Task<ChunkedResponse<T>>() {
             @Override
             public void run(final ChunkedResponse<T> cr) throws IOException {
