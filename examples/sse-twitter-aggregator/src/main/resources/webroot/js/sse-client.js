@@ -37,51 +37,38 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.sse;
+"use strict";
 
-import org.glassfish.jersey.server.Broadcaster;
-import org.glassfish.jersey.server.ChunkedResponse;
+function receiveMessages() {
+    if (typeof(EventSource) !== "undefined") {
+        // Yes! Server-sent events support!
+        var source = new EventSource('/aggregator-api/message/stream');
+        source.onmessage = function (event) {
+            var data = JSON.parse(event.data);
+            console.log(data);
 
-/**
- * Used for broadcasting SSE to multiple {@link EventChannel} instances.
- *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
- */
-public class SseBroadcaster extends Broadcaster<OutboundEvent> {
+            var newEntry =
+                '<div class="message">'
+                    + '<img src="' + data.user.profile_image_url + '" />'
+                    + '<span style="color: #' + data.rgbColor + '">'
+                    + data.text + '</span></div>';
 
-    /**
-     * Creates a new instance.
-     * If this constructor is called by a subclass, it assumes the the reason for the subclass to exist is to implement
-     * {@link #onClose(ChunkedResponse)} and {@link #onException(ChunkedResponse, Exception)} methods, so it adds
-     * the newly created instance as the listener. To avoid this, subclasses may call {@link #SseBroadcaster(Class)}
-     * passing their class as an argument.
-     */
-    public SseBroadcaster() {
-        this(SseBroadcaster.class);
-    }
+            document.body.innerHTML = newEntry + document.body.innerHTML;
+        };
 
-    /**
-     * Can be used by subclasses to override the default functionality of adding self to the set of
-     * {@link org.glassfish.jersey.server.BroadcasterListener listeners}.
-     * If creating a direct instance of a subclass passed in the parameter,
-     * the broadcaster will not register itself as a listener.
-     *
-     * @param subclass subclass of SseBroadcaster that should not be registered as a listener - if creating a direct instance
-     *                 of this subclass, this constructor will not register the new instance as a listener.
-     * @see #SseBroadcaster()
-     */
-    protected SseBroadcaster(final Class<? extends SseBroadcaster> subclass) {
-        super(subclass);
-    }
+        source.onopen = function (event) {
+            // Connection was opened.
+            console.log('opened')
+        };
 
-    /**
-     * Register {@link EventChannel} to current {@link SseBroadcaster} instance.
-     *
-     * @param eventChannel {@link EventChannel} to register.
-     * TODO is this needed? Should we instead override the Broadcaster.add and make it's argument generic?
-     */
-    public void add(final EventChannel eventChannel) {
-        super.add(eventChannel);
+        source.onclose = function (event) {
+            // Connection was closed.
+            console.log('connection closed')
+        };
+    } else {
+        // Sorry! No server-sent events support..
+        console.log('SSE not supported by browser.')
     }
 }
+
+window.onload = receiveMessages ;

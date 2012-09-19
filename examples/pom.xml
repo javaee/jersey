@@ -86,6 +86,7 @@
         <module>server-async-webapp</module>
         <module>server-sent-events</module>
         <module>simple-console</module>
+        <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
     </modules>
 

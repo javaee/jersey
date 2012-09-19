@@ -37,11 +37,11 @@ jaxb.index
 /bundles/glassfish/v4.0/docs-and-examples/src/main/resources/jersey-docs-and-examples_proto.py
 nb-configuration.xml
 /archetype-resources/
-/examples/https-clientserver-grizzly/client.cert
-/examples/https-clientserver-grizzly/keystore_client
-/examples/https-clientserver-grizzly/keystore_server
-/examples/https-clientserver-grizzly/server.cert
-/examples/https-clientserver-grizzly/truststore_client
-/examples/https-clientserver-grizzly/truststore_server
+client.cert
+keystore_client
+keystore_server
+server.cert
+truststore_client
+truststore_server
 /examples/reload/resources
 /core-server/etc

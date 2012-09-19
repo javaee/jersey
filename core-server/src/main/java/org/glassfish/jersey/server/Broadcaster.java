@@ -129,6 +129,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      *
      * @param listener listener to be registered
      * @return {@code true} if registered, {@code false} if the listener was already in the list
+     * TODO rename
      */
     public final boolean addBroadcasterListener(final BroadcasterListener<T> listener) {
         return listeners.add(listener);
@@ -140,6 +141,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * @param listener listener to be unregistered
      * @return {@code true} if unregistered, {@code false} if the listener was not found in the list of registered
      * listeners
+     * TODO rename
      */
     public final boolean removeBroadcasterListener(final BroadcasterListener<T> listener) {
         return listeners.remove(listener);
