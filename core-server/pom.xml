@@ -75,6 +75,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Export-Package>org.glassfish.jersey.server.*;version=${project.version}</Export-Package>
                         <Import-Package>javax.annotation.*;resolution:=optional;version="${range;[==,+);${javax.annotation.version}}", *</Import-Package>
                     </instructions>

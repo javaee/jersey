@@ -59,6 +59,7 @@ import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
  * Helper class to be used by individual tests.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class Helper {
 
@@ -125,6 +126,17 @@ public class Helper {
      * @return list of common OSGi integration test options.
      */
     public static List<Option> getCommonOsgiOptions() {
+        return getCommonOsgiOptions(true);
+    }
+
+    /**
+     * Create new list of common OSGi integration test options.
+     *
+     * @param includeJerseyJaxRsLibs indicates whether JaxRs and Jersey bundles should be added into the resulting list of
+     * options.
+     * @return list of common OSGi integration test options.
+     */
+    public static List<Option> getCommonOsgiOptions(final boolean includeJerseyJaxRsLibs) {
         final List<Option> options = new LinkedList<Option>(expandedList(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)), rawPaxRunnerOption("clean"),
@@ -164,18 +176,8 @@ public class Helper {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
 
-                // JAX-RS API
-                mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
-
                 // javax.annotation
                 wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
-
-                // Jersey bundles
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
-                        .versionAsInProject(),
 
                 // Grizzly
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-server").versionAsInProject(),
@@ -185,8 +187,24 @@ public class Helper {
                 mavenBundle().groupId("org.glassfish.gmbal").artifactId("gmbal-api-only").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.external").artifactId("management-api").versionAsInProject(),
 
+                // Jersey Grizzly
+                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
+                        .versionAsInProject(),
+
                 // start felix framework
                 felix()));
+
+        if (includeJerseyJaxRsLibs) {
+            options.addAll(expandedList(
+                    // JAX-RS API
+                    mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
+
+                    // Jersey bundles
+                    mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
+                    mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
+                    mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject()
+            ));
+        }
 
         return addPaxExamMavenLocalRepositoryProperty(options);
     }

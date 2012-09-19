@@ -57,7 +57,8 @@
     <description>Jersey bundles providers umbrella project module</description>
 
     <modules>
-        <module>jax-rs-ri</module>
+        <module>jax-rs-ri-archive</module>
+        <module>jax-rs-ri-bundle</module>
         <module>glassfish</module>
     </modules>
 
