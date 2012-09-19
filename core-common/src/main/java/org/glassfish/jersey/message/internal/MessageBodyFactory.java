@@ -58,6 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -68,23 +69,24 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.KeyComparator;
 import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.KeyComparatorLinkedHashMap;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
-import org.glassfish.jersey.process.internal.PriorityComparator;
-import org.glassfish.jersey.process.internal.PriorityComparator.Order;
+import org.glassfish.jersey.model.internal.RankedComparator;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
+
+import com.google.common.collect.Lists;
 
 /**
  * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
@@ -187,12 +189,13 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * Create new message body workers factory.
      *
      * @param locator service locator.
-     * @param config configuration. Optional - can be null.
+     * @param configurable configuration. Optional - can be null.
      */
     @Inject
-    public MessageBodyFactory(ServiceLocator locator, @Optional Config config) {
+    public MessageBodyFactory(ServiceLocator locator, @Optional Configurable configurable) {
         this.locator = locator;
-        this.legacyProviderOrdering = config != null && config.isProperty(MessageProperties.LEGACY_WORKERS_ORDERING);
+        this.legacyProviderOrdering = configurable != null
+                        && PropertiesHelper.isProperty(configurable.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
         initReaders();
         initWriters();
@@ -392,13 +395,17 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private void initInterceptors() {
         // TODO: only "global" interceptors should be taken into account here ?
 
-        final List<ReaderInterceptor> _readerInterceptors = locator.getAllServices(ReaderInterceptor.class);
-        Collections.sort(_readerInterceptors, new PriorityComparator<ReaderInterceptor>(Order.ASCENDING));
-        this.readerInterceptors = Collections.unmodifiableList(_readerInterceptors);
+        this.readerInterceptors = Collections.unmodifiableList(
+                Lists.newArrayList(
+                        Providers.getAllProviders(locator, ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())
+                )
+        );
 
-        final List<WriterInterceptor> _writerInterceptors = locator.getAllServices(WriterInterceptor.class);
-        Collections.sort(_writerInterceptors, new PriorityComparator<WriterInterceptor>(Order.ASCENDING));
-        this.writerInterceptors = Collections.unmodifiableList(_writerInterceptors);
+        this.writerInterceptors = Collections.unmodifiableList(
+                Lists.newArrayList(
+                    Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<WriterInterceptor>())
+                )
+        );
     }
 
     private void initReaders() {

@@ -42,16 +42,20 @@ package org.glassfish.jersey.message;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import javax.inject.Provider;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
-import org.glassfish.jersey.Config;
+import javax.inject.Provider;
 
 import org.junit.Test;
 
@@ -61,10 +65,12 @@ import com.google.common.collect.Maps;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class DeflateEncodingTest extends AbstractEncodingTest {
-    private static class DummyConfig implements Config, Provider<Config> {
+
+    private static class DummyConfigurable implements Configurable, Provider<Configurable> {
+
         private final HashMap<String, Object> properties;
 
-        public DummyConfig(boolean noZLib) {
+        public DummyConfigurable(boolean noZLib) {
             properties = Maps.newHashMap();
             properties.put(MessageProperties.DEFLATE_WITHOUT_ZLIB, noZLib);
         }
@@ -75,8 +81,75 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         }
 
         @Override
-        public boolean isProperty(String name) {
-            return (Boolean) properties.get(name);
+        public Configurable setProperties(final Map<String, ?> properties) {
+            if (properties != null) {
+                this.properties.clear();
+                this.properties.putAll(properties);
+            }
+            return this;
+        }
+
+        @Override
+        public Configurable setProperty(final String name, final Object value) {
+            properties.put(name, value);
+            return this;
+        }
+
+        @Override
+        public Collection<Feature> getFeatures() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<Class<?>> getProviderClasses() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<Object> getProviderInstances() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Configurable register(final Class<?> providerClass) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Class<?> providerClass, final int bindingPriority) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Class<T> providerClass, final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Class<T> providerClass,
+                                         final int bindingPriority,
+                                         final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Object provider) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Object provider, final int bindingPriority) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Object provider, final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
+            return this;
         }
 
         @Override
@@ -85,7 +158,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         }
 
         @Override
-        public Config get() {
+        public Configurable get() {
             return this;
         }
     }
@@ -95,7 +168,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         test(new TestSpec() {
             @Override
             public OutputStream getEncoded(OutputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).encode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).encode("deflate", stream);
             }
 
             @Override
@@ -110,7 +183,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         test(new TestSpec() {
             @Override
             public OutputStream getEncoded(OutputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(true)).encode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(true)).encode("deflate", stream);
             }
 
             @Override
@@ -130,7 +203,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
 
             @Override
             public InputStream getDecoded(InputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).decode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).decode("deflate", stream);
             }
         });
     }
@@ -145,7 +218,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
 
             @Override
             public InputStream getDecoded(InputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).decode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).decode("deflate", stream);
             }
         });
     }
@@ -155,12 +228,12 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         test(new TestSpec() {
             @Override
             public OutputStream getEncoded(OutputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).encode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).encode("deflate", stream);
             }
 
             @Override
             public InputStream getDecoded(InputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).decode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).decode("deflate", stream);
             }
         });
     }
@@ -170,12 +243,12 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
         test(new TestSpec() {
             @Override
             public OutputStream getEncoded(OutputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(true)).encode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(true)).encode("deflate", stream);
             }
 
             @Override
             public InputStream getDecoded(InputStream stream) throws IOException {
-                return new DeflateEncoder(new DummyConfig(false)).decode("deflate", stream);
+                return new DeflateEncoder(new DummyConfigurable(false)).decode("deflate", stream);
             }
         });
     }

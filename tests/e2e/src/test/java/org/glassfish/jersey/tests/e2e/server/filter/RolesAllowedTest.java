@@ -58,7 +58,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.RolesAllowedDynamicBinder;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -143,7 +143,7 @@ public class RolesAllowedTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class, RolesAllowedDynamicBinder.class, SecurityFilter.class);
+        return new ResourceConfig(Resource.class, RolesAllowedDynamicFeature.class, SecurityFilter.class);
     }
 
     @Test

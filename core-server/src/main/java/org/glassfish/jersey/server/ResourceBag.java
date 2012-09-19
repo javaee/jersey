@@ -47,8 +47,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.server.model.Resource;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -61,7 +63,7 @@ final class ResourceBag {
     /**
      * Resource bag builder.
      */
-    final static class Builder {
+    public static final class Builder {
 
         private final Set<Class<?>> classes = Sets.newIdentityHashSet();
         private final Set<Object> instances = Sets.newIdentityHashSet();
@@ -70,14 +72,29 @@ final class ResourceBag {
         private final Map<String, Resource> rootResourceMap = new HashMap<String, Resource>();
 
         /**
+         * Contract provider models.
+         */
+        private final Map<Class<?>, ContractProvider> contractProviders = Maps.newIdentityHashMap();
+
+        /**
          * Register a new resource model created from a specific resource class.
          *
          * @param resourceClass introspected resource class.
          * @param resourceModel resource model for the class.
+         * @param contractProvider contract provider for the resource.
          */
-        void registerResource(Class<?> resourceClass, Resource resourceModel) {
+        void registerResource(Class<?> resourceClass, Resource resourceModel, ContractProvider contractProvider) {
             registerModel(resourceModel);
+            registerContractProvider(resourceClass, contractProvider);
             classes.add(resourceClass);
+        }
+
+        private void registerContractProvider(final Class<?> resourceClass, final ContractProvider contractProvider) {
+            if (contractProvider != null) {
+                contractProviders.put(resourceClass, contractProvider);
+            } else {
+                contractProviders.put(resourceClass, ContractProvider.from(resourceClass));
+            }
         }
 
         /**
@@ -85,9 +102,11 @@ final class ResourceBag {
          *
          * @param resourceInstance introspected resource instance.
          * @param resourceModel resource model for the instance.
+         * @param contractProvider contract provider for the resource.
          */
-        void registerResource(Object resourceInstance, Resource resourceModel) {
+        void registerResource(Object resourceInstance, Resource resourceModel, ContractProvider contractProvider) {
             registerModel(resourceModel);
+            registerContractProvider(resourceInstance.getClass(), contractProvider);
             instances.add(resourceInstance);
         }
 
@@ -125,7 +144,7 @@ final class ResourceBag {
          */
         ResourceBag build() {
             models.addAll(rootResourceMap.values());
-            return new ResourceBag(classes, instances, models);
+            return new ResourceBag(classes, instances, models, contractProviders);
         }
     }
 
@@ -141,11 +160,17 @@ final class ResourceBag {
      * Resource models.
      */
     final List<Resource> models;
+    /**
+     * Contract provider models.
+     */
+    final Map<Class<?>, ContractProvider> contractProviders;
 
-    private ResourceBag(Set<Class<?>> classes, Set<Object> instances, List<Resource> models) {
+    private ResourceBag(Set<Class<?>> classes, Set<Object> instances, List<Resource> models, Map<Class<?>,
+            ContractProvider> contractProviders) {
         this.classes = classes;
         this.instances = instances;
         this.models = models;
+        this.contractProviders = contractProviders;
     }
 
 

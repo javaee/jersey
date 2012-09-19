@@ -59,6 +59,7 @@ import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientException;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
@@ -94,7 +95,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private enum EntityPresence {
         MUST_BE_NULL,
         MUST_BE_PRESENT,
-        OPTIONAL;
+        OPTIONAL
     }
 
     private static Map<String, EntityPresence> METHODS = initializeMap();
@@ -245,7 +246,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public ClientConfig configuration() {
+        public Configuration configuration() {
             return requestContext.getConfiguration();
         }
 
@@ -580,7 +581,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public Response invoke() throws ClientException, WebApplicationException {
-        final ClientRuntime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         return requestScope.runInScope(new Producer<Response>() {
             @Override
@@ -592,7 +593,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException {
-        final ClientRuntime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         return requestScope.runInScope(new Producer<T>() {
             @Override
@@ -611,7 +612,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException {
-        final ClientRuntime runtime = configuration().getRuntime();
+        final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         return requestScope.runInScope(new Producer<T>() {
             @Override
@@ -631,7 +632,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
@@ -650,7 +651,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
@@ -698,7 +699,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        configuration().getRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
@@ -782,7 +783,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     }
                 }
             };
-            configuration().getRuntime().submit(requestContext, responseCallback);
+            request().getClientRuntime().submit(requestContext, responseCallback);
         } catch (Throwable error) {
             ClientException ce;
             if (error instanceof ClientException) {
@@ -852,7 +853,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public ClientConfig configuration() {
+    public Configuration configuration() {
         return requestContext.getConfiguration();
     }
 

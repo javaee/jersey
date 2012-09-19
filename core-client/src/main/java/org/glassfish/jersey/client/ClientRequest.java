@@ -45,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
@@ -139,6 +140,15 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         return propertiesDelegate;
     }
 
+    /**
+     * Get the underlying client runtime.
+     *
+     * @return underlying client runtime.
+     */
+    ClientRuntime getClientRuntime() {
+        return configuration.getRuntime();
+    }
+
     @Override
     public URI getUri() {
         return requestUri;
@@ -179,8 +189,8 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     }
 
     @Override
-    public ClientConfig getConfiguration() {
-        return configuration;
+    public Configuration getConfiguration() {
+        return configuration.getRuntimeConfig() != null ? configuration.getRuntimeConfig() : configuration;
     }
 
     @Override

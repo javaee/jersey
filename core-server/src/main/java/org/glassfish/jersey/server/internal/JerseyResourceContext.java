@@ -244,6 +244,7 @@ public class JerseyResourceContext implements ResourceContext {
                 @SuppressWarnings("unchecked")
                 AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());
+                aliasDescriptor.setRanking(providerModel.getPriority(contract));
                 aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
 
                 dc.bind(aliasDescriptor);

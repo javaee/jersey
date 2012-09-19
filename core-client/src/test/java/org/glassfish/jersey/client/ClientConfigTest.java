@@ -42,9 +42,11 @@ package org.glassfish.jersey.client;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
+import javax.ws.rs.client.Configuration;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.junit.After;
@@ -128,39 +130,77 @@ public class ClientConfigTest {
     }
 
     @Provider
-    public class MyProvider {
+    public class MyProvider implements ContextResolver<String> {
 
+        @Override
+        public String getContext(final Class<?> type) {
+            return "";
+        }
     }
 
     @Test
     public void testCustomProvidersFeature() {
-        ClientConfig instance = new ClientConfig();
-        instance.register(new CustomProvidersFeature(Arrays.asList(new Class<?>[]{MyProvider.class})));
+        final CustomProvidersFeature feature = new CustomProvidersFeature(Arrays.asList(new Class<?>[]{MyProvider.class}));
 
-        assertTrue(instance.getProviderClasses().contains(MyProvider.class));
+        ClientConfig instance = new ClientConfig();
+        instance.register(feature);
+
+        // Features are registered at the time of provider bindings.
+        final JerseyClient jerseyClient = new JerseyClient(instance);
+        ClientConfig config = jerseyClient.configuration();
+        config.getRuntime();
+
+        assertTrue(instance.getProviderClasses().isEmpty());
+        assertTrue(instance.getProviderInstances().isEmpty());
+        assertTrue(instance.getFeatures().isEmpty());
+
+        final Configuration runtimeConfig = config.getRuntimeConfig();
+
+        assertEquals(1, runtimeConfig.getProviderClasses().size());
+        assertTrue(runtimeConfig.getProviderClasses().contains(MyProvider.class));
+        assertTrue(runtimeConfig.getProviderInstances().isEmpty());
+
+        assertEquals(1, runtimeConfig.getFeatures().size());
+        assertEquals(feature, runtimeConfig.getFeatures().iterator().next());
     }
 
+    public static class EmptyFeature implements Feature {
+
+        @Override
+        public boolean configure(final Configurable configurable) {
+            return true;
+        }
+    }
+
+    public static class UnconfigurableFeature implements Feature {
+
+        @Override
+        public boolean configure(final Configurable configurable) {
+            return false;
+        }
+    }
+
+    /**
+     * Copied from ConfigurableTest#
+     */
     @Test
-    @Ignore("not ready yet")
-    // TODO implement test
     public void testGetFeatures() {
-        ClientConfig instance = new ClientConfig();
-        Set expResult = null;
-        Set result = instance.getFeatures();
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
+        final EmptyFeature emptyFeature = new EmptyFeature();
+        final UnconfigurableFeature unconfigurableFeature = new UnconfigurableFeature();
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
-    public void testIsEnabled() {
-        Class<? extends Feature> feature = null;
-        ClientConfig instance = new ClientConfig();
-        boolean expResult = false;
-        boolean result = instance.isEnabled(feature);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.register(emptyFeature);
+        clientConfig.register(unconfigurableFeature);
+
+        // Features are registered at the time of provider bindings.
+        final JerseyClient jerseyClient = new JerseyClient(clientConfig);
+        clientConfig = jerseyClient.configuration();
+        clientConfig.getRuntime();
+
+        final Configuration runtimeConfig = clientConfig.getRuntimeConfig();
+
+        assertEquals(1, runtimeConfig.getFeatures().size());
+        assertTrue(runtimeConfig.getFeatures().contains(emptyFeature));
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -176,51 +216,26 @@ public class ClientConfigTest {
     }
 
     @Test
-    @Ignore("not ready yet")
-    // TODO implement test
     public void testUpdate() {
-        ClientConfig clientConfig = null;
-        ClientConfig instance = new ClientConfig();
-        ClientConfig expResult = null;
-        ClientConfig result = instance.updateFrom(clientConfig);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
+        final UnconfigurableFeature unconfigurableFeature = new UnconfigurableFeature();
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
-    public void testRegister_Class() {
-        Class<?> providerClass = null;
-        ClientConfig instance = new ClientConfig();
-        ClientConfig expResult = null;
-        ClientConfig result = instance.register(providerClass);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
+        ClientConfig clientConfig1 = new ClientConfig();
+        ClientConfig clientConfig2 = new ClientConfig();
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
-    public void testRegister_ObjectArr() {
-        Object[] providers = null;
-        ClientConfig instance = new ClientConfig();
-        ClientConfig expResult = null;
-        ClientConfig result = instance.register(providers);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
+        clientConfig1.register(EmptyFeature.class);
+        clientConfig2.register(unconfigurableFeature);
 
-    @Test
-    @Ignore("not ready yet")
-    // TODO implement test
-    public void testEnable_Feature() {
-        Feature feature = null;
-        ClientConfig instance = new ClientConfig();
-        ClientConfig expResult = null;
-        ClientConfig result = instance.register(feature);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        ClientConfig clientConfig = clientConfig2.updateFrom(clientConfig1);
+
+        // Features are registered at the time of provider bindings.
+        final JerseyClient jerseyClient = new JerseyClient(clientConfig);
+        clientConfig = jerseyClient.configuration();
+        clientConfig.getRuntime();
+
+        final Configuration runtimeConfig = clientConfig.getRuntimeConfig();
+
+        assertEquals(1, runtimeConfig.getFeatures().size());
+        assertEquals(EmptyFeature.class, runtimeConfig.getFeatures().iterator().next().getClass());
     }
 
     @Test

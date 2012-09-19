@@ -60,6 +60,9 @@ import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+
+import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
@@ -67,11 +70,11 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import deprecated.javax.ws.rs.DynamicBinder;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
@@ -139,28 +142,84 @@ public class Providers {
     }
 
     /**
-     * Get the set of all providers (custom and default) registered for the given service provider contract
+     * Get the iterable of all providers (custom and default) registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
      * @param <T>      service provider contract Java type.
      * @param locator  underlying HK2 service locator.
      * @param contract service provider contract.
-     * @return set of all available service provider instances for the contract.
+     * @return iterable of all available service provider instances for the contract. Return value is never null.
      */
-    public static <T> List<T> getAllProviders(ServiceLocator locator, Class<T> contract) {
+    public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract) {
+        return getAllProviders(locator, contract, (Comparator<T>) null);
+    }
+
+    /**
+     * Get the iterable of all {@link RankedProvider providers} (custom and default) registered for the given service provider
+     * contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     *
+     * @param <T> service provider contract Java type.
+     * @param locator underlying HK2 service locator.
+     * @param contract service provider contract.
+     * @return iterable of all available ranked service providers for the contract. Return value is never null.
+     */
+    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(ServiceLocator locator, Class<T> contract) {
         List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
         providers.addAll(getAllServiceHandles(locator, contract));
 
-        LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap = Maps.newLinkedHashMap();
+        LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap = Maps.newLinkedHashMap();
 
         for (ServiceHandle<T> provider : providers) {
-            ActiveDescriptor key = provider.getActiveDescriptor();
+            ActiveDescriptor<T> key = provider.getActiveDescriptor();
             if (!providerMap.containsKey(key)) {
-                providerMap.put(key, provider);
+                providerMap.put(key, new RankedProvider<T>(provider.getService(), key.getRanking()));
             }
         }
 
-        return new ArrayList<T>(getClasses(providerMap.values()));
+        return providerMap.values();
+    }
+
+    /**
+     * Sorts given providers with {@link RankedComparator ranked comparator}.
+     *
+     * @param comparator comparator to sort the providers with.
+     * @param providerIterables providers to be sorted.
+     * @param <T> service provider contract Java type.
+     * @return sorted {@link Iterable iterable} instance containing given providers. Return value is never null.
+     */
+    public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
+                                                      final Iterable<RankedProvider<T>>... providerIterables) {
+        final List<RankedProvider<T>> rankedProviders = Lists.newArrayList();
+
+        for (final Iterable<RankedProvider<T>> providers : providerIterables) {
+            rankedProviders.addAll(Lists.<RankedProvider<T>>newLinkedList(providers));
+        }
+
+        Collections.sort(rankedProviders, comparator);
+
+        return Collections2.transform(rankedProviders, new Function<RankedProvider<T>, T>() {
+            @Override
+            public T apply(final RankedProvider<T> input) {
+                return input.getProvider();
+            }
+        });
+    }
+
+    /**
+     * Get the sorted iterable of all {@link RankedProvider providers} (custom and default) registered for the given service
+     * provider contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     *
+     * @param <T> service provider contract Java type.
+     * @param locator underlying HK2 service locator.
+     * @param contract service provider contract.
+     * @param comparator comparator to sort the providers with.
+     * @return set of all available ranked service providers for the contract. Return value is never null.
+     */
+    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator,
+                                                  final Class<T> contract,
+                                                  final RankedComparator<T> comparator) {
+        //noinspection unchecked
+        return sortRankedProviders(comparator, getAllRankedProviders(locator, contract));
     }
 
     private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract,
@@ -179,7 +238,7 @@ public class Providers {
     }
 
     /**
-     * Get the set of all providers (custom and default) registered for the given service provider contract
+     * Get the iterable of all providers (custom and default) registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container ordered based on the given {@code comparator}.
      *
      * @param <T>        service provider contract Java type.
@@ -187,12 +246,28 @@ public class Providers {
      * @param contract   service provider contract.
      * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
-     *         {@link Comparator comparator}.
+     * {@link Comparator comparator}.
      */
-    public static <T> List<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
-        List<T> providers = getAllProviders(locator, contract);
-        Collections.sort(providers, comparator);
-        return providers;
+    public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
+        List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
+        providers.addAll(getAllServiceHandles(locator, contract));
+
+        LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap = Maps.newLinkedHashMap();
+
+        for (ServiceHandle<T> provider : providers) {
+            ActiveDescriptor key = provider.getActiveDescriptor();
+            if (!providerMap.containsKey(key)) {
+                providerMap.put(key, provider);
+            }
+        }
+
+        final ArrayList<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
+
+        if (comparator != null) {
+            Collections.sort(providerList, comparator);
+        }
+
+        return providerList;
     }
 
     private static <T> Set<T> getClasses(Collection<ServiceHandle<T>> hk2Providers) {
@@ -434,7 +509,6 @@ public class Providers {
         }
     }
 
-
     private static final Map<Class<?>, ProviderRuntime> JAX_RS_PROVIDER_INTERFACE_WHITELIST =
             getJaxRsProviderInterfaces();
 
@@ -448,14 +522,15 @@ public class Providers {
         interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, new ProviderRuntime(null));
         interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, new ProviderRuntime(null));
 
+        interfaces.put(javax.ws.rs.core.Feature.class, new ProviderRuntime(null));
+
         interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
         interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
         interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
         interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
 
         interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, new ProviderRuntime(null));
-
-        interfaces.put(DynamicBinder.class, new ProviderRuntime(ConstrainedTo.Type.SERVER)); // TODO remove
+        
         interfaces.put(javax.ws.rs.container.DynamicFeature.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
 
 

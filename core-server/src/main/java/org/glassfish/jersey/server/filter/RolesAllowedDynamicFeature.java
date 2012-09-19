@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,9 @@ import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Response;
 
 import javax.annotation.security.DenyAll;
@@ -54,10 +56,8 @@ import javax.annotation.security.RolesAllowed;
 
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 
-import deprecated.javax.ws.rs.DynamicBinder;
-
 /**
- * A {@link DynamicBinder} supporting the {@code javax.annotation.security.RolesAllowed},
+ * A {@link DynamicFeature} supporting the {@code javax.annotation.security.RolesAllowed},
  * {@code javax.annotation.security.PermitAll} and {@code javax.annotation.security.DenyAll}
  * on resource methods and sub-resource methods.
  * <p>
@@ -76,26 +76,29 @@ import deprecated.javax.ws.rs.DynamicBinder;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class RolesAllowedDynamicBinder implements DynamicBinder<ContainerRequestFilter> {
+public class RolesAllowedDynamicFeature implements DynamicFeature {
 
     @Override
-    public ContainerRequestFilter getBoundProvider(ResourceInfo resourceInfo) {
+    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
         AnnotatedMethod am = new AnnotatedMethod(resourceInfo.getResourceMethod());
 
         // DenyAll on the method take precedence over RolesAllowed and PermitAll
         if (am.isAnnotationPresent(DenyAll.class)) {
-            return new RolesAllowedRequestFilter();
+            configurable.register(new RolesAllowedRequestFilter());
+            return;
         }
 
         // RolesAllowed on the method takes precedence over PermitAll
         RolesAllowed ra = am.getAnnotation(RolesAllowed.class);
         if (ra != null) {
-            return new RolesAllowedRequestFilter(ra.value());
+            configurable.register(new RolesAllowedRequestFilter(ra.value()));
+            return;
         }
 
         // PermitAll takes precedence over RolesAllowed on the class
         if (am.isAnnotationPresent(PermitAll.class)) {
-            return null;
+            // Do nothing.
+            return;
         }
 
         // DenyAll can't be attached to classes
@@ -103,11 +106,8 @@ public class RolesAllowedDynamicBinder implements DynamicBinder<ContainerRequest
         // RolesAllowed on the class takes precedence over PermitAll
         ra = resourceInfo.getResourceClass().getAnnotation(RolesAllowed.class);
         if (ra != null) {
-            return new RolesAllowedRequestFilter(ra.value());
+            configurable.register(new RolesAllowedRequestFilter(ra.value()));
         }
-
-        // No need to check whether PermitAll is present.
-        return null;
     }
 
     @BindingPriority(BindingPriority.AUTHORIZATION) // authorization filter - should go after any authentication filters

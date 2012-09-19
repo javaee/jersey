@@ -78,15 +78,14 @@ class ClientRuntime {
      * @param locator   HK2 service locator.
      */
     public ClientRuntime(final Connector connector, final ServiceLocator locator) {
+
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
-        final ChainableStage<ClientRequest> requestFilteringStage =
-                ClientFilteringStages.createRequestFilteringStage(locator);
+        final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
         this.requestProcessingRoot = requestFilteringStage != null ?
                 requestingChainBuilder.build(requestFilteringStage) : requestingChainBuilder.build();
 
-        final ChainableStage<ClientResponse> responseFilteringStage =
-                ClientFilteringStages.createResponseFilteringStage(locator);
+        final ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(locator);
         this.responseProcessingRoot = responseFilteringStage != null ?
                 responseFilteringStage : Stages.<ClientResponse>identity();
 

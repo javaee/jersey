@@ -45,17 +45,18 @@ import java.io.SequenceInputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.regex.Pattern;
-import javax.ws.rs.BindingPriority;
 
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
-import deprecated.javax.ws.rs.DynamicBinder;
+import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -68,7 +69,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -140,7 +140,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     }
 
     @NameBoundWriter
-    static class NameBoundWriterInterceptor extends PrefixAddingWriterInterceptor {
+    public static class NameBoundWriterInterceptor extends PrefixAddingWriterInterceptor {
 
         @Override
         String getPrefix() {
@@ -149,7 +149,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     }
 
     @BindingPriority(20)
-    static class DynamicallyBoundWriterInterceptor extends PrefixAddingWriterInterceptor {
+    public static class DynamicallyBoundWriterInterceptor extends PrefixAddingWriterInterceptor {
 
         @Override
         String getPrefix() {
@@ -228,20 +228,22 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     protected Application configure() {
         return new ResourceConfig(MethodBindingResource.class, ClassBindingResource.class,
                 MixedBindingResource.class, NameBoundReaderInterceptor.class, NameBoundWriterInterceptor.class).addSingletons(
-                new DynamicBinder<ReaderInterceptor>() {
+                new DynamicFeature() {
 
                     @Override
-                    public ReaderInterceptor getBoundProvider(ResourceInfo resourceInfo) {
-                        return ReaderMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()
-                                ? new DynamicallyBoundReaderInterceptor() : null;
+                    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+                        if (ReaderMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()) {
+                            configurable.register(DynamicallyBoundReaderInterceptor.class);
+                        }
                     }
                 },
-                new DynamicBinder<WriterInterceptor>() {
+                new DynamicFeature() {
 
                     @Override
-                    public WriterInterceptor getBoundProvider(ResourceInfo resourceInfo) {
-                        return WriterMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()
-                                ? new DynamicallyBoundWriterInterceptor() : null;
+                    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+                        if (WriterMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()) {
+                            configurable.register(DynamicallyBoundWriterInterceptor.class);
+                        }
                     }
                 });
     }

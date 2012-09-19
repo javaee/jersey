@@ -51,9 +51,11 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -63,8 +65,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-import deprecated.javax.ws.rs.DynamicBinder;
-
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
@@ -72,7 +72,7 @@ public class ResourceFilterTest extends JerseyTest {
     @Override
     protected Application configure() {
         return new ResourceConfig(
-                MyDynamicBinder.class,
+                MyDynamicFeature.class,
                 MyResource.class,
                 NameBoundRequestFilter.class,
                 NameBoundResponseFilter.class,
@@ -176,15 +176,14 @@ public class ResourceFilterTest extends JerseyTest {
         }
     }
 
-    public static class MyDynamicBinder implements DynamicBinder<DbFilter> {
+    public static class MyDynamicFeature implements DynamicFeature {
         private final DbFilter filter = new DbFilter();
 
         @Override
-        public DbFilter getBoundProvider(ResourceInfo resourceInfo) {
+        public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
             if ("getDynamicBinder".equals(resourceInfo.getResourceMethod().getName())) {
-                return filter;
+                configurable.register(filter);
             }
-            return null;
         }
     }
 }

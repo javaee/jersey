@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -60,7 +61,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -115,7 +116,7 @@ final class MethodSelectingRouter implements Router {
 
         @Inject
         @Optional
-        private Config config;
+        private Configurable config;
 
         @Inject
         @Optional
@@ -135,8 +136,10 @@ final class MethodSelectingRouter implements Router {
         public MethodSelectingRouter build(
                 final MessageBodyWorkers workers, final List<MethodAcceptorPair> methodAcceptorPairs) {
 
-            return new MethodSelectingRouter(respondingContextFactory, workers, methodAcceptorPairs,
-                    config != null && config.isProperty(ServerProperties.FEATURE_DISABLE_WADL),
+            return new MethodSelectingRouter(respondingContextFactory,
+                    workers,
+                    methodAcceptorPairs,
+                    PropertiesHelper.isProperty(config.getProperty(ServerProperties.FEATURE_DISABLE_WADL)),
                     wadlApplicationContext);
         }
 

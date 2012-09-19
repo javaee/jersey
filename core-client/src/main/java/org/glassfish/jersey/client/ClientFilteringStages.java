@@ -41,7 +41,6 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -51,7 +50,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.process.internal.PriorityComparator;
+import org.glassfish.jersey.model.internal.RankedComparator;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -74,11 +73,11 @@ class ClientFilteringStages {
      *         {@link ClientRequestFilter client request filters} registered in the service
      *         locator.
      */
-    static ChainableStage<ClientRequest> createRequestFilteringStage(ServiceLocator locator) {
-        final List<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class,
-                new PriorityComparator<ClientRequestFilter>(PriorityComparator.Order.ASCENDING));
+    static ChainableStage<ClientRequest> createRequestFilteringStage(final ServiceLocator locator) {
+        final RankedComparator<ClientRequestFilter> comparator = new RankedComparator<ClientRequestFilter>(RankedComparator.Order.ASCENDING);
+        final Iterable<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class, comparator);
 
-        return !requestFilters.isEmpty() ? new RequestFilteringStage(requestFilters) : null;
+        return requestFilters.iterator().hasNext() ? new RequestFilteringStage(requestFilters) : null;
     }
 
     /**
@@ -89,19 +88,17 @@ class ClientFilteringStages {
      *         {@link ClientResponseFilter client response filters} registered in the service
      *         locator.
      */
-    static ChainableStage<ClientResponse> createResponseFilteringStage(ServiceLocator locator) {
-        final List<ClientResponseFilter> responseFilters = Providers.getAllProviders(
-                locator,
-                ClientResponseFilter.class,
-                new PriorityComparator<ClientResponseFilter>(PriorityComparator.Order.DESCENDING));
+    static ChainableStage<ClientResponse> createResponseFilteringStage(final ServiceLocator locator) {
+        final RankedComparator<ClientResponseFilter> comparator = new RankedComparator<ClientResponseFilter>(RankedComparator.Order.DESCENDING);
+        final Iterable<ClientResponseFilter> responseFilters = Providers.getAllProviders(locator, ClientResponseFilter.class, comparator);
 
-        return !responseFilters.isEmpty() ? new ResponseFilterStage(responseFilters) : null;
+        return responseFilters.iterator().hasNext() ? new ResponseFilterStage(responseFilters) : null;
     }
 
     private static final class RequestFilteringStage extends AbstractChainableStage<ClientRequest> {
-        private final List<ClientRequestFilter> requestFilters;
+        private final Iterable<ClientRequestFilter> requestFilters;
 
-        private RequestFilteringStage(final List<ClientRequestFilter> requestFilters) {
+        private RequestFilteringStage(final Iterable<ClientRequestFilter> requestFilters) {
             this.requestFilters = requestFilters;
         }
 
@@ -124,9 +121,9 @@ class ClientFilteringStages {
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ClientResponse> {
-        private final List<ClientResponseFilter> filters;
+        private final Iterable<ClientResponseFilter> filters;
 
-        private ResponseFilterStage(List<ClientResponseFilter> filters) {
+        private ResponseFilterStage(Iterable<ClientResponseFilter> filters) {
             this.filters = filters;
         }
 

@@ -46,6 +46,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -59,7 +60,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
-import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageProperties;
@@ -124,13 +125,14 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
         }
     }
 
+    // TODO This provider should be registered and configured via a feature.
     @Context
-    public void setConfiguration(final Config config) {
+    public void setConfiguration(final Configurable config) {
         formattedOutput = Values.lazy(new Value<Boolean>() {
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(config.isProperty(MessageProperties.XML_FORMAT_OUTPUT));
+                return PropertiesHelper.isProperty(config.getProperty(MessageProperties.XML_FORMAT_OUTPUT));
             }
         });
 
@@ -138,7 +140,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
             @Override
             public Boolean get() {
-                return Boolean.valueOf(config.isProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
+                return PropertiesHelper.isProperty(config.getProperty(MessageProperties.JAXB_PROCESS_XML_ROOT_ELEMENT));
             }
         });
     }

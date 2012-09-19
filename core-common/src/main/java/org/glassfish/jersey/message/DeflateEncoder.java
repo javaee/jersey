@@ -48,9 +48,10 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import javax.ws.rs.core.Configurable;
+
 import javax.inject.Inject;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.spi.ContentEncoder;
 
 /**
@@ -62,7 +63,9 @@ import org.glassfish.jersey.spi.ContentEncoder;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class DeflateEncoder extends ContentEncoder {
-    private final Config config;
+
+    // TODO This provider should be registered and configured via a feature.
+    private final Configurable config;
 
     /**
      * Initialize DeflateEncoder.
@@ -70,7 +73,7 @@ public class DeflateEncoder extends ContentEncoder {
      * @param config Jersey configuration properties.
      */
     @Inject
-    public DeflateEncoder(Config config) {
+    public DeflateEncoder(final Configurable config) {
         super("deflate");
         this.config = config;
     }
