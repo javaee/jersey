@@ -67,7 +67,20 @@ public final class EventProcessor implements Closeable {
 
     private volatile boolean closed;
 
-    EventProcessor(InputStream inputStream, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers, MessageBodyWorkers messageBodyWorkers) {
+    /**
+     * Package-private constructor used by the {@link EventProcessorReader}.
+     *
+     * @param inputStream response input stream.
+     * @param annotations annotations associated with response entity.
+     * @param mediaType response entity media type.
+     * @param headers response headers.
+     * @param messageBodyWorkers message body workers.
+     */
+    EventProcessor(InputStream inputStream,
+                   Annotation[] annotations,
+                   MediaType mediaType,
+                   MultivaluedMap<String, String> headers,
+                   MessageBodyWorkers messageBodyWorkers) {
         this.inputStream = inputStream;
         this.annotations = annotations;
         this.mediaType = mediaType;
@@ -128,18 +141,18 @@ public final class EventProcessor implements Closeable {
 
         try {
             int data = 0;
-            while(currentState != State.EVENT_FIRED && (data = inputStream.read()) != -1) {
+            while (currentState != State.EVENT_FIRED && (data = inputStream.read()) != -1) {
 
                 switch (currentState) {
 
                     case START:
-                        if(data == ':') {
+                        if (data == ':') {
                             currentState = State.COMMENT;
-                        } else if(data != '\n') {
+                        } else if (data != '\n') {
                             baos.write(data);
                             currentState = State.FIELD_NAME;
-                        } else if(data == '\n') {
-                            if(!inboundEvent.isEmpty()) {
+                        } else if (data == '\n') {
+                            if (!inboundEvent.isEmpty()) {
                                 // fire!
                                 listener.onEvent(inboundEvent);
                                 currentState = State.EVENT_FIRED;
@@ -149,16 +162,16 @@ public final class EventProcessor implements Closeable {
                         }
                         break;
                     case COMMENT:
-                        if(data == '\n') {
+                        if (data == '\n') {
                             currentState = State.START;
                         }
                         break;
                     case FIELD_NAME:
-                        if(data == ':') {
+                        if (data == ':') {
                             fieldName = baos.toString();
                             baos.reset();
                             currentState = State.FIELD_VALUE_FIRST;
-                        } else if(data == '\n') {
+                        } else if (data == '\n') {
                             processField(inboundEvent, baos.toString(), "".getBytes());
                             baos.reset();
                             currentState = State.START;
@@ -168,11 +181,11 @@ public final class EventProcessor implements Closeable {
                         break;
                     case FIELD_VALUE_FIRST:
                         // first space has to be skipped
-                        if(data != ' ') {
+                        if (data != ' ') {
                             baos.write(data);
                         }
 
-                        if(data == '\n') {
+                        if (data == '\n') {
                             processField(inboundEvent, fieldName, baos.toByteArray());
                             baos.reset();
                             currentState = State.START;
@@ -182,7 +195,7 @@ public final class EventProcessor implements Closeable {
                         currentState = State.FIELD_VALUE;
                         break;
                     case FIELD_VALUE:
-                        if(data == '\n') {
+                        if (data == '\n') {
                             processField(inboundEvent, fieldName, baos.toByteArray());
                             baos.reset();
                             currentState = State.START;
@@ -194,7 +207,7 @@ public final class EventProcessor implements Closeable {
 
             }
 
-            if(data == -1) {
+            if (data == -1) {
                 close();
             }
         } catch (IOException e) {
@@ -204,12 +217,12 @@ public final class EventProcessor implements Closeable {
     }
 
     private void processField(InboundEvent inboundEvent, String name, byte[] value) {
-        if(name.equals("event")) {
+        if (name.equals("event")) {
             inboundEvent.setName(new String(value));
-        } else if(name.equals("data")) {
+        } else if (name.equals("data")) {
             inboundEvent.addData(value);
             inboundEvent.addData(new byte[]{'\n'});
-        } else if(name.equals("id")) {
+        } else if (name.equals("id")) {
             String s = new String(value);
             try {
                 // TODO: check the value [0-9]*
@@ -218,7 +231,7 @@ public final class EventProcessor implements Closeable {
                 s = "";
             }
             inboundEvent.setId(s);
-        } else if(name.equals("retry")) {
+        } else if (name.equals("retry")) {
             // TODO
         } else {
             // ignore

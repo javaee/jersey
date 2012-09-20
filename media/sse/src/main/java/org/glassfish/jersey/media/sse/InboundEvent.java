@@ -66,14 +66,20 @@ public class InboundEvent {
     private final MultivaluedMap<String, String> headers;
 
     /**
-     * Constructor.
+     * Create new inbound event.
      *
-     * @param messageBodyWorkers {@link MessageBodyWorkers} instance. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     * @param annotations annotations from corresponding resource method. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     * @param mediaType media type negotiated for corresponding resource method. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
-     * @param headers response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
+     * @param messageBodyWorkers {@link MessageBodyWorkers} instance.
+     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+     * @param annotations        annotations from corresponding resource method.
+     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+     * @param mediaType          media type negotiated for corresponding resource method.
+     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+     * @param headers            response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
      */
-    InboundEvent(MessageBodyWorkers messageBodyWorkers, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> headers) {
+    InboundEvent(MessageBodyWorkers messageBodyWorkers,
+                 Annotation[] annotations,
+                 MediaType mediaType,
+                 MultivaluedMap<String, String> headers) {
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
         this.mediaType = mediaType;
@@ -104,7 +110,7 @@ public class InboundEvent {
      * @param data byte array containing incoming data.
      */
     void addData(byte[] data) {
-        if(this.data == null) {
+        if (this.data == null) {
             this.data = new ByteArrayOutputStream();
         }
 
@@ -148,12 +154,13 @@ public class InboundEvent {
      * Get event data.
      *
      * @param messageType type of stored data content. Will be used for {@link MessageBodyReader} lookup.
-     * @param mediaType {@link MediaType} of incoming data. Will be used for {@link MessageBodyReader} lookup.
+     * @param mediaType   {@link MediaType} of incoming data. Will be used for {@link MessageBodyReader} lookup.
      * @return object of given type.
      * @throws IOException when provided type can't be read.
      */
     public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
-        final MessageBodyReader<T> messageBodyReader = messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
+        final MessageBodyReader<T> messageBodyReader =
+                messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
         return messageBodyReader.readFrom(messageType, null, annotations, (mediaType == null ? this.mediaType : mediaType),
                 headers, new ByteArrayInputStream(stripLastLineBreak(data.toByteArray())));
     }
@@ -192,7 +199,7 @@ public class InboundEvent {
      * @return updated byte array.
      */
     private byte[] stripLastLineBreak(byte[] data) {
-        if((data.length >= 1) && (data[data.length - 1] == '\n')) {
+        if ((data.length >= 1) && (data[data.length - 1] == '\n')) {
             byte[] newArray = new byte[data.length - 1];
             System.arraycopy(data, 0, newArray, 0, data.length - 1);
             data = newArray;
