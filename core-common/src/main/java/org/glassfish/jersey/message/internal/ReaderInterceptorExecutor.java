@@ -87,7 +87,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
      * List of interceptors to be used is taken from given {@link MessageBodyWorkers workers} instance
      * unless {@value #INTERCEPTORS} property is set in {@link PropertiesDelegate propertiesDelegate}.
-     * If such a property is present, the executor tries to cast it to <code>List&lt;ReaderInterceptor&gt;</code>
+     * If such a property is present, the executor tries to cast it to {@code List&lt;ReaderInterceptor&gt;}
      * and the list is then used to build the interceptor chain.
      *
      * @param rawType     raw Java entity type.

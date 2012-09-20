@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
+// FIXME: rename to ChunkedOutput
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
