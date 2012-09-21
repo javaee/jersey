@@ -44,6 +44,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import org.glassfish.jersey.internal.OsgiRegistry;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 /**
  * Localizes the {@link Localizable} into a message
@@ -101,8 +103,13 @@ public class Localizer {
                                     alternateBundleName,
                                     _locale);
                         } catch (MissingResourceException e2) {
-                            // give up
-                            return getDefaultMessage(l);
+                            // try OSGi
+                                OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
+                                if (osgiRegistry != null) {
+                                    bundle = osgiRegistry.getResourceBundle(bundlename);
+                                } else {
+                                    return getDefaultMessage(l);
+                                }
                         }
                     }
                 }
