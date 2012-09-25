@@ -83,6 +83,7 @@
         <module>reload</module>
         <module>server-async</module>
         <module>server-async-managed</module>
+        <module>server-async-webapp</module>
         <module>server-sent-events</module>
         <module>simple-console</module>
         <module>system-properties-example</module>
