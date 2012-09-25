@@ -40,6 +40,7 @@
 package org.glassfish.jersey.internal;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -50,7 +51,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -337,6 +341,35 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             throw new ClassNotFoundException(className);
         }
         return bundle.loadClass(className);
+    }
+
+    /**
+     * Tries to load resource bundle via OSGi means. No caching involved here,
+     * as localization properties are being cached in Localizer class already.
+     *
+     * @param bundleName name of the resource bundle to load
+     * @return resource bundle instance if found, null otherwise
+     */
+    public ResourceBundle getResourceBundle(final String bundleName) {
+        final int lastDotIndex = bundleName.lastIndexOf('.');
+        final String path = bundleName.substring(0, lastDotIndex).replace('.', '/');
+        final String propertiesName = bundleName.substring(lastDotIndex + 1, bundleName.length()) + ".properties";
+        for (Bundle bundle : bundleContext.getBundles()) {
+            final Enumeration entries = bundle.findEntries(path, propertiesName, false);
+            if (entries != null && entries.hasMoreElements()) {
+                final URL entryUrl = (URL)entries.nextElement();
+                try {
+                    return new PropertyResourceBundle(entryUrl.openStream());
+                } catch (IOException ex) {
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        // does not make sense to localize this
+                        LOGGER.fine("Exception caught when tried to load resource bundle in OSGi");
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 
     /**
