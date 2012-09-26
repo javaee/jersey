@@ -875,7 +875,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jaxrs.api.version>2.0-m11</jaxrs.api.version>
-        <hk2.version>2.1.28</hk2.version>
+        <hk2.version>2.1.30</hk2.version>
         <grizzly2.version>2.2.10</grizzly2.version>
         <jackson.version>1.9.8</jackson.version>
         <jersey1.version>1.14</jersey1.version>
