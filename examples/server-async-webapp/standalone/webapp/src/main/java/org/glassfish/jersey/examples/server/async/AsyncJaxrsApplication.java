@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.serverasync;
+package org.glassfish.jersey.examples.server.async;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -59,8 +59,7 @@ public class AsyncJaxrsApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final HashSet<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(MessagingResource.class);
-        classes.add(SimpleLongRunningResource.class);
+        classes.add(LongRunningEchoResource.class);
 
         return classes;
     }

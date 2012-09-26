@@ -38,22 +38,31 @@
   only if the new code is made subject to such option by the copyright
   holder.
   -->
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         version="3.0">
-    <servlet>
-        <servlet-name>async-app</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>org.glassfish.jersey.examples.server.async.AsyncJaxrsApplication</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-        <async-supported>true</async-supported>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>async-app</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
-</web-app>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.glassfish.jersey.examples</groupId>
+        <artifactId>project</artifactId>
+        <version>2.0-m08-1</version>
+    </parent>
+
+    <artifactId>server-async-standalone-project</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <name>jersey-examples-server-async-standalone-project</name>
+
+    <description>Standalone Jersey JAX-RS server-side asynchronous processing example</description>
+
+    <modules>
+        <module>client</module>
+        <module>webapp</module>
+    </modules>
+
+    <properties>
+        <jersey.version>2.0-m08-1</jersey.version>
+    </properties>
+
+</project>
+

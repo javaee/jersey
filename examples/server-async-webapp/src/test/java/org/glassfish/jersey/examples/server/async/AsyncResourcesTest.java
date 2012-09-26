@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.serverasync;
+package org.glassfish.jersey.examples.server.async;
 
 import java.io.IOException;
 import java.net.URI;
@@ -227,7 +227,7 @@ public class AsyncResourcesTest extends JerseyTest {
      */
     @Test
     public void testLongRunningResource() throws Exception {
-        final WebTarget resourceTarget = target().path("long-running");
+        final WebTarget resourceTarget = target().path("long-running/async/{id}");
 
         final int MAX_MESSAGES = 100;
         final int LATCH_WAIT_TIMEOUT = 10;
@@ -242,7 +242,7 @@ public class AsyncResourcesTest extends JerseyTest {
         try {
             for (int i = 0; i < MAX_MESSAGES; i++) {
                 final int requestId = i;
-                resourceTarget.request().async().get(new InvocationCallback<String>() {
+                resourceTarget.resolveTemplate("id", requestId).request().async().get(new InvocationCallback<String>() {
                     private AtomicInteger failures = new AtomicInteger(0);
 
                     @Override
@@ -281,7 +281,7 @@ public class AsyncResourcesTest extends JerseyTest {
         for (Map.Entry<Integer, String> entry : getResponses.entrySet()) {
             assertEquals(
                     "Unexpected GET notification response for message " + entry.getKey(),
-                    "Hello async world!", entry.getValue());
+                    entry.getKey().toString(), entry.getValue());
         }
         assertEquals(MAX_MESSAGES, getResponses.size());
     }

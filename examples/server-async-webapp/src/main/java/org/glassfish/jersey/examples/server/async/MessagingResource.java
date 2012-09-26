@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.serverasync;
+package org.glassfish.jersey.examples.server.async;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -53,8 +53,6 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 /**
  * Example of a simple blocking point-to-point messaging resource.
  *
@@ -67,10 +65,14 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 @Produces(MediaType.TEXT_PLAIN)
 @Consumes(MediaType.TEXT_PLAIN)
 public class MessagingResource {
-    private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool(
-            new ThreadFactoryBuilder().setNameFormat("blocking-post-chat-resource-executor-%d").build());
+    private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool();
     private static final BlockingQueue<String> messages = new ArrayBlockingQueue<String>(5);
 
+    /**
+     * Retrieve a message from the blocking message queue.
+     *
+     * @param ar suspended asynchronous JAX-RS response.
+     */
     @GET
     public void pickUpMessage(@Suspended final AsyncResponse ar) {
         QUEUE_EXECUTOR.submit(new Runnable() {
@@ -87,6 +89,12 @@ public class MessagingResource {
         });
     }
 
+    /**
+     * Post a new message to the blocking message queue.
+     *
+     * @param ar suspended asynchronous JAX-RS response.
+     * @param message message to be posted.
+     */
     @POST
     public void postMessage(@Suspended final AsyncResponse ar, final String message) {
         QUEUE_EXECUTOR.submit(new Runnable() {

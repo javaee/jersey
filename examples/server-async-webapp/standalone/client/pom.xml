@@ -43,50 +43,43 @@
 
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <artifactId>server-async-standalone-project</artifactId>
+        <version>1.0</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.examples</groupId>
-    <artifactId>server-async-webapp</artifactId>
-    <version>2.0-SNAPSHOT</version>
-    <packaging>war</packaging>
-    <name>jersey-examples-server-async-webapp</name>
+    <artifactId>server-async-standalone-client</artifactId>
+    <packaging>jar</packaging>
+    <name>jersey-examples-server-async-standalone-client</name>
 
-    <description>Jersey JAX-RS server-side asynchronous processing WAR example</description>
+    <description>Standalone Jersey JAX-RS server-side asynchronous processing example client</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${jaxrs.api.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swing-layout</artifactId>
+            <version>1.0.3</version>
         </dependency>
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
+        <finalName>client</finalName>
         <plugins>
             <!--  Maven Exec Plug-In: http://mojo.codehaus.org/exec-maven-plugin/  -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.glassfish.jersey.examples.server.async.Client</mainClass>
+                    <mainClass>org.glassfish.jersey.examples.server.async.MainWindow</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -94,11 +87,17 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.glassfish.jersey.examples.server.async.MainWindow</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -38,46 +38,39 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.serverasync;
+package org.glassfish.jersey.examples.server.async;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Logger;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.filter.LoggingFilter;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom application thread.
+ * TODO: javadoc.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path("long-running")
-@Produces("text/plain")
-public class SimpleLongRunningResource {
+@ApplicationPath("/")
+public class AsyncJaxrsApplication extends Application {
+    @Override
+    public Set<Class<?>> getClasses() {
+        final HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(MessagingResource.class);
+        classes.add(LongRunningEchoResource.class);
 
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(
-            new ThreadFactoryBuilder().setNameFormat("long-running-resource-executor-%d").build());
+        return classes;
+    }
 
-    @GET
-    public void longGet(@Suspended final AsyncResponse ar) {
-        TASK_EXECUTOR.submit(new Runnable() {
+    @Override
+    public Set<Object> getSingletons() {
+        final HashSet<Object> instances = new HashSet<Object>();
 
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    ar.cancel();
-                }
-                ar.resume("Hello async world!");
-            }
-        });
+        instances.add(new LoggingFilter(Logger.getLogger(AsyncJaxrsApplication.class.getName()), true));
+
+        return instances;
     }
 }
