@@ -390,7 +390,79 @@ public void post(MultivaluedMap&lt;String, String&gt; formParams) {
     // Store the message
 }</programlisting></example>
 
-    I.e. you don't need to use the &jaxrs.Context; annotation.</para>
+    I.e. you don't need to use the &jaxrs.core.Context; annotation.</para>
+      <para>Another kind of injection is the &jaxrs.BeanParam; which allows to inject the parameters described above into a
+          single bean. A bean annotated with &jaxrs.BeanParam; containing any fields and appropriate <literal>*param</literal>
+          annotation(like &jaxrs.PathParam;) will be initialized with corresponding request values in expected way as if these
+          fields were in the resource class. Then instead of injecting request values like path param in constructor parameters
+          or class fields the &jaxrs.BeanParam; can be used to inject such a bean into a resource or resource method. The
+          &jaxrs.BeanParam; is used this way to aggregate more request parameters into a single bean.
+      </para>
+      <example>
+          <title>Example of the bean which will be used as &jaxrs.BeanParam;
+          </title>
+          <programlisting language="java" linenumbering="numbered">
+public class MyBeanParam {
+    @PathParam("p")
+    private String pathParam;
+
+    @MatrixParam("m")
+    @Encoded
+    @DefaultValue("default")
+    private String matrixParam;
+
+    @HeaderParam("header")
+    private String headerParam;
+
+    private String queryParam;
+
+    public MyBeanParam(@QueryParam("q") String queryParam) {
+        this.queryParam = queryParam;
+    }
+
+    public String getPathParam() {
+    return pathParam;
+    }
+    ...
+}
+          </programlisting>
+      </example>
+      <example>
+          <title>Injection of MyBeanParam as a method parameter:</title>
+
+          <programlisting language="java" linenumbering="numbered">
+@POST
+public void post(@BeanParam MyBeanParam beanParam, String entity) {
+    final String pathParam = beanParam.getPathParam(); // contains injected path parameter "p"
+    ...
+}
+          </programlisting>
+      </example>
+      <para>The example shows aggregation of injections &jaxrs.PathParam;, &jaxrs.QueryParam; &jaxrs.MatrixParam;
+          and &jaxrs.HeaderParam; into one signle bean. The rules for injections inside the bean are the same as described above
+          for these injections. The &jaxrs.DefaultValue; is used to define the default value for matrix parameter matrixParam.
+          Also the &jaxrs.Encoded; annotation has the same behaviour as if it were used for injection in the resource method
+          directly. Injecting the bean parameter into @Singleton resource class fields is not allowed (injections into method
+          parameter must be used instead).
+      </para>
+      <para>&jaxrs.BeanParam; can contain all parameters injections injections
+          (&jaxrs.PathParam;, &jaxrs.QueryParam;, &jaxrs.MatrixParam;, &jaxrs.HeaderParam;, &jaxrs.CookieParam;, &jaxrs.FormParam;).More
+          beans can be injected into one resource or method parameters even if they inject the same request values. For example
+          the following is possible:
+      </para>
+      <example>
+          <title>Injection of more beans into one resource methods:</title>
+
+          <programlisting language="java" linenumbering="numbered">
+@POST
+public void post(@BeanParam MyBeanParam beanParam, @BeanParam AnotherBean anotherBean, @PathParam("p") pathParam,
+String entity) {
+    // beanParam.getPathParam() == pathParam
+    ...
+}
+          </programlisting>
+      </example>
+
   </section>
 
   <section>

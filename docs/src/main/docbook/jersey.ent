@@ -68,6 +68,7 @@
 <!ENTITY jaxrs.OPTIONS "<ulink url='&jax-rs.javadoc.path;/OPTIONS.html'>@OPTIONS</ulink>">
 <!ENTITY jaxrs.Path "<ulink url='&jax-rs.javadoc.path;/Path.html'>@Path</ulink>">
 <!ENTITY jaxrs.PathParam "<ulink url='&jax-rs.javadoc.path;/PathParam.html'>@PathParam</ulink>">
+<!ENTITY jaxrs.BeanParam "<ulink url='&jax-rs.javadoc.path;/BeanParam.html'>@BeanParam</ulink>">
 <!ENTITY jaxrs.POST "<ulink url='&jax-rs.javadoc.path;/POST.html'>@POST</ulink>">
 <!ENTITY jaxrs.Produces "<ulink url='&jax-rs.javadoc.path;/Produces.html'>@Produces</ulink>">
 <!ENTITY jaxrs.PUT "<ulink url='&jax-rs.javadoc.path;/PUT.html'>@PUT</ulink>">
