@@ -208,6 +208,7 @@
                         <Export-Package>
                             javax.ws.rs.*;version=${jaxrs.api.version},
                             org.glassfish.jersey.*;version=${project.version},
+                            com.sun.research.ws.wadl.*;version=${project.version},
                             deprecated.javax.ws.rs;version=${project.version}
                         </Export-Package>
                         <Import-Package>
