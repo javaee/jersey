@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,48 +41,61 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.spi.StringValueReader;
-import org.glassfish.jersey.spi.StringValueReaderProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * An aggregate {@link StringValueReaderProvider string reader provider} that loads all
- * the registered {@link StringValueReaderProvider} implementations.
+ * An aggregate {@link ParamConverterProvider param converter provider} that loads all
+ * the registered {@link ParamConverterProvider} implementations.
  * <p />
  * When invoked, the provider iterates through the registered implementations until
- * it finds the first implementation that returns a non-null {@link StringValueReader string reader},
+ * it finds the first implementation that returns a non-null {@link ParamConverter param converter},
  * which is subsequently returned from the factory. In case no non-null string reader
- * instance is found, {@code null} is returned from the factory.
+ * instance is found, {@code null} is returned from the factory. {@link org.glassfish.jersey.internal.inject.Custom Custom}
+ * providers are iterated first, so that user registered providers are preferred against internal jersey providers.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @Singleton
-public class StringReaderFactory implements StringValueReaderProvider {
+public class ParamConverterFactory implements ParamConverterProvider {
 
-    private Set<StringValueReaderProvider> readerProviders;
+    private List<ParamConverterProvider> converterProviders;
 
     @Inject
-    StringReaderFactory(ServiceLocator locator) {
-        readerProviders = Providers.getProviders(locator, StringValueReaderProvider.class);
+    ParamConverterFactory(ServiceLocator locator) {
+        converterProviders = new ArrayList<ParamConverterProvider>();
+        final Set<ParamConverterProvider> customProviders = Providers.getCustomProviders(locator, ParamConverterProvider.class);
+        converterProviders.addAll(customProviders);
+
+        final Set<ParamConverterProvider> providers = Providers.getProviders(locator, ParamConverterProvider.class);
+        providers.removeAll(customProviders);
+        converterProviders.addAll(providers);
+
     }
 
     @Override
-    public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-        for (StringValueReaderProvider srp : readerProviders) {
+    public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        for (ParamConverterProvider provider : converterProviders) {
             @SuppressWarnings("unchecked")
-            StringValueReader<T> sr = srp.getStringReader(type, genericType, annotations);
-            if (sr != null) {
-                return sr;
+            ParamConverter<T> converter = provider.getConverter(rawType, genericType, annotations);
+            if (converter != null) {
+                return converter;
             }
         }
         return null;
+
     }
 }

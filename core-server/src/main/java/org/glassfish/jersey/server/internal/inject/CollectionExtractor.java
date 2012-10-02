@@ -48,8 +48,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.glassfish.jersey.spi.StringValueReader;
+import javax.ws.rs.ext.ParamConverter;
 
 /**
  * Extract parameter value as a typed collection.
@@ -59,10 +58,11 @@ import org.glassfish.jersey.spi.StringValueReader;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> implements MultivaluedParameterExtractor<Collection<T>> {
+abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> implements
+        MultivaluedParameterExtractor<Collection<T>> {
 
-    protected CollectionExtractor(StringValueReader<T> sr, String parameter, String defaultStringValue) {
-        super(sr, parameter, defaultStringValue);
+    protected CollectionExtractor(ParamConverter<T> converter, String parameter, String defaultStringValue) {
+        super(converter, parameter, defaultStringValue);
     }
 
     @Override
@@ -86,8 +86,8 @@ abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> i
 
     private static final class ListValueOf<T> extends CollectionExtractor<T> {
 
-        ListValueOf(StringValueReader<T> sr, String parameter, String defaultValueString) {
-            super(sr, parameter, defaultValueString);
+        ListValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+            super(converter, parameter, defaultValueString);
         }
 
         @Override
@@ -98,8 +98,8 @@ abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> i
 
     private static final class SetValueOf<T> extends CollectionExtractor<T> {
 
-        SetValueOf(StringValueReader<T> sr, String parameter, String defaultValueString) {
-            super(sr, parameter, defaultValueString);
+        SetValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+            super(converter, parameter, defaultValueString);
         }
 
         @Override
@@ -110,8 +110,8 @@ abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> i
 
     private static final class SortedSetValueOf<T> extends CollectionExtractor<T> {
 
-        SortedSetValueOf(StringValueReader<T> sr, String parameter, String defaultValueString) {
-            super(sr, parameter, defaultValueString);
+        SortedSetValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+            super(converter, parameter, defaultValueString);
         }
 
         @Override
@@ -121,13 +121,14 @@ abstract class CollectionExtractor<T> extends AbstractStringReaderExtractor<T> i
     }
 
     public static <T> MultivaluedParameterExtractor getInstance(Class<?> c,
-            StringValueReader<T> sr, String parameter, String defaultValueString) {
+                                                                ParamConverter<T> converter, String parameter,
+                                                                String defaultValueString) {
         if (List.class == c) {
-            return new ListValueOf<T>(sr, parameter, defaultValueString);
+            return new ListValueOf<T>(converter, parameter, defaultValueString);
         } else if (Set.class == c) {
-            return new SetValueOf<T>(sr, parameter, defaultValueString);
+            return new SetValueOf<T>(converter, parameter, defaultValueString);
         } else if (SortedSet.class == c) {
-            return new SortedSetValueOf<T>(sr, parameter, defaultValueString);
+            return new SortedSetValueOf<T>(converter, parameter, defaultValueString);
         } else {
             throw new RuntimeException();
         }

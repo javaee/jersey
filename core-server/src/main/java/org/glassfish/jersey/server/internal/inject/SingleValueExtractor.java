@@ -41,36 +41,36 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.ParamConverter;
 
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.spi.StringValueReader;
 
 /**
  * Extract value of the parameter using a single parameter value and the underlying
- * string reader.
+ * {@link ParamConverter param converter}.
  *
  * @param <T> extracted Java type.
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class SingleValueExtractor<T> extends AbstractStringReaderExtractor<T> implements MultivaluedParameterExtractor<T> {
+final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> implements MultivaluedParameterExtractor<T> {
 
     /**
      * Create new string value extractor.
      *
-     * @param sr                 string value reader.
+     * @param converter                 string value reader.
      * @param parameter          string parameter value.
      * @param defaultStringValue default string value.
      */
-    public SingleValueExtractor(StringValueReader<T> sr, String parameter, String defaultStringValue) {
-        super(sr, parameter, defaultStringValue);
+    public SingleValueExtractor(ParamConverter<T> converter, String parameter, String defaultStringValue) {
+        super(converter, parameter, defaultStringValue);
     }
 
     /**
      * {@inheritDoc}
      * <p/>
      * This implementation extracts the value of the parameter applying the underlying
-     * string reader to the first value found in the list of potential multiple
+     * {@link ParamConverter param converter} to the first value found in the list of potential multiple
      * parameter values. Any other values in the multi-value list will be ignored.
      *
      * @param parameters map of parameters.

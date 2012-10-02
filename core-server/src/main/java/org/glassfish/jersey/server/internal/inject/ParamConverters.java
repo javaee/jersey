@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,19 +49,19 @@ import java.util.Date;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
-import org.glassfish.jersey.spi.StringValueReader;
-import org.glassfish.jersey.spi.StringValueReaderProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Container of several different {@link StringValueReaderProvider string reader provider}
+ * Container of several different {@link ParamConverterProvider param converter providers}
  * implementations. The nested provider implementations encapsulate various different
  * strategies of constructing an instance from a {@code String} value.
  *
@@ -69,9 +69,9 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-class StringReaderProviders {
+class ParamConverters {
 
-    private static abstract class AbstractStringReader<T> implements StringValueReader<T> {
+    private static abstract class AbstractStringReader<T> implements ParamConverter<T> {
 
         @Override
         public T fromString(String value) {
@@ -94,124 +94,135 @@ class StringReaderProviders {
         }
 
         protected abstract T _fromString(String value) throws Exception;
+
+        public String toString(T value) throws IllegalArgumentException {
+            return value.toString();
+        }
+
     }
 
+
     /**
-     * Provider of string readers that produce the target Java type instance
+     * Provider of {@link ParamConverter param converter} that produce the target Java type instance
      * by invoking a single {@code String} parameter constructor on the target type.
      */
     @Singleton
-    public static class StringConstructor implements StringValueReaderProvider {
+    public static class StringConstructor implements ParamConverterProvider {
 
         @Override
-        public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-            final Constructor constructor = ReflectionHelper.getStringConstructor(type);
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+            final Constructor constructor = ReflectionHelper.getStringConstructor(rawType);
 
             return (constructor == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
                 protected T _fromString(String value) throws Exception {
-                    return type.cast(constructor.newInstance(value));
+                    return rawType.cast(constructor.newInstance(value));
                 }
             };
         }
+
     }
 
     /**
-     * Provider of string readers that produce the target Java type instance
+     * Provider of {@link ParamConverter param converter} that produce the target Java type instance
      * by invoking a static {@code valueOf(String)} method on the target type.
      */
     @Singleton
-    public static class TypeValueOf implements StringValueReaderProvider {
+    public static class TypeValueOf implements ParamConverterProvider {
 
         @Override
-        public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-            final Method valueOf = ReflectionHelper.getValueOfStringMethod(type);
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+            final Method valueOf = ReflectionHelper.getValueOfStringMethod(rawType);
 
             return (valueOf == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
                 public T _fromString(String value) throws Exception {
-                    return type.cast(valueOf.invoke(null, value));
+                    return rawType.cast(valueOf.invoke(null, value));
                 }
             };
         }
     }
 
     /**
-     * Provider of string readers that produce the target Java type instance
+     * Provider of {@link ParamConverter param converter} that produce the target Java type instance
      * by invoking a static {@code fromString(String)} method on the target type.
      */
     @Singleton
-    public static class TypeFromString implements StringValueReaderProvider {
+    public static class TypeFromString implements ParamConverterProvider {
 
         @Override
-        public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-            final Method fromStringMethod = ReflectionHelper.getFromStringStringMethod(type);
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+            final Method fromStringMethod = ReflectionHelper.getFromStringStringMethod(rawType);
 
             return (fromStringMethod == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
                 public T _fromString(String value) throws Exception {
-                    return type.cast(fromStringMethod.invoke(null, value));
+                    return rawType.cast(fromStringMethod.invoke(null, value));
                 }
             };
         }
     }
 
     /**
-     * Provider of string readers that produce the target Java {@link Enum enum} type instance
+     * Provider of {@link ParamConverter param converter} that produce the target Java {@link Enum enum} type instance
      * by invoking a static {@code fromString(String)} method on the target enum type.
      */
     @Singleton
     public static class TypeFromStringEnum extends TypeFromString {
 
         @Override
-        public <T> StringValueReader<T> getStringReader(Class<T> type, Type genericType, Annotation[] annotations) {
-
-            return (!Enum.class.isAssignableFrom(type)) ? null : super.getStringReader(type, genericType, annotations);
+        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+            return (!Enum.class.isAssignableFrom(rawType)) ? null : super.getConverter(rawType, genericType, annotations);
         }
     }
 
     /**
-     * Provider of string readers that convert the supplied string into a Java
+     * Provider of {@link ParamConverter param converter} that convert the supplied string into a Java
      * {@link Date} instance using conversion method from the
      * {@link HttpDateFormat http date formatter} utility class.
      */
     @Singleton
-    public static class DateProvider implements StringValueReaderProvider {
+    public static class DateProvider implements ParamConverterProvider {
 
         @Override
-        public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-            return (type != Date.class) ? null : new StringValueReader<T>() {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+            return (rawType != Date.class) ? null : new ParamConverter<T>() {
 
                 @Override
                 public T fromString(String value) {
                     try {
-                        return type.cast(HttpDateFormat.readDate(value));
+                        return rawType.cast(HttpDateFormat.readDate(value));
                     } catch (ParseException ex) {
                         throw new ExtractorException(ex);
                     }
+                }
+
+                @Override
+                public String toString(T value) throws IllegalArgumentException {
+                    return value.toString();
                 }
             };
         }
     }
 
     /**
-     * Aggregated string value reader provider.
+     * Aggregated {@link ParamConverterProvider param converter provider}.
      */
     @Singleton
-    public static class AggregatedProvider implements StringValueReaderProvider {
+    public static class AggregatedProvider implements ParamConverterProvider {
 
-        private final StringValueReaderProvider[] providers;
+        private final ParamConverterProvider[] providers;
 
         /**
-         * Create new aggregated string value reader provider.
+         * Create new aggregated {@link ParamConverterProvider param converter provider}.
          *
          * @param locator HK2 service locator.
          */
         public AggregatedProvider(@Context ServiceLocator locator) {
-            providers = new StringValueReaderProvider[]{
+            providers = new ParamConverterProvider[]{
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
                     locator.createAndInitialize(TypeFromString.class),
@@ -222,9 +233,12 @@ class StringReaderProviders {
         }
 
         @Override
-        public <T> StringValueReader<T> getStringReader(Class<T> type, Type genericType, Annotation[] annotations) {
-            for (StringValueReaderProvider p : providers) {
-                final StringValueReader<T> reader = p.getStringReader(type, genericType, annotations);
+        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+            for (ParamConverterProvider p : providers) {
+                // This iteration trough providers is important. It can't be replaced by just registering all the internal
+                // providers of this class. Using iteration trough array the correct ordering of providers is ensured (see
+                // javadoc of PathParam, HeaderParam, ... - there is defined a fixed order of constructing objects form Strings).
+                final ParamConverter<T> reader = p.getConverter(rawType, genericType, annotations);
                 if (reader != null) {
                     return reader;
                 }

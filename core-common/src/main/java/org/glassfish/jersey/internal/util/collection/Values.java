@@ -142,7 +142,7 @@ public final class Values {
         private final Object lock;
         private final Value<T> delegate;
 
-        private volatile T value;
+        private volatile Value<T> value;
 
         public LazyValue(final Value<T> delegate) {
             this.delegate = delegate;
@@ -151,18 +151,18 @@ public final class Values {
 
         @Override
         public T get() {
-            T result = value;
+            Value<T> result = value;
             if (result == null) {
                 synchronized (lock) {
                     result = value;
-                    //noinspection ConstantConditions
                     if (result == null) {
-                        value = result = delegate.get();
+                        value = result = Values.of(delegate.get());
                     }
                 }
             }
-            return result;
+            return result.get();
         }
+
 
         @Override
         public boolean equals(Object o) {

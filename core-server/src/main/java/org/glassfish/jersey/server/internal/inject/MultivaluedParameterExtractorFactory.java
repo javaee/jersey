@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.ws.rs.ext.ParamConverter;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -54,12 +56,11 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.StringValueReader;
 
 /**
  * Implementation of {@link MultivaluedParameterExtractorProvider}. For each
- * parameter, the implementation obtains a {@link StringValueReader} instance via
- * {@link StringReaderFactory} and creates the proper
+ * parameter, the implementation obtains a {@link ParamConverter param converter} instance via
+ * {@link ParamConverterFactory} and creates the proper
  * {@link MultivaluedParameterExtractor multivalued parameter extractor}.
  *
  * @author Paul Sandoz
@@ -68,7 +69,7 @@ import org.glassfish.jersey.spi.StringValueReader;
 @Singleton
 final class MultivaluedParameterExtractorFactory implements MultivaluedParameterExtractorProvider {
 
-    private final StringReaderFactory stringReaderFactory;
+    private final ParamConverterFactory paramConverterFactory;
 
     /**
      * Create new multivalued map parameter extractor factory.
@@ -76,14 +77,14 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
      * @param stringReaderFactory string readers factory.
      */
     @Inject
-    public MultivaluedParameterExtractorFactory(StringReaderFactory stringReaderFactory) {
-        this.stringReaderFactory = stringReaderFactory;
+    public MultivaluedParameterExtractorFactory(ParamConverterFactory stringReaderFactory) {
+        this.paramConverterFactory = stringReaderFactory;
     }
 
     @Override
     public MultivaluedParameterExtractor<?> getWithoutDefaultValue(Parameter p) {
         return process(
-                stringReaderFactory,
+                paramConverterFactory,
                 null,
                 p.getRawType(),
                 p.getType(),
@@ -94,7 +95,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
     @Override
     public MultivaluedParameterExtractor<?> get(Parameter p) {
         return process(
-                stringReaderFactory,
+                paramConverterFactory,
                 p.getDefaultValue(),
                 p.getRawType(),
                 p.getType(),
@@ -104,7 +105,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
 
     @SuppressWarnings("unchecked")
     private MultivaluedParameterExtractor<?> process(
-            StringReaderFactory stringReaderFactory,
+            ParamConverterFactory paramConverterFactory,
             String defaultValue,
             Class<?> rawType,
             Type type,
@@ -121,19 +122,31 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
                 return StringCollectionExtractor.getInstance(
                         rawType, parameterName, defaultValue);
             } else {
-                final StringValueReader<?> sr = stringReaderFactory.getStringReader(ctp.rawClass(), ctp.type(), annotations);
-                if (sr == null) {
+                final ParamConverter<?> converter = paramConverterFactory.getConverter(ctp.rawClass(), ctp.type(), annotations);
+                if (converter == null) {
                     return null;
                 }
 
                 try {
                     return CollectionExtractor.getInstance(
-                            rawType, sr, parameterName, defaultValue);
+                            rawType, converter, parameterName, defaultValue);
                 } catch (Exception e) {
                     throw new ProcessingException("Could not process parameter type " + rawType, e);
                 }
             }
-        } else if (rawType == String.class) {
+        }
+
+        final ParamConverter<?> converter = paramConverterFactory.getConverter(rawType, type, annotations);
+        if (converter != null) {
+            try {
+                return new SingleValueExtractor(converter, parameterName, defaultValue);
+            } catch (Exception e) {
+                throw new ProcessingException("Could not process parameter type " + rawType, e);
+            }
+        }
+
+
+        if (rawType == String.class) {
             return new SingleStringValueExtractor(parameterName, defaultValue);
         } else if (rawType.isPrimitive()) {
             // Convert primitive to wrapper class
@@ -155,17 +168,6 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
                 }
             }
 
-        } else {
-            final StringValueReader<?> sr = stringReaderFactory.getStringReader(rawType, type, annotations);
-            if (sr == null) {
-                return null;
-            }
-
-            try {
-                return new SingleValueExtractor(sr, parameterName, defaultValue);
-            } catch (Exception e) {
-                throw new ProcessingException("Could not process parameter type " + rawType, e);
-            }
         }
 
         return null;
