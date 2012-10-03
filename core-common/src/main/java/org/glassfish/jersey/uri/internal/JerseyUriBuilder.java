@@ -178,11 +178,17 @@ public class JerseyUriBuilder extends UriBuilder {
         UriParser parser = new UriParser(uriTemplate);
         parser.parse();
 
-        scheme(parser.getScheme());
+        final String parsedScheme = parser.getScheme();
+        if (parsedScheme != null) {
+            scheme(parsedScheme);
+        }
 
         schemeSpecificPart(parser);
 
-        fragment(parser.getFragment());
+        final String parserFragment = parser.getFragment();
+        if (parserFragment != null) {
+            fragment(parserFragment);
+        }
 
         return this;
     }

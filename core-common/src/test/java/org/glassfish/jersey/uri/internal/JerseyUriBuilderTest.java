@@ -1493,4 +1493,39 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create("http://localhost:8080/start-path/first-a/second-a/twice-a/twice-a"),
                 uriBuilder.build("start-path"));
     }
+
+    @Test
+    public void replaceWithEmtpySchemeFromUriTest() throws URISyntaxException {
+        String uriOrig = "ftp://ftp.is.co.za/rfc/rfc1808.txt";
+        URI uriReplace = new URI(null, "ftp.is.co.za", "/test/rfc1808.txt", null, null);
+        URI uri = UriBuilder.fromUri(new URI(uriOrig)).uri(uriReplace).build();
+        Assert.assertEquals("ftp://ftp.is.co.za/test/rfc1808.txt", uri.toString());
+    }
+
+    @Test
+    public void replaceWithEmptySchemeFromStringTest() throws URISyntaxException {
+        String uriOrig = "ftp://ftp.is.co.za/rfc/rfc1808.txt";
+        URI uriReplace = new URI(null, "ftp.is.co.za", "/test/rfc1808.txt", null, null);
+
+        URI uri = UriBuilder.fromUri(new URI(uriOrig)).uri(uriReplace.toASCIIString()).build();
+        Assert.assertEquals("ftp://ftp.is.co.za/test/rfc1808.txt", uri.toString());
+    }
+
+    @Test
+    public void replaceWithEmptyQueryFromStringTest() throws URISyntaxException {
+        String uriOrig = "ftp://ftp.is.co.za/rfc/rfc1808.txt?a=1";
+        URI uriReplace = new URI(null, "ftp.is.co.za", "/test/rfc1808.txt", null, null);
+
+        URI uri = UriBuilder.fromUri(new URI(uriOrig)).uri(uriReplace.toASCIIString()).build();
+        Assert.assertEquals("ftp://ftp.is.co.za/test/rfc1808.txt?a=1", uri.toString());
+    }
+
+    @Test
+    public void replaceWithEmptyFragmentFromStringTest() throws URISyntaxException {
+        String uriOrig = "ftp://ftp.is.co.za/rfc/rfc1808.txt#myFragment";
+        URI uriReplace = new URI(null, "ftp.is.co.za", "/test/rfc1808.txt", null, null);
+
+        URI uri = UriBuilder.fromUri(new URI(uriOrig)).uri(uriReplace.toASCIIString()).build();
+        Assert.assertEquals("ftp://ftp.is.co.za/test/rfc1808.txt#myFragment", uri.toString());
+    }
 }
