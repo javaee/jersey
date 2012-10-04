@@ -303,11 +303,19 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setRequestUri(URI requestUri) throws IllegalStateException {
+        if (!uriInfo.getMatchedURIs().isEmpty()) {
+            throw new IllegalStateException("Method could be called only in pre-matching request filter.");
+        }
+
         this.requestUri = requestUri;
     }
 
     @Override
     public void setRequestUri(URI baseUri, URI requestUri) throws IllegalStateException {
+        if (!uriInfo.getMatchedURIs().isEmpty()) {
+            throw new IllegalStateException("Method could be called only in pre-matching request filter.");
+        }
+
         this.baseUri = baseUri;
         this.requestUri = requestUri;
     }
@@ -364,6 +372,19 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setMethod(String method) throws IllegalStateException {
+        if (!uriInfo.getMatchedURIs().isEmpty()) {
+            throw new IllegalStateException("Method could be called only in pre-matching request filter.");
+        }
+        this.httpMethod = method;
+    }
+
+
+    /**
+     * Like {@link #setMethod(String)} but does not throw {@link IllegalStateException} if the method is invoked in other than
+     * pre-matching phase.
+     * @param method HTTP method.
+     */
+    public void setMethodWithoutException(String method) {
         this.httpMethod = method;
     }
 
