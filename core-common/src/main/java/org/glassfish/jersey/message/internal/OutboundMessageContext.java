@@ -719,7 +719,7 @@ public class OutboundMessageContext {
      * @return raw message entity type information.
      */
     public Class<?> getEntityClass() {
-        return entityType.getRawType();
+        return entityType == null ? null : entityType.getRawType();
     }
 
     /**
@@ -728,7 +728,7 @@ public class OutboundMessageContext {
      * @return message entity type.
      */
     public Type getEntityType() {
-        return entityType.getType();
+        return entityType == null ? null : entityType.getType();
     }
 
     /**
