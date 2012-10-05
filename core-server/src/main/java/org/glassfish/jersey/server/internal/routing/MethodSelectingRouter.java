@@ -466,7 +466,8 @@ final class MethodSelectingRouter implements Router {
                                             HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod()))) {
                                 MediaType effectiveResponseType = selected.produces.getCombinedMediaType();
                                 if (isWildcard(effectiveResponseType)) {
-                                    if (effectiveResponseType.isWildcardType() || effectiveResponseType.getType().equalsIgnoreCase("application")) {
+                                    if (effectiveResponseType.isWildcardType() || effectiveResponseType.getType()
+                                            .equalsIgnoreCase("application")) {
                                         effectiveResponseType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
                                     } else {
                                         throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
@@ -527,12 +528,12 @@ final class MethodSelectingRouter implements Router {
             @Override
             public Continuation apply(final ContainerRequest requestContext) {
                 if (HttpMethod.HEAD.equals(requestContext.getMethod())) {
-                    requestContext.setMethod(HttpMethod.GET);
+                    requestContext.setMethodWithoutException(HttpMethod.GET);
                     respondingContextFactory.get().push(
                             new Function<ContainerResponse, ContainerResponse>() {
                                 @Override
                                 public ContainerResponse apply(ContainerResponse responseContext) {
-                                    responseContext.getRequestContext().setMethod(HttpMethod.HEAD);
+                                    responseContext.getRequestContext().setMethodWithoutException(HttpMethod.HEAD);
                                     return responseContext;
                                 }
                             }
