@@ -45,6 +45,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -57,6 +58,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import junit.framework.Assert;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 
@@ -173,8 +175,10 @@ public class InboundMessageContextTest {
     @Test
     public void testGetLinks() {
         InboundMessageContext r = new InboundMessageContext();
-        Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method", "GET").rel("self").build();
-        Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "PUT").rel("self").build();
+        Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
+                "GET").rel("self").build();
+        Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method",
+                "PUT").rel("self").build();
         r.header("Link", link1.toString());
         r.header("Link", link2.toString());
         assertEquals(2, r.getLinks().size());
@@ -185,13 +189,29 @@ public class InboundMessageContextTest {
     @Test
     public void testGetLink() {
         InboundMessageContext r = new InboundMessageContext();
-        Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method", "GET").rel("self").build();
-        Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "PUT").rel("update").build();
-        Link link3 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method", "POST").rel("update").build();
+        Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
+                "GET").rel("self").build();
+        Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method",
+                "PUT").rel("update").build();
+        Link link3 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method",
+                "POST").rel("update").build();
         r.header("Link", link1.toString());
         r.header("Link", link2.toString());
         r.header("Link", link3.toString());
         assertTrue(r.getLink("self").equals(link1));
         assertTrue(r.getLink("update").equals(link2) || r.getLink("update").equals(link3));
+    }
+
+
+    @Test
+    public void testGetAllowedMethods() {
+        InboundMessageContext r = new InboundMessageContext();
+        r.header(HttpHeaders.ALLOW, "a,B,CcC,dDd");
+        final Set<String> allowedMethods = r.getAllowedMethods();
+        Assert.assertEquals(4, allowedMethods.size());
+        Assert.assertTrue(allowedMethods.contains("A"));
+        Assert.assertTrue(allowedMethods.contains("B"));
+        Assert.assertTrue(allowedMethods.contains("CCC"));
+        Assert.assertTrue(allowedMethods.contains("DDD"));
     }
 }

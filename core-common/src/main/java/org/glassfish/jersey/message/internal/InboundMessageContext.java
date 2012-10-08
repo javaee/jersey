@@ -81,6 +81,7 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Sets;
 
 /**
  * Base inbound message context implementation.
@@ -587,7 +588,7 @@ public class InboundMessageContext {
             return Collections.emptySet();
         }
         try {
-            return new HashSet<String>(HttpHeaderReader.readStringList(allowed));
+            return new HashSet<String>(HttpHeaderReader.readStringList(allowed.toUpperCase()));
         } catch (java.text.ParseException e) {
             throw exception(HttpHeaders.ALLOW, allowed, e);
         }
