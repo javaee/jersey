@@ -303,4 +303,9 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
             }
         }
     }
+
+    @Override
+    public String getName() {
+        return "HttpUrlConnection " + System.getProperty("java.version");
+    }
 }

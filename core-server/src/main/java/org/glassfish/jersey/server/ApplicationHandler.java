@@ -74,6 +74,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
+import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -106,6 +107,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 
+import com.google.common.net.HttpHeaders;
 import com.google.common.util.concurrent.AbstractFuture;
 
 import deprecated.javax.ws.rs.DynamicBinder;
@@ -238,6 +240,8 @@ public final class ApplicationHandler {
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
     private void initialize() {
+        LOGGER.info(LocalizationMessages.INIT_MSG(Version.getBuildId()));
+
         registerAdditionalBinders(configuration.getCustomBinders());
 
         final Class<? extends Application> applicationClass = configuration.getApplicationClass();
@@ -652,7 +656,7 @@ public final class ApplicationHandler {
             this.response = response;
 
             if (contentLength >= 0) {
-                response.getHeaders().putSingle("Content-Length", Long.toString(contentLength));
+                response.getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, Long.toString(contentLength));
             }
 
             return outputStream;
@@ -684,13 +688,13 @@ public final class ApplicationHandler {
                             timeoutHandler.onTimeout(FutureResponseWriter.this);
                         }
                     } catch (Throwable throwable) {
-                        LOGGER.log(Level.WARNING, "Time-out handler execution failed.", throwable);
+                        LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_HANDLER_EXECUTION_FAILED(), throwable);
                     }
                 }
             };
             synchronized (runtimeLock) {
                 if (!suspended) {
-                    throw new IllegalStateException("Not suspended.");
+                    throw new IllegalStateException(LocalizationMessages.SUSPEND_NOT_SUSPENDED());
                 }
 
                 if (timeoutTask != null) {
@@ -706,7 +710,7 @@ public final class ApplicationHandler {
                 try {
                     TIMER.schedule(task, unit.toMillis(time));
                 } catch (IllegalStateException ex) {
-                    LOGGER.log(Level.WARNING, "Error while scheduling a timeout task.", ex);
+                    LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_SHEDULING_ERROR(), ex);
                 }
             }
         }

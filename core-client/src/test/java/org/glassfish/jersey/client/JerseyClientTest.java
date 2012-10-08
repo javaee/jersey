@@ -40,13 +40,20 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.Version;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -57,6 +64,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.google.common.net.HttpHeaders;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -179,5 +188,43 @@ public class JerseyClientTest {
 
         assertNotNull(client.invocation(link1).buildPost(Entity.xml("Test.")));
         assertNotNull(client.invocation(link2).buildPost(Entity.xml("Test.")));
+    }
+
+    @Test
+    public void userAgentTest() {
+        Client client = ClientFactory.newClient(new ClientConfig().connector(new Connector() {
+            @Override
+            public ClientResponse apply(ClientRequest request) throws ClientException {
+                throw new ClientException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
+            }
+
+            @Override
+            public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
+                callback.failure(new ClientException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
+                return null;
+            }
+
+            @Override
+            public void close() {
+                // nothing
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+        }));
+
+        try {
+            client.target("test").request().get();
+        } catch (ClientException e) {
+            assertEquals("Jersey/" + Version.getVersion(), e.getMessage());
+        }
+
+        try {
+            client.target("test").request().async().get().get();
+        } catch (Exception e) {
+            assertEquals("Jersey/" + Version.getVersion(), e.getCause().getMessage());
+        }
     }
 }

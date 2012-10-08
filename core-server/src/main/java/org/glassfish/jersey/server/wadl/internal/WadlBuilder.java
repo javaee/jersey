@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
@@ -182,7 +183,7 @@ public class WadlBuilder {
         // Include Jersey version as doc element with generatedBy attribute
         Doc d = new Doc();
         d.getOtherAttributes().put(new QName("http://jersey.java.net/", "generatedBy", "jersey"),
-                BuildId.getBuildId());
+                Version.getBuildId());
         wadlApplication.getDoc().add(0, d);
     }
 

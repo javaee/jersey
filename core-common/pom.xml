@@ -57,6 +57,12 @@
     <description>Jersey core common packages</description>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>com.sun.istack</groupId>
@@ -83,6 +89,24 @@
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <configuration>
+                    <format>{0,date,yyyy-MM-dd HH:mm:ss}</format>
+                    <items>
+                        <item>timestamp</item>
+                    </items>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -62,7 +62,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-public class MethodTest extends JerseyTest{
+public class MethodTest extends JerseyTest {
 
     private static final String PATH = "test";
 

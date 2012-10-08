@@ -37,35 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.wadl.internal;
+package org.glassfish.jersey.internal;
 
 import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * @author Paul Sandoz
+ * Utility class for reading build.properties file.
+ *
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
-public final class BuildId {
-    private static String buildId = _initiateBuildId();
+public final class Version {
+    private static String buildId;
+    private static String version = null;
 
-    private static String _initiateBuildId() {
-        String id = "Jersey";
+    static {
+        _initiateProperties();
+    }
 
+    private static void _initiateProperties() {
         final InputStream in = getIntputStream();
         if (in != null) {
             try {
                 Properties p = new Properties();
                 p.load(in);
-                String _id = p.getProperty("Build-Id");
-                if (_id != null)
-                    id = id + ": " + _id;
+                String timestamp = p.getProperty("Build-Timestamp");
+                version = p.getProperty("Build-Version");
+
+                buildId = String.format("Jersey: %s %s", version, timestamp);
             } catch (Exception e){
-                // Ignore
+                buildId = "Jersey";
             } finally {
                 close(in);
             }
         }
-        return id;
     }
 
     private static void close(InputStream in) {
@@ -78,13 +83,27 @@ public final class BuildId {
 
     private static InputStream getIntputStream() {
         try {
-            return BuildId.class.getResourceAsStream("build.properties");
+            return Version.class.getResourceAsStream("build.properties");
         } catch (Exception ex) {
             return null;
         }
     }
 
+    /**
+     * Get build id.
+     *
+     * @return build id string. Contains version and build timestamp.
+     */
     public static String getBuildId() {
         return buildId;
+    }
+
+    /**
+     * Get Jersey version.
+     *
+     * @return Jersey version.
+     */
+    public static String getVersion() {
+        return version;
     }
 }

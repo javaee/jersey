@@ -80,6 +80,17 @@ public interface Connector extends Inflector<ClientRequest, ClientResponse> {
     Future<?> apply(ClientRequest request, AsyncConnectorCallback callback);
 
     /**
+     * Get name of current connector.
+     *
+     * Should contain identification of underlying specification and optionally version number.
+     * Will be used in User-Agent header.
+     *
+     * @return name of current connector. Returning {@code null} or empty string means not including this information
+     * in generated User-Agent header.
+     */
+    public String getName();
+
+    /**
      * Close connector and release all it's internally associated resources.
      */
     public void close();

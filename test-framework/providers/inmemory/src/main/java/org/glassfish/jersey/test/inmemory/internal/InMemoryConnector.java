@@ -249,4 +249,9 @@ public class InMemoryConnector implements Connector {
                 return response;
         }
     }
+
+    @Override
+    public String getName() {
+        return "Jersey InMemory Container Client";
+    }
 }

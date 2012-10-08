@@ -40,13 +40,16 @@
 
 package org.glassfish.jersey.client;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.ClientException;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -143,7 +146,7 @@ class ClientRuntime {
                     }
                 };
                 try {
-                    connector.apply(Stages.process(request, requestProcessingRoot), connectorCallback);
+                    connector.apply(addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()), connectorCallback);
                 } catch (AbortException aborted) {
                     connectorCallback.response(aborted.getAbortResponse());
                 } catch (Throwable throwable) {
@@ -171,6 +174,19 @@ class ClientRuntime {
         });
     }
 
+    private ClientRequest addUserAgent(ClientRequest clientRequest, String connectorName) {
+        if(!clientRequest.getHeaders().containsKey(HttpHeaders.USER_AGENT)) {
+            if(connectorName != null && !connectorName.equals("")) {
+                clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s (%s)",
+                        Version.getVersion(), connectorName)));
+            } else {
+                clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s",
+                        Version.getVersion())));
+            }
+        }
+        return clientRequest;
+    }
+
     /**
      * Invoke a request processing synchronously in the context of the caller's thread.
      * <p>
@@ -189,7 +205,7 @@ class ClientRuntime {
         ClientResponse response;
         try {
             try {
-                response = connector.apply(Stages.process(request, requestProcessingRoot));
+                response = connector.apply(addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()));
             } catch (AbortException aborted) {
                 response = aborted.getAbortResponse();
             }

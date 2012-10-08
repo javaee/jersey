@@ -73,6 +73,11 @@ public class CustomConnectorTest {
         public void close() {
             // do nothing
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 
     @Test

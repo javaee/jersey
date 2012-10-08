@@ -62,6 +62,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.net.HttpHeaders;
+
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -111,7 +113,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testGetContentLengthCustomWriter() throws Exception {
         Response response = target().request().get(Response.class);
         assertEquals(200, response.getStatus());
-        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString("Content-Length")));
+        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString(HttpHeaders.CONTENT_LENGTH)));
         assertTrue(response.hasEntity());
     }
 
@@ -120,7 +122,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testHeadContentLengthCustomWriter() throws Exception {
         Response response = target().request().head();
         assertEquals(200, response.getStatus());
-        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString("Content-Length")));
+        assertEquals(STR.length(), Integer.parseInt(response.getHeaderString(HttpHeaders.CONTENT_LENGTH)));
         assertFalse(response.hasEntity());
     }
 
@@ -137,7 +139,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testGetByte() throws Exception {
         Response response = target().path("byte").request().get(Response.class);
         assertEquals(200, response.getStatus());
-        assertEquals(3, Integer.parseInt(response.getHeaderString("Content-Length")));
+        assertEquals(3, Integer.parseInt(response.getHeaderString(HttpHeaders.CONTENT_LENGTH)));
         assertTrue(response.hasEntity());
     }
 
@@ -145,7 +147,7 @@ public class ContentLengthTest extends JerseyTest {
     public void testHeadByte() throws Exception {
         Response response = target().path("byte").request().head();
         assertEquals(200, response.getStatus());
-        assertEquals(3, Integer.parseInt(response.getHeaderString("Content-Length")));
+        assertEquals(3, Integer.parseInt(response.getHeaderString(HttpHeaders.CONTENT_LENGTH)));
         assertFalse(response.hasEntity());
     }
 }

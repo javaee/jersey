@@ -43,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -84,7 +85,7 @@ public class HeadTest {
         ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
 
         assertEquals(200, response.getStatus());
-        String length = response.getHeaderString("Content-Length");
+        String length = response.getHeaderString(HttpHeaders.CONTENT_LENGTH);
         assertNotNull(length);
         assertEquals(3, Integer.parseInt(length));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
@@ -210,7 +211,7 @@ public class HeadTest {
 
         ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
         assertEquals(200, response.getStatus());
-        String length = response.getHeaderString("Content-Length");
+        String length = response.getHeaderString(HttpHeaders.CONTENT_LENGTH);
         assertNotNull(length);
         assertEquals(3, Integer.parseInt(length));
         assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, response.getMediaType());

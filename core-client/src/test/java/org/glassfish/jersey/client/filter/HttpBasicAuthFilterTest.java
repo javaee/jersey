@@ -108,5 +108,10 @@ public class HttpBasicAuthFilterTest {
         public void close() {
             // do nothing
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 }

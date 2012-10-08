@@ -270,4 +270,9 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
             }
         };
     }
+
+    @Override
+    public String getName() {
+        return "Grizzly Http Client";
+    }
 }

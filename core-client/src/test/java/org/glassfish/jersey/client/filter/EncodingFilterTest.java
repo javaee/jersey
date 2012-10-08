@@ -141,5 +141,10 @@ public class EncodingFilterTest {
         public void close() {
             // do nothing
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 }

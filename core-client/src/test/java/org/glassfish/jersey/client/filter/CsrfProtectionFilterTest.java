@@ -109,5 +109,10 @@ public class CsrfProtectionFilterTest {
         public void close() {
             // do nothing
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 }
