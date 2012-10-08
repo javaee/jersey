@@ -72,7 +72,6 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
     private static final Logger LOG = Logger.getLogger( WadlApplicationContextImpl.class.getName() );
 
-
     private boolean wadlGenerationEnabled = true;
 
     private final List<org.glassfish.jersey.server.model.Resource> rootResources;

@@ -252,19 +252,18 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
         final Representation rt = _delegate.createRequestRepresentation(ar, arm, mt);
 
-        // TODO - J2
-//        for (Parameter p : arm.getParameters()) {
-//            if (p.getSource() == Parameter.Source.ENTITY) {
-//                _hasTypeWantsName.add( new Pair(
-//                        parameter(p),
-//                        new WantsName() {
-//                            @Override
-//                            public void setName(QName name) {
-//                                rt.setElement(name);
-//                            }
-//                        }));
-//            }
-//        }
+        for (Parameter p : arm.getInvocable().getParameters()) {
+            if (p.getSource() == Parameter.Source.ENTITY) {
+                _hasTypeWantsName.add( new Pair(
+                        parameter(p),
+                        new WantsName() {
+                            @Override
+                            public void setName(QName name) {
+                                rt.setElement(name);
+                            }
+                        }));
+            }
+        }
 
         return rt;
     }

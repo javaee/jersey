@@ -75,6 +75,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
+import org.glassfish.jersey.uri.PathPattern;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -611,6 +612,8 @@ final class MethodSelectingRouter implements Router {
                                             .type(requestContext.getAcceptableMediaTypes().get(0))
                                             .build();
                                 } else {
+                                    final String s = ((UriRoutingContext) requestContext.getUriInfo()).getMatchedTemplates().get(0).getTemplate().substring(1);
+
                                     response = Response.ok()
                                             .allow(allowedMethods)
                                             .type(MediaTypes.WADL)
@@ -618,7 +621,7 @@ final class MethodSelectingRouter implements Router {
                                             .entity(wadlApplicationContext.getApplication(
                                                     requestContext.getUriInfo(),
                                                     resource,
-                                                    null))
+                                                    s.equals(resource.getPath()) || s.equals("") ? null : s))
                                             .build();
                                 }
                                 return new ContainerResponse(requestContext, response);

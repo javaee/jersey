@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.wadl.internal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +54,7 @@ import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.model.Parameterized;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
@@ -121,7 +123,6 @@ public class WadlBuilder {
          
         // Return the description of the application
         
-        
         return description;
     }
 
@@ -171,11 +172,9 @@ public class WadlBuilder {
         addVersion(wadlApplication);
         
         // Attach the data to the parts of the model
-        
         _wadlGenerator.attachTypes(description);
         
         // Return the WADL
-        
         return wadlApplication;
     }
 
@@ -338,23 +337,23 @@ public class WadlBuilder {
 
         // add resource field/setter parameters that are associated with the resource PATH template
 
-//        List<Parameterized> fieldsOrSetters = new LinkedList<Parameterized>();
-//
+        List<Parameterized> fieldsOrSetters = new LinkedList<Parameterized>();
+
 //        if (r.getFields() != null) {
 //            fieldsOrSetters.addAll(r.getFields());
 //        }
 //        if (r.getSetterMethods() != null) {
 //            fieldsOrSetters.addAll(r.getSetterMethods());
 //        }
-//
-//        for (Parameterized f : fieldsOrSetters) {
-//            for (Parameter fp : f.getParameters()) {
-//                Param wadlParam = generateParam(r, null, fp);
-//                if (wadlParam != null) {
-//                    wadlResource.getParam().add(wadlParam);
-//                }
-//            }
-//        }
+
+        for (Parameterized f : fieldsOrSetters) {
+            for (Parameter fp : f.getParameters()) {
+                Param wadlParam = generateParam(r, null, fp);
+                if (wadlParam != null) {
+                    wadlResource.getParam().add(wadlParam);
+                }
+            }
+        }
         // for each resource method
         for (org.glassfish.jersey.server.model.ResourceMethod m : r.getResourceMethods()) {
             com.sun.research.ws.wadl.Method wadlMethod = generateMethod(r, wadlResourceParams, m);

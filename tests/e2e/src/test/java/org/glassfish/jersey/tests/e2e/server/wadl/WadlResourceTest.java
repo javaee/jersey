@@ -90,7 +90,6 @@ import org.glassfish.jersey.server.wadl.config.WadlGeneratorDescription;
 import org.glassfish.jersey.server.wadl.internal.WadlGeneratorImpl;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -395,7 +394,6 @@ public class WadlResourceTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("TODO")
     public void testOptionsSubResourceWadl() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         // test WidgetsResource
         File tmpFile = target("/widgets/3").request(MediaTypes.WADL).options(File.class);
@@ -829,7 +827,6 @@ public class WadlResourceTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testEmptyProduces() throws Exception {
         ResourceConfig rc = new ResourceConfig(EmptyProducesTestResource.class);
         rc.setProperty(ServerProperties.FEATURE_DISABLE_WADL, false);
@@ -857,7 +854,7 @@ public class WadlResourceTest extends JerseyTest {
         xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
         final NodeList responseElements = (NodeList) xp.evaluate(
-                "/wadl:application/wadl:resources//wadl:method/wadl:response", d, XPathConstants.NODESET);
+                "/wadl:application/wadl:resources[@path!='application.wadl']//wadl:method/wadl:response", d, XPathConstants.NODESET);
 
         for (int i = 0; i < responseElements.getLength(); i++) {
             final Node item = responseElements.item(i);
