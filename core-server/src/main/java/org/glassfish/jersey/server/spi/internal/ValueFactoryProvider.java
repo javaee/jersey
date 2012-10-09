@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
+import javax.ws.rs.ConstrainedTo;
+
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.Contract;
 
@@ -51,6 +53,7 @@ import org.glassfish.hk2.api.Factory;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Contract
+@ConstrainedTo(ConstrainedTo.Type.SERVER)
 public interface ValueFactoryProvider {
 
     /**
@@ -74,7 +77,8 @@ public interface ValueFactoryProvider {
 
     /**
      * Priorities are intended to be used as a means to determine the order in which objects are considered whether they are
-     * suitable for a particular action or not (e.g. providing a service like creating a value factory for an injectable parameter).
+     * suitable for a particular action or not (e.g. providing a service like creating a value factory for an injectable
+     * parameter).
      * The higher the weight of a priority is the sooner should be an object with this priority examined.
      * <p/>
      * If two objects are of the same priority there is no guarantee which one comes first.

@@ -61,6 +61,8 @@ final class ProviderBag {
     final static class Builder {
 
         private final Set<Class<?>> classes = Sets.newIdentityHashSet();
+        // this set contains classes which are manually registered by the user (not found by the classpath scanning).
+        private Set<Class<?>> registeredClasses = Sets.newIdentityHashSet();
         private final Set<Object> instances = Sets.newIdentityHashSet();
         private final Map<Class<?>, ContractProvider> models = new IdentityHashMap<Class<?>, ContractProvider>();
 
@@ -104,14 +106,29 @@ final class ProviderBag {
         }
 
         /**
+         * Set classes which are manually registered by the user (not found by the classpath scanning).
+         * @param registeredClasses Classes registered and not found by the scanning.
+         */
+        public void setRegisteredClasses(Set<Class<?>> registeredClasses) {
+            this.registeredClasses = registeredClasses;
+        }
+
+        /**
          * Build a resource bag.
          *
          * @return new resource bag initialized with the content of the resource bag builder.
          */
         ProviderBag build() {
-            return new ProviderBag(classes, instances, models);
+            return new ProviderBag(classes, instances, models, registeredClasses);
         }
     }
+
+    /**
+     * Classes which are manually registered by the user (not found by the classpath scanning).
+     * This is always subset of set {@code classes}.
+     */
+    final Set<Class<?>> registeredClasses;
+
 
     /**
      * Contract provider classes.
@@ -126,9 +143,12 @@ final class ProviderBag {
      */
     final Map<Class<?>, ContractProvider> models;
 
-    private ProviderBag(Set<Class<?>> classes, Set<Object> instances, Map<Class<?>, ContractProvider> models) {
+    private ProviderBag(Set<Class<?>> classes, Set<Object> instances, Map<Class<?>, ContractProvider> models,
+                        Set<Class<?>> registeredClasses) {
         this.classes = classes;
         this.instances = instances;
         this.models = models;
+        this.registeredClasses = registeredClasses;
+
     }
 }

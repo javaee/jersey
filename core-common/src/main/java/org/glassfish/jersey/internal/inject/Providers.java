@@ -44,15 +44,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.core.Feature;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
@@ -75,13 +82,16 @@ import deprecated.javax.ws.rs.DynamicBinder;
  */
 public class Providers {
 
+    private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());
+
+
     private Providers() {
     }
 
     /**
      * Wrap an instance into a HK2 service factory.
      *
-     * @param <T> Java type if the contract produced by the provider and factory.
+     * @param <T>      Java type if the contract produced by the provider and factory.
      * @param instance instance to be wrapped into (and provided by) the factory.
      * @return HK2 service factory wrapping and providing the instance.
      */
@@ -104,8 +114,8 @@ public class Providers {
      * Get the set of default providers registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available default service provider instances for the contract.
      */
@@ -114,13 +124,12 @@ public class Providers {
         return getClasses(hk2Providers);
     }
 
-
     /**
      * Get the set of all custom providers registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
@@ -133,8 +142,8 @@ public class Providers {
      * Get the set of all providers (custom and default) registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
@@ -154,7 +163,8 @@ public class Providers {
         return new ArrayList<T>(getClasses(providerMap.values()));
     }
 
-    private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract, Annotation... qualifiers) {
+    private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract,
+                                                                   Annotation... qualifiers) {
 
         List<ServiceHandle<?>> allServiceHandles = qualifiers == null ?
                 locator.getAllServiceHandles(contract) :
@@ -172,19 +182,18 @@ public class Providers {
      * Get the set of all providers (custom and default) registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 service locator} container ordered based on the given {@code comparator}.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>        service provider contract Java type.
+     * @param locator    underlying HK2 service locator.
+     * @param contract   service provider contract.
      * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
-     * {@link Comparator comparator}.
+     *         {@link Comparator comparator}.
      */
     public static <T> List<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
         List<T> providers = getAllProviders(locator, contract);
         Collections.sort(providers, comparator);
         return providers;
     }
-
 
     private static <T> Set<T> getClasses(Collection<ServiceHandle<T>> hk2Providers) {
         if (hk2Providers.isEmpty()) {
@@ -194,16 +203,15 @@ public class Providers {
         }
     }
 
-
     /**
      * Get the set of all providers registered for the given service provider contract
      * in the underlying {@link ServiceLocator HK2 locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>        service provider contract Java type.
+     * @param locator    underlying HK2 service locator.
+     * @param contract   service provider contract.
      * @param comparator contract comparator used for ordering contracts in the
-     *     set.
+     *                   set.
      * @return set of all available service provider instances for the contract.
      */
     public static <T> SortedSet<T> getProviders(ServiceLocator locator, Class<T> contract, final Comparator<T> comparator) {
@@ -240,31 +248,211 @@ public class Providers {
         }
     }
 
+    /**
+     * Filter provider instances removing all providers not targeted to the {@code currentRuntime}.
+     * The provider applicability to a runtime is determined based on the {@link ConstrainedTo &#64;ConstraintTo}
+     * restriction placed on the contract interface as well as any {@code @ConstrainedTo} restrictions
+     * placed on the contract implementation class.
+     * <p>
+     * A warning is logged for all providers that have been filtered out.
+     * </p>
+     *
+     * @param providerInstances providers to be filtered.
+     * @param currentRuntime    current runtime.
+     * @param registeredClasses classes which were explicitly registered and not found by the classpath scanning
+     *                          or any other kind of class scanning.
+     * @return set of provider instances.
+     */
+    public static Set<Object> filterInstancesByConstraint(Set<Object> providerInstances, ConstrainedTo.Type currentRuntime,
+                                                          Set<Class<?>> registeredClasses) {
+        Set<Object> filteredInstances = new HashSet<Object>();
+        for (Object provider : providerInstances) {
+            final boolean valid = checkProviderRuntime(provider.getClass(), currentRuntime,
+                    registeredClasses == null || !registeredClasses.contains(provider.getClass()), false);
+            if (valid) {
+                filteredInstances.add(provider);
+            }
+        }
 
-    private static boolean isProviderContract(Class clazz) {
-        return (JAX_RS_PROVIDER_INTERFACE_WHITELIST.contains(clazz) || clazz.isAnnotationPresent(Contract.class));
+        return filteredInstances;
     }
 
-    private static final Set<Class<?>> JAX_RS_PROVIDER_INTERFACE_WHITELIST = getJaxRsProviderInterfaces();
+    /**
+     * Filter provider instances removing all providers not targeted to the {@code currentRuntime}.
+     * The provider applicability to a runtime is determined based on the {@link ConstrainedTo &#64;ConstraintTo}
+     * restriction placed on the contract interface as well as any {@code @ConstrainedTo} restrictions
+     * placed on the contract implementation class.
+     * <p>
+     * A warning is logged for all providers that have been filtered out.
+     * </p>
+     *
+     * @param providers         providers to be filtered.
+     * @param currentRuntime    current runtime.
+     * @param registeredClasses classes which were explicitly registered and not found by the classpath scanning or any other
+     *                          kind of class scanning.
+     * @return set of provider classes.
+     */
+    public static Set<Class<?>> filterByConstraint(Set<Class<?>> providers, ConstrainedTo.Type currentRuntime,
+                                                   Set<Class<?>> registeredClasses) {
+        Set<Class<?>> filteredProviders = new HashSet<Class<?>>();
+        for (Class<?> provider : providers) {
+            final boolean valid = checkProviderRuntime(provider, currentRuntime, registeredClasses == null ||
+                    !registeredClasses.contains(provider), false);
+            if (valid) {
+                filteredProviders.add(provider);
+            }
+        }
+        return filteredProviders;
+    }
 
-    private static Set<Class<?>> getJaxRsProviderInterfaces() {
-        Set<Class<?>> interfaces = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
-        interfaces.add(javax.ws.rs.ext.ContextResolver.class);
-        interfaces.add(javax.ws.rs.ext.ExceptionMapper.class);
-        interfaces.add(javax.ws.rs.ext.MessageBodyReader.class);
-        interfaces.add(javax.ws.rs.ext.MessageBodyWriter.class);
-        interfaces.add(javax.ws.rs.ext.Providers.class);
-        interfaces.add(javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate.class);
-        interfaces.add(javax.ws.rs.ext.ReaderInterceptor.class);
-        interfaces.add(javax.ws.rs.ext.WriterInterceptor.class);
+    /**
+     * Check the {@code provider} whether it is appropriate correctly configured for client or server
+     * {@link ConstrainedTo.Type runtime}.
+     *
+     * If a problem occurs a warning is logged and if the provider is not usable at all in the current runtime
+     * {@code false} is returned. For classes found during provider scanning (scanned=true) certain warnings are completely
+     * ignored (e.g. providers {@link ConstrainedTo constrained to} the client runtime and found by server-side class path
+     * scanning will be silently ignored and no warning will be logged).
+     *
+     * @param provider          the class of the provider being checked.
+     * @param runtimeConstraint current runtime (client or server).
+     * @param scanned           {@code false} if the class was explicitly registered; {@code true} if the class has been discovered
+     *                          during any form of provider scanning.
+     * @param isResource        {@code true} if the provider is also a resource class.
+     * @return {@code true} if provider is fine and can be used {@code false} otherwise.
+     */
+    public static boolean checkProviderRuntime(Class<?> provider, ConstrainedTo.Type runtimeConstraint,
+                                               boolean scanned, boolean isResource) {
+        final Set<Class<?>> providerContracts = Providers.getProviderContracts(provider);
+        final ConstrainedTo constrainedAnnotation = provider.getAnnotation(ConstrainedTo.class);
+        ConstrainedTo.Type providerConstraint = constrainedAnnotation == null ? null : constrainedAnnotation.value();
+        if (Feature.class.isAssignableFrom(provider)) {
+            // TODO: solve after implementation
+            return true;
+        }
 
-        interfaces.add(javax.ws.rs.container.ContainerRequestFilter.class);
-        interfaces.add(javax.ws.rs.container.ContainerResponseFilter.class);
-        interfaces.add(javax.ws.rs.client.ClientResponseFilter.class);
-        interfaces.add(javax.ws.rs.client.ClientRequestFilter.class);
+        final StringBuilder warnings = new StringBuilder();
+        try {
+            /**
+             * Indicates that the provider implements at least one contract compatible
+             * with it's implementation class constraint.
+             */
+            boolean foundProviderCompatible = providerConstraint == null;
+            boolean foundRuntimeCompatibleContract = false;
+            for (Class<?> providerContract : providerContracts) {
+                // if the contract is common/not constrained, default to provider constraint
+                final ConstrainedTo.Type contractConstraint = getContractConstraint(providerContract, providerConstraint);
+                foundRuntimeCompatibleContract |= contractConstraint == null || contractConstraint == runtimeConstraint;
 
-        interfaces.add(DynamicBinder.class); // TODO remove
-        interfaces.add(javax.ws.rs.container.DynamicFeature.class);
+                if (providerConstraint != null) {
+                    if (contractConstraint != providerConstraint) {
+                        warnings.append(LocalizationMessages.WARNING_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
+                                provider.getName(),
+                                providerConstraint.name(),
+                                providerContract.getName(),
+                                contractConstraint.name()))
+                                .append(" ");
+                    } else {
+                        foundProviderCompatible = true;
+                    }
+                }
+            }
+
+            if (!foundProviderCompatible) {
+                warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
+                        provider.getName(),
+                        providerConstraint.name()));
+                logProviderSkipped(warnings, provider, isResource);
+                return false;
+            }
+
+            boolean isProviderRuntimeCompatible;
+            // runtimeConstraint vs. providerConstraint
+            isProviderRuntimeCompatible = providerConstraint == null || providerConstraint == runtimeConstraint;
+            if (!isProviderRuntimeCompatible && !scanned) {
+                // log failure for manually registered providers
+                warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_RUNTIME(
+                        provider.getName(),
+                        providerConstraint.name(),
+                        runtimeConstraint.name()));
+
+                logProviderSkipped(warnings, provider, isResource);
+            }
+
+            // runtimeConstraint vs contractConstraint
+            if (!foundRuntimeCompatibleContract && !scanned) {
+                warnings.append(LocalizationMessages.ERROR_PROVIDER_REGISTERED_WRONG_RUNTIME(provider.getName(),
+                        runtimeConstraint.name(), runtimeConstraint == ConstrainedTo.Type.SERVER ? "client" : "server"));
+                logProviderSkipped(warnings, provider, isResource);
+                return false;
+            }
+
+            return isProviderRuntimeCompatible && foundRuntimeCompatibleContract;
+        } finally {
+            if (warnings.length() > 0) {
+                LOGGER.log(Level.WARNING, warnings.toString());
+            }
+        }
+    }
+
+    private static void logProviderSkipped(StringBuilder sb, Class<?> provider, boolean alsoResourceClass) {
+        sb.append(alsoResourceClass ? LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED
+                (provider.getName()) : LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName()));
+    }
+
+    private static boolean isProviderContract(Class clazz) {
+        return (JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz) != null || clazz.isAnnotationPresent(Contract.class));
+    }
+
+    private static ConstrainedTo.Type getContractConstraint(Class<?> clazz, ConstrainedTo.Type defaultConstraint) {
+        final ProviderRuntime jaxRsProvider = JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz);
+
+        ConstrainedTo.Type result = null;
+        if (jaxRsProvider != null) {
+            result = jaxRsProvider.getRuntime();
+        } else if (clazz.getAnnotation(Contract.class) != null) {
+            final ConstrainedTo constrainedToAnnotation = clazz.getAnnotation(ConstrainedTo.class);
+            if (constrainedToAnnotation != null) {
+                result = constrainedToAnnotation.value();
+            }
+        }
+
+        return (result == null) ? defaultConstraint : result;
+    }
+
+    private static final class ProviderRuntime {
+        private final ConstrainedTo.Type runtime;
+
+        private ProviderRuntime(ConstrainedTo.Type runtime) {
+            this.runtime = runtime;
+        }
+
+        public ConstrainedTo.Type getRuntime() {
+            return runtime;
+        }
+    }
+
+
+    private static final Map<Class<?>, ProviderRuntime> JAX_RS_PROVIDER_INTERFACE_WHITELIST =
+            getJaxRsProviderInterfaces();
+
+    private static Map<Class<?>, ProviderRuntime> getJaxRsProviderInterfaces() {
+        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
+
+        interfaces.put(javax.ws.rs.ext.ContextResolver.class, new ProviderRuntime(null));
+        interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, new ProviderRuntime(null));
+        interfaces.put(javax.ws.rs.ext.MessageBodyReader.class, new ProviderRuntime(null));
+        interfaces.put(javax.ws.rs.ext.MessageBodyWriter.class, new ProviderRuntime(null));
+        interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, new ProviderRuntime(null));
+        interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, new ProviderRuntime(null));
+
+        interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
+        interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
+        interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
+        interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
+
+        interfaces.put(DynamicBinder.class, new ProviderRuntime(ConstrainedTo.Type.SERVER)); // TODO remove
+        interfaces.put(javax.ws.rs.container.DynamicFeature.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
 
         return interfaces;
     }

@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
@@ -56,6 +57,7 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 
@@ -75,6 +77,7 @@ import com.google.common.collect.Lists;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class ClientConfig implements Configuration, Config, Configurable {
+
     /**
      * Internal configuration state.
      */
@@ -405,8 +408,10 @@ public class ClientConfig implements Configuration, Config, Configurable {
             }
 
             final ProviderBinder providerBinder = new ProviderBinder(locator);
-            providerBinder.bindClasses(getProviderClasses());
-            providerBinder.bindInstances(getProviderInstances());
+
+            providerBinder.bindClasses(Providers.filterByConstraint(getProviderClasses(), ConstrainedTo.Type.CLIENT, null));
+            providerBinder.bindInstances(Providers.filterInstancesByConstraint(getProviderInstances(),
+                    ConstrainedTo.Type.CLIENT, null));
 
             final ClientRuntime runtime = new ClientRuntime(connector, locator);
             client.addListener(new JerseyClient.LifecycleListener() {

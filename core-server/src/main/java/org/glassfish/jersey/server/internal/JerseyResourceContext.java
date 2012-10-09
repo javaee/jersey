@@ -240,7 +240,7 @@ public class JerseyResourceContext implements ResourceContext {
             final ActiveDescriptor<?> descriptor =
                     dc.bind(BuilderHelper.activeLink(resourceClass).to(resourceClass).in(scope).build());
 
-            for (Class contract : Providers.getProviderContracts(resourceClass)) {
+            for (Class contract : providerModel.getContracts()) {
                 @SuppressWarnings("unchecked")
                 AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());

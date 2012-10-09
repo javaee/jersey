@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server.spi;
 
+import javax.ws.rs.ConstrainedTo;
+
 import org.glassfish.jersey.spi.Contract;
 
 /**
@@ -48,6 +50,7 @@ import org.glassfish.jersey.spi.Contract;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Contract
+@ConstrainedTo(ConstrainedTo.Type.SERVER)
 public interface ContainerLifecycleListener {
 
     /**

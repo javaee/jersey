@@ -144,7 +144,8 @@ public class ResourceConfig extends Application implements Config {
      * @return ResourceConfig instance for the supplied application.
      */
     public static ResourceConfig forApplication(Application application) {
-        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig(application, null, null);
+        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
+                (application, null, null);
     }
 
     /**
@@ -161,7 +162,8 @@ public class ResourceConfig extends Application implements Config {
      * Returns a {@link ResourceConfig} instance wrapping the application of the supplied class.
      *
      * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
-     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core.Application#getClasses()}
+     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core
+     * .Application#getClasses()}
      * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
      *
      * @param applicationClass Class representing a JAX-RS application.
@@ -169,7 +171,8 @@ public class ResourceConfig extends Application implements Config {
      *                         application does not provide any classes and singletons.
      * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
      */
-    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass, Set<Class<?>> defaultClasses) {
+    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass,
+                                                     Set<Class<?>> defaultClasses) {
         return new WrappingResourceConfig(null, applicationClass, defaultClasses);
     }
 
@@ -365,6 +368,7 @@ public class ResourceConfig extends Application implements Config {
         return cachedClassesView;
     }
 
+
     /**
      * Get configured resource and/or provider classes. The method is overridden
      * in a {@link WrappingResourceConfig private sub-type}.
@@ -429,6 +433,14 @@ public class ResourceConfig extends Application implements Config {
             }
         }
         return classNames;
+    }
+
+    /**
+     * Return classes which were registered by the user and not found by class path scanning (or any other scanning).
+     * @return Set of classes registered by the user.
+     */
+    public Set<Class<?>> getRegisteredClasses() {
+        return classes;
     }
 
     /**
@@ -764,7 +776,8 @@ public class ResourceConfig extends Application implements Config {
                 // Merge resources
                 super.resources.addAll(rc.resources);
 
-                // properties set on the wrapping resource config take precedence (as those are retrieved from the web.xml for example)
+                // properties set on the wrapping resource config take precedence (as those are retrieved from the web.xml for
+                // example)
                 rc.invalidateCache();
                 rc.properties.putAll(super.properties);
                 super.properties.putAll(rc.properties);

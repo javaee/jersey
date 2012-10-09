@@ -58,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.container.AsyncResponse;
@@ -74,8 +75,8 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Config;
-import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
@@ -259,6 +260,7 @@ public final class ApplicationHandler {
 
         // Introspecting classes & instances
         final ProviderBag.Builder providerBagBuilder = new ProviderBag.Builder();
+        providerBagBuilder.setRegisteredClasses(configuration.getRegisteredClasses());
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
         final List<ResourceModelIssue> resourceModelIssues = new LinkedList<ResourceModelIssue>();
         final Set<Class<?>> classes = new HashSet<Class<?>>(configuration.getClasses());
@@ -269,7 +271,7 @@ public final class ApplicationHandler {
         }
 
         for (Class<?> c : classes) {
-            if(c == null) {
+            if (c == null) {
                 LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(c));
                 break;
             }
@@ -289,7 +291,7 @@ public final class ApplicationHandler {
         }
 
         for (Object o : configuration.getSingletons()) {
-            if(o == null) {
+            if (o == null) {
                 LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(o));
                 break;
             }
@@ -483,30 +485,59 @@ public final class ApplicationHandler {
 
         // Bind resource classes
         for (Class<?> resourceClass : resourceBag.classes) {
-            final ContractProvider providerModel = providerBag.models.get(resourceClass);
+            ContractProvider providerModel = providerBag.models.get(resourceClass);
+
             if (bindWithComponentProvider(resourceClass, providerModel, componentProviders)) {
                 continue;
             }
+
             if (!Resource.isAcceptable(resourceClass)) {
                 LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(resourceClass));
                 continue;
             }
 
+            if (providerModel != null &&
+                    !providerModel.getContracts().isEmpty() &&
+                    !Providers.checkProviderRuntime(
+                            resourceClass,
+                            ConstrainedTo.Type.SERVER,
+                            !providerBag.registeredClasses.contains(resourceClass),
+                            true)) {
+                providerModel = null;
+            }
             resourceContext.unsafeBindResource(resourceClass, providerModel, dc);
         }
         // Bind resource instances
         for (Object resourceInstance : resourceBag.instances) {
-            final ContractProvider providerModel = providerBag.models.get(resourceInstance.getClass());
+            ContractProvider providerModel = providerBag.models.get(resourceInstance.getClass());
             // TODO Try to bind resource instances using component providers?
+
+            if (providerModel != null &&
+                    !providerModel.getContracts().isEmpty() &&
+                    !Providers.checkProviderRuntime(
+                            resourceInstance.getClass(),
+                            ConstrainedTo.Type.SERVER,
+                            !providerBag.registeredClasses.contains(resourceInstance.getClass()),
+                            true)) {
+                providerModel = null;
+            }
             resourceContext.unsafeBindResource(resourceInstance, providerModel, dc);
         }
+
         // Bind pure provider classes
-        for (Class<?> providerClass : providerBag.classes) {
+        final Set<Class<?>> filteredClasses = Providers.filterByConstraint(providerBag.classes, ConstrainedTo.Type.SERVER,
+                providerBag.registeredClasses);
+        for (Class<?> providerClass : filteredClasses) {
             final ContractProvider model = providerBag.models.get(providerClass);
+
             ProviderBinder.bindProvider(providerClass, model, dc);
         }
         // Bind pure provider instances
-        for (Object provider : providerBag.instances) {
+        final Set<Object> filteredInstances = Providers.filterInstancesByConstraint(providerBag.instances,
+                ConstrainedTo.Type.SERVER,
+                providerBag.registeredClasses);
+        for (Object provider : filteredInstances) {
+
             final ContractProvider model = providerBag.models.get(provider.getClass());
             ProviderBinder.bindProvider(provider, model, dc);
         }

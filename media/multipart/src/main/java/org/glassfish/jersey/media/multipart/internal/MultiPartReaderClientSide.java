@@ -46,6 +46,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -83,6 +84,7 @@ import org.jvnet.mimepull.MIMEPart;
  */
 @Consumes("multipart/*")
 @Singleton
+@ConstrainedTo(ConstrainedTo.Type.CLIENT)
 public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
     /**
@@ -167,8 +169,8 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         final MessageBodyWorkers workers = messageBodyWorkers.get();
         multiPart.setMessageBodyWorkers(workers);
 
-        MultivaluedMap<String,String> multiPartHeaders = multiPart.getHeaders();
-        for (Map.Entry<String,List<String>> entry : headers.entrySet()) {
+        MultivaluedMap<String, String> multiPartHeaders = multiPart.getHeaders();
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
             List<String> values = entry.getValue();
 
             for (String value : values) {

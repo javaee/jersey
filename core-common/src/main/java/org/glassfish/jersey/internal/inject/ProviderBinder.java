@@ -40,7 +40,6 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
 
 import javax.inject.Singleton;
 
@@ -89,7 +88,7 @@ public class ProviderBinder {
      *
      * @param instances custom provider instances.
      */
-    public void bindInstances(Set<Object> instances) {
+    public void bindInstances(Iterable<Object> instances) {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
         for (Object instance : instances) {
             bindInstance(instance, dc);
