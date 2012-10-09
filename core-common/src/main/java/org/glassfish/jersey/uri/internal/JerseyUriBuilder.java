@@ -482,10 +482,10 @@ public class JerseyUriBuilder extends UriBuilder {
 
         if (matrixParams == null) {
             int i = path.lastIndexOf("/");
-            if (i != -1) {
+            if (i == -1) {
                 i = 0;
             }
-            matrixParams = UriComponent.decodeMatrix((i != -1) ? path.substring(i) : path.toString(), false);
+            matrixParams = UriComponent.decodeMatrix(path.substring(i), false);
             i = path.indexOf(";", i);
             if (i != -1) {
                 path.setLength(i);

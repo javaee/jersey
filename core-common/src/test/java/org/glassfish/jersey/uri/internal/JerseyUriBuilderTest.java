@@ -506,6 +506,36 @@ public class JerseyUriBuilderTest {
             Assert.assertEquals(1, c.size());
             Assert.assertEquals("c", c.get(0));
         }
+
+
+        {
+            URI uri = JerseyUriBuilder.fromUri("http://localhost:8080/a;w=123;q=15/b/c;a=x;b=y").
+                    replaceMatrixParam("a", "z", "zz").matrixParam("c", "c").
+                    path("d").build();
+
+            List<PathSegment> ps = UriComponent.decodePath(uri, true);
+            MultivaluedMap<String, String> mps = ps.get(0).getMatrixParameters();
+
+            List<String> w = mps.get("w");
+            Assert.assertEquals(1, w.size());
+            Assert.assertEquals("123", w.get(0));
+
+            w = mps.get("q");
+            Assert.assertEquals(1, w.size());
+            Assert.assertEquals("15", w.get(0));
+
+            mps = ps.get(2).getMatrixParameters();
+            List<String> a = mps.get("a");
+            Assert.assertEquals(2, a.size());
+            Assert.assertEquals("z", a.get(0));
+            Assert.assertEquals("zz", a.get(1));
+            List<String> b = mps.get("b");
+            Assert.assertEquals(1, b.size());
+            Assert.assertEquals("y", b.get(0));
+            List<String> c = mps.get("c");
+            Assert.assertEquals(1, c.size());
+            Assert.assertEquals("c", c.get(0));
+        }
     }
 
     @Test
@@ -531,6 +561,26 @@ public class JerseyUriBuilderTest {
 
         URI uri = ubu.build();
         Assert.assertEquals(URI.create("http://localhost/;limit=100;sql=select+*+from+users"), uri);
+    }
+
+    @Test
+    public void testMatrixParamsWithTheSameName() {
+        UriBuilder first = UriBuilder.fromUri("http://www.com/").replaceMatrixParam("example", "one", "two");
+        first = first.path("/child");
+        first = first.replaceMatrixParam("example", "another");
+
+        Assert.assertEquals(
+                "http://www.com/;example=one;example=two/child;example=another", first.build().toString());
+    }
+
+    @Test
+    public void testMatrixParamsWithTheDifferentName() {
+        UriBuilder first = UriBuilder.fromUri("http://www.com/").replaceMatrixParam("example", "one", "two");
+        first = first.path("/child");
+        first = first.replaceMatrixParam("other", "another");
+
+        Assert.assertEquals(
+                "http://www.com/;example=one;example=two/child;other=another", first.build().toString());
     }
 
     @Test

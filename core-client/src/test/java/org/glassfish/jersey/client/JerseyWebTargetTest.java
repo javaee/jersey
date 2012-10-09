@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
@@ -260,4 +261,49 @@ public class JerseyWebTargetTest {
             // expected
         }
     }
+
+    @Test
+    public void testRemoveMatrixParams() {
+        WebTarget wt = target;
+        wt = wt.matrixParam("matrix1", "segment1");
+        wt = wt.path("path1");
+        wt = wt.matrixParam("matrix2", "segment1");
+        wt = wt.matrixParam("matrix2", new Object[]{null});
+        wt = wt.path("path2");
+        wt = wt.matrixParam("matrix1", "segment1");
+        wt = wt.matrixParam("matrix1", new Object[]{null});
+        wt = wt.path("path3");
+        URI uri = wt.getUri();
+        assertEquals("/;matrix1=segment1/path1/path2/path3", uri.toString());
+    }
+
+    @Test
+    public void testReplaceMatrixParam() {
+        WebTarget wt = target;
+        wt = wt.path("path1");
+        wt = wt.matrixParam("matrix10", "segment10-delete");
+        wt = wt.matrixParam("matrix11", "segment11");
+        wt = wt.matrixParam("matrix10", new Object[]{null});
+        wt = wt.path("path2");
+        wt = wt.matrixParam("matrix20", "segment20-delete");
+        wt = wt.matrixParam("matrix20", new Object[]{null});
+        wt = wt.matrixParam("matrix20", "segment20-delete-again");
+        wt = wt.matrixParam("matrix20", new Object[]{null});
+        wt = wt.path("path3");
+        wt = wt.matrixParam("matrix30", "segment30-delete");
+        wt = wt.matrixParam("matrix30", new Object[]{null});
+        wt = wt.matrixParam("matrix30", "segment30-delete-again");
+        wt = wt.matrixParam("matrix30", new Object[]{null});
+        wt = wt.matrixParam("matrix30", "segment30");
+        wt = wt.path("path4");
+        wt = wt.matrixParam("matrix40", "segment40-delete");
+        wt = wt.matrixParam("matrix40", new Object[]{null});
+
+        URI uri = wt.getUri();
+        assertEquals("/path1;matrix11=segment11/path2/path3;matrix30=segment30/path4", uri.toString());
+    }
+
+
 }
+
+
