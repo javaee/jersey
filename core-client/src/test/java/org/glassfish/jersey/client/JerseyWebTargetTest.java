@@ -303,6 +303,51 @@ public class JerseyWebTargetTest {
         assertEquals("/path1;matrix11=segment11/path2/path3;matrix30=segment30/path4", uri.toString());
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testQueryParamNull() {
+        WebTarget wt = target;
+
+        wt.queryParam(null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testPathNull() {
+        WebTarget wt = target;
+
+        wt.path(null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testResolveTemplateNull1() {
+        WebTarget wt = target;
+
+        wt.resolveTemplate(null, "", true);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testResolveTemplateNull2() {
+        WebTarget wt = target;
+
+        wt.resolveTemplate("name", null, true);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testResolveTemplateFromEncodedNull1() {
+        WebTarget wt = target;
+
+        wt.resolveTemplateFromEncoded(null, "");
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testResolveTemplateFromEncodedNull2() {
+        WebTarget wt = target;
+
+        wt.resolveTemplateFromEncoded("name", null);
+    }
+
+
+
+
 
 }
 
