@@ -155,5 +155,4 @@ public class ResourceConfigBuilderTest {
     private static ResourceConfig initApp(Class<? extends Application> appClass) {
         return new ApplicationHandler(appClass).getConfiguration();
     }
-
 }

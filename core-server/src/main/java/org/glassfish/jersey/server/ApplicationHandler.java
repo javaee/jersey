@@ -265,6 +265,11 @@ public final class ApplicationHandler {
         }
 
         for (Class<?> c : classes) {
+            if(c == null) {
+                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(c));
+                break;
+            }
+
             boolean isResource = false;
 
             try {
@@ -280,6 +285,11 @@ public final class ApplicationHandler {
         }
 
         for (Object o : configuration.getSingletons()) {
+            if(o == null) {
+                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(o));
+                break;
+            }
+
             boolean isResource = false;
             try {
                 Resource resource = Resource.from(o, resourceModelIssues);

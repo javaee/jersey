@@ -344,11 +344,6 @@ public class JerseyWebTargetTest {
 
         wt.resolveTemplateFromEncoded("name", null);
     }
-
-
-
-
-
 }
 
 

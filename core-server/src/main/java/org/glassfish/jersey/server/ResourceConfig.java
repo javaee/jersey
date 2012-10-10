@@ -41,6 +41,7 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -439,7 +440,7 @@ public class ResourceConfig extends Application implements Config {
     public final Set<Object> getSingletons() {
         if (cachedSingletonsView == null) {
             cachedSingletons = _getSingletons();
-            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons);
+            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons == null ? new HashSet<Object>() : cachedSingletons);
         }
 
         return cachedSingletonsView;
@@ -687,7 +688,7 @@ public class ResourceConfig extends Application implements Config {
         public WrappingResourceConfig(Application application, Class<? extends Application> applicationClass,
                                       Set<Class<?>> defaultClasses) {
             if (application == null && applicationClass == null) {
-                throw new IllegalArgumentException("Both application and applicationClass can't be null.");
+                throw new IllegalArgumentException(LocalizationMessages.RESOURCE_CONFIG_ERROR_NULL_APPLICATIONCLASS());
             }
             this.application = application;
             this.applicationClass = applicationClass;
@@ -775,8 +776,9 @@ public class ResourceConfig extends Application implements Config {
         @Override
         Set<Class<?>> _getClasses() {
             Set<Class<?>> result = Sets.newHashSet();
-            result.addAll(application.getClasses());
-            if (result.isEmpty() && getSingletons().isEmpty()) {
+            Set<Class<?>> applicationClasses = application.getClasses();
+            result.addAll(applicationClasses == null ? new HashSet<Class<?>>() : applicationClasses);
+            if (result.isEmpty() &&  getSingletons().isEmpty()) {
                 result.addAll(defaultClasses);
             }
 
