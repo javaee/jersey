@@ -129,7 +129,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private transient ResourceConfig resourceConfig;
     private transient Pattern staticContentPattern;
     private transient String filterContextPath;
-    private ContainerLifecycleListener containerListener;
+    private volatile ContainerLifecycleListener containerListener;
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(ServletContainer.class.getName()), Level.FINEST);
@@ -315,7 +315,10 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     @Override
     public void destroy() {
         super.destroy();
-        containerListener.onShutdown(this);
+        ContainerLifecycleListener listener = containerListener;
+        if (listener != null) {
+            listener.onShutdown(this);
+        }
     }
 
     @Override
