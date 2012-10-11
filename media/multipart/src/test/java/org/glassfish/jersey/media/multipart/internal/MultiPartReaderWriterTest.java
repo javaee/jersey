@@ -102,6 +102,30 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
     }
 
     @Test
+    public void testETag() {
+        final WebTarget target = target().path("multipart/etag");
+
+        try {
+            MultiPart result = target.request("multipart/mixed").get(MultiPart.class);
+            checkMediaType(new MediaType("multipart", "mixed"), result.getMediaType());
+            assertEquals(1, result.getBodyParts().size());
+            BodyPart part = result.getBodyParts().get(0);
+            checkMediaType(new MediaType("text", "plain"), part.getMediaType());
+            checkEntity("This is the only segment", (BodyPartEntity) part.getEntity());
+            assertEquals("\"value\"", part.getHeaders().getFirst("ETag"));
+
+            result.getParameterizedHeaders();
+            result.cleanup();
+        } catch (IOException e) {
+            e.printStackTrace(System.out);
+            fail("Caught exception: " + e);
+        } catch(ParseException e) {
+            e.printStackTrace(System.out);
+            fail("Caught exception: " + e);
+        }
+    }
+
+    @Test
     public void testTwo() {
         final WebTarget target = target().path("multipart/two");
         try {

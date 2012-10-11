@@ -242,4 +242,16 @@ public class MultiPartResource {
         multiPart.cleanup();
         return "cleanup";
     }
+
+    @GET
+    @Path("etag")
+    @Produces("multipart/mixed")
+    public Response etag() {
+        MultiPart entity = new MultiPart();
+        // Exercise manually adding part(s) to the bodyParts property
+        BodyPart part = new BodyPart("This is the only segment", new MediaType("text", "plain"));
+        part.getHeaders().add("ETag", "\"value\"");
+        entity.getBodyParts().add(part);
+        return Response.ok(entity).type("multipart/mixed").build();
+    }
 }
