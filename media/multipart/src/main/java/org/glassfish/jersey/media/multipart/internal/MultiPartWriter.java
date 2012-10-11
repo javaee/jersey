@@ -184,12 +184,6 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
 
             // Iterate for the nested body parts
             for (final Map.Entry<String, List<String>> entry : bodyHeaders.entrySet()) {
-                // Only headers that match "Content-*" are allowed on body parts.
-                if (!entry.getKey().toLowerCase().startsWith("content-")) {
-                    throw new WebApplicationException(new IllegalArgumentException("Invalid body part header '" + entry.getKey()
-                                    + "', only Content-* allowed"));
-                }
-
                 // Write this header and its value(s)
                 writer.write(entry.getKey());
                 writer.write(':');
