@@ -59,7 +59,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.ValidationException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -96,6 +95,7 @@ public class ExceptionTest extends JerseyTest {
 
     static final URI testUri = UriBuilder.fromUri("http://jersey.java.net").build();
 
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     static Map<String, WebApplicationException> ExceptionMAP = new HashMap<String, WebApplicationException>() {{
         put("301", new RedirectionException(Response.Status.MOVED_PERMANENTLY, testUri));
         put("302", new RedirectionException(Response.Status.FOUND, testUri));
@@ -166,6 +166,7 @@ public class ExceptionTest extends JerseyTest {
             target().path(prefix).path(status).request().get(ClientResponse.class);
             fail("An exception expected");
         } catch (WebApplicationException ex) {
+            //noinspection ThrowableResultOfMethodCallIgnored
             assertEquals(ExceptionMAP.get(status).getClass(), ex.getClass());
 
             final Response response = ex.getResponse();
@@ -196,15 +197,5 @@ public class ExceptionTest extends JerseyTest {
 
     private boolean is3xxCode(final int statusCode) {
         return 299 < statusCode && statusCode < 400;
-    }
-
-    @Test
-    // See JERSEY-1408
-    public void testNullStatusInValidationException() {
-        try {
-            new ValidationException((Response.Status) null);
-        } catch (IllegalArgumentException expected) {
-            // expected
-        }
     }
 }

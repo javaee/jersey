@@ -335,13 +335,13 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder path(Class<?> resource) {
+    public UriBuilder path(Class resource) throws IllegalArgumentException {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException("Resource parameter is null");
         }
 
-        Path p = resource.getAnnotation(Path.class);
+        Path p = (Path) resource.getAnnotation(Path.class);
         if (p == null) {
             throw new IllegalArgumentException("The class, " + resource + " is not annotated with @Path");
         }
