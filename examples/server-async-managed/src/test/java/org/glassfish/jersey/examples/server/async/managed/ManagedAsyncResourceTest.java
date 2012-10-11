@@ -61,7 +61,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -183,8 +182,6 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
-    // FIXME: Un-ignore once JERSEY-1269 is fixed.
     public void testChatResource() throws InterruptedException {
         final WebTarget resourceTarget = target().path("chat");
         final int MAX_MESSAGES = 100;
