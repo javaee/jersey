@@ -121,6 +121,7 @@ public class Base64 {
      * @param buffer Byte array containing Base64 data
      * @return Array containing decoded data.
      */
+    @SuppressWarnings("fallthrough")
     public static byte[] decode(byte[] buffer) {
         if(buffer.length < 4 && (buffer.length % 4) != 0) {
             return new byte[0];

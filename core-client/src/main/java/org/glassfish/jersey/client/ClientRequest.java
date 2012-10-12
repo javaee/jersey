@@ -221,7 +221,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param types accepted types to be added.
      */
     public void accept(String... types) {
-        getHeaders().addAll(HttpHeaders.ACCEPT, types);
+        getHeaders().addAll(HttpHeaders.ACCEPT, (Object[]) types);
     }
 
     /**
@@ -230,7 +230,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param locales accepted languages to be added.
      */
     public void acceptLanguage(Locale... locales) {
-        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, locales);
+        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, (Object[]) locales);
     }
 
     /**
@@ -239,7 +239,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param locales accepted languages to be added.
      */
     public void acceptLanguage(String... locales) {
-        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, locales);
+        getHeaders().addAll(HttpHeaders.ACCEPT_LANGUAGE, (Object[]) locales);
     }
 
     /**

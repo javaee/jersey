@@ -156,6 +156,7 @@ public class ProviderBinder {
      * @param provider contract provider model.
      * @param dc HK2 dynamic service locator configuration.
      */
+    @SuppressWarnings("unchecked")
     public static void bindProvider(
             final Class<?> providerClass, final ContractProvider provider, final DynamicConfiguration dc) {
         final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
@@ -163,7 +164,6 @@ public class ProviderBinder {
                     .qualifiedBy(new CustomAnnotationImpl());
 
         for (Class contract : provider.getContracts()) {
-            //noinspection unchecked
             bindingBuilder.to(contract);
         }
 

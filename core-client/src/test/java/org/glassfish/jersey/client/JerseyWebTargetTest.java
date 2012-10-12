@@ -211,8 +211,8 @@ public class JerseyWebTargetTest {
         }
 
         {
-            uri = target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", "w2").queryParam("q2",
-                    null).getUri();
+            uri = target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", "w2")
+                    .queryParam("q2", (Object) null).getUri();
             assertEquals("/a?q1=v1&q1=w1&q1=w2", uri.toString());
         }
 
@@ -224,7 +224,8 @@ public class JerseyWebTargetTest {
         }
 
         try {
-            target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", null).queryParam("q2", null);
+            target.path("a").queryParam("q1", "v1").queryParam("q2", "v2").queryParam("q1", "w1", null)
+                    .queryParam("q2", (Object) null);
 
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {

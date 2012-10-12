@@ -61,9 +61,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.SaxHelper;
 
 import org.xml.sax.EntityResolver;
-import org.xml.sax.HandlerBase;
 import org.xml.sax.InputSource;
-import org.xml.sax.Parser;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
@@ -168,6 +166,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
         return spf.getFeature(s);
     }
 
+    @SuppressWarnings("deprecation")
     private static final class WrappingSAXParser extends SAXParser {
         private final SAXParser sp;
 
@@ -182,13 +181,13 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(InputStream inputStream, HandlerBase handlerBase) throws SAXException, IOException {
+        public void parse(InputStream inputStream, org.xml.sax.HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(inputStream, handlerBase);
         }
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(InputStream inputStream, HandlerBase handlerBase, String s) throws SAXException, IOException {
+        public void parse(InputStream inputStream, org.xml.sax.HandlerBase handlerBase, String s) throws SAXException, IOException {
             sp.parse(inputStream, handlerBase, s);
         }
 
@@ -204,7 +203,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(String s, HandlerBase handlerBase) throws SAXException, IOException {
+        public void parse(String s, org.xml.sax.HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(s, handlerBase);
         }
 
@@ -215,7 +214,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(File file, HandlerBase handlerBase) throws SAXException, IOException {
+        public void parse(File file, org.xml.sax.HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(file, handlerBase);
         }
 
@@ -226,7 +225,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(InputSource inputSource, HandlerBase handlerBase) throws SAXException, IOException {
+        public void parse(InputSource inputSource, org.xml.sax.HandlerBase handlerBase) throws SAXException, IOException {
             sp.parse(inputSource, handlerBase);
         }
 
@@ -237,7 +236,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public Parser getParser() throws SAXException {
+        public org.xml.sax.Parser getParser() throws SAXException {
             return sp.getParser();
         }
 

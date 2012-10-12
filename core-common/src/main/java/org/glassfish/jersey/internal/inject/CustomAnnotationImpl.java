@@ -45,4 +45,5 @@ import org.glassfish.hk2.api.AnnotationLiteral;
  * Custom annotation implementation
  */
 public class CustomAnnotationImpl extends AnnotationLiteral<Custom> implements Custom {
+    private static final long serialVersionUID = -892565346695359346L;
 }

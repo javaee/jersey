@@ -121,11 +121,17 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     private Injectee getInjectee(final Injectee injectee, final Type requiredType) {
-        return new InjecteeImpl(injectee) {
-            {
-                setRequiredType(requiredType);
-            }
-        };
+        return new RequiredTypeOverridingInjectee(injectee, requiredType);
+    }
+
+    private static class RequiredTypeOverridingInjectee extends InjecteeImpl {
+
+        private static final long serialVersionUID = -3740895548611880187L;
+
+        private RequiredTypeOverridingInjectee(final Injectee injectee, final Type requiredType) {
+            super(injectee);
+            setRequiredType(requiredType);
+        }
     }
 
     @Override

@@ -216,7 +216,7 @@ public abstract class AbstractBinder implements Binder, DynamicConfiguration {
      * </p>
      */
     @Override
-    public ActiveDescriptor<?> bind(Descriptor descriptor) {
+    public <T> ActiveDescriptor<T> bind(Descriptor descriptor) {
         setLoader(descriptor);
         return configuration().bind(descriptor);
     }

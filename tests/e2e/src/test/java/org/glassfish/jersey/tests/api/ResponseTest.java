@@ -140,7 +140,7 @@ public class ResponseTest {
         sb.append(tmp).append(newline);
 
         String content = "TestOnly";
-        Response resp1 = respb1.entity(content).cookie(null).build();
+        Response resp1 = respb1.entity(content).cookie((NewCookie) null).build();
         tmp = verifyResponse(resp1, content, status, encoding, lang, type,
                 null, null, null);
         if (tmp.endsWith("false")) {
@@ -323,7 +323,7 @@ public class ResponseTest {
             if (language != null) {
                 if (key.equalsIgnoreCase("Content-language")) {
                     for (String lang : mvp.get(key)) {
-                        if (!language.contains(lang.toString())) {
+                        if (!language.contains(lang)) {
                             pass = false;
                             sb.append(indent + indent + "language test failed: ").append(lang).append(" is not expected in Response").append(newline);
                             for (String tt : language) {
