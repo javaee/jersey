@@ -43,7 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ChunkedOutput;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -66,16 +66,16 @@ public class ChunkedResponseTest extends JerseyTest {
     public static class MyResource {
 
         @GET
-        public ChunkedResponse<String> get() {
-            final ChunkedResponse<String> response = new ChunkedResponse<String>(String.class);
+        public ChunkedOutput<String> get() {
+            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
 
             new Thread() {
                 public void run() {
                     try {
-                        response.write("test");
-                        response.write("test");
-                        response.write("test");
-                        response.close();
+                        output.write("test");
+                        output.write("test");
+                        output.write("test");
+                        output.close();
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -85,7 +85,7 @@ public class ChunkedResponseTest extends JerseyTest {
                 }
             }.start();
 
-            return response;
+            return output;
         }
     }
 

@@ -51,7 +51,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.Broadcaster;
 import org.glassfish.jersey.server.BroadcasterListener;
-import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ChunkedOutput;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -66,20 +66,20 @@ import com.google.common.collect.Lists;
 public class BroadcasterTest extends JerseyTest {
     static Broadcaster<String> broadcaster = new Broadcaster<String>() {
         @Override
-        public void onClose(ChunkedResponse<String> stringChunkedResponse) {
-            closedResponses.add(stringChunkedResponse);
+        public void onClose(ChunkedOutput<String> stringChunkedOutput) {
+            closedOutputs.add(stringChunkedOutput);
         }
     };
 
-    static List<ChunkedResponse<String>> responses = Lists.newArrayList();
-    static List<ChunkedResponse<String>> closedResponses = Lists.newArrayList();
+    static List<ChunkedOutput<String>> outputs = Lists.newArrayList();
+    static List<ChunkedOutput<String>> closedOutputs = Lists.newArrayList();
     static int listenerClosed = 0;
 
     @Path("/test")
     public static class MyResource {
         @GET
-        public ChunkedResponse<String> get() {
-            ChunkedResponse<String> result = new ChunkedResponse<String>() {};
+        public ChunkedOutput<String> get() {
+            ChunkedOutput<String> result = new ChunkedOutput<String>() {};
 
             // write something to ensure the client does not get blocked on waiting for the first byte
             try {
@@ -88,7 +88,7 @@ public class BroadcasterTest extends JerseyTest {
                 e.printStackTrace();
             }
 
-            responses.add(result);
+            outputs.add(result);
             broadcaster.add(result);
             return result;
         }
@@ -116,21 +116,21 @@ public class BroadcasterTest extends JerseyTest {
         checkClosed(0);
         checkStream("firstChunktext1", is1, is2, is3, is4);
 
-        responses.remove(0).close();
+        outputs.remove(0).close();
 
         target("test").request().post(Entity.text("text2"));
         checkStream("text2", is2, is3, is4);
         checkClosed(1);
 
-        responses.remove(0).close();
+        outputs.remove(0).close();
 
         BroadcasterListener<String> bl = new BroadcasterListener<String>() {
             @Override
-            public void onException(ChunkedResponse<String> stringChunkedResponse, Exception exception) {
+            public void onException(ChunkedOutput<String> stringChunkedResponse, Exception exception) {
             }
 
             @Override
-            public void onClose(ChunkedResponse<String> stringChunkedResponse) {
+            public void onClose(ChunkedOutput<String> stringChunkedResponse) {
                 listenerClosed++;
             }
         };
@@ -169,6 +169,6 @@ public class BroadcasterTest extends JerseyTest {
     }
 
     private void checkClosed(int count) {
-        assertEquals("Closed count does not match", count, closedResponses.size());
+        assertEquals("Closed count does not match", count, closedOutputs.size());
     }
 }

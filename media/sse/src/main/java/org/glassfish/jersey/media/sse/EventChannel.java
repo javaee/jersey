@@ -41,7 +41,7 @@ package org.glassfish.jersey.media.sse;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
  * Outgoing event message channel.
@@ -51,7 +51,7 @@ import org.glassfish.jersey.server.ChunkedResponse;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class EventChannel extends ChunkedResponse<OutboundEvent> {
+public class EventChannel extends ChunkedOutput<OutboundEvent> {
     /**
      * {@link String} representation of Server sent events media type. ("{@value}").
      */

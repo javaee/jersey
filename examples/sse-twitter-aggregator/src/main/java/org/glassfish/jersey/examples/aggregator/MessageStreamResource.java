@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.sse.EventChannel;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
-import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
  * Resource that aggregates incoming messages and broadcasts them
@@ -68,7 +68,7 @@ public class MessageStreamResource {
 
     private static SseBroadcaster broadcaster = new SseBroadcaster() {
         @Override
-        public void onException(ChunkedResponse<OutboundEvent> chunkedResponse, Exception exception) {
+        public void onException(ChunkedOutput<OutboundEvent> chunkedOutput, Exception exception) {
             LOGGER.log(Level.SEVERE, "Error broadcasting message.", exception);
         }
     };

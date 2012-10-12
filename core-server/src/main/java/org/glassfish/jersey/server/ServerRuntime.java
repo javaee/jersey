@@ -440,7 +440,7 @@ class ServerRuntime {
 
                     if (response.isChunked()) {
                         try {
-                            ((ChunkedResponse) entity).setContext(request, response);
+                            ((ChunkedOutput) entity).setContext(request, response);
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                         }

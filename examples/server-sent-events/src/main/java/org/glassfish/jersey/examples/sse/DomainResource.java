@@ -62,7 +62,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.media.sse.EventChannel;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
-import org.glassfish.jersey.server.ChunkedResponse;
+import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -113,7 +113,7 @@ public class DomainResource {
         private final CountDownLatch latch;
         private final SseBroadcaster broadcaster = new SseBroadcaster() {
             @Override
-            public void onException(ChunkedResponse<OutboundEvent> outboundEventChunkedResponse, Exception exception) {
+            public void onException(ChunkedOutput<OutboundEvent> outboundEventChunkedOutput, Exception exception) {
                 exception.printStackTrace();
             }
         };

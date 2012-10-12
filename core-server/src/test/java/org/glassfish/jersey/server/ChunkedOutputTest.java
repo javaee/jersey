@@ -52,20 +52,20 @@ import static junit.framework.Assert.fail;
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ChunkedResponseTest {
+public class ChunkedOutputTest {
     @Path("/test")
     public static class MyResource {
         @GET
-        public ChunkedResponse<String> get() {
-            final ChunkedResponse<String> response = new ChunkedResponse<String>(String.class);
+        public ChunkedOutput<String> get() {
+            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
 
             new Thread() {
                 public void run() {
                     try {
-                        response.write("test");
-                        response.write("test");
-                        response.write("test");
-                        response.close();
+                        output.write("test");
+                        output.write("test");
+                        output.write("test");
+                        output.close();
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -75,7 +75,7 @@ public class ChunkedResponseTest {
                 }
             }.start();
 
-            return response;
+            return output;
         }
     }
 

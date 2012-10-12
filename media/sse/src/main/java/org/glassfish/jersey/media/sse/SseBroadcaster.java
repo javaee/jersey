@@ -40,7 +40,6 @@
 package org.glassfish.jersey.media.sse;
 
 import org.glassfish.jersey.server.Broadcaster;
-import org.glassfish.jersey.server.ChunkedResponse;
 
 /**
  * Used for broadcasting SSE to multiple {@link EventChannel} instances.
@@ -53,7 +52,7 @@ public class SseBroadcaster extends Broadcaster<OutboundEvent> {
     /**
      * Creates a new instance.
      * If this constructor is called by a subclass, it assumes the the reason for the subclass to exist is to implement
-     * {@link #onClose(ChunkedResponse)} and {@link #onException(ChunkedResponse, Exception)} methods, so it adds
+     * {@link #onClose(org.glassfish.jersey.server.ChunkedOutput)} and {@link #onException(org.glassfish.jersey.server.ChunkedOutput, Exception)} methods, so it adds
      * the newly created instance as the listener. To avoid this, subclasses may call {@link #SseBroadcaster(Class)}
      * passing their class as an argument.
      */

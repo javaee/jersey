@@ -379,10 +379,10 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     /**
-     * Returns {@code true} if the response entity is a {@link ChunkedResponse} instance.
-     * @return {@code true} if the entity is a {@link ChunkedResponse} instance, {@code false} otherwise.
+     * Returns {@code true} if the response entity is a {@link ChunkedOutput} instance.
+     * @return {@code true} if the entity is a {@link ChunkedOutput} instance, {@code false} otherwise.
      */
     public boolean isChunked() {
-        return hasEntity() && ChunkedResponse.class.isAssignableFrom(getEntity().getClass());
+        return hasEntity() && ChunkedOutput.class.isAssignableFrom(getEntity().getClass());
     }
 }

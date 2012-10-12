@@ -50,16 +50,16 @@ package org.glassfish.jersey.server;
 public interface BroadcasterListener<T> {
     /**
      * Called when exception was thrown by a given chunked response when trying to write to it or close it.
-     * @param chunkedResponse instance that threw exception
+     * @param chunkedOutput instance that threw exception
      * @param exception thrown exception
      */
-    void onException(ChunkedResponse<T> chunkedResponse, Exception exception);
+    void onException(ChunkedOutput<T> chunkedOutput, Exception exception);
 
     /**
-     * Called when the chunkedResponse has been closed (either by client closing the connection or by calling
-     * {@link org.glassfish.jersey.server.ChunkedResponse#close()} on the server side.
+     * Called when the chunkedOutput has been closed (either by client closing the connection or by calling
+     * {@link ChunkedOutput#close()} on the server side.
      *
-     * @param chunkedResponse instance that has been closed.
+     * @param chunkedOutput instance that has been closed.
      */
-    void onClose(ChunkedResponse<T> chunkedResponse);
+    void onClose(ChunkedOutput<T> chunkedOutput);
 }

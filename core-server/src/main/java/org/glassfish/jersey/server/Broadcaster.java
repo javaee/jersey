@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
- * Used for broadcasting response chunks to multiple {@link ChunkedResponse} instances.
+ * Used for broadcasting response chunks to multiple {@link ChunkedOutput} instances.
  *
  * @param <T> broadcast type.
  *
@@ -66,18 +66,18 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
                 }
             });
 
-    private final ConcurrentSkipListSet<ChunkedResponse<T>> chunkedResponses =
-            new ConcurrentSkipListSet<ChunkedResponse<T>> (new Comparator<ChunkedResponse<T>>() {
+    private final ConcurrentSkipListSet<ChunkedOutput<T>> chunkedOutputs =
+            new ConcurrentSkipListSet<ChunkedOutput<T>> (new Comparator<ChunkedOutput<T>>() {
         @Override
-        public int compare(final ChunkedResponse<T> chunkedResponse1, final ChunkedResponse<T> chunkedResponse2) {
-            return chunkedResponse1.hashCode() - chunkedResponse2.hashCode();
+        public int compare(final ChunkedOutput<T> chunkedOutput1, final ChunkedOutput<T> chunkedOutput2) {
+            return chunkedOutput1.hashCode() - chunkedOutput2.hashCode();
         }
     });
 
     /**
      * Creates a new instance.
      * If this constructor is called by a subclass, it assumes the the reason for the subclass to exist is to implement
-     * {@link #onClose(ChunkedResponse)} and {@link #onException(ChunkedResponse, Exception)} methods, so it adds
+     * {@link #onClose(ChunkedOutput)} and {@link #onException(ChunkedOutput, Exception)} methods, so it adds
      * the newly created instance as the listener. To avoid this, subclasses may call {@link #Broadcaster(Class)}
      * passing their class as an argument.
      */
@@ -101,27 +101,27 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     }
 
     /**
-     * Register {@link ChunkedResponse} to this {@link Broadcaster} instance.
+     * Register {@link ChunkedOutput} to this {@link Broadcaster} instance.
      *
-     * @param chunkedResponse {@link ChunkedResponse} to register.
+     * @param chunkedOutput {@link ChunkedOutput} to register.
      * @return {@code true} if the instance was successfully registered, {@code false} if this instance was already in
      * the list of registered chunked responses.
      */
-    public final boolean add(final ChunkedResponse<T> chunkedResponse) {
-        return chunkedResponses.add(chunkedResponse);
+    public final boolean add(final ChunkedOutput<T> chunkedOutput) {
+        return chunkedOutputs.add(chunkedOutput);
     }
 
     /**
-     * Un-register {@link ChunkedResponse} from this {@link Broadcaster} instance.
+     * Un-register {@link ChunkedOutput} from this {@link Broadcaster} instance.
      *
-     * This method does not close the {@link ChunkedResponse} being unregistered.
+     * This method does not close the {@link ChunkedOutput} being unregistered.
      *
-     * @param chunkedResponse {@link ChunkedResponse} instance to un-register from this broadcaster.
+     * @param chunkedOutput {@link ChunkedOutput} instance to un-register from this broadcaster.
      * @return {@code true} if the instance was unregistered, {@code false} if the instance wasn't found in the list
      * of registered chunked responses.
      */
-    public final boolean remove(final ChunkedResponse<T> chunkedResponse) {
-        return chunkedResponses.remove(chunkedResponse);
+    public final boolean remove(final ChunkedOutput<T> chunkedOutput) {
+        return chunkedOutputs.remove(chunkedOutput);
     }
 
     /**
@@ -148,26 +148,26 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     }
 
     /**
-     * Broadcast a chunk to all registered {@link ChunkedResponse} instances.
+     * Broadcast a chunk to all registered {@link ChunkedOutput} instances.
      *
      * @param chunk chunk to be sent.
      */
     public void broadcast(final T chunk) {
-        forEachChunkedResponse(new Task<ChunkedResponse<T>>() {
+        forEachChunkedResponse(new Task<ChunkedOutput<T>>() {
             @Override
-            public void run(final ChunkedResponse<T> cr) throws IOException {
+            public void run(final ChunkedOutput<T> cr) throws IOException {
                 cr.write(chunk);
             }
         });
     }
 
     /**
-     * Close all registered {@link ChunkedResponse} instances.
+     * Close all registered {@link ChunkedOutput} instances.
      */
     public void closeAll() {
-        forEachChunkedResponse(new Task<ChunkedResponse<T>>() {
+        forEachChunkedResponse(new Task<ChunkedOutput<T>>() {
             @Override
-            public void run(final ChunkedResponse<T> cr) throws IOException {
+            public void run(final ChunkedOutput<T> cr) throws IOException {
                 cr.close();
             }
         });
@@ -176,44 +176,44 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     /**
      * {@inheritDoc}
      *
-     * Can be implemented by subclasses to handle the event of exception thrown from a particular {@link ChunkedResponse}
+     * Can be implemented by subclasses to handle the event of exception thrown from a particular {@link ChunkedOutput}
      * instance when trying to write to it or close it.
      *
-     * @param chunkedResponse instance that threw exception.
+     * @param chunkedOutput instance that threw exception.
      * @param exception exception that was thrown.
      */
     @Override
-    public void onException(final ChunkedResponse<T> chunkedResponse, final Exception exception) {
+    public void onException(final ChunkedOutput<T> chunkedOutput, final Exception exception) {
     }
 
     /**
      * {@inheritDoc}
      *
-     * Can be implemented by subclasses to hadnle the event of {@link ChunkedResponse} being closed.
+     * Can be implemented by subclasses to hadnle the event of {@link ChunkedOutput} being closed.
      *
-     * @param chunkedResponse instance that was closed.
+     * @param chunkedOutput instance that was closed.
      */
     @Override
-    public void onClose(final ChunkedResponse<T> chunkedResponse) {
+    public void onClose(final ChunkedOutput<T> chunkedOutput) {
     }
 
     private static interface Task<T> {
         void run(T parameter) throws IOException;
     }
 
-    private void forEachChunkedResponse(final Task<ChunkedResponse<T>> t) {
-        for (Iterator<ChunkedResponse<T>> iterator = chunkedResponses.iterator(); iterator.hasNext();) {
-            ChunkedResponse<T> chunkedResponse = iterator.next();
-            if (!chunkedResponse.isClosed()) {
+    private void forEachChunkedResponse(final Task<ChunkedOutput<T>> t) {
+        for (Iterator<ChunkedOutput<T>> iterator = chunkedOutputs.iterator(); iterator.hasNext();) {
+            ChunkedOutput<T> chunkedOutput = iterator.next();
+            if (!chunkedOutput.isClosed()) {
                 try {
-                    t.run(chunkedResponse);
+                    t.run(chunkedOutput);
                 } catch (Exception e) {
-                    fireOnException(chunkedResponse, e);
+                    fireOnException(chunkedOutput, e);
                 }
             }
-            if (chunkedResponse.isClosed()) {
+            if (chunkedOutput.isClosed()) {
                 iterator.remove();
-                fireOnClose(chunkedResponse);
+                fireOnClose(chunkedOutput);
             }
         }
     }
@@ -230,20 +230,20 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
         }
     }
 
-    private void fireOnException(final ChunkedResponse<T> chunkedResponse, final Exception exception) {
+    private void fireOnException(final ChunkedOutput<T> chunkedOutput, final Exception exception) {
         forEachListener(new Task<BroadcasterListener<T>>() {
             @Override
             public void run(BroadcasterListener<T> parameter) throws IOException {
-                parameter.onException(chunkedResponse, exception);
+                parameter.onException(chunkedOutput, exception);
             }
         });
     }
 
-    private void fireOnClose(final ChunkedResponse<T> chunkedResponse) {
+    private void fireOnClose(final ChunkedOutput<T> chunkedOutput) {
         forEachListener(new Task<BroadcasterListener<T>>() {
             @Override
             public void run(BroadcasterListener<T> parameter) throws IOException {
-                parameter.onClose(chunkedResponse);
+                parameter.onClose(chunkedOutput);
             }
         });
     }

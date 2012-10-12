@@ -57,9 +57,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-// FIXME: rename to ChunkedOutput
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
-public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
+public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
 
     private volatile boolean closed = false;
@@ -70,15 +69,15 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     /**
      * Create new chunked response.
      */
-    protected ChunkedResponse() {
+    protected ChunkedOutput() {
     }
 
     /**
-     * Create {@link ChunkedResponse} with specified type.
+     * Create {@link ChunkedOutput} with specified type.
      *
      * @param chunkType chunk type
      */
-    public ChunkedResponse(final Type chunkType) {
+    public ChunkedOutput(final Type chunkType) {
         super(chunkType);
     }
 
@@ -90,7 +89,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
      */
     public void write(final T chunk) throws IOException {
         if (closed) {
-            throw new IOException(LocalizationMessages.CHUNKED_RESPONSE_CLOSED());
+            throw new IOException(LocalizationMessages.CHUNKED_OUTPUT_CLOSED());
         }
 
         if (chunk != null) {
@@ -205,7 +204,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
     /**
      * Get state information.
      *
-     * Please note that {@link ChunkedResponse} can be closed by the client side - client can close connection
+     * Please note that {@link ChunkedOutput} can be closed by the client side - client can close connection
      * from its side.
      *
      * @return true when closed, false otherwise.
@@ -227,7 +226,7 @@ public class ChunkedResponse<T> extends GenericType<T> implements Closeable {
 
     @Override
     public String toString() {
-        return "ChunkedResponse<" + getType() + ">";
+        return "ChunkedOutput<" + getType() + ">";
     }
 
     /**

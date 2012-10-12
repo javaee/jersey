@@ -50,24 +50,24 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 /**
- * Used for writing {@link ChunkedResponse}.
+ * Used for writing {@link ChunkedOutput}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @see MessageBodyWriter
  */
-public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedResponse<?>> {
+public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedOutput<?>> {
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return ChunkedResponse.class.isAssignableFrom(type);
+        return ChunkedOutput.class.isAssignableFrom(type);
     }
 
     @Override
-    public long getSize(ChunkedResponse<?> chunkedResponse, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(ChunkedOutput<?> chunkedOutput, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(ChunkedResponse<?> chunkedResponse, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+    public void writeTo(ChunkedOutput<?> chunkedOutput, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
         // do nothing.
     }
 }
