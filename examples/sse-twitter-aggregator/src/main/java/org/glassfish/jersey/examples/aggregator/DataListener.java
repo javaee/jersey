@@ -37,51 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.sse;
 
-import org.glassfish.jersey.server.Broadcaster;
-import org.glassfish.jersey.server.ChunkedResponse;
+package org.glassfish.jersey.examples.aggregator;
 
 /**
- * Used for broadcasting SSE to multiple {@link EventChannel} instances.
+ * Incoming data listener.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class SseBroadcaster extends Broadcaster<OutboundEvent> {
-
+public interface DataListener {
     /**
-     * Creates a new instance.
-     * If this constructor is called by a subclass, it assumes the the reason for the subclass to exist is to implement
-     * {@link #onClose(ChunkedResponse)} and {@link #onException(ChunkedResponse, Exception)} methods, so it adds
-     * the newly created instance as the listener. To avoid this, subclasses may call {@link #SseBroadcaster(Class)}
-     * passing their class as an argument.
+     * Invoked when the connection to the data stream has been established.
      */
-    public SseBroadcaster() {
-        this(SseBroadcaster.class);
-    }
+    public void onStart();
 
     /**
-     * Can be used by subclasses to override the default functionality of adding self to the set of
-     * {@link org.glassfish.jersey.server.BroadcasterListener listeners}.
-     * If creating a direct instance of a subclass passed in the parameter,
-     * the broadcaster will not register itself as a listener.
+     * Invoked when the data stream has dried out (or the connection has been closed).
+     */
+    public void onComplete();
+
+    /**
+     * Invoked when there was an error while receiving streamed data.
+     */
+    public void onError();
+
+    /**
+     * Invoked when a new message data are available.
      *
-     * @param subclass subclass of SseBroadcaster that should not be registered as a listener - if creating a direct instance
-     *                 of this subclass, this constructor will not register the new instance as a listener.
-     * @see #SseBroadcaster()
+     * @param message new message data.
      */
-    protected SseBroadcaster(final Class<? extends SseBroadcaster> subclass) {
-        super(subclass);
-    }
-
-    /**
-     * Register {@link EventChannel} to current {@link SseBroadcaster} instance.
-     *
-     * @param eventChannel {@link EventChannel} to register.
-     * TODO is this needed? Should we instead override the Broadcaster.add and make it's argument generic?
-     */
-    public void add(final EventChannel eventChannel) {
-        super.add(eventChannel);
-    }
+    public void onMessage(Message message);
 }
