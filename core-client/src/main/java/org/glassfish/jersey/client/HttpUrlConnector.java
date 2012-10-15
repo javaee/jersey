@@ -62,6 +62,8 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
@@ -121,13 +123,73 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
         this.connectionFactory = connectionFactory;
     }
 
-    private static InputStream getInputStream(HttpURLConnection uc) throws IOException {
-        if (uc.getResponseCode() < 300) {
-            return uc.getInputStream();
-        } else {
-            InputStream ein = uc.getErrorStream();
-            return (ein != null) ? ein : new ByteArrayInputStream(new byte[0]);
-        }
+    private static InputStream getInputStream(final HttpURLConnection uc) throws IOException {
+        return new InputStream() {
+            private final UnsafeValue<InputStream, IOException> in = Values.lazy(new UnsafeValue<InputStream, IOException>() {
+                @Override
+                public InputStream get() throws IOException{
+                    if (uc.getResponseCode() < 300) {
+                        return uc.getInputStream();
+                    } else {
+                        InputStream ein = uc.getErrorStream();
+                        return (ein != null) ? ein : new ByteArrayInputStream(new byte[0]);
+                    }
+                }
+            });
+
+            @Override
+            public int read() throws IOException {
+                return in.get().read();
+            }
+
+            @Override
+            public int read(byte[] b) throws IOException {
+                return in.get().read(b);
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                return in.get().read(b, off, len);
+            }
+
+            @Override
+            public long skip(long n) throws IOException {
+                return in.get().skip(n);
+            }
+
+            @Override
+            public int available() throws IOException {
+                return in.get().available();
+            }
+
+            @Override
+            public void close() throws IOException {
+                in.get().close();
+            }
+
+            @Override
+            public void mark(int readLimit) {
+                try {
+                    in.get().mark(readLimit);
+                } catch (IOException e) {
+                    throw new IllegalStateException("Unable to retrieve the underlying input stream.", e);
+                }
+            }
+
+            @Override
+            public void reset() throws IOException {
+                in.get().reset();
+            }
+
+            @Override
+            public boolean markSupported() {
+                try {
+                    return in.get().markSupported();
+                } catch (IOException e) {
+                    throw new IllegalStateException("Unable to retrieve the underlying input stream.", e);
+                }
+            }
+        };
     }
 
     @Override
@@ -255,8 +317,8 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
 
         ClientResponse responseContext = new ClientResponse(
                 Statuses.from(uc.getResponseCode()), request);
-        responseContext.setEntityStream(getInputStream(uc));
         responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
+        responseContext.setEntityStream(getInputStream(uc));
 
         return responseContext;
     }

@@ -42,7 +42,7 @@ package org.glassfish.jersey.media.sse;
 import org.glassfish.jersey.server.Broadcaster;
 
 /**
- * Used for broadcasting SSE to multiple {@link EventChannel} instances.
+ * Used for broadcasting SSE to multiple {@link EventOutput} instances.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
@@ -75,12 +75,12 @@ public class SseBroadcaster extends Broadcaster<OutboundEvent> {
     }
 
     /**
-     * Register {@link EventChannel} to current {@link SseBroadcaster} instance.
+     * Register {@link EventOutput} to current {@link SseBroadcaster} instance.
      *
-     * @param eventChannel {@link EventChannel} to register.
+     * @param eventOutput {@link EventOutput} to register.
      * TODO is this needed? Should we instead override the Broadcaster.add and make it's argument generic?
      */
-    public void add(final EventChannel eventChannel) {
-        super.add(eventChannel);
+    public void add(final EventOutput eventOutput) {
+        super.add(eventOutput);
     }
 }

@@ -48,8 +48,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.media.sse.SseFeature;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -57,30 +58,30 @@ import org.glassfish.jersey.media.sse.OutboundEvent;
 @Path("server-sent-events")
 public class ServerSentEventsResource {
 
-    private static EventChannel eventChannel = new EventChannel();
+    private static EventOutput eventOutput = new EventOutput();
 
     @GET
-    @Produces(EventChannel.SERVER_SENT_EVENTS)
-    public EventChannel getMessageQueue() {
-        return eventChannel;
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
+    public EventOutput getMessageQueue() {
+        return eventOutput;
     }
 
     @POST
     public void addMessage(String message) throws IOException {
-        eventChannel.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
+        eventOutput.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
     }
 
     @DELETE
     public void close() throws IOException {
-        eventChannel.close();
-        eventChannel = new EventChannel();
+        eventOutput.close();
+        eventOutput = new EventOutput();
     }
 
     @POST
     @Path("domains/{id}")
-    @Produces(EventChannel.SERVER_SENT_EVENTS)
-    public EventChannel startDomain(@PathParam("id") final String id) {
-        final EventChannel seq = new EventChannel();
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
+    public EventOutput startDomain(@PathParam("id") final String id) {
+        final EventOutput seq = new EventOutput();
 
         new Thread() {
             public void run() {

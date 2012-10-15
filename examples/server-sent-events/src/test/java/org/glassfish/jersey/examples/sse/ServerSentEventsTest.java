@@ -42,8 +42,6 @@ package org.glassfish.jersey.examples.sse;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,15 +50,16 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ChunkedInput;
+import org.glassfish.jersey.media.sse.EventInput;
+import org.glassfish.jersey.media.sse.EventInputReader;
 import org.glassfish.jersey.media.sse.EventListener;
-import org.glassfish.jersey.media.sse.EventProcessor;
-import org.glassfish.jersey.media.sse.EventProcessorReader;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
+import org.glassfish.jersey.media.sse.InboundEventReader;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -73,14 +72,15 @@ public class ServerSentEventsTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        enable(TestProperties.LOG_TRAFFIC);
+        // enable(TestProperties.LOG_TRAFFIC);
         return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, OutboundEventWriter.class);
     }
 
     @Test
     public void testEventSource() throws InterruptedException, URISyntaxException {
 
-        new EventSource(target().path(App.ROOT_PATH), Executors.newCachedThreadPool()) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final EventSource eventSource = new EventSource(target().path(App.ROOT_PATH)) {
             @Override
             public void onEvent(InboundEvent inboundEvent) {
                 try {
@@ -88,6 +88,7 @@ public class ServerSentEventsTest extends JerseyTest {
                     System.out.println(inboundEvent.getData(String.class));
 
                     assertEquals("message", inboundEvent.getData());
+                    latch.countDown();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -95,40 +96,56 @@ public class ServerSentEventsTest extends JerseyTest {
         };
 
         target().path(App.ROOT_PATH).request().post(Entity.text("message"));
-        target().path(App.ROOT_PATH).request().delete();
+//        target().path(App.ROOT_PATH).request().delete();
+
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } finally {
+            eventSource.close();
+        }
     }
 
     @Test
-    public void testEventProcessor() throws InterruptedException {
-        final CountDownLatch latch = new CountDownLatch(5);
-        new Thread(new Runnable() {
+    public void testInboundEventReader() throws InterruptedException {
+        final CountDownLatch startLatch = new CountDownLatch(1);
+        final CountDownLatch stopLatch = new CountDownLatch(5);
+        final Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                WebTarget target = target(App.ROOT_PATH);
-                target.configuration().register(EventProcessorReader.class);
-                EventProcessor processor = target.request().get(EventProcessor.class);
-                processor.process(new EventListener() {
-                    @Override
-                    public void onEvent(InboundEvent inboundEvent) {
-                        try {
-                            System.out.println("# Received: " + inboundEvent);
-                            System.out.println(inboundEvent.getData(String.class));
+                final WebTarget target = target(App.ROOT_PATH);
+                target.configuration().register(InboundEventReader.class).register(EventInputReader.class);
+                final EventInput eventInput = target.request().get(EventInput.class);
 
-                            assertEquals("message " + (5 - latch.getCount()), inboundEvent.getData());
-                            latch.countDown();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                startLatch.countDown();
+
+                try {
+                    eventInput.setParser(ChunkedInput.createParser("\n\n"));
+                    do {
+                        InboundEvent event = eventInput.read();
+                        System.out.println("# Received: " + event);
+                        System.out.println(event.getData(String.class));
+
+                        assertEquals("message " + (5 - stopLatch.getCount()), event.getData());
+                        stopLatch.countDown();
+                    } while (stopLatch.getCount() > 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (eventInput != null) {
+                        eventInput.close();
                     }
-                });
+                }
             }
-        }).start();
+        });
+        thread.start();
+
+        assertTrue(startLatch.await(5, TimeUnit.SECONDS));
 
         for (int i = 0; i < 5; i++) {
             target(App.ROOT_PATH).request().post(Entity.text("message " + i));
         }
-        assertTrue(latch.await(5, TimeUnit.SECONDS));
-        target(App.ROOT_PATH).request().delete();
+        assertTrue(stopLatch.await(5, TimeUnit.SECONDS));
+        thread.join(5000);
     }
 
     @Test
@@ -139,13 +156,13 @@ public class ServerSentEventsTest extends JerseyTest {
         final Response response = target().path("domain/start").queryParam("testSources", MAX_COUNT)
                 .request().post(Entity.text("data"), Response.class);
 
-        final ExecutorService executorService = Executors.newFixedThreadPool(MAX_COUNT);
         final AtomicInteger doneCount = new AtomicInteger(0);
         final CountDownLatch doneLatch = new CountDownLatch(MAX_COUNT);
         final EventSource[] sources = new EventSource[MAX_COUNT];
         final String processUrl = response.getLocation().toString();
         for (int i = 0; i < MAX_COUNT; i++) {
-            sources[i] = new EventSource(target().path(processUrl).queryParam("testSource", "true"), executorService) {
+            sources[i] = new EventSource(target().path(processUrl).queryParam("testSource", "true"), false);
+            sources[i].register(new EventListener() {
 
                 private volatile int messageCount = 0;
 
@@ -165,7 +182,8 @@ public class ServerSentEventsTest extends JerseyTest {
                         e.printStackTrace();
                     }
                 }
-            };
+            });
+            sources[i].open();
         }
 
         doneLatch.await(2, TimeUnit.SECONDS);
@@ -175,8 +193,6 @@ public class ServerSentEventsTest extends JerseyTest {
             source.close();
         }
 
-        executorService.shutdown();
-        executorService.awaitTermination(2, TimeUnit.SECONDS);
         System.out.println("terminated");
         assertEquals(MAX_COUNT, doneCount.get());
     }

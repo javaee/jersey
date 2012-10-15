@@ -39,26 +39,42 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
+import java.lang.annotation.Annotation;
 
-import org.glassfish.jersey.server.ChunkedOutput;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.client.ChunkedInput;
+import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
- * Outgoing event message channel.
+ * Inbound Server-Sent Events channel.
  *
- * When returned from resource method, underlying connection is kept open and application
- * is able to send events. One instance of this class corresponds with exactly one HTTP connection.
+ * The input channel lets you serially read & consume SSE events as they arrive.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class EventChannel extends ChunkedOutput<OutboundEvent> {
+public class EventInput extends ChunkedInput<InboundEvent> {
     /**
-     * {@link String} representation of Server sent events media type. ("{@value}").
+     * Package-private constructor used by the {@link org.glassfish.jersey.client.ChunkedInputReader}.
+     *
+     * @param inputStream        response input stream.
+     * @param annotations        annotations associated with response entity.
+     * @param mediaType          response entity media type.
+     * @param headers            response headers.
+     * @param messageBodyWorkers message body workers.
+     * @param propertiesDelegate properties delegate for this request/response.
      */
-    public static final String SERVER_SENT_EVENTS = "text/event-stream";
+    EventInput(InputStream inputStream,
+               Annotation[] annotations,
+               MediaType mediaType,
+               MultivaluedMap<String, String> headers,
+               MessageBodyWorkers messageBodyWorkers,
+               PropertiesDelegate propertiesDelegate) {
+        super(InboundEvent.class, inputStream, annotations, mediaType, headers, messageBodyWorkers, propertiesDelegate);
 
-    /**
-     * Server sent events media type.
-     */
-    public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
+        super.setParser(ChunkedInput.createParser("\n\n"));
+    }
 }

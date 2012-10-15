@@ -62,7 +62,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.glassfish.jersey.client.ChunkedInput;
-import org.glassfish.jersey.client.ChunkedInputReader;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.SslConfig;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
@@ -121,7 +120,6 @@ public final class TwitterAggregator implements DataAggregator {
                 client.configuration()
                         .setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context))
                         .setProperty(ClientProperties.CONNECT_TIMEOUT, 2000)
-                        .register(ChunkedInputReader.class)
                         .register(new MoxyJsonFeature())
                         .register(new HttpBasicAuthFilter(App.getTwitterUserName(), App.getTwitterUserPassword()))
                         .register(GZipEncoder.class);

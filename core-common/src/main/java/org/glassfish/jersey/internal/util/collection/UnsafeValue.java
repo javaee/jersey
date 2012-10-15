@@ -37,62 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.client;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.message.MessageBodyWorkers;
+package org.glassfish.jersey.internal.util.collection;
 
 /**
- * {@link javax.ws.rs.ext.MessageBodyWriter} for {@link ChunkedInput}.
+ * A generic value provider, similar to {@link Value}, but able to
+ * throw an exception.
  *
+ * @param <T> value type.
+ * @param <E> exception type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@ConstrainedTo(ConstrainedTo.Type.CLIENT)
-class ChunkedInputReader implements MessageBodyReader<ChunkedInput> {
-
-    @Inject
-    private Provider<MessageBodyWorkers> messageBodyWorkers;
-    @Inject
-    private Provider<PropertiesDelegate> propertiesDelegateProvider;
-
-    @Override
-    public boolean isReadable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {
-        return aClass.equals(ChunkedInput.class);
-    }
-
-    @Override
-    public ChunkedInput readFrom(Class<ChunkedInput> chunkedInputClass,
-                                   Type type,
-                                   Annotation[] annotations,
-                                   MediaType mediaType,
-                                   MultivaluedMap<String, String> headers,
-                                   InputStream inputStream) throws IOException, WebApplicationException {
-
-        final Type chunkType = ReflectionHelper.getTypeArgument(type, 0);
-
-        return new ChunkedInput(
-                chunkType,
-                inputStream,
-                annotations,
-                mediaType,
-                headers,
-                messageBodyWorkers.get(),
-                propertiesDelegateProvider.get());
-    }
+public interface UnsafeValue<T, E extends Throwable> {
+    public T get() throws E;
 }

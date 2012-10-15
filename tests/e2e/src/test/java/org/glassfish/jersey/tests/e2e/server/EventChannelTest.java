@@ -45,9 +45,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -71,15 +72,15 @@ public class EventChannelTest extends JerseyTest {
     public static class MyResource {
 
         @GET
-        @Produces(EventChannel.SERVER_SENT_EVENTS)
-        public EventChannel get() {
-            final EventChannel eventChannel = new EventChannel();
+        @Produces(SseFeature.SERVER_SENT_EVENTS)
+        public EventOutput get() {
+            final EventOutput eventOutput = new EventOutput();
 
             new Thread() {
                 public void run() {
                     try {
-                        eventChannel.write(new OutboundEvent.Builder().data(String.class, "test").build());
-                        eventChannel.close();
+                        eventOutput.write(new OutboundEvent.Builder().data(String.class, "test").build());
+                        eventOutput.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                         fail();
@@ -87,7 +88,7 @@ public class EventChannelTest extends JerseyTest {
                 }
             }.start();
 
-            return eventChannel;
+            return eventOutput;
         }
     }
 

@@ -44,7 +44,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -81,7 +80,6 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Sets;
 
 /**
  * Base inbound message context implementation.
@@ -100,39 +98,29 @@ public class InboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
     private final MultivaluedMap<String, String> headers;
-    private final ContentStream contentStream;
+    private final EntityContent entityContent;
     private MessageBodyWorkers workers;
 
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
      * is used to control the execution of interceptors.
      */
-    private static class ContentStream {
-        private InputStream entityStream;
+    private static class EntityContent extends EntityInputStream {
         private boolean interceptable;
         private boolean buffered;
-        private boolean closed;
 
-        ContentStream(InputStream entityStream) {
-            super();
-            this.entityStream = entityStream;
-            this.interceptable = this.buffered = this.closed = false;
+        EntityContent(InputStream input) {
+            super(input);
         }
 
-        void setBufferedContentStream(InputStream bufferedInputStream) {
-            entityStream = bufferedInputStream;
+        void setBufferedContentStream(InputStream bufferedInput) {
+            setWrappedStream(bufferedInput);
             buffered = true;
-            closed = false;
         }
 
-        void setExternalContentStream(InputStream stream) {
-            entityStream = stream;
+        void setExternalContentStream(InputStream input) {
+            setWrappedStream(input);
             interceptable = true;
-            closed = false;
-        }
-
-        InputStream getInputStream() {
-            return entityStream;
         }
 
         boolean isInterceptable() {
@@ -143,62 +131,12 @@ public class InboundMessageContext {
             return buffered;
         }
 
-        void reset() {
+        public void close() {
             try {
-                entityStream.reset();
-            } catch (IOException ex) {
-                throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFER_RESET_FAILED(), ex);
-            }
-        }
-
-        void close() {
-            if (!closed && entityStream != null) {
-                try {
-                    entityStream.close();
-                } catch (IOException ex) {
-                    throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
-                } finally {
-                    closed = true;
-                    buffered = false;
-                    entityStream = null;
-                }
-            }
-        }
-
-        public boolean isEmpty() {
-            if (closed) {
-                throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
-            }
-            if (entityStream == null) {
-                return true;
-            }
-            try {
-                if (entityStream.available() > 0) {
-                    return false;
-                } else if (entityStream.markSupported()) {
-                    entityStream.mark(1);
-                    int i = entityStream.read();
-                    entityStream.reset();
-                    return i == -1;
-                } else {
-                    int b = entityStream.read();
-                    if (b == -1) {
-                        return true;
-                    }
-
-                    PushbackInputStream pbis;
-                    if (entityStream instanceof PushbackInputStream) {
-                        pbis = (PushbackInputStream) entityStream;
-                    } else {
-                        pbis = new PushbackInputStream(entityStream, 1);
-                        entityStream = pbis;
-                    }
-                    pbis.unread(b);
-
-                    return false;
-                }
-            } catch (IOException ex) {
-                throw new ProcessingException(ex);
+                super.close();
+            } finally {
+                buffered = false;
+                setWrappedStream(null);
             }
         }
     }
@@ -208,7 +146,7 @@ public class InboundMessageContext {
      */
     public InboundMessageContext() {
         this.headers = HeadersFactory.createInbound();
-        this.contentStream = new ContentStream(EMPTY);
+        this.entityContent = new EntityContent(EMPTY);
     }
 
     // Message headers
@@ -771,7 +709,7 @@ public class InboundMessageContext {
      */
     public boolean hasEntity() {
         try {
-            return !contentStream.isEmpty();
+            return !entityContent.isEmpty();
         } catch (IllegalStateException ex) {
             // input stream has been closed.
             return false;
@@ -784,7 +722,7 @@ public class InboundMessageContext {
      * @return entity input stream.
      */
     public InputStream getEntityStream() {
-        return contentStream.getInputStream();
+        return entityContent.getWrappedStream();
     }
 
     /**
@@ -793,7 +731,7 @@ public class InboundMessageContext {
      * @param input new entity input stream.
      */
     public void setEntityStream(InputStream input) {
-        this.contentStream.setExternalContentStream(input);
+        this.entityContent.setExternalContentStream(input);
     }
 
     /**
@@ -847,13 +785,21 @@ public class InboundMessageContext {
      */
     @SuppressWarnings("unchecked")
     public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations, PropertiesDelegate propertiesDelegate) {
-        if (contentStream.isBuffered()) {
-            contentStream.reset();
+
+        if (entityContent.isBuffered()) {
+            entityContent.reset();
         }
 
-        if (contentStream.isEmpty()) {
-            return null;
-        }
+        entityContent.ensureNotClosed();
+
+// TODO: revise if we need to re-introduce the check for performance reasons or once non-blocking I/O is supported.
+// The code has been commended out because in case of streaming input (e.g. SSE) the call might block until a first
+// byte is available, which would make e.g. the SSE EventSource construction or EventSource.open() method to block
+// until a first event is received, which is undesirable.
+//
+//        if (entityContent.isEmpty()) {
+//            return null;
+//        }
 
         if (workers == null) {
             return null;
@@ -867,11 +813,11 @@ public class InboundMessageContext {
                     getMediaType(),
                     headers,
                     propertiesDelegate,
-                    contentStream.getInputStream(),
-                    contentStream.isInterceptable());
+                    entityContent.getWrappedStream(),
+                    entityContent.isInterceptable());
 
-            if (!contentStream.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
-                contentStream.close();
+            if (!entityContent.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
+                entityContent.close();
             }
             return t;
         } catch (IOException ex) {
@@ -888,18 +834,19 @@ public class InboundMessageContext {
      */
     public boolean bufferEntity() throws MessageProcessingException {
         try {
-            if (contentStream.isBuffered()) {
+            if (entityContent.isBuffered()) {
                 return true;
             }
 
+            final InputStream entityStream = entityContent.getWrappedStream();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
-                ReaderWriter.writeTo(contentStream.getInputStream(), baos);
+                ReaderWriter.writeTo(entityStream, baos);
             } finally {
-                contentStream.close();
+                entityStream.close();
             }
 
-            contentStream.setBufferedContentStream(new ByteArrayInputStream(baos.toByteArray()));
+            entityContent.setBufferedContentStream(new ByteArrayInputStream(baos.toByteArray()));
 
             return true;
         } catch (IOException ex) {
@@ -911,6 +858,6 @@ public class InboundMessageContext {
      * Closes the underlying content stream.
      */
     public void close() {
-        contentStream.close();
+        entityContent.close();
     }
 }

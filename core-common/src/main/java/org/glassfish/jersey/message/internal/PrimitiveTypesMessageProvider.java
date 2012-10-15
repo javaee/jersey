@@ -154,7 +154,11 @@ final class PrimitiveTypesMessageProvider extends AbstractMessageReaderWriterPro
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream entityStream) throws IOException, WebApplicationException {
-        return PrimitiveTypes.forType(type).convert(readFromAsString(entityStream, mediaType));
+        final String entityString = readFromAsString(entityStream, mediaType);
+        if (entityString.isEmpty()) {
+            return null;
+        }
+        return PrimitiveTypes.forType(type).convert(entityString);
     }
 
     @Override

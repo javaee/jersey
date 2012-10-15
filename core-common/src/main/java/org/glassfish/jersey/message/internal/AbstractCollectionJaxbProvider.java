@@ -300,7 +300,13 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+            InputStream inputStream) throws IOException {
+
+        final EntityInputStream entityStream = EntityInputStream.create(inputStream);
+        if (entityStream.isEmpty()) {
+            return null;
+        }
+
         try {
             final Class<?> elementType = getElementClass(type, genericType);
             final Unmarshaller u = getUnmarshaller(elementType, mediaType);

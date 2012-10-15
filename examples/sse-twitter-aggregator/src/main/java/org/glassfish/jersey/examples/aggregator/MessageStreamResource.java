@@ -51,9 +51,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
@@ -101,12 +102,12 @@ public class MessageStreamResource {
      * @return new SSE message stream channel.
      */
     @GET
-    @Produces(EventChannel.SERVER_SENT_EVENTS)
-    public EventChannel getMessageStream() {
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
+    public EventOutput getMessageStream() {
         LOGGER.info("--> SSE connection received.");
-        final EventChannel eventChannel = new EventChannel();
-        broadcaster.add(eventChannel);
-        return eventChannel;
+        final EventOutput eventOutput = new EventOutput();
+        broadcaster.add(eventOutput);
+        return eventOutput;
     }
 
 }

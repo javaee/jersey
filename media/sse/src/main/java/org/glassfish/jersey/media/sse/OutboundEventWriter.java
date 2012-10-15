@@ -59,6 +59,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+// TODO: make package-private once common config support is fully implemented & replace registration with SseFeature.
 public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
 
     @Inject
@@ -70,44 +71,63 @@ public class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
     }
 
     @Override
-    public long getSize(OutboundEvent incomingEvent, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(OutboundEvent incomingEvent,
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType) {
         return -1;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void writeTo(OutboundEvent outboundEvent, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-        if(outboundEvent.getComment() != null) {
+    public void writeTo(OutboundEvent outboundEvent,
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+
+        if (outboundEvent.getComment() != null) {
             entityStream.write(String.format(": %s\n", outboundEvent.getComment()).getBytes());
         }
 
-        if(outboundEvent.getType() != null) {
-            final MediaType eventMediaType = outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
+        if (outboundEvent.getType() != null) {
+            final MediaType eventMediaType =
+                    outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
             final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
                     outboundEvent.getType(), annotations, eventMediaType);
-            if(outboundEvent.getName() != null) {
+            if (outboundEvent.getName() != null) {
                 entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());
             }
-            if(outboundEvent.getId() != null) {
+            if (outboundEvent.getId() != null) {
                 entityStream.write(String.format("id: %s\n", outboundEvent.getId()).getBytes());
             }
 
-            messageBodyWriter.writeTo(outboundEvent.getData(), outboundEvent.getType(), outboundEvent.getType(), annotations, eventMediaType, httpHeaders, new OutputStream() {
+            messageBodyWriter.writeTo(
+                    outboundEvent.getData(),
+                    outboundEvent.getType(),
+                    outboundEvent.getType(),
+                    annotations,
+                    eventMediaType,
+                    httpHeaders,
+                    new OutputStream() {
 
-                private boolean start = true;
+                        private boolean start = true;
 
-                @Override
-                public void write(int i) throws IOException {
-                    if(start) {
-                        entityStream.write("data: ".getBytes());
-                        start = false;
-                    }
-                    entityStream.write(i);
-                    if(i == '\n') {
-                        entityStream.write("data: ".getBytes());
-                    }
-                }
-            });
+                        @Override
+                        public void write(int i) throws IOException {
+                            if (start) {
+                                entityStream.write("data: ".getBytes());
+                                start = false;
+                            }
+                            entityStream.write(i);
+                            if (i == '\n') {
+                                entityStream.write("data: ".getBytes());
+                            }
+                        }
+                    });
         }
 
         entityStream.write("\n\n".getBytes());

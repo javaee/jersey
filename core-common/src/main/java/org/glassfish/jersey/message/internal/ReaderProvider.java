@@ -77,7 +77,13 @@ public final class ReaderProvider extends AbstractMessageReaderWriterProvider<Re
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+            InputStream inputStream) throws IOException {
+
+        final EntityInputStream entityStream = EntityInputStream.create(inputStream);
+        if (entityStream.isEmpty()) {
+            return null;
+        }
+
         return new BufferedReader(new InputStreamReader(entityStream, getCharset(mediaType)));
     }
 

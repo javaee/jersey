@@ -46,11 +46,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Providers;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -103,7 +105,13 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+            InputStream inputStream) throws IOException {
+
+        final EntityInputStream entityStream = EntityInputStream.create(inputStream);
+        if (entityStream.isEmpty()) {
+            return null;
+        }
+
         final ParameterizedType pt = (ParameterizedType) genericType;
         final Class ta = (Class) pt.getActualTypeArguments()[0];
 
@@ -116,8 +124,7 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
         }
     }
 
-    protected abstract JAXBElement<?> readFrom(Class<?> type, MediaType mediaType,
-            Unmarshaller u, InputStream entityStream)
+    protected abstract JAXBElement<?> readFrom(Class<?> type, MediaType mediaType, Unmarshaller u, InputStream entityStream)
             throws JAXBException;
 
     @Override
@@ -143,6 +150,6 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
     }
 
     protected abstract void writeTo(JAXBElement<?> t, MediaType mediaType, Charset c,
-            Marshaller m, OutputStream entityStream)
+                                    Marshaller m, OutputStream entityStream)
             throws JAXBException;
 }

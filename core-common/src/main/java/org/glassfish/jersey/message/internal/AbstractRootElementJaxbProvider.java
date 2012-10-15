@@ -106,9 +106,13 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+            InputStream inputStream) throws IOException {
 
         try {
+            final EntityInputStream entityStream = EntityInputStream.create(inputStream);
+            if (entityStream.isEmpty()) {
+                return null;
+            }
             return readFrom(type, mediaType, getUnmarshaller(type, mediaType), entityStream);
         } catch (UnmarshalException ex) {
             throw new WebApplicationException(ex, Status.BAD_REQUEST);

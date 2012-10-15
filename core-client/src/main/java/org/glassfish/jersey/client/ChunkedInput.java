@@ -57,6 +57,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
@@ -79,7 +80,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
     private final Annotation[] annotations;
     private final MultivaluedMap<String, String> headers;
     private final MessageBodyWorkers messageBodyWorkers;
-    private final ClientRequest request;
+    private final PropertiesDelegate propertiesDelegate;
 
     /**
      * Create new chunk parser that will split the response entity input stream
@@ -105,16 +106,14 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     private static class FixedBoundaryParser implements ChunkParser {
         private final byte[] delimiter;
-        private final byte[] boundary;
 
         public FixedBoundaryParser(byte[] boundary) {
-            this.boundary = boundary;
             delimiter = Arrays.copyOf(boundary, boundary.length);
         }
 
         @Override
         public byte[] readChunk(InputStream in) throws IOException {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             final byte[] delimiterBuffer = new byte[delimiter.length];
 
             int data;
@@ -129,15 +128,15 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                             break;
                         }
                     } else if (dPos > 0) {
-                        baos.write(delimiterBuffer, 0, dPos);
+                        buffer.write(delimiterBuffer, 0, dPos - 1);
                         dPos = 0;
                     }
-                    baos.write(b);
+                    buffer.write(b);
                 }
-            } while (data != -1 && baos.size() == 0);
+            } while (data != -1 && buffer.size() == 0);
 
-            if (baos.size() > 0) {
-                return baos.toByteArray();
+            if (buffer.size() > 0) {
+                return buffer.toByteArray();
             }
             return null;
         }
@@ -152,16 +151,16 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * @param mediaType          response entity media type.
      * @param headers            response headers.
      * @param messageBodyWorkers message body workers.
-     * @param request            client request.
+     * @param propertiesDelegate properties delegate for this request/response.
      */
-    ChunkedInput(
+    protected ChunkedInput(
             Type chunkType,
             InputStream inputStream,
             Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> headers,
             MessageBodyWorkers messageBodyWorkers,
-            ClientRequest request) {
+            PropertiesDelegate propertiesDelegate) {
         super(chunkType);
 
         this.inputStream = inputStream;
@@ -169,7 +168,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
         this.mediaType = mediaType;
         this.headers = headers;
         this.messageBodyWorkers = messageBodyWorkers;
-        this.request = request;
+        this.propertiesDelegate = propertiesDelegate;
     }
 
     /**
@@ -284,13 +283,16 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     /**
      * Read next chunk from the response stream and convert it to a Java instance
-     * using the {@link #getChunkType() chunk media type}.
+     * using the {@link #getChunkType() chunk media type}. The method returns {@code null}
+     * if the underlying entity input stream has been closed (either implicitly or explicitly
+     * by calling the {@link #close()} method).
      * <p>
-     * Note: Access to internal chunk parser is not a thread-safe operation and has to be explicitly synchronized
-     * in case the chunked input is used from multiple threads.
+     * Note: Access to internal chunk parser is not a thread-safe operation and has to be explicitly
+     * synchronized in case the chunked input is used from multiple threads.
      * </p>
      *
-     * @return next streamed chunk.
+     * @return next streamed chunk or {@code null} if the underlying entity input stream
+     *         has been closed while reading next chunk data.
      * @throws IllegalStateException in case this chunked input has been closed.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
@@ -300,8 +302,10 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
         }
 
         try {
-            byte[] chunk = parser.readChunk(inputStream);
-            if (chunk != null) {
+            final byte[] chunk = parser.readChunk(inputStream);
+            if (chunk == null) {
+                close();
+            } else {
                 ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
                 //noinspection unchecked
                 return (T) messageBodyWorkers.readFrom(
@@ -310,7 +314,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                         annotations,
                         mediaType,
                         headers,
-                        request.getPropertiesDelegate(),
+                        propertiesDelegate,
                         chunkStream,
                         false);
             }
@@ -318,8 +322,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);
             close();
         }
-
-        close();
         return null;
     }
 }

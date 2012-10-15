@@ -46,7 +46,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -59,9 +58,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
@@ -69,13 +69,11 @@ import org.glassfish.jersey.server.ChunkedOutput;
  */
 @Path("domain")
 public class DomainResource {
-    private static final Logger logger = Logger.getLogger(DomainResource.class.getName());
     private static final Map<Integer, Process> processes = new ConcurrentHashMap<Integer, Process>();
 
     @Path("start")
     @POST
     public Response post(@DefaultValue("0") @QueryParam("testSources") int testSources) {
-        logger.severe("start");
         final Process process = new Process(testSources);
         processes.put(process.getId(), process);
 
@@ -86,20 +84,19 @@ public class DomainResource {
     }
 
     @Path("process/{id}")
-    @Produces(EventChannel.SERVER_SENT_EVENTS)
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
     @GET
-    public EventChannel getProgress(@PathParam("id") int id,
+    public EventOutput getProgress(@PathParam("id") int id,
                                     @DefaultValue("false") @QueryParam("testSource") boolean testSource) {
-        logger.severe("get");
         final Process process = processes.get(id);
 
         if (process != null) {
             if (testSource) {
                 process.release();
             }
-            final EventChannel eventChannel = new EventChannel();
-            process.getBroadcaster().add(eventChannel);
-            return eventChannel;
+            final EventOutput eventOutput = new EventOutput();
+            process.getBroadcaster().add(eventOutput);
+            return eventOutput;
         } else {
             throw new NotFoundException();
         }

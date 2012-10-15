@@ -43,8 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
@@ -55,11 +54,12 @@ import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.sse.EventChannel;
+import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
@@ -74,6 +74,7 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
@@ -112,9 +113,9 @@ public class SseTest {
     public static class SseResource {
 
         @GET
-        @Produces(EventChannel.SERVER_SENT_EVENTS)
-        public EventChannel getIt() throws IOException {
-            final EventChannel result = new EventChannel();
+        @Produces(SseFeature.SERVER_SENT_EVENTS)
+        public EventOutput getIt() throws IOException {
+            final EventOutput result = new EventOutput();
             result.write(new OutboundEvent.Builder().name("event1").data(String.class, "ping").build());
             result.write(new OutboundEvent.Builder().name("event2").data(String.class, "pong").build());
             result.close();
@@ -128,24 +129,27 @@ public class SseTest {
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();
-        c.configuration().register(OutboundEventWriter.class);
+        c.configuration().register(SseFeature.class);
 
-        final ExecutorService threadPool = Executors.newSingleThreadExecutor();
         final List<String> data = new LinkedList<String>();
+        final CountDownLatch latch = new CountDownLatch(2);
 
-        new EventSource(c.target(baseUri).path("/sse"), threadPool) {
+        final EventSource eventSource = new EventSource(c.target(baseUri).path("/sse")) {
 
             @Override
             public void onEvent(InboundEvent event) {
                 try {
                     data.add(event.getData());
+                    latch.countDown();
                 } catch (IOException e) {
                     // ignore
                 }
             }
         };
-        threadPool.awaitTermination(2, TimeUnit.SECONDS);
 
+        assertTrue(latch.await(2, TimeUnit.SECONDS));
+
+        eventSource.close();
         assertEquals(2, data.size());
 
         server.stop();

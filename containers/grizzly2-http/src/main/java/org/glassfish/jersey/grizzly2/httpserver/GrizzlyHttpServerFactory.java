@@ -42,15 +42,16 @@ package org.glassfish.jersey.grizzly2.httpserver;
 import java.io.IOException;
 import java.net.URI;
 
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
-import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Factory for creating Grizzly Http Server.

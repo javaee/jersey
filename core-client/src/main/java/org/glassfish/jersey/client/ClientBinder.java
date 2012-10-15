@@ -40,12 +40,15 @@
 package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
+import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -56,6 +59,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.TypeLiteral;
 
 /**
@@ -70,6 +74,25 @@ class ClientBinder extends AbstractBinder {
         @Inject
         public RequestContextInjectionFactory(Provider<Ref<ClientRequest>> referenceFactory) {
             super(referenceFactory);
+        }
+    }
+
+    private static class PropertiesDelegateFactory implements Factory<PropertiesDelegate> {
+        private final Provider<ClientRequest> requestProvider;
+
+        @Inject
+        private PropertiesDelegateFactory(Provider<ClientRequest> requestProvider) {
+            this.requestProvider = requestProvider;
+        }
+
+        @Override
+        public PropertiesDelegate provide() {
+            return requestProvider.get().getPropertiesDelegate();
+        }
+
+        @Override
+        public void dispose(PropertiesDelegate instance) {
+            // do nothing
         }
     }
 
@@ -93,5 +116,10 @@ class ClientBinder extends AbstractBinder {
 
         bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new TypeLiteral<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);
+
+        bindFactory(PropertiesDelegateFactory.class, Singleton.class).to(PropertiesDelegate.class).in(RequestScoped.class);
+
+        // ChunkedInput support
+        bind(ChunkedInputReader.class).to(MessageBodyReader.class).in(Singleton.class);
     }
 }

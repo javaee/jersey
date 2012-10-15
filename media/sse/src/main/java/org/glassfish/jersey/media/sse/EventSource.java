@@ -39,152 +39,278 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.WebTarget;
 
+import org.glassfish.jersey.client.ChunkedInput;
+
 /**
- * Client for reading and processing Server Sent {@link InboundEvent inbound events}.
+ * Client for reading and processing {@link InboundEvent incoming Server-Sent Events}.
  * <p>
- * When {@link EventSource} is created, it makes GET request to given {@link URI} and waits for incoming inbound events.
- * Whenever any event is received, {@link EventSource#onEvent(InboundEvent)} is called and listeners (if any) are notified
- * (see {@link EventSource#addEventListener(String, EventListener)} and
- * {@link EventSource#addEventListener(String, EventListener)}.
+ * Once an {@link EventSource} is created, it {@link #open opens a connection} to the associated {@link WebTarget web target}
+ * and starts processing any incoming inbound events.
  * </p>
- * <p>Instances of this class are thread safe.</p>
+ * <p>
+ * Whenever a new event is received, an {@link EventSource#onEvent(InboundEvent)} method is called as well as any
+ * registered {@link EventListener event listeners} are notified (see {@link EventSource#register(EventListener)}
+ * and {@link EventSource#register(EventListener, String, String...)}.
+ * </p>
+ * <p>
+ * Instances of this class are thread safe.
+ * </p>
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class EventSource implements EventListener {
+    private static final Logger LOGGER = Logger.getLogger(EventSource.class.getName());
 
+    // Keeping the target is necessary for future reconnect support.
     private final WebTarget target;
-    private volatile EventProcessor processor;
-    private boolean close = false;
 
-    private final EventListener processorListener = new EventListener() {
+    private ExecutorService executorService;
+    private Future<?> process;
+    private final Object connectionLock = new Object();
+
+    private final EventListener listenerAggregator = new EventListener() {
         /**
-         * Called by EventProcessor when inboundEvent is received.
-         * Is responsible for calling {@link EventSource#onEvent(InboundEvent)} and all registered
-         * {@link EventListener} instances.
+         * Called by the event source when an inbound event is received.
          *
-         * @param inboundEvent incoming {@link InboundEvent}.
+         * This listener aggregator method is responsible for invoking {@link EventSource#onEvent(InboundEvent)}
+         * method on the owning event source as well as for notifying all registered {@link EventListener event listeners}.
+         *
+         * @param inboundEvent incoming {@link InboundEvent inbound event}.
          */
         @Override
         public void onEvent(final InboundEvent inboundEvent) {
             EventSource.this.onEvent(inboundEvent);
 
-            notifyListeners(inboundEvent, generalListeners);
+            EventSource.notify(inboundEvent, unboundListeners);
 
             final String eventName = inboundEvent.getName();
             if (eventName != null) {
-                final List<EventListener> eventListeners = namedListeners.get(eventName);
+                final List<EventListener> eventListeners = boundListeners.get(eventName);
                 if (eventListeners != null) {
-                    notifyListeners(inboundEvent, eventListeners);
+                    EventSource.notify(inboundEvent, eventListeners);
                 }
             }
         }
     };
 
-    private final ConcurrentSkipListSet<EventListener> generalListeners =
-            new ConcurrentSkipListSet<EventListener>(new Comparator<EventListener>() {
+    /**
+     * List of all listeners not bound to receive only events of a particular name.
+     */
+    private final List<EventListener> unboundListeners =
+            new CopyOnWriteArrayList<EventListener>();
+
+    /**
+     * A map of listeners bound to receive only events of a particular name.
+     */
+    private final ConcurrentMap<String, List<EventListener>> boundListeners =
+            new ConcurrentHashMap<String, List<EventListener>>();
+
+    /**
+     * Create new SSE event source and open a connection it to the supplied SSE streaming {@link WebTarget web target}.
+     * <p>
+     * The created event source instance automatically {@link #open opens a connection} to the supplied SSE streaming
+     * web target and starts processing incoming {@link InboundEvent events}.
+     * </p>
+     * <p>
+     * The incoming events are processed in an asynchronous task running in an internal
+     * {@link java.util.concurrent.Executors#newSingleThreadExecutor() single thread executor}.
+     * </p>
+     *
+     * @param target SSE streaming web target. Must not be {@code null}.
+     * @throws NullPointerException in case the supplied web target is {@code null}.
+     */
+    public EventSource(WebTarget target) throws NullPointerException {
+        this(target, true);
+
+    }
+
+    /**
+     * Create new SSE event source pointing at a SSE streaming {@link WebTarget web target}.
+     * <p>
+     * If the supplied {@code open} flag is {@code true}, the created event source instance automatically
+     * {@link #open opens a connection} to the supplied SSE streaming web target and starts processing incoming
+     * {@link InboundEvent events}.
+     * Otherwise, if the {@code open} flag is set to {@code false}, the created event source instance
+     * is not automatically connected to the web target. In this case it is expected that the user who
+     * created the event source will manually invoke its {@link #open()} method.
+     * </p>
+     * <p>
+     * The incoming events are processed in an asynchronous task running in an internal
+     * {@link java.util.concurrent.Executors#newSingleThreadExecutor() single thread executor}.
+     * </p>
+     *
+     * @param target SSE streaming web target. Must not be {@code null}.
+     * @throws NullPointerException in case the supplied web target is {@code null}.
+     */
+    public EventSource(WebTarget target, boolean open) {
+        if (target == null) {
+            throw new NullPointerException("Web target is 'null'.");
+        }
+
+        // TODO replace with SseFeature once common config is fully implemented.
+        target.configuration().register(InboundEventReader.class).register(EventInputReader.class);
+        this.target = target;
+
+        if (open) {
+            open();
+        }
+    }
+
+    /**
+     * Open the connection to the supplied SSE underlying {@link WebTarget web target} and start processing incoming
+     * {@link InboundEvent events}.
+     *
+     * @throws IllegalStateException in case the event source has already been opened earlier.
+     */
+    public void open() throws IllegalStateException {
+        synchronized (connectionLock) {
+            if (process != null) {
+                throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CONNECTED());
+            }
+
+            executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
                 @Override
-                public int compare(EventListener eventListener, EventListener eventListener1) {
-                    return eventListener.hashCode() - eventListener1.hashCode();
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, String.format("jersey-sse-event-source-[%s]", target.getUri().toASCIIString()));
                 }
             });
 
-    private final ConcurrentSkipListMap<String, List<EventListener>> namedListeners = new ConcurrentSkipListMap<String, List<EventListener>>();
 
-    /**
-     * Create new instance and start processing incoming {@link InboundEvent}s in newly created
-     * {@link java.util.concurrent.Executors#newSingleThreadExecutor() single thread executor}.
-     *
-     * @param target JAX-RS {@link WebTarget} instance which will be used to obtain inbound events.
-     */
-    public EventSource(WebTarget target) {
-        this(target, Executors.newSingleThreadExecutor());
+            final EventInput eventInput = target.request(SseFeature.SERVER_SENT_EVENTS_TYPE).get(EventInput.class);
+            eventInput.setParser(ChunkedInput.createParser("\n\n"));
+
+            final Future<?> p = executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    while (!eventInput.isClosed()) {
+                        synchronized (listenerAggregator) {
+                            final InboundEvent event = eventInput.read();
+                            if (event != null) {
+                                listenerAggregator.onEvent(event);
+                            }
+                        }
+                    }
+                }
+            });
+
+            process = new Future<Object>() {
+                public boolean cancel(boolean mayInterruptIfRunning) {
+                    eventInput.close();
+                    return p.cancel(mayInterruptIfRunning);
+                }
+
+                public boolean isCancelled() {
+                    return p.isCancelled();
+                }
+
+                public boolean isDone() {
+                    return p.isDone();
+                }
+
+                public Object get() throws InterruptedException, ExecutionException {
+                    return p.get();
+                }
+
+                public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                    return p.get(timeout, unit);
+                }
+            };
+        }
     }
 
     /**
-     * Create new instance and start processing incoming {@link InboundEvent}s in provided {@link ExecutorService}.
+     * Check if this event source instance is open.
      *
-     * @param target          JAX-RS {@link WebTarget} instance which will be used to obtain inbound events.
-     * @param executorService used for processing events.
+     * @return {@code true} if this event source is open, {@code false} otherwise.
      */
-    public EventSource(WebTarget target, ExecutorService executorService) {
-        this.target = target;
-
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                process();
-            }
-        });
+    public boolean isOpen() {
+        synchronized (connectionLock) {
+            return process != null;
+        }
     }
 
     /**
-     * Add {@link EventListener}.
+     * Register new {@link EventListener event listener} to receive all streamed {@link InboundEvent SSE events}.
      *
-     * @param listener {@code EventListener} to add to current instance.
+     * @param listener event listener to be registered with the event source.
+     * @see #register(EventListener, String, String...)
      */
-    public void addEventListener(EventListener listener) {
-        addEventListener(null, listener);
+    public void register(EventListener listener) {
+        register(listener, null);
     }
 
     /**
-     * Add {@link EventListener} which will be called only when {@link InboundEvent} with certain name is received.
+     * Add name-bound {@link EventListener event listener} which will be called only for incoming SSE
+     * {@link InboundEvent events} whose {@link InboundEvent#getName() name} is equal to the specified
+     * name(s).
      *
-     * @param eventName inbound event name.
-     * @param listener  event listener to register with this event source.
+     * @param listener   event listener to register with this event source.
+     * @param eventName  inbound event name.
+     * @param eventNames additional event names.
+     * @see #register(EventListener)
      */
-    public void addEventListener(String eventName, EventListener listener) {
+    public void register(EventListener listener, String eventName, String... eventNames) {
         if (eventName == null) {
-            generalListeners.add(listener);
+            unboundListeners.add(listener);
         } else {
-            final List<EventListener> eventListeners = namedListeners.get(eventName);
-            if (eventListeners == null) {
-                namedListeners.put(eventName, Arrays.asList(listener));
-            } else {
-                eventListeners.add(listener);
+            addBoundListener(eventName, listener);
+
+            if (eventNames != null) {
+                for (String name : eventNames) {
+                    addBoundListener(name, listener);
+                }
             }
         }
     }
 
-    private void process() {
-        target.configuration().register(EventProcessorReader.class);
-        processor = target.request().get(EventProcessor.class);
-        synchronized (this) {
-            if (close) {
-                processor.close();
-                return;
-            }
+    private void addBoundListener(String name, EventListener listener) {
+        List<EventListener> listeners = boundListeners.get(name);
+        if (listeners == null) {
+            listeners = boundListeners.putIfAbsent(name, new CopyOnWriteArrayList<EventListener>());
         }
-        processor.process(processorListener);
+        listeners.add(listener);
     }
 
-    private void notifyListeners(InboundEvent inboundEvent, Collection<EventListener> listeners) {
-        for (EventListener eventListener : listeners) {
-            eventListener.onEvent(inboundEvent);
+    private static void notify(InboundEvent inboundEvent, Collection<EventListener> listeners) {
+        for (EventListener listener : listeners) {
+            listener.onEvent(inboundEvent);
         }
     }
 
     /**
      * {@inheritDoc}
+     * <p>
+     * The default {@code EventSource} implementation is empty, users can override this method to handle
+     * incoming {@link InboundEvent}s.
+     * </p>
+     * <p>
+     * Note that overriding this method may be necessary to make sure no {@code InboundEvent incoming events}
+     * are lost in case the event source is constructed using {@link #EventSource(javax.ws.rs.client.WebTarget)}
+     * constructor or in case a {@code true} flag is passed to the {@link #EventSource(javax.ws.rs.client.WebTarget, boolean)}
+     * constructor, since the connection is opened as as part of the constructor call and the event processing starts
+     * immediately. Therefore any {@link EventListener}s registered later after the event source has been constructed
+     * may miss the notifications about the one or more events that arrive immediately after the connection to the
+     * event source is established.
+     * </p>
      *
-     * Empty implementations, users can override this method to handle incoming {@link InboundEvent}s. Please note that this
-     * is the ONLY way how to be absolutely sure that you won't miss any incoming {@code InboundEvent}. Initial request is made
-     * right after {@code EventSource} is created and processing starts immediately. {@link EventListener}s registered
-     * after {@code InboundEvent} is received won't be notified.
-     *
-     * @param inboundEvent received inboundEvent.
+     * @param inboundEvent received inbound event.
      */
     @Override
     public void onEvent(InboundEvent inboundEvent) {
@@ -193,12 +319,51 @@ public class EventSource implements EventListener {
 
     /**
      * Close this event source.
+     *
+     * The method will wait up to 5 seconds for the internal event processing task to complete.
      */
-    public synchronized void close() {
-        if (processor != null) {
-            processor.close();
-        } else {
-            close = true;
+    public void close() {
+        close(5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Close this event source and wait for the internal event processing task to complete
+     * for up to the specified amount of wait time.
+     * <p>
+     * The method blocks until the event processing task has completed execution after a shutdown
+     * request, or until the timeout occurs, or the current thread is interrupted, whichever happens
+     * first.
+     * </p>
+     * <p>
+     * In case the waiting for the event processing task has been interrupted, this method restores
+     * the {@link Thread#interrupted() interrupt} flag on the thread before returning {@code false}.
+     * </p>
+     *
+     * @param timeout the maximum time to wait.
+     * @param unit    the time unit of the timeout argument.
+     * @return {@code true} if this executor terminated and {@code false} if the timeout elapsed
+     *         before termination or the termination was interrupted.
+     */
+    public boolean close(long timeout, TimeUnit unit) {
+        synchronized (connectionLock) {
+            if (process == null) {
+                return true;
+            }
+
+            process.cancel(true);
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(timeout, unit)) {
+                    LOGGER.warning(LocalizationMessages.EVENT_SOURCE_SHUTDOWN_TIMEOUT(target.getUri().toString()));
+                    return false;
+                }
+            } catch (InterruptedException e) {
+                LOGGER.fine(LocalizationMessages.EVENT_SOURCE_SHUTDOWN_INTERRUPTED(target.getUri().toString()));
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
+
+        return true;
     }
 }

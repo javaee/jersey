@@ -1,0 +1,238 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ *
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common Development
+ * and Distribution License("CDDL") (collectively, the "License").  You
+ * may not use this file except in compliance with the License.  You can
+ * obtain a copy of the License at
+ * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+ * or packager/legal/LICENSE.txt.  See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing the software, include this License Header Notice in each
+ * file and include the License file at packager/legal/LICENSE.txt.
+ *
+ * GPL Classpath Exception:
+ * Oracle designates this particular file as subject to the "Classpath"
+ * exception as provided by Oracle in the GPL Version 2 section of the License
+ * file that accompanied this code.
+ *
+ * Modifications:
+ * If applicable, add the following below the License Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
+ * "Portions Copyright [year] [name of copyright owner]"
+ *
+ * Contributor(s):
+ * If you wish your version of this file to be governed by only the CDDL or
+ * only the GPL Version 2, indicate your decision by adding "[Contributor]
+ * elects to include this software in this distribution under the [CDDL or GPL
+ * Version 2] license."  If you don't indicate a single choice of license, a
+ * recipient has the option to distribute your version of this file under
+ * either the CDDL, the GPL Version 2 or to extend the choice of license to
+ * its licensees as provided above.  However, if you add GPL Version 2 code
+ * and therefore, elected the GPL Version 2 license, then the option applies
+ * only if the new code is made subject to such option by the copyright
+ * holder.
+ */
+package org.glassfish.jersey.message.internal;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
+
+import javax.ws.rs.MessageProcessingException;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.ProcessingException;
+
+/**
+ * Entity input stream customized for entity message processing:
+ * <ul>
+ * <li>contains {@link #isEmpty()} method.</li>
+ * <li>{@link #close()} method throws Jersey-specific runtime exception in case of an IO error.</li>
+ * </ul>
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
+class EntityInputStream extends InputStream {
+    private InputStream input;
+    private boolean closed;
+
+    /**
+     * Create an entity input stream instance wrapping the original input stream.
+     *
+     * In case the original entity stream is already of type {@code EntityInputStream},
+     * the stream is returned without wrapping.
+     *
+     * @param inputStream input stream.
+     * @return entity input stream.
+     */
+    public static EntityInputStream create(InputStream inputStream) {
+        if (inputStream instanceof EntityInputStream) {
+            return (EntityInputStream) inputStream;
+        }
+
+        return new EntityInputStream(inputStream);
+    }
+
+    /**
+     * Extension constructor.
+     *
+     * @param input underlying wrapped input stream.
+     */
+    protected EntityInputStream(InputStream input) {
+        this.input = input;
+    }
+
+    @Override
+    public int read() throws IOException {
+        return input.read();
+    }
+
+    @Override
+    public int read(byte[] b) throws IOException {
+        return input.read(b);
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        return input.read(b, off, len);
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        return input.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+        return input.available();
+    }
+
+    @Override
+    public void mark(int readLimit) {
+        input.mark(readLimit);
+    }
+
+    @Override
+    public boolean markSupported() {
+        return input.markSupported();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The method is customized to not throw an {@link IOException} if the reset operation fails. Instead,
+     * a runtime {@link MessageProcessingException} is thrown.
+     * </p>
+     *
+     * @throws MessageProcessingException in case the reset operation on the underlying entity input stream failed.
+     */
+    @Override
+    public void reset() {
+        try {
+            input.reset();
+        } catch (IOException ex) {
+            throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFER_RESET_FAILED(), ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The method is customized to not throw an {@link IOException} if the close operation fails. Instead,
+     * a runtime {@link MessageProcessingException} is thrown.
+     * </p>
+     *
+     * @throws MessageProcessingException in case the close operation on the underlying entity input stream failed.
+     */
+    @Override
+    public void close() throws MessageProcessingException {
+        if (!closed && input != null) {
+            try {
+                input.close();
+            } catch (IOException ex) {
+                throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+            } finally {
+                closed = true;
+            }
+        }
+    }
+
+    /**
+     * Check if the underlying entity stream is empty.
+     * <p>
+     * Note that the operation may need to block until a first byte (or EOF) is available in the stream.
+     * </p>
+     *
+     * @return {@code true} if the entity stream is empty, {@code false} otherwise.
+     */
+    public boolean isEmpty() {
+        ensureNotClosed();
+
+        if (input == null) {
+            return true;
+        }
+
+        try {
+            if (input.available() > 0) {
+                return false;
+            } else if (input.markSupported()) {
+                input.mark(1);
+                int i = input.read();
+                input.reset();
+                return i == -1;
+            } else {
+                int b = input.read();
+                if (b == -1) {
+                    return true;
+                }
+
+                PushbackInputStream pbis;
+                if (input instanceof PushbackInputStream) {
+                    pbis = (PushbackInputStream) input;
+                } else {
+                    pbis = new PushbackInputStream(input, 1);
+                    input = pbis;
+                }
+                pbis.unread(b);
+
+                return false;
+            }
+        } catch (IOException ex) {
+            throw new ProcessingException(ex);
+        }
+    }
+
+    /**
+     * Check that the entity input stream has not been closed yet.
+     *
+     * @throws IllegalStateException in case the entity input stream has been closed.
+     */
+    public void ensureNotClosed() throws IllegalStateException {
+        if (closed) {
+            throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
+        }
+    }
+
+    /**
+     * Get the wrapped input stream instance.
+     *
+     * @return wrapped input stream instance.
+     */
+    protected final InputStream getWrappedStream() {
+        return input;
+    }
+
+    /**
+     * Set the wrapped input stream instance.
+     *
+     * @param wrapped new input stream instance to be wrapped.
+     */
+    protected final void setWrappedStream(InputStream wrapped) {
+        input = wrapped;
+    }
+}

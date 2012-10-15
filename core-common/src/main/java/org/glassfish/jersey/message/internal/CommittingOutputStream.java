@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * An abstract committing output stream adapter that performs a {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#commit()
- * commit} and then retrieves the {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
+ * An abstract committing output stream adapter that performs a
+ * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#commit()
+ * commit} and then retrieves the
+ * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
  * before the first byte is written to the provided stream.
  *
  * Concrete implementations of the class typically override the commit operation
@@ -53,8 +55,7 @@ import java.io.OutputStream;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-// TODO make package-private
-public final class CommittingOutputStream extends OutputStream {
+final class CommittingOutputStream extends OutputStream {
 
     /**
      * Adapted output stream.
@@ -71,7 +72,8 @@ public final class CommittingOutputStream extends OutputStream {
 
     /**
      * Construct a new committing output stream using a deferred initialization
-     * of the adapted output stream via {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider stream provider}.
+     * of the adapted output stream via
+     * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider stream provider}.
      */
     public CommittingOutputStream() {
     }

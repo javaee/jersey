@@ -45,7 +45,6 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -55,14 +54,16 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Singleton;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.jersey.internal.LocalizationMessages;
+
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Base XML-based message body reader for JAXB beans.
@@ -148,13 +149,19 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     }
 
     @Override
-    public Object readFrom(
+    public final Object readFrom(
             Class<Object> type,
             Type genericType,
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+            InputStream inputStream) throws IOException {
+
+        final EntityInputStream entityStream = EntityInputStream.create(inputStream);
+        if (entityStream.isEmpty()) {
+            return null;
+        }
+
         try {
             return getUnmarshaller(type, mediaType).
                     unmarshal(getSAXSource(spf.provide(), entityStream));

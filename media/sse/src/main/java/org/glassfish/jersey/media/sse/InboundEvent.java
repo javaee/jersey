@@ -56,9 +56,9 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class InboundEvent {
-    private String name = null;
-    private String id = null;
-    private ByteArrayOutputStream data = null;
+    private final String name;
+    private final String id;
+    private final byte[] data;
 
     private final MessageBodyWorkers messageBodyWorkers;
     private final Annotation[] annotations;
@@ -66,59 +66,95 @@ public class InboundEvent {
     private final MultivaluedMap<String, String> headers;
 
     /**
-     * Create new inbound event.
-     *
-     * @param messageBodyWorkers {@link MessageBodyWorkers} instance.
-     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
-     * @param annotations        annotations from corresponding resource method.
-     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
-     * @param mediaType          media type negotiated for corresponding resource method.
-     *                           Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
-     * @param headers            response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
+     * Inbound event builder. This implementation is not thread-safe.
      */
-    InboundEvent(MessageBodyWorkers messageBodyWorkers,
-                 Annotation[] annotations,
-                 MediaType mediaType,
-                 MultivaluedMap<String, String> headers) {
+    static class Builder {
+        private String name;
+        private String id;
+        private ByteArrayOutputStream dataStream;
+
+        private final MessageBodyWorkers workers;
+        private final Annotation[] annotations;
+        private final MediaType mediaType;
+        private final MultivaluedMap<String, String> headers;
+
+        /**
+         * Create new inbound event builder.
+         *
+         * @param workers     configured client-side {@link MessageBodyWorkers entity providers} used for
+         *                    {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+         * @param annotations annotations attached to the Java type to be read. Used for
+         *                    {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+         * @param mediaType   media type of the SSE event data.
+         *                    Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
+         * @param headers     response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
+         */
+        Builder(MessageBodyWorkers workers,
+                Annotation[] annotations,
+                MediaType mediaType,
+                MultivaluedMap<String, String> headers) {
+            this.workers = workers;
+            this.annotations = annotations;
+            this.mediaType = mediaType;
+            this.headers = headers;
+
+            this.dataStream = new ByteArrayOutputStream();
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        /**
+         * Add more incoming event data.
+         *
+         * @param data byte array containing data stored in the incoming event.
+         */
+        public Builder data(byte[] data) {
+            if (data == null || data.length == 0) {
+                return this;
+            }
+
+            try {
+                this.dataStream.write(data);
+            } catch (IOException e) {
+                this.dataStream = null;
+            }
+            return this;
+        }
+
+        public InboundEvent build() {
+            return new InboundEvent(
+                    name,
+                    id,
+                    dataStream.toByteArray(),
+                    workers,
+                    annotations,
+                    mediaType,
+                    headers);
+        }
+    }
+
+    private InboundEvent(String name,
+                        String id,
+                        byte[] data,
+                        MessageBodyWorkers messageBodyWorkers,
+                        Annotation[] annotations,
+                        MediaType mediaType,
+                        MultivaluedMap<String, String> headers) {
+        this.name = name;
+        this.id = id;
+        this.data = data;
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
         this.mediaType = mediaType;
         this.headers = headers;
-    }
-
-    /**
-     * Set {@link InboundEvent} name.
-     *
-     * @param name event name.
-     */
-    void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Set {@link InboundEvent} id.
-     *
-     * @param id event id.
-     */
-    void setId(String id) {
-        this.id = id;
-    }
-
-    /**
-     * Add data. Used by {@link EventProcessor}.
-     *
-     * @param data byte array containing incoming data.
-     */
-    void addData(byte[] data) {
-        if (this.data == null) {
-            this.data = new ByteArrayOutputStream();
-        }
-
-        try {
-            this.data.write(data);
-        } catch (IOException e) {
-            this.data = null;
-        }
     }
 
     /**
@@ -127,7 +163,7 @@ public class InboundEvent {
      * @return {@code true} if current instance does not contain data. {@code false} otherwise.
      */
     boolean isEmpty() {
-        return data == null;
+        return data.length == 0;
     }
 
     /**
@@ -159,10 +195,19 @@ public class InboundEvent {
      * @throws IOException when provided type can't be read.
      */
     public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
-        final MessageBodyReader<T> messageBodyReader =
+        final MediaType effectiveMediaType = mediaType == null ? this.mediaType : mediaType;
+        final MessageBodyReader<T> reader =
                 messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
-        return messageBodyReader.readFrom(messageType, null, annotations, (mediaType == null ? this.mediaType : mediaType),
-                headers, new ByteArrayInputStream(stripLastLineBreak(data.toByteArray())));
+        if (reader == null) {
+            throw new IllegalStateException(LocalizationMessages.EVENT_DATA_READER_NOT_FOUND());
+        }
+        return reader.readFrom(
+                    messageType,
+                    null,
+                    annotations,
+                    effectiveMediaType,
+                    headers,
+                    new ByteArrayInputStream(stripLastLineBreak(data)));
     }
 
     /**
@@ -199,7 +244,8 @@ public class InboundEvent {
      * @return updated byte array.
      */
     private byte[] stripLastLineBreak(byte[] data) {
-        if ((data.length >= 1) && (data[data.length - 1] == '\n')) {
+
+        if (data.length >= 1 && data[data.length - 1] == '\n') {
             byte[] newArray = new byte[data.length - 1];
             System.arraycopy(data, 0, newArray, 0, data.length - 1);
             data = newArray;

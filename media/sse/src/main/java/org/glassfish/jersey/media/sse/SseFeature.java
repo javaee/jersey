@@ -39,49 +39,35 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
- * {@link javax.ws.rs.ext.MessageBodyWriter} for {@link EventProcessor}.
+ * A JAX-RS {@link Feature feature} that enables Server-Sent Events support.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class EventProcessorReader implements MessageBodyReader<EventProcessor> {
-
-    @Inject
-    private Provider<MessageBodyWorkers> messageBodyWorkers;
+public class SseFeature implements Feature {
+    /**
+     * {@link String} representation of Server sent events media type. ("{@value}").
+     */
+    public static final String SERVER_SENT_EVENTS = "text/event-stream";
+    /**
+     * Server sent events media type.
+     */
+    public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
 
     @Override
-    public boolean isReadable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {
-        return aClass.equals(EventProcessor.class) && mediaType.equals(EventChannel.SERVER_SENT_EVENTS_TYPE);
-    }
+    public boolean configure(Configurable configurable) {
+        for (Object o : configurable.getFeatures()) {
+            if (o.getClass() == this.getClass()) {
+                // already registered
+                return false;
+            }
+        }
 
-    @Override
-    public EventProcessor readFrom(Class<EventProcessor> eventProcessorClass,
-                                   Type type,
-                                   Annotation[] annotations,
-                                   MediaType mediaType,
-                                   MultivaluedMap<String, String> headers,
-                                   InputStream inputStream) throws IOException, WebApplicationException {
-
-        return new EventProcessor(
-                inputStream,
-                annotations,
-                MediaType.TEXT_PLAIN_TYPE /* TODO: mediaType */,
-                headers,
-                messageBodyWorkers.get());
+        configurable.register(EventInputReader.class).register(InboundEventReader.class).register(OutboundEventWriter.class);
+        return true;
     }
 }

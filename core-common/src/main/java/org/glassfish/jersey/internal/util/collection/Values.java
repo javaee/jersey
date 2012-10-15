@@ -52,6 +52,13 @@ public final class Values {
         }
     };
 
+    private static final UnsafeValue EMPTY_UNSAFE = new UnsafeValue() {
+        @Override
+        public Object get() {
+            return null;
+        }
+    };
+
     private Values() {
         // prevents instantiation.
     }
@@ -66,6 +73,18 @@ public final class Values {
     public static <T> Value<T> empty() {
         //noinspection unchecked
         return (Value<T>) EMPTY;
+    }
+
+    /**
+     * Get an empty {@link UnsafeValue value provider} whose {@link UnsafeValue#get() get()}
+     * method always returns {@code null}.
+     *
+     * @param <T> value type.
+     * @return empty unsafe value provider.
+     */
+    public static <T, E extends Throwable> UnsafeValue<T, E> emptyUnsafe() {
+        //noinspection unchecked
+        return (UnsafeValue<T, E>) EMPTY_UNSAFE;
     }
 
     /**
@@ -111,6 +130,103 @@ public final class Values {
         @Override
         public String toString() {
             return "InstanceValue{value=" + value + '}';
+        }
+    }
+
+    /**
+     * Get a new constant {@link UnsafeValue value provider} whose {@link UnsafeValue#get() get()}
+     * method always returns the instance supplied to the {@code value} parameter.
+     *
+     * In case the supplied value constant is {@code null}, an {@link #emptyUnsafe() empty} value
+     * provider is returned.
+     *
+     * @param <T>   value type.
+     * @param value value instance to be provided.
+     * @return constant value provider.
+     */
+    public static <T, E extends Throwable> UnsafeValue<T, E> unsafe(final T value) {
+        return (value == null) ? Values.<T, E>emptyUnsafe() : new InstanceUnsafeValue<T, E>(value);
+    }
+
+    private static class InstanceUnsafeValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+        private final T value;
+
+        public InstanceUnsafeValue(final T value) {
+            this.value = value;
+        }
+
+        @Override
+        public T get() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            return value.equals(((InstanceUnsafeValue) o).value);
+        }
+
+        @Override
+        public int hashCode() {
+            return value != null ? value.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "InstanceUnsafeValue{value=" + value + '}';
+        }
+    }
+
+    /**
+     * Get a new "throwing" {@link UnsafeValue unsafe value provider} whose {@link UnsafeValue#get() get()}
+     * method always throws the exception supplied to the {@code throwable} parameter.
+     *
+     * In case the supplied throwable is {@code null}, an {@link NullPointerException} is thrown.
+     *
+     * @param <T> value type.
+     * @param <E> exception type.
+     * @param throwable throwable instance to be thrown.
+     * @return "throwing" unsafe value provider.
+     * @throws NullPointerException in case the supplied throwable instance is {@code null}.
+     */
+    public static <T, E extends Throwable> UnsafeValue<T, E> throwing(final E throwable) throws NullPointerException {
+        if (throwable == null) {
+            throw new NullPointerException("Supplied throwable ");
+        }
+
+        return new ExceptionValue<T, E>(throwable);
+    }
+
+    private static class ExceptionValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+        private final E throwable;
+
+        public ExceptionValue(final E throwable) {
+            this.throwable = throwable;
+        }
+
+        @Override
+        public T get() throws E {
+            throw throwable;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            return throwable.equals(((ExceptionValue) o).throwable);
+        }
+
+        @Override
+        public int hashCode() {
+            return throwable != null ? throwable.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "ExceptionValue{throwable=" + throwable + '}';
         }
     }
 
@@ -170,6 +286,85 @@ public final class Values {
             if (o == null || getClass() != o.getClass()) return false;
 
             return delegate.equals(((LazyValue) o).delegate);
+        }
+
+        @Override
+        public int hashCode() {
+            return delegate != null ? delegate.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "LazyValue{delegate=" + delegate.toString() + '}';
+        }
+    }
+
+    /**
+     * Get a new lazily initialized {@link UnsafeValue unsafe value provider}.
+     *
+     * The value returned by its {@link UnsafeValue#get() get()} method is lazily retrieved during a first
+     * call to the method from the supplied {@code delegate} value provider and is then cached for
+     * a subsequent retrieval.
+     * <p>
+     * In case the call to underlying {@code delegate.get()} throws a throwable, the throwable is cached
+     * and thrown on all subsequent retrievals.
+     * </p>
+     * <p>
+     * The implementation of the returned lazy value provider is thread-safe and is guaranteed to
+     * invoke the {@code get()} method on the supplied {@code delegate} value provider instance at
+     * most once.
+     * </p>
+     * <p>
+     * If the supplied value provider is {@code null}, an {@link #empty() empty} value
+     * provider is returned.
+     * </p>
+     *
+     * @param <T>      value type.
+     * @param delegate value provider delegate that will be used to lazily initialize the value provider.
+     * @return lazily initialized value provider.
+     */
+    public static <T, E extends Throwable> UnsafeValue<T, E> lazy(final UnsafeValue<T, E> delegate) {
+        return (delegate == null) ? Values.<T, E>emptyUnsafe() : new LazyUnsafeValue<T, E>(delegate);
+    }
+
+    private static class LazyUnsafeValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+        private final Object lock;
+        private final UnsafeValue<T, E> delegate;
+
+        private volatile UnsafeValue<T, E> value;
+
+        public LazyUnsafeValue(final UnsafeValue<T, E> delegate) {
+            this.delegate = delegate;
+            this.lock = new Object();
+        }
+
+        @Override
+        public T get() throws E {
+            UnsafeValue<T, E> result = value;
+            if (result == null) {
+                synchronized (lock) {
+                    result = value;
+                    //noinspection ConstantConditions
+                    if (result == null) {
+                        try {
+                            result = Values.unsafe(delegate.get());
+                        } catch (Throwable e) {
+                            //noinspection unchecked
+                            result = Values.throwing((E) e);
+                        }
+                        value = result;
+                    }
+                }
+            }
+            return result.get();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            return delegate.equals(((LazyUnsafeValue) o).delegate);
         }
 
         @Override
