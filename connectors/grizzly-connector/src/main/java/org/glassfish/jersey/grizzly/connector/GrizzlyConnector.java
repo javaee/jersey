@@ -64,6 +64,8 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
+import org.glassfish.grizzly.http.client.Version;
+
 import com.google.common.util.concurrent.SettableFuture;
 
 import com.ning.http.client.AsyncCompletionHandler;
@@ -273,6 +275,6 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
 
     @Override
     public String getName() {
-        return "Grizzly Http Client";
+        return String.format("Grizzly Http Client %d.%d", Version.MAJOR_VERSION, Version.MINOR_VERSION);
     }
 }

@@ -87,7 +87,7 @@ public class PackageScanningTest {
 
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject(),
 
-                mavenBundle().groupId("org.mortbay.jetty").artifactId("servlet-api-2.5").versionAsInProject(),
+                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1-b02"),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").
                         versionAsInProject(),
