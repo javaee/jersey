@@ -41,6 +41,8 @@
 package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.BindingPriority;
@@ -106,6 +108,48 @@ public class FilterSetMethodTest {
         ContainerResponse res = handler.apply(RequestContextBuilder.from("", "/another/locator",
                 "GET").build()).get();
         Assert.assertEquals(200, res.getStatus());
+    }
+
+    @Test
+    public void testResourceUri() throws ExecutionException, InterruptedException {
+        ApplicationHandler handler = new ApplicationHandler(new ResourceConfig(ResourceChangeUri.class,
+                PreMatchChangingUriFilter.class));
+        ContainerResponse res = handler.apply(RequestContextBuilder.from("", "/resourceChangeUri/first",
+                "GET").build()).get();
+        Assert.assertEquals(200, res.getStatus());
+        Assert.assertEquals("ok", res.getEntity());
+    }
+
+    @Path("resourceChangeUri")
+    public static class ResourceChangeUri {
+
+        @Path("first")
+        @GET
+        public String first() {
+            Assert.fail("should not be called.");
+            return "fail";
+        }
+
+        @Path("first/a")
+        @GET
+        public String a() {
+            return "ok";
+        }
+    }
+
+    @Provider
+    @BindingPriority(500)
+    @PreMatching
+    public static class PreMatchChangingUriFilter implements ContainerRequestFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            try {
+                final URI requestUri = new URI(requestContext.getUriInfo().getPath() + "/a");
+                requestContext.setRequestUri(requestUri);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
 

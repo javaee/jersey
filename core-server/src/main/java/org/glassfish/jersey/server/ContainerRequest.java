@@ -307,6 +307,8 @@ public class ContainerRequest extends InboundMessageContext
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
 
+        this.encodedRelativePath = null;
+        this.decodedRelativePath = null;
         this.requestUri = requestUri;
     }
 
