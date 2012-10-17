@@ -111,6 +111,7 @@ class ServerRuntime {
     private final ExceptionMappers exceptionMappers;
     private final Provider<CloseableService> closeableServiceProvider;
     private final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider;
+    private final Provider<AsyncContext> asyncContextProvider;
     private final ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
 
     /**
@@ -128,6 +129,8 @@ class ServerRuntime {
         @Inject
         private Provider<Ref<Value<AsyncContext>>> asyncContextRefProvider;
         @Inject
+        private Provider<AsyncContext> asyncContextProvider;
+        @Inject
         private ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
 
         /**
@@ -144,6 +147,7 @@ class ServerRuntime {
                     exceptionMappers,
                     closeableServiceProvider,
                     asyncContextRefProvider,
+                    asyncContextProvider,
                     asyncExecutorsFactory);
         }
     }
@@ -154,6 +158,7 @@ class ServerRuntime {
                           ExceptionMappers exceptionMappers,
                           Provider<CloseableService> closeableServiceProvider,
                           Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider,
+                          Provider<AsyncContext> asyncContextProvider,
                           ExecutorsFactory<ContainerRequest> asyncExecutorsFactory) {
         this.requestProcessingRoot = requestProcessingRoot;
         this.locator = locator;
@@ -161,6 +166,7 @@ class ServerRuntime {
         this.exceptionMappers = exceptionMappers;
         this.closeableServiceProvider = closeableServiceProvider;
         this.asyncContextFactoryProvider = asyncContextFactoryProvider;
+        this.asyncContextProvider = asyncContextProvider;
         this.asyncExecutorsFactory = asyncExecutorsFactory;
     }
 
@@ -178,11 +184,11 @@ class ServerRuntime {
                         request,
                         locator.<RespondingContext>getService(RespondingContext.class),
                         exceptionMappers,
-                        closeableServiceProvider);
+                        closeableServiceProvider,
+                        asyncContextProvider);
 
                 final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
                         responder, locator, requestScope, requestScope.referenceCurrent(), asyncExecutorsFactory);
-
 
                 try {
                     final Ref<Endpoint> endpointRef = Refs.emptyRef();
@@ -257,22 +263,25 @@ class ServerRuntime {
         private final RespondingContext respondingCtx;
         private final ExceptionMappers exceptionMappers;
         private final Provider<CloseableService> closeableService;
+        private final Provider<AsyncContext> asyncContext;
+
 
         private final CompletionCallbackRunner completionCallbackRunner = new CompletionCallbackRunner();
-        // TODO support connection callback
         private final ConnectionCallbackRunner connectionCallbackRunner = new ConnectionCallbackRunner();
+
 
         public Responder(final ContainerRequest request,
                          final RespondingContext respondingCtx,
                          final ExceptionMappers exceptionMappers,
-                         final Provider<CloseableService> closeableService) {
+                         final Provider<CloseableService> closeableService,
+                         final Provider<AsyncContext> asyncContext) {
 
             this.request = request;
             this.respondingCtx = respondingCtx;
             this.exceptionMappers = exceptionMappers;
             this.closeableService = closeableService;
+            this.asyncContext = asyncContext;
         }
-
 
         public void process(ContainerResponse response) {
             Stage<ContainerResponse> respondingRoot = respondingCtx.createRespondingRoot();
@@ -383,7 +392,6 @@ class ServerRuntime {
             final ContainerResponseWriter writer = request.getResponseWriter();
             final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
-
             if (!response.hasEntity()) {
                 writer.writeResponseStatusAndHeaders(0, response);
                 return response;
@@ -411,18 +419,24 @@ class ServerRuntime {
                         return output;
                     }
                 });
-                response.setEntityStream(request.getWorkers().writeTo(
-                        entity,
-                        entity.getClass(),
-                        response.getEntityType(),
-                        response.getEntityAnnotations(),
-                        response.getMediaType(),
-                        response.getHeaders(),
-                        request.getPropertiesDelegate(),
-                        response.getEntityStream(),
-                        messageBodySizeCallback,
-                        true,
-                        !request.getMethod().equals(HttpMethod.HEAD)));
+                try {
+                    response.setEntityStream(request.getWorkers().writeTo(
+                            entity,
+                            entity.getClass(),
+                            response.getEntityType(),
+                            response.getEntityAnnotations(),
+                            response.getMediaType(),
+                            response.getHeaders(),
+                            request.getPropertiesDelegate(),
+                            response.getEntityStream(),
+                            messageBodySizeCallback,
+                            true,
+                            !request.getMethod().equals(HttpMethod.HEAD)));
+                } catch (IOException ioe) {
+                    connectionCallbackRunner.onDisconnect(asyncContext.get());
+                    throw ioe;
+                }
+
             } catch (Throwable ex) {
                 if (response.isCommitted()) {
                     /**
@@ -440,7 +454,7 @@ class ServerRuntime {
 
                     if (response.isChunked()) {
                         try {
-                            ((ChunkedOutput) entity).setContext(request, response);
+                            ((ChunkedOutput) entity).setContext(request, response, connectionCallbackRunner, asyncContext);
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                         }
@@ -782,6 +796,12 @@ class ServerRuntime {
             this.logger = logger;
         }
 
+        /**
+         * Return true if this callback runner supports the {@code callbackClass}.
+         *
+         * @param callbackClass Callback to be checked.
+         * @return True if this callback runner supports the {@code callbackClass}; false otherwise.
+         */
         public abstract boolean supports(Class<?> callbackClass);
 
         @SuppressWarnings("unchecked")
@@ -794,8 +814,7 @@ class ServerRuntime {
                 try {
                     invoker.invoke(callback);
                 } catch (Throwable t) {
-                    // TODO L10N
-                    logger.log(Level.WARNING, String.format("Callback %s invocation failed.", callback.getClass().getName()), t);
+                    logger.log(Level.WARNING, LocalizationMessages.ERROR_ASYNC_CALLBACK_FAILED(callback.getClass().getName()), t);
                 }
             }
         }
@@ -867,7 +886,10 @@ class ServerRuntime {
         }
     }
 
-    private static class ConnectionCallbackRunner
+    /**
+     * Executor of {@link ConnectionCallback connection callbacks}.
+     */
+    static class ConnectionCallbackRunner
             extends AbstractCallbackRunner<ConnectionCallback> implements ConnectionCallback {
 
         private ConnectionCallbackRunner() {
@@ -888,6 +910,8 @@ class ServerRuntime {
                 }
             });
         }
+
+
     }
 
 }

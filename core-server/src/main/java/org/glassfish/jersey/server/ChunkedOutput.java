@@ -47,7 +47,10 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.ws.rs.core.GenericType;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.process.AsyncContext;
 
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
@@ -65,6 +68,8 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private boolean flushing = false;
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
+    private volatile ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner;
+    private volatile Provider<AsyncContext> asyncContext;
 
     /**
      * Create new chunked response.
@@ -129,19 +134,24 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
         try {
             while (t != null) {
-                responseContext.setEntityStream(requestContext.getWorkers().writeTo(
-                        t,
-                        t.getClass(),
-                        getType(),
-                        responseContext.getEntityAnnotations(),
-                        responseContext.getMediaType(),
-                        responseContext.getHeaders(),
-                        requestContext.getPropertiesDelegate(),
-                        responseContext.getEntityStream(),
-                        null,
-                        // TODO: (MM) should intercept only for the very first chunk!
-                        // TODO: from then on the stream is already wrapped by interceptor streams
-                        true));
+                try {
+                    responseContext.setEntityStream(requestContext.getWorkers().writeTo(
+                            t,
+                            t.getClass(),
+                            getType(),
+                            responseContext.getEntityAnnotations(),
+                            responseContext.getMediaType(),
+                            responseContext.getHeaders(),
+                            requestContext.getPropertiesDelegate(),
+                            responseContext.getEntityStream(),
+                            null,
+                            // TODO: (MM) should intercept only for the very first chunk!
+                            // TODO: from then on the stream is already wrapped by interceptor streams
+                            true));
+                } catch (IOException ioe) {
+                    connectionCallbackRunner.onDisconnect(asyncContext.get());
+                    throw ioe;
+                }
                 t = queue.poll();
                 if (t == null) {
                     synchronized (this) {
@@ -232,14 +242,21 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     /**
      * Set context used for writing chunks.
      *
+     *
      * @param requestContext  request context.
      * @param responseContext response context.
+     * @param connectionCallbackRunner connection callback runner.
+     * @param asyncContext async context value.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setContext(final ContainerRequest requestContext,
-                    final ContainerResponse responseContext) throws IOException {
+                    final ContainerResponse responseContext,
+                    final ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner,
+                    final Provider<AsyncContext> asyncContext) throws IOException {
         this.requestContext = requestContext;
         this.responseContext = responseContext;
+        this.connectionCallbackRunner = connectionCallbackRunner;
+        this.asyncContext = asyncContext;
         flushQueue();
     }
 }
