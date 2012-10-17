@@ -508,16 +508,24 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder allow(String... methods) {
-            return allow(new HashSet<String>(Arrays.asList(methods)));
+            if(methods.length == 1 && methods[0] == null) {
+                return allow((Set<String>)null);
+            } else {
+                return allow(new HashSet<String>(Arrays.asList(methods)));
+            }
         }
 
         @Override
         public ResponseBuilder allow(Set<String> methods) {
+            if(methods == null) {
+                return header(HttpHeaders.ALLOW, null, true);
+            }
+
             StringBuilder allow = new StringBuilder();
             for (String m : methods) {
                 append(allow, true, m);
             }
-            return header("Allow", allow, true);
+            return header(HttpHeaders.ALLOW, allow, true);
         }
 
         @Override
