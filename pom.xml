@@ -232,7 +232,7 @@
                             <!--Xlint/-->
                         </compilerArguments>
                         <showWarnings>true</showWarnings>
-                        <fork>true</fork>
+                        <fork>false</fork>
                     </configuration>
                 </plugin>
                 <plugin>

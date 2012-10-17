@@ -154,6 +154,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             if (entity != null) {
                 requestContext.variant(entity.getVariant());
                 requestContext.setEntity(entity.getEntity());
+                requestContext.setEntityAnnotations(entity.getAnnotations());
             }
         }
 
