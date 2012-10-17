@@ -477,4 +477,17 @@ public class ResponseTest {
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void bufferEntityTest() {
+        Response response = Response.ok().build();
+        response.close();
+        response.bufferEntity();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void getEntityTest() {
+        Response response = Response.ok().build();
+        response.close();
+        response.getEntity();
+    }
 }

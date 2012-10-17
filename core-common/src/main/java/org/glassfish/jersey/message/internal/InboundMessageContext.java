@@ -722,6 +722,8 @@ public class InboundMessageContext {
      * @return entity input stream.
      */
     public InputStream getEntityStream() {
+        entityContent.ensureNotClosed();
+
         return entityContent.getWrappedStream();
     }
 
@@ -785,7 +787,6 @@ public class InboundMessageContext {
      */
     @SuppressWarnings("unchecked")
     public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations, PropertiesDelegate propertiesDelegate) {
-
         if (entityContent.isBuffered()) {
             entityContent.reset();
         }
@@ -833,6 +834,8 @@ public class InboundMessageContext {
      * @throws MessageProcessingException in case of an IO error.
      */
     public boolean bufferEntity() throws MessageProcessingException {
+        entityContent.ensureNotClosed();
+
         try {
             if (entityContent.isBuffered()) {
                 return true;

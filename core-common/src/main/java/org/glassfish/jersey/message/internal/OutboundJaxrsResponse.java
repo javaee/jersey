@@ -60,6 +60,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Variant;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * An outbound JAX-RS response message.
  *
@@ -72,6 +74,8 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     private final OutboundMessageContext context;
     private final StatusType status;
+
+    private boolean closed = false;
 
     /**
      * Unwrap an OutboundJaxrsResponse instance from a given response.
@@ -121,6 +125,9 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public Object getEntity() {
+        if(closed) {
+            throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
+        }
         return context.getEntity();
     }
 
@@ -155,13 +162,16 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public boolean bufferEntity() throws MessageProcessingException {
+        if(closed) {
+            throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
+        }
         // TODO implement additional support if entity object is InputStream ?
         return false;
     }
 
     @Override
     public void close() throws MessageProcessingException {
-        // do nothing
+        closed = true;
         // TODO implement additional support if entity object is InputStream ?
     }
 
