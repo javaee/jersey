@@ -266,7 +266,11 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param encoding message encoding to be set.
      */
     public void encoding(String encoding) {
-        getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, encoding);
+        if(encoding == null) {
+            getHeaders().remove(HttpHeaders.CONTENT_ENCODING);
+        } else {
+            getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, encoding);
+        }
     }
 
     /**
@@ -275,7 +279,11 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(String language) {
-        getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+        if(language == null) {
+            getHeaders().remove(HttpHeaders.CONTENT_LANGUAGE);
+        } else {
+            getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+        }
     }
 
     /**
@@ -284,7 +292,11 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(Locale language) {
-        getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+        if(language == null) {
+            getHeaders().remove(HttpHeaders.CONTENT_LANGUAGE);
+        } else {
+            getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+        }
     }
 
     /**

@@ -50,6 +50,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -57,6 +59,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
 
 import junit.framework.Assert;
 
@@ -67,7 +71,6 @@ import junit.framework.Assert;
  *
  */
 public class HttpMethodEntityTest extends JerseyTest {
-
 
     @Override
     protected Application configure() {
@@ -115,8 +118,6 @@ public class HttpMethodEntityTest extends JerseyTest {
         Entity entity = entityPresent ? Entity.entity("entity", MediaType.TEXT_PLAIN_TYPE) : null;
         _testSync(method, entity, shouldFail);
         _testAsync(method, entity, shouldFail);
-
-
     }
 
     public void _testAsync(String method, Entity entity, boolean shouldFail) {
@@ -147,9 +148,12 @@ public class HttpMethodEntityTest extends JerseyTest {
         }
     }
 
-
     @Path("resource")
     public static class Resource {
+
+        @Context
+        HttpHeaders httpHeaders;
+
         @GET
         public String get() {
             return "get";
@@ -157,6 +161,10 @@ public class HttpMethodEntityTest extends JerseyTest {
 
         @POST
         public String post(String str) {
+            // See JERSEY-1455
+            assertFalse(httpHeaders.getRequestHeaders().containsKey(HttpHeaders.CONTENT_ENCODING));
+            assertFalse(httpHeaders.getRequestHeaders().containsKey(HttpHeaders.CONTENT_LANGUAGE));
+
             return "post";
         }
 
@@ -174,7 +182,5 @@ public class HttpMethodEntityTest extends JerseyTest {
         public String delete() {
             return "delete";
         }
-
-
     }
 }
