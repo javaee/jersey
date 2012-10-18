@@ -41,10 +41,13 @@ package org.glassfish.jersey.tests.api;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
@@ -52,9 +55,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import javax.annotation.Nullable;
+
 import org.glassfish.jersey.message.internal.HeadersFactory;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -451,4 +456,25 @@ public class ResponseTest {
         sb.append(indent).append(pass);
         return sb.toString();
     }
+
+    @Test
+    public void testAllowString() {
+        Response.ResponseBuilder responseBuilder = Response.ok();
+
+        responseBuilder = responseBuilder.allow("GET");
+        assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
+        responseBuilder = responseBuilder.allow((String)null);
+        assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW) == null);
+    }
+
+    @Test
+    public void testAllowSet() {
+        Response.ResponseBuilder responseBuilder = Response.ok();
+
+        responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
+        assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
+        responseBuilder = responseBuilder.allow((Set<String>)null);
+        assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
+    }
+
 }
