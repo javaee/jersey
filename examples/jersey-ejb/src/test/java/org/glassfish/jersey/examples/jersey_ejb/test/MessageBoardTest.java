@@ -111,9 +111,8 @@ public class MessageBoardTest extends JerseyTest {
         final int successfulDeleteResponseStatus = firstDeleteResponse.getStatus();
         assertTrue("First DELETE request should return with a 2xx status code", (200 <= successfulDeleteResponseStatus) && (successfulDeleteResponseStatus < 300));
 
-        // TODO: this should pass
-//        Response nonExistentGetResponse = client().target(u).request().get();
-//        assertEquals("GET request to a non existent resource should return 404", 404, nonExistentGetResponse.getStatus());
+        Response nonExistentGetResponse = client().target(u).request().get();
+        assertEquals("GET request to a non existent resource should return 404", 404, nonExistentGetResponse.getStatus());
 
         Response nonExistentDeleteResponse = client().target(u).request().delete();
         assertEquals("DELETE request to a non existent resource should return 404", 404, nonExistentDeleteResponse.getStatus());
