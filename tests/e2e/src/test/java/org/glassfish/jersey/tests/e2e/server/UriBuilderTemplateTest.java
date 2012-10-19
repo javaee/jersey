@@ -41,6 +41,8 @@
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -101,5 +103,14 @@ public class UriBuilderTemplateTest extends JerseyTest {
             URI numResourceUri = UriBuilder.fromResource(Resource.class).path(Resource.class, "getNumericResource").build(11);
             return numResourceUri.toString();
         }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testResolveTemplate() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("a", "xyz");
+        map.put(null, "path");
+        UriBuilder builder = UriBuilder.fromPath("").path("{a}/{b}");
+        builder.resolveTemplates(map);
     }
 }

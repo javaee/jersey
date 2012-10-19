@@ -51,6 +51,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -111,7 +112,7 @@ public class JerseyUriBuilder extends UriBuilder {
     @Override
     public JerseyUriBuilder uri(URI uri) {
         if (uri == null) {
-            throw new IllegalArgumentException("URI parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("uri"));
         }
 
         if (uri.getRawFragment() != null) {
@@ -172,7 +173,7 @@ public class JerseyUriBuilder extends UriBuilder {
     @Override
     public JerseyUriBuilder uri(String uriTemplate) {
         if (uriTemplate == null) {
-            throw new IllegalArgumentException("URI parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("uriTemplate"));
         }
 
         UriParser parser = new UriParser(uriTemplate);
@@ -256,21 +257,19 @@ public class JerseyUriBuilder extends UriBuilder {
     @Override
     public JerseyUriBuilder schemeSpecificPart(String ssp) {
         if (ssp == null) {
-            throw new IllegalArgumentException("Supplied scheme-specific part parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEME_PART_NULL());
         }
 
         UriParser parser = new UriParser((scheme != null) ? scheme + ":" + ssp : ssp);
         parser.parse();
 
         if (parser.getScheme() != null && !parser.getScheme().equals(scheme)) {
-            throw new IllegalStateException(String.format(
-                    "Supplied scheme-specific URI part '%s' contains unexpected URI Scheme component: '%s'",
-                    ssp, parser.getScheme()));
+            throw new IllegalStateException(
+                    LocalizationMessages.URI_BUILDER_SCHEME_PART_UNEXPECTED_COMPONENT(ssp, parser.getScheme()));
         }
         if (parser.getFragment() != null) {
-            throw new IllegalStateException(String.format(
-                    "Supplied scheme-specific URI part '%s' contains URI Fragment component: '%s'",
-                    ssp, parser.getFragment()));
+            throw new IllegalStateException(
+                    LocalizationMessages.URI_BUILDER_URI_PART_FRAGMENT(ssp, parser.getFragment()));
         }
 
         schemeSpecificPart(parser);
@@ -291,7 +290,7 @@ public class JerseyUriBuilder extends UriBuilder {
         checkSsp();
         if (host != null) {
             if (host.length() == 0) {
-                throw new IllegalArgumentException("Invalid host name");
+                throw new IllegalArgumentException(LocalizationMessages.INVALID_HOST());
             }
             if (InetAddresses.isMappedIPv4Address(host) || InetAddresses.isUriInetAddress(host)) {
                 this.host = host;
@@ -311,7 +310,7 @@ public class JerseyUriBuilder extends UriBuilder {
         if (port < -1) // -1 is used to reset port setting and since URI allows
         // as port any positive integer, so do we.
         {
-            throw new IllegalArgumentException("Invalid port value");
+            throw new IllegalArgumentException(LocalizationMessages.INVALID_PORT());
         }
         this.port = port == -1 ? null : String.valueOf(port);
         return this;
@@ -338,12 +337,12 @@ public class JerseyUriBuilder extends UriBuilder {
     public UriBuilder path(Class resource) throws IllegalArgumentException {
         checkSsp();
         if (resource == null) {
-            throw new IllegalArgumentException("Resource parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("resource"));
         }
 
         Path p = (Path) resource.getAnnotation(Path.class);
         if (p == null) {
-            throw new IllegalArgumentException("The class, " + resource + " is not annotated with @Path");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_CLASS_PATH_ANNOTATION_MISSING(resource));
         }
         appendPath(p);
         return this;
@@ -353,10 +352,10 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder path(Class resource, String methodName) {
         checkSsp();
         if (resource == null) {
-            throw new IllegalArgumentException("Resource parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("resource"));
         }
         if (methodName == null) {
-            throw new IllegalArgumentException("MethodName parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("methodName"));
         }
 
         Method[] methods = resource.getMethods();
@@ -372,8 +371,7 @@ public class JerseyUriBuilder extends UriBuilder {
         }
 
         if (found == null) {
-            throw new IllegalArgumentException("The method named, " + methodName
-                    + ", is not specified by " + resource);
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_METHODNAME_NOT_SPECIFIED(methodName, resource));
         }
 
         appendPath(getPath(found));
@@ -385,7 +383,7 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder path(Method method) {
         checkSsp();
         if (method == null) {
-            throw new IllegalArgumentException("Method is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("method"));
         }
         appendPath(getPath(method));
         return this;
@@ -394,8 +392,7 @@ public class JerseyUriBuilder extends UriBuilder {
     private Path getPath(AnnotatedElement ae) {
         Path p = ae.getAnnotation(Path.class);
         if (p == null) {
-            throw new IllegalArgumentException("The annotated element, "
-                    + ae + " is not annotated with @Path");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_ANNOTATEDELEMENT_PATH_ANNOTATION_MISSING(ae));
         }
         return p;
     }
@@ -404,7 +401,7 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder segment(String... segments) throws IllegalArgumentException {
         checkSsp();
         if (segments == null) {
-            throw new IllegalArgumentException("Segments parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("segments"));
         }
 
         for (String segment : segments) {
@@ -437,10 +434,10 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder matrixParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
-            throw new IllegalArgumentException("Name parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
         }
         if (values == null) {
-            throw new IllegalArgumentException("Value parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("value"));
         }
         if (values.length == 0) {
             return this;
@@ -452,7 +449,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 path.append(';').append(name);
 
                 if (value == null) {
-                    throw new IllegalArgumentException("One or more of matrix value parameters are null");
+                    throw new IllegalArgumentException(LocalizationMessages.MATRIX_PARAM_NULL());
                 }
 
                 final String stringValue = value.toString();
@@ -463,7 +460,7 @@ public class JerseyUriBuilder extends UriBuilder {
         } else {
             for (Object value : values) {
                 if (value == null) {
-                    throw new IllegalArgumentException("One or more of matrix value parameters are null");
+                    throw new IllegalArgumentException(LocalizationMessages.MATRIX_PARAM_NULL());
                 }
 
                 matrixParams.add(name, encode(value.toString(), UriComponent.Type.MATRIX_PARAM));
@@ -477,7 +474,7 @@ public class JerseyUriBuilder extends UriBuilder {
         checkSsp();
 
         if (name == null) {
-            throw new IllegalArgumentException("Name parameter is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
         }
 
         if (matrixParams == null) {
@@ -497,7 +494,7 @@ public class JerseyUriBuilder extends UriBuilder {
         if (values != null) {
             for (Object value : values) {
                 if (value == null) {
-                    throw new IllegalArgumentException("One or more of matrix value parameters are null");
+                    throw new IllegalArgumentException(LocalizationMessages.MATRIX_PARAM_NULL());
                 }
 
                 matrixParams.add(name, encode(value.toString(), UriComponent.Type.MATRIX_PARAM));
@@ -520,10 +517,10 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder queryParam(String name, Object... values) {
         checkSsp();
         if (name == null) {
-            throw new IllegalArgumentException("Name is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
         }
         if (values == null) {
-            throw new IllegalArgumentException("Value is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("values"));
         }
         if (values.length == 0) {
             return this;
@@ -538,7 +535,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 query.append(name);
 
                 if (value == null) {
-                    throw new IllegalArgumentException("One or more of query value parameters are null");
+                    throw new IllegalArgumentException(LocalizationMessages.QUERY_PARAM_NULL());
                 }
 
                 query.append('=').append(encode(value.toString(), UriComponent.Type.QUERY_PARAM));
@@ -546,7 +543,7 @@ public class JerseyUriBuilder extends UriBuilder {
         } else {
             for (Object value : values) {
                 if (value == null) {
-                    throw new IllegalArgumentException("One or more of query value parameters are null");
+                    throw new IllegalArgumentException(LocalizationMessages.QUERY_PARAM_NULL());
                 }
 
                 queryParams.add(name, encode(value.toString(), UriComponent.Type.QUERY_PARAM));
@@ -573,7 +570,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
         for (Object value : values) {
             if (value == null) {
-                throw new IllegalArgumentException("One or more of query value parameters are null");
+                throw new IllegalArgumentException(LocalizationMessages.QUERY_PARAM_NULL());
             }
 
             queryParams.add(name, encode(value.toString(), UriComponent.Type.QUERY_PARAM));
@@ -602,10 +599,10 @@ public class JerseyUriBuilder extends UriBuilder {
 
     private JerseyUriBuilder resolveTemplate(String name, Object value, boolean encode, boolean encodeSlashInPath) {
         if (name == null) {
-            throw new IllegalArgumentException("Name is null.");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
         }
         if (value == null) {
-            throw new IllegalArgumentException("Value is null.");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("value"));
         }
 
         Map<String, Object> templateValues = Maps.newHashMap();
@@ -636,7 +633,13 @@ public class JerseyUriBuilder extends UriBuilder {
 
     private JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encode, boolean encodeSlashInPath) {
         if (templateValues == null) {
-            throw new IllegalArgumentException("templateValues parameter is null.");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("templateValues"));
+        } else {
+            for(Map.Entry entry : templateValues.entrySet()) {
+                if(entry.getKey() == null|| entry.getValue() == null) {
+                    throw new IllegalArgumentException(LocalizationMessages.TEMPLATE_PARAM_NULL());
+                }
+            }
         }
 
         scheme = UriTemplate.resolveTemplateValues(UriComponent.Type.SCHEME, scheme, false, templateValues);
@@ -672,16 +675,16 @@ public class JerseyUriBuilder extends UriBuilder {
 
     private void checkSsp() {
         if (ssp != null) {
-            throw new IllegalArgumentException("Schema specific part is opaque");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEMA_PART_OPAQUE());
         }
     }
 
-    private void appendPath(Path t) {
-        if (t == null) {
-            throw new IllegalArgumentException("Path is null");
+    private void appendPath(Path path) {
+        if (path == null) {
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("path"));
         }
 
-        appendPath(t.value());
+        appendPath(path.value());
     }
 
     private void appendPath(String path) {
@@ -690,7 +693,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
     private void appendPath(String segments, boolean isSegment) {
         if (segments == null) {
-            throw new IllegalArgumentException("Path segment is null");
+            throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("segments"));
         }
         if (segments.length() == 0) {
             return;
@@ -774,7 +777,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
     private URI _buildFromMap(boolean encode, boolean encodeSlashInPath, Map<String, ?> values) {
         if (ssp != null) {
-            throw new IllegalArgumentException("Schema specific part is opaque");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEMA_PART_OPAQUE());
         }
 
         encodeMatrix();
@@ -867,7 +870,7 @@ public class JerseyUriBuilder extends UriBuilder {
         }
 
         if (ssp != null) {
-            throw new IllegalArgumentException("Schema specific part is opaque");
+            throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEMA_PART_OPAQUE());
         }
 
         encodeMatrix();
@@ -891,9 +894,4 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new UriBuilderException(ex);
         }
     }
-
-    private String replaceNull(String s) {
-        return (s != null) ? s : "";
-    }
-
 }
