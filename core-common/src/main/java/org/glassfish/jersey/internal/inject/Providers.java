@@ -316,7 +316,8 @@ public class Providers {
      *
      * @param provider          the class of the provider being checked.
      * @param runtimeConstraint current runtime (client or server).
-     * @param scanned           {@code false} if the class was explicitly registered; {@code true} if the class has been discovered
+     * @param scanned           {@code false} if the class was explicitly registered; {@code true} if the class has been
+     *                                       discovered
      *                          during any form of provider scanning.
      * @param isResource        {@code true} if the provider is also a resource class.
      * @return {@code true} if provider is fine and can be used {@code false} otherwise.
@@ -404,6 +405,7 @@ public class Providers {
         return (JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz) != null || clazz.isAnnotationPresent(Contract.class));
     }
 
+
     private static ConstrainedTo.Type getContractConstraint(Class<?> clazz, ConstrainedTo.Type defaultConstraint) {
         final ProviderRuntime jaxRsProvider = JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz);
 
@@ -451,8 +453,11 @@ public class Providers {
         interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
         interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
 
+        interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, new ProviderRuntime(null));
+
         interfaces.put(DynamicBinder.class, new ProviderRuntime(ConstrainedTo.Type.SERVER)); // TODO remove
         interfaces.put(javax.ws.rs.container.DynamicFeature.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
+
 
         return interfaces;
     }

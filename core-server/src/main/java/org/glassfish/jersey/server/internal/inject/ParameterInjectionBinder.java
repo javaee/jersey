@@ -48,12 +48,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.Uri;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-import org.glassfish.jersey.spi.StringValueReaderProvider;
 
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
@@ -119,9 +119,9 @@ public class ParameterInjectionBinder extends AbstractBinder {
 
     @Override
     public void configure() {
-        // String reader providers
-        bind(StringReaderProviders.AggregatedProvider.class).to(StringValueReaderProvider.class).in(Singleton.class);
-        bindAsContract(StringReaderFactory.class).in(Singleton.class);
+        // Param converter providers
+        bind(ParamConverters.AggregatedProvider.class).to(ParamConverterProvider.class).in(Singleton.class);
+        bindAsContract(ParamConverterFactory.class).in(Singleton.class);
 
         // Parameter injection value extractor providers
         bind(MultivaluedParameterExtractorFactory.class).to(MultivaluedParameterExtractorProvider.class).in(Singleton.class);

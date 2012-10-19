@@ -39,44 +39,57 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import org.glassfish.jersey.spi.StringValueReader;
+import javax.ws.rs.ext.ParamConverter;
+
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 /**
  * Abstract base class for implementing multivalued parameter value extractor
- * logic supplied using {@link StringValueReader string reader}.
+ * logic supplied using {@link ParamConverter parameter converters}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractStringReaderExtractor<T> {
+abstract class AbstractParamValueExtractor<T> {
 
-    private final StringValueReader<T> valueReader;
+    private final ParamConverter<T> paramConverter;
     private final String parameterName;
     private final String defaultValueString;
+    private final Value<T> convertedDefaultValue;
 
     /**
      * Constructor that initializes common string reader-based parameter extractor
      * data.
      * <p />
      * As part of the initialization, the default value validation is performed
-     * based on the presence and value of the {@link StringValueReader.ValidateDefaultValue}
+     * based on the presence and value of the {@link ParamConverter.Lazy}
      * annotation on the supplied string value reader class.
      *
-     * @param valueReader parameter "from string" value reader.
+     * @param converter parameter converter.
      * @param parameterName name of the parameter.
      * @param defaultValueString default parameter value string.
      */
-    protected AbstractStringReaderExtractor(StringValueReader<T> valueReader, String parameterName, String defaultValueString) {
-        this.valueReader = valueReader;
+    protected AbstractParamValueExtractor(ParamConverter<T> converter, String parameterName, final String defaultValueString) {
+        this.paramConverter = converter;
         this.parameterName = parameterName;
         this.defaultValueString = defaultValueString;
 
+
         if (defaultValueString != null) {
-            StringValueReader.ValidateDefaultValue validate =
-                    valueReader.getClass().getAnnotation(StringValueReader.ValidateDefaultValue.class);
-            if (validate == null || validate.value()) {
-                valueReader.fromString(defaultValueString);
+            this.convertedDefaultValue = Values.lazy(new Value<T>() {
+                @Override
+                public T get() {
+                    return paramConverter.fromString(defaultValueString);
+                }
+            });
+
+            if (!converter.getClass().isAnnotationPresent(ParamConverter.Lazy.class)) {
+                // ignore return value - executed just for validation reasons
+                convertedDefaultValue.get();
             }
+        } else {
+            convertedDefaultValue = null;
         }
     }
 
@@ -89,7 +102,7 @@ abstract class AbstractStringReaderExtractor<T> {
     }
 
     protected final T fromString(String value) {
-        T result = valueReader.fromString(value);
+        T result = paramConverter.fromString(value);
         if (result == null) {
             return defaultValue();
         }
@@ -101,6 +114,10 @@ abstract class AbstractStringReaderExtractor<T> {
     }
 
     protected final T defaultValue() {
-        return (defaultValueString == null) ? null : valueReader.fromString(defaultValueString);
+        if (!isDefaultValueRegistered()) {
+            return null;
+        }
+
+        return convertedDefaultValue.get();
     }
 }

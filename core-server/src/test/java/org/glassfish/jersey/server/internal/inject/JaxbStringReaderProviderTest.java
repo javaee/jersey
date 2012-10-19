@@ -100,7 +100,7 @@ public class JaxbStringReaderProviderTest {
 
         String content = "<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>";
 
-        provider.getStringReader(RootObject.class, null, null).fromString(content);
+        provider.getConverter(RootObject.class, null, null).fromString(content);
     }
 
     @XmlRootElement

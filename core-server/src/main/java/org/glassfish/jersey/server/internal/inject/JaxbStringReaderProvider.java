@@ -46,6 +46,8 @@ import java.util.WeakHashMap;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
 import javax.inject.Provider;
@@ -62,13 +64,11 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.StringValueReader;
-import org.glassfish.jersey.spi.StringValueReaderProvider;
 
 import org.xml.sax.InputSource;
 
 /**
- * String reader provider producing {@link StringValueReader string readers} that
+ * String reader provider producing {@link ParamConverterProvider param converter provider} that
  * support conversion of a string value into a JAXB instance.
  *
  * @author Paul Sandoz
@@ -150,9 +150,9 @@ public class JaxbStringReaderProvider {
     }
 
     /**
-     * Root element JAXB string reader provider.
+     * Root element JAXB {@link ParamConverter param converter}.
      */
-    public static class RootElementProvider extends JaxbStringReaderProvider implements StringValueReaderProvider {
+    public static class RootElementProvider extends JaxbStringReaderProvider implements ParamConverterProvider {
 
         private Provider<SAXParserFactory> spfProvider;
 
@@ -167,15 +167,16 @@ public class JaxbStringReaderProvider {
             this.spfProvider = spfProvider;
         }
 
+
         @Override
-        public <T> StringValueReader<T> getStringReader(final Class<T> type, Type genericType, Annotation[] annotations) {
-            final boolean supported = (type.getAnnotation(XmlRootElement.class) != null
-                    || type.getAnnotation(XmlType.class) != null);
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+            final boolean supported = (rawType.getAnnotation(XmlRootElement.class) != null
+                    || rawType.getAnnotation(XmlType.class) != null);
             if (!supported) {
                 return null;
             }
 
-            return new StringValueReader<T>() {
+            return new ParamConverter<T>() {
 
                 @Override
                 public T fromString(String value) {
@@ -184,19 +185,25 @@ public class JaxbStringReaderProvider {
                                 spfProvider.get().newSAXParser().getXMLReader(),
                                 new InputSource(new java.io.StringReader(value)));
 
-                        final Unmarshaller u = getUnmarshaller(type);
-                        if (type.isAnnotationPresent(XmlRootElement.class)) {
-                            return type.cast(u.unmarshal(source));
+                        final Unmarshaller u = getUnmarshaller(rawType);
+                        if (rawType.isAnnotationPresent(XmlRootElement.class)) {
+                            return rawType.cast(u.unmarshal(source));
                         } else {
-                            return u.unmarshal(source, type).getValue();
+                            return u.unmarshal(source, rawType).getValue();
                         }
                     } catch (UnmarshalException ex) {
-                        throw new ExtractorException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(type), ex);
+                        throw new ExtractorException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(rawType), ex);
                     } catch (JAXBException ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(type), ex);
+                        throw new ProcessingException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(rawType), ex);
                     } catch (Exception ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(type), ex);
+                        throw new ProcessingException(LocalizationMessages.ERROR_UNMARSHALLING_JAXB(rawType), ex);
                     }
+                }
+
+                @Override
+                public String toString(T value) throws IllegalArgumentException {
+                    // TODO: JERSEY-1385
+                    return "test";
                 }
             };
         }
