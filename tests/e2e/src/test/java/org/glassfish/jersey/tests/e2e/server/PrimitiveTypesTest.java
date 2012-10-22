@@ -40,9 +40,16 @@
 
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -238,7 +245,56 @@ public class PrimitiveTypesTest extends JerseyTest {
         Assert.assertEquals("StringPOST", response.readEntity(String.class));
     }
 
+    @Test
+    public void testBoolean() {
+        WebTarget web = target().path("test");
+        Response response = web.path("Boolean").request().post(Entity.entity(Boolean.TRUE, MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(Boolean.FALSE, response.readEntity(Boolean.class));
+    }
 
+
+    @Test
+    public void testPrimitiveBoolean() {
+        WebTarget web = target().path("test");
+        Response response = web.path("boolean").request().post(Entity.entity(true, MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertFalse(response.readEntity(boolean.class));
+    }
+
+    @Test
+    public void testBigDecimal() {
+        WebTarget web = target().path("test");
+        Response response = web.path("bigDecimal").request().post(Entity.entity(new BigDecimal("15"), MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(new BigDecimal("16"), response.readEntity(BigDecimal.class));
+    }
+
+    @Test
+    public void testBigInteger() {
+        WebTarget web = target().path("test");
+        Response response = web.path("bigInteger").request().post(Entity.entity(new BigInteger("15"), MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(new BigInteger("16"), response.readEntity(BigInteger.class));
+    }
+
+    @Test
+    public void testAtomicInteger() {
+        WebTarget web = target().path("test");
+        Response response = web.path("atomicInteger").request().post(Entity.entity(new AtomicInteger(15),
+                MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(16, response.readEntity(AtomicInteger.class).get());
+    }
+
+    @Test
+    public void testAtomicLong() {
+        WebTarget web = target().path("test");
+        Response response = web.path("atomicLong").request().post(Entity.entity(new AtomicLong(15),
+                MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(16, response.readEntity(AtomicLong.class).get());
+    }
 
 
     @Path("test")
@@ -344,11 +400,58 @@ public class PrimitiveTypesTest extends JerseyTest {
             return (char) b;
         }
 
-
         @POST
         @Path("String")
         public String postString(String str) {
             return str + "POST";
+        }
+
+        @POST
+        @Path("Boolean")
+        public Boolean postBoolean(Boolean b) {
+            boolean bool = b;
+            return Boolean.valueOf(!bool);
+        }
+
+        @POST
+        @Path("boolean")
+        public Boolean postPrimitiveBoolean(boolean b) {
+            return !b;
+        }
+
+        @Path("bigDecimal")
+        @POST
+        @Consumes(MediaType.TEXT_PLAIN)
+        @Produces(MediaType.TEXT_PLAIN)
+        public BigDecimal number(BigDecimal number) {
+            return number.add(new BigDecimal("1"));
+        }
+
+
+        @Path("bigInteger")
+        @POST
+        @Consumes(MediaType.TEXT_PLAIN)
+        @Produces(MediaType.TEXT_PLAIN)
+        public BigInteger bigInteger(BigInteger bigInteger) {
+            return bigInteger.add(new BigInteger("1"));
+        }
+
+        @Path("atomicInteger")
+        @POST
+        @Consumes(MediaType.TEXT_PLAIN)
+        @Produces(MediaType.TEXT_PLAIN)
+        public AtomicInteger atomicInteger(AtomicInteger atomic) {
+            atomic.incrementAndGet();
+            return atomic;
+        }
+
+        @Path("atomicLong")
+        @POST
+        @Consumes(MediaType.TEXT_PLAIN)
+        @Produces(MediaType.TEXT_PLAIN)
+        public AtomicLong atomicLong(AtomicLong atomic) {
+            atomic.incrementAndGet();
+            return atomic;
         }
     }
 }
