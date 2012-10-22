@@ -129,24 +129,6 @@ class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     @Override
-    // TODO remove this when moved to MOXy 2.4.1
-    public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
-                              final MediaType mediaType) {
-        // MOXy returns empty string when Response#readEntity(String.class) is called.
-        return !String.class.equals(type)
-                && super.isReadable(type, genericType, annotations, mediaType)
-                && (MediaType.APPLICATION_JSON_TYPE.isCompatible(mediaType) || mediaType.getSubtype().endsWith("+json"));
-    }
-
-    @Override
-    // TODO remove this when moved to MOXy 2.4.1
-    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
-                               final MediaType mediaType) {
-        return super.isReadable(type, genericType, annotations, mediaType)
-                && (MediaType.APPLICATION_JSON_TYPE.isCompatible(mediaType) || mediaType.getSubtype().endsWith("+json"));
-    }
-
-    @Override
     protected void preReadFrom(final Class<Object> type, final Type genericType, final Annotation[] annotations,
                                final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders,
                                final Unmarshaller unmarshaller) throws JAXBException {

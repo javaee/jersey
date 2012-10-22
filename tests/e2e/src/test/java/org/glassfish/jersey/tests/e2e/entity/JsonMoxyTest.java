@@ -63,16 +63,18 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ContextResolver;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -92,6 +94,17 @@ public class JsonMoxyTest extends AbstractTypeTester {
         return Arrays.asList(getJAXBElementArray());
     }
 
+    public static final class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
+
+        @Override
+        public MoxyJsonConfiguration getContext(final Class<?> type) {
+            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
+            configuration.setIncludeRoot(true);
+            return configuration;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public void _testListOrArray(boolean isList, MediaType mt) {
         Object in = isList ? getJAXBElementList() : getJAXBElementArray();
         GenericType gt = isList ? new GenericType<List<JAXBElement<String>>>() {
@@ -111,7 +124,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBElementListJSONRepresentation() {
         _testListOrArray(true, MediaType.APPLICATION_JSON_TYPE);
     }
@@ -122,6 +134,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
     public static class JAXBElementArrayResource extends AResource<JAXBElement<String>[]> {
     }
 
+    @SuppressWarnings("unchecked")
     private JAXBElement<String>[] getJAXBElementArray() {
         return new JAXBElement[]{
                 new JAXBElement(QName.valueOf("element1"), String.class, "ahoj"),
@@ -130,20 +143,24 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBElementArrayJSONRepresentation() {
         _testListOrArray(false, MediaType.APPLICATION_JSON_TYPE);
     }
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new MoxyJsonBinder());
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
+        return ((ResourceConfig) super.configure()).
+                addBinders(new MoxyJsonBinder()).
+                addSingletons(new MoxyJsonConfigurationContextResolver());
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
         clientConfig.register(new MoxyJsonFeature());
+        clientConfig.register(new MoxyJsonConfigurationContextResolver());
     }
 
     @Path("JAXBElementBeanJSONResource")
@@ -153,7 +170,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBElementBeanJSONRepresentation() {
         WebTarget target = target("JAXBElementBeanJSONResource");
 
@@ -348,7 +364,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBListRepresentationJSONLinkedList() throws Exception {
         WebTarget target = target("JAXBListResourceJSON");
 
@@ -357,15 +372,14 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new LinkedList(a);
-        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue) a) {
+        a = new LinkedList<JaxbBean>(a);
+        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/json"), new GenericType<Queue<JaxbBean>>() {
         });
         assertEquals(a, b);
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBListRepresentationJSONSet() throws Exception {
         WebTarget target = target("JAXBListResourceJSON");
 
@@ -374,8 +388,8 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new HashSet(a);
-        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set) a) {
+        a = new HashSet<JaxbBean>(a);
+        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/json"), new GenericType<Set<JaxbBean>>() {
         });
         Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
@@ -384,14 +398,13 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet t1 = new TreeSet(c), t2 = new TreeSet(c);
+        TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c), t2 = new TreeSet<JaxbBean>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBListRepresentationJSONStack() throws Exception {
         WebTarget target = target("JAXBListResourceJSON");
 
@@ -400,7 +413,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        Stack s = new Stack();
+        Stack<JaxbBean> s = new Stack<JaxbBean>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/json"), new GenericType<Stack<JaxbBean>>() {
@@ -409,7 +422,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore("not yet supported by MOXy json provider")
     public void testJAXBListRepresentationJSONArrayList() throws Exception {
         WebTarget target = target("JAXBListResourceJSON");
 
@@ -418,10 +430,10 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new MyArrayList(a);
-        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList) a) {
-        }, "application/json"), new GenericType<MyArrayList<JaxbBean>>() {
-        });
+        a = new MyArrayList<JaxbBean>(a);
+        b = target.path("custom").request().post(Entity.entity(
+                new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {}, "application/json"),
+                new GenericType<MyArrayList<JaxbBean>>() {});
         assertEquals(a, b);
     }
 

@@ -231,7 +231,7 @@
                             <!-- TODO work towards eliminating all warnings in order to be able to enable the -Xlint option -->
                             <!--Xlint/-->
                         </compilerArguments>
-                        <showWarnings>true</showWarnings>
+                        <showWarnings>false</showWarnings>
                         <fork>false</fork>
                     </configuration>
                 </plugin>
@@ -902,7 +902,7 @@
         <ejb.version>3.1</ejb.version>
         <jaxb.api.version>2.1</jaxb.api.version>
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>
-        <moxy.version>2.4.0</moxy.version>
+        <moxy.version>2.4.1</moxy.version>
         <mimepull.version>1.8</mimepull.version>
 
         <findbugs.skip>false</findbugs.skip>
