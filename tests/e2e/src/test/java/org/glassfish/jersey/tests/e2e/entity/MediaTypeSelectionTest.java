@@ -47,6 +47,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -128,6 +129,21 @@ public class MediaTypeSelectionTest extends AbstractTypeTester {
     @Test
     public void testWildcardsInTypeAndSubType() {
         Response r = target("text/any").request("*/*").get();
+        assertEquals(200, r.getStatus());
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, r.getMediaType());
+    }
+
+    @Test
+    public void testNoAcceptHeader() {
+        // This test is testing the situation when the client sends no Accept header to the server and it expects
+        // APPLICATION_OCTET_STREAM_TYPE to be returned. But when no Accept header is defined by the client api the
+        // HttpURLConnection (in HttpUrlConnector)  always put there some default Accept header (like */*, text/plain, ...).
+        // To overwrite this behaviour we set Accept to empty String. This works fine as the server code handles empty
+        // Accept header like no Accept header.
+        final MultivaluedHashMap headers = new MultivaluedHashMap();
+        headers.add("Accept", "");
+
+        Response r = target("text/any").request().headers(headers).get();
         assertEquals(200, r.getStatus());
         assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, r.getMediaType());
     }
