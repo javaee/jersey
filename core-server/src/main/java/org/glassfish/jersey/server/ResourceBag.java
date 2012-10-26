@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -145,5 +146,20 @@ final class ResourceBag {
         this.classes = classes;
         this.instances = instances;
         this.models = models;
+    }
+
+
+    /**
+     * Returns list of root resources.
+     * @return {@link Resource#isRoot Root} resources.
+     */
+    List<Resource> getRootResources() {
+        List<Resource> rootResources = new ArrayList<Resource>();
+        for (Resource resource : models) {
+            if (resource.isRootResource()) {
+                rootResources.add(resource);
+            }
+        }
+        return rootResources;
     }
 }

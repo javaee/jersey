@@ -47,7 +47,6 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.glassfish.jersey.server.model.Parameter;
@@ -127,7 +126,7 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
         _grammarsStream = grammarsStream;
     }
 
-    public void init() throws IllegalStateException, JAXBException {
+    public void init() throws Exception {
         if (_grammarsFile == null && _grammarsStream == null) {
             throw new IllegalStateException("Neither the grammarsFile nor the grammarsStream" +
                     " is set, one of both is required.");
@@ -167,7 +166,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param ar  abstract resource
      * @param arm abstract resource method
      * @return method
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
     public Method createMethod(org.glassfish.jersey.server.model.Resource ar,
                                org.glassfish.jersey.server.model.ResourceMethod arm) {
@@ -178,7 +178,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param ar  abstract resource
      * @param arm abstract resource method
      * @return request
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
     public Request createRequest(org.glassfish.jersey.server.model.Resource ar,
                                  org.glassfish.jersey.server.model.ResourceMethod arm) {
@@ -190,7 +191,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param am abstract method
      * @param p  parameter
      * @return parameter
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
      */
     public Param createParam(org.glassfish.jersey.server.model.Resource ar,
                              org.glassfish.jersey.server.model.ResourceMethod am, Parameter p) {
@@ -202,7 +204,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param arm abstract resource method
      * @param mt  media type
      * @return respresentation type
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model
+     * .Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
             org.glassfish.jersey.server.model.Resource ar, org.glassfish.jersey.server.model.ResourceMethod arm, MediaType mt) {
@@ -231,7 +234,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param ar  abstract resource
      * @param arm abstract resource method
      * @return response
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource ar,
                                           org.glassfish.jersey.server.model.ResourceMethod arm) {

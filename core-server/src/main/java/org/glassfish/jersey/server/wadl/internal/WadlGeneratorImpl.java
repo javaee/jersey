@@ -45,7 +45,6 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.server.model.Parameter;
@@ -66,6 +65,7 @@ import com.sun.research.ws.wadl.Response;
  * Created on: Jun 16, 2008<br>
  *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class WadlGeneratorImpl implements WadlGenerator {
 
@@ -76,12 +76,12 @@ public class WadlGeneratorImpl implements WadlGenerator {
     }
 
     @Override
-    public void init() throws IllegalStateException, JAXBException {
+    public void init() {
     }
 
     @Override
-    public void setWadlGeneratorDelegate( WadlGenerator delegate ) {
-        throw new UnsupportedOperationException( "No delegate supported." );
+    public void setWadlGeneratorDelegate(WadlGenerator delegate) {
+        throw new UnsupportedOperationException("No delegate supported.");
     }
 
     @Override
@@ -96,18 +96,17 @@ public class WadlGeneratorImpl implements WadlGenerator {
 
     @Override
     public com.sun.research.ws.wadl.Method createMethod(
-            org.glassfish.jersey.server.model.Resource r, final ResourceMethod m ) {
+            org.glassfish.jersey.server.model.Resource r, final ResourceMethod m) {
         com.sun.research.ws.wadl.Method wadlMethod =
                 new com.sun.research.ws.wadl.Method();
         wadlMethod.setName(m.getHttpMethod());
-        // TODO - J2
-        wadlMethod.setId(m.getHttpMethod() + m.getPath());
+        wadlMethod.setId(m.getInvocable().getHandlingMethod().getName());
         return wadlMethod;
     }
 
     @Override
-    public Representation createRequestRepresentation( org.glassfish.jersey.server.model.Resource r,
-                                                       ResourceMethod m, MediaType mediaType ) {
+    public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
+                                                      ResourceMethod m, MediaType mediaType) {
         Representation wadlRepresentation = new Representation();
         wadlRepresentation.setMediaType(mediaType.toString());
         return wadlRepresentation;
@@ -119,7 +118,7 @@ public class WadlGeneratorImpl implements WadlGenerator {
     }
 
     @Override
-    public Param createParam( org.glassfish.jersey.server.model.Resource r, ResourceMethod m, final Parameter p ) {
+    public Param createParam(org.glassfish.jersey.server.model.Resource r, ResourceMethod m, final Parameter p) {
 
         if (p.getSource() == Parameter.Source.UNKNOWN)
             return null;
@@ -180,7 +179,7 @@ public class WadlGeneratorImpl implements WadlGenerator {
     }
 
     @Override
-    public Resource createResource( org.glassfish.jersey.server.model.Resource r, String path ) {
+    public Resource createResource(org.glassfish.jersey.server.model.Resource r, String path) {
         Resource wadlResource = new Resource();
         if (path != null)
             wadlResource.setPath(path);
@@ -190,13 +189,13 @@ public class WadlGeneratorImpl implements WadlGenerator {
     }
 
     @Override
-    public List<Response> createResponses( org.glassfish.jersey.server.model.Resource r, ResourceMethod m ) {
+    public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r, ResourceMethod m) {
         final Response response = new Response();
 
-        for (MediaType mediaType: m.getProducedTypes()) {
+        for (MediaType mediaType : m.getProducedTypes()) {
             if (!MediaType.WILDCARD_TYPE.equals(mediaType)
                     || !hasEmptyProducibleMediaTypeSet(m)) {
-                Representation wadlRepresentation = createResponseRepresentation( r, m, mediaType );
+                Representation wadlRepresentation = createResponseRepresentation(r, m, mediaType);
                 response.getRepresentation().add(wadlRepresentation);
             }
         }
@@ -210,7 +209,8 @@ public class WadlGeneratorImpl implements WadlGenerator {
         return method.getProducedTypes().isEmpty();
     }
 
-    public Representation createResponseRepresentation( org.glassfish.jersey.server.model.Resource r, ResourceMethod m, MediaType mediaType ) {
+    public Representation createResponseRepresentation(org.glassfish.jersey.server.model.Resource r, ResourceMethod m,
+                                                       MediaType mediaType) {
         Representation wadlRepresentation = new Representation();
         wadlRepresentation.setMediaType(mediaType.toString());
         return wadlRepresentation;

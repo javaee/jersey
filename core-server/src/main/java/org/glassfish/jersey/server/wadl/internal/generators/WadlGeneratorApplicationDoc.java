@@ -46,7 +46,6 @@ import java.util.List;
 import javax.ws.rs.core.MediaType;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.glassfish.jersey.server.model.Parameter;
@@ -119,7 +118,7 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
         _applicationDocsStream = applicationDocsStream;
     }
 
-    public void init() throws IllegalStateException, JAXBException {
+    public void init() throws Exception {
         if (_applicationDocsFile == null && _applicationDocsStream == null) {
             throw new IllegalStateException("Neither the applicationDocsFile nor the applicationDocsStream" +
                     " is set, one of both is required.");
@@ -153,7 +152,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param r
      * @param m
      * @return the method
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
     public Method createMethod(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod m) {
         return _delegate.createMethod(r, m);
@@ -164,7 +164,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param m
      * @param mediaType
      * @return representation type
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model
+     * .Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
                                                       org.glassfish.jersey.server.model.ResourceMethod m,
@@ -176,9 +177,11 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param r
      * @param m
      * @return request
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public Request createRequest(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod m) {
+    public Request createRequest(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod
+            m) {
         return _delegate.createRequest(r, m);
     }
 
@@ -187,7 +190,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param m
      * @param p
      * @return parameter
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
      */
     public Param createParam(org.glassfish.jersey.server.model.Resource r,
                              org.glassfish.jersey.server.model.ResourceMethod m,
@@ -209,9 +213,11 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param r
      * @param m
      * @return response
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod m) {
+    public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
+                                          org.glassfish.jersey.server.model.ResourceMethod m) {
         return _delegate.createResponses(r, m);
     }
 

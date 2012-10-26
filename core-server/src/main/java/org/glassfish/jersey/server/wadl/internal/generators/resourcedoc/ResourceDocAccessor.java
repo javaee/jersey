@@ -55,7 +55,7 @@ import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.Re
 /**
  * A class providing access to information stored in a {@link ResourceDocType}.<br>
  * Created on: Jun 16, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 public class ResourceDocAccessor {
@@ -66,19 +66,19 @@ public class ResourceDocAccessor {
         _resourceDoc = resourceDoc;
     }
 
-    public ClassDocType getClassDoc( Class<?> resourceClass ) {
-        for ( ClassDocType classDocType : _resourceDoc.getDocs() ) {
-            if( resourceClass.getName().equals( classDocType.getClassName() ) ) {
+    public ClassDocType getClassDoc(Class<?> resourceClass) {
+        for (ClassDocType classDocType : _resourceDoc.getDocs()) {
+            if (resourceClass.getName().equals(classDocType.getClassName())) {
                 return classDocType;
             }
         }
         return null;
     }
 
-    public MethodDocType getMethodDoc( Class<?> resourceClass, Method method ) {
-        final ClassDocType classDoc = getClassDoc( resourceClass );
-        if ( classDoc != null ) {
-            for ( MethodDocType methodDocType : classDoc.getMethodDocs() ) {
+    public MethodDocType getMethodDoc(Class<?> resourceClass, Method method) {
+        final ClassDocType classDoc = getClassDoc(resourceClass);
+        if (classDoc != null) {
+            for (MethodDocType methodDocType : classDoc.getMethodDocs()) {
                 if (method != null && method.getName().equals(methodDocType.getMethodName())) {
                     return methodDocType;
                 }
@@ -88,22 +88,22 @@ public class ResourceDocAccessor {
     }
 
     /**
-     * 
+     *
      * @param resourceClass
      * @param method
      * @param p
      * @return param doc type
      */
-    public ParamDocType getParamDoc( Class<?> resourceClass, Method method,
-            Parameter p ) {
-        final MethodDocType methodDoc = getMethodDoc( resourceClass, method );
-        if ( methodDoc != null ) {
-            for ( ParamDocType paramDocType : methodDoc.getParamDocs() ) {
-                for ( AnnotationDocType annotationDocType : paramDocType.getAnnotationDocs() ) {
+    public ParamDocType getParamDoc(Class<?> resourceClass, Method method,
+                                    Parameter p) {
+        final MethodDocType methodDoc = getMethodDoc(resourceClass, method);
+        if (methodDoc != null) {
+            for (ParamDocType paramDocType : methodDoc.getParamDocs()) {
+                for (AnnotationDocType annotationDocType : paramDocType.getAnnotationDocs()) {
                     final Class<? extends Annotation> annotationType = p.getAnnotation().annotationType();
-                    if ( annotationType != null ) {
+                    if (annotationType != null) {
                         final String sourceName = getSourceName(annotationDocType);
-                        if ( sourceName != null && sourceName.equals( p.getSourceName() ) ) {
+                        if (sourceName != null && sourceName.equals(p.getSourceName())) {
                             return paramDocType;
                         }
                     }
@@ -113,30 +113,30 @@ public class ResourceDocAccessor {
         return null;
     }
 
-    public RepresentationDocType getRequestRepresentation( Class<?> resourceClass, Method method, String mediaType ) {
-        if ( mediaType == null ) {
+    public RepresentationDocType getRequestRepresentation(Class<?> resourceClass, Method method, String mediaType) {
+        if (mediaType == null) {
             return null;
         }
-        final MethodDocType methodDoc = getMethodDoc( resourceClass, method );
+        final MethodDocType methodDoc = getMethodDoc(resourceClass, method);
         return methodDoc != null
-            && methodDoc.getRequestDoc() != null
-            && methodDoc.getRequestDoc().getRepresentationDoc() != null
-            // && mediaType.equals( methodDoc.getRequestDoc().getRepresentationDoc().getMediaType() )
+                && methodDoc.getRequestDoc() != null
+                && methodDoc.getRequestDoc().getRepresentationDoc() != null
+                // && mediaType.equals( methodDoc.getRequestDoc().getRepresentationDoc().getMediaType() )
                 ? methodDoc.getRequestDoc().getRepresentationDoc() : null;
     }
 
-    public ResponseDocType getResponse( Class<?> resourceClass, Method method ) {
-        final MethodDocType methodDoc = getMethodDoc( resourceClass, method );
+    public ResponseDocType getResponse(Class<?> resourceClass, Method method) {
+        final MethodDocType methodDoc = getMethodDoc(resourceClass, method);
         return methodDoc != null && methodDoc.getResponseDoc() != null
                 ? methodDoc.getResponseDoc() : null;
     }
 
-    private String getSourceName(AnnotationDocType annotationDocType ) {
-        if ( annotationDocType.hasAttributeDocs() ) {
-            for ( NamedValueType namedValueType : annotationDocType.getAttributeDocs() ) {
+    private String getSourceName(AnnotationDocType annotationDocType) {
+        if (annotationDocType.hasAttributeDocs()) {
+            for (NamedValueType namedValueType : annotationDocType.getAttributeDocs()) {
                 /* the value of the "value"-attribute is the param.sourceName...
                  */
-                if ( "value".equals( namedValueType.getName() ) ) {
+                if ("value".equals(namedValueType.getName())) {
                     return namedValueType.getValue();
                 }
             }

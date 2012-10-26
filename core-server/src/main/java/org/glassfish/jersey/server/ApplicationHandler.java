@@ -363,7 +363,7 @@ public final class ApplicationHandler {
 
         // create a router
         DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.models,
+        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.getRootResources(),
                 configuration)).to(WadlApplicationContext.class), dynamicConfiguration);
         dynamicConfiguration.commit();
 
@@ -415,6 +415,7 @@ public final class ApplicationHandler {
         // inject self
         locator.inject(this);
     }
+
 
     /**
      * Takes collection of all filters/interceptors (either request/reader or response/writer)

@@ -78,7 +78,7 @@ public interface WadlGenerator {
      * this generator is instantiated before {@link #init()} or any setter method is invoked.
      * @param delegate the wadl generator to decorate
      */
-    void setWadlGeneratorDelegate( WadlGenerator delegate );
+    void setWadlGeneratorDelegate(WadlGenerator delegate);
 
     /**
      * Invoked before all methods related to wadl-building are invoked. This method is used in a
@@ -87,7 +87,7 @@ public interface WadlGenerator {
      * @throws IllegalStateException
      * @throws JAXBException
      */
-    void init() throws IllegalStateException, JAXBException;
+    void init() throws Exception;
 
     /**
      * The jaxb context path that is used when the generated wadl application is marshalled
@@ -142,8 +142,7 @@ public interface WadlGenerator {
      * Call back interface that the create external grammar can use
      * to allow other parts of the code to attach the correct grammar information
      */
-    public interface Resolver
-    {
+    public interface Resolver {
         /**
          * @param type The type of the class
          * @return The schema type of the class if defined, null if not.
@@ -152,7 +151,7 @@ public interface WadlGenerator {
     }
 
     /**
-     * And internal storage object to store the grammar definitions and 
+     * And internal storage object to store the grammar definitions and
      * any type resolvers that are created along the way.
      */
     public class ExternalGrammarDefinition {
@@ -175,9 +174,10 @@ public interface WadlGenerator {
          */
         public QName resolve(Class type) {
             QName name = null;
-            found : for (Resolver resolver : typeResolvers) {
+            found:
+            for (Resolver resolver : typeResolvers) {
                 name = resolver.resolve(type);
-                if (name!=null) break found;
+                if (name != null) break found;
             }
             return name;
         }

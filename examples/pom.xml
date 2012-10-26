@@ -62,6 +62,7 @@
         <module>bookmark-em</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
+        <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>
         <module>helloworld</module>
         <module>helloworld-programmatic</module>

@@ -77,6 +77,7 @@ import com.sun.research.ws.wadl.Response;
  *
  * @author Marc Hadley
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class WadlBuilder {
 
@@ -107,22 +108,22 @@ public class WadlBuilder {
         wadlApplication.getResources().add(wadlResources);
 
         addVersion(wadlApplication);
-        
+
         // Build any external grammars
-        
+
         WadlGenerator.ExternalGrammarDefinition external =
-            _wadlGenerator.createExternalGrammar();
+                _wadlGenerator.createExternalGrammar();
 
         //
-        
+
         ApplicationDescription description = new ApplicationDescription(wadlApplication, external);
-        
+
         // Attach the data to the parts of the model
-        
+
         _wadlGenerator.attachTypes(description);
-         
+
         // Return the description of the application
-        
+
         return description;
     }
 
@@ -142,13 +143,13 @@ public class WadlBuilder {
         wadlApplication.getResources().add(wadlResources);
 
         addVersion(wadlApplication);
-        
+
         // Attach the data to the parts of the model
-        
+
         _wadlGenerator.attachTypes(description);
-        
+
         // Return the WADL
-        
+
         return wadlApplication;
     }
 
@@ -170,10 +171,10 @@ public class WadlBuilder {
         wadlApplication.getResources().add(wadlResources);
 
         addVersion(wadlApplication);
-        
+
         // Attach the data to the parts of the model
         _wadlGenerator.attachTypes(description);
-        
+
         // Return the WADL
         return wadlApplication;
     }
@@ -197,7 +198,7 @@ public class WadlBuilder {
         }
         // generate the response part
         final List<Response> responses = generateResponses(r, m);
-        if(responses != null) {
+        if (responses != null) {
             wadlMethod.getResponse().addAll(responses);
         }
         return wadlMethod;
@@ -234,7 +235,8 @@ public class WadlBuilder {
                         }
                     }
                 }
-            } else if (p.getAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart.FormDataParam")) { // jersey-multipart support
+            } else if (p.getAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart" +
+                    ".FormDataParam")) { // jersey-multipart support
                 // Use multipart/form-data if no @Consumes
                 List<MediaType> supportedInputTypes = m.getConsumedTypes();
                 if (supportedInputTypes.isEmpty()
@@ -290,9 +292,9 @@ public class WadlBuilder {
      * @return the wadl request representation for the specified {@link MediaType}.
      */
     private Representation setRepresentationForMediaType(org.glassfish.jersey.server.model.Resource r,
-                                                             final org.glassfish.jersey.server.model.ResourceMethod m,
-                                                             MediaType mediaType,
-                                                             Request wadlRequest) {
+                                                         final org.glassfish.jersey.server.model.ResourceMethod m,
+                                                         MediaType mediaType,
+                                                         Request wadlRequest) {
         Representation wadlRepresentation = getRepresentationByMediaType(wadlRequest.getRepresentation(), mediaType);
         if (wadlRepresentation == null) {
             wadlRepresentation = _wadlGenerator.createRequestRepresentation(r, m, mediaType);
@@ -311,7 +313,8 @@ public class WadlBuilder {
         return null;
     }
 
-    private Param generateParam(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod m, final Parameter p) {
+    private Param generateParam(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod
+            m, final Parameter p) {
         if (p.getSource() == Parameter.Source.ENTITY || p.getSource() == Parameter.Source.CONTEXT) {
             return null;
         }
@@ -322,7 +325,8 @@ public class WadlBuilder {
         return generateResource(r, path, Collections.<org.glassfish.jersey.server.model.Resource>emptySet());
     }
 
-    private Resource generateResource(org.glassfish.jersey.server.model.Resource r, String path, Set<org.glassfish.jersey.server.model.Resource> visitedResources) {
+    private Resource generateResource(org.glassfish.jersey.server.model.Resource r, String path,
+                                      Set<org.glassfish.jersey.server.model.Resource> visitedResources) {
         Resource wadlResource = _wadlGenerator.createResource(r, path);
 
         // prevent infinite recursion
@@ -395,16 +399,23 @@ public class WadlBuilder {
         }
 
         // for each sub resource locator
-        for (ResourceMethod l : r.getSubResourceLocators()) {
+        for (ResourceMethod locator : r.getSubResourceLocators()) {
 
+            org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
+                    .builder(locator.getInvocable().getRawResponseType(), null);
+            if (builder == null) {
+                // for example in the case the return type of the sub resource locator is Object
+                builder = org.glassfish.jersey.server.model.Resource.builder().path(locator.getPath());
+            }
             org.glassfish.jersey.server.model.Resource subResource =
-                    org.glassfish.jersey.server.model.Resource.builder(l.getInvocable().getRawResponseType(), null).build();
+                    builder.build();
+
             Resource wadlSubResource = generateResource(subResource,
-                    l.getPath(), visitedResources);
+                    locator.getPath(), visitedResources);
             wadlResource.getMethodOrResource().add(wadlSubResource);
 
-            for (Parameter p : l.getInvocable().getParameters()) {
-                Param wadlParam = generateParam(r, l, p);
+            for (Parameter p : locator.getInvocable().getParameters()) {
+                Param wadlParam = generateParam(r, locator, p);
                 if (wadlParam != null && wadlParam.getStyle() == ParamStyle.TEMPLATE) {
                     wadlSubResource.getParam().add(wadlParam);
                 }

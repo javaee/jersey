@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,44 +40,38 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
-    </parent>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pom="http://maven.apache.org/POM/4.0.0" version="1.0">
+    <xsl:output method="xml" indent="yes"/>
 
-    <groupId>org.glassfish.jersey.ext</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-extensions</name>
+    <xsl:template match="/">
+        <xsl:apply-templates/>
+    </xsl:template>
 
-    <description>
-        Jersey extension modules providing utilities, filters as well as integrations
-        with external frameworks (Guice, Spring, Freemarker, etc.) and languages
-        (Scala, Groovy, etc.).
+    <xsl:template
+            match="pom:profile[pom:id='default']/pom:dependencies/pom:dependency[pom:groupId='com.sun.jersey.contribs' or pom:groupId='com.sun.jersey' or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
+        <scope>provided</scope>
+    </xsl:template>
 
-        NOTE: Jersey security extensions have their own dedicated security umbrella
-        project.
-    </description>
+    <xsl:template
+            match="pom:profile[pom:id='default']/pom:dependencies/pom:dependency[pom:groupId='com.sun.jersey.contribs' or pom:groupId='com.sun.jersey'  or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']">
+        <xsl:copy>
+            <xsl:apply-templates/>
+            <xsl:if test="count(pom:scope)=0">
+                <scope>provided</scope>
+            </xsl:if>
+        </xsl:copy>
+    </xsl:template>
 
-    <modules>
-        <module>servlet-portability</module>
-        <module>proxy-client</module>
-        <module>wadl-doclet</module>
-    </modules>
+    <xsl:template match="comment()">
+        <xsl:comment>
+            <xsl:value-of select="."/>
+        </xsl:comment>
+    </xsl:template>
 
-    <dependencies>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
+    <xsl:template match="*">
+        <xsl:copy>
+            <xsl:apply-templates/>
+        </xsl:copy>
+    </xsl:template>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-</project>
+</xsl:stylesheet>
