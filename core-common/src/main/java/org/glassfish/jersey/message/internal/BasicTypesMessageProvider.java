@@ -43,7 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -53,8 +56,15 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+
 /**
- * Primitive types message body provider for {@link MediaType#TEXT_PLAIN} media type.
+ * The basic types message body provider for {@link MediaType#TEXT_PLAIN} media type.
+ *
+ * The provider processes primitive types and also other {@link Number} implementations like {@link java.math.BigDecimal},
+ * {@link java.math.BigInteger}, {@link AtomicInteger},  {@link AtomicLong} and all other implementations which has one String
+ * argument constructor.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -62,7 +72,7 @@ import javax.inject.Singleton;
 @Produces({"text/plain"})
 @Consumes({"text/plain"})
 @Singleton
-final class PrimitiveTypesMessageProvider extends AbstractMessageReaderWriterProvider<Object> {
+final class BasicTypesMessageProvider extends AbstractMessageReaderWriterProvider<Object> {
 
     private static enum PrimitiveTypes {
         BYTE(Byte.class, byte.class) {
@@ -111,7 +121,8 @@ final class PrimitiveTypesMessageProvider extends AbstractMessageReaderWriterPro
             @Override
             public Object convert(String s) {
                 if (s.length() != 1) {
-                    throw new MessageBodyProcessingException("A single character expected in the entity input stream.");
+                    throw new MessageBodyProcessingException(LocalizationMessages
+                            .ERROR_ENTITY_PROVIDER_BASICTYPES_CHARACTER_MORECHARS());
                 }
                 return s.charAt(0);
             }
@@ -143,7 +154,7 @@ final class PrimitiveTypesMessageProvider extends AbstractMessageReaderWriterPro
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return PrimitiveTypes.forType(type) != null;
+        return canProcess(type);
     }
 
     @Override
@@ -158,12 +169,52 @@ final class PrimitiveTypesMessageProvider extends AbstractMessageReaderWriterPro
         if (entityString.isEmpty()) {
             return null;
         }
-        return PrimitiveTypes.forType(type).convert(entityString);
+        final PrimitiveTypes primitiveType = PrimitiveTypes.forType(type);
+        if (primitiveType != null) {
+            return primitiveType.convert(entityString);
+        }
+
+        final Constructor constructor = ReflectionHelper.getStringConstructor(type);
+        if (constructor != null) {
+            try {
+                return type.cast(constructor.newInstance(entityString));
+            } catch (Exception e) {
+                throw new MessageBodyProcessingException(LocalizationMessages.ERROR_ENTITY_PROVIDER_BASICTYPES_CONSTRUCTOR(type));
+            }
+        }
+
+        if (AtomicInteger.class.isAssignableFrom(type)) {
+            return new AtomicInteger((Integer) PrimitiveTypes.INTEGER.convert(entityString));
+        }
+
+        if (AtomicLong.class.isAssignableFrom(type)) {
+            return new AtomicLong((Long) PrimitiveTypes.LONG.convert(entityString));
+        }
+
+        throw new MessageBodyProcessingException(LocalizationMessages.ERROR_ENTITY_PROVIDER_BASICTYPES_UNKWNOWN(type));
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return PrimitiveTypes.forType(type) != null;
+        return canProcess(type);
+
+    }
+
+    private boolean canProcess(Class<?> type) {
+        if (PrimitiveTypes.forType(type) != null) {
+            return true;
+        }
+        if (Number.class.isAssignableFrom(type)) {
+            final Constructor constructor = ReflectionHelper.getStringConstructor(type);
+            if (constructor != null) {
+                return true;
+            }
+            if (AtomicInteger.class.isAssignableFrom(type) || AtomicLong.class.isAssignableFrom(type)) {
+                return true;
+            }
+        }
+        ;
+        return false;
     }
 
     @Override
