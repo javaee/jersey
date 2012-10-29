@@ -182,6 +182,17 @@ public class JerseyUriBuilder extends UriBuilder {
         final String parsedScheme = parser.getScheme();
         if (parsedScheme != null) {
             scheme(parsedScheme);
+        } else if (ssp != null) {
+            // The previously set scheme was opaque and uriTemplate does not contain a scheme part.
+            // However, the scheme might have already changed, as demonstrated in
+            // JerseyUriBuilderTest.testChangeUriStringAfterChangingOpaqueSchemeToHttp().
+            // So to be safe, we need to erase the existing internal SSP value and
+            // re-parse the new uriTemplate using the current scheme and try to set the SSP
+            // again using the re-parsed data.
+            // See also JERSEY-1457 and related test.
+            ssp = null;
+            parser = new UriParser(scheme + ":" + uriTemplate);
+            parser.parse();
         }
 
         schemeSpecificPart(parser);
