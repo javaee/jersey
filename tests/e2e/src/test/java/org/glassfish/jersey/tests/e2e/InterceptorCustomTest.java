@@ -46,6 +46,7 @@ import java.lang.annotation.Annotation;
 
 import javax.ws.rs.BindingPriority;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -68,6 +69,7 @@ import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPWriterTestIntercep
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -218,6 +220,32 @@ public class InterceptorCustomTest extends JerseyTest {
             } catch (NullPointerException npe) {
                 // OK.
             }
+        }
+    }
+
+    @Provider
+    public static class IOExceptionReaderInterceptor implements ReaderInterceptor {
+
+        @Override
+        public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            throw new IOException("client io");
+        }
+    }
+
+    @Test
+    public void testIOException() throws IOException {
+        client().configuration().
+                register(IOExceptionReaderInterceptor.class);
+
+        WebTarget target = target().path("test");
+
+        Response response = target.request().put(Entity.entity(ENTITY, MediaType.TEXT_PLAIN_TYPE));
+
+        try {
+            response.readEntity(String.class);
+            fail("MessageProcessingException expected.");
+        } catch (MessageProcessingException e) {
+            assertTrue(e.getCause() instanceof IOException);
         }
     }
 
