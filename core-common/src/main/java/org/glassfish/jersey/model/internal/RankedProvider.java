@@ -37,77 +37,63 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.glassfish.jersey.model.internal;
 
 import javax.ws.rs.BindingPriority;
 
-import org.glassfish.jersey.process.internal.PriorityComparator.Order;
-import org.junit.Test;
+import org.glassfish.jersey.model.ContractProvider;
 
 /**
- * Tests {@link PriorityComparator}.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Jersey ranked provider model.
  *
+ * @param <T> service provider contract Java type.
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class PriorityComparatorTest {
+public class RankedProvider<T> {
 
-    @Test
-    public void testPriorityComparator() {
-        List<Object> list = new ArrayList<Object>();
-        list.add(new F1000());
-        list.add(new FF200());
-        list.add(new F0());
-        list.add(new F0());
-        list.add(new F300());
-        list.add(new F1000());
-        list.add(new F100());
-        list.add(new F200());
-        list.add(new F200());
-        Collections.sort(list, new PriorityComparator<Object>(Order.ASCENDING));
-        int max = Integer.MIN_VALUE;
-        for (Object o : list) {
-            int val = o.getClass().getAnnotation(BindingPriority.class).value();
-            assertTrue(val >= max);
-            max = val;
+    private final T provider;
+    private final int rank;
+
+    /**
+     * Creates a new {@code RankedProvider} instance. The rank of the provider is obtained from the {@link BindingPriority}
+     * annotation or is set to {@value BindingPriority#USER} if the annotation is not present.
+     *
+     * @param provider service provider to create a {@code RankedProvider} instance from.
+     */
+    public RankedProvider(final T provider) {
+        this.provider = provider;
+        this.rank = computeRank(provider, ContractProvider.NO_PRIORITY);
+    }
+
+    /**
+     * Creates a new {@code RankedProvider} instance for given {@code provider} with specific {@code rank} (> 0).
+     *
+     * @param provider service provider to create a {@code RankedProvider} instance from.
+     * @param rank rank of this provider.
+     */
+    public RankedProvider(final T provider, final int rank) {
+        this.provider = provider;
+        this.rank = computeRank(provider, rank);
+    }
+
+    private int computeRank(final T provider, final int rank) {
+        if (rank > 0) {
+            return rank;
+        } else {
+            if (provider.getClass().isAnnotationPresent(BindingPriority.class)) {
+                return provider.getClass().getAnnotation(BindingPriority.class).value();
+            } else {
+                return BindingPriority.USER;
+            }
         }
-
-        Collections.sort(list, new PriorityComparator<Object>(Order.DESCENDING));
-        max = Integer.MAX_VALUE;
-        for (Object o : list) {
-            int val = o.getClass().getAnnotation(BindingPriority.class).value();
-            assertTrue(val <= max);
-            max = val;
-        }
     }
 
-    @BindingPriority(0)
-    private static class F0 {
+    public T getProvider() {
+        return provider;
     }
 
-    @BindingPriority(100)
-    private static class F100 {
+    public int getRank() {
+        return rank;
     }
-
-    @BindingPriority(200)
-    private static class F200 {
-    }
-
-    @BindingPriority(200)
-    private static class FF200 {
-    }
-
-    @BindingPriority(300)
-    private static class F300 {
-    }
-
-    @BindingPriority(1000)
-    private static class F1000 {
-    }
-
 }

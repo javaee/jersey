@@ -37,57 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.message.internal;
 
-import java.util.Comparator;
+import javax.ws.rs.core.Configurable;
 
-import javax.ws.rs.BindingPriority;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.MessageProperties;
 
 /**
- * Comparator used to sort types by their priorities defined by {@link BindingPriority
- * annotations BindingPriority}.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Gathers common functionality for {@link org.glassfish.hk2.api.Factory} instances handling XML data.
  *
- * @param <T> Type of the elements to be sorted.
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class PriorityComparator<T> implements Comparator<T> {
+abstract class AbstractXmlFactory {
+
+    private final Configurable config;
+
+    protected AbstractXmlFactory(final Configurable config) {
+        this.config = config;
+    }
 
     /**
-     * Defines which ordering should be used for sorting.
+     * Determines whether the {@value MessageProperties#XML_SECURITY_DISABLE} property is disabled for this factory.
+     *
+     * @return {@code true} if the xml security is disabled for this factory, {@code false} otherwise.
      */
-    public enum Order {
-        /**
-         * Ascending order. The lowest priority first, the highest priority last.
-         */
-        ASCENDING(1),
-        /**
-         * Ascending order. The highest priority first, the lowest priority last.
-         */
-        DESCENDING(-1);
-
-        private int ordering;
-
-        private Order(int ordering) {
-            this.ordering = ordering;
-        }
-    }
-
-    private Order order;
-
-    public PriorityComparator(Order order) {
-        this.order = order;
-    }
-
-    @Override
-    public int compare(T o1, T o2) {
-        return (getPriority(o1) - getPriority(o2)) * order.ordering;
-    }
-
-    private int getPriority(T o) {
-        if (o.getClass().isAnnotationPresent(BindingPriority.class)) {
-            return o.getClass().getAnnotation(BindingPriority.class).value();
-        } else {
-            return BindingPriority.USER;
-        }
+    boolean isXmlSecurityDisabled() {
+        return PropertiesHelper.isProperty(config.getProperty(MessageProperties.XML_SECURITY_DISABLE));
     }
 }

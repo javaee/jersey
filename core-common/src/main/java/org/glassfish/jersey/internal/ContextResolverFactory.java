@@ -100,7 +100,7 @@ public class ContextResolverFactory implements ContextResolvers {
         Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        List<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
+        Iterable<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
         for (ContextResolver provider : providers) {
             List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 

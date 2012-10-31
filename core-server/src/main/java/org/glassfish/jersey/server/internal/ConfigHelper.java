@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal;
 
-import java.util.List;
-
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
@@ -68,9 +66,9 @@ public final class ConfigHelper {
      */
     public static ContainerLifecycleListener getContainerLifecycleListener(final ApplicationHandler applicationHandler) {
 
-        final List<ContainerLifecycleListener> listeners = Providers.getAllProviders(applicationHandler.getServiceLocator(),
+        final Iterable<ContainerLifecycleListener> listeners = Providers.getAllProviders(applicationHandler.getServiceLocator(),
                 ContainerLifecycleListener.class);
-        return listeners.isEmpty() ? EMPTY_CONTAINER_LIFECYCLE_LISTENER : new ContainerLifecycleListener() {
+        return !listeners.iterator().hasNext() ? EMPTY_CONTAINER_LIFECYCLE_LISTENER : new ContainerLifecycleListener() {
 
             @Override
             public void onStartup(Container container) {

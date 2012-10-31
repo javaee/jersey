@@ -128,4 +128,30 @@ public class PropertiesHelper {
 
         return type.cast(value);
     }
+
+    /**
+     * Get the value of the property with a given name converted to {@code boolean}. Returns {@code false} if the value is
+     * not convertible.
+     *
+     * @param properties key-value map of properties.
+     * @param name property name.
+     * @return {@code boolean} property value or {@code false} if the property is not convertible.
+     */
+    public static boolean isProperty(final Map<String, Object> properties, final String name) {
+        return properties.containsKey(name) && isProperty(properties.get(name));
+    }
+
+    /**
+     * Get the value of the property converted to {@code boolean}. Returns {@code false} if the value is not convertible.
+     *
+     * @param value property value.
+     * @return {@code boolean} property value or {@code false} if the property is not convertible.
+     */
+    public static boolean isProperty(final Object value) {
+        if (value instanceof Boolean) {
+            return Boolean.class.cast(value);
+        } else {
+            return value != null && Boolean.parseBoolean(value.toString());
+        }
+    }
 }

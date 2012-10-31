@@ -40,9 +40,6 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -53,8 +50,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
-import org.glassfish.jersey.process.internal.PriorityComparator;
+import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
@@ -72,8 +71,8 @@ import org.glassfish.hk2.api.ServiceLocator;
 class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
     private ServiceLocator locator;
-    private final List<ContainerRequestFilter> requestFilters;
-    private final List<ContainerResponseFilter> responseFilters;
+    private final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters;
+    private final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters;
     private final Provider<RespondingContext> respondingContextFactory;
 
     /**
@@ -101,8 +100,8 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
          *                        stage).
          * @return new container filtering stage.
          */
-        public ContainerFilteringStage build(List<ContainerRequestFilter> requestFilters,
-                                             List<ContainerResponseFilter> responseFilters) {
+        public ContainerFilteringStage build(Iterable<RankedProvider<ContainerRequestFilter>> requestFilters,
+                                             Iterable<RankedProvider<ContainerResponseFilter>> responseFilters) {
             return new ContainerFilteringStage(respondingContextFactory, locator,
                     requestFilters, responseFilters);
         }
@@ -116,13 +115,12 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
      * @param locator HK2 service locator.
      * @param requestFilters global request filters (pre or post match).
      * @param responseFilters global response filters or {@code null}.
-     *
      */
     private ContainerFilteringStage(
             Provider<RespondingContext> respondingContextFactory,
             ServiceLocator locator,
-            List<ContainerRequestFilter> requestFilters,
-            List<ContainerResponseFilter> responseFilters) {
+            Iterable<RankedProvider<ContainerRequestFilter>> requestFilters,
+            Iterable<RankedProvider<ContainerResponseFilter>> responseFilters) {
 
         this.respondingContextFactory = respondingContextFactory;
         this.locator = locator;
@@ -131,21 +129,20 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
-        List<ContainerRequestFilter> sortedRequestFilters;
+        Iterable<ContainerRequestFilter> sortedRequestFilters;
 
         if (responseFilters == null) {
             // post-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
             // throws exception, response filters get still invoked)
             RoutingContext rc = locator.getService(RoutingContext.class);
-            sortedRequestFilters = new ArrayList<ContainerRequestFilter>(requestFilters);
-            sortedRequestFilters.addAll(rc.getBoundRequestFilters());
-            Collections.sort(sortedRequestFilters,
-                    new PriorityComparator<ContainerRequestFilter>(PriorityComparator.Order.ASCENDING));
+            sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters,
+                    rc.getBoundRequestFilters());
         } else {
             // pre-matching
             respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator));
-            sortedRequestFilters = requestFilters;
+            sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters);
         }
 
         for (ContainerRequestFilter filter : sortedRequestFilters) {
@@ -176,25 +173,23 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
-        private final List<ContainerResponseFilter> filters;
+        private final Iterable<RankedProvider<ContainerResponseFilter>> filters;
         private final ServiceLocator locator;
 
-        private ResponseFilterStage(List<ContainerResponseFilter> filters, ServiceLocator locator) {
+        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters, ServiceLocator locator) {
             this.filters = filters;
             this.locator = locator;
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
             try {
                 RoutingContext rc = locator.getService(RoutingContext.class);
 
-                List<ContainerResponseFilter> sortedResponseFilters = new ArrayList<ContainerResponseFilter>(filters);
-                if (rc != null) {
-                    sortedResponseFilters.addAll(rc.getBoundResponseFilters());
-                }
-                Collections.sort(sortedResponseFilters,
-                        new PriorityComparator<ContainerResponseFilter>(PriorityComparator.Order.DESCENDING));
+                Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
+                        new RankedComparator<ContainerResponseFilter>(), filters, rc.getBoundResponseFilters()
+                );
 
                 for (ContainerResponseFilter filter : sortedResponseFilters) {
                     filter.filter(responseContext.getRequestContext(), responseContext);

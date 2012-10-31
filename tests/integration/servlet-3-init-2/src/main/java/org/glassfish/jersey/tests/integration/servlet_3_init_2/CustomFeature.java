@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey;
 
-import java.util.Map;
+package org.glassfish.jersey.tests.integration.servlet_3_init_2;
+
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext1WriterInterceptor;
+import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext2WriterInterceptor;
+import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext3WriterInterceptor;
+import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext4WriterInterceptor;
 
 /**
- * Provides access to properties and features.
- *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- * TODO remove - replace with JAX-RS configurable
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public interface Config {
+@Provider
+public class CustomFeature implements Feature {
 
-    /**
-     * Get the value of the property with a given name.
-     *
-     * @param name property name.
-     * @return property value.
-     */
-    public Object getProperty(String name);
-
-    /**
-     * Get the value of the property with a given name converted to Java boolean
-     * type. Returns {@code false} if the value is not convertible.
-     *
-     * @param name property name.
-     * @return boolean property value or {@code false} if the property is not
-     *     convertible.
-     */
-    public boolean isProperty(String name);
-
-    /**
-     * Get the immutable property map.
-     *
-     * @return immutable {@link Map map} of properties.
-     */
-    Map<String, Object> getProperties();
-//    public Set<Class<? extends Feature>> getFeatures();
-//
-//    public boolean isEnabled(Class<? extends Feature> feature);
-//
-//    public Config enable(Class<? extends Feature> feature);
-//
-//    public Config disable(Class<? extends Feature> feature);
+    @Override
+    public boolean configure(final Configurable configurable) {
+        configurable.register(Ext3WriterInterceptor.class, 1000);
+        configurable.register(Ext2WriterInterceptor.class, 100);
+        configurable.register(Ext1WriterInterceptor.INSTANCE, 500);
+        configurable.register(Ext4WriterInterceptor.INSTANCE, 1);
+        return true;
+    }
 }

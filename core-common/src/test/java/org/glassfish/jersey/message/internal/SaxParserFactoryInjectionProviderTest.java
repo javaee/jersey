@@ -45,15 +45,19 @@
 package org.glassfish.jersey.message.internal;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -66,7 +70,9 @@ import org.glassfish.hk2.utilities.Binder;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.InputSource;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -83,15 +89,78 @@ public class SaxParserFactoryInjectionProviderTest {
         locator = createServiceLocator();
     }
 
-    private static final Config EMPTY_CONFIG = new Config() {
+    private static final Configurable EMPTY_CONFIG = new Configurable() {
+
         @Override
         public Object getProperty(String propertyName) {
             return null;
         }
 
         @Override
-        public boolean isProperty(String name) {
-            return false;
+        public Configurable setProperties(final Map<String, ?> properties) {
+            return this;
+        }
+
+        @Override
+        public Configurable setProperty(final String name, final Object value) {
+            return this;
+        }
+
+        @Override
+        public Collection<Feature> getFeatures() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<Class<?>> getProviderClasses() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<Object> getProviderInstances() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Configurable register(final Class<?> providerClass) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Class<?> providerClass, final int bindingPriority) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Class<T> providerClass, final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Class<T> providerClass,
+                                         final int bindingPriority,
+                                         final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Object provider) {
+            return this;
+        }
+
+        @Override
+        public Configurable register(final Object provider, final int bindingPriority) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Object provider, final Class<? super T>... contracts) {
+            return this;
+        }
+
+        @Override
+        public <T> Configurable register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
+            return this;
         }
 
         @Override
@@ -106,19 +175,21 @@ public class SaxParserFactoryInjectionProviderTest {
         binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(new Factory<Config>() {
+                bindFactory(new Factory<Configurable>() {
                     @Override
-                    public Config provide() {
+                    public Configurable provide() {
                         return EMPTY_CONFIG;
                     }
 
                     @Override
-                    public void dispose(Config instance) {
+                    public void dispose(Configurable instance) {
                         //not used
                     }
-                }).to(Config.class);
-                bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).to(SAXParserFactory.class)
-                        .in(PerThread.class);
+                }).to(Configurable.class);
+
+                bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).
+                        to(SAXParserFactory.class).
+                        in(PerThread.class);
                 bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };

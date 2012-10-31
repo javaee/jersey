@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -61,6 +60,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -188,25 +188,25 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public Collection<ContainerRequestFilter> getBoundRequestFilters() {
+    public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
     }
 
     @Override
-    public Collection<ContainerResponseFilter> getBoundResponseFilters() {
+    public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
     }
 
     @Override
-    public Collection<ReaderInterceptor> getBoundReaderInterceptors() {
+    public Iterable<RankedProvider<ReaderInterceptor>> getBoundReaderInterceptors() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getReaderInterceptors() : null);
     }
 
     @Override
-    public Collection<WriterInterceptor> getBoundWriterInterceptors() {
+    public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getWriterInterceptors() : null);
     }
@@ -214,8 +214,8 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     // UriInfo
     private Ref<ContainerRequest> requestContext;
 
-    private static <T> Collection<T> emptyIfNull(Collection<T> collection) {
-        return collection == null ? Collections.<T>emptyList() : collection;
+    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
+        return iterable == null ? Collections.<T>emptyList() : iterable;
     }
 
     @Override

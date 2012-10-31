@@ -39,11 +39,10 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.ws.rs.core.Configurable;
+
 import javax.inject.Inject;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.jersey.Config;
-import org.glassfish.jersey.message.MessageProperties;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
@@ -55,17 +54,17 @@ import org.glassfish.hk2.api.PerThread;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFactory> {
-    private final Config config;
+public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implements Factory<SAXParserFactory> {
 
     /**
      * Create new SAX parser factory provider.
      *
      * @param config Jersey configuration properties.
      */
+    // TODO This provider should be registered and configured via a feature.
     @Inject
-    public SaxParserFactoryInjectionProvider(Config config) {
-        this.config = config;
+    public SaxParserFactoryInjectionProvider(final Configurable config) {
+        super(config);
     }
 
     @Override
@@ -75,7 +74,7 @@ public class SaxParserFactoryInjectionProvider implements Factory<SAXParserFacto
 
         factory.setNamespaceAware(true);
 
-        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
+        if (!isXmlSecurityDisabled()) {
             factory = new SecureSaxParserFactory(factory);
         }
 

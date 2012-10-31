@@ -39,11 +39,10 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.ws.rs.core.Configurable;
+
 import javax.inject.Inject;
 import javax.xml.stream.XMLInputFactory;
-
-import org.glassfish.jersey.Config;
-import org.glassfish.jersey.message.MessageProperties;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
@@ -54,18 +53,17 @@ import org.glassfish.hk2.api.PerThread;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class XmlInputFactoryInjectionProvider implements Factory<XMLInputFactory> {
-
-    private final Config config;
+public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory implements Factory<XMLInputFactory> {
 
     /**
      * Create new XML input factory provider.
      *
      * @param config Jersey configuration properties.
      */
+    // TODO This provider should be registered and configured via a feature.
     @Inject
-    public XmlInputFactoryInjectionProvider(Config config) {
-        this.config = config;
+    public XmlInputFactoryInjectionProvider(final Configurable config) {
+        super(config);
     }
 
     @Override
@@ -73,7 +71,7 @@ public class XmlInputFactoryInjectionProvider implements Factory<XMLInputFactory
     public XMLInputFactory provide() {
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
-        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
+        if (!isXmlSecurityDisabled()) {
             factory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
         }
 

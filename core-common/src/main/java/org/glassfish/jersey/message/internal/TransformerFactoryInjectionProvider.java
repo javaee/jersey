@@ -39,11 +39,10 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import javax.ws.rs.core.Configurable;
+
 import javax.inject.Inject;
 import javax.xml.transform.TransformerFactory;
-
-import org.glassfish.jersey.Config;
-import org.glassfish.jersey.message.MessageProperties;
 
 import org.glassfish.hk2.api.Factory;
 
@@ -53,25 +52,24 @@ import org.glassfish.hk2.api.Factory;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class TransformerFactoryInjectionProvider implements Factory<TransformerFactory> {
-
-    private final Config config;
+public class TransformerFactoryInjectionProvider extends AbstractXmlFactory implements Factory<TransformerFactory> {
 
     /**
      * Create new transformer factory provider.
      *
      * @param config Jersey configuration properties.
      */
+    // TODO This provider should be registered and configured via a feature.
     @Inject
-    public TransformerFactoryInjectionProvider(Config config) {
-        this.config = config;
+    public TransformerFactoryInjectionProvider(final Configurable config) {
+        super(config);
     }
 
     @Override
     public TransformerFactory provide() {
         TransformerFactory f = TransformerFactory.newInstance();
 
-        if (!config.isProperty(MessageProperties.XML_SECURITY_DISABLE)) {
+        if (!isXmlSecurityDisabled()) {
             // TODO ?
         }
 

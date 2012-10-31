@@ -40,9 +40,8 @@
 package org.glassfish.jersey.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,21 +51,18 @@ import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
 
-import org.glassfish.jersey.Config;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.model.internal.DefaultConfig;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.Binder;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 
 /**
@@ -76,8 +72,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class ClientConfig implements Configuration, Config, Configurable {
-
+public class ClientConfig implements Configuration, Configurable {
     /**
      * Internal configuration state.
      */
@@ -86,7 +81,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
     /**
      * Default encapsulation of the internal configuration state.
      */
-    private static class State implements Configuration, Config, Configurable {
+    private static class State implements Configuration, Configurable {
 
         /**
          * Strategy that returns the same state instance.
@@ -110,22 +105,15 @@ public class ClientConfig implements Configuration, Config, Configurable {
         };
 
         private volatile StateChangeStrategy strategy;
-        private final Map<String, Object> properties;
-        private final Map<String, Object> immutablePropertiesView;
-        private final Set<Class<?>> providerClasses;
+        private final DefaultConfig config;
 
-        private final Set<Class<?>> immutableClassesView;
-        private final Set<Object> providerInstances;
-        private final Set<Object> immutableInstancesView;
-        private final Set<Feature> immutableFeatureSetView;
-
-        private final BiMap<Class<? extends Feature>, Feature> features;
         private final List<Binder> binders;
 
         private final JerseyClient client;
         private Connector connector;
 
-        private Value<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
+        private RuntimeClientConfig runtimeClientConfig;
+        private final Value<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
             @Override
             public ClientRuntime get() {
                 return initRuntime();
@@ -157,17 +145,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
         State(JerseyClient client) {
             this.client = client;
             this.strategy = IDENTITY;
-
-            this.properties = new HashMap<String, Object>();
-            this.providerClasses = new LinkedHashSet<Class<?>>();
-            this.providerInstances = new LinkedHashSet<Object>();
-            this.features = HashBiMap.create();
-
-            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
-            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
-            this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
-            this.immutableFeatureSetView = Collections.unmodifiableSet(features.values());
-
+            this.config = new DefaultConfig();
             this.binders = Lists.newLinkedList();
             this.connector = null;
         }
@@ -182,18 +160,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
         private State(JerseyClient client, State original) {
             this.client = client;
             this.strategy = IDENTITY;
-
-            this.properties = new HashMap<String, Object>(original.properties);
-            this.providerClasses = new LinkedHashSet<Class<?>>(original.providerClasses);
-            this.providerInstances = new LinkedHashSet<Object>(original.providerInstances);
-            this.features = HashBiMap.create(original.features);
-
-
-            this.immutablePropertiesView = Collections.unmodifiableMap(properties);
-            this.immutableClassesView = Collections.unmodifiableSet(providerClasses);
-            this.immutableInstancesView = Collections.unmodifiableSet(providerInstances);
-            this.immutableFeatureSetView = Collections.unmodifiableSet(this.features.values());
-
+            this.config = new DefaultConfig(original.config);
             this.binders = Lists.newLinkedList(original.binders);
             this.connector = original.connector;
         }
@@ -225,45 +192,27 @@ public class ClientConfig implements Configuration, Config, Configurable {
 
         @Override
         public Map<String, Object> getProperties() {
-            return immutablePropertiesView;
+            return config.getProperties();
         }
 
         @Override
         public Object getProperty(final String name) {
-            return properties.get(name);
+            return config.getProperty(name);
         }
 
         @Override
-        public boolean isProperty(final String name) {
-            if (properties.containsKey(name)) {
-                Object value = properties.get(name);
-                if (value instanceof Boolean) {
-                    return Boolean.class.cast(value);
-                } else {
-                    return Boolean.parseBoolean(value.toString());
-                }
-            }
-
-            return false;
-        }
-
-        @Override
-        public Set<Feature> getFeatures() {
-            return immutableFeatureSetView;
-        }
-
-        public boolean isEnabled(final Class<? extends Feature> featureClass) {
-            return features.containsKey(featureClass);
+        public Collection<Feature> getFeatures() {
+            return config.getFeatures();
         }
 
         @Override
         public Set<Class<?>> getProviderClasses() {
-            return immutableClassesView;
+            return config.getProviderClasses();
         }
 
         @Override
         public Set<Object> getProviderInstances() {
-            return immutableInstancesView;
+            return config.getProviderInstances();
         }
 
         @Override
@@ -274,86 +223,70 @@ public class ClientConfig implements Configuration, Config, Configurable {
         @Override
         public State register(final Class<?> providerClass) {
             final State state = strategy.onChange(this);
-            state.providerClasses.add(providerClass);
+            state.config.register(providerClass);
             return state;
         }
 
         @Override
         public State register(final Object provider) {
             final State state = strategy.onChange(this);
-            state.providerInstances.add(provider);
+            state.config.register(provider);
             return state;
         }
 
         @Override
-        public State register(Class<?> providerClass, int bindingPriority) {
+        public State register(final Class<?> providerClass, final int bindingPriority) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
+            state.config.register(providerClass, bindingPriority);
             return state;
         }
 
         @Override
-        public <T> State register(Class<T> providerClass, Class<? super T>... contracts) {
+        public <T> State register(final Class<T> providerClass, final Class<? super T>... contracts) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
+            state.config.register(providerClass, contracts);
             return state;
         }
 
         @Override
-        public <T> State register(Class<T> providerClass, int bindingPriority, Class<? super T>... contracts) {
+        public <T> State register(final Class<T> providerClass, final int bindingPriority, Class<? super T>... contracts) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
+            state.config.register(providerClass, bindingPriority, contracts);
             return state;
         }
 
         @Override
-        public State register(Object provider, int bindingPriority) {
+        public State register(final Object provider, final int bindingPriority) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
+            state.config.register(provider, bindingPriority);
             return state;
         }
 
         @Override
-        public <T> State register(Object provider, Class<? super T>... contracts) {
+        public <T> State register(final Object provider, final Class<? super T>... contracts) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
+            state.config.register(provider, contracts);
             return state;
         }
 
         @Override
-        public <T> State register(Object provider, int bindingPriority, Class<? super T>... contracts) {
+        public <T> State register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
             final State state = strategy.onChange(this);
-            // TODO: implement method.
-            return state;
-        }
-
-        public State enable(final Feature feature) {
-            final Class<? extends Feature> featureClass = feature.getClass();
-            if (features.containsKey(featureClass)) {
-                throw new IllegalStateException(String.format("Feature [%s] has already been enabled.", featureClass));
-            }
-
-            final State state = strategy.onChange(this);
-            boolean success = feature.configure(state);
-            if (success) {
-                state.features.put(featureClass, feature);
-            }
-
+            state.config.register(provider, bindingPriority, contracts);
             return state;
         }
 
         @Override
         public State setProperties(final Map<String, ?> properties) {
             final State state = strategy.onChange(this);
-            state.properties.clear();
-            state.properties.putAll(properties);
+            state.config.setProperties(properties);
             return state;
         }
 
         @Override
         public State setProperty(final String name, final Object value) {
             final State state = strategy.onChange(this);
-            state.properties.put(name, value);
+            state.config.setProperty(name, value);
             return state;
         }
 
@@ -390,10 +323,11 @@ public class ClientConfig implements Configuration, Config, Configurable {
              */
             markAsShared();
 
+            runtimeClientConfig = new RuntimeClientConfig(config);
             final AbstractBinder configBinder = new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bind(State.this).to(Configuration.class).to(Config.class);
+                    bind(runtimeClientConfig).to(Configuration.class).to(Configurable.class);
                 }
             };
             final ServiceLocator locator;
@@ -407,11 +341,13 @@ public class ClientConfig implements Configuration, Config, Configurable {
                 locator = Injections.createLocator(allBinders.toArray(new Binder[allBinders.size()]));
             }
 
-            final ProviderBinder providerBinder = new ProviderBinder(locator);
+            // Configure features.
+            ProviderBinder.configureFeatures(runtimeClientConfig.getFeatureBag(), runtimeClientConfig, locator);
 
-            providerBinder.bindClasses(Providers.filterByConstraint(getProviderClasses(), ConstrainedTo.Type.CLIENT, null));
-            providerBinder.bindInstances(Providers.filterInstancesByConstraint(getProviderInstances(),
-                    ConstrainedTo.Type.CLIENT, null));
+            // Bind providers.
+            ProviderBinder.bindProviders(runtimeClientConfig.getProviderBag(), ConstrainedTo.Type.CLIENT, null, locator);
+
+            runtimeClientConfig.lock();
 
             final ClientRuntime runtime = new ClientRuntime(connector, locator);
             client.addListener(new JerseyClient.LifecycleListener() {
@@ -435,24 +371,91 @@ public class ClientConfig implements Configuration, Config, Configurable {
             }
             State other = (State) obj;
             return this == other
-                    || (properties == other.properties || properties.equals(other.properties))
-                    && (providerClasses == other.providerClasses || providerClasses.equals(other.providerClasses))
-                    && (providerInstances == other.providerInstances || providerInstances.equals(other.providerInstances))
+                    && super.equals(other)
                     && (binders == other.binders || binders.equals(other.binders))
-                    && (connector == other.connector
-                    || connector != null && connector.equals(other.connector))
-                    ;
+                    && (connector == other.connector || connector != null && connector.equals(other.connector));
         }
 
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 41 * hash + this.properties.hashCode();
-            hash = 41 * hash + this.providerClasses.hashCode();
-            hash = 41 * hash + this.providerInstances.hashCode();
+            hash = 41 * hash + super.hashCode();
             hash = 41 * hash + this.binders.hashCode();
             hash = 41 * hash + (this.connector != null ? this.connector.hashCode() : 0);
             return hash;
+        }
+
+        private static class RuntimeClientConfig extends DefaultConfig implements Configuration {
+
+            public RuntimeClientConfig(final DefaultConfig config) {
+                super(config);
+            }
+
+            @Override
+            public RuntimeClientConfig register(final Class<?> providerClass) {
+                super.register(providerClass);
+                return this;
+            }
+
+            @Override
+            public RuntimeClientConfig setProperties(final Map<String, ?> properties) {
+                super.setProperties(properties);
+                return this;
+            }
+
+            @Override
+            public RuntimeClientConfig setProperty(final String name, final Object value) {
+                super.setProperty(name, value);
+                return this;
+            }
+
+            @Override
+            public RuntimeClientConfig register(final Object provider) {
+                super.register(provider);
+                return this;
+            }
+
+            @Override
+            public RuntimeClientConfig register(final Class<?> providerClass, final int bindingPriority) {
+                super.register(providerClass, bindingPriority);
+                return this;
+            }
+
+            @Override
+            public <P> RuntimeClientConfig register(final Class<P> providerClass, final Class<? super P>... contracts) {
+                super.register(providerClass, contracts);
+                return this;
+            }
+
+            @Override
+            public <P> RuntimeClientConfig register(final Class<P> providerClass, final int bindingPriority, final Class<? super P>...
+                    contracts) {
+                super.register(providerClass, bindingPriority, contracts);
+                return this;
+            }
+
+            @Override
+            public RuntimeClientConfig register(final Object provider, final int bindingPriority) {
+                super.register(provider, bindingPriority);
+                return this;
+            }
+
+            @Override
+            public <P> RuntimeClientConfig register(final Object provider, final Class<? super P>... contracts) {
+                super.register(provider, contracts);
+                return this;
+            }
+
+            @Override
+            public <P> RuntimeClientConfig register(final Object provider, final int bindingPriority, final Class<? super P>... contracts) {
+                super.register(provider, bindingPriority, contracts);
+                return this;
+            }
+
+            @Override
+            public Configuration updateFrom(final Configurable configuration) {
+                throw new UnsupportedOperationException();
+            }
         }
     }
 
@@ -526,7 +529,7 @@ public class ClientConfig implements Configuration, Config, Configurable {
             }
 
             for (Feature feature : that.getFeatures()) {
-                state = state.enable(feature);
+                state = state.register(feature, Feature.class);
             }
         }
     }
@@ -566,23 +569,8 @@ public class ClientConfig implements Configuration, Config, Configurable {
     }
 
     @Override
-    public boolean isProperty(final String name) {
-        return state.isProperty(name);
-    }
-
-    @Override
-    public Set<Feature> getFeatures() {
-        return state.getFeatures();
-    }
-
-    /**
-     * Check if the given feature is enabled or not.
-     *
-     * @param feature tested feature.
-     * @return {@code true} in case
-     */
-    public boolean isEnabled(final Class<? extends Feature> feature) {
-        return state.isEnabled(feature);
+    public Collection<Feature> getFeatures() {
+        return state.runtimeClientConfig != null ? state.runtimeClientConfig.getFeatures() : state.getFeatures();
     }
 
     @Override
@@ -603,19 +591,13 @@ public class ClientConfig implements Configuration, Config, Configurable {
 
     @Override
     public ClientConfig register(final Class<?> providerClass) {
-        // TODO features
         state = state.register(providerClass);
         return this;
     }
 
     @Override
     public ClientConfig register(final Object provider) {
-        // TODO features properly
-        if (provider instanceof Feature) {
-            state = state.enable((Feature) provider);
-        } else {
-            state = state.register(provider);
-        }
+        state = state.register(provider);
         return this;
     }
 
@@ -707,6 +689,10 @@ public class ClientConfig implements Configuration, Config, Configurable {
      */
     ClientRuntime getRuntime() {
         return state.runtime.get();
+    }
+
+    Configuration getRuntimeConfig() {
+        return state.runtimeClientConfig;
     }
 
     /**

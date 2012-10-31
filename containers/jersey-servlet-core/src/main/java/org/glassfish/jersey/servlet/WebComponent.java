@@ -45,7 +45,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -126,10 +126,10 @@ public class WebComponent {
 
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
 
-        final List<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServiceLocator(),
-                AsyncContextDelegateProvider.class);
-        if (!providers.isEmpty()) {
-            return providers.iterator().next();
+        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServiceLocator(),
+                AsyncContextDelegateProvider.class).iterator();
+        if (providers.hasNext()) {
+            return providers.next();
         }
 
         return new AsyncContextDelegateProvider() {

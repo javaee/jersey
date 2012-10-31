@@ -42,6 +42,7 @@ package org.glassfish.jersey.model;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.BindingPriority;
@@ -52,10 +53,11 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
- * Jersey application contract provider model.
+ * Jersey contract provider model.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -74,8 +76,60 @@ public final class ContractProvider implements Scoped, NameBound {
      *         implement any recognized provider contracts.
      */
     public static ContractProvider from(final Class<?> serviceClass) {
-        Builder<?> builder = introspectService(serviceClass);
-        return (builder == null) ? null : builder.build();
+        return from(serviceClass, NO_PRIORITY, null);
+    }
+
+    /**
+     * Create a contract provider model by introspecting a contract provider/service
+     * class.
+     *
+     * @param serviceClass contract provider/service class.
+     * @param bindingPriority binding priority of contracts.
+     * @param contracts contracts to bind the provider/service to.
+     * @return contract provider model for the class or {@code null} if the class does not
+     *         implement any recognized provider contracts.
+     */
+    public static ContractProvider from(final Class<?> serviceClass,
+                                        final int bindingPriority,
+                                        Set<Class<?>> contracts) {
+        final Builder builder = builder();
+
+        // Contracts.
+        if (contracts == null || contracts.isEmpty()) {
+            contracts = Providers.getProviderContracts(serviceClass);
+
+            if (contracts.isEmpty()) {
+                return null;
+            }
+        }
+
+        // Priority.
+        if (bindingPriority > NO_PRIORITY) {
+            builder.defaultPriority(bindingPriority);
+        }
+
+        // Annotations.
+        for (Annotation annotation : serviceClass.getAnnotations()) {
+            if (annotation instanceof BindingPriority) {
+                if (bindingPriority == NO_PRIORITY) {
+                    builder.defaultPriority(((BindingPriority) annotation).value());
+                }
+            } else {
+                for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {
+                    if (metaAnnotation instanceof NameBinding) {
+                        builder.addNameBinding(annotation.annotationType());
+                    }
+                    if (metaAnnotation instanceof Scope) {
+                        builder.scope(annotation.annotationType());
+                    }
+                }
+            }
+        }
+
+        // Add contracts - default priority has been set.
+        builder.addContracts(contracts);
+
+        return builder.build();
     }
 
     /**
@@ -90,29 +144,20 @@ public final class ContractProvider implements Scoped, NameBound {
         return from(service.getClass());
     }
 
-    private static Builder<?> introspectService(Class<?> serviceClass) {
-        final Set<Class<?>> providerContracts = Providers.getProviderContracts(serviceClass);
-        if (providerContracts.isEmpty()) {
-            return null;
-        }
-
-        Builder<?> builder = builder().addContracts(providerContracts);
-
-        for (Annotation annotation : serviceClass.getAnnotations()) {
-            if (annotation instanceof BindingPriority) {
-                builder.priority(((BindingPriority) annotation).value());
-            } else {
-                for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {
-                    if (metaAnnotation instanceof NameBinding) {
-                        builder.addNameBinding(annotation.annotationType());
-                    }
-                    if (metaAnnotation instanceof Scope) {
-                        builder.scope(annotation.annotationType());
-                    }
-                }
-            }
-        }
-        return builder;
+    /**
+     * Create a contract provider model by introspecting the class of a contract provider/service
+     * instance.
+     *
+     * @param service contract provider/service instance.
+     * @param bindingPriority binding priority of contracts.
+     * @param contracts contracts to bind the provider/service to.
+     * @return contract provider model for the instance or {@code null} if the instance does not
+     *         implement any recognized provider contracts.
+     */
+    public static ContractProvider from(final Object service,
+                                        final int bindingPriority,
+                                        final Set<Class<?>> contracts) {
+        return from(service.getClass(), bindingPriority, contracts);
     }
 
     /**
@@ -120,8 +165,8 @@ public final class ContractProvider implements Scoped, NameBound {
      *
      * @return new contract provider builder.
      */
-    public static <T> Builder<T> builder() {
-        return new Builder<T>();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -130,18 +175,18 @@ public final class ContractProvider implements Scoped, NameBound {
      * @param original existing contract provider model.
      * @return new contract provider builder.
      */
-    public static <T> Builder<T> builder(final ContractProvider original) {
-        return new Builder<T>(original);
+    public static Builder builder(final ContractProvider original) {
+        return new Builder(original);
     }
 
     /**
      * Contract provider model builder.
      */
-    public static final class Builder<T> {
+    public static final class Builder {
 
         private Class<? extends Annotation> scope = Singleton.class;
-        private Set<Class<?>> contracts = Sets.newIdentityHashSet();
-        private int priority = NO_PRIORITY;
+        private Map<Class<?>, Integer> contracts = Maps.newHashMap();
+        private int defaultPriority = NO_PRIORITY;
         private Set<Class<? extends Annotation>> nameBindings = Sets.newIdentityHashSet();
 
         private Builder() {
@@ -149,8 +194,8 @@ public final class ContractProvider implements Scoped, NameBound {
 
         private Builder(final ContractProvider original) {
             this.scope = original.scope;
-            this.contracts.addAll(original.contracts);
-            this.priority = original.priority;
+            this.contracts.putAll(original.contracts);
+            this.defaultPriority = original.defaultPriority;
             this.nameBindings.addAll(original.nameBindings);
         }
 
@@ -160,7 +205,7 @@ public final class ContractProvider implements Scoped, NameBound {
          * @param scope contract provider scope.
          * @return updated builder.
          */
-        public Builder<T> scope(final Class<? extends Annotation> scope) {
+        public Builder scope(final Class<? extends Annotation> scope) {
             this.scope = scope;
             return this;
         }
@@ -171,8 +216,19 @@ public final class ContractProvider implements Scoped, NameBound {
          * @param contract additional provided contract.
          * @return updated builder.
          */
-        public Builder<T> addContract(final Class<? super T> contract) {
-            this.contracts.add(contract);
+        public Builder addContract(final Class<?> contract) {
+            return addContract(contract, defaultPriority);
+        }
+
+        /**
+         * Add a new provided contract with priority.
+         *
+         * @param contract additional provided contract.
+         * @param priority priority for the contract.
+         * @return updated builder.
+         */
+        public Builder addContract(final Class<?> contract, final int priority) {
+            contracts.put(contract, priority);
             return this;
         }
 
@@ -182,19 +238,32 @@ public final class ContractProvider implements Scoped, NameBound {
          * @param contracts additional provided contracts.
          * @return updated builder.
          */
-        private Builder<T> addContracts(final Collection<Class<?>> contracts) {
-            this.contracts.addAll(contracts);
+        public Builder addContracts(final Map<Class<?>, Integer> contracts) {
+            this.contracts.putAll(contracts);
             return this;
         }
 
         /**
-         * Set the contract provider priority. (By default is set to {@link ContractProvider#NO_PRIORITY}.)
+         * Add a new provided contracts.
          *
-         * @param priority contract provider priority.
+         * @param contracts additional provided contracts.
          * @return updated builder.
          */
-        public Builder<T> priority(final int priority) {
-            this.priority = priority;
+        public Builder addContracts(final Collection<Class<?>> contracts) {
+            for (final Class<?> contract : contracts) {
+                addContract(contract, defaultPriority);
+            }
+            return this;
+        }
+
+        /**
+         * Set the contract default provider priority. (Default value is {@link ContractProvider#NO_PRIORITY})
+         *
+         * @param defaultPriority default contract provider priority.
+         * @return updated builder.
+         */
+        public Builder defaultPriority(final int defaultPriority) {
+            this.defaultPriority = defaultPriority;
             return this;
         }
 
@@ -204,7 +273,7 @@ public final class ContractProvider implements Scoped, NameBound {
          * @param binding name binding.
          * @return updated builder.
          */
-        public Builder<T> addNameBinding(final Class<? extends Annotation> binding) {
+        public Builder addNameBinding(final Class<? extends Annotation> binding) {
             this.nameBindings.add(binding);
             return this;
         }
@@ -215,24 +284,24 @@ public final class ContractProvider implements Scoped, NameBound {
          * @return new contract provider model.
          */
         public ContractProvider build() {
-            return new ContractProvider(scope, contracts, priority, nameBindings);
+            return new ContractProvider(scope, contracts, defaultPriority, nameBindings);
         }
     }
 
-    private final Set<Class<?>> contracts;
-    private final int priority;
+    private final Map<Class<?>, Integer> contracts;
+    private final int defaultPriority;
     private final Set<Class<? extends Annotation>> nameBindings;
     private final Class<? extends Annotation> scope;
 
     private ContractProvider(
             final Class<? extends Annotation> scope,
-            final Set<Class<?>> contracts,
-            final int priority,
+            final Map<Class<?>, Integer> contracts,
+            final int defaultPriority,
             final Set<Class<? extends Annotation>> nameBindings) {
 
         this.scope = scope;
         this.contracts = contracts;
-        this.priority = priority;
+        this.defaultPriority = defaultPriority;
         this.nameBindings = nameBindings;
     }
 
@@ -248,7 +317,7 @@ public final class ContractProvider implements Scoped, NameBound {
      * @see org.glassfish.jersey.spi.Contract
      */
     public Set<Class<?>> getContracts() {
-        return contracts;
+        return contracts.keySet();
     }
 
     @Override
@@ -257,13 +326,13 @@ public final class ContractProvider implements Scoped, NameBound {
     }
 
     /**
-     * Get the provider priority, if set, {@code -1} if not set.
+     * Get the default provider priority, if set, {@code -1} if not set.
      *
      * @return provider priority.
      * @see javax.ws.rs.BindingPriority
      */
-    public int getPriority() {
-        return priority;
+    public int getPriority(final Class<?> contract) {
+        return contracts.containsKey(contract) ? contracts.get(contract) : defaultPriority;
     }
 
     @Override

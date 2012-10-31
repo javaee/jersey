@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.MatchResult;
 
@@ -49,6 +48,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -157,7 +157,7 @@ public interface RoutingContext extends ResourceInfo {
      * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Collection<ContainerRequestFilter> getBoundRequestFilters();
+    public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters();
 
     /**
      * Get all bound response filters applicable to this request.
@@ -166,7 +166,7 @@ public interface RoutingContext extends ResourceInfo {
      * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Collection<ContainerResponseFilter> getBoundResponseFilters();
+    public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters();
 
     /**
      * Get all reader interceptors applicable to this request.
@@ -175,7 +175,7 @@ public interface RoutingContext extends ResourceInfo {
      * @return All reader interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Collection<ReaderInterceptor> getBoundReaderInterceptors();
+    public Iterable<RankedProvider<ReaderInterceptor>> getBoundReaderInterceptors();
 
     /**
      * Get all writer interceptors applicable to this request.
@@ -184,5 +184,5 @@ public interface RoutingContext extends ResourceInfo {
      * @return All writer interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Collection<WriterInterceptor> getBoundWriterInterceptors();
+    public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors();
 }

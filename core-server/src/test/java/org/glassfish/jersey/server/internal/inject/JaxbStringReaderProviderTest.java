@@ -59,6 +59,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.message.internal.SaxParserFactoryInjectionProvider;
+import org.glassfish.jersey.model.internal.DefaultConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
@@ -68,7 +69,7 @@ public class JaxbStringReaderProviderTest {
     public void stringReaderDoesNotReadExternalDtds() {
 
         Provider<SAXParserFactory> saxParserFactoryProvider = new Provider<SAXParserFactory>() {
-            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new ResourceConfig());
+            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new DefaultConfig());
 
             @Override
             public SAXParserFactory get() {

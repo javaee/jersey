@@ -44,8 +44,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -56,7 +54,15 @@ public class ReloadResource {
     @GET
     @Produces("text/plain")
     public String get() {
-        ReloadContainerLifecycleListener.container.reload(new ResourceConfig(HelloWorldResource.class, AnotherResource.class,
-                ReloadContainerLifecycleListener.class));
+        try {
+            ReloadContainerLifecycleListener.container.reload(
+                    new ResourceConfig(HelloWorldResource.class,
+                            ReloadResource.class,
+                            AnotherResource.class,
+                            ReloadContainerLifecycleListener.class)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return "Reload resource";
     }}

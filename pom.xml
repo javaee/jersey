@@ -891,6 +891,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <!-- Change jaxrs.api.version in examples/osgi-helloworld-webapp/pom.xml as well. -->
         <jaxrs.api.version>2.0-m12</jaxrs.api.version>
         <hk2.version>2.1.30</hk2.version>
         <grizzly2.version>2.3-beta6</grizzly2.version>

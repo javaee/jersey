@@ -39,16 +39,27 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.HttpHeaders;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.server.model.ModelValidationException;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -56,6 +67,7 @@ import static org.junit.Assert.fail;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ApplicationHandlerTest {
 
@@ -148,5 +160,111 @@ public class ApplicationHandlerTest {
         }
 
         fail("Model validation exception was expected but not thrown.");
+    }
+
+    public static final class CustomResponseFilter implements ContainerResponseFilter {
+
+        @Override
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
+            responseContext.setEntity(
+                    responseContext.getEntity() + "-filtered",
+                    responseContext.getEntityAnnotations(),
+                    responseContext.getMediaType());
+        }
+    }
+
+    public static final class CustomFeature implements Feature {
+
+        @Override
+        public boolean configure(final Configurable configurable) {
+            configurable.register(CustomResponseFilter.class);
+            return true;
+        }
+    }
+
+    @Path("property")
+    public static final class ProviderPropertyResource {
+
+        private final Configurable config;
+        private final ResourceConfig application;
+
+        @Inject
+        public ProviderPropertyResource(final Application application, final Configurable config) {
+            this.config = config;
+            this.application = (ResourceConfig) application;
+        }
+
+        @GET
+        public String get() {
+            assertEquals(0, application.getFeatures().size());
+            assertEquals(0, application.getFeatureBag().getUnconfiguredFeatures().size());
+            assertEquals(0, application.getProviderClasses().size());
+            assertEquals(0, application.getProviderInstances().size());
+
+            assertEquals(1, config.getFeatures().size());
+            assertEquals(0, ((ResourceConfig) config).getFeatureBag().getUnconfiguredFeatures().size());
+            assertEquals(1, config.getProviderClasses().size());
+            assertEquals(0, config.getProviderInstances().size());
+
+            assertTrue(config.getProviderClasses().contains(CustomResponseFilter.class));
+
+            return "get";
+        }
+
+    }
+
+    @Test
+    public void testProviderAsServerProperty() throws Exception {
+        final ResourceConfig resourceConfig = new ResourceConfig(ProviderPropertyResource.class);
+        resourceConfig.setProperty(ServerProperties.PROVIDER_CLASSNAMES, CustomFeature.class.getName());
+
+        final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
+
+        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/property", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("get-filtered", response.getEntity());
+    }
+
+    @Path("runtimeConfig")
+    public static final class RuntimeConfigResource {
+
+        private final Configurable config;
+        private final ResourceConfig application;
+
+        @Inject
+        public RuntimeConfigResource(final Application application, final Configurable config) {
+            this.config = config;
+            this.application = (ResourceConfig) application;
+        }
+
+        @GET
+        public String get() {
+            assertEquals(0, application.getFeatures().size());
+            assertEquals(1, application.getFeatureBag().getUnconfiguredFeatures().size());
+            assertEquals(0, application.getProviderClasses().size());
+            assertEquals(0, application.getProviderInstances().size());
+
+            assertEquals(1, config.getFeatures().size());
+            assertEquals(0, ((ResourceConfig) config).getFeatureBag().getUnconfiguredFeatures().size());
+            assertEquals(1, config.getProviderClasses().size());
+            assertEquals(0, config.getProviderInstances().size());
+
+            assertTrue(config.getProviderClasses().contains(CustomResponseFilter.class));
+
+            return "get";
+        }
+
+    }
+
+    @Test
+    public void testRuntimeResourceConfig() throws Exception {
+        final ResourceConfig resourceConfig = new ResourceConfig(RuntimeConfigResource.class);
+        resourceConfig.register(CustomFeature.class);
+
+        final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
+
+        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/runtimeConfig", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("get-filtered", response.getEntity());
     }
 }
