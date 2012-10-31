@@ -206,6 +206,27 @@ public class JerseyUriBuilderTest {
         assertEquals("http://localhost/?test=", uri.toString());
     }
 
+    // regression test for JERSEY-1457
+    @Test
+    public void testChangeSspViaStringUriTemplate() throws Exception {
+        String[] origUris = new String[] {"news:comp.lang.java", "tel:+1-816-555-1212"};
+        URI[] replaceUris = new URI[] {new URI(null, "news.lang.java", null), new URI(null, "+1-866-555-1212", null)};
+        String[] results = new String[] {"news:news.lang.java", "tel:+1-866-555-1212"};
+        int i = 0;
+        while (i < origUris.length){
+            assertEquals(results[i],
+                    UriBuilder.fromUri(new URI(origUris[i])).uri(replaceUris[i].toASCIIString()).build().toString());
+            i++;
+        }
+    }
+
+    @Test
+    public void testChangeUriStringAfterChangingOpaqueSchemeToHttp() {
+        assertEquals("http://www.example.org/test",
+                UriBuilder.fromUri("tel:+1-816-555-1212")
+                        .scheme("http").uri("//www.{host}.org").path("test").build("example").toString());
+    }
+
     @Test
     public void testUriBuilderTemplatesSimple() {
         testUri("a:/path");
