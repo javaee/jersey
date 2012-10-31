@@ -822,9 +822,8 @@ public class InboundMessageContext {
             }
             return t;
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
+            throw new MessageProcessingException(LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
         }
-        return null;
     }
 
     /**
