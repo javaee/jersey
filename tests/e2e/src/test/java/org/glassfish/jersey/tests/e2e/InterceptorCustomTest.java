@@ -62,6 +62,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.e2e.InterceptorGzipTest.GZIPReaderTestInterceptor;
@@ -88,15 +89,18 @@ public class InterceptorCustomTest extends JerseyTest {
                 PlusOneWriterInterceptor.class, MinusOneReaderInterceptor.class, AnnotationsReaderWriterInterceptor.class);
     }
 
-    @Test
-    public void testMoreInterceptorsAndFilter() throws IOException {
-        client().configuration().
+    @Override
+    protected void configureClient(final ClientConfig clientConfig) {
+        clientConfig.
                 register(GZIPReaderTestInterceptor.class).
                 register(GZIPWriterTestInterceptor.class).
                 register(PlusOneWriterInterceptor.class).
                 register(MinusOneReaderInterceptor.class).
                 register(AnnotationsReaderWriterInterceptor.class);
+    }
 
+    @Test
+    public void testMoreInterceptorsAndFilter() throws IOException {
         WebTarget target = target().path("test");
 
         Response response = target.request().put(Entity.entity(ENTITY, MediaType.TEXT_PLAIN_TYPE));
@@ -224,6 +228,7 @@ public class InterceptorCustomTest extends JerseyTest {
     }
 
     @Provider
+    @BindingPriority(100)
     public static class IOExceptionReaderInterceptor implements ReaderInterceptor {
 
         @Override
