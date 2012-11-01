@@ -54,6 +54,7 @@ import org.glassfish.jersey.model.internal.DefaultConfig;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests {@link ProviderBinder}.
@@ -224,11 +225,26 @@ public class ProviderBinderTest {
         assertEquals(1, b);
     }
 
-    @Test(expected = StackOverflowError.class)
+    @Test
     public void testConfigureFeatureInstanceRecursive() throws Exception {
         final DefaultConfig config = new DefaultConfig();
         config.register(new RecursiveInstanceFeature());
 
-        ProviderBinder.configureFeatures(config.getFeatureBag(), config, Injections.createLocator());
+        try {
+            ProviderBinder.configureFeatures(config.getFeatureBag(), config, Injections.createLocator());
+            fail("StackOverflowError expected.");
+        } catch (StackOverflowError soe) {
+            // OK.
+        } catch (Throwable e) {
+            // OK. On Windows StackOverflowError is wrapped into another exception.
+            while (e != null) {
+                if (e instanceof StackOverflowError) {
+                    // OK.
+                    return;
+                }
+                e = e.getCause();
+            }
+            fail("StackOverflowError expected.");
+        }
     }
 }
