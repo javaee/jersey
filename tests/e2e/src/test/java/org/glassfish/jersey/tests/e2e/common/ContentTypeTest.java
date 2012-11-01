@@ -39,7 +39,14 @@
  */
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.logging.Logger;
@@ -47,10 +54,25 @@ import java.util.logging.Logger;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.DynamicFeature;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -77,6 +99,87 @@ public class ContentTypeTest extends JerseyTest {
         public void postTest(final String str) {
             // Ignore to generate response 204 - NoContent.
         }
+
+        @POST
+        @Path("changeTest")
+        @Produces("foo/bar")
+        @CtFix(ContainerRequestFilter.class)
+        public String changeContentTypeTest(String echo) {
+            return echo;
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE, ElementType.METHOD})
+    @interface CtFix {
+        Class<? super ContentTypeFixProvider> value();
+    }
+
+    public static class ContentTypeFixProvider
+            implements ReaderInterceptor, ContainerRequestFilter, ClientResponseFilter {
+
+        @Override
+        public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
+            System.out.println("filter1");
+            if (responseContext.getMediaType().toString().equals("foo/bar")) {
+                responseContext.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+            }
+        }
+
+        @Override
+        public void filter(ContainerRequestContext context) throws IOException {
+            System.out.println("filter2");
+            if (context.getMediaType().toString().equals("foo/bar")) {
+                context.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+            }
+        }
+
+        @Override
+        public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            System.out.println("reader");
+            if (context.getMediaType().toString().equals("foo/bar")) {
+                context.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
+            }
+
+            return context.proceed();
+        }
+    }
+
+    public static class ContentTypeFixFeature implements DynamicFeature {
+
+        @Override
+        public void configure(ResourceInfo resourceInfo, Configurable configurable) {
+            final CtFix annotation = resourceInfo.getResourceMethod().getAnnotation(CtFix.class);
+            if (annotation != null) {
+                configurable.register(ContentTypeFixProvider.class, annotation.value());
+            }
+        }
+    }
+
+    @Produces("foo/bar")
+    public static class FooBarStringWriter implements MessageBodyWriter<String> {
+
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == String.class && mediaType.toString().equals("foo/bar");
+        }
+
+        @Override
+        public long getSize(String s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return s.length();
+        }
+
+        @Override
+        public void writeTo(String s,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
+
+            entityStream.write(s.getBytes());
+        }
     }
 
     @Override
@@ -85,7 +188,7 @@ public class ContentTypeTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig().
-                addClasses(ContentTypeResource.class).
+                addClasses(ContentTypeResource.class, ContentTypeFixFeature.class, FooBarStringWriter.class).
                 addSingletons(new LoggingFilter(LOGGER, true));
     }
 
@@ -115,6 +218,40 @@ public class ContentTypeTest extends JerseyTest {
         outputStream.flush();
 
         assertEquals(400, connection.getResponseCode());
+    }
+
+    @Test
+    public void testChangeContentTypeHeader() throws Exception {
+        WebTarget target;
+        Response response;
+
+        // filter test
+        target = target().path("ContentType").path("changeTest");
+        target.configuration()
+                .register(ContentTypeFixProvider.class, ClientResponseFilter.class)
+                .register(FooBarStringWriter.class);
+
+        response = target
+                .request().post(Entity.entity("test", "foo/bar"));
+
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
+        assertEquals("test", response.readEntity(String.class));
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
+
+        // interceptor test
+        target = target().path("ContentType").path("changeTest");
+        target.configuration()
+                .register(ContentTypeFixProvider.class, ReaderInterceptor.class)
+                .register(FooBarStringWriter.class);
+
+        response = target
+                .request().post(Entity.entity("test", "foo/bar"));
+
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.valueOf("foo/bar"), response.getMediaType());
+        assertEquals("test", response.readEntity(String.class));
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
     }
 
 }

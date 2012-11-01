@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -230,34 +231,36 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final List<RankedProvider<ContainerResponseFilter>> _responseFilters = Lists.newLinkedList();
 
         final Map<Class<?>, ContractProvider> models = providerBag.getModels();
-        for (final Object dynamicProvider : providers) {
-            // TODO: should be based on the type arg. value rather than instanceof?
-            if (dynamicProvider instanceof WriterInterceptor) {
+        for (final Object provider : providers) {
+            final ContractProvider model = models.get(provider.getClass());
+            final Set<Class<?>> contracts = model.getContracts();
+
+            if (contracts.contains(WriterInterceptor.class)) {
                 _writerInterceptors.add(
                         new RankedProvider<WriterInterceptor>(
-                                (WriterInterceptor) dynamicProvider,
-                                models.get(dynamicProvider.getClass()).getPriority(WriterInterceptor.class)));
+                                (WriterInterceptor) provider,
+                                model.getPriority(WriterInterceptor.class)));
             }
 
-            if (dynamicProvider instanceof ReaderInterceptor) {
+            if (contracts.contains(ReaderInterceptor.class)) {
                 _readerInterceptors.add(
                         new RankedProvider<ReaderInterceptor>(
-                                (ReaderInterceptor) dynamicProvider,
-                                models.get(dynamicProvider.getClass()).getPriority(ReaderInterceptor.class)));
+                                (ReaderInterceptor) provider,
+                                model.getPriority(ReaderInterceptor.class)));
             }
 
-            if (dynamicProvider instanceof ContainerRequestFilter) {
+            if (contracts.contains(ContainerRequestFilter.class)) {
                 _requestFilters.add(
                         new RankedProvider<ContainerRequestFilter>(
-                                (ContainerRequestFilter) dynamicProvider,
-                                models.get(dynamicProvider.getClass()).getPriority(ContainerRequestFilter.class)));
+                                (ContainerRequestFilter) provider,
+                                model.getPriority(ContainerRequestFilter.class)));
             }
 
-            if (dynamicProvider instanceof ContainerResponseFilter) {
+            if (contracts.contains(ContainerResponseFilter.class)) {
                 _responseFilters.add(
                         new RankedProvider<ContainerResponseFilter>(
-                                (ContainerResponseFilter) dynamicProvider,
-                                models.get(dynamicProvider.getClass()).getPriority(ContainerResponseFilter.class)));
+                                (ContainerResponseFilter) provider,
+                                model.getPriority(ContainerResponseFilter.class)));
             }
         }
 

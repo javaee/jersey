@@ -59,8 +59,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.Cookie;
@@ -87,7 +85,6 @@ import com.google.common.base.Function;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class InboundMessageContext {
-    private static final Logger LOGGER = Logger.getLogger(InboundMessageContext.class.getName());
     private static final InputStream EMPTY = new InputStream() {
 
         @Override
@@ -190,22 +187,26 @@ public class InboundMessageContext {
     /**
      * Add new headers.
      *
-     * @param headers new headers.
+     * @param newHeaders new headers.
      * @return updated context.
      */
-    public InboundMessageContext headers(MultivaluedMap<String, String> headers) {
-        this.getHeaders().putAll(headers);
+    public InboundMessageContext headers(MultivaluedMap<String, String> newHeaders) {
+        for (Map.Entry<String, List<String>> header : newHeaders.entrySet()) {
+            headers.addAll(header.getKey(), header.getValue());
+        }
         return this;
     }
 
     /**
      * Add new headers.
      *
-     * @param headers new headers.
+     * @param newHeaders new headers.
      * @return updated context.
      */
-    public InboundMessageContext headers(Map<String, List<String>> headers) {
-        this.getHeaders().putAll(headers);
+    public InboundMessageContext headers(Map<String, List<String>> newHeaders) {
+        for (Map.Entry<String, List<String>> header : newHeaders.entrySet()) {
+            headers.addAll(header.getKey(), header.getValue());
+        }
         return this;
     }
 
