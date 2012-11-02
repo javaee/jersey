@@ -477,6 +477,17 @@ public class ResponseTest {
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
     }
 
+    @Test
+    public void testAllowVariant() {
+        Response.ResponseBuilder responseBuilder = Response.ok();
+
+        responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
+        assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
+        responseBuilder = responseBuilder.allow((String[])null);
+        assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
+    }
+
+
     @Test(expected = IllegalStateException.class)
     public void bufferEntityTest() {
         Response response = Response.ok().build();

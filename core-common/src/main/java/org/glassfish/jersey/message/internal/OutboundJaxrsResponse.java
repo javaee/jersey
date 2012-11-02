@@ -518,7 +518,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder allow(String... methods) {
-            if(methods.length == 1 && methods[0] == null) {
+            if(methods == null || (methods.length == 1 && methods[0] == null)) {
                 return allow((Set<String>)null);
             } else {
                 return allow(new HashSet<String>(Arrays.asList(methods)));
