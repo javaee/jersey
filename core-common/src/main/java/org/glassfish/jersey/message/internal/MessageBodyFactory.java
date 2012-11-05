@@ -47,9 +47,12 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -319,17 +322,52 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
             Class<?> tmp1 = wantedType;
             Class<?> tmp2 = classParam;
+
+            final Iterator<Class<?>> it1 = getClassHierarchyIterator(tmp1);
+            final Iterator<Class<?>> it2 = getClassHierarchyIterator(tmp2);
+
             int distance = 0;
             while (!wantedType.equals(tmp2) && !classParam.equals(tmp1)) {
                 distance++;
-                if(tmp2 != null) tmp2 = tmp2.getSuperclass();
-                if(tmp1 != null) tmp1 = tmp1.getSuperclass();
+
+                if(!wantedType.equals(tmp2)) {
+                    tmp2 = it2.hasNext() ? it2.next() : null;
+                }
+
+                if(!classParam.equals(tmp1)) {
+                    tmp1 = it1.hasNext() ? it1.next() : null;
+                }
+
                 if(tmp2 == null && tmp1 == null) {
                     return Integer.MAX_VALUE;
                 }
             }
 
             return distance;
+        }
+
+        private Iterator<Class<?>> getClassHierarchyIterator(final Class<?> classParam) {
+            if (classParam == null) {
+                return Collections.<Class<?>>emptyList().iterator();
+            }
+
+            final ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
+            final LinkedList<Class<?>> unprocessed = new LinkedList<Class<?>>();
+
+            unprocessed.add(classParam);
+            while(!unprocessed.isEmpty()) {
+                final Class<?> clazz = unprocessed.removeFirst();
+
+                classes.add(clazz);
+                unprocessed.addAll(Arrays.asList(clazz.getInterfaces()));
+
+                final Class<?> superclazz = clazz.getSuperclass();
+                if (superclazz != null) {
+                    unprocessed.add(superclazz);
+                }
+            }
+
+            return classes.iterator();
         }
     }
 
