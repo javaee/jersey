@@ -44,11 +44,8 @@ import java.util.List;
 
 import javax.ws.rs.core.Feature;
 
-import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
-
-import org.glassfish.hk2.utilities.Binder;
 
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
@@ -80,10 +77,5 @@ public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
     @Override
     protected Feature getJsonProviderFeature() {
         return new JacksonFeature();
-    }
-
-    @Override
-    protected Binder getJsonProviderBinder() {
-        return new JacksonBinder();
     }
 }

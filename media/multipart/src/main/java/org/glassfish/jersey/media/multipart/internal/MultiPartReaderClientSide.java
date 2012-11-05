@@ -54,7 +54,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.Providers;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -88,11 +90,6 @@ import org.jvnet.mimepull.MIMEPart;
 public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
     /**
-     * Injected configuration parameters for this application.
-     */
-    private final MultiPartProperties config;
-
-    /**
      * Injectable helper to look up appropriate {@link MessageBodyReader}s
      * for our body parts.
      */
@@ -105,12 +102,19 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
      * Accepts constructor injection of the configuration parameters for this
      * application.
      */
-    public MultiPartReaderClientSide(@Context MultiPartProperties config) {
-        if (config == null) {
-            throw new IllegalArgumentException("The MultiPartConfig instance we expected is not present." +
-                    "Have you registered the MultiPartConfigProvider class?");
+    public MultiPartReaderClientSide(@Context final Providers providers) {
+        final ContextResolver<MultiPartProperties> contextResolver =
+                providers.getContextResolver(MultiPartProperties.class, MediaType.WILDCARD_TYPE);
+
+        if (contextResolver == null) {
+            throw new IllegalArgumentException(LocalizationMessages.CONTEXT_RESOLVER_NOT_PRESENT());
         }
-        this.config = config;
+
+        final MultiPartProperties config = contextResolver.getContext(this.getClass());
+
+        if (config == null) {
+            throw new IllegalArgumentException(LocalizationMessages.CONFIG_NOT_PRESENT());
+        }
 
         mimeConfig = new MIMEConfig();
         mimeConfig.setMemoryThreshold(config.getBufferThreshold());

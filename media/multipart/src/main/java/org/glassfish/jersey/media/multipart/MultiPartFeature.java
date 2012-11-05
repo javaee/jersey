@@ -37,49 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jackson;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+package org.glassfish.jersey.media.multipart;
 
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.core.Configurable;
 
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
+import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionFeature;
+import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
+import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
+import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 
 /**
- * Module with JAX-RS Jackson JSON providers.
+ * Feature used to register Multipart providers.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class JacksonBinder extends AbstractBinder {
-
-    @SuppressWarnings("unchecked")
-    private static final Collection<Class<?>> PROVIDERS = Collections.unmodifiableCollection(
-            Arrays.<Class<?>>asList(JacksonJaxbJsonProvider.class)
-    );
-
-    /**
-     * Get providers used for serialization and de-serialization of entities
-     * to/from JSON media type.
-     *
-     * @return {@link Collection} of providers.
-     */
-    public static Collection<Class<?>> getProviders() {
-        return PROVIDERS;
-    }
+public class MultiPartFeature implements javax.ws.rs.core.Feature {
 
     @Override
-    protected void configure() {
-        bindSingletonReaderWriterProvider(JacksonJaxbJsonProvider.class);
-    }
+    public boolean configure(final Configurable config) {
+        config.register(FormDataParameterInjectionFeature.class);
+        config.register(MultiPartProperties.Feature.class);
 
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void bindSingletonReaderWriterProvider(Class<T> provider) {
-        bind(provider).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class);
+        config.register(MultiPartReaderServerSide.class);
+        config.register(MultiPartReaderClientSide.class);
+
+        config.register(MultiPartWriter.class);
+
+        return true;
     }
 }

@@ -57,7 +57,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonConfiguration;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
@@ -118,7 +117,7 @@ public class EmptyRequestWithJaxbTest {
 
         @Override
         protected Application configure() {
-            return new ResourceConfig(Resource.class).addBinders(new JettisonBinder());
+            return new ResourceConfig(Resource.class).register(new JettisonFeature());
         }
 
         @Override
@@ -183,7 +182,7 @@ public class EmptyRequestWithJaxbTest {
 
         @Override
         protected Application configure() {
-            return new ResourceConfig(MappedJettisonCR.class, Resource.class).addBinders(new JettisonBinder());
+            return new ResourceConfig(MappedJettisonCR.class, Resource.class).register(new JettisonFeature());
         }
 
         @Override
@@ -208,7 +207,7 @@ public class EmptyRequestWithJaxbTest {
 
         @Override
         protected Application configure() {
-            return new ResourceConfig(BadgerFishCR.class, Resource.class).addBinders(new JettisonBinder());
+            return new ResourceConfig(BadgerFishCR.class, Resource.class).register(new JettisonFeature());
         }
 
         @Override

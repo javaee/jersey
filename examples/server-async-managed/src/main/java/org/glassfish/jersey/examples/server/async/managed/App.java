@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.jackson.JacksonBinder;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -84,8 +84,7 @@ public class App {
 
     public static ResourceConfig create() {
         return new ResourceConfig()
-                .addClasses(ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true))
-                .addBinders(new JacksonBinder());
+                .addClasses(JacksonFeature.class, ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
+                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
     }
 }

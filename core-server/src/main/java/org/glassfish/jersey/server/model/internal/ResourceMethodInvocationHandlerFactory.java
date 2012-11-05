@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,43 +51,60 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
+ * An injectable {@link ResourceMethodInvocationHandlerProvider resource method
+ * invocation handler provider} factory.
+ * <p />
+ * When invoked, the factory iterates over the registered custom {@link ResourceMethodInvocationHandlerProvider
+ * resource method invocation handler providers} invoking their
+ * {@link ResourceMethodInvocationHandlerProvider#create(org.glassfish.jersey.server.model.Invocable) createPatternFor(...)}
+ * methods and returns the first non-null {@link InvocationHandler
+ * invocation handler} instance retrieved from the providers. If no custom providers
+ * are available, or if none of the providers returns a non-null invocation handler,
+ * in such case a default invocation handler provided by the factory is returned.
  *
- *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.Provider {
+public final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvocationHandlerProvider {
 
-    private static final Logger LOGGER = Logger.getLogger(ResourceMethodDispatcherFactory.class.getName());
-    private final Set<ResourceMethodDispatcher.Provider> providers;
+    private static final InvocationHandler DEFAULT_HANDLER = new InvocationHandler() {
+
+        @Override
+        public Object invoke(Object target, Method method, Object[] args)
+                throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            return method.invoke(target, args);
+        }
+    };
+    private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
+    private final Set<ResourceMethodInvocationHandlerProvider> providers;
 
     @Inject
-    ResourceMethodDispatcherFactory(ServiceLocator locator) {
-        providers = Providers.getProviders(locator, ResourceMethodDispatcher.Provider.class);
+    ResourceMethodInvocationHandlerFactory(ServiceLocator locator) {
+        providers = Providers.getProviders(locator, ResourceMethodInvocationHandlerProvider.class);
     }
 
-    // ResourceMethodDispatchProvider
+    // ResourceMethodInvocationHandlerProvider
     @Override
-    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
-        for (ResourceMethodDispatcher.Provider provider : providers) {
+    public InvocationHandler create(Invocable resourceMethod) {
+        for (ResourceMethodInvocationHandlerProvider provider : providers) {
             try {
-                ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler);
-                if (dispatcher != null) {
-                    return dispatcher;
+                InvocationHandler handler = provider.create(resourceMethod);
+                if (handler != null) {
+                    return handler;
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE,
-                        LocalizationMessages.ERROR_PROCESSING_METHOD(resourceMethod, provider.getClass().getName()),
-                        e);
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_PROCESSING_METHOD(
+                        resourceMethod,
+                        provider.getClass().getName()), e);
             }
         }
 
-        return null;
+        return DEFAULT_HANDLER;
     }
 }

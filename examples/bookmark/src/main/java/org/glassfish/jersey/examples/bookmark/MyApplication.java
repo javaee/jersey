@@ -45,7 +45,7 @@ import org.glassfish.jersey.examples.bookmark.resource.BookmarkResource;
 import org.glassfish.jersey.examples.bookmark.resource.BookmarksResource;
 import org.glassfish.jersey.examples.bookmark.resource.UserResource;
 import org.glassfish.jersey.examples.bookmark.resource.UsersResource;
-import org.glassfish.jersey.jettison.JettisonBinder;
+import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -56,6 +56,6 @@ public class MyApplication extends ResourceConfig {
 
     public MyApplication() {
         addClasses(BookmarkResource.class, BookmarksResource.class, UserResource.class, UsersResource.class);
-        addBinders(new JettisonBinder());
+        register(new JettisonFeature());
     }
 }

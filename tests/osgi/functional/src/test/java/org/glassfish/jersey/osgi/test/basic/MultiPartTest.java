@@ -59,8 +59,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartBinder;
-import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
@@ -116,10 +115,10 @@ public class MultiPartTest {
 
     @Test
     public void testMultiPartResource() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(MultiPartResource.class).addBinders(new MultiPartBinder());
+        final ResourceConfig resourceConfig = new ResourceConfig(MultiPartResource.class).register(new MultiPartFeature());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
-        Client c = ClientFactory.newClient(new ClientConfig().binders(new MultiPartClientBinder()));
+        Client c = ClientFactory.newClient(new ClientConfig().register(MultiPartFeature.class));
         final Response response = c.target(baseUri).path("/multipart-simple").request().buildGet().invoke();
 
         MultiPart result = response.readEntity(MultiPart.class);

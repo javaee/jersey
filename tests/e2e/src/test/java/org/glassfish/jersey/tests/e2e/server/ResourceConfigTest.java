@@ -50,7 +50,6 @@ import javax.ws.rs.client.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -140,14 +139,13 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     /**
-     * Application similar to the one that needs to register a custom {@code Binder} to run properly
+     * Application similar to the one that needs to register a custom {@code Feature} to run properly
      * and is supposed to be present in WAR files.
      */
     public static class Jersey1094 extends ResourceConfig {
 
         public Jersey1094() {
-            addClasses(Resource.class);
-            addBinders(new JettisonBinder());
+            addClasses(Resource.class, JettisonFeature.class);
         }
 
     }

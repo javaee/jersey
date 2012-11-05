@@ -46,8 +46,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.media.multipart.MultiPartBinder;
-import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -70,7 +69,7 @@ abstract class MultiPartJerseyTest extends JerseyTest {
                 addClasses(getResourceClasses()).
                 addClasses(MultiPartBeanProvider.class).
                 addSingletons(new LoggingFilter(LOGGER, true)).
-                addBinders(new MultiPartBinder());
+                register(new MultiPartFeature());
     }
 
     /**
@@ -82,7 +81,7 @@ abstract class MultiPartJerseyTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.binders(new MultiPartClientBinder()).register(MultiPartBeanProvider.class);
+        clientConfig.register(MultiPartFeature.class).register(MultiPartBeanProvider.class);
     }
 
 }

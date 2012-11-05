@@ -69,7 +69,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -152,8 +151,8 @@ public class JsonMoxyTest extends AbstractTypeTester {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
         return ((ResourceConfig) super.configure()).
-                addBinders(new MoxyJsonBinder()).
-                addSingletons(new MoxyJsonConfigurationContextResolver());
+                register(new MoxyJsonFeature()).
+                register(new MoxyJsonConfigurationContextResolver());
     }
 
     @Override

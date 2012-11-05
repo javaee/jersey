@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
-import org.glassfish.jersey.jackson.JacksonBinder;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -56,8 +56,8 @@ public class MyApplication extends ResourceConfig {
                 NonJaxbBeanResource.class,
                 CombinedAnnotationResource.class,
                 // register Jackson ObjectMapper resolver
-                MyObjectMapperProvider.class
+                MyObjectMapperProvider.class,
+                JacksonFeature.class
         );
-        addBinders(new JacksonBinder());
     }
 }

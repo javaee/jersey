@@ -37,11 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart.internal;
 
-import javax.inject.Singleton;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Feature;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
@@ -49,17 +50,18 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Binder providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
+ * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class FormDataParameterInjectionBinder extends AbstractBinder {
+public class FormDataParameterInjectionFeature implements Feature {
 
     @Override
-    protected void configure() {
-        bind(FormDataParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(FormDataParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormDataParam>>() {
-        }).in(Singleton.class);
+    @SuppressWarnings("unchecked")
+    public boolean configure(final Configurable config) {
+        config.register(FormDataParamValueFactoryProvider.class, ValueFactoryProvider.class);
+        config.register(FormDataParamValueFactoryProvider.InjectionResolver.class,
+                new TypeLiteral<InjectionResolver<FormDataParam>>() {}.getRawType());
+        return true;
     }
-
 }

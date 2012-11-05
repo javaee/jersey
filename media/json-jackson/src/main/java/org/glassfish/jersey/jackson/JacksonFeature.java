@@ -41,20 +41,27 @@ package org.glassfish.jersey.jackson;
 
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 
 /**
- * Feature used to register Jackson JSON providers with Client.
+ * Feature used to register Jackson JSON providers.
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
 public class JacksonFeature implements Feature {
 
     @Override
-    public boolean configure(Configurable c) {
-        for (Class<?> provider : JacksonBinder.getProviders()) {
-            c.register(provider);
-        }
+    public boolean configure(final Configurable config) {
+        registerReaderWriterProvider(config, JacksonJaxbJsonProvider.class);
         return true;
     }
 
+    @SuppressWarnings("unchecked")
+    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void registerReaderWriterProvider(
+            final Configurable config, final Class<T> provider) {
+        config.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
+    }
 }

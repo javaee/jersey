@@ -41,19 +41,45 @@ package org.glassfish.jersey.jettison;
 
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.Configurable;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import org.glassfish.jersey.jettison.internal.entity.JettisonArrayProvider;
+import org.glassfish.jersey.jettison.internal.entity.JettisonJaxbElementProvider;
+import org.glassfish.jersey.jettison.internal.entity.JettisonListElementProvider;
+import org.glassfish.jersey.jettison.internal.entity.JettisonObjectProvider;
+import org.glassfish.jersey.jettison.internal.entity.JettisonRootElementProvider;
 
 /**
- * Feature used to register Jettison JSON providers with Client.
+ * Feature used to register Jettison JSON providers.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class JettisonFeature implements Feature {
 
     @Override
-    public boolean configure(Configurable c) {
-        for (Class<?> provider : JettisonBinder.getProviders()) {
-            c.register(provider);
-        }
+    public boolean configure(final Configurable config) {
+        registerReaderWriterProvider(config, JettisonArrayProvider.App.class);
+        registerReaderWriterProvider(config, JettisonArrayProvider.General.class);
+
+        registerReaderWriterProvider(config, JettisonObjectProvider.App.class);
+        registerReaderWriterProvider(config, JettisonObjectProvider.General.class);
+
+        registerReaderWriterProvider(config, JettisonRootElementProvider.App.class);
+        registerReaderWriterProvider(config, JettisonRootElementProvider.General.class);
+
+        registerReaderWriterProvider(config, JettisonJaxbElementProvider.App.class);
+        registerReaderWriterProvider(config, JettisonJaxbElementProvider.General.class);
+
+        registerReaderWriterProvider(config, JettisonListElementProvider.App.class);
+        registerReaderWriterProvider(config, JettisonListElementProvider.General.class);
+        
         return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void registerReaderWriterProvider(
+            final Configurable config, final Class<T> provider) {
+        config.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
     }
 }

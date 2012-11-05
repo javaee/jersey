@@ -46,11 +46,13 @@ import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
 
 /**
+ * Feature used to register MOXy XML providers.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class MoxyXmlFeature implements Feature {
 
-    private final Map properties;
+    private final Map<String, Object> properties;
     private final ClassLoader classLoader;
     private final boolean oxmMappingLookup;
     private final Class[] classes;
@@ -60,7 +62,7 @@ public class MoxyXmlFeature implements Feature {
      * and properties. Current context {@link ClassLoader} will be used.
      */
     public MoxyXmlFeature() {
-        this(Collections.EMPTY_MAP, Thread.currentThread().getContextClassLoader(), false);
+        this(Collections.<String, Object>emptyMap(), Thread.currentThread().getContextClassLoader(), false);
     }
 
     /**
@@ -73,8 +75,8 @@ public class MoxyXmlFeature implements Feature {
      * @param oxmMappingLookup if {@code true}, lookup for file with custom mappings will be performed.
      * @param classes          additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
      */
-    public MoxyXmlFeature(Map properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
-        this.properties = (properties == null ? Collections.EMPTY_MAP : properties);
+    public MoxyXmlFeature(Map<String, Object> properties, ClassLoader classLoader, boolean oxmMappingLookup, Class... classes) {
+        this.properties = (properties == null ? Collections.<String, Object>emptyMap() : properties);
         this.classLoader = (classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
         this.oxmMappingLookup = oxmMappingLookup;
         this.classes = classes;

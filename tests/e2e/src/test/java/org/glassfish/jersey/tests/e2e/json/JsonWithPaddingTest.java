@@ -166,7 +166,7 @@ public class JsonWithPaddingTest extends JerseyTest {
     private static Application configureJaxrsApplication(final JsonTestProvider jsonTestProvider) {
         final ResourceConfig resourceConfig = new ResourceConfig().
                 addClasses(JsonResource.class).
-                addBinders(jsonTestProvider.getBinder());
+                register(jsonTestProvider.getFeature());
 
         if (jsonTestProvider.getProviders() != null) {
             resourceConfig.addSingletons(jsonTestProvider.getProviders());

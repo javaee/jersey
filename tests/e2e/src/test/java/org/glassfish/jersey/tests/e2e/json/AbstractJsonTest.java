@@ -145,7 +145,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig().
                 addResources(resourceBuilder.build()).
-                addBinders(jsonTestSetup.getJsonProvider().getBinder());
+                register(jsonTestSetup.getJsonProvider().getFeature());
 
         if (jsonTestSetup.getProviders() != null) {
             resourceConfig.addSingletons(jsonTestSetup.getProviders());

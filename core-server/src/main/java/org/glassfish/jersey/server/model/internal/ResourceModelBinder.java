@@ -37,48 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.model.internal;
 
-import java.lang.reflect.InvocationHandler;
-
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
- * Specific resource method dispatcher for dispatching requests to a void
- * {@link java.lang.reflect.Method Java method} with no input arguments
- * using a supplied {@link InvocationHandler Java method invocation handler}.
+ * Configures injection bindings for resource modeling API.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Singleton
-final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provider {
-
-    private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {
-
-        private VoidToVoidDispatcher(Invocable resourceMethod, InvocationHandler handler) {
-            super(resourceMethod, handler);
-        }
-
-        @Override
-        public Response doDispatch(Object resource, Request request) throws ProcessingException {
-            invoke(resource);
-            return Response.noContent().build();
-        }
-    }
+public class ResourceModelBinder extends AbstractBinder {
 
     @Override
-    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
-        if (resourceMethod.getHandlingMethod().getReturnType() != void.class || !resourceMethod.getParameters().isEmpty()) {
-            return null;
-        }
+    protected void configure() {
+        // Model bindings
+        bindAsContract(RuntimeModelBuilder.class);
 
-        return new VoidToVoidDispatcher(resourceMethod, handler);
+        // Resource method invocation bindings
+        bindAsContract(ResourceMethodInvoker.Builder.class);
+        bindAsContract(ResourceMethodDispatcherFactory.class);
+        bindAsContract(ResourceMethodInvocationHandlerFactory.class);
+
+        // Dispatcher providers
+        bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
+        bind(JavaResourceMethodDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.multipart;
+package org.glassfish.jersey.server.model.internal;
 
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
+import java.lang.reflect.InvocationHandler;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionBinder;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
-import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Binder for Multipart providers.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ *
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MultiPartBinder extends AbstractBinder {
+@Singleton
+public final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.Provider {
 
-    @Override
-    protected void configure() {
-        install(new FormDataParameterInjectionBinder(), new MultiPartProperties.Binder());
+    private static final Logger LOGGER = Logger.getLogger(ResourceMethodDispatcherFactory.class.getName());
+    private final Set<ResourceMethodDispatcher.Provider> providers;
 
-        bind(MultiPartReaderServerSide.class).to(MessageBodyReader.class).in(Singleton.class);
-        bind(MultiPartWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
+    @Inject
+    ResourceMethodDispatcherFactory(ServiceLocator locator) {
+        providers = Providers.getProviders(locator, ResourceMethodDispatcher.Provider.class);
     }
 
+    // ResourceMethodDispatchProvider
+    @Override
+    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
+        for (ResourceMethodDispatcher.Provider provider : providers) {
+            try {
+                ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler);
+                if (dispatcher != null) {
+                    return dispatcher;
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE,
+                        LocalizationMessages.ERROR_PROCESSING_METHOD(resourceMethod, provider.getClass().getName()),
+                        e);
+            }
+        }
+
+        return null;
+    }
 }
