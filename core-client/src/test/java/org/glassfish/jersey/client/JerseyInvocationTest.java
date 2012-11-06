@@ -39,15 +39,24 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -80,5 +89,56 @@ public class JerseyInvocationTest {
         return (JerseyInvocation) builder
                 .header("unexpected-header", "unexpected-header").headers(headers)
                 .buildGet();
+    }
+
+    @Test
+    public void testNullResponseType() throws Exception {
+        final Client client = ClientFactory.newClient();
+        client.configuration().register(new ClientRequestFilter() {
+            @Override
+            public void filter(final ClientRequestContext requestContext) throws IOException {
+                requestContext.abortWith(Response.ok().build());
+            }
+        });
+
+        final WebTarget target = client.target("http://localhost:8080/mypath");
+
+        final Class<Response> responseType = null;
+        final String[] methods = new String[] {"GET", "PUT", "POST", "DELETE", "OPTIONS"};
+
+        for (final String method : methods) {
+            final Invocation.Builder request = target.request();
+
+            try {
+                request.method(method, responseType);
+                fail("IllegalArgumentException expected.");
+            } catch (IllegalArgumentException iae) {
+                // OK.
+            }
+
+            final Invocation build = "PUT".equals(method) ?
+                    request.build(method, Entity.entity("", MediaType.TEXT_PLAIN_TYPE)) : request.build(method);
+
+            try {
+                build.submit(responseType);
+                fail("IllegalArgumentException expected.");
+            } catch (IllegalArgumentException iae) {
+                // OK.
+            }
+
+            try {
+                build.invoke(responseType);
+                fail("IllegalArgumentException expected.");
+            } catch (IllegalArgumentException iae) {
+                // OK.
+            }
+
+            try {
+                request.async().method(method, responseType);
+                fail("IllegalArgumentException expected.");
+            } catch (IllegalArgumentException iae) {
+                // OK.
+            }
+        }
     }
 }
