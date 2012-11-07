@@ -330,6 +330,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     public void destroy() {
         super.destroy();
         containerListener.onShutdown(this);
+        appHandler = null;
     }
 
     private SecurityContext getSecurityContext(final Request request) {

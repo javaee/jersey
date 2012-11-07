@@ -60,9 +60,9 @@ import javax.xml.xpath.XPathFactory;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartClientBinder;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -89,7 +89,7 @@ public class MultiPartWebAppTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.binders(new MultiPartClientBinder());
+        clientConfig.register(MultiPartFeature.class);
     }
 
     @Test

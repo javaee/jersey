@@ -50,8 +50,8 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -82,7 +82,7 @@ public class App {
     public static ResourceConfig createApp() {
         return new ResourceConfig().
                 packages("org.glassfish.jersey.examples.jsonmoxy").
-                addBinders(new MoxyJsonBinder()).
+                register(new MoxyJsonFeature()).
                 addSingletons(new JsonMoxyConfigurationContextResolver());
     }
 

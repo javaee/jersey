@@ -49,12 +49,9 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey.jackson.JacksonBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonConfiguration;
 import org.glassfish.jersey.jettison.JettisonFeature;
-import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
@@ -82,7 +79,6 @@ public abstract class JsonTestProvider {
     public static class JacksonJsonTestProvider extends JsonTestProvider {
 
         public JacksonJsonTestProvider() {
-            setBinder(new JacksonBinder());
             setFeature(new JacksonFeature());
         }
 
@@ -98,7 +94,6 @@ public abstract class JsonTestProvider {
                 put("http://test.jaxb.com", "jaxb");
             }}).build();
 
-            setBinder(new JettisonBinder());
             setFeature(new JettisonFeature());
             setConfiguration(jsonConfiguration);
         }
@@ -108,7 +103,6 @@ public abstract class JsonTestProvider {
     public static class JettisonBadgerfishJsonTestProvider extends JsonTestProvider {
 
         public JettisonBadgerfishJsonTestProvider() {
-            setBinder(new JettisonBinder());
             setFeature(new JettisonFeature());
 
             setConfiguration(JettisonConfiguration.badgerFish().build());
@@ -119,7 +113,6 @@ public abstract class JsonTestProvider {
     public static class MoxyJsonTestProvider extends JsonTestProvider {
 
         public MoxyJsonTestProvider() {
-            setBinder(new MoxyJsonBinder());
             setFeature(new MoxyJsonFeature());
             getProviders().add(new MoxyJsonConfigurationContextResolver());
         }
@@ -145,14 +138,6 @@ public abstract class JsonTestProvider {
 
     protected void setFeature(final Feature feature) {
         this.feature = feature;
-    }
-
-    public Binder getBinder() {
-        return binder;
-    }
-
-    protected void setBinder(final Binder binder) {
-        this.binder = binder;
     }
 
     public Set<Object> getProviders() {

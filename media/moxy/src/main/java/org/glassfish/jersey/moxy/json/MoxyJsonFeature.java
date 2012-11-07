@@ -43,15 +43,15 @@ import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
 
 /**
- * Feature used to register MOXy JSON providers with Client.
+ * Feature used to register MOXy JSON providers.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class MoxyJsonFeature implements Feature {
 
     @Override
-    public boolean configure(Configurable c) {
-        c.register(ConfigurableMoxyJsonProvider.class);
+    public boolean configure(final Configurable config) {
+        config.register(ConfigurableMoxyJsonProvider.class);
         return true;
     }
 }

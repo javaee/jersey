@@ -43,9 +43,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-
-import org.glassfish.hk2.api.Factory;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
 
 /**
  * Injectable JavaBean containing the configuration parameters for
@@ -58,29 +58,26 @@ import org.glassfish.hk2.api.Factory;
 public class MultiPartProperties {
 
     /**
-     * Injectable provider that supplies a configured instance of {@link org.glassfish.jersey.media.multipart
+     * Feature that supplies a configured instance of {@link org.glassfish.jersey.media.multipart
      * .MultiPartProperties} for this application.
      */
-    public static class Binder extends AbstractBinder {
+    public static class Feature implements javax.ws.rs.core.Feature {
 
         @Override
-        protected void configure() {
-            bindFactory(MultiPartConfigFactory.class).to(MultiPartProperties.class);
+        @SuppressWarnings("unchecked")
+        public boolean configure(final Configurable configurable) {
+            configurable.register(MultiPartContextResolver.class);
+            return true;
         }
 
-        private static class MultiPartConfigFactory implements Factory<MultiPartProperties> {
+        @Provider
+        private static class MultiPartContextResolver implements ContextResolver<MultiPartProperties> {
 
             @Override
-            public MultiPartProperties provide() {
+            public MultiPartProperties getContext(final Class<?> type) {
                 return new MultiPartProperties();
             }
-
-            @Override
-            public void dispose(MultiPartProperties instance) {
-                //not used
-            }
         }
-
     }
 
     /**

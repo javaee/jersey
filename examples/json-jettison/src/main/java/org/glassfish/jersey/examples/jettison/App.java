@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.jettison.JettisonBinder;
+import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -78,7 +78,7 @@ public class App {
 
     public static ResourceConfig createApp() {
         return new ResourceConfig().
-                addBinders(new JettisonBinder()).
+                register(new JettisonFeature()).
                 packages("org.glassfish.jersey.examples.jettison");
     }
 }

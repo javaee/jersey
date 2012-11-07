@@ -71,15 +71,17 @@ import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.model.internal.ProviderBag;
-import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
+import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
+import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 

@@ -54,7 +54,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.media.sse.OutboundEventWriter;
 import org.glassfish.jersey.message.internal.ReaderWriter;
-import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -143,8 +143,7 @@ public class App {
      */
     public static ResourceConfig createResourceConfig() {
         return new ResourceConfig()
-                .addClasses(MessageStreamResource.class, OutboundEventWriter.class)
-                .addBinders(new MoxyJsonBinder());
+                .addClasses(MessageStreamResource.class, OutboundEventWriter.class, MoxyJsonFeature.class);
     }
 
     /**

@@ -45,16 +45,17 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.Providers;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartProperties;
 import org.glassfish.jersey.server.CloseableService;
 
 import org.jvnet.mimepull.MIMEParsingException;
@@ -73,8 +74,8 @@ public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
     private final Provider<CloseableService> closeableServiceProvider;
 
     @Inject
-    public MultiPartReaderServerSide(MultiPartProperties config, Provider<CloseableService> closeableServiceProvider) {
-        super(config);
+    public MultiPartReaderServerSide(@Context Providers providers, final Provider<CloseableService> closeableServiceProvider) {
+        super(providers);
         this.closeableServiceProvider = closeableServiceProvider;
     }
 

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.process.MappableException;
+import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**

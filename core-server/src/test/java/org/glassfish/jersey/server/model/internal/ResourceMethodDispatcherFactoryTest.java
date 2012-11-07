@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -48,6 +48,10 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.ResourceModelComponent;
 
 import org.glassfish.hk2.api.ServiceLocator;
 

@@ -52,8 +52,6 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.hk2.utilities.Binder;
-
 import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
@@ -74,11 +72,9 @@ public abstract class AbstractJsonOsgiIntegrationTest {
 
     protected abstract Feature getJsonProviderFeature();
 
-    protected abstract Binder getJsonProviderBinder();
-
     @Test
     public void testJson() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class).addBinders(getJsonProviderBinder());
+        final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class).register(getJsonProviderFeature());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();
@@ -94,7 +90,7 @@ public abstract class AbstractJsonOsgiIntegrationTest {
 
     @Test
     public void testJsonViaResponse() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class).addBinders(getJsonProviderBinder());
+        final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class).register(getJsonProviderFeature());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();

@@ -92,7 +92,6 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
-import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.message.internal.FileProvider;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -310,7 +309,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new JettisonBinder());
+        return ((ResourceConfig) super.configure()).register(new JettisonFeature());
     }
 
     @Override

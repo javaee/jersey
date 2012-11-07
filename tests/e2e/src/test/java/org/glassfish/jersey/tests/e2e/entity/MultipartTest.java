@@ -48,7 +48,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -71,7 +71,7 @@ public class MultipartTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MultipartResource.class).addBinders(new MultiPartBinder());
+        return new ResourceConfig(MultipartResource.class).register(new MultiPartFeature());
     }
 
     @Test

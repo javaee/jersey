@@ -64,7 +64,6 @@ import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jettison.JettisonBinder;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -134,7 +133,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addBinders(new JettisonBinder());
+        return ((ResourceConfig) super.configure()).register(new JettisonFeature());
     }
 
     @Override
