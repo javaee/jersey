@@ -353,12 +353,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public <T> T method(String name, Class<T> responseType) throws ClientException, WebApplicationException {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
 
         @Override
         public <T> T method(String name, GenericType<T> responseType) throws ClientException, WebApplicationException {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke(responseType);
         }
@@ -373,6 +379,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public <T> T method(String name, Entity<?> entity, Class<T> responseType)
                 throws ClientException, WebApplicationException {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
@@ -381,6 +390,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public <T> T method(String name, Entity<?> entity, GenericType<T> responseType)
                 throws ClientException, WebApplicationException {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
@@ -534,12 +546,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public <T> Future<T> method(String name, Class<T> responseType) {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
 
         @Override
         public <T> Future<T> method(String name, GenericType<T> responseType) {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(responseType);
         }
@@ -559,6 +577,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
@@ -566,6 +587,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public <T> Future<T> method(String name, Entity<?> entity, GenericType<T> responseType) {
+            if (responseType == null) {
+                throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+            }
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(responseType);
@@ -593,6 +617,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final Class<T> responseType) throws ClientException, WebApplicationException {
+        if (responseType == null) {
+            throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+        }
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         return requestScope.runInScope(new Producer<T>() {
@@ -612,6 +639,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> T invoke(final GenericType<T> responseType) throws ClientException, WebApplicationException {
+        if (responseType == null) {
+            throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+        }
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         return requestScope.runInScope(new Producer<T>() {
@@ -650,6 +680,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> Future<T> submit(final Class<T> responseType) {
+        if (responseType == null) {
+            throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+        }
         final SettableFuture<T> responseFuture = SettableFuture.create();
         request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
@@ -698,6 +731,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> Future<T> submit(final GenericType<T> responseType) {
+        if (responseType == null) {
+            throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
+        }
         final SettableFuture<T> responseFuture = SettableFuture.create();
         request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
