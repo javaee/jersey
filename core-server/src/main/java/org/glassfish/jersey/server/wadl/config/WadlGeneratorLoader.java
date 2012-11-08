@@ -61,25 +61,25 @@ import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGra
  * The properties of the {@link WadlGeneratorDescription}s can refer to {@link WadlGenerator} properties
  * of these types:
  * <ul>
- * 
+ *
  * <li>exact match: if the WadlGenerator property is of type <code>org.example.Foo</code> and the
  * property value provided by the {@link WadlGeneratorDescription} is of type <code>org.example.Foo</code></li>
- * 
+ *
  * <li>java.io.InputStream: The {@link InputStream} can e.g. represent a file. The stream is loaded from the
- * property value (provided by the {@link WadlGeneratorDescription}) via 
+ * property value (provided by the {@link WadlGeneratorDescription}) via
  * {@link ClassLoader#getResourceAsStream(String)}. It will be closed after {@link WadlGenerator#init()} was called.
  * </li>
- * 
+ *
  * <li>Types that provide a constructor for the provided type (mostly java.lang.String)</li>
- * 
+ *
  * <li><strong>Deprecated, will be removed in future versions from the {@link WadlGeneratorLoader}:</strong><br/>
  * java.lang.File: The property value can contain the prefix <em>classpath:</em> to denote, that the
- * path to the file is relative to the classpath. In this case, the property value is stripped by 
+ * path to the file is relative to the classpath. In this case, the property value is stripped by
  * the prefix <em>classpath:</em> and the java.lang.File is created via
  * <pre><code>new File( generator.getClass().getResource( strippedFilename ).toURI() )</code></pre></li>
- * 
+ *
  * </ul>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 class WadlGeneratorLoader {
@@ -163,7 +163,7 @@ class WadlGeneratorLoader {
             throw new RuntimeException("Method " + methodName + " is no setter, it does not expect exactly one parameter, but " + method.getParameterTypes().length);
         }
         final Class<?> paramClazz = method.getParameterTypes()[0];
-        if (paramClazz == propertyValue.getClass()) {
+        if (paramClazz.isAssignableFrom(propertyValue.getClass())) {
             method.invoke(generator, propertyValue);
         } else if (File.class.equals(paramClazz) && propertyValue instanceof String) {
 
@@ -285,7 +285,7 @@ class WadlGeneratorLoader {
 
         /**
          * Appends the specified element to the end of the list, if the element is not null.
-         * 
+         *
          * @param e the element to append, can be null.
          * @return true if the element was appended to the list, otherwise null.
          */
