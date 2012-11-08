@@ -50,8 +50,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
@@ -67,7 +69,8 @@ import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGra
  *
  * <li>java.io.InputStream: The {@link InputStream} can e.g. represent a file. The stream is loaded from the
  * property value (provided by the {@link WadlGeneratorDescription}) via
- * {@link ClassLoader#getResourceAsStream(String)}. It will be closed after {@link WadlGenerator#init()} was called.
+ * {@link ClassLoader#getResourceAsStream(String)} or via OSGi API means if OSGi runtime is detected.
+ * The stream will be closed after {@link WadlGenerator#init()} was called.
  * </li>
  *
  * <li>Types that provide a constructor for the provided type (mostly java.lang.String)</li>
@@ -135,8 +138,10 @@ class WadlGeneratorLoader {
         if (wadlGeneratorDescription.getProperties() != null
                 && !wadlGeneratorDescription.getProperties().isEmpty()) {
             callbacks = new CallbackList();
-            for (Entry<Object, Object> entry : wadlGeneratorDescription.getProperties().entrySet()) {
-                final Callback callback = setProperty(generator, entry.getKey().toString(), entry.getValue());
+            final Properties wadlGeneratorProperties = wadlGeneratorDescription.getProperties();
+            Class<?> osgiConfiguratorClass = wadlGeneratorDescription.getConfiguratorClass();
+            for (Entry<Object, Object> entry : wadlGeneratorProperties.entrySet()) {
+                final Callback callback = setProperty(generator, entry.getKey().toString(), entry.getValue(), osgiConfiguratorClass);
                 callbacks.add(callback);
             }
         }
@@ -152,7 +157,7 @@ class WadlGeneratorLoader {
      * @return a {@link Callback} object that must be called later, or null if no callback is required.
      * @throws Exception if s.th. goes wrong
      */
-    private static Callback setProperty(final Object generator, final String propertyName, final Object propertyValue)
+    private static Callback setProperty(final Object generator, final String propertyName, final Object propertyValue, final Class<?> osgiConfigClass)
             throws Exception {
 
         Callback result = null;
@@ -197,7 +202,7 @@ class WadlGeneratorLoader {
             if (loader == null) {
                 loader = WadlGeneratorLoader.class.getClassLoader();
             }
-            final InputStream is = loader.getResourceAsStream(resource);
+            final InputStream is = ReflectionHelper.getResourceAsStream(loader, osgiConfigClass, resource);
             if (is == null) {
                 String message = "The resource '" + resource + "' does not exist.";
                 throw new RuntimeException(message);

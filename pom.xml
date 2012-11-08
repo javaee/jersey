@@ -304,6 +304,25 @@
                         <arguments>${release.arguments}</arguments>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.ops4j.pax.exam</groupId>
+                    <artifactId>maven-paxexam-plugin</artifactId>
+                    <version>${pax-exam-version}</version>
+                    <executions>
+                        <execution>
+                            <id>generate-config</id>
+                            <goals>
+                                <goal>generate-depends-file</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <options>
+                            <platform>felix</platform>
+                        </options>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
@@ -825,6 +844,7 @@
                 <version>${jaxb.api.version}</version>
                 <scope>provided</scope>
             </dependency>
+
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
@@ -848,16 +868,19 @@
                 <artifactId>jackson-core-asl</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-xc</artifactId>
@@ -879,6 +902,69 @@
             </dependency>
 
             <!-- Test scope -->
+
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam</artifactId>
+                <version>${pax-exam-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam-junit</artifactId>
+                <version>${pax-exam-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam-container-default</artifactId>
+                <version>${pax-exam-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam-junit-extender-impl</artifactId>
+                <version>${pax-exam-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.swissbox</groupId>
+                <artifactId>pax-swissbox-tinybundles</artifactId>
+                <version>${pax-swissbox-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty</artifactId>
+                <version>${jetty-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>${jetty-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>servlet-api-2.5</artifactId>
+                <version>${jetty-servlet-api-25-version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -912,6 +998,11 @@
 
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <osgi.version>4.2.0</osgi.version>
+
+        <pax-exam-version>1.2.3</pax-exam-version>
+        <pax-swissbox-version>1.3.1</pax-swissbox-version>
+        <jetty-version>6.1.22</jetty-version>
+        <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
 
         <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

@@ -51,7 +51,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
@@ -111,7 +110,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             final ClassLoader classLoader = ReflectionHelper.class.getClassLoader();
             if (classLoader instanceof BundleReference) {
                 BundleContext context = FrameworkUtil.getBundle(OsgiRegistry.class).getBundleContext();
-                if (context != null) { // context could be still null in GlassFish
+                if (context != null) { // context could be still null if the current bundle has not been started
                     instance = new OsgiRegistry(context);
                 }
             }

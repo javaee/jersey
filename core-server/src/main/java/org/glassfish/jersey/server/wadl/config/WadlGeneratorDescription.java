@@ -56,61 +56,80 @@ import org.glassfish.jersey.server.wadl.WadlGenerator;
  * provided property value is of type <code>org.example.Foo</code></li>
  * <li>Types that provide a constructor for the provided type (mostly java.lang.String)</li>
  * <li>The WadlGenerator property is of type {@link InputStream}: The stream is loaded from the
- * property value (provided by the {@link WadlGeneratorDescription}) via 
+ * property value (provided by the {@link WadlGeneratorDescription}) via
  * {@link ClassLoader#getResourceAsStream(String)}. It will be closed after {@link WadlGenerator#init()} was called.
  * </li>
- * 
+ *
  * <li><strong>Deprecated, will be removed in future versions:</strong><br/>
  * The WadlGenerator property is of type {@link File} and the provided property value is a {@link String}:<br/>
  * the provided property value can contain the prefix <em>classpath:</em> to denote, that the
- * path to the file is relative to the classpath. In this case, the property value is stripped by 
+ * path to the file is relative to the classpath. In this case, the property value is stripped by
  * the prefix <em>classpath:</em> and the {@link File} is created via
  * <pre><code>new File( generator.getClass().getResource( strippedFilename ).toURI() )</code></pre>
  * Notice that the filename is loaded from the classpath in this case, e.g. <em>classpath:test.xml</em>
  * refers to a file in the package of the class ({@link WadlGeneratorDescription#getGeneratorClass()}). The
  * file reference <em>classpath:/test.xml</em> refers to a file that is in the root of the classpath.
  * </li>
- * 
+ *
  * </ul>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 public class WadlGeneratorDescription {
-    
-    private Class<? extends WadlGenerator> _generatorClass;
-    private Properties _properties;
-    
+
+    private Class<? extends WadlGenerator> generatorClass;
+    private Properties properties;
+    private Class<?> configuratorClass;
+
     public WadlGeneratorDescription() {
     }
-    
-    public WadlGeneratorDescription( Class<? extends WadlGenerator> generatorClass, Properties properties ) {
-        _generatorClass = generatorClass;
-        _properties = properties;
+
+    public WadlGeneratorDescription(Class<? extends WadlGenerator> generatorClass, Properties properties) {
+        this.generatorClass = generatorClass;
+        this.properties = properties;
     }
-    
+
     /**
      * @return the generatorClass
      */
     public Class<? extends WadlGenerator> getGeneratorClass() {
-        return _generatorClass;
+        return generatorClass;
     }
     /**
      * @param generatorClass the generatorClass to set
      */
-    public void setGeneratorClass( Class<? extends WadlGenerator> generatorClass ) {
-        _generatorClass = generatorClass;
+    public void setGeneratorClass(Class<? extends WadlGenerator> generatorClass) {
+        this.generatorClass = generatorClass;
     }
     /**
      * @return the properties
      */
     public Properties getProperties() {
-        return _properties;
+        return properties;
     }
     /**
      * @param properties the properties to set
      */
-    public void setProperties( Properties properties ) {
-        _properties = properties;
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
+    /**
+     * Return {@link WadlGeneratorConfig} that was used to produce current description instance.
+     * The result could be null if the config was not set on this instance.
+     *
+     * @return config
+     */
+    public Class<?> getConfiguratorClass() {
+        return configuratorClass;
+    }
+
+    /**
+     * Set {@link WadlGeneratorConfig} class to be associated with current instance.
+     *
+     * @param configuratorClass
+     */
+    void setConfiguratorClass(Class<?> configuratorClass) {
+        this.configuratorClass = configuratorClass;
+    }
 }

@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
@@ -52,6 +54,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
@@ -67,6 +70,9 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -1035,6 +1041,16 @@ public class ReflectionHelper {
         return true;
     }
 
+    private final static Class<?> bundleReferenceClass = lookupBundleReferenceClass();
+
+    private static Class<?> lookupBundleReferenceClass() {
+        try {
+            return Class.forName("org.osgi.framework.BundleReference");
+        } catch (ClassNotFoundException ex) {
+            return null;
+        }
+    }
+
     /**
      * Returns an {@link OsgiRegistry} instance.
      *
@@ -1042,8 +1058,6 @@ public class ReflectionHelper {
      */
     public static OsgiRegistry getOsgiRegistryInstance() {
         try {
-            final Class<?> bundleReferenceClass = Class.forName("org.osgi.framework.BundleReference");
-
             if (bundleReferenceClass != null) {
                 return OsgiRegistry.getInstance();
             }
@@ -1052,6 +1066,33 @@ public class ReflectionHelper {
         }
 
         return null;
+    }
+
+    /**
+     * Lookup resource by given name. If OSGi runtime is detected and the originClass parameter is not null,
+     * an attempt will be made to get the resource input stream via OSGi API from the bundle where originClass is included.
+     * Otherwise (non OSGi environment) or if OSGi fails to provide the input stream, the return value
+     * will be taken from the provided loader getResourceAsStream method.
+     *
+     * @param loader class loader where to lookup the resource in non-OSGi environment or if OSGi means fail.
+     * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including the originClass type.
+     * @param name filename of the desired resource.
+     * @return an input stream corresponding to the required resource or null if the resource could not be found.
+     *
+     */
+    public static InputStream getResourceAsStream(final ClassLoader loader, final Class<?> originClass, final String name) {
+        try {
+            if (bundleReferenceClass != null && originClass != null && bundleReferenceClass.isInstance(ReflectionHelper.class.getClassLoader())) {
+                final Bundle bundle = FrameworkUtil.getBundle(originClass);
+                final URL resourceUrl = (bundle != null) ? bundle.getEntry(name) : null;
+                if (resourceUrl != null) {
+                    return resourceUrl.openStream();
+                }
+            }
+        } catch (IOException ex) {
+            // ignore
+        }
+        return loader.getResourceAsStream(name);
     }
 
     /**

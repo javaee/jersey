@@ -171,6 +171,9 @@ public abstract class WadlGeneratorConfig {
     public WadlGenerator createWadlGenerator() {
         WadlGenerator wadlGenerator;
         final List<WadlGeneratorDescription> wadlGeneratorDescriptions = configure();
+        for (WadlGeneratorDescription desc : wadlGeneratorDescriptions) {
+            desc.setConfiguratorClass(this.getClass());
+        }
         try {
             wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(wadlGeneratorDescriptions);
         } catch (Exception e) {
