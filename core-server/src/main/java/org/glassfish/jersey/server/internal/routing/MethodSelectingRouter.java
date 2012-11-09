@@ -614,7 +614,24 @@ final class MethodSelectingRouter implements Router {
                                             .type(requestContext.getAcceptableMediaTypes().get(0))
                                             .build();
                                 } else {
-                                    final String s = ((UriRoutingContext) requestContext.getUriInfo()).getMatchedTemplates().get(0).getTemplate().substring(1);
+                                    final String lastMatchedPathSegment = ((UriRoutingContext) requestContext.getUriInfo())
+                                            .getMatchedTemplates()
+                                            .get(0).getTemplate().substring(1);
+
+                                    Resource resourceForWadlModel = null;
+                                    if (lastMatchedPathSegment
+                                            .equals("") || lastMatchedPathSegment.equals(resource.getPath())) {
+                                        resourceForWadlModel = resource;
+                                    } else {
+                                        for (Resource childResource : resource.getChildResources()) {
+
+                                            if (childResource.getPath().equals(lastMatchedPathSegment) ||
+                                                    childResource.getPath().equals("/" + lastMatchedPathSegment)) {
+                                                resourceForWadlModel = childResource;
+                                                break;
+                                            }
+                                        }
+                                    }
 
                                     response = Response.ok()
                                             .allow(allowedMethods)
@@ -622,8 +639,7 @@ final class MethodSelectingRouter implements Router {
                                             .header("Last-modified", lastModified)
                                             .entity(wadlApplicationContext.getApplication(
                                                     requestContext.getUriInfo(),
-                                                    resource,
-                                                    s.equals(resource.getPath()) || s.equals("") ? null : s))
+                                                    resourceForWadlModel))
                                             .build();
                                 }
                                 return new ContainerResponse(requestContext, response);

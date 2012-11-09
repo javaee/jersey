@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.model;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -77,12 +78,20 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.Lists;
+
 /**
- * Taken from Jersey 1: jersey-server:com.sun.jersey.server.impl.modelapi.validation.BasicValidatorTest.java
+ * Taken from Jersey 1: jersey-server:com.sun.jersey.server.impl.modelapi.validation.ResourceModelValidatorTest.java
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class BasicValidatorTest {
+public class ValidatorTest {
+    private static final Logger LOGGER = Logger.getLogger(ValidatorTest.class.getName());
+
+
+    private ServiceLocator createLocator() {
+        return Injections.createLocator(new ServerBinder());
+    }
 
     @Path("rootNonAmbigCtors")
     public static class TestRootResourceNonAmbigCtors {
@@ -105,11 +114,10 @@ public class BasicValidatorTest {
 
     @Test
     public void testRootResourceNonAmbigConstructors() throws Exception {
-        System.out.println(
-                "---\nNo issue should be reported if more public ctors exists with the same number of params, " +
-                        "but another just one is presented with more params at a root resource:");
+        LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, " +
+                "but another just one is presented with more params at a root resource:");
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
         assertTrue(validator.getIssueList().isEmpty());
     }
@@ -120,10 +128,6 @@ public class BasicValidatorTest {
         String hParam;
     }
 
-
-    private ServiceLocator createLocator() {
-        return Injections.createLocator(new ServerBinder());
-    }
 
     @Singleton
     @Path("rootSingleton/{p}")
@@ -219,14 +223,14 @@ public class BasicValidatorTest {
 
     @Test
     public void testRelaxedProducesConsumesParserRules() throws Exception {
-        System.out.println("---\nAn issue should not be reported with the relaxed Produces/Consumes values parser.");
+        LOGGER.info("An issue should not be reported with the relaxed Produces/Consumes values parser.");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectMethodParamsForSingleton.class);
         assertTrue(issues.isEmpty());
     }
 
     @Test
     public void testSingletonFieldsInjection() throws Exception {
-        System.out.println("---\nAn issue should be reported if injection is required for a singleton life-cycle:");
+        LOGGER.info("An issue should be reported if injection is required for a singleton life-cycle:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForSingleton.class);
         assertTrue(!issues.isEmpty());
         assertEquals(6, issues.size());
@@ -235,7 +239,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testProviderFieldsInjection() throws Exception {
-        System.out.println("---\nAn issue should be reported if injection is required for a class which is provider and " +
+        LOGGER.info("An issue should be reported if injection is required for a class which is provider and " +
                 "therefore singleton:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForProvider.class);
         assertTrue(!issues.isEmpty());
@@ -245,7 +249,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testSingletonConstructorParamsInjection() throws Exception {
-        System.out.println("---\nAn issue should be reported if injection is required for a singleton life-cycle:");
+        LOGGER.info("An issue should be reported if injection is required for a singleton life-cycle:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectConstructorParamsForSingleton.class);
         assertTrue(!issues.isEmpty());
         assertEquals(1, issues.size());
@@ -253,7 +257,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testSingletonMethodParamsInjection() throws Exception {
-        System.out.println("---\nAn issue should not be reported as injections into the methods are allowed.");
+        LOGGER.info("An issue should not be reported as injections into the methods are allowed.");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectMethodParamsForSingleton.class);
         assertTrue(issues.isEmpty());
     }
@@ -288,28 +292,30 @@ public class BasicValidatorTest {
 
     @Test
     public void testResourceAsProvider() throws Exception {
-        System.out.println("---\nAn issue should be reported as resource implements provider but does not define scope.");
+        LOGGER.info("An issue should be reported as resource implements provider but does not define scope.");
         List<ResourceModelIssue> issues = testResourceValidation(ResourceAsProvider.class);
         assertEquals(1, issues.size());
     }
 
     @Test
     public void testResourceWithMultipleScopes() throws Exception {
-        System.out.println("---\nAn issue should not be reported as resource defines multiple scopes.");
+        LOGGER.info("An issue should not be reported as resource defines multiple scopes.");
         List<ResourceModelIssue> issues = testResourceValidation(ResourceWithMultipleScopes.class);
         assertEquals(1, issues.size());
     }
 
 
-    private List<ResourceModelIssue> testResourceValidation(final Class<?> resourceClass) {
+    private List<ResourceModelIssue> testResourceValidation(final Class<?>... resourceClasses) {
         return Errors.process(new Errors.Closure<List<ResourceModelIssue>>() {
             @Override
             public List<ResourceModelIssue> invoke() {
-                final Resource resource = Resource.builder(resourceClass).build();
-                final BasicValidator validator = new BasicValidator(createLocator());
-
-                validator.validate(resource);
-
+                List<Resource> resources = Lists.newArrayList();
+                for (Class<?> clazz : resourceClasses) {
+                    resources.add(Resource.builder(clazz).build());
+                }
+                ResourceModel model = new ResourceModel(resources);
+                ComponentModelValidator validator = new ComponentModelValidator(createLocator());
+                validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
             }
         });
@@ -331,7 +337,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testNonPublicRM() throws Exception {
-        System.out.println("---\nAn issue should be reported if a resource method is not public:");
+        LOGGER.info("An issue should be reported if a resource method is not public:");
 
         List<ResourceModelIssue> issues = testResourceValidation(TestNonPublicRM.class);
         assertTrue(!issues.isEmpty());
@@ -348,7 +354,7 @@ public class BasicValidatorTest {
     @Ignore("Multiple entity validation not implemented yet.")
     // TODO implement validation
     public void suspendedTestMoreThanOneEntity() throws Exception {
-        System.out.println("---\nAn issue should be reported if a resource method takes more than one entity params:");
+        LOGGER.info("An issue should be reported if a resource method takes more than one entity params:");
         List<ResourceModelIssue> issues = testResourceValidation(TestMoreThanOneEntity.class);
 
         assertTrue(!issues.isEmpty());
@@ -363,7 +369,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testGetRMReturningVoid() throws Exception {
-        System.out.println("---\nAn issue should be reported if a non-async get method returns void:");
+        LOGGER.info("An issue should be reported if a non-async get method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMReturningVoid.class);
         assertTrue(!issues.isEmpty());
         assertTrue(!issues.get(0).isFatal());
@@ -380,7 +386,7 @@ public class BasicValidatorTest {
     @Ignore("Async GET void validation not updated to new API.")
     // TODO update validation
     public void testAsyncGetRMReturningVoid() throws Exception {
-        System.out.println("---\nAn issue should NOT be reported if a async get method returns void:");
+        LOGGER.info("An issue should NOT be reported if a async get method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestAsyncGetRMReturningVoid.class);
         assertTrue(issues.isEmpty());
     }
@@ -395,7 +401,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testGetRMConsumingEntity() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get method consumes an entity:");
+        LOGGER.info("An issue should be reported if a get method consumes an entity:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMConsumingEntity.class);
         assertTrue(!issues.isEmpty());
         assertTrue(!issues.get(0).isFatal());
@@ -411,7 +417,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testGetRMConsumingFormParam() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get method consumes a form param:");
+        LOGGER.info("An issue should be reported if a get method consumes a form param:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMConsumingFormParam.class);
         assertTrue(issues.size() == 1);
         assertTrue(issues.get(0).isFatal());
@@ -426,9 +432,9 @@ public class BasicValidatorTest {
 
     @Test
     public void testSRLReturningVoid() throws Exception {
-        System.out.println("---\nAn issue should be reported if a sub-resource locator returns void:");
+        LOGGER.info("An issue should be reported if a sub-resource locator returns void:");
         Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -443,7 +449,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testGetSRMReturningVoid() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get sub-resource method returns void:");
+        LOGGER.info("An issue should be reported if a get sub-resource method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMReturningVoid.class);
 
         assertTrue(!issues.isEmpty());
@@ -461,25 +467,26 @@ public class BasicValidatorTest {
 
     @Test
     public void testGetSRMConsumingEntity() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get method consumes an entity:");
+        LOGGER.info("An issue should be reported if a get method consumes an entity:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMConsumingEntity.class);
 
         assertTrue(!issues.isEmpty());
         assertTrue(!issues.get(0).isFatal());
     }
 
+    @Path("root")
     public static class TestGetSRMConsumingFormParam {
 
         @GET
         @Path("p")
-        public String getMethod(@FormParam("f") Object o) {
+        public String getMethod(@FormParam("f") String formParam) {
             return "it";
         }
     }
 
     @Test
     public void testGetSRMConsumingFormParam() throws Exception {
-        System.out.println("---\nAn issue should be reported if a get method consumes a form param:");
+        LOGGER.info("An issue should be reported if a get method consumes a form param:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMConsumingFormParam.class);
 
         assertTrue(!issues.isEmpty());
@@ -498,10 +505,10 @@ public class BasicValidatorTest {
 
     @Test
     public void testMultipleHttpMethodDesignatorsRM() throws Exception {
-        System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a resource " +
+        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource " +
                 "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -519,10 +526,10 @@ public class BasicValidatorTest {
 
     @Test
     public void testMultipleHttpMethodDesignatorsSRM() throws Exception {
-        System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a sub-resource " +
+        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource " +
                 "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -538,9 +545,9 @@ public class BasicValidatorTest {
 
     @Test
     public void testEntityParamOnSRL() throws Exception {
-        System.out.println("---\nAn issue should be reported if an entity parameter exists on a sub-resource locator:");
+        LOGGER.info("An issue should be reported if an entity parameter exists on a sub-resource locator:");
         Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -574,7 +581,7 @@ public class BasicValidatorTest {
 
     @Test
     public void testNonConflictingHttpMethodDelete() throws Exception {
-        System.out.println("---\nNo issue should be reported if produced mime types differ");
+        LOGGER.info("No issue should be reported if produced mime types differ");
         List<ResourceModelIssue> issues = testResourceValidation(TestNonConflictingHttpMethodDelete.class);
 
         assertTrue(issues.isEmpty());
@@ -614,12 +621,12 @@ public class BasicValidatorTest {
 
     @Test
     public void testAmbiguousParams() throws Exception {
-        System.out.println("---\nA warning should be reported if ambiguous source of a parameter is seen");
+        LOGGER.info("A warning should be reported if ambiguous source of a parameter is seen");
         Errors.process(new Errors.Closure<Void>() {
             @Override
             public Void invoke() {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
-                BasicValidator validator = new BasicValidator(createLocator());
+                ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -643,9 +650,9 @@ public class BasicValidatorTest {
 
     @Test
     public void testEmptyPathSegment() throws Exception {
-        System.out.println("---\nA warning should be reported if @Path with \"/\" or empty string value is seen");
+        LOGGER.info("A warning should be reported if @Path with \"/\" or empty string value is seen");
         Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -683,12 +690,12 @@ public class BasicValidatorTest {
 
     @Test
     public void testTypeVariableResource() throws Exception {
-        System.out.println("---\n");
+        LOGGER.info("");
         Errors.process(new Errors.Closure<Void>() {
             @Override
             public Void invoke() {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
-                BasicValidator validator = new BasicValidator(createLocator());
+                ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -733,9 +740,9 @@ public class BasicValidatorTest {
 
     @Test
     public void testParameterizedTypeResource() throws Exception {
-        System.out.println("---\n");
+        LOGGER.info("");
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -770,9 +777,9 @@ public class BasicValidatorTest {
 
     @Test
     public void testGenericArrayResource() throws Exception {
-        System.out.println("---\n");
+        LOGGER.info("");
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -799,7 +806,7 @@ public class BasicValidatorTest {
     @Test
     public void testPercentEncoded() throws Exception {
         Resource resource = Resource.builder(PercentEncodedTest.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -826,7 +833,7 @@ public class BasicValidatorTest {
     @Test
     public void testPercentEncodedCaseSensitive() throws Exception {
         Resource resource = Resource.builder(PercentEncodedCaseSensitiveTest.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -846,7 +853,7 @@ public class BasicValidatorTest {
     @Test
     public void testNotAnnotatedParameters() throws Exception {
         Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
-        BasicValidator validator = new BasicValidator(createLocator());
+        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -855,4 +862,187 @@ public class BasicValidatorTest {
     }
 
 
+    public static class SubResource {
+        public static final String MESSAGE = "Got it!";
+
+        @GET
+        public String getIt() {
+            return MESSAGE;
+        }
+    }
+
+    /**
+     * Should report warning during validation as Resource cannot have resource method and sub resource locators on the same path.
+     */
+    @Path("failRoot")
+    public static class MethodAndLocatorResource {
+
+
+        @Path("/")
+        public SubResource getSubResourceLocator() {
+            return new SubResource();
+        }
+
+        @GET
+        public String get() {
+            return "should never be called - fails during validation";
+        }
+    }
+
+
+    @Test
+    public void testLocatorAndMethodValidation() throws Exception {
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
+                "resource locators on the same path.");
+        List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource.class);
+        assertEquals(1, issues.size());
+        assertTrue(!issues.get(0).isFatal());
+    }
+
+    /**
+     * Should report warning during validation as Resource cannot have resource method and sub resource locators on the same path.
+     */
+    @Path("failRoot")
+    public static class MethodAndLocatorResource2 {
+
+
+        @Path("a")
+        public SubResource getSubResourceLocator() {
+            return new SubResource();
+        }
+
+        @GET
+        @Path("a")
+        public String get() {
+            return "should never be called - fails during validation";
+        }
+    }
+
+
+    @Test
+    public void testLocatorAndMethod2Validation() throws Exception {
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
+                "resource locators on the same path.");
+        List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource2.class);
+        assertEquals(1, issues.size());
+        assertTrue(!issues.get(0).isFatal());
+    }
+
+    /**
+     * Warning should be reported informing wich locator will be used in runtime
+     */
+    @Path("locator")
+    public static class TwoLocatorsResource {
+        @Path("a")
+        public SubResource locator() {
+            return new SubResource();
+        }
+
+        @Path("a")
+        public SubResource locator2() {
+            return new SubResource();
+        }
+    }
+
+    @Test
+    public void testLocatorPathValidationFail() throws Exception {
+        LOGGER.info("Should report error during validation as Resource cannot have ambiguous sub resource locators.");
+        List<ResourceModelIssue> issues = testResourceValidation(TwoLocatorsResource.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
+    }
+
+    @Path("root")
+    public static class ResourceRoot {
+        @GET
+        @Path("sub-root") // in path collision with ResourceSubRoot.get()
+        public String get() {
+            return "should never be called - fails during validation";
+        }
+    }
+
+    @Path("root/sub-root")
+    public static class ResourceSubPathRoot {
+        @GET
+        public String get() {
+            return "should never be called - fails during validation";
+        }
+    }
+
+    @Path("root")
+    public static class ResourceRootNotUnique {
+        @GET
+        @Path("sub-root") // in path collision with ResourceSubRoot.get()
+        public String get() {
+            return "should never be called - fails during validation";
+        }
+    }
+
+    @Test
+    @Ignore
+    // TODO: need to add validation to detect ambiguous problems of ResourceSubPathRoot and two other resources.
+    public void testTwoOverlappingSubResourceValidation() throws Exception {
+        List<ResourceModelIssue> issues = testResourceValidation(ResourceRoot.class, ResourceSubPathRoot.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
+    }
+
+    @Test
+    @Ignore
+    public void testTwoOverlappingResourceValidation() throws Exception {
+        List<ResourceModelIssue> issues = testResourceValidation(ResourceRoot.class, ResourceRootNotUnique.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
+    }
+
+    @Path("root")
+    public static class EmptyResource {
+        public String get() {
+            return "not a get method.";
+        }
+    }
+
+    @Test
+    public void testEmptyResourcel() throws Exception {
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
+                "resource locators on the same path.");
+        List<ResourceModelIssue> issues = testResourceValidation(EmptyResource.class);
+        assertEquals(1, issues.size());
+        assertTrue(!issues.get(0).isFatal());
+    }
+
+
+    @Path("{abc}")
+    public static class AmbiguousResource1 {
+        @Path("x")
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Path("{def}")
+    public static class AmbiguousResource2 {
+        @Path("y")
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Path("unique")
+    public static class UniqueResource {
+        @Path("y")
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Test
+    public void testAmbiguousResources() throws Exception {
+        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} " +
+                "results into same path pattern).");
+        List<ResourceModelIssue> issues = testResourceValidation(AmbiguousResource1.class, AmbiguousResource2.class,
+                UniqueResource.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
+    }
 }

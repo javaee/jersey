@@ -94,6 +94,34 @@ public class PathParamDefaultValueTest extends AbstractTest {
     }
 
     @Test
+    public void testCallWithMissingPathParam404() throws ExecutionException, InterruptedException {
+        initiateWebApplication(Resource.class);
+
+        ContainerResponse response = getResponseContext("/foo/bar");
+        Assert.assertEquals(404, response.getStatus());
+    }
+
+    @Test
+    public void testDefaultPathParamInSubResource() throws ExecutionException, InterruptedException {
+        initiateWebApplication(FooResource.class);
+
+        ContainerResponse response = getResponseContext("/foo/baz/sub");
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("default-id", response.getEntity());
+    }
+
+
+    @Test
+    public void testParamInSubResource() throws ExecutionException, InterruptedException {
+        initiateWebApplication(FooResource.class);
+
+        ContainerResponse response = getResponseContext("/foo/baz/iddd");
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("iddd", response.getEntity());
+    }
+
+
+    @Test
     public void testDefaultPathParamValueOnAnotherResource1() throws ExecutionException, InterruptedException {
         initiateWebApplication(AnotherResource.class);
 
@@ -135,6 +163,17 @@ public class PathParamDefaultValueTest extends AbstractTest {
         public String getBar() {
             return id;
         }
+
+        @Path("baz/{id}")
+        public Resource getResource() {
+            return new Resource();
+        }
+
+        @Path("baz/sub")
+        public Resource getResource2() {
+            return new Resource();
+        }
+
     }
 
     @Path("foo")

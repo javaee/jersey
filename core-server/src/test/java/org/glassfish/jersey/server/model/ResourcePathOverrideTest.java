@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.server.model;
 
-import java.util.LinkedList;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -50,11 +48,14 @@ import javax.ws.rs.container.ContainerRequestContext;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import junit.framework.Assert;
 
 /**
  * Test of resource path overriding via programmatic API.
@@ -84,15 +85,20 @@ public class ResourcePathOverrideTest {
     public void testOverride() throws Exception {
         ResourceConfig resourceConfig = new ResourceConfig(HelloResource.class);
 
-        Resource.Builder resourceBuilder = Resource.builder(HelloResource.class).path("hello2");
-        resourceBuilder.addMethod("GET").path("world").produces("text/plain").handledBy(new Inflector<ContainerRequestContext, String>() {
-            @Override
-            public String apply(ContainerRequestContext request) {
-                return "Hello World!";
-            }
-        });
 
-        resourceConfig.addResources(resourceBuilder.build());
+        Resource.Builder resourceBuilder = Resource.builder(HelloResource.class)
+                .path("hello2");
+        resourceBuilder.addChildResource("world").addMethod("GET").produces("text/plain")
+                .handledBy(new Inflector<ContainerRequestContext, String>() {
+
+                    @Override
+                    public String apply(ContainerRequestContext request) {
+                        return "Hello World!";
+                    }
+                });
+
+        final Resource resource = resourceBuilder.build();
+        resourceConfig.addResources(resource);
 
         ApplicationHandler app = createApplication(resourceConfig);
 
@@ -104,6 +110,8 @@ public class ResourcePathOverrideTest {
         assertEquals("Hello!", app.apply(request).get().getEntity());
 
         request = RequestContextBuilder.from("/hello2/world", "GET").build();
-        assertEquals("Hello World!", app.apply(request).get().getEntity());
+        final ContainerResponse response = app.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        assertEquals("Hello World!", response.getEntity());
     }
 }

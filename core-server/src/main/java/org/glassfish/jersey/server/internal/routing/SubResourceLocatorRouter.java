@@ -44,6 +44,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
@@ -111,8 +112,15 @@ class SubResourceLocatorRouter implements Router {
         resourceContext.bindResourceIfSingleton(subResource);
 
         final Resource subResourceModel;
+
         // TODO: what to do with the issues?
-        subResourceModel = Resource.builder(subResource).build();
+        final Resource.Builder builder = Resource.builder(subResource);
+        if (builder == null) {
+            // resource is empty
+            throw new NotFoundException();
+        }
+        subResourceModel = builder.build();
+
 
         final RuntimeModelBuilder runtimeModelBuilder = runtimeModelBuilderOriginal.copy();
         runtimeModelBuilder.process(subResourceModel, true);

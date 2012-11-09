@@ -69,7 +69,7 @@ import com.google.common.collect.Sets;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod implements ResourceModelComponent, Routed, Producing, Consuming, Suspendable, NameBound {
+public class ResourceMethod implements ResourceModelComponent, Producing, Consuming, Suspendable, NameBound {
 
     /**
      * Resource method classification based on the recognized JAX-RS
@@ -122,24 +122,12 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
          */
         abstract PathPattern createPatternFor(String pathTemplate);
 
-        private static JaxrsType classify(String httpMethod, String methodPath) {
-            if (httpMethod != null) {
-                if (!httpMethod.isEmpty()) {
-                    if (methodPath.isEmpty() || "/".equals(methodPath)) {
-                        return RESOURCE_METHOD;
-                    } else {
-                        return SUB_RESOURCE_METHOD;
-                    }
-                }
-            } else if (!methodPath.isEmpty()) {
+        private static JaxrsType classify(String httpMethod) {
+            if (httpMethod != null && !httpMethod.isEmpty()) {
+                return RESOURCE_METHOD;
+            } else {
                 return SUB_RESOURCE_LOCATOR;
             }
-
-            // TODO L10N
-            throw new IllegalStateException(String.format(
-                    "Unknown resource method model type: HTTP method = '%s', method path = '%s'.",
-                    httpMethod,
-                    methodPath));
         }
     }
 
@@ -151,8 +139,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
 
         // HttpMethod
         private String httpMethod;
-        // Routed
-        private String path;
         // Consuming & Producing
         private final Set<MediaType> consumedTypes;
         private final Set<MediaType> producedTypes;
@@ -189,8 +175,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
 
             this.httpMethod = null;
 
-            this.path = "";
-
             this.consumedTypes = Sets.newLinkedHashSet();
             this.producedTypes = Sets.newLinkedHashSet();
 
@@ -214,19 +198,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
             return this;
         }
 
-        /**
-         * Set the method routing path.
-         *
-         * @param path method path.
-         * @return updated builder object.
-         */
-        public Builder path(String path) {
-            if (path == null) {
-                path = "";
-            }
-            this.path = path;
-            return this;
-        }
 
         /**
          * Add produced media types supported by the component.
@@ -266,7 +237,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
          * @return updated builder object.
          */
         public Builder consumes(String... types) {
-            return produces(MediaTypes.createFrom(types));
+            return consumes(MediaTypes.createFrom(types));
         }
 
         /**
@@ -276,7 +247,7 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
          * @return updated builder object.
          */
         public Builder consumes(MediaType... types) {
-            return produces(Arrays.asList(types));
+            return consumes(Arrays.asList(types));
         }
 
         /**
@@ -438,7 +409,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
 
             ResourceMethod method = new ResourceMethod(
                     httpMethod,
-                    path,
                     consumedTypes,
                     producedTypes,
                     managedAsync,
@@ -471,9 +441,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     private final JaxrsType type;
     // HttpMethod
     private final String httpMethod;
-    // Routed
-    private final String path;
-    private final PathPattern pathPattern;
     // Consuming & Producing
     private final List<MediaType> consumedTypes;
     private final List<MediaType> producedTypes;
@@ -488,7 +455,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     private final Collection<Class<? extends Annotation>> nameBindings;
 
     private ResourceMethod(final String httpMethod,
-                           final String path,
                            final Collection<MediaType> consumedTypes,
                            final Collection<MediaType> producedTypes,
                            boolean managedAsync, final boolean suspended,
@@ -498,12 +464,9 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
                            final Collection<Class<? extends Annotation>> nameBindings
     ) {
         this.managedAsync = managedAsync;
-        this.type = JaxrsType.classify(httpMethod, path);
+        this.type = JaxrsType.classify(httpMethod);
 
         this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
-
-        this.path = path;
-        this.pathPattern = type.createPatternFor(path);
 
         this.consumedTypes = Collections.unmodifiableList(Lists.newArrayList(consumedTypes));
         this.producedTypes = Collections.unmodifiableList(Lists.newArrayList(producedTypes));
@@ -546,25 +509,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
         return invocable;
     }
 
-    // Routed
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * In case of a resource method, an empty string is returned.
-     *
-     * @return the path directly assigned to the method or an empty string in case
-     *         the method represents a resource method.
-     */
-    @Override
-    public String getPath() {
-        return path;
-    }
-
-    @Override
-    public PathPattern getPathPattern() {
-        return pathPattern;
-    }
 
     // Consuming
     @Override
@@ -625,7 +569,6 @@ public class ResourceMethod implements ResourceModelComponent, Routed, Producing
     public String toString() {
         return "ResourceMethod{" +
                 "httpMethod=" + httpMethod +
-                ", path=" + path +
                 ", consumedTypes=" + consumedTypes +
                 ", producedTypes=" + producedTypes +
                 ", suspended=" + suspended +

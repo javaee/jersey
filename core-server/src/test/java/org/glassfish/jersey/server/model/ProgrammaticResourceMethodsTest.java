@@ -40,8 +40,10 @@
 package org.glassfish.jersey.server.model;
 
 import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.Inflector;
@@ -52,6 +54,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
 
+import junit.framework.Assert;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -142,7 +145,8 @@ public class ProgrammaticResourceMethodsTest {
     public void testTwoBindersSamePath() throws Exception {
         final ResourceConfig rc = new ResourceConfig();
         final Resource.Builder resourceBuilder = Resource.builder("/");
-        resourceBuilder.addMethod("GET").path("test1").handledBy(new Inflector<ContainerRequestContext, Response>() {
+        final Resource.Builder childTest1Builder = resourceBuilder.addChildResource("test1");
+        childTest1Builder.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
             public Response apply(ContainerRequestContext request) {
@@ -156,8 +160,9 @@ public class ProgrammaticResourceMethodsTest {
                 return Response.accepted().build();
             }
         };
-        resourceBuilder.addMethod("GET").path("test2").handledBy(inflector1);
-        resourceBuilder.addMethod("HEAD").path("test2").handledBy(inflector1);
+        final Resource.Builder childTest2Builder = resourceBuilder.addChildResource("test2");
+        childTest2Builder.addMethod("GET").handledBy(inflector1);
+        childTest2Builder.addMethod("HEAD").handledBy(inflector1);
         Inflector<ContainerRequestContext, Response> inflector2 = new Inflector<ContainerRequestContext, Response>() {
 
             @Override
@@ -165,9 +170,10 @@ public class ProgrammaticResourceMethodsTest {
                 return Response.status(203).build();
             }
         };
-        resourceBuilder.addMethod("OPTIONS").path("test1").handledBy(inflector2);
-        resourceBuilder.addMethod("HEAD").path("test1").handledBy(inflector2);
-        rc.addResources(resourceBuilder.build());
+        childTest1Builder.addMethod("OPTIONS").handledBy(inflector2);
+        childTest1Builder.addMethod("HEAD").handledBy(inflector2);
+        final Resource resource = resourceBuilder.build();
+        rc.addResources(resource);
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatusEquals(201, RequestContextBuilder.from("/test1", "GET").build(), application);
@@ -177,6 +183,33 @@ public class ProgrammaticResourceMethodsTest {
 //        checkReturnedStatusEquals(202, Requests.from("/test2", "GET").build(), application);
 //        checkReturnedStatusEquals(202, Requests.from("/test2", "HEAD").build(), application);
 //        checkReturnedStatusEquals(202, Requests.from("/test2", "OPTIONS").build(), application);
+    }
+
+    @Test
+    public void testConsumesProduces() {
+        final Resource.Builder builder = Resource.builder("root");
+        builder.addMethod("POST").handledBy(new Inflector
+                <ContainerRequestContext, Object>() {
+
+            @Override
+            public Object apply(ContainerRequestContext requestContext) {
+                return null;
+            }
+        }).consumes(MediaType.APPLICATION_XML).consumes("text/html").consumes("text/plain",
+                "application/json").produces(MediaType.TEXT_HTML_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+        final Resource res = builder.build();
+        final ResourceMethod method = res.getResourceMethods().get(0);
+        final List<MediaType> consumedTypes = method.getConsumedTypes();
+        Assert.assertEquals(4, consumedTypes.size());
+        final List<MediaType> producedTypes = method.getProducedTypes();
+        Assert.assertEquals(2, producedTypes.size());
+        Assert.assertTrue(consumedTypes.contains(MediaType.APPLICATION_XML_TYPE));
+        Assert.assertTrue(consumedTypes.contains(MediaType.TEXT_HTML_TYPE));
+        Assert.assertTrue(consumedTypes.contains(MediaType.TEXT_PLAIN_TYPE));
+        Assert.assertTrue(consumedTypes.contains(MediaType.APPLICATION_JSON_TYPE));
+        Assert.assertTrue(producedTypes.contains(MediaType.TEXT_HTML_TYPE));
+        Assert.assertTrue(producedTypes.contains(MediaType.APPLICATION_JSON_TYPE));
     }
 
     private void checkReturnedStatus(ContainerRequest req, ApplicationHandler app) throws Exception {

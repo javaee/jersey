@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.wadl.internal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +53,6 @@ import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.model.Parameterized;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
@@ -150,32 +148,6 @@ public class WadlBuilder {
 
         // Return the WADL
 
-        return wadlApplication;
-    }
-
-    /**
-     * Generate WADL for a virtual subresource resulting from sub resource
-     * methods.
-     * @param description the overall application description so we can
-     * @param resource the parent resource
-     * @param path the value of the methods path annotations
-     * @return the JAXB WADL application bean
-     */
-    public Application generate(
-            ApplicationDescription description,
-            org.glassfish.jersey.server.model.Resource resource, String path) {
-        Application wadlApplication = _wadlGenerator.createApplication();
-        Resources wadlResources = _wadlGenerator.createResources();
-        Resource wadlResource = generateSubResource(resource, path);
-        wadlResources.getResource().add(wadlResource);
-        wadlApplication.getResources().add(wadlResources);
-
-        addVersion(wadlApplication);
-
-        // Attach the data to the parts of the model
-        _wadlGenerator.attachTypes(description);
-
-        // Return the WADL
         return wadlApplication;
     }
 
@@ -313,54 +285,63 @@ public class WadlBuilder {
         return null;
     }
 
-    private Param generateParam(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod
-            m, final Parameter p) {
-        if (p.getSource() == Parameter.Source.ENTITY || p.getSource() == Parameter.Source.CONTEXT) {
+    private Param generateParam(org.glassfish.jersey.server.model.Resource resource,
+                                org.glassfish.jersey.server.model.ResourceMethod
+                                        method, final Parameter param) {
+        if (param.getSource() == Parameter.Source.ENTITY || param.getSource() == Parameter.Source.CONTEXT) {
             return null;
         }
-        return _wadlGenerator.createParam(r, m, p);
+        return _wadlGenerator.createParam(resource, method, param);
     }
 
     private Resource generateResource(org.glassfish.jersey.server.model.Resource r, String path) {
         return generateResource(r, path, Collections.<org.glassfish.jersey.server.model.Resource>emptySet());
     }
 
-    private Resource generateResource(org.glassfish.jersey.server.model.Resource r, String path,
+    private Resource generateResource(final org.glassfish.jersey.server.model.Resource resource, String path,
                                       Set<org.glassfish.jersey.server.model.Resource> visitedResources) {
-        Resource wadlResource = _wadlGenerator.createResource(r, path);
+        Resource wadlResource = _wadlGenerator.createResource(resource, path);
 
         // prevent infinite recursion
-        if (visitedResources.contains(r)) {
+        if (visitedResources.contains(resource)) {
             return wadlResource;
         } else {
             visitedResources = new HashSet<org.glassfish.jersey.server.model.Resource>(visitedResources);
-            visitedResources.add(r);
+            visitedResources.add(resource);
+        }
+
+
+        // if the resource contains subresource locator create new resource for this locator and return it instead
+        // of this resource
+        final ResourceMethod locator = resource.getResourceLocator();
+        if (locator != null) {
+
+            org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
+                    .builder(locator.getInvocable().getRawResponseType());
+            if (builder == null) {
+                // for example in the case the return type of the sub resource locator is Object
+                builder = org.glassfish.jersey.server.model.Resource.builder().path(resource.getPath());
+            }
+            org.glassfish.jersey.server.model.Resource subResource =
+                    builder.build();
+
+            Resource wadlSubResource = generateResource(subResource,
+                    resource.getPath(), visitedResources);
+
+            for (Parameter param : locator.getInvocable().getParameters()) {
+                Param wadlParam = generateParam(resource, locator, param);
+
+                if (wadlParam != null && wadlParam.getStyle() == ParamStyle.TEMPLATE) {
+                    wadlSubResource.getParam().add(wadlParam);
+                }
+            }
+            return wadlSubResource;
         }
 
         Map<String, Param> wadlResourceParams = new HashMap<String, Param>();
-
-        // add resource field/setter parameters that are associated with the resource PATH template
-
-        List<Parameterized> fieldsOrSetters = new LinkedList<Parameterized>();
-
-//        if (r.getFields() != null) {
-//            fieldsOrSetters.addAll(r.getFields());
-//        }
-//        if (r.getSetterMethods() != null) {
-//            fieldsOrSetters.addAll(r.getSetterMethods());
-//        }
-
-        for (Parameterized f : fieldsOrSetters) {
-            for (Parameter fp : f.getParameters()) {
-                Param wadlParam = generateParam(r, null, fp);
-                if (wadlParam != null) {
-                    wadlResource.getParam().add(wadlParam);
-                }
-            }
-        }
         // for each resource method
-        for (org.glassfish.jersey.server.model.ResourceMethod m : r.getResourceMethods()) {
-            com.sun.research.ws.wadl.Method wadlMethod = generateMethod(r, wadlResourceParams, m);
+        for (org.glassfish.jersey.server.model.ResourceMethod method : resource.getResourceMethods()) {
+            com.sun.research.ws.wadl.Method wadlMethod = generateMethod(resource, wadlResourceParams, method);
             wadlResource.getMethodOrResource().add(wadlMethod);
         }
         // add method parameters that are associated with the resource PATH template
@@ -372,87 +353,16 @@ public class WadlBuilder {
         Map<String, Resource> wadlSubResources = new HashMap<String, Resource>();
         Map<String, Map<String, Param>> wadlSubResourcesParams =
                 new HashMap<String, Map<String, Param>>();
-        for (ResourceMethod subResourceMethod : r.getSubResourceMethods()) {
-            // find or create sub resource for uri template
-            String template = subResourceMethod.getPath();
-            Resource wadlSubResource = wadlSubResources.get(template);
-            Map<String, Param> wadlSubResourceParams = wadlSubResourcesParams.get(template);
-            if (wadlSubResource == null) {
-                wadlSubResource = new Resource();
-                wadlSubResource.setPath(template);
-                wadlSubResources.put(template, wadlSubResource);
-                wadlSubResourceParams = new HashMap<String, Param>();
-                wadlSubResourcesParams.put(template, wadlSubResourceParams);
-                wadlResource.getMethodOrResource().add(wadlSubResource);
-            }
-            com.sun.research.ws.wadl.Method wadlMethod = generateMethod(r, wadlSubResourceParams, subResourceMethod);
-            wadlSubResource.getMethodOrResource().add(wadlMethod);
-        }
-        // add parameters that are associated with each sub-resource method PATH template
-        for (Map.Entry<String, Resource> e : wadlSubResources.entrySet()) {
-            String template = e.getKey();
-            Resource wadlSubResource = e.getValue();
-            Map<String, Param> wadlSubResourceParams = wadlSubResourcesParams.get(template);
-            for (Param wadlParam : wadlSubResourceParams.values()) {
-                wadlSubResource.getParam().add(wadlParam);
-            }
-        }
 
-        // for each sub resource locator
-        for (ResourceMethod locator : r.getSubResourceLocators()) {
-
-            org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
-                    .builder(locator.getInvocable().getRawResponseType());
-            if (builder == null) {
-                // for example in the case the return type of the sub resource locator is Object
-                builder = org.glassfish.jersey.server.model.Resource.builder().path(locator.getPath());
-            }
-            org.glassfish.jersey.server.model.Resource subResource =
-                    builder.build();
-
-            Resource wadlSubResource = generateResource(subResource,
-                    locator.getPath(), visitedResources);
-            wadlResource.getMethodOrResource().add(wadlSubResource);
-
-            for (Parameter p : locator.getInvocable().getParameters()) {
-                Param wadlParam = generateParam(r, locator, p);
-                if (wadlParam != null && wadlParam.getStyle() == ParamStyle.TEMPLATE) {
-                    wadlSubResource.getParam().add(wadlParam);
-                }
-            }
-        }
-        return wadlResource;
-    }
-
-    private Resource generateSubResource(org.glassfish.jersey.server.model.Resource r, String path) {
-        Resource wadlResource = new Resource();
-        if (r.isRootResource()) {
-            StringBuilder b = new StringBuilder(r.getPath());
-            if (!(r.getPath().endsWith("/") || path.startsWith("/"))) {
-                b.append("/");
-            }
-            b.append(path);
-            wadlResource.setPath(b.toString());
-        }
-        // for each sub-resource method
-        Map<String, Param> wadlSubResourceParams = new HashMap<String, Param>();
-        for (ResourceMethod m : r.getSubResourceMethods()) {
-            // find or create sub resource for uri template
-            String template = m.getPath();
-            if (!template.equals(path)
-                    && !template.equals('/' + path)) {
-                continue;
-            }
-            com.sun.research.ws.wadl.Method wadlMethod = generateMethod(r, wadlSubResourceParams, m);
-            wadlResource.getMethodOrResource().add(wadlMethod);
-        }
-        // add parameters that are associated with each sub-resource method PATH template
-        for (Param wadlParam : wadlSubResourceParams.values()) {
-            wadlResource.getParam().add(wadlParam);
+        for (org.glassfish.jersey.server.model.Resource childResource : resource.getChildResources()) {
+            Resource childWadlResource = generateResource(childResource, childResource.getPath(),
+                    visitedResources);
+            wadlResource.getMethodOrResource().add(childWadlResource);
         }
 
         return wadlResource;
     }
+
 
     private List<Response> generateResponses(org.glassfish.jersey.server.model.Resource r, final ResourceMethod m) {
         if (m.getInvocable().getRawResponseType() == void.class) {

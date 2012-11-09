@@ -80,17 +80,16 @@ public interface WadlApplicationContext {
      */
     ApplicationDescription getApplication(UriInfo ui);
 
+
     /**
      * Get a new instance of {@link Application} for a particular resource
      * @param info the URI information from which the base URI is set on the
      *        WADL application.
      * @param resource the resource to build the Application for
-     * @param path the path to this resource
      * @return the application for this resource
      */
     Application getApplication(UriInfo info,
-                               org.glassfish.jersey.server.model.Resource resource,
-                               String path);
+                               org.glassfish.jersey.server.model.Resource resource);
 
     /**
      * Get the default JAXB context associated with the {@link WadlGenerator}

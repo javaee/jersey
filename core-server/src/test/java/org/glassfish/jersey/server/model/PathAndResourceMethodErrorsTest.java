@@ -54,8 +54,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
 

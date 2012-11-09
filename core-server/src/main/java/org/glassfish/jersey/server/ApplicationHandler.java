@@ -92,10 +92,10 @@ import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStag
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
-import org.glassfish.jersey.server.model.BasicValidator;
+import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceModelValidator;
+import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -609,11 +609,10 @@ public final class ApplicationHandler {
     }
 
     private void validate(List<Resource> resources) {
-        final ResourceModelValidator validator = new BasicValidator(locator);
+        final ComponentModelValidator validator = new ComponentModelValidator(locator);
 
-        for (Resource r : resources) {
-            validator.validate(r);
-        }
+        validator.validate(new ResourceModel(resources));
+
         if (Errors.fatalIssuesFound()) {
             throw new ModelValidationException(ModelErrors.getErrorsAsResourceModelIssues());
         }

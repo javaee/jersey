@@ -55,7 +55,13 @@ public interface ResourceModelVisitor {
      *
      * @param resource resource model.
      */
-    void visitResourceClass(Resource resource);
+    void visitResource(Resource resource);
+
+    /**
+     *  Start visiting a single child resource model.
+     * @param resource child resource model.
+     */
+    void visitChildResource(Resource resource);
 
     /**
      * Visit a single resource method model.
@@ -86,4 +92,11 @@ public interface ResourceModelVisitor {
      * @param constructor resource method handler constructor.
      */
     void visitResourceHandlerConstructor(HandlerConstructor constructor);
+
+    /**
+     * Process a resource model.
+     *
+     * @param resourceModel resource model.
+     */
+    void visitResourceModel(ResourceModel resourceModel);
 }

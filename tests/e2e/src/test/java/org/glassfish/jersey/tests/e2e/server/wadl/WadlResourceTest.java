@@ -126,7 +126,7 @@ import static junit.framework.Assert.assertTrue;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({WadlResourceTest.Wadl1Test.class, WadlResourceTest.Wadl2Test.class, WadlResourceTest.Wadl3Test.class,
-        WadlResourceTest.Wadl5Test.class})
+        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class})
 public class WadlResourceTest {
     private static Document extractWadlAsDocument(Response response) throws ParserConfigurationException, SAXException,
             IOException {
@@ -143,6 +143,43 @@ public class WadlResourceTest {
         Document d = b.parse(tmpFile);
         Wadl5Test.printSource(new DOMSource(d));
         return d;
+    }
+
+
+    public static class Wadl7Test extends JerseyTest {
+
+        @Override
+        protected Application configure() {
+            return new ResourceConfig(TestRootResource.class);
+        }
+
+        @Path("root")
+        public static class TestRootResource {
+            @Path("{template}")
+            @GET
+            public String getSub() {
+                return "get";
+            }
+
+            @GET
+            public String get() {
+                return "getroot";
+            }
+        }
+
+        @Test
+        public void testPathTemplateInSubResourceMethod() throws ParserConfigurationException, SAXException, IOException,
+                XPathExpressionException {
+            final Response response = target("root/foo").request(MediaTypes.WADL).options();
+            Assert.assertEquals(200, response.getStatus());
+        }
+
+        @Test
+        public void testPathTemplateInSubResourceMethod2() throws ParserConfigurationException, SAXException, IOException,
+                XPathExpressionException {
+            final Response response = target("root").request(MediaTypes.WADL).options();
+            Assert.assertEquals(200, response.getStatus());
+        }
     }
 
 
@@ -1219,4 +1256,6 @@ public class WadlResourceTest {
             }
         }
     }
+
+
 }

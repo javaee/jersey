@@ -154,7 +154,7 @@ final class IntrospectionModeller {
         final MethodList methodList = new MethodList(handlerClass);
 
         checkResourceClassSetters(methodList, keepEncodedParams);
-        checkResourceClassFields(keepEncodedParams, BasicValidator.isSingleton(handlerClass));
+        checkResourceClassFields(keepEncodedParams, InvocableValidator.isSingleton(handlerClass));
 
         Resource.Builder resourceBuilder;
 
@@ -214,8 +214,8 @@ final class IntrospectionModeller {
                     method.getGenericParameterTypes()[0],
                     method.getAnnotations());
             if (null != p) {
-                BasicValidator.validateParameter(p, method.getMethod(), method.getMethod().toGenericString(), "1",
-                        BasicValidator.isSingleton(handlerClass));
+                ResourceMethodValidator.validateParameter(p, method.getMethod(), method.getMethod().toGenericString(), "1",
+                        InvocableValidator.isSingleton(handlerClass));
             }
         }
     }
@@ -231,7 +231,7 @@ final class IntrospectionModeller {
                         field.getGenericType(),
                         field.getAnnotations());
                 if (null != p) {
-                    BasicValidator.validateParameter(p, field, field.toGenericString(), field.getName(),
+                    ResourceMethodValidator.validateParameter(p, field, field.toGenericString(), field.getName(),
                             isInSingleton);
                 }
             }
@@ -370,10 +370,12 @@ final class IntrospectionModeller {
             final List<MediaType> defaultProducedTypes,
             final Collection<Class<? extends Annotation>> defaultNameBindings
     ) {
+
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
+            Resource.Builder childResourceBuilder = resourceBuilder.addChildResource(am.getAnnotation(Path.class).value());
+
             ResourceMethod.Builder methodBuilder =
-                    resourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
-                            .path(am.getAnnotation(Path.class).value())
+                    childResourceBuilder.addMethod(am.getMetaMethodAnnotations(HttpMethod.class).get(0).value())
                             .consumes(resolveConsumedTypes(am, defaultConsumedTypes))
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
@@ -394,7 +396,13 @@ final class IntrospectionModeller {
             boolean encodedParameters) {
 
         for (AnnotatedMethod am : methodList.withoutMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
-            resourceBuilder.addMethod().path(am.getAnnotation(Path.class).value())
+            final String path = am.getAnnotation(Path.class).value();
+            Resource.Builder builder = resourceBuilder;
+            if (path != null && !path.isEmpty() && !path.equals("/")) {
+                builder = resourceBuilder.addChildResource(path);
+            }
+
+            builder.addMethod()
                     .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                     .handledBy(handlerClass, am.getMethod());
         }

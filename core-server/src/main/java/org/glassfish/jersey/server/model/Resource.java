@@ -47,8 +47,11 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.Errors;
 import org.glassfish.jersey.uri.PathPattern;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -86,8 +89,7 @@ import com.google.common.collect.Sets;
  *         .path("hello2");
  *
  * // Add a new (virtual) sub-resource method to the "hello2" resource.
- * resourceBuilder.addMethod("GET")
- *         .path("world")
+ * resourceBuilder.addChildResource("world").addMethod("GET")
  *         .produces("text/plain")
  *         .handledBy(new Inflector&lt;Request, String&gt;() {
  *                 &#64;Override
@@ -118,8 +120,10 @@ import com.google.common.collect.Sets;
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public final class Resource implements Routed, ResourceModelComponent {
+
 
     /**
      * Resource model component builder.
@@ -131,38 +135,54 @@ public final class Resource implements Routed, ResourceModelComponent {
         private boolean isRoot;
 
         private final Set<ResourceMethod.Builder> methodBuilders;
+        private final Set<Resource.Builder> childResourceBuilders;
+        private final List<Resource> childResources;
 
         private final List<ResourceMethod> resourceMethods;
-        private final List<ResourceMethod> subResourceMethods;
-        private final List<ResourceMethod> locators;
+        private ResourceMethod resourceLocator;
 
         private final Set<Class<?>> handlerClasses;
         private final Set<Object> handlerInstances;
 
-        private Builder() {
+
+        private final Resource.Builder parentResource;
+
+
+        private Builder(final Resource.Builder parentResource) {
             this.methodBuilders = Sets.newIdentityHashSet();
+            this.childResourceBuilders = Sets.newIdentityHashSet();
+            this.childResources = Lists.newLinkedList();
 
             this.resourceMethods = Lists.newLinkedList();
-            this.subResourceMethods = Lists.newLinkedList();
-            this.locators = Lists.newLinkedList();
 
             this.handlerClasses = Sets.newIdentityHashSet();
             this.handlerInstances = Sets.newIdentityHashSet();
 
+            this.parentResource = parentResource;
             name("[unnamed]");
         }
 
         private Builder(final String path) {
-            this();
+            this((Resource.Builder) null);
             path(path);
+        }
+
+        private Builder(final String path, final Resource.Builder parentResource) {
+            this(parentResource);
+            this.path = path;
+        }
+
+        private Builder() {
+            this((Resource.Builder) null);
         }
 
         private boolean isEmpty() {
             return !isRoot &&
                     methodBuilders.isEmpty() &&
+                    childResourceBuilders.isEmpty() &&
                     resourceMethods.isEmpty() &&
-                    subResourceMethods.isEmpty() &&
-                    locators.isEmpty();
+                    childResources.isEmpty() &&
+                    resourceLocator == null;
         }
 
         /**
@@ -231,6 +251,36 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         /**
+         * Add a new child resource to the resource.
+         * <p/>
+         * The returned builder is automatically bound to the the resource. It is
+         * not necessary to invoke the {@link Resource.Builder#build() build()}
+         * method on the resource builder after setting all the data. This will be
+         * done automatically when the resource is built.
+         *
+         * @param relativePath The path of the new child resource relative to this resource.
+         * @return
+         */
+        public Builder addChildResource(String relativePath) {
+            if (this.parentResource != null) {
+                throw new IllegalStateException(LocalizationMessages.RESOURCE_ADD_CHILD_ALREADY_CHILD());
+            }
+            final Builder resourceBuilder = new Builder(relativePath, this);
+
+            childResourceBuilders.add(resourceBuilder);
+            return resourceBuilder;
+        }
+
+
+        /**
+         * Add an existing Resource as a child resource of current resource.
+         * @param resource Resource to be added as child resource.
+         */
+        public void addChildResource(Resource resource) {
+            this.childResources.add(resource);
+        }
+
+        /**
          * Merge methods from a given resource model into this resource model builder.
          *
          * @param resource to be merged into this resource model builder.
@@ -238,8 +288,22 @@ public final class Resource implements Routed, ResourceModelComponent {
          */
         public Builder mergeWith(final Resource resource) {
             this.resourceMethods.addAll(resource.getResourceMethods());
-            this.subResourceMethods.addAll(resource.getSubResourceMethods());
-            this.locators.addAll(resource.getSubResourceLocators());
+            this.childResources.addAll(resource.childResources);
+
+            if (resourceLocator != null && resource.subResourceLocator != null) {
+                Errors.processWithException(new Errors.Closure<Object>() {
+                    @Override
+                    public Object invoke() {
+
+                        Errors.error(this, LocalizationMessages.RESOURCE_MERGE_CONFLICT_LOCATORS(Resource.Builder.this,
+                                resource, path), true);
+
+                        return null;
+                    }
+                });
+            } else if (resource.subResourceLocator != null) {
+                this.resourceLocator = resource.subResourceLocator;
+            }
 
             this.handlerClasses.addAll(resource.getHandlerClasses());
             this.handlerInstances.addAll(resource.getHandlerInstances());
@@ -262,18 +326,28 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param resourceBuilder to be merged into this resource model builder.
          * @return updated builder object.
          */
-        public Builder mergeWith(Builder resourceBuilder) {
+        public Builder mergeWith(final Builder resourceBuilder) {
             resourceBuilder.processMethodBuilders();
 
             this.resourceMethods.addAll(resourceBuilder.resourceMethods);
-            this.subResourceMethods.addAll(resourceBuilder.subResourceMethods);
-            this.locators.addAll(resourceBuilder.locators);
+            this.childResources.addAll(resourceBuilder.childResources);
+            if (Resource.Builder.this.resourceLocator != null && resourceBuilder.resourceLocator != null) {
+                Errors.processWithException(new Errors.Closure<Object>() {
+                    @Override
+                    public Object invoke() {
 
+                        Errors.warning(this, LocalizationMessages.RESOURCE_MERGE_CONFLICT_LOCATORS(Resource.Builder.this,
+                                resourceBuilder, path));
+
+                        return null;
+                    }
+                });
+            } else if (resourceBuilder.resourceLocator != null) {
+                this.resourceLocator = resourceBuilder.resourceLocator;
+            }
             this.handlerClasses.addAll(resourceBuilder.handlerClasses);
             this.handlerInstances.addAll(resourceBuilder.handlerInstances);
-
             this.names.addAll(resourceBuilder.names);
-
             return this;
         }
 
@@ -297,11 +371,20 @@ public final class Resource implements Routed, ResourceModelComponent {
                 case RESOURCE_METHOD:
                     resourceMethods.add(method);
                     break;
-                case SUB_RESOURCE_METHOD:
-                    subResourceMethods.add(method);
-                    break;
                 case SUB_RESOURCE_LOCATOR:
-                    locators.add(method);
+                    if (resourceLocator != null) {
+                        Errors.processWithException(new Errors.Closure<Void>() {
+                            @Override
+                            public Void invoke() {
+
+                                Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS(this, path), true);
+                                return null;
+                            }
+                        });
+
+
+                    }
+                    resourceLocator = method;
                     break;
             }
 
@@ -313,6 +396,43 @@ public final class Resource implements Routed, ResourceModelComponent {
             }
         }
 
+
+        private void onBuildChildResource(Builder childResourceBuilder, Resource childResource) {
+            Preconditions.checkState(childResourceBuilders.remove(childResourceBuilder),
+                    "Resource.Builder.onBuildChildResource() invoked from a resource builder " +
+                            "that is not registered in the resource builder instance as a child resource builder.");
+            childResources.add(childResource);
+
+        }
+
+        private List<Resource> mergeResources(List<Resource> resources) {
+            List<Resource> mergedResources = Lists.newArrayList();
+            for (int i = 0; i < resources.size(); i++) {
+                Resource outer = resources.get(i);
+                Resource.Builder builder = null;
+
+                for (int j = i + 1; j < resources.size(); j++) {
+                    Resource inner = resources.get(j);
+
+                    if (outer.getPath().equals(inner.getPath())) {
+                        if (builder == null) {
+                            builder = Resource.builder(outer);
+                        }
+                        builder.mergeWith(inner);
+                        resources.remove(j);
+                        j--;
+                    }
+                }
+                if (builder == null) {
+                    mergedResources.add(outer);
+                } else {
+                    mergedResources.add(builder.build());
+                }
+            }
+            return mergedResources;
+        }
+
+
         /**
          * Build a new resource model.
          *
@@ -320,16 +440,23 @@ public final class Resource implements Routed, ResourceModelComponent {
          */
         public Resource build() {
             processMethodBuilders();
+            processChildResourceBuilders();
 
-            return new Resource(
+            final Resource resource = new Resource(
                     immutableCopy(names),
                     path,
                     isRoot,
+                    parentResource != null,
                     immutableCopy(resourceMethods),
-                    immutableCopy(subResourceMethods),
-                    immutableCopy(locators),
+                    resourceLocator,
+                    mergeResources(childResources),
                     immutableCopy(handlerClasses),
                     immutableCopy(handlerInstances));
+            if (parentResource != null) {
+                parentResource.onBuildChildResource(this, resource);
+            }
+            return resource;
+
         }
 
         private static <T> List<T> immutableCopy(List<T> list) {
@@ -353,6 +480,15 @@ public final class Resource implements Routed, ResourceModelComponent {
                 methodBuilders.iterator().next().build();
             }
         }
+
+        private void processChildResourceBuilders() {
+            // We have to iterate the set this way to prevent ConcurrentModificationExceptions
+            // caused by the nested invocation of Set.remove(...) in Resource.Builder.onBuildChildResource(...).
+            while (!childResourceBuilders.isEmpty()) {
+                childResourceBuilders.iterator().next().build();
+            }
+        }
+
     }
 
     /**
@@ -369,6 +505,7 @@ public final class Resource implements Routed, ResourceModelComponent {
     public static Builder builder() {
         return new Builder();
     }
+
 
     /**
      * Get a new resource model builder for a resource bound to a given path.
@@ -512,8 +649,8 @@ public final class Resource implements Routed, ResourceModelComponent {
         final Builder b = new Builder(resource.path);
 
         b.resourceMethods.addAll(resource.resourceMethods);
-        b.subResourceMethods.addAll(resource.subResourceMethods);
-        b.locators.addAll(resource.subResourceLocators);
+        b.childResources.addAll(resource.getChildResources());
+        b.resourceLocator = resource.subResourceLocator;
 
         b.handlerClasses.addAll(resource.handlerClasses);
         b.handlerInstances.addAll(resource.handlerInstances);
@@ -527,9 +664,10 @@ public final class Resource implements Routed, ResourceModelComponent {
     private final PathPattern pathPattern;
     private final boolean isRoot;
 
+
     private final List<ResourceMethod> resourceMethods;
-    private final List<ResourceMethod> subResourceMethods;
-    private final List<ResourceMethod> subResourceLocators;
+    private final ResourceMethod subResourceLocator;
+    private final List<Resource> childResources;
 
     private final Set<Class<?>> handlerClasses;
     private final Set<Object> handlerInstances;
@@ -538,22 +676,22 @@ public final class Resource implements Routed, ResourceModelComponent {
             final List<String> names,
             final String path,
             final boolean isRoot,
+            final boolean isChild,
             final List<ResourceMethod> resourceMethods,
-            final List<ResourceMethod> subResourceMethods,
-            final List<ResourceMethod> subResourceLocators,
+            final ResourceMethod subResourceLocator,
+            final List<Resource> childResources,
             final Set<Class<?>> handlerClasses,
             final Set<Object> handlerInstances) {
 
         this.names = names;
         this.path = path;
-        this.isRoot = isRoot;
+        this.isRoot = !isChild && isRoot;
 
-        this.pathPattern = (!isRoot || path == null || path.isEmpty()) ?
+        this.pathPattern = (path == null || path.isEmpty()) ?
                 PathPattern.OPEN_ROOT_PATH_PATTERN : new PathPattern(path, PathPattern.RightHandPath.capturingZeroOrMoreSegments);
-
         this.resourceMethods = resourceMethods;
-        this.subResourceMethods = subResourceMethods;
-        this.subResourceLocators = subResourceLocators;
+        this.subResourceLocator = subResourceLocator;
+        this.childResources = childResources;
 
         this.handlerClasses = handlerClasses;
         this.handlerInstances = handlerInstances;
@@ -612,22 +750,36 @@ public final class Resource implements Routed, ResourceModelComponent {
         return resourceMethods;
     }
 
+
     /**
-     * Provides a non-null list of sub-resource methods available on the resource.
+     * Provides a resource locator available on the resource.
      *
-     * @return non-null abstract sub-resource method list.
+     * @return Resource locator if it is present, null otherwise.
      */
-    public List<ResourceMethod> getSubResourceMethods() {
-        return subResourceMethods;
+    public ResourceMethod getResourceLocator() {
+        return subResourceLocator;
     }
 
     /**
-     * Provides a non-null list of sub-resource locators available on the resource.
-     *
-     * @return non-null abstract sub-resource locator list.
+     * Provides resource methods and resource locator are available on the resource. The list is ordered so that resource
+     * methods are positioned first before resource locator.
+     * @return List of resource methods and resource locator.
      */
-    public List<ResourceMethod> getSubResourceLocators() {
-        return subResourceLocators;
+    public List<ResourceMethod> getAllMethods() {
+        final LinkedList<ResourceMethod> methodsAndLocators = Lists.newLinkedList(resourceMethods);
+        if (subResourceLocator != null) {
+            methodsAndLocators.add(subResourceLocator);
+        }
+        return methodsAndLocators;
+    }
+
+
+    /**
+     * Returns the list of child resources available on this resource.
+     * @return Non-null list of child resources (may be empty).
+     */
+    public List<Resource> getChildResources() {
+        return childResources;
     }
 
     /**
@@ -649,18 +801,39 @@ public final class Resource implements Routed, ResourceModelComponent {
         return handlerInstances;
     }
 
+    private static class ChildResourceComponent implements ResourceModelComponent {
+        private final Resource childResource;
+
+        private ChildResourceComponent(Resource childResource) {
+            this.childResource = childResource;
+        }
+
+        @Override
+        public void accept(ResourceModelVisitor visitor) {
+            visitor.visitChildResource(childResource);
+
+        }
+
+        @Override
+        public List<? extends ResourceModelComponent> getComponents() {
+            List<ResourceModelComponent> components = new LinkedList<ResourceModelComponent>();
+            addResourceCommonComponents(childResource, components);
+            return components;
+        }
+    }
+
     @Override
     public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceClass(this);
+        visitor.visitResource(this);
     }
 
     @Override
     public String toString() {
         return "Resource {"
                 + ((path == null) ? "[unbound], " : "\"" + path + "\", ")
+                + childResources.size() + " child resources,"
                 + resourceMethods.size() + " resource methods, "
-                + subResourceMethods.size() + " sub-resource methods, "
-                + subResourceLocators.size() + " sub-resource locators, "
+                + (subResourceLocator == null ? "0" : "1") + " sub-resource locators, "
                 + handlerClasses.size() + " method handler classes, "
                 + handlerInstances.size() + " method handler instances"
                 + '}';
@@ -668,12 +841,22 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
-        List<ResourceMethod> components = new LinkedList<ResourceMethod>();
+        List<ResourceModelComponent> components = new LinkedList<ResourceModelComponent>();
 
-        components.addAll(getResourceMethods());
-        components.addAll(getSubResourceMethods());
-        components.addAll(getSubResourceLocators());
-
+        components.addAll(Lists.transform(getChildResources(), new Function<Resource, ChildResourceComponent>() {
+            @Override
+            public ChildResourceComponent apply(Resource childResource) {
+                return new ChildResourceComponent(childResource);
+            }
+        }));
+        addResourceCommonComponents(this, components);
         return components;
+    }
+
+    private static void addResourceCommonComponents(Resource resource, List<ResourceModelComponent> components) {
+        components.addAll(resource.getResourceMethods());
+        if (resource.getResourceLocator() != null) {
+            components.add(resource.getResourceLocator());
+        }
     }
 }

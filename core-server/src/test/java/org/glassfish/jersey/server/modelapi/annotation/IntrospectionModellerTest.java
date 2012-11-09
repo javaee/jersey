@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server.modelapi.annotation;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -49,7 +48,6 @@ import javax.ws.rs.Produces;
 
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.server.model.ResourceModelIssue;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

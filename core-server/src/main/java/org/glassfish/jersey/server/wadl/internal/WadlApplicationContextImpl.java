@@ -70,7 +70,7 @@ import com.sun.research.ws.wadl.Resources;
  */
 public class WadlApplicationContextImpl implements WadlApplicationContext {
 
-    private static final Logger LOG = Logger.getLogger( WadlApplicationContextImpl.class.getName() );
+    private static final Logger LOG = Logger.getLogger(WadlApplicationContextImpl.class.getName());
 
     private boolean wadlGenerationEnabled = true;
 
@@ -103,19 +103,18 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     public ApplicationDescription getApplication(UriInfo uriInfo) {
         ApplicationDescription a = getWadlBuilder().generate(rootResources);
         final Application application = a.getApplication();
-        for(Resources resources : application.getResources()) {
+        for (Resources resources : application.getResources()) {
             if (resources.getBase() == null) {
                 resources.setBase(uriInfo.getBaseUri().toString());
             }
         }
-        attachExternalGrammar(application,a, uriInfo.getRequestUri());
+        attachExternalGrammar(application, a, uriInfo.getRequestUri());
         return a;
     }
 
     @Override
     public Application getApplication(UriInfo info,
-                                      org.glassfish.jersey.server.model.Resource resource,
-                                      String path) {
+                                      org.glassfish.jersey.server.model.Resource resource) {
 
         // Get the root application description
         //
@@ -123,10 +122,9 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         ApplicationDescription description = getApplication(info);
 
         WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator();
-        Application a = path == null ? new WadlBuilder( wadlGenerator ).generate(description,resource) :
-                new WadlBuilder( wadlGenerator ).generate(description, resource, path);
+        Application a = new WadlBuilder(wadlGenerator).generate(description, resource);
 
-        for(Resources resources : a.getResources())
+        for (Resources resources : a.getResources())
             resources.setBase(info.getBaseUri().toString());
 
         // Attach any grammar we may have
@@ -134,7 +132,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         attachExternalGrammar(a, description,
                 info.getRequestUri());
 
-        for(Resources resources : a.getResources()) {
+        for (Resources resources : a.getResources()) {
             final Resource r = resources.getResource().get(0);
             r.setPath(info.getBaseUri().relativize(info.getAbsolutePath()).toString());
 
@@ -181,53 +179,52 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         if (requestURIPath.endsWith("application.wadl")) {
             requestURI = UriBuilder.fromUri(requestURI)
                     .replacePath(
-                       requestURIPath
-                        .substring(0, requestURIPath.lastIndexOf('/')+1))
+                            requestURIPath
+                                    .substring(0, requestURIPath.lastIndexOf('/') + 1))
                     .build();
         }
 
 
         String root = application.getResources().get(0).getBase();
-        UriBuilder extendedPath = root!=null ?
+        UriBuilder extendedPath = root != null ?
                 UriBuilder.fromPath(root).path("/application.wadl/")
                 : UriBuilder.fromPath("./application.wadl/");
-        URI rootURI = root!=null ? UriBuilder.fromPath(root).build() : null;
+        URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
 
 
         // Add a reference to this grammar
         //
 
         Grammars grammars;
-        if ( application.getGrammars() != null ) {
-            LOG.info( "The wadl application already contains a grammars element," +
-                      " we're adding elements of the provided grammars file." );
+        if (application.getGrammars() != null) {
+            LOG.info("The wadl application already contains a grammars element," +
+                    " we're adding elements of the provided grammars file.");
             grammars = application.getGrammars();
         } else {
             grammars = new Grammars();
-            application.setGrammars( grammars );
+            application.setGrammars(grammars);
         }
 
         // Create a reference back to the root WADL
         //
 
-        for (String path : applicationDescription.getExternalMetadataKeys())
-        {
+        for (String path : applicationDescription.getExternalMetadataKeys()) {
             URI schemaURI =
-                extendedPath.clone().path( path ).build();
+                    extendedPath.clone().path(path).build();
 
             String schemaURIS = schemaURI.toString();
             String requestURIs = requestURI.toString();
 
-            String schemaPath = rootURI!=null ?
+            String schemaPath = rootURI != null ?
                     requestURI.relativize(schemaURI).toString()
                     : schemaURI.toString();
 
             Include include = new Include();
-            include.setHref( schemaPath );
+            include.setHref(schemaPath);
             Doc doc = new Doc();
-            doc.setLang( "en" );
-            doc.setTitle( "Generated" );
-            include.getDoc().add( doc );
+            doc.setLang("en");
+            doc.setTitle("Generated");
+            include.getDoc().add(doc);
 
             // Finally add to list
             grammars.getInclude().add(include);

@@ -189,11 +189,7 @@ public final class RuntimeModelBuilder {
             final PathPattern closedResourcePathPattern =
                     (subResourceMode) ? PathPattern.END_OF_PATH_PATTERN : PathPattern.asClosed(resource.getPathPattern());
 
-            List<MethodAcceptorPair> sameResourcePathList = rootAcceptors.get(closedResourcePathPattern);
-            if (sameResourcePathList == null) {
-                sameResourcePathList = Lists.newLinkedList();
-                rootAcceptors.put(closedResourcePathPattern, sameResourcePathList);
-            }
+            List<MethodAcceptorPair> sameResourcePathList = getAcceptorList(rootAcceptors, closedResourcePathPattern);
 
             sameResourcePathList.addAll(Lists.transform(resource.getResourceMethods(),
                     new Function<ResourceMethod, MethodAcceptorPair>() {
@@ -205,41 +201,59 @@ public final class RuntimeModelBuilder {
                     }));
         }
 
+        final ResourceMethod resourceLocator = resource.getResourceLocator();
+        if (resourceLocator != null) {
+            TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resource
+                    .getPathPattern());
+
+            List<MethodAcceptorPair> locatorList = getAcceptorList(sameResourcePathMap, PathPattern.OPEN_ROOT_PATH_PATTERN);
+
+            locatorList.add(
+                    new MethodAcceptorPair(resourceLocator, resource, createSingleMethodAcceptor(resourceLocator,
+                            subResourceMode)));
+        }
+
         // prepare & add sub-resource method and locator acceptors.
-        if (resource.getSubResourceMethods().size() + resource.getSubResourceLocators().size() > 0) {
-            final PathPattern openResourcePathPattern =
+        if (resource.getChildResources().size() > 0) {
+            final PathPattern resourcePath =
                     (subResourceMode) ? PathPattern.OPEN_ROOT_PATH_PATTERN : resource.getPathPattern();
 
-            TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap =
-                    subResourceAcceptors.get(openResourcePathPattern);
-            if (sameResourcePathMap == null) {
-                sameResourcePathMap = Maps.newTreeMap(PathPattern.COMPARATOR);
-                subResourceAcceptors.put(openResourcePathPattern, sameResourcePathMap);
-            }
+            TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resourcePath);
+            for (Resource child : resource.getChildResources()) {
+                PathPattern childRelativePath = new PathPattern(child.getPath());
 
-            for (ResourceMethod methodModel : resource.getSubResourceMethods()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel, resource, subResourceMode);
-            }
-            for (ResourceMethod methodModel : resource.getSubResourceLocators()) {
-                updateSubResourceMethodMap(sameResourcePathMap, methodModel, resource, subResourceMode);
+                List<MethodAcceptorPair> samePathMethodAcceptorPairs = getAcceptorList(sameResourcePathMap,
+                        childRelativePath);
+
+                for (ResourceMethod resourceMethod : child.getAllMethods()) {
+                    samePathMethodAcceptorPairs.add(
+                            new MethodAcceptorPair(resourceMethod, resource, createSingleMethodAcceptor(resourceMethod,
+                                    subResourceMode)));
+                }
+
             }
         }
     }
 
-    private void updateSubResourceMethodMap(
-            final TreeMap<PathPattern, List<MethodAcceptorPair>> subResourceMethodMap, final ResourceMethod methodModel,
-            final Resource resource, boolean subResourceMode) {
+    private TreeMap<PathPattern, List<MethodAcceptorPair>> getPatternAcceptorListMap(PathPattern pathPattern) {
+        TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = subResourceAcceptors.get(pathPattern);
+        if (sameResourcePathMap == null) {
+            sameResourcePathMap = Maps.newTreeMap(PathPattern.COMPARATOR);
+            subResourceAcceptors.put(pathPattern, sameResourcePathMap);
+        }
+        return sameResourcePathMap;
+    }
 
-        PathPattern openMethodPattern = new PathPattern(methodModel.getPath());
-
-        List<MethodAcceptorPair> samePathMethodAcceptorPairs = subResourceMethodMap.get(openMethodPattern);
+    private List<MethodAcceptorPair> getAcceptorList(TreeMap<PathPattern, List<MethodAcceptorPair>>
+                                                             sameResourcePathMap, PathPattern childRelativePath) {
+        List<MethodAcceptorPair> samePathMethodAcceptorPairs = sameResourcePathMap.get(childRelativePath);
         if (samePathMethodAcceptorPairs == null) {
             samePathMethodAcceptorPairs = Lists.newLinkedList();
-            subResourceMethodMap.put(openMethodPattern, samePathMethodAcceptorPairs);
+            sameResourcePathMap.put(childRelativePath, samePathMethodAcceptorPairs);
         }
-        samePathMethodAcceptorPairs.add(
-                new MethodAcceptorPair(methodModel, resource, createSingleMethodAcceptor(methodModel, subResourceMode)));
+        return samePathMethodAcceptorPairs;
     }
+
 
     private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod, final boolean subResourceMode) {
         Router methodAcceptor = null;
@@ -355,31 +369,33 @@ public final class RuntimeModelBuilder {
 
                     // there can be multiple sub-resource methods on the same path
                     // but only a single sub-resource locator.
-                    List<MethodAcceptorPair> subResourceMethods = Lists.newLinkedList();
-                    MethodAcceptorPair locator = null;
+                    List<MethodAcceptorPair> resourceMethods = Lists.newLinkedList();
+                    MethodAcceptorPair resourceLocator = null;
 
                     for (MethodAcceptorPair methodAcceptorPair : singlePathEntry.getValue()) {
-                        if (methodAcceptorPair.model.getType() == ResourceMethod.JaxrsType.SUB_RESOURCE_METHOD) {
-                            subResourceMethods.add(methodAcceptorPair);
+                        if (methodAcceptorPair.model.getType() == ResourceMethod.JaxrsType.RESOURCE_METHOD) {
+                            resourceMethods.add(methodAcceptorPair);
                         } else {
-                            locator = methodAcceptorPair;
+                            resourceLocator = methodAcceptorPair;
                         }
                     }
-                    if (!subResourceMethods.isEmpty()) {
+                    if (!resourceMethods.isEmpty()) {
                         final PathPattern subResourceMethodPath = PathPattern.asClosed(singlePathEntry.getKey());
                         srRoutedBuilder = routedBuilder(srRoutedBuilder).route(subResourceMethodPath)
                                 .to(uriPushingRouter)
-                                .to(methodSelectingAcceptorBuilder.build(workers, subResourceMethods));
+                                .to(methodSelectingAcceptorBuilder.build(workers, resourceMethods));
                     }
-                    if (locator != null) {
+
+                    if (resourceLocator != null) {
                         srRoutedBuilder = routedBuilder(srRoutedBuilder).route(singlePathEntry.getKey())
                                 .to(uriPushingRouter)
-                                .to(locator.router);
+                                .to(resourceLocator.router);
                     }
                 }
                 assert srRoutedBuilder != null;
                 lastRoutedBuilder = routeMethodAcceptor(
-                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build(), subResourceMode);
+                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build(),
+                        subResourceMode);
             }
             subResourceAcceptors.clear();
         }
@@ -396,8 +412,8 @@ public final class RuntimeModelBuilder {
      * @param readerInterceptors global reader interceptors.
      * @param writerInterceptors global writer interceptors.
      */
-    public void setGlobalInterceptors (Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors,
-                                       Iterable<RankedProvider<WriterInterceptor>> writerInterceptors) {
+    public void setGlobalInterceptors(Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors,
+                                      Iterable<RankedProvider<WriterInterceptor>> writerInterceptors) {
         this.globalReaderInterceptors = readerInterceptors;
         this.globalWriterInterceptors = writerInterceptors;
     }
