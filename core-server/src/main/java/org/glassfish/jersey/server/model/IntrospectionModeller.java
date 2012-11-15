@@ -68,6 +68,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.Errors;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -80,28 +81,14 @@ final class IntrospectionModeller {
 
     // introspected annotated JAX-RS resource class
     private final Class<?> handlerClass;
-    private final List<ResourceModelIssue> issueList;
 
     /**
      * Create a new introspection modeller for a given JAX-RS resource class.
      *
      * @param handlerClass JAX-RS resource (handler) class.
-     * @param issueList    a mutable list of resource model issues that will be updated
-     *                     with any introspection validation issues found on the resource
-     *                     handler class during the {@link Resource.Builder resource builder}
-     *                     initialization.
      */
-    public IntrospectionModeller(Class<?> handlerClass, List<ResourceModelIssue> issueList) {
+    public IntrospectionModeller(Class<?> handlerClass) {
         this.handlerClass = handlerClass;
-        this.issueList = issueList;
-    }
-
-    private void addFatalIssue(Object source, String message) {
-        issueList.add(new ResourceModelIssue(source, message, true));
-    }
-
-    private void addMinorIssue(Object source, String message) {
-        issueList.add(new ResourceModelIssue(source, message, false));
     }
 
     /**
@@ -114,9 +101,18 @@ final class IntrospectionModeller {
      *                            resource class is skipped.
      * @return new resource model builder for the introspected class.
      */
-    public Resource.Builder createResourceBuilder(boolean skipAcceptableCheck) {
+    public Resource.Builder createResourceBuilder(final boolean skipAcceptableCheck) {
+        return Errors.processWithException(new Errors.Closure<Resource.Builder>() {
+            @Override
+            public Resource.Builder invoke() {
+                return doCreateResourceBuilder(skipAcceptableCheck);
+            }
+        });
+    }
+
+    private Resource.Builder doCreateResourceBuilder(final boolean skipAcceptableCheck) {
         if (!skipAcceptableCheck && !Resource.isAcceptable(handlerClass)) {
-            addFatalIssue(handlerClass, LocalizationMessages.NON_INSTANTIABLE_CLASS(handlerClass));
+            Errors.fatal(handlerClass, LocalizationMessages.NON_INSTANTIABLE_CLASS(handlerClass));
         }
 
         checkForNonPublicMethodIssues();
@@ -169,17 +165,17 @@ final class IntrospectionModeller {
         // non-public resource methods
         for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class).
                 withoutAnnotation(Path.class).isNotPublic()) {
-            addMinorIssue(handlerClass, LocalizationMessages.NON_PUB_RES_METHOD(m.getMethod().toGenericString()));
+            Errors.warning(handlerClass, LocalizationMessages.NON_PUB_RES_METHOD(m.getMethod().toGenericString()));
         }
         // non-public subres methods
         for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class).
                 withAnnotation(Path.class).isNotPublic()) {
-            addMinorIssue(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_METHOD(m.getMethod().toGenericString()));
+            Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_METHOD(m.getMethod().toGenericString()));
         }
         // non-public subres locators
         for (AnnotatedMethod m : allDeclaredMethods.withoutMetaAnnotation(HttpMethod.class).
                 withAnnotation(Path.class).isNotPublic()) {
-            addMinorIssue(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_LOC(m.getMethod().toGenericString()));
+            Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_LOC(m.getMethod().toGenericString()));
         }
     }
 
@@ -197,7 +193,7 @@ final class IntrospectionModeller {
                     method.getGenericParameterTypes()[0],
                     method.getAnnotations());
             if (null != p) {
-                BasicValidator.validateParameter(issueList, p, method.getMethod(), method.getMethod().toGenericString(), "1",
+                BasicValidator.validateParameter(p, method.getMethod(), method.getMethod().toGenericString(), "1",
                         BasicValidator.isSingleton(handlerClass));
             }
         }
@@ -214,7 +210,7 @@ final class IntrospectionModeller {
                         field.getGenericType(),
                         field.getAnnotations());
                 if (null != p) {
-                    BasicValidator.validateParameter(issueList, p, field, field.toGenericString(), field.getName(),
+                    BasicValidator.validateParameter(p, field, field.toGenericString(), field.getName(),
                             isInSingleton);
                 }
             }

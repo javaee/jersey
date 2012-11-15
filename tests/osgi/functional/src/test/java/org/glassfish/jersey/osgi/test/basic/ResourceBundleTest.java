@@ -54,16 +54,16 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.osgi.test.util.Helper;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.spi.Errors;
 import org.glassfish.jersey.test.TestProperties;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
 /**
  * Ensures server localization resource bundle gets loaded fine in OSGi runtime.
@@ -116,7 +116,7 @@ public class ResourceBundleTest {
         while (loggerNames.hasMoreElements()) {
             String name = loggerNames.nextElement();
             if (name.startsWith("org.glassfish")) {
-                LogManager.getLogManager().getLogger(ApplicationHandler.class.getName()).addHandler(logHandler);
+                LogManager.getLogManager().getLogger(Errors.class.getName()).addHandler(logHandler);
             }
         }
         GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);

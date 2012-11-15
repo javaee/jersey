@@ -392,16 +392,14 @@ public final class Resource implements Routed, ResourceModelComponent {
      * on the resource class prior to the resource model creation.
      *
      * @param resourceClass resource class to be modelled.
-     * @param issueList     mutable list of issues that will be updated with the
-     *                      introspection-specific issues found in the model.
      * @return resource model builder initialized by the class or {@code null} if the
      *         class does not represent a resource.
      * @throws IllegalArgumentException in case the class is not
      *                                  {@link #isAcceptable(java.lang.Class) acceptable}
      *                                  as a JAX-RS resource.
      */
-    public static Builder builder(Class<?> resourceClass, List<ResourceModelIssue> issueList) throws IllegalArgumentException {
-        final Builder builder = new IntrospectionModeller(resourceClass, issueList).createResourceBuilder(false);
+    public static Builder builder(Class<?> resourceClass) throws IllegalArgumentException {
+        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder(false);
         return builder.isEmpty() ? null : builder;
     }
 
@@ -409,19 +407,17 @@ public final class Resource implements Routed, ResourceModelComponent {
      * Create a resource model builder initialized by introspecting an annotated
      * JAX-RS resource instance.
      * <p/>
-     * Unlike {@link #builder(Class, java.util.List)}, this method does not perform
+     * Unlike {@link #builder(Class)}, this method does not perform
      * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
      * assumed that the instance of the resource has already been created and is
      * acceptable.
      *
      * @param resource  resource instance to be modelled.
-     * @param issueList mutable list of issues that will be updated with the
-     *                  introspection-specific issues found in the model.
      * @return resource model builder initialized by instance or {@code null} if the
      *         instance does not represent a resource.
      */
-    public static Builder builder(Object resource, List<ResourceModelIssue> issueList) {
-        final Builder builder = new IntrospectionModeller(resource.getClass(), issueList).createResourceBuilder(true);
+    public static Builder builder(Object resource) {
+        final Builder builder = new IntrospectionModeller(resource.getClass()).createResourceBuilder(true);
         return builder.isEmpty() ? null : builder;
     }
 
@@ -433,16 +429,14 @@ public final class Resource implements Routed, ResourceModelComponent {
      * on the resource class prior to the resource model creation.
      *
      * @param resourceClass resource class to be modelled.
-     * @param issueList     mutable list of issues that will be updated with the
-     *                      introspection-specific issues found in the model.
      * @return resource model initialized by the class or {@code null} if the
      *         class does not represent a resource.
      * @throws IllegalArgumentException in case the class is not
      *                                  {@link #isAcceptable(java.lang.Class) acceptable}
      *                                  as a JAX-RS resource.
      */
-    public static Resource from(Class<?> resourceClass, List<ResourceModelIssue> issueList) throws IllegalArgumentException {
-        final Builder builder = new IntrospectionModeller(resourceClass, issueList).createResourceBuilder(false);
+    public static Resource from(Class<?> resourceClass) throws IllegalArgumentException {
+        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder(false);
         return builder.isEmpty() ? null : builder.build();
     }
 
@@ -450,19 +444,17 @@ public final class Resource implements Routed, ResourceModelComponent {
      * Create a resource model initialized by introspecting an annotated
      * JAX-RS resource instance.
      * <p/>
-     * Unlike {@link #builder(Class, java.util.List)}, this method does not perform
+     * Unlike {@link #builder(Class)}, this method does not perform
      * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
      * assumed that the instance of the resource has already been created and is
      * acceptable.
      *
      * @param resource  resource instance to be modelled.
-     * @param issueList mutable list of issues that will be updated with the
-     *                  introspection-specific issues found in the model.
      * @return resource model initialized by instance or {@code null} if the
      *         instance does not represent a resource.
      */
-    public static Resource from(Object resource, List<ResourceModelIssue> issueList) {
-        final Builder builder = new IntrospectionModeller(resource.getClass(), issueList).createResourceBuilder(true);
+    public static Resource from(Object resource) {
+        final Builder builder = new IntrospectionModeller(resource.getClass()).createResourceBuilder(true);
         return builder.isEmpty() ? null : builder.build();
     }
 

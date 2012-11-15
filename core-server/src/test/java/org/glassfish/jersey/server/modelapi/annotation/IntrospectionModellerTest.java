@@ -64,7 +64,7 @@ public class IntrospectionModellerTest {
     @Path("/helloworld")
     @Produces(" a/b, c/d ")
     @Consumes({"e/f,g/h", " i/j"})
-    public class HelloWorldResource {
+    public static class HelloWorldResource {
 
         @POST
         @Consumes(" a/b, c/d ")
@@ -89,7 +89,7 @@ public class IntrospectionModellerTest {
     @Test
     public void testCreateResource() {
         Class<?> resourceClass = HelloWorldResource.class;
-        Resource result = Resource.builder(resourceClass, new LinkedList<ResourceModelIssue>()).build();
+        Resource result = Resource.builder(resourceClass).build();
         final List<ResourceMethod> resourceMethods = result.getResourceMethods();
         assertEquals("Unexpected number of resource methods in the resource model.", 2, resourceMethods.size());
 

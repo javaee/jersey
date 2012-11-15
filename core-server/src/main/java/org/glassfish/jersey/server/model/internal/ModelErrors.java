@@ -37,22 +37,44 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.portability;
+package org.glassfish.jersey.server.model.internal;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
+import java.util.List;
+
+import org.glassfish.jersey.server.model.ResourceModelIssue;
+import org.glassfish.jersey.spi.Errors;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * Utility to transform {@link Errors.ErrorMessage error messages} to {@link ResourceModelIssue}s.
+ *
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class Jersey2Application extends ResourceConfig {
+public class ModelErrors {
 
-    public Jersey2Application() {
-        // do the package scanning
-        packages("org.glassfish.jersey.tests.integration.portability");
-
-        // explicitly add unannotated Jersey 2 specific resource
-        Resource.Builder rb = Resource.builder(Jersey2Resource.class);
-        addResources(rb.path("jersey").build());
+    /**
+     * Get all filed error messages as {@link ResourceModelIssue}s.
+     *
+     * @return non-null list of resource model issues.
+     */
+    public static List<ResourceModelIssue> getErrorsAsResourceModelIssues() {
+        return getErrorsAsResourceModelIssues(false);
     }
+
+    /**
+     * Get error messages filed after {@link Errors#mark()} flag was set as {@link ResourceModelIssue}s.
+     *
+     * @return non-null list of resource model issues.
+     */
+    public static List<ResourceModelIssue> getErrorsAsResourceModelIssues(final boolean afterMark) {
+        return Lists.transform(Errors.getErrorMessages(afterMark), new Function<Errors.ErrorMessage, ResourceModelIssue>() {
+            @Override
+            public ResourceModelIssue apply(final Errors.ErrorMessage input) {
+                return new ResourceModelIssue(input.getSource(), input.getMessage(), input.isFatal());
+            }
+        });
+    }
+
 }

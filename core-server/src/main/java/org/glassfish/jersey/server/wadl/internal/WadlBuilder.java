@@ -402,7 +402,7 @@ public class WadlBuilder {
         for (ResourceMethod locator : r.getSubResourceLocators()) {
 
             org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
-                    .builder(locator.getInvocable().getRawResponseType(), null);
+                    .builder(locator.getInvocable().getRawResponseType());
             if (builder == null) {
                 // for example in the case the return type of the sub resource locator is Object
                 builder = org.glassfish.jersey.server.model.Resource.builder().path(locator.getPath());

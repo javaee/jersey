@@ -98,7 +98,7 @@ public class WadlGeneratorResourceDocSupportTest {
         WadlGenerator wg = new WadlGeneratorResourceDocSupport(new WadlGeneratorImpl(), rdt);
 
         WadlBuilder wb = new WadlBuilder(wg);
-        Resource resource = Resource.from(TestResource.class, null);
+        Resource resource = Resource.from(TestResource.class);
         ApplicationDescription app = wb.generate(Lists.newArrayList(resource));
 
 

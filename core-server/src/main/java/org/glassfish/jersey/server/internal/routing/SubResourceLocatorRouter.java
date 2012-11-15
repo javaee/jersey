@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.routing;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -55,7 +54,6 @@ import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
 import org.glassfish.hk2.api.Factory;
@@ -114,7 +112,7 @@ class SubResourceLocatorRouter implements Router {
 
         final Resource subResourceModel;
         // TODO: what to do with the issues?
-        subResourceModel = Resource.builder(subResource, new LinkedList<ResourceModelIssue>()).build();
+        subResourceModel = Resource.builder(subResource).build();
 
         final RuntimeModelBuilder runtimeModelBuilder = runtimeModelBuilderOriginal.copy();
         runtimeModelBuilder.process(subResourceModel, true);

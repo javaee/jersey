@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -96,13 +95,14 @@ import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.BasicValidator;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceModelIssue;
 import org.glassfish.jersey.server.model.ResourceModelValidator;
+import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
+import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
@@ -216,7 +216,14 @@ public final class ApplicationHandler {
         this.application = new Application();
         this.resourceConfig = new ResourceConfig.RuntimeResourceConfig();
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
-        initialize();
+
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                initialize();
+                return null;
+            }
+        });
     }
 
     /**
@@ -231,7 +238,14 @@ public final class ApplicationHandler {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         this.application = createApplication(jaxrsApplicationClass);
         this.resourceConfig = createResourceConfig(application);
-        initialize();
+
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                initialize();
+                return null;
+            }
+        });
     }
 
     /**
@@ -245,7 +259,14 @@ public final class ApplicationHandler {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         this.application = application;
         this.resourceConfig = createResourceConfig(application);
-        initialize();
+
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                initialize();
+                return null;
+            }
+        });
     }
 
     private ResourceConfig.RuntimeResourceConfig createResourceConfig(Application application) {
@@ -280,7 +301,6 @@ public final class ApplicationHandler {
 
         // Introspecting classes & instances
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
-        final List<ResourceModelIssue> resourceModelIssues = new LinkedList<ResourceModelIssue>();
         final Set<Class<?>> classes = new HashSet<Class<?>>(resourceConfig.getClasses());
 
         boolean wadlDisabled = resourceConfig.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
@@ -295,7 +315,7 @@ public final class ApplicationHandler {
             }
 
             try {
-                Resource resource = Resource.from(c, resourceModelIssues);
+                Resource resource = Resource.from(c);
                 if (resource != null) {
                     resourceBagBuilder.registerResource(c, resource, resourceConfig.getProviderBag().getContractProvider(c));
                 } else {
@@ -313,7 +333,7 @@ public final class ApplicationHandler {
             }
 
             try {
-                Resource resource = Resource.from(o, resourceModelIssues);
+                Resource resource = Resource.from(o);
                 if (resource != null) {
                     resourceBagBuilder.registerResource(o, resource, resourceConfig.getProviderBag().getContractProvider(o.getClass()));
                 } else {
@@ -377,7 +397,7 @@ public final class ApplicationHandler {
         final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
 
         // validate the models
-        validate(resourceBag.models, resourceModelIssues);
+        validate(resourceBag.models);
 
         // create a router
         DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
@@ -392,7 +412,6 @@ public final class ApplicationHandler {
         for (Resource resource : resourceBag.models) {
             runtimeModelBuilder.process(resource, false);
         }
-
 
         // assembly request processing chain
         /**
@@ -589,48 +608,15 @@ public final class ApplicationHandler {
         dc.commit();
     }
 
-    private void validate(List<Resource> resources, List<ResourceModelIssue> modelIssues) {
-        ResourceModelValidator validator = new BasicValidator(modelIssues, locator);
+    private void validate(List<Resource> resources) {
+        final ResourceModelValidator validator = new BasicValidator(locator);
 
         for (Resource r : resources) {
             validator.validate(r);
         }
-
-        processIssues(validator);
-    }
-
-    private void processIssues(ResourceModelValidator validator) {
-
-        final List<ResourceModelIssue> issueList = validator.getIssueList();
-        if (!issueList.isEmpty()) {
-            final String allIssueMessages = allIssueLogMessages(validator.getIssueList());
-            if (validator.fatalIssuesFound()) {
-                LOGGER.severe(
-                        LocalizationMessages.ERRORS_AND_WARNINGS_DETECTED_WITH_RESOURCE_CLASSES(allIssueMessages));
-            } else {
-                LOGGER.warning(
-                        LocalizationMessages.WARNINGS_DETECTED_WITH_RESOURCE_CLASSES(allIssueMessages));
-            }
+        if (Errors.fatalIssuesFound()) {
+            throw new ModelValidationException(ModelErrors.getErrorsAsResourceModelIssues());
         }
-
-        if (validator.fatalIssuesFound()) {
-            throw new ModelValidationException(issueList);
-        }
-    }
-
-    private String allIssueLogMessages(final List<ResourceModelIssue> issueList) {
-        StringBuilder errors = new StringBuilder("\n");
-        StringBuilder warnings = new StringBuilder();
-
-        for (ResourceModelIssue issue : issueList) {
-            if (issue.isFatal()) {
-                errors.append(LocalizationMessages.ERROR_MSG(issue.getMessage())).append('\n');
-            } else {
-                warnings.append(LocalizationMessages.WARNING_MSG(issue.getMessage())).append('\n');
-            }
-        }
-
-        return errors.append(warnings).toString();
     }
 
     /**
