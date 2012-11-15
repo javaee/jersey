@@ -76,7 +76,6 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
-import org.glassfish.jersey.uri.PathPattern;
 
 import org.jvnet.hk2.annotations.Optional;
 

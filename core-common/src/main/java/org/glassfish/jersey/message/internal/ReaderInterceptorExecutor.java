@@ -49,10 +49,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
@@ -177,7 +177,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
     /**
      * Terminal reader interceptor which choose the appropriate {@link MessageBodyReader}
      * and reads the entity from the input stream. The order of actions is the following: <br>
-     * 1. choose the appropriate {@link MessageBodyWriter} <br>
+     * 1. choose the appropriate {@link MessageBodyReader} <br>
      * 3. reads the entity from the output stream <br>
      */
     private static class TerminalReaderInterceptor implements ReaderInterceptor {
@@ -194,13 +194,19 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
             final MessageBodyReader bodyReader = workers.getMessageBodyReader(context.getType(), context.getGenericType(),
                     context.getAnnotations(), context.getMediaType());
 
+            final EntityInputStream input = new EntityInputStream(context.getInputStream());
+
             if (bodyReader == null) {
-                throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
+                if (input.isEmpty() && !context.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE)) {
+                    return null;
+                } else {
+                    throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
                         context.getMediaType(), context.getType(), context.getGenericType()));
+                }
             }
 
             Object entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                    context.getMediaType(), context.getHeaders(), context.getInputStream());
+                    context.getMediaType(), context.getHeaders(), input);
 
             if (bodyReader instanceof CompletableReader) {
                 entity = ((CompletableReader) bodyReader).complete(entity);

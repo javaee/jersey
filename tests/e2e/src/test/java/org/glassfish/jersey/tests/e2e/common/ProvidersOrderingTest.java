@@ -67,10 +67,14 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import com.google.common.collect.Lists;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
