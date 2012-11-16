@@ -52,6 +52,11 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
+import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.spi.Errors;
+
+import com.google.common.collect.Lists;
+
 /**
  * An abstract resource model validator.
  *
@@ -69,11 +74,7 @@ import java.util.List;
  */
 public abstract class ResourceModelValidator implements ResourceModelVisitor {
 
-    private final List<ResourceModelIssue> issueList;
-
-    public ResourceModelValidator(final List<ResourceModelIssue> issueList) {
-        this.issueList = issueList;
-    }
+    private final List<ResourceModelIssue> issueList = Lists.newLinkedList();
 
     /**
      * Returns a list of issues found after
@@ -84,14 +85,6 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
      */
     public List<ResourceModelIssue> getIssueList() {
         return issueList;
-    }
-
-    protected final void addFatalIssue(Object source, String message) {
-        issueList.add(new ResourceModelIssue(source, message, true));
-    }
-
-    protected final void addMinorIssue(Object source, String message) {
-        issueList.add(new ResourceModelIssue(source, message, false));
     }
 
     /**
@@ -125,11 +118,27 @@ public abstract class ResourceModelValidator implements ResourceModelVisitor {
      * @param component resource model component.
      */
     public void validate(final ResourceModelComponent component) {
-        component.accept(this);
-        List<? extends ResourceModelComponent> componentList = component.getComponents();
+        Errors.process(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                Errors.mark();
+
+                validateWithErrors(component);
+                issueList.addAll(ModelErrors.getErrorsAsResourceModelIssues(true));
+
+                Errors.unmark();
+                return null;
+            }
+        });
+    }
+
+    private void validateWithErrors(final ResourceModelComponent component) {
+        component.accept(ResourceModelValidator.this);
+
+        final List<? extends ResourceModelComponent> componentList = component.getComponents();
         if (null != componentList) {
             for (ResourceModelComponent subComponent : componentList) {
-                validate(subComponent);
+                validateWithErrors(subComponent);
             }
         }
     }

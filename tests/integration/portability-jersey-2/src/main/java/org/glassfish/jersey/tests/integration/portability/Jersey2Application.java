@@ -39,26 +39,20 @@
  */
 package org.glassfish.jersey.tests.integration.portability;
 
-import java.util.ArrayList;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceModelIssue;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class Jersey2Application extends ResourceConfig {
+
     public Jersey2Application() {
         // do the package scanning
         packages("org.glassfish.jersey.tests.integration.portability");
 
         // explicitly add unannotated Jersey 2 specific resource
-        ArrayList<ResourceModelIssue> issues = new ArrayList<ResourceModelIssue>();
-        Resource.Builder rb = Resource.builder(Jersey2Resource.class, issues);
-        if (!issues.isEmpty()) {
-            throw new RuntimeException("Jersey2Resource class introspection issues found: " + issues);
-        }
+        Resource.Builder rb = Resource.builder(Jersey2Resource.class);
         addResources(rb.path("jersey").build());
     }
 }

@@ -84,8 +84,7 @@ public class ResourcePathOverrideTest {
     public void testOverride() throws Exception {
         ResourceConfig resourceConfig = new ResourceConfig(HelloResource.class);
 
-        Resource.Builder resourceBuilder = Resource.builder(HelloResource.class, new LinkedList<ResourceModelIssue>())
-                .path("hello2");
+        Resource.Builder resourceBuilder = Resource.builder(HelloResource.class).path("hello2");
         resourceBuilder.addMethod("GET").path("world").produces("text/plain").handledBy(new Inflector<ContainerRequestContext, String>() {
             @Override
             public String apply(ContainerRequestContext request) {

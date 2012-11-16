@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.model;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -67,6 +66,8 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -107,11 +108,9 @@ public class BasicValidatorTest {
         System.out.println(
                 "---\nNo issue should be reported if more public ctors exists with the same number of params, " +
                         "but another just one is presented with more params at a root resource:");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
         assertTrue(validator.getIssueList().isEmpty());
     }
 
@@ -302,13 +301,18 @@ public class BasicValidatorTest {
     }
 
 
-    private List<ResourceModelIssue> testResourceValidation(Class<?> resourceClass) {
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(resourceClass, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
-        validator.validate(resource);
-        printIssueList(validator);
-        return issues;
+    private List<ResourceModelIssue> testResourceValidation(final Class<?> resourceClass) {
+        return Errors.process(new Errors.Closure<List<ResourceModelIssue>>() {
+            @Override
+            public List<ResourceModelIssue> invoke() {
+                final Resource resource = Resource.builder(resourceClass).build();
+                final BasicValidator validator = new BasicValidator(createLocator());
+
+                validator.validate(resource);
+
+                return ModelErrors.getErrorsAsResourceModelIssues();
+            }
+        });
     }
 
 
@@ -423,11 +427,9 @@ public class BasicValidatorTest {
     @Test
     public void testSRLReturningVoid() throws Exception {
         System.out.println("---\nAn issue should be reported if a sub-resource locator returns void:");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestSRLReturningVoid.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
     }
 
@@ -498,11 +500,9 @@ public class BasicValidatorTest {
     public void testMultipleHttpMethodDesignatorsRM() throws Exception {
         System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a resource " +
                 "method:");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
     }
 
@@ -521,11 +521,9 @@ public class BasicValidatorTest {
     public void testMultipleHttpMethodDesignatorsSRM() throws Exception {
         System.out.println("---\nAn issue should be reported if more than one HTTP method designator exist on a sub-resource " +
                 "method:");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
     }
 
@@ -541,11 +539,9 @@ public class BasicValidatorTest {
     @Test
     public void testEntityParamOnSRL() throws Exception {
         System.out.println("---\nAn issue should be reported if an entity parameter exists on a sub-resource locator:");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestEntityParamOnSRL.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
         assertTrue(validator.fatalIssuesFound());
     }
 
@@ -619,13 +615,20 @@ public class BasicValidatorTest {
     @Test
     public void testAmbiguousParams() throws Exception {
         System.out.println("---\nA warning should be reported if ambiguous source of a parameter is seen");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestAmbiguousParams.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
-        validator.validate(resource);
-        printIssueList(validator);
-        assertTrue(!validator.fatalIssuesFound());
-        assertEquals(6, validator.getIssueList().size());
+        Errors.process(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                Resource resource = Resource.builder(TestAmbiguousParams.class).build();
+                BasicValidator validator = new BasicValidator(createLocator());
+                validator.validate(resource);
+
+                assertTrue(!validator.fatalIssuesFound());
+                assertEquals(4, validator.getIssueList().size());
+                assertEquals(6, Errors.getErrorMessages().size());
+
+                return null;
+            }
+        });
     }
 
     @Path(value = "/EmptyPathSegmentTest")
@@ -641,11 +644,10 @@ public class BasicValidatorTest {
     @Test
     public void testEmptyPathSegment() throws Exception {
         System.out.println("---\nA warning should be reported if @Path with \"/\" or empty string value is seen");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TestEmptyPathSegment.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
+
         assertTrue(!validator.fatalIssuesFound());
         assertEquals(1, validator.getIssueList().size());
     }
@@ -682,13 +684,20 @@ public class BasicValidatorTest {
     @Test
     public void testTypeVariableResource() throws Exception {
         System.out.println("---\n");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(TypeVariableResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
-        validator.validate(resource);
-        printIssueList(validator);
-        assertTrue(!validator.fatalIssuesFound());
-        assertEquals(7, validator.getIssueList().size());
+        Errors.process(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                Resource resource = Resource.builder(TypeVariableResource.class).build();
+                BasicValidator validator = new BasicValidator(createLocator());
+                validator.validate(resource);
+
+                assertTrue(!validator.fatalIssuesFound());
+                assertEquals(5, validator.getIssueList().size());
+                assertEquals(7, Errors.getErrorMessages().size());
+
+                return null;
+            }
+        });
     }
 
     public static class ParameterizedTypeResource<T, V> {
@@ -725,11 +734,10 @@ public class BasicValidatorTest {
     @Test
     public void testParameterizedTypeResource() throws Exception {
         System.out.println("---\n");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
+
         assertTrue(!validator.fatalIssuesFound());
         assertEquals(0, validator.getIssueList().size());
     }
@@ -763,22 +771,15 @@ public class BasicValidatorTest {
     @Test
     public void testGenericArrayResource() throws Exception {
         System.out.println("---\n");
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(ConcreteGenericArrayResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
+
         assertTrue(!validator.fatalIssuesFound());
         assertEquals(0, validator.getIssueList().size());
     }
 
     // TODO: test multiple root resources with the same uriTemplate (in WebApplicationImpl.processRootResources ?)
-
-    private static void printIssueList(BasicValidator validator) {
-        for (ResourceModelIssue issue : validator.getIssueList()) {
-            System.out.println((issue.isFatal() ? "ERROR: " : "WARNING: ") + issue.getMessage());
-        }
-    }
 
     @Path("test1")
     public static class PercentEncodedTest {
@@ -797,13 +798,13 @@ public class BasicValidatorTest {
 
     @Test
     public void testPercentEncoded() throws Exception {
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(PercentEncodedTest.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(PercentEncodedTest.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
-        assertEquals(1, validator.getIssueList().size());
-        assertTrue(validator.getIssueList().get(0).isFatal());
+
+        final List<ResourceModelIssue> errorMessages = validator.getIssueList();
+        assertEquals(1, errorMessages.size());
+        assertTrue(errorMessages.get(0).isFatal());
     }
 
 
@@ -824,13 +825,14 @@ public class BasicValidatorTest {
 
     @Test
     public void testPercentEncodedCaseSensitive() throws Exception {
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(PercentEncodedCaseSensitiveTest.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(PercentEncodedCaseSensitiveTest.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
-        assertEquals(1, validator.getIssueList().size());
-        assertTrue(validator.getIssueList().get(0).isFatal());
+
+        final List<ResourceModelIssue> errorMessages = validator.getIssueList();
+
+        assertEquals(1, errorMessages.size());
+        assertTrue(errorMessages.get(0).isFatal());
     }
 
     @Path("ambiguous-parameter")
@@ -843,13 +845,13 @@ public class BasicValidatorTest {
 
     @Test
     public void testNotAnnotatedParameters() throws Exception {
-        List<ResourceModelIssue> issues = new LinkedList<ResourceModelIssue>();
-        Resource resource = Resource.builder(AmbiguousParameterResource.class, issues).build();
-        BasicValidator validator = new BasicValidator(issues, createLocator());
+        Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
+        BasicValidator validator = new BasicValidator(createLocator());
         validator.validate(resource);
-        printIssueList(validator);
-        assertEquals(1, validator.getIssueList().size());
-        assertTrue(validator.getIssueList().get(0).isFatal());
+
+        final List<ResourceModelIssue> errorMessages = validator.getIssueList();
+        assertEquals(1, errorMessages.size());
+        assertTrue(errorMessages.get(0).isFatal());
     }
 
 

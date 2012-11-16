@@ -67,6 +67,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
@@ -111,52 +112,51 @@ public class BasicValidator extends ResourceModelValidator {
     protected final Set<Class<?>> checkedClasses = new HashSet<Class<?>>();
 
     /**
-     * Construct a new basic validator with an empty issue list.
-     *
-     *  @param locator HK2 service locator.
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public BasicValidator(ServiceLocator locator) {
-        this(new LinkedList<ResourceModelIssue>(), locator);
-    }
-
-
-    /**
      * Construct a new basic validator.
      *
-     * @param issueList validation issue list.
      * @param locator HK2 service locator.
      */
-    public BasicValidator(List<ResourceModelIssue> issueList, ServiceLocator locator) {
-        super(issueList);
-        this.workers = locator.<MessageBodyWorkers>getService(MessageBodyWorkers.class);
+    public BasicValidator(ServiceLocator locator) {
+        this.workers = locator.getService(MessageBodyWorkers.class);
         this.locator = locator;
     }
 
     @Override
-    public void visitResourceClass(Resource resource) {
-        // uri template of the resource, if present should not contain a null value
-        if (resource.isRootResource() && (null == resource.getPath())) {
-            // TODO: is it really a fatal issue?
-            addFatalIssue(resource, LocalizationMessages.RES_URI_PATH_INVALID(resource.getName(), resource.getPath()));
-        }
+    public void visitResourceClass(final Resource resource) {
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                // uri template of the resource, if present should not contain a null value
+                if (resource.isRootResource() && (null == resource.getPath())) {
+                    // TODO: is it really a fatal issue?
+                    Errors.fatal(resource, LocalizationMessages.RES_URI_PATH_INVALID(resource.getName(), resource.getPath()));
+                }
 
-        checkConsumesProducesAmbiguities(resource);
-        checkSRLAmbiguities(resource);
+                checkConsumesProducesAmbiguities(resource);
+                checkSRLAmbiguities(resource);
+
+                return null;
+            }
+        });
     }
 
 
     @Override
-    public void visitResourceHandlerConstructor(HandlerConstructor constructor) {
+    public void visitResourceHandlerConstructor(final HandlerConstructor constructor) {
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                Class<?> resClass = constructor.getConstructor().getDeclaringClass();
+                boolean isSingleton = isSingleton(resClass);
+                int paramCount = 0;
+                for (Parameter p : constructor.getParameters()) {
+                    validateParameter(p, constructor.getConstructor(), constructor.getConstructor().toGenericString(),
+                            Integer.toString(++paramCount), isSingleton);
+                }
 
-        Class<?> resClass = constructor.getConstructor().getDeclaringClass();
-        boolean isSingleton = isSingleton(resClass);
-        int paramCount = 0;
-        for (Parameter p : constructor.getParameters()) {
-            validateParameter(getIssueList(), p, constructor.getConstructor(), constructor.getConstructor().toGenericString(),
-                    Integer.toString(++paramCount),
-                    isSingleton);
-        }
+                return null;
+            }
+        });
     }
 
     /**
@@ -171,25 +171,32 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
     @Override
-    public void visitInvocable(Invocable invocable) {
-        // TODO: check invocable.
-        Class resClass = invocable.getHandler().getHandlerClass();
-        if (resClass != null && !checkedClasses.contains(resClass)) {
-            checkedClasses.add(resClass);
-            final boolean provider = Providers.isProvider(resClass);
-            int counter = 0;
-            for (Annotation annotation : resClass.getAnnotations()) {
-                if (SCOPE_ANNOTATIONS.contains(annotation.annotationType())) {
-                    counter++;
+    public void visitInvocable(final Invocable invocable) {
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                // TODO: check invocable.
+                Class resClass = invocable.getHandler().getHandlerClass();
+                if (resClass != null && !checkedClasses.contains(resClass)) {
+                    checkedClasses.add(resClass);
+                    final boolean provider = Providers.isProvider(resClass);
+                    int counter = 0;
+                    for (Annotation annotation : resClass.getAnnotations()) {
+                        if (SCOPE_ANNOTATIONS.contains(annotation.annotationType())) {
+                            counter++;
+                        }
+                    }
+                    if (counter == 0 && provider) {
+                        Errors.warning(resClass, LocalizationMessages.RESOURCE_IMPLEMENTS_PROVIDER(resClass,
+                                Providers.getProviderContracts(resClass)));
+                    } else if (counter > 1) {
+                        Errors.fatal(resClass, LocalizationMessages.RESOURCE_MULTIPLE_SCOPE_ANNOTATIONS(resClass));
+                    }
                 }
+
+                return null;
             }
-            if (counter == 0 && provider) {
-                addMinorIssue(resClass, LocalizationMessages.RESOURCE_IMPLEMENTS_PROVIDER(resClass,
-                        Providers.getProviderContracts(resClass)));
-            } else if (counter > 1) {
-                addFatalIssue(resClass, LocalizationMessages.RESOURCE_MULTIPLE_SCOPE_ANNOTATIONS(resClass));
-            }
-        }
+        });
     }
 
     @Override
@@ -198,23 +205,29 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
     @Override
-    public void visitResourceMethod(ResourceMethod method) {
-        switch (method.getType()) {
-            case RESOURCE_METHOD:
-                visitJaxrsResourceMethod(method);
-                break;
-            case SUB_RESOURCE_METHOD:
-                visitSubResourceMethod(method);
-                break;
-            case SUB_RESOURCE_LOCATOR:
-                visitSubResourceLocator(method);
-                break;
-        }
+    public void visitResourceMethod(final ResourceMethod method) {
+        Errors.processWithException(new Errors.Closure<Object>() {
+            @Override
+            public Object invoke() {
+                switch (method.getType()) {
+                    case RESOURCE_METHOD:
+                        visitJaxrsResourceMethod(method);
+                        break;
+                    case SUB_RESOURCE_METHOD:
+                        visitSubResourceMethod(method);
+                        break;
+                    case SUB_RESOURCE_LOCATOR:
+                        visitSubResourceLocator(method);
+                        break;
+                }
+
+                return null;
+            }
+        });
     }
 
     private void visitJaxrsResourceMethod(ResourceMethod method) {
         checkMethod(method);
-
     }
 
     private void checkMethod(ResourceMethod method) {
@@ -226,17 +239,17 @@ public class BasicValidator extends ResourceModelValidator {
         if ("GET".equals(method.getHttpMethod())) {
             // ensure GET returns non-void value if not suspendable
             if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared()) {
-                addMinorIssue(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
+                Errors.warning(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
             }
 
             // ensure GET does not consume an entity parameter, if not inflector-based
             if (invocable.requiresEntity() && !invocable.isInflector()) {
-                addMinorIssue(method, LocalizationMessages.GET_CONSUMES_ENTITY(invocable.getHandlingMethod()));
+                Errors.warning(method, LocalizationMessages.GET_CONSUMES_ENTITY(invocable.getHandlingMethod()));
             }
             // ensure GET does not consume any @FormParam annotated parameter
             for (Parameter p : invocable.getParameters()) {
                 if (p.isAnnotationPresent(FormParam.class)) {
-                    addFatalIssue(method, LocalizationMessages.GET_CONSUMES_FORM_PARAM(invocable.getHandlingMethod()));
+                    Errors.fatal(method, LocalizationMessages.GET_CONSUMES_FORM_PARAM(invocable.getHandlingMethod()));
                     break;
                 }
             }
@@ -248,21 +261,20 @@ public class BasicValidator extends ResourceModelValidator {
             if (null != a.annotationType().getAnnotation(HttpMethod.class)) {
                 httpMethodAnnotations.add(a.toString());
             } else if ((a.annotationType() == Path.class) && method.getType() == ResourceMethod.JaxrsType.RESOURCE_METHOD) {
-                addMinorIssue(method, LocalizationMessages.SUB_RES_METHOD_TREATED_AS_RES_METHOD(
-                        invocable.getHandlingMethod(), ((Path) a).value()));
+                Errors.warning(method, LocalizationMessages.SUB_RES_METHOD_TREATED_AS_RES_METHOD(invocable.getHandlingMethod(),
+                        ((Path) a).value()));
             }
         }
 
         if (httpMethodAnnotations.size() > 1) {
-            addFatalIssue(method, LocalizationMessages.MULTIPLE_HTTP_METHOD_DESIGNATORS(
-                    invocable.getHandlingMethod(), httpMethodAnnotations.toString()));
+            Errors.fatal(method, LocalizationMessages.MULTIPLE_HTTP_METHOD_DESIGNATORS(invocable.getHandlingMethod(),
+                    httpMethodAnnotations.toString()));
         }
 
         final Type responseType = invocable.getResponseType();
         if (!isConcreteType(responseType)) {
-            addMinorIssue(invocable.getHandlingMethod(),
-                    LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE(
-                            responseType, invocable.getHandlingMethod().toGenericString()));
+            Errors.warning(invocable.getHandlingMethod(), LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE
+                    (responseType, invocable.getHandlingMethod().toGenericString()));
         }
     }
 
@@ -272,8 +284,8 @@ public class BasicValidator extends ResourceModelValidator {
 
         // and make sure the Path is not null
         if ((null == method.getPath()) || (null == method.getPath()) || (method.getPath().length() == 0)) {
-            addFatalIssue(method, LocalizationMessages.SUBRES_METHOD_URI_PATH_INVALID(
-                    method.getInvocable().getHandlingMethod(), method.getPath()));
+            Errors.fatal(method, LocalizationMessages.SUBRES_METHOD_URI_PATH_INVALID(method.getInvocable().getHandlingMethod(),
+                    method.getPath()));
         }
     }
 
@@ -281,8 +293,8 @@ public class BasicValidator extends ResourceModelValidator {
         final List<Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
-            addFatalIssue(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index,
-                    method.getInvocable().getHandlingMethod()));
+            Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()
+                    .getHandlingMethod()));
         }
     }
 
@@ -292,11 +304,11 @@ public class BasicValidator extends ResourceModelValidator {
 
         final Invocable invocable = locator.getInvocable();
         if (void.class == invocable.getRawResponseType()) {
-            addFatalIssue(locator, LocalizationMessages.SUBRES_LOC_RETURNS_VOID(invocable.getHandlingMethod()));
+            Errors.fatal(locator, LocalizationMessages.SUBRES_LOC_RETURNS_VOID(invocable.getHandlingMethod()));
         }
         if ((null == locator.getPath()) || (null == locator.getPath()) || (locator.getPath().length() == 0)) {
-            addFatalIssue(locator,
-                    LocalizationMessages.SUBRES_LOC_URI_PATH_INVALID(invocable.getHandlingMethod(), locator.getPath()));
+            Errors.fatal(locator, LocalizationMessages.SUBRES_LOC_URI_PATH_INVALID(invocable.getHandlingMethod(),
+                    locator.getPath()));
         }
     }
 
@@ -316,7 +328,6 @@ public class BasicValidator extends ResourceModelValidator {
     /**
      * Validate a single parameter instance.
      *
-     * @param issueList             an existing list of issues that will be modified.
      * @param parameter             parameter to be validated.
      * @param source                parameter source; used for issue reporting.
      * @param reportedSourceName    source name; used for issue reporting.
@@ -324,40 +335,40 @@ public class BasicValidator extends ResourceModelValidator {
      * @param injectionsForbidden   true if parameters cannot be injected by
      *                              parameter annotations, eg. {@link HeaderParam @HeaderParam}.
      */
-    static void validateParameter(final List<ResourceModelIssue> issueList,
-                                  final Parameter parameter,
+    static void validateParameter(final Parameter parameter,
                                   final Object source,
                                   final String reportedSourceName,
-                                  final String reportedParameterName, boolean injectionsForbidden) {
-        int counter = 0;
-        final Annotation[] annotations = parameter.getAnnotations();
-        for (Annotation a : annotations) {
-            if (PARAM_ANNOTATION_SET.contains(a.annotationType())) {
-                if (injectionsForbidden) {
-                    issueList.add(new ResourceModelIssue(
-                            source,
-                            LocalizationMessages.SINGLETON_INJECTS_PARAMETER(reportedSourceName, reportedParameterName),
-                            true));
-                    break;
+                                  final String reportedParameterName, final boolean injectionsForbidden) {
+        Errors.processWithException(new Errors.Closure<Void>() {
+            @Override
+            public Void invoke() {
+                int counter = 0;
+                final Annotation[] annotations = parameter.getAnnotations();
+                for (Annotation a : annotations) {
+                    if (PARAM_ANNOTATION_SET.contains(a.annotationType())) {
+                        if (injectionsForbidden) {
+                            Errors.fatal(source, LocalizationMessages.SINGLETON_INJECTS_PARAMETER(reportedSourceName,
+                                    reportedParameterName));
+                            break;
+                        }
+                        counter++;
+                        if (counter > 1) {
+                            Errors.warning(source, LocalizationMessages.AMBIGUOUS_PARAMETER(reportedSourceName,
+                                    reportedParameterName));
+                            break;
+                        }
+                    }
                 }
-                counter++;
-                if (counter > 1) {
-                    issueList.add(new ResourceModelIssue(
-                            source,
-                            LocalizationMessages.AMBIGUOUS_PARAMETER(reportedSourceName, reportedParameterName),
-                            false));
-                    break;
-                }
-            }
-        }
 
-        final Type paramType = parameter.getType();
-        if (!isConcreteType(paramType)) {
-            issueList.add(new ResourceModelIssue(
-                    source,
-                    LocalizationMessages.PARAMETER_UNRESOLVABLE(reportedParameterName, paramType, reportedSourceName),
-                    false));
-        }
+                final Type paramType = parameter.getType();
+                if (!isConcreteType(paramType)) {
+                    Errors.warning(source, LocalizationMessages.PARAMETER_UNRESOLVABLE(reportedParameterName, paramType,
+                            reportedSourceName));
+                }
+
+                return null;
+            }
+        });
     }
 
     private static boolean isConcreteType(Type t) {
@@ -387,15 +398,14 @@ public class BasicValidator extends ResourceModelValidator {
         int nonAnnotetedParameters = 0;
 
         for (Parameter p : invocable.getParameters()) {
-            validateParameter(getIssueList(), p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount),
-                    false);
+            validateParameter(p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount), false);
             if (method.getType() == ResourceMethod.JaxrsType.SUB_RESOURCE_LOCATOR
                     && Parameter.Source.ENTITY == p.getSource()) {
-                addFatalIssue(method, LocalizationMessages.SUBRES_LOC_HAS_ENTITY_PARAM(invocable.getHandlingMethod()));
+                Errors.fatal(method, LocalizationMessages.SUBRES_LOC_HAS_ENTITY_PARAM(invocable.getHandlingMethod()));
             } else if (p.getAnnotations().length == 0) {
                 nonAnnotetedParameters++;
                 if (nonAnnotetedParameters > 1) {
-                    addFatalIssue(method, LocalizationMessages.AMBIGUOUS_NON_ANNOTATED_PARAMETER(invocable.getHandlingMethod(),
+                    Errors.fatal(method, LocalizationMessages.AMBIGUOUS_NON_ANNOTATED_PARAMETER(invocable.getHandlingMethod(),
                             invocable.getHandlingMethod().getDeclaringClass()));
                 }
             }
@@ -431,7 +441,6 @@ public class BasicValidator extends ResourceModelValidator {
     }
 
     private void checkSRLAmbiguities(Resource resource) {
-
         final List<ResourceMethod> subResourceLocators = resource.getSubResourceLocators();
 
         if (subResourceLocators.size() >= 2) {
@@ -439,7 +448,7 @@ public class BasicValidator extends ResourceModelValidator {
                 for (ResourceMethod m2 :
                         subResourceLocators.subList(subResourceLocators.indexOf(m1) + 1, subResourceLocators.size())) {
                     if (samePath(m1, m2)) {
-                        addFatalIssue(resource, LocalizationMessages.AMBIGUOUS_SRLS(
+                        Errors.fatal(resource, LocalizationMessages.AMBIGUOUS_SRLS(
                                 resource.getName(),
                                 m1.getPath(),
                                 m2.getPath()));
@@ -485,23 +494,22 @@ public class BasicValidator extends ResourceModelValidator {
         if (consumesFails && producesFails) {
             // fatal
             final String rcName = resource.getName();
-            addFatalIssue(resource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(rcName, httpMethod, m1.getInvocable()
+            Errors.fatal(resource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(rcName, httpMethod, m1.getInvocable()
                     .getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
         } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
                 (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
             final String rcName = resource.getName();
             if (m1.getInvocable().requiresEntity()) {
-                addMinorIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_IN(
+                Errors.warning(resource, LocalizationMessages.AMBIGUOUS_RMS_IN(
                         rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             } else {
-                addMinorIssue(resource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
+                Errors.warning(resource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
                         rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             }
         }
 
     }
-
 
     private static final List<MediaType> StarTypeList = Arrays.asList(new MediaType("*", "*"));
 
