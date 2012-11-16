@@ -99,6 +99,7 @@ import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorDescription;
 import org.glassfish.jersey.server.wadl.internal.WadlGeneratorImpl;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.JaxbBean;
 
 import org.junit.Ignore;
@@ -1152,6 +1153,70 @@ public class WadlResourceTest {
         public void testFieldParam() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
             final String path = "fieldParam";
             _testFieldAndSetterParam(target("/application.wadl").request().get(), path);
+        }
+    }
+
+    /**
+     * Tests OPTIONS method on a resource method annotated with @Path and containing a leading '/'.
+     */
+    public static class Wadl6Test extends JerseyTest {
+
+        @Path("wadl6test")
+        public static class Resource {
+
+            @GET
+            @Path("foo1")
+            public String foo1() {
+                return "foo1";
+            }
+
+            @GET
+            @Path("/foo2")
+            public String foo2() {
+                return "foo2";
+            }
+
+            @GET
+            @Path("foo3/")
+            public String foo3() {
+                return "foo3";
+            }
+
+            @GET
+            @Path("/foo4/")
+            public String foo4() {
+                return "foo4";
+            }
+        }
+
+        @Override
+        protected Application configure() {
+            enable(TestProperties.LOG_TRAFFIC);
+            enable(TestProperties.DUMP_ENTITY);
+
+            return new ResourceConfig(Resource.class);
+        }
+
+        @Test
+        public void testGetWithPathAndLeadingSlash() throws Exception {
+            for (int i = 1; i < 5; i++) {
+                final String[] paths = {
+                        "foo" + i,
+                        "/foo" + i,
+                        "foo" + i + '/',
+                        "/foo" + i + '/'
+                };
+
+                for (final String path : paths) {
+                    final String document = target("wadl6test").
+                            path(path).
+                            request("application/vnd.sun.wadl+xml").
+                            options(String.class);
+
+                    // check that the resulting document contains a method element with id="fooX"
+                    assertTrue(document.matches(".*<method[^>]+id=\"foo" + i + "\"[^>]*>.*"));
+                }
+            }
         }
     }
 }

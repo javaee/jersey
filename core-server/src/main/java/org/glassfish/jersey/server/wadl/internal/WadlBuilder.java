@@ -439,7 +439,8 @@ public class WadlBuilder {
         for (ResourceMethod m : r.getSubResourceMethods()) {
             // find or create sub resource for uri template
             String template = m.getPath();
-            if (!template.equals(path)) {
+            if (!template.equals(path)
+                    && !template.equals('/' + path)) {
                 continue;
             }
             com.sun.research.ws.wadl.Method wadlMethod = generateMethod(r, wadlSubResourceParams, m);
