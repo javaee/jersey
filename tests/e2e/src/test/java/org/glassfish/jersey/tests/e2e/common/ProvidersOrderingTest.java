@@ -39,6 +39,7 @@
 */
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -64,17 +66,17 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import com.google.common.collect.Lists;
-
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -289,6 +291,12 @@ public class ProvidersOrderingTest extends JerseyTest {
 
             return myType;
         }
+
+        @Path("bytearray")
+        @POST
+        public byte[] bytearray(byte[] bytes) {
+            return bytes;
+        }
     }
 
     private List<Class<?>> callList;
@@ -299,7 +307,7 @@ public class ProvidersOrderingTest extends JerseyTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, MyMBW5.class);
         resourceConfig.addSingletons(new MyMBW1(callList), new MyMBW2(callList), new MyMBW3(callList), new MyMBW4(callList),
-                new MyMBR1(callList), new MyMBR2(callList), new MyMBR3(callList));
+                new MyMBR1(callList), new MyMBR2(callList), new MyMBR3(callList), new MyByteArrayProvider());
         return resourceConfig;
     }
 
@@ -331,5 +339,75 @@ public class ProvidersOrderingTest extends JerseyTest {
         );
 
         assertEquals(classes, callList);
+    }
+
+    @Test
+    public void replaceBuiltInProvider() {
+        callList.clear();
+        WebTarget target = target("bytearray");
+
+        try {
+            Response response = target.request().post(Entity.text("replaceBuiltInProvider"), Response.class);
+
+            assertNotNull(response);
+            assertEquals("Request was not handled correctly, most likely fault in MessageBodyWorker selection.",
+                    200, response.getStatus());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            fail("Request was not handled correctly, most likely fault in MessageBodyWorker selection.");
+        }
+
+        assertTrue(MyByteArrayProvider.counter == 2); // used to read and write entity on server side.
+
+    }
+
+    @Produces({"application/octet-stream", "*/*"})
+    @Consumes({"application/octet-stream", "*/*"})
+    public static final class MyByteArrayProvider extends AbstractMessageReaderWriterProvider<byte[]> {
+
+        public static int counter = 0;
+
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == byte[].class;
+        }
+
+        @Override
+        public byte[] readFrom(
+                Class<byte[]> type,
+                Type genericType,
+                Annotation annotations[],
+                MediaType mediaType,
+                MultivaluedMap<String, String> httpHeaders,
+                InputStream entityStream) throws IOException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writeTo(entityStream, out);
+            counter++;
+            return out.toByteArray();
+        }
+
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == byte[].class;
+        }
+
+        @Override
+        public void writeTo(
+                byte[] t,
+                Class<?> type,
+                Type genericType,
+                Annotation annotations[],
+                MediaType mediaType,
+                MultivaluedMap<String, Object> httpHeaders,
+                OutputStream entityStream) throws IOException {
+            entityStream.write(t);
+        }
+
+        @Override
+        public long getSize(byte[] t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            counter++;
+            return t.length;
+        }
     }
 }
