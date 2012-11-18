@@ -503,17 +503,26 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder links(Link... links) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            if(links != null) {
+                for(Link link : links) {
+                    header(HttpHeaders.LINK, link);
+                }
+            } else {
+                header(HttpHeaders.LINK, null);
+            }
+            return this;
         }
 
         @Override
         public ResponseBuilder link(URI uri, String rel) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            header(HttpHeaders.LINK, Link.fromUri(uri).rel(rel).build());
+            return this;
         }
 
         @Override
         public ResponseBuilder link(String uri, String rel) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            header(HttpHeaders.LINK, Link.fromUri(uri).rel(rel).build());
+            return this;
         }
 
         @Override

@@ -39,21 +39,24 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.net.URI;
 import java.util.Map;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import junit.framework.Assert;
 
@@ -77,11 +80,10 @@ public class LinkTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class);
+        return new ResourceConfig(Resource.class, LinkTestResource.class);
     }
 
     @Test
-    @Ignore // TODO: fails due to http://java.net/jira/browse/JAX_RS_SPEC-236
     public void testEquals() {
         Link link = Link.fromResourceMethod(Resource.class, "producesXml").build();
         String string = link.toString();
@@ -90,7 +92,6 @@ public class LinkTest extends JerseyTest {
     }
 
     @Test
-    @Ignore // TODO: fails due to http://java.net/jira/browse/JAX_RS_SPEC-235
     public void testFromResourceMethod() {
         Link link = Link.fromResourceMethod(Resource.class, "producesXml").build();
         assertEquals("resource/producesxml", link.getUri().toString());
@@ -104,5 +105,33 @@ public class LinkTest extends JerseyTest {
         Link link = builder.build();
         final Map<String, String> params = link.getParams();
         Assert.assertEquals(value, params.get("param1"));
+    }
+
+    @Path("linktest")
+    public static class LinkTestResource {
+
+        @GET
+        public Response get() throws Exception {
+            return Response.ok().
+                    link("http://oracle.com", "parent").
+                    link(new URI("http://jersey.java.net"), "framework").
+                    links(
+                            Link.fromUri("test1").rel("test1").build(),
+                            Link.fromUri("test2").rel("test2").build(),
+                            Link.fromUri("test3").rel("test3").build()
+                    ).build();
+        }
+    }
+
+    @Test
+    public void simpleLinkTest() {
+        final Response response = target("linktest").request().get();
+
+        assertEquals(response.getLink("parent").getUri().toString(), "http://oracle.com");
+        assertEquals(response.getLink("framework").getUri().toString(), "http://jersey.java.net");
+
+        assertTrue(response.getLinks().contains(Link.fromUri("test1").rel("test1").build()));
+        assertTrue(response.getLinks().contains(Link.fromUri("test2").rel("test2").build()));
+        assertTrue(response.getLinks().contains(Link.fromUri("test3").rel("test3").build()));
     }
 }
