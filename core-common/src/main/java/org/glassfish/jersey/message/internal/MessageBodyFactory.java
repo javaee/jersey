@@ -288,7 +288,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
 
             if (mbwp1.custom ^ mbwp2.custom) {
-                return (mbwp1.custom) ? 1 : -1;
+                return (mbwp1.custom) ? -1 : 1;
             }
             return 0;
         }
