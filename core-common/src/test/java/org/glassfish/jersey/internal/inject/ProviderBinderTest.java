@@ -236,15 +236,19 @@ public class ProviderBinderTest {
         } catch (StackOverflowError soe) {
             // OK.
         } catch (Throwable e) {
-            // OK. On Windows StackOverflowError is wrapped into another exception.
+            // OK.
+            // On Windows StackOverflowError is wrapped into another exception.
+            // On Linux with JDK7 IllegalStateException (feature already enabled) is sometimes thrown instead of SOE.
             while (e != null) {
-                if (e instanceof StackOverflowError) {
+                if (e instanceof StackOverflowError
+                        || e instanceof IllegalStateException) {
                     // OK.
                     return;
                 }
                 e = e.getCause();
             }
-            fail("StackOverflowError expected.");
+
+            fail("StackOverflowError or IllegalStateException expected.");
         }
     }
 }
