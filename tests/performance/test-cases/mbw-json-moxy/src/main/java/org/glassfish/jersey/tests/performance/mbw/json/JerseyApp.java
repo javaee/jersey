@@ -43,7 +43,7 @@ import java.net.URI;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.moxy.json.MoxyJsonBinder;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -59,7 +59,7 @@ public class JerseyApp {
             System.out.println("Jersey performance test web service application");
 
             final ResourceConfig resourceConfig = new ResourceConfig(JsonEntityResource.class);
-            resourceConfig.addBinders(new MoxyJsonBinder());
+            resourceConfig.register(MoxyJsonFeature.class);
             URI baseUri = args.length > 0 ? URI.create(args[0]) : BASE_URI;
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
