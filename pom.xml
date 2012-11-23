@@ -979,7 +979,7 @@
 
         <!-- Change jaxrs.api.version in examples/osgi-helloworld-webapp/pom.xml as well. -->
         <jaxrs.api.version>2.0-m12</jaxrs.api.version>
-        <hk2.version>2.1.41</hk2.version>
+        <hk2.version>2.1.45</hk2.version>
         <grizzly2.version>2.3-beta8</grizzly2.version>
         <jackson.version>1.9.8</jackson.version>
         <jersey1.version>1.15</jersey1.version>
