@@ -78,7 +78,7 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testBlankUsernamePassword() {
-        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter(null, null))
+        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter(null, (String)null))
                 .connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();

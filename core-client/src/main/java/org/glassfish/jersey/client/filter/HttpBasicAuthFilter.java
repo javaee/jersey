@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client.filter;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -57,6 +58,7 @@ import org.glassfish.jersey.internal.util.Base64;
 public final class HttpBasicAuthFilter implements ClientRequestFilter {
 
     private final String authentication;
+    private static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
 
     /**
      * Creates a new HTTP Basic Authentication filter using provided username
@@ -66,15 +68,33 @@ public final class HttpBasicAuthFilter implements ClientRequestFilter {
      * @param password password
      */
     public HttpBasicAuthFilter(String username, String password) {
+        this(username, (password != null) ? password.getBytes(CHARACTER_SET) : new byte[0]);
+    }
+
+    /**
+     * Creates a new HTTP Basic Authentication filter using provided username
+     * and password credentials. This constructor allows you to avoid storing
+     * plain password value in a String variable.
+     *
+     * @param username user name
+     * @param password password
+     */
+    public HttpBasicAuthFilter(String username, byte[] password) {
         if(username == null) {
             username = "";
         }
 
         if(password == null) {
-            password = "";
+            password = new byte[0];
         }
 
-        authentication = "Basic " + Base64.encodeAsString(username + ":" + password);
+        final byte[] prefix = (username + ":").getBytes(CHARACTER_SET);
+        final byte[] usernamePassword = new byte[prefix.length + password.length];
+
+        System.arraycopy(prefix, 0, usernamePassword, 0, prefix.length);
+        System.arraycopy(password, 0, usernamePassword, prefix.length, password.length);
+
+        authentication = "Basic " + Base64.encodeAsString(usernamePassword);
     }
 
     @Override
