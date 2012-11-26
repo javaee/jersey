@@ -65,7 +65,7 @@ public class ServiceFinderBinder<T> extends AbstractBinder {
 
     @Override
     public void configure() {
-        for (T t : ServiceFinder.find(contract)) {
+        for (T t : ServiceFinder.find(contract, true)) {
             bind(t).to(contract);
         }
     }
