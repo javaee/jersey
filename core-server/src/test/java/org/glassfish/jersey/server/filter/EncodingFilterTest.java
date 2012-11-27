@@ -60,6 +60,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -85,9 +86,10 @@ public class EncodingFilterTest {
     @Test
     public void testNoInterceptor() {
         ResourceConfig rc = new ResourceConfig(EncodingFilter.class);
-        EncodingFilter filter = new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
+        ContainerResponseFilter filter = new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
         assertNotNull(filter);
-        assertEquals(1, filter.getSupportedEncodings().size());
+        assertTrue(filter instanceof EncodingFilter);
+        assertEquals(1, ((EncodingFilter) filter).getSupportedEncodings().size());
     }
 
     @Test
@@ -157,7 +159,7 @@ public class EncodingFilterTest {
     private EncodingFilter initializeAndGetFilter() {
         ResourceConfig rc = new ResourceConfig();
         EncodingFilter.enableFor(rc, FooEncoding.class, GZipEncoder.class);
-        return new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
+        return (EncodingFilter) new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
     }
 
     private void testEncoding(String expected, String... accepted) throws IOException {

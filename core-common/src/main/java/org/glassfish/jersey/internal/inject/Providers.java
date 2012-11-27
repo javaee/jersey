@@ -225,7 +225,7 @@ public class Providers {
     private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract,
                                                                    Annotation... qualifiers) {
 
-        List<ServiceHandle<?>> allServiceHandles = qualifiers == null ?
+        List<ServiceHandle<T>> allServiceHandles = qualifiers == null ?
                 locator.getAllServiceHandles(contract) :
                 locator.getAllServiceHandles(contract, qualifiers);
 
@@ -530,7 +530,7 @@ public class Providers {
         interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
 
         interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, new ProviderRuntime(null));
-        
+
         interfaces.put(javax.ws.rs.container.DynamicFeature.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
 
 
