@@ -442,7 +442,11 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     /**
      * Create a resource model initialized by introspecting an annotated
-     * JAX-RS resource instance.
+     * JAX-RS resource instance. The instance will also be used as
+     * {@link MethodHandler method handler} for {@link Invocable invocables}
+     * of {@link ResourceMethod resource methods}. In other words the final resource
+     * will be singleton resource based on the given instance.
+     *
      * <p/>
      * Unlike {@link #builder(Class)}, this method does not perform
      * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
@@ -451,10 +455,10 @@ public final class Resource implements Routed, ResourceModelComponent {
      *
      * @param resource  resource instance to be modelled.
      * @return resource model initialized by instance or {@code null} if the
-     *         instance does not represent a resource.
+     *         instance does not represent a JAX-RS resource.
      */
     public static Resource from(Object resource) {
-        final Builder builder = new IntrospectionModeller(resource.getClass()).createResourceBuilder(true);
+        final Builder builder = new IntrospectionModeller(resource).createResourceBuilder(true);
         return builder.isEmpty() ? null : builder.build();
     }
 

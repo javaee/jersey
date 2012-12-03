@@ -81,6 +81,9 @@ final class IntrospectionModeller {
 
     // introspected annotated JAX-RS resource class
     private final Class<?> handlerClass;
+    // if not null then introspection modeller is instance based
+    private final Object handlerInstance;
+
 
     /**
      * Create a new introspection modeller for a given JAX-RS resource class.
@@ -89,6 +92,24 @@ final class IntrospectionModeller {
      */
     public IntrospectionModeller(Class<?> handlerClass) {
         this.handlerClass = handlerClass;
+        this.handlerInstance = null;
+    }
+
+    /**
+     * Create a new introspection modeller for a given JAX-RS resource instance. The instance will be used for
+     * introspection and also created {@link MethodHandler method handlers} will be based on this instance. In other
+     * words the final resource will be singleton resource based on the given instance.
+     *
+     * @param handlerInstance Instance of JAX-RS resource class.
+     */
+    public IntrospectionModeller(Object handlerInstance) {
+        if (handlerInstance instanceof Class<?>) {
+            this.handlerClass = (Class) handlerInstance;
+            this.handlerInstance = null;
+        } else {
+            this.handlerInstance = handlerInstance;
+            this.handlerClass = handlerInstance.getClass();
+        }
     }
 
     /**
@@ -330,8 +351,12 @@ final class IntrospectionModeller {
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
-                            .nameBindings(am.getAnnotations())
-                            .handledBy(handlerClass, am.getMethod());
+                            .nameBindings(am.getAnnotations());
+            if (handlerInstance != null) {
+                methodBuilder.handledBy(handlerInstance, am.getMethod());
+            } else {
+                methodBuilder.handledBy(handlerClass, am.getMethod());
+            }
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -353,9 +378,12 @@ final class IntrospectionModeller {
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
-                            .nameBindings(am.getAnnotations())
-                            .handledBy(handlerClass, am.getMethod());
-
+                            .nameBindings(am.getAnnotations());
+            if (handlerInstance != null) {
+                methodBuilder.handledBy(handlerInstance, am.getMethod());
+            } else {
+                methodBuilder.handledBy(handlerClass, am.getMethod());
+            }
             introspectAsyncFeatures(am, methodBuilder);
         }
     }
