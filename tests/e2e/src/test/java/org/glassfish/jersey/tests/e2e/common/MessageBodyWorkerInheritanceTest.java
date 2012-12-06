@@ -37,21 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.common;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import javax.ws.rs.Consumes;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
@@ -65,7 +70,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test-case for JERSEY-1481.
  *
- * {@link JacksonFeature Jackson provider} should not take precedence over our custom provider.
+ * {@link JacksonFeature Jackson provider} should not take precedence over our
+ * custom provider.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -90,34 +96,69 @@ public class MessageBodyWorkerInheritanceTest extends JerseyTest {
         }
     }
 
+    public static interface InterfaceType extends Model {
+    }
+
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Provider
+    public static class ModelReader<T extends Model> implements MessageBodyReader<T> {
+
+        @Override
+        public boolean isReadable(
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType) {
+
+            return Model.class.isAssignableFrom(type);
+        }
+
+        @Override
+        public T readFrom(
+                    Class<T> type,
+                    Type genericType,
+                    Annotation[] annotations,
+                    MediaType mediaType,
+                    MultivaluedMap<String, String> httpHeaders,
+                    InputStream entityStream) throws IOException, WebApplicationException {
+
+            return (T) new InterfaceType() {
+                @Override
+                public Object getValue() {
+                    return "fromInterfaceTypeReader";
+                }
+            };
+        }
+    }
+
     @Provider
     public static abstract class BaseProvider<T> implements MessageBodyWriter<T> {
 
         @Override
         public boolean isWriteable(final Class<?> type,
-                                   final Type genericType,
-                                   final Annotation[] annotations,
-                                   final MediaType mediaType) {
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType) {
             return true;
         }
 
         @Override
         public long getSize(final T t,
-                            final Class<?> type,
-                            final Type genericType,
-                            final Annotation[] annotations,
-                            final MediaType mediaType) {
+                final Class<?> type,
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType) {
             return -1;
         }
 
         @Override
         public void writeTo(final T t,
-                            final Class<?> type,
-                            final Type genericType,
-                            final Annotation[] annotations,
-                            final MediaType mediaType,
-                            final MultivaluedMap<String, Object> httpHeaders,
-                            final OutputStream entityStream) throws IOException, WebApplicationException {
+                final Class<?> type,
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType,
+                final MultivaluedMap<String, Object> httpHeaders,
+                final OutputStream entityStream) throws IOException, WebApplicationException {
             entityStream.write(getContent(t).getBytes("UTF-8"));
         }
 
@@ -151,17 +192,34 @@ public class MessageBodyWorkerInheritanceTest extends JerseyTest {
         public Model<String> getStringModel() {
             return new StringModel("foo");
         }
+
+        @POST
+        @Produces(MediaType.TEXT_PLAIN)
+        public String post(InterfaceType t) {
+            return t.getValue().toString();
+        }
     }
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class).
-                register(GenericModelWriter.class).
-                register(JacksonFeature.class);
+        return new ResourceConfig(Resource.class)
+                .register(GenericModelWriter.class)
+                .register(ModelReader.class)
+                .register(JacksonFeature.class);
     }
 
     @Test
     public void testMessageBodyWorkerInheritance() throws Exception {
         assertEquals("{\"bar\":\"foo\"}", target().path("resource").request(MediaType.APPLICATION_JSON_TYPE).get(String.class));
+    }
+
+    @Test
+    public void testMessageBodyWorkerInterfaceInheritance() throws Exception {
+
+        final Response response = target().path("resource")
+                                     .request().post(Entity.json("{\"value\":\"ignored\"}"));
+
+        assertEquals(200, response.getStatus());
+        assertEquals("fromInterfaceTypeReader", response.readEntity(String.class));
     }
 }
