@@ -726,8 +726,9 @@ public class ReflectionHelper {
                     pt = (ParameterizedType) a;
                     cas[i] = (Class) pt.getRawType();
                 } else if (a instanceof TypeVariable) {
-                    ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, (TypeVariable) a);
-                    cas[i] = (ctp != null) ? ctp.rawClass() : Object.class;
+                    final TypeVariable tv = (TypeVariable) a;
+                    ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, tv);
+                    cas[i] = (ctp != null) ? ctp.rawClass() : (Class<?>)(tv.getBounds()[0]);
                 }
             }
             return cas;
