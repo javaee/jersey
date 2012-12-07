@@ -121,8 +121,8 @@ public class PathAndResourceMethodErrorsTest {
         ResourceConfig resourceConfig = new ResourceConfig(
                 PathErrorsOneResource.class, PathErrorsTwoResource.class, PathErrorsThreeResource.class);
 
-        resourceConfig.addResources(Resource.builder(PathErrorsOneResource.class).path("/{four}").build());
-        resourceConfig.addResources(Resource.builder(PathErrorsThreeResource.class).path("/{five}").build());
+        resourceConfig.registerResources(Resource.builder(PathErrorsOneResource.class).path("/{four}").build());
+        resourceConfig.registerResources(Resource.builder(PathErrorsThreeResource.class).path("/{five}").build());
 
         assertEquals(4, initiateWebApplication(resourceConfig));
     }
@@ -133,8 +133,8 @@ public class PathAndResourceMethodErrorsTest {
     public void testConflictingRootResourceErrors2() {
         ResourceConfig resourceConfig = new ResourceConfig();
 
-        resourceConfig.addResources(Resource.builder(PathErrorsOneResource.class).path("/{one}").build());
-        resourceConfig.addResources(Resource.builder(PathErrorsThreeResource.class).path("/{one}/").build());
+        resourceConfig.registerResources(Resource.builder(PathErrorsOneResource.class).path("/{one}").build());
+        resourceConfig.registerResources(Resource.builder(PathErrorsThreeResource.class).path("/{one}/").build());
 
         assertEquals(1, initiateWebApplication(resourceConfig));
     }

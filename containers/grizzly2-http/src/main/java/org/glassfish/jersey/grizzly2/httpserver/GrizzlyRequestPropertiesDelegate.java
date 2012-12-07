@@ -39,19 +39,25 @@
  */
 package org.glassfish.jersey.grizzly2.httpserver;
 
-import java.util.Collections;
-import java.util.Enumeration;
+import java.util.Collection;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 
 import org.glassfish.grizzly.http.server.Request;
 
 /**
+ * Grizzly container {@link PropertiesDelegate properties delegate}.
+ *
  * @author Martin Matula (martin.matula at oracle.com)
  */
 class GrizzlyRequestPropertiesDelegate implements PropertiesDelegate {
     private final Request request;
 
+    /**
+     * Create new Grizzly container properties delegate instance.
+     *
+     * @param request grizzly HTTP request.
+     */
     GrizzlyRequestPropertiesDelegate(Request request) {
         this.request = request;
     }
@@ -62,8 +68,8 @@ class GrizzlyRequestPropertiesDelegate implements PropertiesDelegate {
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
-        return Collections.enumeration(request.getAttributeNames());
+    public Collection<String> getPropertyNames() {
+        return request.getAttributeNames();
     }
 
     @Override

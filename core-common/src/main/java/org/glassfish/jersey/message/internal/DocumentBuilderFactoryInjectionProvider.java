@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -63,7 +63,7 @@ public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory 
      */
     // TODO This provider should be registered and configured via a feature.
     @Inject
-    public DocumentBuilderFactoryInjectionProvider(final Configurable config) {
+    public DocumentBuilderFactoryInjectionProvider(final Configuration config) {
         super(config);
     }
 

@@ -117,8 +117,7 @@ public final class TwitterAggregator implements DataAggregator {
                 }
 
                 final Client client = ClientFactory.newClient();
-                client.configuration()
-                        .setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context))
+                client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context))
                         .setProperty(ClientProperties.CONNECT_TIMEOUT, 2000)
                         .register(new MoxyJsonFeature())
                         .register(new HttpBasicAuthFilter(App.getTwitterUserName(), App.getTwitterUserPassword()))
@@ -174,7 +173,7 @@ public final class TwitterAggregator implements DataAggregator {
             @Override
             public void run() {
                 final Client resourceClient = ClientFactory.newClient();
-                resourceClient.configuration().register(new MoxyJsonFeature());
+                resourceClient.register(new MoxyJsonFeature());
                 final WebTarget messageStreamResource = resourceClient.target(App.getApiUri()).path("message/stream");
 
                 Message message = null;

@@ -49,6 +49,7 @@ import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.Tokenizer;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -96,7 +97,7 @@ public class ResourceConfigTest {
         ResourceConfig resourceConfig = new MyResourceConfig2();
         ApplicationHandler ah = new ApplicationHandler(resourceConfig);
 
-        assertEquals(1, ah.getConfiguration().getClasses().size());
+        assertTrue(ah.getConfiguration().getClasses().contains(MyResource.class));
     }
 
     @Test
@@ -117,24 +118,24 @@ public class ResourceConfigTest {
     public void testResourceConfigMergeApplications() throws Exception {
         // No custom binder.
         ApplicationHandler ah = new ApplicationHandler(ResourceConfig.class);
-        assertEquals(0, ah.getConfiguration().getCustomBinders().size());
+        assertEquals(0, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
 
         // with MyBinder
         ah = new ApplicationHandler(MyResourceConfig1.class);
-        assertEquals(1, ah.getConfiguration().getCustomBinders().size());
+        assertEquals(1, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
 
         // Add myBinder + one default.
-        final MyBinder defaultBinder = new MyBinder();
+        final MyOtherBinder defaultBinder = new MyOtherBinder();
         ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
-        rc.addBinders(defaultBinder);
+        rc.registerBinders(defaultBinder);
         ah = new ApplicationHandler(rc);
-        assertEquals(2, ah.getConfiguration().getCustomBinders().size());
-        assertTrue(ah.getConfiguration().getCustomBinders().contains(defaultBinder));
+        assertEquals(2, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
+        assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
     }
 
     public static class MyResourceConfig1 extends ResourceConfig {
         public MyResourceConfig1() {
-            addBinders(new MyBinder());
+            registerBinders(new MyBinder());
         }
     }
 
@@ -148,7 +149,7 @@ public class ResourceConfigTest {
 
         public MyResourceConfig2(int id) {
             this.id = id;
-            addClasses(MyResource.class);
+            registerClasses(MyResource.class);
         }
     }
 
@@ -165,6 +166,14 @@ public class ResourceConfigTest {
     }
 
     public static class MyBinder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            // do nothing
+        }
+    }
+
+    public static class MyOtherBinder extends AbstractBinder {
 
         @Override
         protected void configure() {

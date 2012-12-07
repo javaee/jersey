@@ -66,9 +66,9 @@ abstract class MultiPartJerseyTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
 
         return new ResourceConfig().
-                addClasses(getResourceClasses()).
-                addClasses(MultiPartBeanProvider.class).
-                addSingletons(new LoggingFilter(LOGGER, true)).
+                registerClasses(getResourceClasses()).
+                registerClasses(MultiPartBeanProvider.class).
+                registerInstances(new LoggingFilter(LOGGER, true)).
                 register(new MultiPartFeature());
     }
 

@@ -40,20 +40,21 @@
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -145,29 +146,31 @@ public class ClientConfigTest {
         ClientConfig instance = new ClientConfig();
         instance.register(feature);
 
+        assertTrue(instance.getClasses().isEmpty());
+        assertEquals(1, instance.getInstances().size());
+
         // Features are registered at the time of provider bindings.
         final JerseyClient jerseyClient = new JerseyClient(instance);
-        ClientConfig config = jerseyClient.configuration();
-        config.getRuntime();
+        ClientConfig config = jerseyClient.getConfiguration();
+        final ClientRuntime runtime = config.getRuntime();
 
-        assertTrue(instance.getProviderClasses().isEmpty());
-        assertTrue(instance.getProviderInstances().isEmpty());
-        assertTrue(instance.getFeatures().isEmpty());
+        final CommonConfig commonConfig = (CommonConfig) runtime.getConfig();
 
-        final Configuration runtimeConfig = config.getRuntimeConfig();
+        assertEquals(1, commonConfig.getClasses().size());
+        assertEquals(1, commonConfig.getInstances().size());
 
-        assertEquals(1, runtimeConfig.getProviderClasses().size());
-        assertTrue(runtimeConfig.getProviderClasses().contains(MyProvider.class));
-        assertTrue(runtimeConfig.getProviderInstances().isEmpty());
+        assertEquals(1, commonConfig.getComponentBag().getClasses(ComponentBag.EXCLUDE_META_PROVIDERS).size());
+        assertTrue(commonConfig.getComponentBag().getInstances(ComponentBag.EXCLUDE_META_PROVIDERS).isEmpty());
 
-        assertEquals(1, runtimeConfig.getFeatures().size());
-        assertEquals(feature, runtimeConfig.getFeatures().iterator().next());
+        assertTrue(commonConfig.isRegistered(MyProvider.class));
+        assertTrue(commonConfig.isEnabled(feature));
+
     }
 
     public static class EmptyFeature implements Feature {
 
         @Override
-        public boolean configure(final Configurable configurable) {
+        public boolean configure(final FeatureContext context) {
             return true;
         }
     }
@@ -175,13 +178,13 @@ public class ClientConfigTest {
     public static class UnconfigurableFeature implements Feature {
 
         @Override
-        public boolean configure(final Configurable configurable) {
+        public boolean configure(final FeatureContext context) {
             return false;
         }
     }
 
     /**
-     * Copied from ConfigurableTest#
+     * Copied from DefaultConfigTest#
      */
     @Test
     public void testGetFeatures() {
@@ -194,25 +197,24 @@ public class ClientConfigTest {
 
         // Features are registered at the time of provider bindings.
         final JerseyClient jerseyClient = new JerseyClient(clientConfig);
-        clientConfig = jerseyClient.configuration();
+        clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 
-        final Configuration runtimeConfig = clientConfig.getRuntimeConfig();
+        final Configuration runtimeConfig = clientConfig.getRuntime().getConfig();
 
-        assertEquals(1, runtimeConfig.getFeatures().size());
-        assertTrue(runtimeConfig.getFeatures().contains(emptyFeature));
+        assertTrue(runtimeConfig.isEnabled(emptyFeature));
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testGetProviderClasses() {
         ClientConfig instance = new ClientConfig();
-        instance.getProviderClasses().add(ClientConfigTest.class);
+        instance.getClasses().add(ClientConfigTest.class);
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testGetProviderInstances() {
         ClientConfig instance = new ClientConfig();
-        instance.getProviderInstances().add(this);
+        instance.getInstances().add(this);
     }
 
     @Test
@@ -225,31 +227,16 @@ public class ClientConfigTest {
         clientConfig1.register(EmptyFeature.class);
         clientConfig2.register(unconfigurableFeature);
 
-        ClientConfig clientConfig = clientConfig2.updateFrom(clientConfig1);
+        ClientConfig clientConfig = clientConfig2.replaceWith(clientConfig1);
 
         // Features are registered at the time of provider bindings.
         final JerseyClient jerseyClient = new JerseyClient(clientConfig);
-        clientConfig = jerseyClient.configuration();
+        clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 
-        final Configuration runtimeConfig = clientConfig.getRuntimeConfig();
+        final Configuration runtimeConfig = clientConfig.getRuntime().getConfig();
 
-        assertEquals(1, runtimeConfig.getFeatures().size());
-        assertEquals(EmptyFeature.class, runtimeConfig.getFeatures().iterator().next().getClass());
-    }
-
-    @Test
-    public void testSetProperties() {
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("name1", "value1");
-        props.put("name2", "value2");
-        props.put("name3", "value3");
-
-        ClientConfig instance = new ClientConfig().setProperties(props);
-        assertEquals("value1", instance.getProperty("name1"));
-        assertEquals("value2", instance.getProperty("name2"));
-        assertEquals("value3", instance.getProperty("name3"));
-        assertNull(instance.getProperty("other"));
+        assertTrue(runtimeConfig.isEnabled(EmptyFeature.class));
     }
 
     @Test

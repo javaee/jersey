@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
 import javax.xml.parsers.SAXParserFactory;
@@ -63,7 +63,7 @@ public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implem
      */
     // TODO This provider should be registered and configured via a feature.
     @Inject
-    public SaxParserFactoryInjectionProvider(final Configurable config) {
+    public SaxParserFactoryInjectionProvider(final Configuration config) {
         super(config);
     }
 

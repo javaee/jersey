@@ -41,8 +41,8 @@ package org.glassfish.jersey.client;
 
 import java.util.Collection;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 /**
  * Feature to provide the single-line registration of custom providers.
@@ -63,9 +63,9 @@ public class CustomProvidersFeature implements Feature {
     }
 
     @Override
-    public boolean configure(Configurable configuration) {
+    public boolean configure(FeatureContext context) {
         for (Class<?> provider : providers) {
-            configuration.register(provider);
+            context.register(provider);
         }
         return true;
     }

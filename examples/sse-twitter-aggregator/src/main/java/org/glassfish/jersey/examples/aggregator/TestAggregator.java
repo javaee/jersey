@@ -93,7 +93,7 @@ public class TestAggregator implements DataAggregator {
             @Override
             public void run() {
                 final Client resourceClient = ClientFactory.newClient();
-                resourceClient.configuration().register(new MoxyJsonFeature());
+                resourceClient.register(new MoxyJsonFeature());
                 final WebTarget messageStreamResource = resourceClient.target(App.getApiUri()).path("message/stream");
 
                 try {

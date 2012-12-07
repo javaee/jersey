@@ -159,17 +159,17 @@ public class JsonWithPaddingTest extends JerseyTest {
     @Override
     protected Client getClient(final TestContainer tc, final ApplicationHandler applicationHandler) {
         final Client client = super.getClient(tc, applicationHandler);
-        client.configuration().register(jsonTestProvider.getFeature());
+        client.register(jsonTestProvider.getFeature());
         return client;
     }
 
     private static Application configureJaxrsApplication(final JsonTestProvider jsonTestProvider) {
         final ResourceConfig resourceConfig = new ResourceConfig().
-                addClasses(JsonResource.class).
+                registerClasses(JsonResource.class).
                 register(jsonTestProvider.getFeature());
 
         if (jsonTestProvider.getProviders() != null) {
-            resourceConfig.addSingletons(jsonTestProvider.getProviders());
+            resourceConfig.registerInstances(jsonTestProvider.getProviders());
         }
 
         return resourceConfig;

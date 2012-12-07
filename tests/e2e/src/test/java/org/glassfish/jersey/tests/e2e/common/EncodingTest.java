@@ -151,7 +151,7 @@ public class EncodingTest extends JerseyTest {
         test(new TestSpec() {
             @Override
             public WebTarget configure(WebTarget target) {
-                target.configuration().register(GZipEncoder.class).register(EncodingFilter.class);
+                target.register(GZipEncoder.class).register(EncodingFilter.class);
                 return target;
             }
 
@@ -172,7 +172,7 @@ public class EncodingTest extends JerseyTest {
 
             @Override
             public WebTarget configure(WebTarget target) {
-                target.configuration().register(DeflateEncoder.class)
+                target.register(DeflateEncoder.class)
                         .register(GZipEncoder.class).register(EncodingFilter.class);
                 return target;
             }

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
@@ -58,21 +59,47 @@ public final class JarFileScanner implements ResourceFinder {
 
     private final JarInputStream jarInputStream;
     private final String parent;
+    private final boolean recursive;
 
-    public JarFileScanner(InputStream inputStream, String parent) throws IOException {
+    /**
+     * Create new JAR file scanner.
+     *
+     * @param inputStream JAR file input stream
+     * @param parent      JAR file entry prefix.
+     * @param recursive   if ({@code true} the packages will be scanned recursively together with
+     *                    any nested packages, if {@code false} only the explicitly listed packages
+     *                    will be scanned.
+     * @throws IOException
+     */
+    public JarFileScanner(InputStream inputStream, String parent, boolean recursive) throws IOException {
         this.jarInputStream = new JarInputStream(inputStream);
         this.parent = parent;
+        this.recursive = recursive;
     }
 
     private JarEntry next = null;
 
     @Override
     public boolean hasNext() {
-        if(next == null) {
+        if (next == null) {
             try {
                 do {
                     this.next = jarInputStream.getNextJarEntry();
-                } while(next != null && (next.isDirectory() || !next.getName().startsWith(parent)));
+                    if (next == null) {
+                        break;
+                    }
+                    if (!next.isDirectory() && next.getName().startsWith(parent)) {
+                        if (recursive) {
+                            // accept any entries with the prefix
+                            break;
+                        }
+                        // accept only entries directly in the folder.
+                        String suffix = next.getName().substring(parent.length());
+                        if (suffix.lastIndexOf(File.separatorChar) <= 0) {
+                            break;
+                        }
+                    }
+                } while (true);
             } catch (IOException e) {
                 Logger.getLogger(JarFileScanner.class.getName()).log(Level.CONFIG, "Unable to read the next jar entry.", e);
                 return false;
@@ -82,7 +109,7 @@ public final class JarFileScanner implements ResourceFinder {
             }
         }
 
-        if(next == null) {
+        if (next == null) {
             try {
                 jarInputStream.close();
             } catch (IOException e) {
@@ -97,7 +124,7 @@ public final class JarFileScanner implements ResourceFinder {
 
     @Override
     public String next() {
-        if(next != null || hasNext()) {
+        if (next != null || hasNext()) {
             final String name = next.getName();
             next = null;
             return name;

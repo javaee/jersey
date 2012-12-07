@@ -49,6 +49,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -155,7 +156,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      *                be added to the config by default.
      */
     public static void enableFor(ResourceConfig rc, Source... sources) {
-        rc.addClasses(HttpMethodOverrideFilter.class);
+        rc.registerClasses(HttpMethodOverrideFilter.class);
         rc.setProperty(ServerProperties.HTTP_METHOD_OVERRIDE, sources);
     }
 
@@ -169,7 +170,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      *
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
-    public HttpMethodOverrideFilter(@Context ResourceConfig rc) {
+    public HttpMethodOverrideFilter(@Context Configuration rc) {
         this(parseConfig(rc.getProperty(ServerProperties.HTTP_METHOD_OVERRIDE)));
     }
 

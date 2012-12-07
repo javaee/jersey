@@ -46,7 +46,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -127,7 +127,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
 
     // TODO This provider should be registered and configured via a feature.
     @Context
-    public void setConfiguration(final Configurable config) {
+    public void setConfiguration(final Configuration config) {
         formattedOutput = Values.lazy(new Value<Boolean>() {
 
             @Override

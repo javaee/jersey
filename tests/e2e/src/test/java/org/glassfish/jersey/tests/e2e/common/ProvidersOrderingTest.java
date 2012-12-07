@@ -306,7 +306,7 @@ public class ProvidersOrderingTest extends JerseyTest {
         callList = new ArrayList<Class<?>>();
 
         final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, MyMBW5.class);
-        resourceConfig.addSingletons(new MyMBW1(callList), new MyMBW2(callList), new MyMBW3(callList), new MyMBW4(callList),
+        resourceConfig.registerInstances(new MyMBW1(callList), new MyMBW2(callList), new MyMBW3(callList), new MyMBW4(callList),
                 new MyMBR1(callList), new MyMBR2(callList), new MyMBR3(callList), new MyByteArrayProvider());
         return resourceConfig;
     }

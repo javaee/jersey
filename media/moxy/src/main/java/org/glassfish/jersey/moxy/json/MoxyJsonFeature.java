@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.moxy.json;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 /**
  * Feature used to register MOXy JSON providers.
@@ -50,8 +50,8 @@ import javax.ws.rs.core.Feature;
 public class MoxyJsonFeature implements Feature {
 
     @Override
-    public boolean configure(final Configurable config) {
-        config.register(ConfigurableMoxyJsonProvider.class);
+    public boolean configure(FeatureContext context) {
+        context.register(ConfigurableMoxyJsonProvider.class);
         return true;
     }
 }

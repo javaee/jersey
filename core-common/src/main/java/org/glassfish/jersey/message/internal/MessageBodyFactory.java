@@ -61,7 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -192,13 +192,13 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * Create new message body workers factory.
      *
      * @param locator service locator.
-     * @param configurable configuration. Optional - can be null.
+     * @param configuration configuration. Optional - can be null.
      */
     @Inject
-    public MessageBodyFactory(ServiceLocator locator, @Optional Configurable configurable) {
+    public MessageBodyFactory(ServiceLocator locator, @Optional Configuration configuration) {
         this.locator = locator;
-        this.legacyProviderOrdering = configurable != null
-                        && PropertiesHelper.isProperty(configurable.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
+        this.legacyProviderOrdering = configuration != null
+                        && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
         initReaders();
         initWriters();

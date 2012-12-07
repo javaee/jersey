@@ -76,7 +76,7 @@ public class ProgrammaticResourceMethodsTest {
                 return Response.ok().build();
             }
         });
-        rc.addResources(resourceBuilder.build());
+        rc.registerResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatus(RequestContextBuilder.from("/test", "GET").build(), application);
@@ -93,7 +93,7 @@ public class ProgrammaticResourceMethodsTest {
                 return Response.ok().build();
             }
         });
-        rc.addResources(resourceBuilder.build());
+        rc.registerResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatus(RequestContextBuilder.from("/test", "HEAD").build(), application);
@@ -110,7 +110,7 @@ public class ProgrammaticResourceMethodsTest {
                 return Response.ok().build();
             }
         });
-        rc.addResources(resourceBuilder.build());
+        rc.registerResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatus(RequestContextBuilder.from("/test", "OPTIONS").build(), application);
@@ -133,7 +133,7 @@ public class ProgrammaticResourceMethodsTest {
         resourceBuilder.addMethod("OPTIONS").handledBy(inflector);
         resourceBuilder.addMethod("HEAD").handledBy(inflector);
 
-        rc.addResources(resourceBuilder.build());
+        rc.registerResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatus(RequestContextBuilder.from("/test", "GET").build(), application);
@@ -173,7 +173,7 @@ public class ProgrammaticResourceMethodsTest {
         childTest1Builder.addMethod("OPTIONS").handledBy(inflector2);
         childTest1Builder.addMethod("HEAD").handledBy(inflector2);
         final Resource resource = resourceBuilder.build();
-        rc.addResources(resource);
+        rc.registerResources(resource);
         final ApplicationHandler application = new ApplicationHandler(rc);
 
         checkReturnedStatusEquals(201, RequestContextBuilder.from("/test1", "GET").build(), application);

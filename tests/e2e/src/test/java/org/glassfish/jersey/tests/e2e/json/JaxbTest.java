@@ -114,22 +114,20 @@ public class JaxbTest extends AbstractJsonTest {
             UserTable.class
     };
 
+    public JaxbTest(final JsonTestSetup jsonTestSetup) throws Exception {
+        super(jsonTestSetup);
+    }
+
     @Parameterized.Parameters()
     public static Collection<JsonTestSetup[]> getJsonProviders() throws Exception {
         final List<JsonTestSetup[]> jsonTestSetups = new LinkedList<JsonTestSetup[]>();
 
         for (JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
             for (Class<?> entityClass : CLASSES) {
-                jsonProvider.getProviders().add(createJaxbContextResolver(jsonProvider, entityClass));
-                jsonTestSetups.add(new JsonTestSetup[] {new JsonTestSetup(entityClass, jsonProvider)});
+                jsonTestSetups.add(new JsonTestSetup[]{new JsonTestSetup(entityClass, jsonProvider)});
             }
         }
 
         return jsonTestSetups;
     }
-
-    public JaxbTest(final JsonTestSetup jsonTestSetup) throws Exception {
-        super(jsonTestSetup);
-    }
-
 }

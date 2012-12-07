@@ -84,7 +84,7 @@ public class App {
 
     public static ResourceConfig create() {
         return new ResourceConfig()
-                .addClasses(JacksonFeature.class, ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
+                .registerClasses(JacksonFeature.class, ChatResource.class, SimpleJerseyExecutorManagedLongRunningResource.class)
+                .registerInstances(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
     }
 }

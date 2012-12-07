@@ -79,7 +79,7 @@ public class ProgrammaticResourceTest {
         final MyResource myResource = new MyResource();
         myResource.setCounter(100);
         Resource resource = Resource.from(myResource);
-        ApplicationHandler ah = new ApplicationHandler(new ResourceConfig().addResources(resource));
+        ApplicationHandler ah = new ApplicationHandler(new ResourceConfig().registerResources(resource));
         ContainerResponse response = ah.apply(RequestContextBuilder.from("/root", "GET").build()).get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("100", response.getEntity());
@@ -91,7 +91,7 @@ public class ProgrammaticResourceTest {
     @Test
     public void testClassBasedResources() throws ExecutionException, InterruptedException {
         Resource resource = Resource.from(MyResource.class);
-        ApplicationHandler ah = new ApplicationHandler(new ResourceConfig().addResources(resource));
+        ApplicationHandler ah = new ApplicationHandler(new ResourceConfig().registerResources(resource));
         ContainerResponse response = ah.apply(RequestContextBuilder.from("/root", "GET").build()).get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("10", response.getEntity());

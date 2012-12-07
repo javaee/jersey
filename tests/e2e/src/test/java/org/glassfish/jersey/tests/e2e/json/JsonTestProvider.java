@@ -55,8 +55,6 @@ import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
-import org.glassfish.hk2.utilities.Binder;
-
 /**
  * Common class for JSON providers that should be used for testing JSON capabilities.
  *
@@ -76,23 +74,20 @@ public abstract class JsonTestProvider {
         add(new JacksonJsonTestProvider());
     }};
 
-    public static class JacksonJsonTestProvider extends JsonTestProvider {
-
-        public JacksonJsonTestProvider() {
-            setFeature(new JacksonFeature());
-        }
-
-    }
+    private Feature feature;
+    private JettisonConfiguration configuration;
+    private Set<Object> providers = new LinkedHashSet<Object>();
 
     public static class JettisonMappedJsonTestProvider extends JsonTestProvider {
 
         public JettisonMappedJsonTestProvider() {
-            final JettisonConfiguration jsonConfiguration = JettisonConfiguration.mappedJettison().xml2JsonNs(new HashMap<String,
-                    String>() {{
-                put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
-                put("http://example.com", "example");
-                put("http://test.jaxb.com", "jaxb");
-            }}).build();
+            final JettisonConfiguration jsonConfiguration =
+                    JettisonConfiguration.mappedJettison().xml2JsonNs(new HashMap<String,
+                            String>() {{
+                        put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+                        put("http://example.com", "example");
+                        put("http://test.jaxb.com", "jaxb");
+                    }}).build();
 
             setFeature(new JettisonFeature());
             setConfiguration(jsonConfiguration);
@@ -119,10 +114,32 @@ public abstract class JsonTestProvider {
 
     }
 
-    private Binder binder;
-    private Feature feature;
-    private JettisonConfiguration configuration;
-    private Set<Object> providers = new LinkedHashSet<Object>();
+    @Provider
+    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
+
+        @Override
+        public MoxyJsonConfiguration getContext(Class<?> objectType) {
+            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
+
+            Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+            namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+            namespacePrefixMapper.put("http://example.com", "example");
+            namespacePrefixMapper.put("http://test.jaxb.com", "jaxb");
+
+            configuration.setNamespacePrefixMapper(namespacePrefixMapper);
+            configuration.setNamespaceSeparator(':');
+
+            return configuration;
+        }
+    }
+
+    public static class JacksonJsonTestProvider extends JsonTestProvider {
+
+        public JacksonJsonTestProvider() {
+            setFeature(new JacksonFeature());
+        }
+
+    }
 
     public JettisonConfiguration getConfiguration() {
         return configuration;
@@ -143,24 +160,4 @@ public abstract class JsonTestProvider {
     public Set<Object> getProviders() {
         return providers;
     }
-
-    @Provider
-    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
-
-        @Override
-        public MoxyJsonConfiguration getContext(Class<?> objectType) {
-            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
-
-            Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
-            namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
-            namespacePrefixMapper.put("http://example.com", "example");
-            namespacePrefixMapper.put("http://test.jaxb.com", "jaxb");
-
-            configuration.setNamespacePrefixMapper(namespacePrefixMapper);
-            configuration.setNamespaceSeparator(':');
-
-            return configuration;
-        }
-    }
-
 }

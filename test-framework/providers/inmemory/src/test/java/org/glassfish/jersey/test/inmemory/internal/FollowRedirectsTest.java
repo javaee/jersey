@@ -86,7 +86,7 @@ public class FollowRedirectsTest extends JerseyTest {
     @Test
     public void testDontFollow() {
         WebTarget t = target("test/redirect");
-        t.configuration().setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
+        t.setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
         assertEquals(302, t.request().get().getStatus());
     }
 }

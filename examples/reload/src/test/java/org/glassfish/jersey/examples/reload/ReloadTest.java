@@ -67,7 +67,7 @@ public class ReloadTest extends JerseyTest {
 
         final ResourceConfig result = new ResourceConfig(ArrivalsResource.class);
 
-        result.addSingletons(new AbstractContainerLifecycleListener() {
+        result.registerInstances(new AbstractContainerLifecycleListener() {
             @Override
             public void onStartup(Container container) {
                 ReloadTest.container = container;

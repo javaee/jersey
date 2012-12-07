@@ -37,11 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server.scanning;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext1WriterInterceptor;
@@ -50,17 +49,17 @@ import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext3WriterInterceptor;
 import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext4WriterInterceptor;
 
 /**
-* @author Michal Gajdos (michal.gajdos at oracle.com)
-*/
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ */
 @Provider
 public class CustomFeature implements Feature {
 
     @Override
-    public boolean configure(final Configurable configurable) {
-        configurable.register(Ext3WriterInterceptor.class, 1000);
-        configurable.register(Ext2WriterInterceptor.class, 100);
-        configurable.register(Ext1WriterInterceptor.INSTANCE, 500);
-        configurable.register(Ext4WriterInterceptor.INSTANCE, 1);
+    public boolean configure(final FeatureContext context) {
+        context.register(Ext3WriterInterceptor.class, 1000);
+        context.register(Ext2WriterInterceptor.class, 100);
+        context.register(Ext1WriterInterceptor.INSTANCE, 500);
+        context.register(Ext4WriterInterceptor.INSTANCE, 1);
         return true;
     }
 }

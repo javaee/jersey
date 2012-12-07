@@ -58,13 +58,13 @@ public class RankedProviderScanningTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig().packages(RankedProviderScanningTest.class.getPackage().getName());
+        return new ResourceConfig().packages(false, RankedProviderScanningTest.class.getPackage().getName());
     }
 
     @Test
     public void testRankedProviderScanning() throws Exception {
         WebTarget t = target();
-        t.configuration().register(new LoggingFilter());
+        t.register(new LoggingFilter());
 
         Response r = t.path("/").request().get();
 

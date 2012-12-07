@@ -59,7 +59,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
-import javax.ws.rs.container.ResumeCallback;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -294,7 +293,7 @@ class ServerRuntime {
 
             // no-exception zone
             // the methods below are guaranteed to not throw any exceptions
-            completionCallbackRunner.onComplete();
+            completionCallbackRunner.onComplete(null);
             release(response);
         }
 
@@ -307,7 +306,7 @@ class ServerRuntime {
                 try {
                     request.getResponseWriter().failure(error);
                 } finally {
-                    completionCallbackRunner.onError(error);
+                    completionCallbackRunner.onComplete(error);
                 }
             } finally {
                 release(response);
@@ -504,7 +503,6 @@ class ServerRuntime {
 
         private volatile TimeoutHandler timeoutHandler = DEFAULT_TIMEOUT_HANDLER;
 
-        private final ResumeCallbackRunner resumeCallbackRunner = new ResumeCallbackRunner();
         private final List<AbstractCallbackRunner<?>> callbackRunners;
 
         public AsyncResponder(final Responder responder,
@@ -519,7 +517,7 @@ class ServerRuntime {
             this.asyncExecutorsFactory = asyncExecutorsFactory;
 
             this.callbackRunners = Collections.unmodifiableList(Arrays.asList(
-                    resumeCallbackRunner, responder.completionCallbackRunner, responder.connectionCallbackRunner));
+                    responder.completionCallbackRunner, responder.connectionCallbackRunner));
 
             responder.completionCallbackRunner.register(this);
         }
@@ -544,14 +542,7 @@ class ServerRuntime {
         }
 
         @Override
-        public void onComplete() {
-            synchronized (stateLock) {
-                state = COMPLETED;
-            }
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
+        public void onComplete(final Throwable throwable) {
             synchronized (stateLock) {
                 state = COMPLETED;
             }
@@ -592,15 +583,12 @@ class ServerRuntime {
         }
 
         @Override
-        public void resume(final Object response) throws IllegalStateException {
-            resume(new Runnable() {
+        public boolean resume(final Object response) throws IllegalStateException {
+            return resume(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         final Response jaxrsResponse = toJaxrsResponse(response);
-
-                        resumeCallbackRunner.onResume(AsyncResponder.this, jaxrsResponse);
-
                         responder.process(new ContainerResponse(responder.request, jaxrsResponse));
                     } catch (Throwable t) {
                         responder.process(t);
@@ -618,30 +606,31 @@ class ServerRuntime {
         }
 
         @Override
-        public void resume(final Throwable error) throws IllegalStateException {
-            resume(new Runnable() {
+        public boolean resume(final Throwable error) throws IllegalStateException {
+            return resume(new Runnable() {
                 @Override
                 public void run() {
-                    resumeCallbackRunner.onResume(AsyncResponder.this, error);
                     responder.process(error);
                 }
             });
         }
 
-        private void resume(Runnable handler) {
+        private boolean resume(Runnable handler) {
             synchronized (stateLock) {
                 if (state != SUSPENDED) {
-                    throw new IllegalStateException("Not suspended.");
+                    return false;
                 }
                 state = RESUMED;
             }
 
             requestScope.runInScope(scopeInstance, handler);
+
+            return true;
         }
 
         @Override
-        public void cancel() {
-            cancel(new Value<Response>() {
+        public boolean cancel() {
+            return cancel(new Value<Response>() {
                 @Override
                 public Response get() {
                     return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
@@ -650,8 +639,8 @@ class ServerRuntime {
         }
 
         @Override
-        public void cancel(final int retryAfter) {
-            cancel(new Value<Response>() {
+        public boolean cancel(final int retryAfter) {
+            return cancel(new Value<Response>() {
                 @Override
                 public Response get() {
                     return Response
@@ -663,8 +652,8 @@ class ServerRuntime {
         }
 
         @Override
-        public void cancel(final Date retryAfter) {
-            cancel(new Value<Response>() {
+        public boolean cancel(final Date retryAfter) {
+            return cancel(new Value<Response>() {
                 @Override
                 public Response get() {
                     return Response
@@ -675,13 +664,10 @@ class ServerRuntime {
             });
         }
 
-        private void cancel(final Value<Response> responseValue) {
+        private boolean cancel(final Value<Response> responseValue) {
             synchronized (stateLock) {
-                if (cancelled) {
-                    return;
-                }
-                if (state != SUSPENDED) {
-                    throw new IllegalStateException("Not suspended");
+                if (cancelled || state != SUSPENDED) {
+                    return false;
                 }
                 state = RESUMED;
                 cancelled = true;
@@ -692,13 +678,13 @@ class ServerRuntime {
                 public void run() {
                     try {
                         final Response response = responseValue.get();
-                        resumeCallbackRunner.onResume(AsyncResponder.this, response);
                         responder.process(new ContainerResponse(responder.request, response));
                     } catch (Throwable t) {
                         responder.process(t);
                     }
                 }
             });
+            return true;
         }
 
         public boolean isRunning() {
@@ -820,39 +806,6 @@ class ServerRuntime {
         }
     }
 
-    private static class ResumeCallbackRunner
-            extends AbstractCallbackRunner<ResumeCallback> implements ResumeCallback {
-
-        private ResumeCallbackRunner() {
-            super(Logger.getLogger(ResumeCallbackRunner.class.getName()));
-        }
-
-        @Override
-        public boolean supports(Class<?> callbackClass) {
-            return ResumeCallback.class.isAssignableFrom(callbackClass);
-        }
-
-        @Override
-        public void onResume(final AsyncResponse resuming, final Response response) {
-            executeCallbacks(new Closure<ResumeCallback>() {
-                @Override
-                public void invoke(ResumeCallback callback) {
-                    callback.onResume(resuming, response);
-                }
-            });
-        }
-
-        @Override
-        public void onResume(final AsyncResponse resuming, final Throwable error) {
-            executeCallbacks(new Closure<ResumeCallback>() {
-                @Override
-                public void invoke(ResumeCallback callback) {
-                    callback.onResume(resuming, error);
-                }
-            });
-        }
-    }
-
     private static class CompletionCallbackRunner
             extends AbstractCallbackRunner<CompletionCallback> implements CompletionCallback {
 
@@ -866,21 +819,11 @@ class ServerRuntime {
         }
 
         @Override
-        public void onComplete() {
+        public void onComplete(final Throwable throwable) {
             executeCallbacks(new Closure<CompletionCallback>() {
                 @Override
                 public void invoke(CompletionCallback callback) {
-                    callback.onComplete();
-                }
-            });
-        }
-
-        @Override
-        public void onError(final Throwable error) {
-            executeCallbacks(new Closure<CompletionCallback>() {
-                @Override
-                public void invoke(CompletionCallback callback) {
-                    callback.onError(error);
+                    callback.onComplete(throwable);
                 }
             });
         }

@@ -40,7 +40,7 @@
 package org.glassfish.jersey.jettison;
 
 import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
@@ -56,30 +56,29 @@ import org.glassfish.jersey.jettison.internal.entity.JettisonRootElementProvider
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class JettisonFeature implements Feature {
+    private static Class[] PROVIDERS = new Class[]{
+            JettisonArrayProvider.App.class,
+            JettisonArrayProvider.General.class,
+
+            JettisonObjectProvider.App.class,
+            JettisonObjectProvider.General.class,
+
+            JettisonRootElementProvider.App.class,
+            JettisonRootElementProvider.General.class,
+
+            JettisonJaxbElementProvider.App.class,
+            JettisonJaxbElementProvider.General.class,
+
+            JettisonListElementProvider.App.class,
+            JettisonListElementProvider.General.class
+    };
 
     @Override
-    public boolean configure(final Configurable config) {
-        registerReaderWriterProvider(config, JettisonArrayProvider.App.class);
-        registerReaderWriterProvider(config, JettisonArrayProvider.General.class);
+    public boolean configure(final FeatureContext context) {
+        for (Class<?> provider : PROVIDERS) {
+            context.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
+        }
 
-        registerReaderWriterProvider(config, JettisonObjectProvider.App.class);
-        registerReaderWriterProvider(config, JettisonObjectProvider.General.class);
-
-        registerReaderWriterProvider(config, JettisonRootElementProvider.App.class);
-        registerReaderWriterProvider(config, JettisonRootElementProvider.General.class);
-
-        registerReaderWriterProvider(config, JettisonJaxbElementProvider.App.class);
-        registerReaderWriterProvider(config, JettisonJaxbElementProvider.General.class);
-
-        registerReaderWriterProvider(config, JettisonListElementProvider.App.class);
-        registerReaderWriterProvider(config, JettisonListElementProvider.General.class);
-        
         return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void registerReaderWriterProvider(
-            final Configurable config, final Class<T> provider) {
-        config.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
     }
 }

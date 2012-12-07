@@ -51,7 +51,7 @@ import java.util.Set;
 import org.glassfish.jersey.server.ResourceFinder;
 
 /**
- * Not used yet - preparations for OSGi support.
+ * Preparations for OSGi support.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -62,11 +62,14 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         return new HashSet<String>(Arrays.asList("bundle"));
     }
 
+    /**
+     * Create new bundle scheme resource finder factory.
+     */
     BundleSchemeResourceFinderFactory() {
     }
 
     @Override
-    public BundleSchemeScanner create(URI uri) {
+    public BundleSchemeScanner create(URI uri, boolean recursive) {
         return new BundleSchemeScanner(uri);
     }
 

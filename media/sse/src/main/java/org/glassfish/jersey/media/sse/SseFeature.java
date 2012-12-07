@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -59,15 +59,14 @@ public class SseFeature implements Feature {
     public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
 
     @Override
-    public boolean configure(Configurable configurable) {
-        for (Object o : configurable.getFeatures()) {
-            if (o.getClass() == this.getClass()) {
-                // already registered
-                return false;
-            }
+    public boolean configure(FeatureContext context) {
+        if (context.getConfiguration().isEnabled(this.getClass())) {
+            return false;
         }
 
-        configurable.register(EventInputReader.class).register(InboundEventReader.class).register(OutboundEventWriter.class);
+        context.register(EventInputReader.class);
+        context.register(InboundEventReader.class);
+        context.register(OutboundEventWriter.class);
         return true;
     }
 }

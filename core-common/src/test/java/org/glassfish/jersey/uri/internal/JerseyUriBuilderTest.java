@@ -285,7 +285,7 @@ public class JerseyUriBuilderTest {
         Map<String, Object> values = new HashMap<String, Object>();
         values.put("scheme", "s");
         values.put("host", "h");
-        values.put("port", new Integer(1));
+        values.put("port", 1);
         values.put("path", "p/p");
         values.put("query", "q");
         values.put("fragment", "f");
@@ -335,7 +335,7 @@ public class JerseyUriBuilderTest {
         Map<String, Object> values = new HashMap<String, Object>();
         values.put("scheme", "s");
         values.put("host", "h");
-        values.put("port", new Integer(1));
+        values.put("port", 1);
         values.put("path", "p/p");
         values.put("query", "q");
         values.put("fragment", "f");
@@ -675,7 +675,7 @@ public class JerseyUriBuilderTest {
             boolean caught = false;
 
             try {
-                URI u = UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", "1", null, "2")
+                UriBuilder.fromPath("http://localhost:8080").queryParam("x", "10").replaceQueryParam("x", "1", null, "2")
                         .build();
             } catch (IllegalArgumentException iae) {
                 caught = true;
@@ -963,7 +963,7 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create("http://localhost:8080/?c=z"), uri);
 
         try {
-            uri = UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x", null).build();
+            UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x", null).build();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         } catch (NullPointerException e) {
@@ -1143,7 +1143,7 @@ public class JerseyUriBuilderTest {
 
     @Test
     public void testBuildFromMap() {
-        Map maps = new HashMap();
+        Map<String, Object> maps = new HashMap<String, Object>();
         maps.put("x", null);
         maps.put("y", "/path-absolute/test1");
         maps.put("z", "fred@example.com");
@@ -1166,7 +1166,7 @@ public class JerseyUriBuilderTest {
 
     @Test
     public void testBuildFromMapByResolve() {
-        Map maps = new HashMap();
+        Map<String, Object> maps = new HashMap<String, Object>();
         maps.put("x", null);
         maps.put("y", "/path-absolute/test1");
         maps.put("z", "fred@example.com");
@@ -1476,9 +1476,6 @@ public class JerseyUriBuilderTest {
         final UriBuilder uriBuilder = UriBuilder.fromPath("http://localhost:8080").path("{a}").path
                 ("{b}").queryParam("query", "{q}");
 
-        Map<String, Object> resolveMap = new HashMap<String, Object>();
-        resolveMap.put("a", "param-a");
-        resolveMap.put("q", "param-q");
         uriBuilder.resolveTemplate("a", "param-a");
         uriBuilder.resolveTemplate("q", "param-q");
         Map<String, Object> buildMap = new HashMap<String, Object>();

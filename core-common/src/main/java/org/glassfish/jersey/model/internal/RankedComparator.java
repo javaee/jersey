@@ -44,7 +44,7 @@ import java.util.Comparator;
 
 /**
  * Comparator used to sort types by their priorities defined by theirs binding priority set during the configuration phase
- * ({@link javax.ws.rs.core.Configurable}) in {@link RankedProvider ranked provider}.
+ * ({@link javax.ws.rs.core.Configuration}) in {@link RankedProvider ranked provider}.
  *
  * @param <T> Type of the elements to be sorted.
  *

@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.media.multipart;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
@@ -55,14 +55,14 @@ import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 public class MultiPartFeature implements javax.ws.rs.core.Feature {
 
     @Override
-    public boolean configure(final Configurable config) {
-        config.register(FormDataParameterInjectionFeature.class);
-        config.register(MultiPartProperties.Feature.class);
+    public boolean configure(final FeatureContext context) {
+        context.register(FormDataParameterInjectionFeature.class);
+        context.register(MultiPartProperties.Feature.class);
 
-        config.register(MultiPartReaderServerSide.class);
-        config.register(MultiPartReaderClientSide.class);
+        context.register(MultiPartReaderServerSide.class);
+        context.register(MultiPartReaderClientSide.class);
 
-        config.register(MultiPartWriter.class);
+        context.register(MultiPartWriter.class);
 
         return true;
     }

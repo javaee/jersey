@@ -49,6 +49,7 @@ import javax.ws.rs.BindingPriority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -112,7 +113,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      * @param languageMappings the suffix to language mappings.
      */
     public static void enableFor(ResourceConfig rc, Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
-        rc.addClasses(UriConnegFilter.class);
+        rc.registerClasses(UriConnegFilter.class);
         setIfNull(rc, ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypeMappings);
         setIfNull(rc, ServerProperties.LANGUAGE_MAPPINGS, languageMappings);
     }
@@ -130,7 +131,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      *
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
-    public UriConnegFilter(@Context ResourceConfig rc) {
+    public UriConnegFilter(@Context Configuration rc) {
         this(extractMediaTypeMappings(rc.getProperty(ServerProperties.MEDIA_TYPE_MAPPINGS)),
                 extractLanguageMappings(rc.getProperty(ServerProperties.LANGUAGE_MAPPINGS)));
     }

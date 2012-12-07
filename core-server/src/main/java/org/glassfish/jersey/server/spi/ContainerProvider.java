@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.spi;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -78,7 +79,7 @@ import org.glassfish.jersey.spi.Contract;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Contract
-@ConstrainedTo(ConstrainedTo.Type.SERVER)
+@ConstrainedTo(RuntimeType.SERVER)
 public interface ContainerProvider {
 
     /**

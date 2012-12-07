@@ -76,7 +76,7 @@ public class TraceSupportTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.configuration().register(LoggingFilter.class);
+        target.register(LoggingFilter.class);
         return target.path(path);
     }
 
@@ -149,6 +149,6 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     private Client getGrizzlyClient() {
-        return ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().configuration())));
+        return ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().getConfiguration())));
     }
 }

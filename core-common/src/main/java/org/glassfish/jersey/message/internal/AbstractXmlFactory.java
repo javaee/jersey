@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageProperties;
@@ -51,9 +51,9 @@ import org.glassfish.jersey.message.MessageProperties;
  */
 abstract class AbstractXmlFactory {
 
-    private final Configurable config;
+    private final Configuration config;
 
-    protected AbstractXmlFactory(final Configurable config) {
+    protected AbstractXmlFactory(final Configuration config) {
         this.config = config;
     }
 

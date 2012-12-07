@@ -84,7 +84,7 @@ public class FollowRedirectsTest extends JerseyTest {
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         Client c = super.getClient(tc, applicationHandler);
-        ClientConfig cc = new ClientConfig().connector(new GrizzlyConnector(c.configuration()));
+        ClientConfig cc = new ClientConfig().connector(new GrizzlyConnector(c.getConfiguration()));
         return ClientFactory.newClient(cc);
     }
 
@@ -98,7 +98,7 @@ public class FollowRedirectsTest extends JerseyTest {
     @Test
     public void testDontFollow() {
         WebTarget t = target("test/redirect");
-        t.configuration().setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
+        t.setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
         assertEquals(303, t.request().get().getStatus());
     }
 }

@@ -55,7 +55,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication extends ResourceConfig {
 
     public MyApplication() {
-        addClasses(BookmarkResource.class, BookmarksResource.class, UserResource.class, UsersResource.class);
+        registerClasses(BookmarkResource.class, BookmarksResource.class, UserResource.class, UsersResource.class);
         register(new JettisonFeature());
     }
 }

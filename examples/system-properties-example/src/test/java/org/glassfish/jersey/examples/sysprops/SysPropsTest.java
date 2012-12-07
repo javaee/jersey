@@ -66,7 +66,7 @@ public class SysPropsTest extends JerseyTest {
     @Override
     protected Client getClient(TestContainer tc, ApplicationHandler application) {
         Client origClient = super.getClient(tc, application);
-        origClient.configuration().register(PropertiesReader.class);
+        origClient.register(PropertiesReader.class);
         return origClient;
     }
 

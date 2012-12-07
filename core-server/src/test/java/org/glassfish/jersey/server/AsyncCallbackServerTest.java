@@ -46,7 +46,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
@@ -56,169 +55,32 @@ import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.ResumeCallback;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Response;
 
 import javax.inject.Singleton;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import junit.framework.Assert;
 
 /**
- * Tests {@link ResumeCallback} and {@link CompletionCallback}.
+ * Tests {@link CompletionCallback}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class AsyncCallbackServerTest {
     public static boolean onResumeCalled;
     public static boolean onCompletionCalled;
-    public static boolean onCompletionFailedCalled;
+    public static boolean onCompletionCalledWithError;
     public static boolean onResumeFailedCalled;
 
-    public static void reset() {
+    @Before
+    public void reset() {
         onResumeCalled = false;
         onCompletionCalled = false;
-        onCompletionFailedCalled = false;
+        onCompletionCalledWithError = false;
         onResumeFailedCalled = false;
-    }
-
-    @Test
-    public void testResumeCallbackOneMethod() throws ExecutionException, InterruptedException {
-        reset();
-        ApplicationHandler app = new ApplicationHandler(new ResourceConfig(Resource.class,
-                CheckingResumeFilter.class));
-        ContainerRequest req = RequestContextBuilder.from(
-                "/resource/oneMethod", "GET").build();
-
-        final ContainerResponse response = app.apply(req).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("MyResumeCallback.onResume was not called.", onResumeCalled);
-
-    }
-
-    @Test
-    public void testResumeCallbackTwoMethods() throws ExecutionException, InterruptedException {
-        reset();
-        ApplicationHandler app = new ApplicationHandler(new ResourceConfig(Resource.class,
-                CheckingResumeFilter.class));
-
-        final Future<ContainerResponse> future = app.apply(RequestContextBuilder.from(
-                "/resource/suspendResponse", "GET").build());
-        Assert.assertFalse(future.isDone());
-        Assert.assertFalse(onResumeCalled);
-        ContainerResponse response = app.apply(RequestContextBuilder.from(
-                "/resource/resumeSuspendedResponse", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("MyResumeCallback.onResume was not called.", onResumeCalled);
-    }
-
-    @Test
-    public void testResumeFail() throws ExecutionException, InterruptedException {
-        reset();
-        ApplicationHandler app = new ApplicationHandler(new ResourceConfig(Resource.class,
-                CheckingResumeFailFilter.class));
-
-        try {
-            ContainerResponse response = app.apply(RequestContextBuilder.from(
-                    "/resource/resumeFail", "GET").build()).get();
-            Assert.fail("should fail");
-        } catch (Exception e) {
-            // ok - should throw an exception
-        }
-        Assert.assertTrue("MyResumeCallback.onResume was not called.", onResumeFailedCalled);
-    }
-
-
-    public static class MyResumeCallback implements ResumeCallback {
-        @Override
-        public void onResume(AsyncResponse resuming, Response response) {
-            Assert.assertFalse(onResumeCalled);
-            onResumeCalled = true;
-        }
-
-        @Override
-        public void onResume(AsyncResponse resuming, Throwable error) {
-            Assert.assertFalse(onResumeFailedCalled);
-            onResumeFailedCalled = true;
-        }
-    }
-
-
-    @ResumeBinding
-    public static class CheckingResumeFilter implements ContainerResponseFilter {
-        @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.assertTrue("onResume(AsyncResponse resuming, Response response) callback has not been called.",
-                    onResumeCalled);
-        }
-    }
-
-    @ResumeFailBinding
-    public static class CheckingResumeFailFilter implements ContainerResponseFilter {
-        @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.assertTrue("onResume(AsyncResponse resuming, Throwable error) callback has not been called.",
-                    onResumeFailedCalled);
-        }
-    }
-
-
-    @Path("resource")
-    @Singleton
-    public static class Resource {
-        private AsyncResponse storedAsyncResponse;
-
-
-        @ResumeBinding
-        @GET
-        @Path("oneMethod")
-        public void get(@Suspended AsyncResponse asyncResponse) {
-            Assert.assertFalse("onResume(AsyncResponse resuming, Response response) callback has already been called.",
-                    onResumeCalled);
-            asyncResponse.register(MyResumeCallback.class);
-            asyncResponse.resume(Response.ok().entity("resumed").build());
-            Assert.assertTrue("onResume(AsyncResponse resuming, Response response) callback has not been called.",
-                    onResumeCalled);
-        }
-
-        @ResumeBinding
-        @GET
-        @Path("suspendResponse")
-        public void suspendResponse(@Suspended AsyncResponse asyncResponse) throws InterruptedException {
-
-            storedAsyncResponse = asyncResponse;
-            Assert.assertFalse("onResume(AsyncResponse resuming, Response response) callback has already been called.",
-                    onResumeCalled);
-            asyncResponse.register(MyResumeCallback.class);
-        }
-
-        @ResumeBinding
-        @GET
-        @Path("resumeSuspendedResponse")
-        public String resumeSuspendedResponse() {
-            Assert.assertFalse("onResume(AsyncResponse resuming, Response response) callback has already been called.",
-                    onResumeCalled);
-
-            storedAsyncResponse.resume(Response.ok().entity("resumed").build());
-            Assert.assertTrue("onResume(AsyncResponse resuming, Response response) callback has not been called.",
-                    onResumeCalled);
-            return "not-from-async";
-        }
-
-        @ResumeFailBinding
-        @GET
-        @Path("resumeFail")
-        public void resumeFails(@Suspended AsyncResponse asyncResponse) {
-            Assert.assertFalse("onResume(AsyncResponse resuming, Throwable error) callback has already been called.",
-                    onResumeFailedCalled);
-            asyncResponse.register(MyResumeCallback.class);
-            asyncResponse.resume(new RuntimeException("test-exception"));
-            Assert.assertTrue("onResume(AsyncResponse resuming, Throwable error) callback has not been called.",
-                    onResumeFailedCalled);
-        }
     }
 
     @Test
@@ -231,7 +93,6 @@ public class AsyncCallbackServerTest {
         final ContainerResponse response = app.apply(req).get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertTrue("onComplete() was not called.", onCompletionCalled);
-
     }
 
     @Test
@@ -246,7 +107,7 @@ public class AsyncCallbackServerTest {
         } catch (Exception e) {
             // ok - should throw an exception
         }
-        Assert.assertTrue("onError().", onCompletionFailedCalled);
+        Assert.assertTrue("onError().", onCompletionCalledWithError);
     }
 
     @CompletionBinding
@@ -262,18 +123,16 @@ public class AsyncCallbackServerTest {
 
     public static class MyCompletionCallback implements CompletionCallback {
         @Override
-        public void onComplete() {
+        public void onComplete(Throwable throwable) {
             Assert.assertFalse("onComplete() has already been called.", onCompletionCalled);
-            onCompletionCalled = true;
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            Assert.assertFalse("onError() has already been called.", onCompletionFailedCalled);
-            onCompletionFailedCalled = true;
+            Assert.assertFalse("onComplete() has already been called with error.", onCompletionCalledWithError);
+            if (throwable == null) {
+                onCompletionCalled = true;
+            } else {
+                onCompletionCalledWithError = true;
+            }
         }
     }
-
 
     @Path("completion")
     @Singleton
@@ -292,30 +151,16 @@ public class AsyncCallbackServerTest {
         @Path("onError")
         @CompletionBinding
         public void onError(@Suspended AsyncResponse asyncResponse) {
-            Assert.assertFalse(onCompletionFailedCalled);
+            Assert.assertFalse(onCompletionCalledWithError);
             asyncResponse.register(MyCompletionCallback.class);
             asyncResponse.resume(new RuntimeException("test-exception"));
-            Assert.assertTrue(onCompletionFailedCalled);
+            Assert.assertTrue(onCompletionCalledWithError);
         }
     }
-
 
     @NameBinding
     @Target({ElementType.TYPE, ElementType.METHOD})
     @Retention(value = RetentionPolicy.RUNTIME)
     public @interface CompletionBinding {
     }
-
-    @NameBinding
-    @Target({ElementType.TYPE, ElementType.METHOD})
-    @Retention(value = RetentionPolicy.RUNTIME)
-    public @interface ResumeBinding {
-    }
-
-    @NameBinding
-    @Target({ElementType.TYPE, ElementType.METHOD})
-    @Retention(value = RetentionPolicy.RUNTIME)
-    public @interface ResumeFailBinding {
-    }
-
 }

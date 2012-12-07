@@ -113,7 +113,7 @@ public class ServerSentEventsTest extends JerseyTest {
             @Override
             public void run() {
                 final WebTarget target = target(App.ROOT_PATH);
-                target.configuration().register(InboundEventReader.class).register(EventInputReader.class);
+                target.register(InboundEventReader.class).register(EventInputReader.class);
                 final EventInput eventInput = target.request().get(EventInput.class);
 
                 startLatch.countDown();

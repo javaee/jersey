@@ -92,7 +92,7 @@ public class ClientFilterTest extends JerseyTest {
     @Test
     public void filterAbortTest() {
         final WebTarget target = target();
-        target.configuration().register(CustomRequestFilter.class);
+        target.register(CustomRequestFilter.class);
         final String entity = target.request().get(String.class);
 
         assertEquals("OK!", entity);
@@ -111,8 +111,7 @@ public class ClientFilterTest extends JerseyTest {
     @Test
     public void filterHeaderProvidersTest() {
         final WebTarget target = target();
-        target.configuration().register(HeaderProvidersRequestFilter.class);
-        target.configuration().register(LoggingFilter.class);
+        target.register(HeaderProvidersRequestFilter.class).register(LoggingFilter.class);
         final Response response = target.path("test").request().get(Response.class);
         final String entity = response.readEntity(String.class);
 

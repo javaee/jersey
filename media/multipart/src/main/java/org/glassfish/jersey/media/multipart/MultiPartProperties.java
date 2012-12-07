@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
@@ -65,8 +65,8 @@ public class MultiPartProperties {
 
         @Override
         @SuppressWarnings("unchecked")
-        public boolean configure(final Configurable configurable) {
-            configurable.register(MultiPartContextResolver.class);
+        public boolean configure(final FeatureContext context) {
+            context.register(MultiPartContextResolver.class);
             return true;
         }
 
@@ -111,16 +111,19 @@ public class MultiPartProperties {
      * {@code jersey-multipart} injection binder.
      *
      * @throws IllegalArgumentException if the configuration resource
-     * exists, but there are problems reading it
+     *                                  exists, but there are problems reading it
      */
     public MultiPartProperties() {
         configure();
     }
 
     /**
-     * Return the size (in bytes) of the entity of an incoming
+     * Get the size (in bytes) of the entity of an incoming
      * {@link BodyPart} before it will be buffered to disk.  If not
      * customized, the default value is 4096.
+     *
+     * @return return threshold size for starting to buffer the incoming entity
+     *         to disk.
      */
     public int getBufferThreshold() {
         return bufferThreshold;
@@ -132,7 +135,7 @@ public class MultiPartProperties {
      * for this application.
      *
      * @throws IllegalArgumentException if the configuration resource
-     * exists, but there are problems reading it
+     *                                  exists, but there are problems reading it
      */
     private void configure() {
         // Identify the class loader we will use

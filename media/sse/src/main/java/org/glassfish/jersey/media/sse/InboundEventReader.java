@@ -48,6 +48,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -63,7 +64,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@ConstrainedTo(ConstrainedTo.Type.CLIENT)
+@ConstrainedTo(RuntimeType.CLIENT)
 // TODO: make package-private once common config support is fully implemented & replace registration with SseFeature.
 public class InboundEventReader implements MessageBodyReader<InboundEvent> {
     private static final byte[] EOL_DATA = new byte[]{'\n'};

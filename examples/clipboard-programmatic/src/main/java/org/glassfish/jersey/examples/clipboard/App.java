@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -147,6 +146,6 @@ public class App {
         });
 
 
-        return new ResourceConfig().addResources(resourceBuilder.build());
+        return new ResourceConfig().registerResources(resourceBuilder.build());
     }
 }

@@ -74,7 +74,7 @@ public class ContentLengthTest extends JerseyTest {
     @Override
     protected Application configure() {
         ResourceConfig rc = new ResourceConfig();
-        rc.addClasses(MyTypeResource.class, MyTypeWriter.class, ResourceGetByteNoHead.class);
+        rc.registerClasses(MyTypeResource.class, MyTypeWriter.class, ResourceGetByteNoHead.class);
         return rc;
     }
 

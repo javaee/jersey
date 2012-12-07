@@ -48,26 +48,31 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
-import org.glassfish.jersey.model.internal.FeatureBag;
-import org.glassfish.jersey.model.internal.ProviderBag;
-import org.glassfish.jersey.model.internal.DefaultConfig;
+import org.glassfish.jersey.model.ContractProvider;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener;
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 
-import com.google.common.collect.Maps;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 
 /**
@@ -76,43 +81,261 @@ import com.google.common.collect.Sets;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceConfig extends Application {
+public class ResourceConfig extends Application implements Configurable<ResourceConfig>, ServerConfig {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceConfig.class.getName());
-    //
+
     private transient Set<Class<?>> cachedClasses = null;
     private transient Set<Class<?>> cachedClassesView = null;
     private transient Set<Object> cachedSingletons = null;
     private transient Set<Object> cachedSingletonsView = null;
-    //
-    private final Set<Class<?>> classes;
-    private final Set<Object> resourceSingletons;
-    private final Set<ResourceFinder> resourceFinders;
-    //
-    private final Set<Resource> resources;
-    private final Set<Resource> resourcesView;
-    //
-    private final Set<Binder> customBinders;
-    //
-    private ClassLoader classLoader = null;
-    //
-    private InternalState internalState = new Mutable();
+
+    private volatile State state;
+
+    private static class State extends CommonConfig implements ServerConfig {
+
+        private final Set<ResourceFinder> resourceFinders;
+
+        private final Set<Resource> resources;
+        private final Set<Resource> resourcesView;
+
+        private volatile ClassLoader classLoader = null;
+
+        public State() {
+            super(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL);
+            this.classLoader = ReflectionHelper.getContextClassLoader();
+
+            this.resourceFinders = Sets.newHashSet();
+
+            this.resources = Sets.newHashSet();
+            this.resourcesView = Collections.unmodifiableSet(this.resources);
+        }
+
+        public State(State original) {
+            super(original);
+            this.classLoader = original.classLoader;
+
+            this.resources = Sets.newHashSet(original.resources);
+            this.resourcesView = Collections.unmodifiableSet(this.resources);
+
+            this.resourceFinders = Sets.newHashSet(original.resourceFinders);
+        }
+
+        public void setClassLoader(ClassLoader classLoader) {
+            this.classLoader = classLoader;
+        }
+
+        public void registerResources(Set<Resource> resources) {
+            this.resources.addAll(resources);
+        }
+
+        public void registerFinder(ResourceFinder resourceFinder) {
+            this.resourceFinders.add(resourceFinder);
+        }
+
+        @Override
+        protected Inflector<ContractProvider.Builder, ContractProvider> getModelEnhancer(final Class<?> componentClass) {
+            return new Inflector<ContractProvider.Builder, ContractProvider>() {
+                @Override
+                public ContractProvider apply(ContractProvider.Builder builder) {
+                    if (builder.getScope() == null && builder.getContracts().isEmpty() &&
+                            Resource.getPath(componentClass) != null) {
+                        builder.scope(RequestScoped.class);
+                    }
+
+                    return builder.build();
+                }
+            };
+
+        }
+
+        @Override
+        public State replaceWith(Configuration config) {
+            super.replaceWith(config);
+            this.resourceFinders.clear();
+            this.resources.clear();
+
+            State other = null;
+            if (config instanceof ResourceConfig) {
+                other = ((ResourceConfig) config).state;
+            }
+            if (config instanceof State) {
+                other = (State) config;
+            }
+
+            if (other != null) {
+                this.resourceFinders.addAll(other.resourceFinders);
+                this.resources.addAll(other.resources);
+            }
+
+            return this;
+        }
+
+        @Override
+        public final Set<Resource> getResources() {
+            return resourcesView;
+        }
+
+        @Override
+        public ServerConfig getConfiguration() {
+            return this;
+        }
+
+        /**
+         * Get the registered resource finders.
+         *
+         * @return registered resource finders.
+         */
+        public Set<ResourceFinder> getResourceFinders() {
+            return resourceFinders;
+        }
+
+        /**
+         * Get resource and provider class loader.
+         *
+         * @return class loader to be used when looking up the resource classes and providers.
+         */
+        public ClassLoader getClassLoader() {
+            return classLoader;
+        }
+    }
+
+    private static final class ImmutableState extends State {
+        private ImmutableState(State original) {
+            super(original);
+        }
+
+        @Override
+        public void setClassLoader(ClassLoader classLoader) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public void registerResources(Set<Resource> resources) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public void registerFinder(ResourceFinder resourceFinder) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State addProperties(Map<String, ?> properties) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State setProperty(String name, Object value) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Class<?> componentClass) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Class<?> componentClass, int bindingPriority) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Class<?> componentClass, Class<?>... contracts) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Class<?> componentClass, Map<Class<?>, Integer> contracts) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Object component) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Object component, int bindingPriority) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Object component, Class<?>... contracts) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State register(Object component, Map<Class<?>, Integer> contracts) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public State setProperties(Map<String, ?> properties) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public void configureBinders(ServiceLocator locator) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public void configureFeatures(ServiceLocator locator) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+    }
+
+    /**
+     * Returns a {@code ResourceConfig} instance for the supplied application.
+     *
+     * If the application is an instance of {@code ResourceConfig} the method returns defensive copy of the resource config.
+     * Otherwise it creates a new {@code ResourceConfig} from the application.
+     *
+     * @param application Application to provide the {@code ResourceConfig} instance for.
+     * @return ResourceConfig instance for the supplied application.
+     */
+    public static ResourceConfig forApplication(Application application) {
+        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
+                (application, null, null);
+    }
+
+    /**
+     * Returns a {@code ResourceConfig} instance wrapping the application of the supplied class.
+     *
+     * @param applicationClass Class representing a JAX-RS application.
+     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
+     */
+    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass) {
+        return new WrappingResourceConfig(null, applicationClass, null);
+    }
+
+    /**
+     * Returns a {@code ResourceConfig} instance wrapping the application of the supplied class.
+     *
+     * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
+     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core
+     * .Application#getClasses()}
+     * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
+     *
+     * @param applicationClass Class representing a JAX-RS application.
+     * @param defaultClasses   Default set of classes that should be returned from {@link #getClasses()} if the underlying
+     *                         application does not provide any classes and singletons.
+     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
+     */
+    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass,
+                                                     Set<Class<?>> defaultClasses) {
+        return new WrappingResourceConfig(null, applicationClass, defaultClasses);
+    }
 
     /**
      * Create a new resource configuration without any custom properties or
      * resource and provider classes.
      */
     public ResourceConfig() {
-        this.classLoader = ReflectionHelper.getContextClassLoader();
-
-        this.classes = Sets.newHashSet();
-        this.resourceSingletons = Sets.newHashSet();
-        this.resources = Sets.newHashSet();
-        this.resourcesView = Collections.unmodifiableSet(this.resources);
-
-        this.resourceFinders = Sets.newHashSet();
-        this.customBinders = Sets.newHashSet();
+        this.state = new State();
     }
 
     /**
@@ -123,7 +346,7 @@ public class ResourceConfig extends Application {
      */
     public ResourceConfig(Set<Class<?>> classes) {
         this();
-        this.addClasses(classes);
+        this.registerClasses(classes);
     }
 
     /**
@@ -142,222 +365,7 @@ public class ResourceConfig extends Application {
      * @param original resource configuration to create a defensive copy from.
      */
     public ResourceConfig(final ResourceConfig original) {
-        this.classLoader = original.classLoader;
-
-        this.classes = Sets.newHashSet(original.classes);
-        this.resourceSingletons = Sets.newHashSet(original.resourceSingletons);
-        this.resources = Sets.newHashSet(original.resources);
-        this.resourcesView = Collections.unmodifiableSet(this.resources);
-
-        this.resourceFinders = Sets.newHashSet(original.resourceFinders);
-        this.customBinders = Sets.newHashSet(original.customBinders);
-
-        this.internalState = new Mutable((DefaultConfig) original.internalState);
-    }
-
-    /**
-     * Returns a {@link ResourceConfig} instance for the supplied application.
-     *
-     * If the application is an instance of {@link ResourceConfig} the method returns defensive copy of the resource config.
-     * Otherwise it creates a new {@link ResourceConfig} from the application.
-     *
-     * @param application Application to provide the {@link ResourceConfig} instance for.
-     * @return ResourceConfig instance for the supplied application.
-     */
-    public static ResourceConfig forApplication(Application application) {
-        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
-                (application, null, null);
-    }
-
-    static RuntimeResourceConfig newRuntimeResourceConfig(Application application) {
-        ResourceConfig runtimeResourceConfig;
-
-        if (application instanceof ResourceConfig) {
-            final ResourceConfig resourceConfig = (ResourceConfig) application;
-            runtimeResourceConfig = new RuntimeResourceConfig(resourceConfig);
-            application = resourceConfig.getApplication();
-        } else {
-            runtimeResourceConfig = new RuntimeResourceConfig();
-        }
-
-        if (application != null) {
-            final Set<Class<?>> classes = application.getClasses();
-            if (classes != null) {
-                runtimeResourceConfig.classes.addAll(classes);
-            }
-
-            final Set<Object> singletons = application.getSingletons();
-            if (singletons != null) {
-                runtimeResourceConfig.resourceSingletons.addAll(singletons);
-            }
-        }
-
-        return (RuntimeResourceConfig) runtimeResourceConfig;
-    }
-
-    /**
-     * Returns a {@link ResourceConfig} instance wrapping the application of the supplied class.
-     *
-     * @param applicationClass Class representing a JAX-RS application.
-     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
-     */
-    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass) {
-        return new WrappingResourceConfig(null, applicationClass, null);
-    }
-
-    /**
-     * Returns a {@link ResourceConfig} instance wrapping the application of the supplied class.
-     *
-     * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
-     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core
-     * .Application#getClasses()}
-     * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
-     *
-     * @param applicationClass Class representing a JAX-RS application.
-     * @param defaultClasses   Default set of classes that should be returned from {@link #getClasses()} if the underlying
-     *                         application does not provide any classes and singletons.
-     * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
-     */
-    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass,
-                                                     Set<Class<?>> defaultClasses) {
-        return new WrappingResourceConfig(null, applicationClass, defaultClasses);
-    }
-
-    /**
-     * Add classes to {@code ResourceConfig}.
-     *
-     * @param classes list of classes to add.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig addClasses(Set<Class<?>> classes) {
-        return internalState.addClasses(classes);
-    }
-
-    /**
-     * Add classes to {@code ResourceConfig}.
-     *
-     * @param classes {@link Set} of classes to add.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig addClasses(Class<?>... classes) {
-        return addClasses(Sets.newHashSet(classes));
-    }
-
-    /**
-     * Add singletons to {@code ResourceConfig}.
-     *
-     * @param singletons {@link Set} of instances to add.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig addSingletons(Set<Object> singletons) {
-        return internalState.addSingletons(singletons);
-    }
-
-    /**
-     * Add singletons to {@code ResourceConfig}.
-     *
-     * @param singletons list of instances to add.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig addSingletons(Object... singletons) {
-        return addSingletons(Sets.newHashSet(singletons));
-    }
-
-    /**
-     * Add new resource models to the configuration.
-     *
-     * @param resources resource models.
-     * @return updated resource configuration.
-     */
-    public final ResourceConfig addResources(Resource... resources) {
-        return addResources(Sets.newHashSet(resources));
-    }
-
-    /**
-     * Add new resource models to the configuration.
-     *
-     * @param resources resource models.
-     * @return updated resource configuration.
-     */
-    public final ResourceConfig addResources(Set<Resource> resources) {
-        return internalState.addResources(resources);
-    }
-
-    /**
-     * Set a {@code ResourceConfig} property.
-     *
-     * @param name  property name.
-     * @param value property value.
-     * @return updated resource configuration instance.
-     */
-    public ResourceConfig setProperty(String name, Object value) {
-        internalState.setProperty(name, value);
-        return this;
-    }
-
-    public ResourceConfig setProperties(final Map<String, ?> properties) {
-        internalState.setProperties(properties);
-        return this;
-    }
-
-    public Collection<Feature> getFeatures() {
-        return internalState.getFeatures();
-    }
-
-    public Set<Class<?>> getProviderClasses() {
-        return internalState.getProviderClasses();
-    }
-
-    public Set<Object> getProviderInstances() {
-        return internalState.getProviderInstances();
-    }
-
-    public ResourceConfig register(final Class<?> providerClass) {
-        internalState.register(providerClass);
-        return this;
-    }
-
-    public ResourceConfig register(final Object provider) {
-        internalState.register(provider);
-        return this;
-    }
-
-    public ResourceConfig register(final Class<?> providerClass, final int bindingPriority) {
-        internalState.register(providerClass, bindingPriority);
-        return this;
-    }
-
-    public <T> ResourceConfig register(final Class<T> providerClass, final Class<? super T>... contracts) {
-        internalState.register(providerClass, contracts);
-        return this;
-    }
-
-    public <T> ResourceConfig register(final Class<T> providerClass, final int bindingPriority, Class<? super T>... contracts) {
-        internalState.register(providerClass, bindingPriority, contracts);
-        return this;
-    }
-
-    public ResourceConfig register(final Object provider, final int bindingPriority) {
-        internalState.register(provider, bindingPriority);
-        return this;
-    }
-
-    public <T> ResourceConfig register(final Object provider, final Class<? super T>... contracts) {
-        internalState.register(provider, contracts);
-        return this;
-    }
-
-    public <T> ResourceConfig register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
-        internalState.register(provider, bindingPriority, contracts);
-        return this;
-    }
-
-    ProviderBag getProviderBag() {
-        return ((DefaultConfig)internalState).getProviderBag();
-    }
-
-    FeatureBag getFeatureBag() {
-        return ((DefaultConfig)internalState).getFeatureBag();
+        this.state = new State(original.state);
     }
 
     /**
@@ -370,7 +378,181 @@ public class ResourceConfig extends Application {
      * @return updated resource configuration instance.
      */
     public final ResourceConfig addProperties(Map<String, Object> properties) {
-        return internalState.addProperties(properties);
+        state.addProperties(properties);
+        return this;
+    }
+
+    /**
+     * Set new configuration properties replacing all previously set properties.
+     *
+     * @param properties new set of configuration properties. The content of
+     *                   the map will replace any existing properties set on the configuration
+     *                   instance.
+     * @return the updated configuration instance.
+     */
+    public ResourceConfig setProperties(final Map<String, ?> properties) {
+        state.setProperties(properties);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig setProperty(String name, Object value) {
+        state.setProperty(name, value);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Class<?> componentClass) {
+        invalidateCache();
+        state.register(componentClass);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Class<?> componentClass, final int bindingPriority) {
+        invalidateCache();
+        state.register(componentClass, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Class<?> componentClass, final Class<?>... contracts) {
+        invalidateCache();
+        state.register(componentClass, contracts);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Class<?> componentClass, final Map<Class<?>, Integer> contracts) {
+        invalidateCache();
+        state.register(componentClass, contracts);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Object component) {
+        invalidateCache();
+        state.register(component);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Object component, final int bindingPriority) {
+        invalidateCache();
+        state.register(component, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Object component, final Class<?>... contracts) {
+        invalidateCache();
+        state.register(component, contracts);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig register(final Object component, final Map<Class<?>, Integer> contracts) {
+        invalidateCache();
+        state.register(component, contracts);
+        return this;
+    }
+
+    @Override
+    public ResourceConfig replaceWith(Configuration config) {
+        invalidateCache();
+        state.replaceWith(config);
+        return this;
+    }
+
+    /**
+     * Register resource, provider or feature classes in the {@code ResourceConfig}.
+     *
+     * @param classes classes to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerClasses(Set<Class<?>> classes) {
+        if (classes == null) {
+            return this;
+        }
+
+        for (Class<?> cls : classes) {
+            register(cls);
+        }
+        return this;
+    }
+
+    /**
+     * Register resource, provider or feature classes in the {@code ResourceConfig}.
+     *
+     * @param classes classes to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerClasses(Class<?>... classes) {
+        if (classes == null) {
+            return this;
+        }
+
+        return registerClasses(Sets.newHashSet(classes));
+    }
+
+    /**
+     * Register resource, provider or feature instances (singletons) in the {@code ResourceConfig}.
+     *
+     * @param instances instances to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerInstances(Set<Object> instances) {
+        if (instances == null) {
+            return this;
+        }
+
+        for (Object instance : instances) {
+            register(instance);
+        }
+        return this;
+    }
+
+    /**
+     * Register resource, provider or feature instances (singletons) in the {@code ResourceConfig}.
+     *
+     * @param instances instances to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerInstances(Object... instances) {
+        if (instances == null) {
+            return this;
+        }
+
+        return registerInstances(Sets.newHashSet(instances));
+    }
+
+    /**
+     * Register new resource models in the {@code ResourceConfig}.
+     *
+     * @param resources resource models to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerResources(Resource... resources) {
+        if (resources == null) {
+            return this;
+        }
+
+        return registerResources(Sets.newHashSet(resources));
+    }
+
+    /**
+     * Register new resource models in the {@code ResourceConfig}.
+     *
+     * @param resources resource models to register.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig registerResources(Set<Resource> resources) {
+        if (resources == null) {
+            return this;
+        }
+
+        this.state.registerResources(resources);
+        return this;
     }
 
     /**
@@ -379,32 +561,52 @@ public class ResourceConfig extends Application {
      * @param resourceFinder {@link ResourceFinder}
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addFinder(ResourceFinder resourceFinder) {
-        return internalState.addFinder(resourceFinder);
+    public final ResourceConfig registerFinder(ResourceFinder resourceFinder) {
+        if (resourceFinder == null) {
+            return this;
+        }
+
+        this.state.registerFinder(resourceFinder);
+        return this;
     }
 
     /**
-     * Add {@link Binder HK2 binders} to {@code ResourceConfig}.
+     * Register new {@link Binder HK2 binders} in the {@code ResourceConfig}.
      *
-     * These binders will be added when creating {@link ServiceLocator} instance.
+     * These binders will be used to configure a Jersey runtime {@link ServiceLocator} instance
+     * during application deployment.
      *
-     * @param binders custom binders.
+     * @param binders custom binders to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addBinders(Set<Binder> binders) {
-        return internalState.addBinders(binders);
+    public final ResourceConfig registerBinders(Set<Binder> binders) {
+        if (binders == null) {
+            return this;
+        }
+
+        invalidateCache();
+        for (Binder binder : binders) {
+            state.register(binder);
+        }
+
+        return this;
     }
 
     /**
-     * Add {@link Binder HK2 binders} to {@code ResourceConfig}.
+     * Register new {@link Binder HK2 binders} in the {@code ResourceConfig}.
      *
-     * These binders will be added when creating {@link ServiceLocator} instance.
+     * These binders will be used to configure a Jersey runtime {@link ServiceLocator} instance
+     * during application deployment.
      *
-     * @param binders custom binders.
+     * @param binders custom binders to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addBinders(Binder... binders) {
-        return addBinders(Sets.newHashSet(binders));
+    public final ResourceConfig registerBinders(Binder... binders) {
+        if (binders == null) {
+            return this;
+        }
+
+        return registerBinders(Sets.newHashSet(binders));
     }
 
     /**
@@ -414,32 +616,72 @@ public class ResourceConfig extends Application {
      * @return updated resource configuration instance.
      */
     public final ResourceConfig setClassLoader(ClassLoader classLoader) {
-        return internalState.setClassLoader(classLoader);
+        this.state.setClassLoader(classLoader);
+        return this;
     }
 
     /**
-     * Adds array of package names which will be used to scan for
-     * providers.
+     * Adds array of package names which will be used to scan for components.
      *
-     * @param packages array of package names
+     * Packages will be scanned recursively, including all nested packages.
+     *
+     * @param packages array of package names.
      * @return updated resource configuration instance.
+     * @see #packages(boolean, String...)
      */
     public final ResourceConfig packages(String... packages) {
-        return addFinder(new PackageNamesScanner(packages));
+        return packages(true, packages);
     }
 
     /**
-     * Adds array of file names to scan for providers.
+     * Adds array of package names which will be used to scan for components.
      *
-     * @param files array of file names.
+     * @param recursive defines whether any nested packages in the collection of specified
+     *                  package names should be recursively scanned (value of {@code true})
+     *                  as part of the package scanning or not (value of {@code false}).
+     * @param packages  array of package names.
+     * @return updated resource configuration instance.
+     * @see #packages(String...)
+     */
+    public final ResourceConfig packages(boolean recursive, String... packages) {
+        if (packages == null || packages.length == 0) {
+            return this;
+        }
+        return registerFinder(new PackageNamesScanner(packages, recursive));
+    }
+
+    /**
+     * Adds array of file and directory names to scan for components.
+     *
+     * Any directories in the list will be scanned recursively, including their sub-directories.
+     *
+     * @param files array of file and directory names.
      * @return updated resource configuration instance.
      */
     public final ResourceConfig files(String... files) {
-        return addFinder(new FilesScanner(files));
+        return files(true, files);
     }
 
+    /**
+     * Adds array of file and directory names to scan for components.
+     *
+     * @param recursive defines whether any sub-directories of the directories specified
+     *                  in the collection of file names should be recursively scanned (value of {@code true})
+     *                  as part of the file scanning or not (value of {@code false}).
+     * @param files     array of file and directory names.
+     * @return updated resource configuration instance.
+     */
+    public final ResourceConfig files(boolean recursive, String... files) {
+        if (files == null || files.length == 0) {
+            return this;
+        }
+        return registerFinder(new FilesScanner(files, recursive));
+    }
 
-    private void invalidateCache() {
+    /**
+     * Invalidate cached component instances and classes.
+     */
+    final void invalidateCache() {
         this.cachedClasses = null;
         this.cachedClassesView = null;
         this.cachedSingletons = null;
@@ -447,31 +689,44 @@ public class ResourceConfig extends Application {
     }
 
     /**
-     * Returns binders declared during {@code ResourceConfig} creation.
-     *
-     * @return set of custom HK2 binders.
-     */
-    final Set<Binder> getCustomBinders() {
-        return customBinders;
-    }
-
-    /**
      * Switches the ResourceConfig to read-only state.
      *
      * Called by the WrappingResourceConfig if this ResourceConfig is set as the application.
-     * Also called by ApplicationHandler on WrappingResourceConfig at the point when it is going to build the resource model.
+     * Also called by ApplicationHandler on WrappingResourceConfig at the point when it is going
+     * to build the resource model.
      */
-    void lock() {
-        if (!(internalState instanceof Immutable)) {
-            internalState = new Immutable((DefaultConfig) internalState);
+    final void lock() {
+        final State current = state;
+        if (!(current instanceof ImmutableState)) {
+            state = new ImmutableState(current);
         }
     }
 
-    /**
-     * Unmodifiable {@link Set} of current resource and provider classes.
-     *
-     * @return Unmodifiable {@link Set} of resource and provider classes.
-     */
+    @Override
+    public final ServerConfig getConfiguration() {
+        return this;
+    }
+
+    @Override
+    public final Map<String, Object> getProperties() {
+        return state.getProperties();
+    }
+
+    @Override
+    public final Object getProperty(String name) {
+        return state.getProperty(name);
+    }
+
+    @Override
+    public Collection<String> getPropertyNames() {
+        return state.getPropertyNames();
+    }
+
+    @Override
+    public final boolean isProperty(final String name) {
+        return state.isProperty(name);
+    }
+
     @Override
     public final Set<Class<?>> getClasses() {
         if (cachedClassesView == null) {
@@ -481,6 +736,77 @@ public class ResourceConfig extends Application {
         return cachedClassesView;
     }
 
+    @Override
+    public final Set<Object> getInstances() {
+        return getSingletons();
+    }
+
+    @Override
+    public final Set<Object> getSingletons() {
+        if (cachedSingletonsView == null) {
+            cachedSingletons = _getSingletons();
+            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons == null ? new HashSet<Object>() : cachedSingletons);
+        }
+
+        return cachedSingletonsView;
+    }
+
+    /**
+     * Get the internal component bag.
+     *
+     * @return internal component bag.
+     */
+    final ComponentBag getComponentBag() {
+        return state.getComponentBag();
+    }
+
+    /**
+     * Configure custom binders registered in the resource config.
+     *
+     * @param locator service locator to update with the custom binders.
+     */
+    final void configureBinders(final ServiceLocator locator) {
+        state.configureBinders(locator);
+    }
+
+    /**
+     * Configure custom features registered in the resource config.
+     *
+     * @param locator service locator to use for feature provisioning.
+     */
+    final void configureFeatures(ServiceLocator locator) {
+        state.configureFeatures(locator);
+    }
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return state.getRuntimeType();
+    }
+
+    @Override
+    public boolean isEnabled(Feature feature) {
+        return state.isEnabled(feature);
+    }
+
+    @Override
+    public boolean isEnabled(Class<? extends Feature> featureClass) {
+        return state.isEnabled(featureClass);
+    }
+
+    @Override
+    public boolean isRegistered(Object component) {
+        return state.isRegistered(component);
+    }
+
+    @Override
+    public boolean isRegistered(Class<?> componentClass) {
+        return state.isRegistered(componentClass);
+    }
+
+    @Override
+    public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+        return state.getContracts(componentClass);
+    }
 
     /**
      * Get configured resource and/or provider classes. The method is overridden
@@ -489,33 +815,43 @@ public class ResourceConfig extends Application {
      * @return set of configured resource and/or provider classes.
      */
     Set<Class<?>> _getClasses() {
+        final Set<Class<?>> result = scanClasses();
+        result.addAll(state.getClasses());
+        return result;
+    }
+
+    private Set<Class<?>> scanClasses() {
         Set<Class<?>> result = Sets.newHashSet();
 
-        Set<ResourceFinder> rfs = Sets.newHashSet(resourceFinders);
+        final ResourceConfig.State _state = state;
+        Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
 
         // classes registered via configuration property
         String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);
         if (classNames != null) {
             for (String className : classNames) {
                 try {
-                    result.add(classLoader.loadClass(className));
+                    result.add(_state.getClassLoader().loadClass(className));
                 } catch (ClassNotFoundException e) {
                     LOGGER.log(Level.CONFIG, LocalizationMessages.UNABLE_TO_LOAD_CLASS(className));
                 }
             }
         }
 
-        String[] packageNames = parsePropertyValue(ServerProperties.PROVIDER_PACKAGES);
+        final String[] packageNames = parsePropertyValue(ServerProperties.PROVIDER_PACKAGES);
         if (packageNames != null) {
-            rfs.add(new PackageNamesScanner(packageNames));
+            final Object p = getProperty(ServerProperties.PROVIDER_SCANNING_RECURSIVE);
+            final boolean recursive = p == null || PropertiesHelper.isProperty(p);
+            rfs.add(new PackageNamesScanner(packageNames, recursive));
         }
 
         String[] classPathElements = parsePropertyValue(ServerProperties.PROVIDER_CLASSPATH);
         if (classPathElements != null) {
-            rfs.add(new FilesScanner(classPathElements));
+            rfs.add(new FilesScanner(classPathElements, true));
         }
 
-        AnnotationAcceptingListener afl = AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(classLoader);
+        AnnotationAcceptingListener afl =
+                AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(_state.getClassLoader());
         for (ResourceFinder resourceFinder : rfs) {
             while (resourceFinder.hasNext()) {
                 final String next = resourceFinder.next();
@@ -531,14 +867,12 @@ public class ResourceConfig extends Application {
         }
 
         result.addAll(afl.getAnnotatedClasses());
-        result.addAll(internalState.getProviderClasses());
-        result.addAll(classes);
         return result;
     }
 
     private String[] parsePropertyValue(String propertyName) {
         String[] classNames = null;
-        final Object o = internalState.getProperties().get(propertyName);
+        final Object o = state.getProperties().get(propertyName);
         if (o != null) {
             if (o instanceof String) {
                 classNames = Tokenizer.tokenize((String) o);
@@ -551,25 +885,11 @@ public class ResourceConfig extends Application {
 
     /**
      * Return classes which were registered by the user and not found by class path scanning (or any other scanning).
+     *
      * @return Set of classes registered by the user.
      */
-    public Set<Class<?>> getRegisteredClasses() {
-        return classes;
-    }
-
-    /**
-     * Unmodifiable {@link Set} of singletons.
-     *
-     * @return Unmodifiable {@link Set} of singletons.
-     */
-    @Override
-    public final Set<Object> getSingletons() {
-        if (cachedSingletonsView == null) {
-            cachedSingletons = _getSingletons();
-            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons == null ? new HashSet<Object>() : cachedSingletons);
-        }
-
-        return cachedSingletonsView;
+    Set<Class<?>> getRegisteredClasses() {
+        return state.getComponentBag().getRegistrations();
     }
 
     /**
@@ -580,18 +900,13 @@ public class ResourceConfig extends Application {
      */
     Set<Object> _getSingletons() {
         Set<Object> result = Sets.newHashSet();
-        result.addAll(internalState.getProviderInstances());
-        result.addAll(resourceSingletons);
+        result.addAll(state.getInstances());
         return result;
     }
 
-    /**
-     * Get programmatically modeled resources.
-     *
-     * @return programmatically modeled resources.
-     */
+    @Override
     public final Set<Resource> getResources() {
-        return resourcesView;
+        return state.getResources();
     }
 
     /**
@@ -601,19 +916,7 @@ public class ResourceConfig extends Application {
      *         providers.
      */
     public final ClassLoader getClassLoader() {
-        return classLoader;
-    }
-
-    public final Map<String, Object> getProperties() {
-        return internalState.getProperties();
-    }
-
-    public final Object getProperty(String name) {
-        return internalState.getProperty(name);
-    }
-
-    public final boolean isProperty(final String name) {
-        return PropertiesHelper.isProperty(internalState.getProperties(), name);
+        return state.getClassLoader();
     }
 
     /**
@@ -635,7 +938,8 @@ public class ResourceConfig extends Application {
     }
 
     /**
-     * Method used by ApplicationHandler to retrieve application class (this method is overriden by WrappingResourceConfig.
+     * Method used by ApplicationHandler to retrieve application class
+     * (this method is overridden by WrappingResourceConfig).
      *
      * @return application class
      */
@@ -652,8 +956,7 @@ public class ResourceConfig extends Application {
      * @return this ResourceConfig instance (for convenience)
      */
     final ResourceConfig setApplication(Application app) {
-        internalState.setApplication(app);
-        return this;
+        return _setApplication(app);
     }
 
     /**
@@ -666,372 +969,14 @@ public class ResourceConfig extends Application {
         throw new UnsupportedOperationException();
     }
 
-    private interface InternalState extends Configurable {
-
-        ResourceConfig addClasses(Set<Class<?>> classes);
-
-        ResourceConfig addResources(Set<Resource> resources);
-
-        ResourceConfig addFinder(ResourceFinder resourceFinder);
-
-        ResourceConfig addBinders(Set<Binder> binders);
-
-        ResourceConfig addProperties(Map<String, Object> properties);
-
-        ResourceConfig addSingletons(Set<Object> singletons);
-
-        ResourceConfig setClassLoader(ClassLoader classLoader);
-
-        ResourceConfig setApplication(Application application);
-
-        @Override
-        InternalState setProperty(String name, Object value);
-
-        @Override
-        InternalState setProperties(Map<String,?> properties);
-
-        @Override
-        InternalState register(Class<?> providerClass);
-
-        @Override
-        InternalState register(Class<?> providerClass, int bindingPriority);
-
-        @Override
-        <T> InternalState register(Class<T> providerClass, Class<? super T>... contracts);
-
-        @Override
-        <T> InternalState register(Class<T> providerClass, int bindingPriority, Class<? super T>... contracts);
-
-        @Override
-        InternalState register(Object provider);
-
-        @Override
-        InternalState register(Object provider, int bindingPriority);
-
-        @Override
-        <T> InternalState register(Object provider, Class<? super T>... contracts);
-
-        @Override
-        <T> InternalState register(Object provider, int bindingPriority, Class<? super T>... contracts);
-    }
-
-    private class Immutable extends DefaultConfig implements InternalState {
-
-        private Immutable(final DefaultConfig configurable) {
-            super(configurable);
-        }
-
-        @Override
-        public ResourceConfig addClasses(Set<Class<?>> classes) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig addResources(Set<Resource> resources) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig addFinder(ResourceFinder resourceFinder) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig addBinders(Set<Binder> binders) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig addProperties(Map<String, Object> properties) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig addSingletons(Set<Object> singletons) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig setClassLoader(ClassLoader classLoader) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable setProperty(String name, Object value) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable setProperties(final Map<String, ?> properties) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable register(final Class<?> providerClass) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable register(final Class<?> providerClass, final int bindingPriority) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public <T> Immutable register(final Class<T> providerClass, final Class<? super T>... contracts) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public <T> Immutable register(final Class<T> providerClass, final int bindingPriority, final Class<? super T>...
-                contracts) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable register(final Object provider) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public Immutable register(final Object provider, final int bindingPriority) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public <T> Immutable register(final Object provider, final Class<? super T>... contracts) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public <T> Immutable register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public ResourceConfig setApplication(Application application) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-    }
-
-    private class Mutable extends DefaultConfig implements InternalState {
-
-        private Mutable() {
-        }
-
-        private Mutable(final DefaultConfig config) {
-            super(config);
-        }
-
-        @Override
-        public ResourceConfig addClasses(Set<Class<?>> classes) {
-            invalidateCache();
-            ResourceConfig.this.classes.addAll(classes);
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig addResources(Set<Resource> resources) {
-            ResourceConfig.this.resources.addAll(resources);
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig addFinder(ResourceFinder resourceFinder) {
-            invalidateCache();
-            ResourceConfig.this.resourceFinders.add(resourceFinder);
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig addBinders(Set<Binder> binders) {
-            ResourceConfig.this.customBinders.addAll(binders);
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig addProperties(Map<String, Object> properties) {
-            invalidateCache();
-
-            final Map<String,Object> props = Maps.newHashMap(getProperties());
-            props.putAll(properties);
-
-            setProperties(properties);
-
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig addSingletons(Set<Object> singletons) {
-            invalidateCache();
-            ResourceConfig.this.resourceSingletons.addAll(singletons);
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public ResourceConfig setClassLoader(ClassLoader classLoader) {
-            invalidateCache();
-            ResourceConfig.this.classLoader = classLoader;
-            return ResourceConfig.this;
-        }
-
-        @Override
-        public Mutable setProperty(String name, Object value) {
-            invalidateCache();
-            super.setProperty(name, value);
-            return this;
-        }
-
-        @Override
-        public Mutable setProperties(final Map<String, ?> properties) {
-            invalidateCache();
-            super.setProperties(properties);
-            return this;
-        }
-
-        @Override
-        public Mutable register(final Class<?> providerClass) {
-            invalidateCache();
-            super.register(providerClass);
-            return this;
-        }
-
-        @Override
-        public Mutable register(final Class<?> providerClass, final int bindingPriority) {
-            invalidateCache();
-            super.register(providerClass, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public <T> Mutable register(final Class<T> providerClass, final Class<? super T>... contracts) {
-            invalidateCache();
-            super.register(providerClass, contracts);
-            return this;
-        }
-
-        @Override
-        public <T> Mutable register(final Class<T> providerClass,
-                                    final int bindingPriority,
-                                    final Class<? super T>... contracts) {
-            invalidateCache();
-            super.register(providerClass, bindingPriority, contracts);
-            return this;
-        }
-
-        @Override
-        public Mutable register(final Object provider) {
-            invalidateCache();
-            super.register(provider);
-            return this;
-        }
-
-        @Override
-        public Mutable register(final Object provider, final int bindingPriority) {
-            invalidateCache();
-            super.register(provider, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public <T> Mutable register(final Object provider, final Class<? super T>... contracts) {
-            invalidateCache();
-            super.register(provider, contracts);
-            return this;
-        }
-
-        @Override
-        public <T> Mutable register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
-            invalidateCache();
-            super.register(provider, bindingPriority, contracts);
-            return this;
-        }
-
-        @Override
-        public ResourceConfig setApplication(Application application) {
-            invalidateCache();
-            return ResourceConfig.this._setApplication(application);
-        }
-    }
-
-    static class RuntimeResourceConfig extends ResourceConfig implements Configurable {
-
-        public RuntimeResourceConfig() {
-        }
-
-        public RuntimeResourceConfig(final ResourceConfig resourceConfig) {
-            super(resourceConfig);
-        }
-
-        @Override
-        public RuntimeResourceConfig setProperties(final Map<String, ?> properties) {
-            super.setProperties(properties);
-            return this;
-        }
-
-        @Override
-        public RuntimeResourceConfig setProperty(final String name, final Object value) {
-            super.setProperty(name, value);
-            return this;
-        }
-
-        @Override
-        public RuntimeResourceConfig register(final Class<?> providerClass) {
-            super.register(providerClass);
-            return this;
-        }
-
-        @Override
-        public RuntimeResourceConfig register(final Class<?> providerClass, final int bindingPriority) {
-            super.register(providerClass, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public <T> RuntimeResourceConfig register(final Class<T> providerClass, final Class<? super T>... contracts) {
-            super.register(providerClass, contracts);
-            return this;
-        }
-
-        @Override
-        public <T> RuntimeResourceConfig register(final Class<T> providerClass,
-                                                  final int bindingPriority, final Class<? super T>... contracts) {
-            super.register(providerClass, bindingPriority, contracts);
-            return this;
-        }
-
-        @Override
-        public RuntimeResourceConfig register(final Object provider) {
-            super.register(provider);
-            return this;
-        }
-
-        @Override
-        public RuntimeResourceConfig register(final Object provider, final int bindingPriority) {
-            super.register(provider, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public <T> RuntimeResourceConfig register(final Object provider, final Class<? super T>... contracts) {
-            super.register(provider, contracts);
-            return this;
-        }
-
-        @Override
-        public <T> RuntimeResourceConfig register(final Object provider,
-                                                  final int bindingPriority, final Class<? super T>... contracts) {
-            super.register(provider, bindingPriority, contracts);
-            return this;
-        }
-    }
-
     private static class WrappingResourceConfig extends ResourceConfig {
         private Application application;
         private Class<? extends Application> applicationClass;
         private final Set<Class<?>> defaultClasses = Sets.newHashSet();
 
-        public WrappingResourceConfig(Application application, Class<? extends Application> applicationClass,
-                                      Set<Class<?>> defaultClasses) {
+        public WrappingResourceConfig(
+                Application application, Class<? extends Application> applicationClass, Set<Class<?>> defaultClasses) {
+
             if (application == null && applicationClass == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESOURCE_CONFIG_ERROR_NULL_APPLICATIONCLASS());
             }
@@ -1081,6 +1026,7 @@ public class ResourceConfig extends Application {
          * If there is no JAX-RS application class set, or if the class has been
          * instantiated already, the method will return {@code null}.
          * </p>
+         *
          * @return original JAX-RS application class or {@code null} if there is no
          *         such class configured or if the class has been already instantiated.
          */
@@ -1096,6 +1042,7 @@ public class ResourceConfig extends Application {
          * so this resource config should know about custom binders and properties of the underlying application to ensure
          * the reload process will complete successfully.
          * </p>
+         *
          * @param application the application which fields should be merged with this application.
          * @see org.glassfish.jersey.server.spi.Container#reload()
          * @see org.glassfish.jersey.server.spi.Container#reload(ResourceConfig)
@@ -1104,15 +1051,14 @@ public class ResourceConfig extends Application {
             if (application instanceof ResourceConfig) {
                 // Merge custom binders.
                 ResourceConfig rc = (ResourceConfig) application;
-                super.customBinders.addAll(rc.customBinders);
 
                 // Merge resources
-                super.resources.addAll(rc.resources);
+                super.registerResources(rc.getResources());
 
-                // properties set on the wrapping resource config take precedence (as those are retrieved from the web.xml for
-                // example)
+                // properties set on the wrapping resource config take precedence
+                // (as those are retrieved from the web.xml, for example)
                 rc.invalidateCache();
-                rc.internalState.addProperties(super.getProperties());
+                rc.addProperties(super.getProperties());
                 super.addProperties(rc.getProperties());
 
                 rc.lock();
@@ -1124,11 +1070,11 @@ public class ResourceConfig extends Application {
             Set<Class<?>> result = Sets.newHashSet();
             Set<Class<?>> applicationClasses = application.getClasses();
             result.addAll(applicationClasses == null ? new HashSet<Class<?>>() : applicationClasses);
-            if (result.isEmpty() &&  getSingletons().isEmpty()) {
+            if (result.isEmpty() && getSingletons().isEmpty()) {
                 result.addAll(defaultClasses);
             }
 
-            // if the application is not an instance of ResourceConfig, handle scanning triggered by the way of properties
+            // if the application is not an instance of ResourceConfig, handle scanning triggered via properties
             if (!(application instanceof ResourceConfig)) {
                 result.addAll(super._getClasses());
             }
@@ -1139,5 +1085,141 @@ public class ResourceConfig extends Application {
         Set<Object> _getSingletons() {
             return application.getSingletons();
         }
+    }
+
+    /**
+     * Create runtime configuration initialized from a given deploy-time JAX-RS/Jersey
+     * application configuration.
+     *
+     * @param application deploy-time JAX-RS/Jersey application configuration.
+     * @return initialized run-time resource config.
+     */
+    static ResourceConfig createRuntimeConfig(Application application) {
+        return (application instanceof ResourceConfig) ?
+                new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
+    }
+
+    private static class RuntimeConfig extends ResourceConfig {
+        private final Set<Class<?>> originalRegistrations;
+        private final Application application;
+
+        private RuntimeConfig(ResourceConfig original) {
+            super(original);
+
+            this.application = original;
+
+            Application customRootApp = ResourceConfig.uwrapCustomRootApplication(original);
+            if (customRootApp != null) {
+                registerComponentsOf(customRootApp);
+            }
+
+            originalRegistrations = Sets.newIdentityHashSet();
+            originalRegistrations.addAll(super.getRegisteredClasses());
+
+            // Register externally provided instances.
+            Set<Object> externalInstances = Sets.filter(original.getSingletons(), new Predicate<Object>() {
+                @Override
+                public boolean apply(Object external) {
+                    return !originalRegistrations.contains(external.getClass());
+                }
+            });
+            registerInstances(externalInstances);
+
+            // Register externally provided classes.
+            Set<Class<?>> externalClasses = Sets.filter(original.getClasses(), new Predicate<Class<?>>() {
+                @Override
+                public boolean apply(Class<?> external) {
+                    return !originalRegistrations.contains(external);
+                }
+            });
+            registerClasses(externalClasses);
+        }
+
+        private void registerComponentsOf(final Application application) {
+            Errors.processWithException(new Errors.Closure<Object>() {
+                @Override
+                public Object invoke() {
+                    // First register instances that should take precedence over classes
+                    // in case of duplicate registrations
+                    final Set<Object> singletons = application.getSingletons();
+                    if (singletons != null) {
+                        registerInstances(Sets.filter(singletons, new Predicate<Object>() {
+                            @Override
+                            public boolean apply(Object input) {
+                                if (input == null) {
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                }
+                                return input != null;
+                            }
+                        }));
+                    }
+
+                    final Set<Class<?>> classes = application.getClasses();
+                    if (classes != null) {
+                        registerClasses(Sets.filter(classes, new Predicate<Class<?>>() {
+                            @Override
+                            public boolean apply(Class<?> input) {
+                                if (input == null) {
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                }
+                                return input != null;
+                            }
+                        }));
+                    }
+                    return null;
+                }
+            });
+        }
+
+        private RuntimeConfig(Application application) {
+            super();
+
+            this.application = application;
+
+            if (application != null) {
+                registerComponentsOf(application);
+            }
+
+            originalRegistrations = super.getRegisteredClasses();
+        }
+
+        @Override
+        Set<Class<?>> _getClasses() {
+            // Get only a read-only classes cached in internal state.
+            return super.state.getClasses();
+        }
+
+        @Override
+        Set<Object> _getSingletons() {
+            // Get only a read-only classes cached in internal state.
+            return super.state.getInstances();
+        }
+
+        @Override
+        Set<Class<?>> getRegisteredClasses() {
+            return originalRegistrations;
+        }
+
+
+        @Override
+        Application _getApplication() {
+            return application;
+        }
+    }
+
+    private static Application uwrapCustomRootApplication(ResourceConfig resourceConfig) {
+        Application app = null;
+        while (resourceConfig != null) {
+            app = resourceConfig.getApplication();
+            if (app == resourceConfig) {
+                // resource config is the root app - return null
+                return null;
+            } else if (app instanceof ResourceConfig) {
+                resourceConfig = (ResourceConfig) app;
+            } else {
+                break;
+            }
+        }
+        return app;
     }
 }

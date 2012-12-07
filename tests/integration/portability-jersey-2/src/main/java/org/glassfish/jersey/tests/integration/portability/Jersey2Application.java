@@ -53,6 +53,6 @@ public class Jersey2Application extends ResourceConfig {
 
         // explicitly add unannotated Jersey 2 specific resource
         Resource.Builder rb = Resource.builder(Jersey2Resource.class);
-        addResources(rb.path("jersey").build());
+        registerResources(rb.path("jersey").build());
     }
 }

@@ -50,6 +50,7 @@ import javax.ws.rs.core.HttpHeaders;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -67,6 +68,7 @@ class ClientRuntime {
     private final Stage<ClientResponse> responseProcessingRoot;
 
     private final Connector connector;
+    private final ExtendedConfig config;
 
     private final RequestScope requestScope;
     private final ClientAsyncExecutorsFactory asyncExecutorsFactory;
@@ -74,10 +76,11 @@ class ClientRuntime {
     /**
      * Create new client request processing runtime.
      *
+     * @param config    client runtime configuration.
      * @param connector client transport connector.
      * @param locator   HK2 service locator.
      */
-    public ClientRuntime(final Connector connector, final ServiceLocator locator) {
+    public ClientRuntime(final ExtendedConfig config, final Connector connector, final ServiceLocator locator) {
 
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
@@ -89,6 +92,7 @@ class ClientRuntime {
         this.responseProcessingRoot = responseFilteringStage != null ?
                 responseFilteringStage : Stages.<ClientResponse>identity();
 
+        this.config = config;
         this.connector = connector;
 
         this.requestScope = locator.getService(RequestScope.class);
@@ -174,8 +178,8 @@ class ClientRuntime {
     }
 
     private ClientRequest addUserAgent(ClientRequest clientRequest, String connectorName) {
-        if(!clientRequest.getHeaders().containsKey(HttpHeaders.USER_AGENT)) {
-            if(connectorName != null && !connectorName.equals("")) {
+        if (!clientRequest.getHeaders().containsKey(HttpHeaders.USER_AGENT)) {
+            if (connectorName != null && !connectorName.equals("")) {
                 clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s (%s)",
                         Version.getVersion(), connectorName)));
             } else {
@@ -224,6 +228,15 @@ class ClientRuntime {
      */
     public RequestScope getRequestScope() {
         return requestScope;
+    }
+
+    /**
+     * Get runtime configuration.
+     *
+     * @return runtime configuration.
+     */
+    public ExtendedConfig getConfig() {
+        return config;
     }
 
     /**

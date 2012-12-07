@@ -57,7 +57,8 @@ import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * A scanner that recursively scans URI-based resources present in a set of
- * package names, and sub-package names of that set.
+ * package names, and  nested package names of that set. (Recursive scanning of
+ * nested packages can be disabled using a proper constructor.)
  * <p>
  * The URIs for a package name are obtained, by default, by invoking
  * {@link ClassLoader#getResources(java.lang.String) } with the parameter that
@@ -85,6 +86,7 @@ import org.glassfish.jersey.uri.UriComponent;
  */
 public class PackageNamesScanner implements ResourceFinder {
 
+    private final boolean recursive;
     private final String[] packages;
     private final ClassLoader classloader;
     private final Map<String, UriSchemeResourceFinderFactory> finderFactories;
@@ -92,23 +94,38 @@ public class PackageNamesScanner implements ResourceFinder {
     private ResourceFinderStack resourceFinderStack;
 
     /**
-     * Scan from a set of packages using the context {@link ClassLoader}.
+     * Scan a set of packages using a context {@link ClassLoader}.
      *
-     * @param packages an array of package names.
+     * The {@code recursive} flag determines whether the packages will be scanned recursively
+     * together with their nested packages ({@code true}) or if only the specified packages
+     * shall be scanned ({@code false}).
+     *
+     * @param packages  an array of package names.
+     * @param recursive if ({@code true} the packages will be scanned recursively together with
+     *                  any nested packages, if {@code false} only the explicitly listed packages
+     *                  will be scanned.
      */
-    public PackageNamesScanner(final String[] packages) {
-        this(ReflectionHelper.getContextClassLoader(), Tokenizer.tokenize(packages, Tokenizer.COMMON_DELIMITERS));
+    public PackageNamesScanner(final String[] packages, final boolean recursive) {
+        this(ReflectionHelper.getContextClassLoader(), Tokenizer.tokenize(packages, Tokenizer.COMMON_DELIMITERS), recursive);
     }
 
     /**
-     * Scan from a set of packages using provided {@link ClassLoader}.
+     * Scan a set of packages using the provided {@link ClassLoader}.
      *
-     * @param classloader the {@link ClassLoader} to load classes from.
-     * @param packages an array of package names.
+     * The {@code recursive} flag determines whether the packages will be scanned recursively
+     * together with their nested packages ({@code true}) or if only the specified packages
+     * shall be scanned ({@code false}).
+     *
+     * @param classLoader the {@link ClassLoader} to load classes from.
+     * @param packages    an array of package names.
+     * @param recursive   if ({@code true} the packages will be scanned recursively together with
+     *                    any nested packages, if {@code false} only the explicitly listed packages
+     *                    will be scanned.
      */
-    public PackageNamesScanner(final ClassLoader classloader, final String[] packages) {
+    public PackageNamesScanner(final ClassLoader classLoader, final String[] packages, final boolean recursive) {
+        this.recursive = recursive;
         this.packages = packages;
-        this.classloader = classloader;
+        this.classloader = classLoader;
 
         this.finderFactories = new HashMap<String, UriSchemeResourceFinderFactory>();
         add(new JarZipSchemeResourceFinderFactory());
@@ -141,7 +158,6 @@ public class PackageNamesScanner implements ResourceFinder {
         }
     }
 
-
     @Override
     public boolean hasNext() {
         return resourceFinderStack.hasNext();
@@ -172,8 +188,8 @@ public class PackageNamesScanner implements ResourceFinder {
 
         for (final String p : packages) {
             try {
-                final Enumeration<URL> urls = ResourcesProvider.getInstance().
-                        getResources(p.replace('.', '/'), classloader);
+                final Enumeration<URL> urls =
+                        ResourcesProvider.getInstance().getResources(p.replace('.', '/'), classloader);
                 while (urls.hasMoreElements()) {
                     try {
                         addResourceFinder(toURI(urls.nextElement()));
@@ -233,7 +249,7 @@ public class PackageNamesScanner implements ResourceFinder {
         /**
          * Find all resources with the given name using a class loader.
          *
-         * @param cl the class loader use to find the resources
+         * @param cl   the class loader use to find the resources
          * @param name the resource name
          * @return An enumeration of URL objects for the resource.
          *         If no resources could be found, the enumeration will be empty.
@@ -260,7 +276,7 @@ public class PackageNamesScanner implements ResourceFinder {
     private void addResourceFinder(final URI u) {
         final UriSchemeResourceFinderFactory finderFactory = finderFactories.get(u.getScheme().toLowerCase());
         if (finderFactory != null) {
-            resourceFinderStack.push(finderFactory.create(u));
+            resourceFinderStack.push(finderFactory.create(u, recursive));
         } else {
             throw new ResourceFinderException("The URI scheme " + u.getScheme()
                     + " of the URI " + u

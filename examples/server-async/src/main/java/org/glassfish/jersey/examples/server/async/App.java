@@ -87,8 +87,8 @@ public class App {
 
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
-                .addSingletons(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
+                .registerClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
+                .registerInstances(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
 
         return resourceConfig;
     }

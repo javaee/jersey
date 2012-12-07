@@ -239,8 +239,7 @@ public class InterceptorCustomTest extends JerseyTest {
 
     @Test
     public void testIOException() throws IOException {
-        client().configuration().
-                register(IOExceptionReaderInterceptor.class);
+        client().register(IOExceptionReaderInterceptor.class);
 
         WebTarget target = target().path("test");
 

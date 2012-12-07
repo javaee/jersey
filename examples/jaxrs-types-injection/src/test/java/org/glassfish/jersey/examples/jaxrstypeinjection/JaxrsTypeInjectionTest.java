@@ -109,7 +109,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.configuration().register(LoggingFilter.class);
+        target.register(LoggingFilter.class);
         return target.path(path).resolveTemplate("p1", "v1").resolveTemplate("p2",
                 "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
     }

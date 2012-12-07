@@ -83,7 +83,7 @@ public class App {
         return new ResourceConfig().
                 packages("org.glassfish.jersey.examples.jsonmoxy").
                 register(new MoxyJsonFeature()).
-                addSingletons(new JsonMoxyConfigurationContextResolver());
+                registerInstances(new JsonMoxyConfigurationContextResolver());
     }
 
     @Provider

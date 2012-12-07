@@ -45,7 +45,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,12 +56,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-
-import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
@@ -84,9 +84,57 @@ import com.google.common.collect.Sets;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class Providers {
-
     private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());
 
+    /**
+     * Map of all supported external (i.e. non-Jersey) contracts and their run-time affinity.
+     */
+    private static final Map<Class<?>, ProviderRuntime> EXTERNAL_PROVIDER_INTERFACE_WHITELIST =
+            getExternalProviderInterfaces();
+
+    private static Map<Class<?>, ProviderRuntime> getExternalProviderInterfaces() {
+        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
+
+        final ProviderRuntime BOTH = new ProviderRuntime(null);
+        final ProviderRuntime SERVER = new ProviderRuntime(RuntimeType.SERVER);
+        final ProviderRuntime CLIENT = new ProviderRuntime(RuntimeType.CLIENT);
+
+        // JAX-RS
+
+        interfaces.put(javax.ws.rs.ext.ContextResolver.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.MessageBodyReader.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.MessageBodyWriter.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, BOTH);
+        interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, BOTH);
+        interfaces.put(javax.ws.rs.core.Feature.class, BOTH);
+
+        interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, SERVER);
+        interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, SERVER);
+        interfaces.put(javax.ws.rs.container.DynamicFeature.class, SERVER);
+
+        interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, CLIENT);
+        interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, CLIENT);
+
+        // HK2
+
+        interfaces.put(org.glassfish.hk2.utilities.Binder.class, BOTH);
+
+        return interfaces;
+    }
+
+    private static final class ProviderRuntime {
+        private final RuntimeType runtime;
+
+        private ProviderRuntime(RuntimeType runtime) {
+            this.runtime = runtime;
+        }
+
+        public RuntimeType getRuntime() {
+            return runtime;
+        }
+    }
 
     private Providers() {
     }
@@ -158,8 +206,8 @@ public class Providers {
      * Get the iterable of all {@link RankedProvider providers} (custom and default) registered for the given service provider
      * contract in the underlying {@link ServiceLocator HK2 service locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
      * @param contract service provider contract.
      * @return iterable of all available ranked service providers for the contract. Return value is never null.
      */
@@ -182,9 +230,9 @@ public class Providers {
     /**
      * Sorts given providers with {@link RankedComparator ranked comparator}.
      *
-     * @param comparator comparator to sort the providers with.
+     * @param comparator        comparator to sort the providers with.
      * @param providerIterables providers to be sorted.
-     * @param <T> service provider contract Java type.
+     * @param <T>               service provider contract Java type.
      * @return sorted {@link Iterable iterable} instance containing given providers. Return value is never null.
      */
     public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
@@ -209,9 +257,9 @@ public class Providers {
      * Get the sorted iterable of all {@link RankedProvider providers} (custom and default) registered for the given service
      * provider contract in the underlying {@link ServiceLocator HK2 service locator} container.
      *
-     * @param <T> service provider contract Java type.
-     * @param locator underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>        service provider contract Java type.
+     * @param locator    underlying HK2 service locator.
+     * @param contract   service provider contract.
      * @param comparator comparator to sort the providers with.
      * @return set of all available ranked service providers for the contract. Return value is never null.
      */
@@ -246,7 +294,7 @@ public class Providers {
      * @param contract   service provider contract.
      * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
-     * {@link Comparator comparator}.
+     *         {@link Comparator comparator}.
      */
     public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
         List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
@@ -309,14 +357,14 @@ public class Providers {
      * @return set of provider contracts implemented by the given class.
      */
     public static Set<Class<?>> getProviderContracts(Class<?> clazz) {
-        Set<Class<?>> contracts = new HashSet<Class<?>>();
+        Set<Class<?>> contracts = Sets.newIdentityHashSet();
         computeProviderContracts(clazz, contracts);
         return contracts;
     }
 
     private static void computeProviderContracts(Class<?> clazz, Set<Class<?>> contracts) {
         for (Class<?> contract : getImplementedContracts(clazz)) {
-            if (isProviderContract(contract)) {
+            if (isSupportedContract(contract)) {
                 contracts.add(contract);
             }
             computeProviderContracts(contract, contracts);
@@ -324,85 +372,31 @@ public class Providers {
     }
 
     /**
-     * Filter provider instances removing all providers not targeted to the {@code currentRuntime}.
-     * The provider applicability to a runtime is determined based on the {@link ConstrainedTo &#64;ConstraintTo}
-     * restriction placed on the contract interface as well as any {@code @ConstrainedTo} restrictions
-     * placed on the contract implementation class.
-     * <p>
-     * A warning is logged for all providers that have been filtered out.
-     * </p>
+     * Check the {@code component} whether it is appropriate correctly configured for client or server
+     * {@link RuntimeType runtime}.
      *
-     * @param providerInstances providers to be filtered.
-     * @param currentRuntime    current runtime.
-     * @param registeredClasses classes which were explicitly registered and not found by the classpath scanning
-     *                          or any other kind of class scanning.
-     * @return set of provider instances.
-     */
-    public static Set<Object> filterInstancesByConstraint(Set<Object> providerInstances, ConstrainedTo.Type currentRuntime,
-                                                          Set<Class<?>> registeredClasses) {
-        Set<Object> filteredInstances = new HashSet<Object>();
-        for (Object provider : providerInstances) {
-            final boolean valid = checkProviderRuntime(provider.getClass(), currentRuntime,
-                    registeredClasses == null || !registeredClasses.contains(provider.getClass()), false);
-            if (valid) {
-                filteredInstances.add(provider);
-            }
-        }
-
-        return filteredInstances;
-    }
-
-    /**
-     * Filter provider instances removing all providers not targeted to the {@code currentRuntime}.
-     * The provider applicability to a runtime is determined based on the {@link ConstrainedTo &#64;ConstraintTo}
-     * restriction placed on the contract interface as well as any {@code @ConstrainedTo} restrictions
-     * placed on the contract implementation class.
-     * <p>
-     * A warning is logged for all providers that have been filtered out.
-     * </p>
+     * If a problem occurs a warning is logged and if the component is not usable at all in the current runtime
+     * {@code false} is returned. For classes found during component scanning (scanned=true) certain warnings are
+     * completely ignored (e.g. components {@link ConstrainedTo constrained to} the client runtime and found by
+     * server-side class path scanning will be silently ignored and no warning will be logged).
      *
-     * @param providers         providers to be filtered.
-     * @param currentRuntime    current runtime.
-     * @param registeredClasses classes which were explicitly registered and not found by the classpath scanning or any other
-     *                          kind of class scanning.
-     * @return set of provider classes.
-     */
-    public static Set<Class<?>> filterByConstraint(Set<Class<?>> providers, ConstrainedTo.Type currentRuntime,
-                                                   Set<Class<?>> registeredClasses) {
-        Set<Class<?>> filteredProviders = new HashSet<Class<?>>();
-        for (Class<?> provider : providers) {
-            final boolean valid = checkProviderRuntime(provider, currentRuntime, registeredClasses == null ||
-                    !registeredClasses.contains(provider), false);
-            if (valid) {
-                filteredProviders.add(provider);
-            }
-        }
-        return filteredProviders;
-    }
-
-    /**
-     * Check the {@code provider} whether it is appropriate correctly configured for client or server
-     * {@link ConstrainedTo.Type runtime}.
-     *
-     * If a problem occurs a warning is logged and if the provider is not usable at all in the current runtime
-     * {@code false} is returned. For classes found during provider scanning (scanned=true) certain warnings are completely
-     * ignored (e.g. providers {@link ConstrainedTo constrained to} the client runtime and found by server-side class path
-     * scanning will be silently ignored and no warning will be logged).
-     *
-     * @param provider          the class of the provider being checked.
+     * @param component         the class of the component being checked.
+     * @param model             model of the component.
      * @param runtimeConstraint current runtime (client or server).
-     * @param scanned           {@code false} if the class was explicitly registered; {@code true} if the class has been
-     *                                       discovered
-     *                          during any form of provider scanning.
-     * @param isResource        {@code true} if the provider is also a resource class.
-     * @return {@code true} if provider is fine and can be used {@code false} otherwise.
+     * @param scanned           {@code false} if the component type has been registered explicitly;
+     *                          {@code true} if the class has been discovered during any form of component scanning.
+     * @param isResource        {@code true} if the component is also a resource class.
+     * @return {@code true} if component is acceptable for use in the given runtime type, {@code false} otherwise.
      */
-    public static boolean checkProviderRuntime(Class<?> provider, ConstrainedTo.Type runtimeConstraint,
-                                               boolean scanned, boolean isResource) {
-        final Set<Class<?>> providerContracts = Providers.getProviderContracts(provider);
-        final ConstrainedTo constrainedAnnotation = provider.getAnnotation(ConstrainedTo.class);
-        ConstrainedTo.Type providerConstraint = constrainedAnnotation == null ? null : constrainedAnnotation.value();
-        if (Feature.class.isAssignableFrom(provider)) {
+    public static boolean checkProviderRuntime(Class<?> component,
+                                               ContractProvider model,
+                                               RuntimeType runtimeConstraint,
+                                               boolean scanned,
+                                               boolean isResource) {
+        final Set<Class<?>> contracts = model.getContracts();
+        final ConstrainedTo constrainedTo = component.getAnnotation(ConstrainedTo.class);
+        final RuntimeType componentConstraint = constrainedTo == null ? null : constrainedTo.value();
+        if (Feature.class.isAssignableFrom(component)) {
             // TODO: solve after implementation
             return true;
         }
@@ -413,53 +407,53 @@ public class Providers {
              * Indicates that the provider implements at least one contract compatible
              * with it's implementation class constraint.
              */
-            boolean foundProviderCompatible = providerConstraint == null;
-            boolean foundRuntimeCompatibleContract = false;
-            for (Class<?> providerContract : providerContracts) {
+            boolean foundComponentCompatible = componentConstraint == null;
+            boolean foundRuntimeCompatibleContract = isResource && runtimeConstraint == RuntimeType.SERVER;
+            for (Class<?> contract : contracts) {
                 // if the contract is common/not constrained, default to provider constraint
-                final ConstrainedTo.Type contractConstraint = getContractConstraint(providerContract, providerConstraint);
+                final RuntimeType contractConstraint = getContractConstraint(contract, componentConstraint);
                 foundRuntimeCompatibleContract |= contractConstraint == null || contractConstraint == runtimeConstraint;
 
-                if (providerConstraint != null) {
-                    if (contractConstraint != providerConstraint) {
+                if (componentConstraint != null) {
+                    if (contractConstraint != componentConstraint) {
                         warnings.append(LocalizationMessages.WARNING_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
-                                provider.getName(),
-                                providerConstraint.name(),
-                                providerContract.getName(),
+                                component.getName(),
+                                componentConstraint.name(),
+                                contract.getName(),
                                 contractConstraint.name()))
                                 .append(" ");
                     } else {
-                        foundProviderCompatible = true;
+                        foundComponentCompatible = true;
                     }
                 }
             }
 
-            if (!foundProviderCompatible) {
+            if (!foundComponentCompatible) {
                 warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
-                        provider.getName(),
-                        providerConstraint.name()));
-                logProviderSkipped(warnings, provider, isResource);
+                        component.getName(),
+                        componentConstraint.name()));
+                logProviderSkipped(warnings, component, isResource);
                 return false;
             }
 
             boolean isProviderRuntimeCompatible;
             // runtimeConstraint vs. providerConstraint
-            isProviderRuntimeCompatible = providerConstraint == null || providerConstraint == runtimeConstraint;
+            isProviderRuntimeCompatible = componentConstraint == null || componentConstraint == runtimeConstraint;
             if (!isProviderRuntimeCompatible && !scanned) {
                 // log failure for manually registered providers
                 warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_RUNTIME(
-                        provider.getName(),
-                        providerConstraint.name(),
+                        component.getName(),
+                        componentConstraint.name(),
                         runtimeConstraint.name()));
 
-                logProviderSkipped(warnings, provider, isResource);
+                logProviderSkipped(warnings, component, isResource);
             }
 
             // runtimeConstraint vs contractConstraint
             if (!foundRuntimeCompatibleContract && !scanned) {
-                warnings.append(LocalizationMessages.ERROR_PROVIDER_REGISTERED_WRONG_RUNTIME(provider.getName(),
-                        runtimeConstraint.name(), runtimeConstraint == ConstrainedTo.Type.SERVER ? "client" : "server"));
-                logProviderSkipped(warnings, provider, isResource);
+                warnings.append(LocalizationMessages.ERROR_PROVIDER_REGISTERED_WRONG_RUNTIME(component.getName(),
+                        runtimeConstraint.name(), runtimeConstraint == RuntimeType.SERVER ? "client" : "server"));
+                logProviderSkipped(warnings, component, isResource);
                 return false;
             }
 
@@ -476,15 +470,20 @@ public class Providers {
                 (provider.getName()) : LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName()));
     }
 
-    private static boolean isProviderContract(Class clazz) {
-        return (JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz) != null || clazz.isAnnotationPresent(Contract.class));
+    /**
+     * Check if the given Java type is a Jersey-supported contract.
+     *
+     * @param type contract type.
+     * @return {@code true} if given type is a Jersey-supported contract, {@code false} otherwise.
+     */
+    public static boolean isSupportedContract(Class<?> type) {
+        return (EXTERNAL_PROVIDER_INTERFACE_WHITELIST.get(type) != null || type.isAnnotationPresent(Contract.class));
     }
 
+    private static RuntimeType getContractConstraint(Class<?> clazz, RuntimeType defaultConstraint) {
+        final ProviderRuntime jaxRsProvider = EXTERNAL_PROVIDER_INTERFACE_WHITELIST.get(clazz);
 
-    private static ConstrainedTo.Type getContractConstraint(Class<?> clazz, ConstrainedTo.Type defaultConstraint) {
-        final ProviderRuntime jaxRsProvider = JAX_RS_PROVIDER_INTERFACE_WHITELIST.get(clazz);
-
-        ConstrainedTo.Type result = null;
+        RuntimeType result = null;
         if (jaxRsProvider != null) {
             result = jaxRsProvider.getRuntime();
         } else if (clazz.getAnnotation(Contract.class) != null) {
@@ -496,47 +495,6 @@ public class Providers {
 
         return (result == null) ? defaultConstraint : result;
     }
-
-    private static final class ProviderRuntime {
-        private final ConstrainedTo.Type runtime;
-
-        private ProviderRuntime(ConstrainedTo.Type runtime) {
-            this.runtime = runtime;
-        }
-
-        public ConstrainedTo.Type getRuntime() {
-            return runtime;
-        }
-    }
-
-    private static final Map<Class<?>, ProviderRuntime> JAX_RS_PROVIDER_INTERFACE_WHITELIST =
-            getJaxRsProviderInterfaces();
-
-    private static Map<Class<?>, ProviderRuntime> getJaxRsProviderInterfaces() {
-        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
-
-        interfaces.put(javax.ws.rs.ext.ContextResolver.class, new ProviderRuntime(null));
-        interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, new ProviderRuntime(null));
-        interfaces.put(javax.ws.rs.ext.MessageBodyReader.class, new ProviderRuntime(null));
-        interfaces.put(javax.ws.rs.ext.MessageBodyWriter.class, new ProviderRuntime(null));
-        interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, new ProviderRuntime(null));
-        interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, new ProviderRuntime(null));
-
-        interfaces.put(javax.ws.rs.core.Feature.class, new ProviderRuntime(null));
-
-        interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
-        interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
-        interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
-        interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, new ProviderRuntime(ConstrainedTo.Type.CLIENT));
-
-        interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, new ProviderRuntime(null));
-
-        interfaces.put(javax.ws.rs.container.DynamicFeature.class, new ProviderRuntime(ConstrainedTo.Type.SERVER));
-
-
-        return interfaces;
-    }
-
 
     private static List<Class<?>> getImplementedContracts(Class<?> clazz) {
         List<Class<?>> list = new LinkedList<Class<?>>();
@@ -552,7 +510,7 @@ public class Providers {
     }
 
     /**
-     * Returns {@code true} if the given class is a provider (implements specific interfaces).
+     * Returns {@code true} if the given component class is a provider (implements specific interfaces).
      * See {@link #getProviderContracts}.
      *
      * @param clazz class to test.
@@ -564,7 +522,7 @@ public class Providers {
 
     private static boolean findFirstProviderContract(Class<?> clazz) {
         for (Class<?> contract : getImplementedContracts(clazz)) {
-            if (isProviderContract(contract)) {
+            if (isSupportedContract(contract)) {
                 return true;
             }
             if (findFirstProviderContract(contract)) {

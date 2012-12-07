@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.jackson;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
@@ -54,14 +54,8 @@ import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 public class JacksonFeature implements Feature {
 
     @Override
-    public boolean configure(final Configurable config) {
-        registerReaderWriterProvider(config, JacksonJaxbJsonProvider.class);
+    public boolean configure(final FeatureContext context) {
+        context.register(JacksonJaxbJsonProvider.class, MessageBodyReader.class, MessageBodyWriter.class);
         return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends MessageBodyReader<?> & MessageBodyWriter<?>> void registerReaderWriterProvider(
-            final Configurable config, final Class<T> provider) {
-        config.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
     }
 }

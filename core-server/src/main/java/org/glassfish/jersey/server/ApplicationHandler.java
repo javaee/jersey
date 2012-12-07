@@ -56,16 +56,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
@@ -82,7 +82,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.model.ContractProvider;
-import org.glassfish.jersey.model.internal.ProviderBag;
+import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -109,7 +109,9 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
 import com.google.common.util.concurrent.AbstractFuture;
 
@@ -121,12 +123,12 @@ import com.google.common.util.concurrent.AbstractFuture;
  * method on a configured application  handler instance.
  * </p>
  * <p>
- * {@code ApplicationHandler} provides two implementations of {@link Configurable config} that can be injected
- * into the application classes. The first is {@link ResourceConfig resource config} which implements {@code Configurable} itself
+ * {@code ApplicationHandler} provides two implementations of {@link javax.ws.rs.core.Configuration config} that can be injected
+ * into the application classes. The first is {@link ResourceConfig resource config} which implements {@code Configuration} itself
  * and is configured by the user. The resource config is not modified by this application handler so the future reloads of the
  * application is not disrupted by providers found on a classpath. This config can
  * be injected only as {@code ResourceConfig} or {@code Application}. The second one can be injected into the
- * {@code Configurable} parameters / fields and contains info about all the properties / provider classes / provider instances
+ * {@code Configuration} parameters / fields and contains info about all the properties / provider classes / provider instances
  * from the resource config and also about all the providers found during processing classes registered under
  * {@link ServerProperties server properties}. After the application handler is initialized both configurations are marked as
  * read-only.
@@ -136,7 +138,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see ResourceConfig
- * @see Configurable
+ * @see javax.ws.rs.core.Configuration
  * @see org.glassfish.jersey.server.spi.ContainerProvider
  */
 public final class ApplicationHandler {
@@ -183,29 +185,29 @@ public final class ApplicationHandler {
             }
         }
 
-        private class ResourceConfigProvider implements Factory<ResourceConfig.RuntimeResourceConfig> {
+        private class RuntimeConfigProvider implements Factory<ServerConfig> {
 
             @Override
-            public ResourceConfig.RuntimeResourceConfig provide() {
-                return ApplicationHandler.this.resourceConfig;
+            public ServerConfig provide() {
+                return ApplicationHandler.this.runtimeConfig;
             }
 
             @Override
-            public void dispose(ResourceConfig.RuntimeResourceConfig instance) {
+            public void dispose(ServerConfig instance) {
                 //not used
             }
         }
 
         @Override
         protected void configure() {
-            bindFactory(new ResourceConfigProvider()).to(ResourceConfig.class).to(Configurable.class).in(Singleton.class);
+            bindFactory(new RuntimeConfigProvider()).to(ServerConfig.class).to(Configuration.class).in(Singleton.class);
             bindFactory(new JaxrsApplicationProvider()).to(Application.class).in(Singleton.class);
             bind(ApplicationHandler.this).to(ApplicationHandler.class);
         }
     }
 
     private final Application application;
-    private final ResourceConfig.RuntimeResourceConfig resourceConfig;
+    private final ResourceConfig runtimeConfig;
     private final ServiceLocator locator;
     private ServerRuntime runtime;
 
@@ -213,17 +215,7 @@ public final class ApplicationHandler {
      * Create a new Jersey application handler using a default configuration.
      */
     public ApplicationHandler() {
-        this.application = new Application();
-        this.resourceConfig = new ResourceConfig.RuntimeResourceConfig();
-        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
-
-        Errors.processWithException(new Errors.Closure<Void>() {
-            @Override
-            public Void invoke() {
-                initialize();
-                return null;
-            }
-        });
+        this(new Application());
     }
 
     /**
@@ -237,7 +229,7 @@ public final class ApplicationHandler {
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         this.application = createApplication(jaxrsApplicationClass);
-        this.resourceConfig = createResourceConfig(application);
+        this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
 
         Errors.processWithException(new Errors.Closure<Void>() {
             @Override
@@ -258,7 +250,13 @@ public final class ApplicationHandler {
     public ApplicationHandler(Application application) {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
         this.application = application;
-        this.resourceConfig = createResourceConfig(application);
+        if (application instanceof ResourceConfig) {
+            final ResourceConfig rc = (ResourceConfig) application;
+            if (rc.getApplicationClass() != null) {
+                rc.setApplication(createApplication(rc.getApplicationClass()));
+            }
+        }
+        this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
 
         Errors.processWithException(new Errors.Closure<Void>() {
             @Override
@@ -269,21 +267,25 @@ public final class ApplicationHandler {
         });
     }
 
-    private ResourceConfig.RuntimeResourceConfig createResourceConfig(Application application) {
-        if (application instanceof ResourceConfig) {
-            final ResourceConfig resourceConfig = (ResourceConfig) application;
-            final Class<? extends Application> applicationClass = resourceConfig.getApplicationClass();
-            if (applicationClass != null) {
-                final Application app = createApplication(applicationClass);
-
-                // (JERSEY-1094) If the application is an instance of ResourceConfig then register it's
-                // custom binders into the HK2 service locator so they can be used right away.
-                registerAdditionalBinders(resourceConfig.getCustomBinders());
-
-                resourceConfig.setApplication(app);
+    private Application createApplication(Class<? extends Application> applicationClass) {
+        // need to handle ResourceConfig and Application separately as invoking forContract() on these
+        // will trigger the factories which we don't want at this point
+        if (applicationClass == ResourceConfig.class) {
+            return new ResourceConfig();
+        } else if (applicationClass == Application.class) {
+            return new Application();
+        } else {
+            Application app = locator.createAndInitialize(applicationClass);
+            if (app instanceof ResourceConfig) {
+                final ResourceConfig _rc = (ResourceConfig) app;
+                final Class<? extends Application> innerAppClass = _rc.getApplicationClass();
+                if (innerAppClass != null) {
+                    final Application innerApp = createApplication(innerAppClass);
+                    _rc.setApplication(innerApp);
+                }
             }
+            return app;
         }
-        return ResourceConfig.newRuntimeResourceConfig(application);
     }
 
     /**
@@ -294,68 +296,51 @@ public final class ApplicationHandler {
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {
-            ((ResourceConfig)application).lock();
+            ((ResourceConfig) application).lock();
         }
 
-        registerAdditionalBinders(resourceConfig.getCustomBinders());
+        // Configure binders and features.
+        runtimeConfig.configureBinders(locator);
+        runtimeConfig.configureFeatures(locator);
+
+        // Add WADL support.
+        boolean wadlDisabled = runtimeConfig.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
+        if (!wadlDisabled && !runtimeConfig.isRegistered(WadlResource.class)) {
+            runtimeConfig.register(WadlResource.class);
+        }
 
         // Introspecting classes & instances
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
-        final Set<Class<?>> classes = new HashSet<Class<?>>(resourceConfig.getClasses());
-
-        boolean wadlDisabled = resourceConfig.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
-        if (!wadlDisabled) {
-            classes.add(WadlResource.class);
-        }
-
-        for (Class<?> c : classes) {
-            if (c == null) {
-                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(c));
-                break;
-            }
-
+        for (Class<?> c : runtimeConfig.getClasses()) {
             try {
                 Resource resource = Resource.from(c);
                 if (resource != null) {
-                    resourceBagBuilder.registerResource(c, resource, resourceConfig.getProviderBag().getContractProvider(c));
-                } else {
-                    resourceConfig.register(c);
+                    resourceBagBuilder.registerResource(c, resource);
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warning(ex.getMessage());
             }
         }
 
-        for (Object o : resourceConfig.getSingletons()) {
-            if(o == null) {
-                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(o));
-                break;
-            }
-
+        for (Object o : runtimeConfig.getSingletons()) {
             try {
                 Resource resource = Resource.from(o);
                 if (resource != null) {
-                    resourceBagBuilder.registerResource(o, resource, resourceConfig.getProviderBag().getContractProvider(o.getClass()));
-                } else {
-                    resourceConfig.register(o);
+                    resourceBagBuilder.registerResource(o, resource);
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warning(ex.getMessage());
             }
         }
 
-        // Configure features.
-        ProviderBinder.configureFeatures(resourceConfig.getFeatureBag(), resourceConfig, locator);
-
-        resourceConfig.lock();
-
         // Adding programmatic resource models
-        for (Resource programmaticResource : resourceConfig.getResources()) {
+        for (Resource programmaticResource : runtimeConfig.getResources()) {
             resourceBagBuilder.registerProgrammaticResource(programmaticResource);
         }
 
         final ResourceBag resourceBag = resourceBagBuilder.build();
-        final ProviderBag providerBag = resourceConfig.getProviderBag();
+
+        runtimeConfig.lock();
 
         // Registering Injection Bindings
         final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
@@ -364,7 +349,9 @@ public final class ApplicationHandler {
             provider.initialize(locator);
             componentProviders.add(provider);
         }
-        registerProvidersAndResources(componentProviders, providerBag, resourceBag);
+
+        final ComponentBag componentBag = runtimeConfig.getComponentBag();
+        bindProvidersAndResources(componentProviders, componentBag, resourceBag);
         for (ComponentProvider componentProvider : componentProviders) {
             componentProvider.done();
         }
@@ -377,23 +364,23 @@ public final class ApplicationHandler {
         final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters = Providers.getAllRankedProviders(locator,
                 ContainerResponseFilter.class);
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
-                = filterNameBound(responseFilters, null, providerBag, applicationNameBindings);
+                = filterNameBound(responseFilters, null, componentBag, applicationNameBindings);
 
         final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters = Providers.getAllRankedProviders(locator,
                 ContainerRequestFilter.class);
         final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters
-                = filterNameBound(requestFilters, preMatchFilters, providerBag, applicationNameBindings);
+                = filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings);
 
         final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors = Providers.getAllRankedProviders(locator,
                 ReaderInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors
-                = filterNameBound(readerInterceptors, null, providerBag, applicationNameBindings);
+                = filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings);
 
         final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors = Providers.getAllRankedProviders(locator,
                 WriterInterceptor.class);
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors
-                = filterNameBound(writerInterceptors, null, providerBag, applicationNameBindings);
+                = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings);
         final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
 
         // validate the models
@@ -401,7 +388,7 @@ public final class ApplicationHandler {
 
         // create a router
         DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.getRootResources(), resourceConfig))
+        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.getRootResources(), runtimeConfig))
                 .to(WadlApplicationContext.class), dynamicConfiguration);
         dynamicConfiguration.commit();
 
@@ -440,7 +427,7 @@ public final class ApplicationHandler {
                 .build(routedInflectorExtractorStage);
 
         // Inject instances.
-        for (Object instance : providerBag.getInstances()) {
+        for (Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
             locator.inject(instance);
         }
         for (Object instance : resourceBag.instances) {
@@ -472,7 +459,7 @@ public final class ApplicationHandler {
     private static <T> MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> filterNameBound(
             final Iterable<RankedProvider<T>> all,
             final Collection<RankedProvider<ContainerRequestFilter>> preMatching,
-            final ProviderBag providerBag,
+            final ComponentBag componentBag,
             final Collection<Class<? extends Annotation>> applicationNameBindings) {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
@@ -482,16 +469,16 @@ public final class ApplicationHandler {
             RankedProvider<T> provider = it.next();
             final Class<?> providerClass = provider.getProvider().getClass();
 
-            ContractProvider model = providerBag.getModels().get(providerClass);
+            ContractProvider model = componentBag.getModel(providerClass);
             if (model == null) {
                 // the provider was (most likely) bound in HK2 externally
-                model = ContractProvider.from(providerClass);
+                model = ComponentBag.modelFor(providerClass);
             }
 
             if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
                 it.remove();
                 preMatching.add(new RankedProvider<ContainerRequestFilter>((ContainerRequestFilter) provider.getProvider(),
-                                model.getPriority(ContainerRequestFilter.class)));
+                        model.getPriority(ContainerRequestFilter.class)));
             }
 
             boolean nameBound = model.isNameBound();
@@ -515,55 +502,92 @@ public final class ApplicationHandler {
         return result;
     }
 
-    private void registerProvidersAndResources(
+    private void bindProvidersAndResources(
             final Set<ComponentProvider> componentProviders,
-            final ProviderBag providerBag,
+            final ComponentBag componentBag,
             final ResourceBag resourceBag) {
 
         final JerseyResourceContext resourceContext = locator.getService(JerseyResourceContext.class);
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+        final Set<Class<?>> registeredClasses = runtimeConfig.getRegisteredClasses();
 
-        // Bind resource classes
-        for (Class<?> resourceClass : resourceBag.classes) {
-            ContractProvider providerModel = resourceBag.contractProviders.get(resourceClass);
-            if (bindWithComponentProvider(resourceClass, providerModel, componentProviders)) {
-                continue;
-            }
+        // Merge programmatic resource classes with component classes.
+        Set<Class<?>> classes = Sets.newIdentityHashSet();
+        classes.addAll(Sets.filter(componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS),
+                new Predicate<Class<?>>() {
+                    @Override
+                    public boolean apply(Class<?> componentClass) {
+                        return Providers.checkProviderRuntime(
+                                componentClass,
+                                componentBag.getModel(componentClass),
+                                RuntimeType.SERVER,
+                                !registeredClasses.contains(componentClass),
+                                resourceBag.classes.contains(componentClass));
+                    }
+                }));
+        classes.addAll(resourceBag.classes);
 
-            if (!Resource.isAcceptable(resourceClass)) {
-                LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_CLASS(resourceClass));
-                continue;
-            }
+        // Bind classes.
+        for (Class<?> componentClass : classes) {
+            ContractProvider model = componentBag.getModel(componentClass);
+            if (resourceBag.classes.contains(componentClass)) {
+                if (bindWithComponentProvider(componentClass, model, componentProviders)) {
+                    continue;
+                }
 
-            if (providerModel != null &&
-                    !providerModel.getContracts().isEmpty() &&
-                    !Providers.checkProviderRuntime(
-                            resourceClass,
-                            ConstrainedTo.Type.SERVER,
-                            !resourceConfig.getRegisteredClasses().contains(resourceClass),
-                            true)) {
-                providerModel = null;
+                if (!Resource.isAcceptable(componentClass)) {
+                    LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_COMPONENT(componentClass));
+                    continue;
+                }
+
+                if (model != null && !Providers.checkProviderRuntime(
+                        componentClass,
+                        model,
+                        RuntimeType.SERVER,
+                        !registeredClasses.contains(componentClass),
+                        true)) {
+                    model = null;
+                }
+                resourceContext.unsafeBindResource(componentClass, model, dc);
+            } else {
+                ProviderBinder.bindProvider(componentClass, model, dc);
             }
-            resourceContext.unsafeBindResource(resourceClass, providerModel, dc);
         }
-        // Bind resource instances
-        for (Object resourceInstance : resourceBag.instances) {
-            ContractProvider providerModel = resourceBag.contractProviders.get(resourceInstance.getClass());
-            // TODO Try to bind resource instances using component providers?
 
-            if (providerModel != null &&
-                    !providerModel.getContracts().isEmpty() &&
-                    !Providers.checkProviderRuntime(
-                            resourceInstance.getClass(),
-                            ConstrainedTo.Type.SERVER,
-                            !resourceConfig.getRegisteredClasses().contains(resourceInstance.getClass()),
-                            true)) {
-                providerModel = null;
+        // Merge programmatic resource instances with other component instances.
+        Set<Object> instances = Sets.newHashSet();
+        instances.addAll(Sets.filter(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS),
+                new Predicate<Object>() {
+                    @Override
+                    public boolean apply(Object component) {
+                        final Class<?> componentClass = component.getClass();
+                        return Providers.checkProviderRuntime(
+                                componentClass,
+                                componentBag.getModel(componentClass),
+                                RuntimeType.SERVER,
+                                !registeredClasses.contains(componentClass),
+                                resourceBag.instances.contains(component));
+                    }
+                }));
+        instances.addAll(resourceBag.instances);
+
+        // Bind instances.
+        for (Object component : instances) {
+            ContractProvider model = componentBag.getModel(component.getClass());
+            if (resourceBag.instances.contains(component)) {
+                if (model != null && !Providers.checkProviderRuntime(
+                        component.getClass(),
+                        model,
+                        RuntimeType.SERVER,
+                        !registeredClasses.contains(component.getClass()),
+                        true)) {
+                    model = null;
+                }
+                resourceContext.unsafeBindResource(component, model, dc);
+            } else {
+                ProviderBinder.bindProvider(component, model, dc);
             }
-            resourceContext.unsafeBindResource(resourceInstance, providerModel, dc);
         }
-        // Bind providers.
-        ProviderBinder.bindProviders(providerBag, ConstrainedTo.Type.SERVER, resourceConfig.getRegisteredClasses(), dc);
 
         dc.commit();
     }
@@ -582,24 +606,12 @@ public final class ApplicationHandler {
         return false;
     }
 
-    private Application createApplication(Class<? extends Application> applicationClass) {
-        // need to handle ResourceConfig and Application separately as invoking forContract() on these
-        // will trigger the factories which we don't want at this point
-        if (applicationClass == ResourceConfig.class) {
-            return new ResourceConfig();
-        } else if (applicationClass == Application.class) {
-            return new Application();
-        } else {
-            return locator.createAndInitialize(applicationClass);
-        }
-    }
-
     /**
      * Registers HK2 binders into the HK2 service register.
      *
      * @param binders binders to be registered.
      */
-    public void registerAdditionalBinders(final Set<Binder> binders) {
+    public void registerAdditionalBinders(final Iterable<Binder> binders) {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         for (Binder binder : binders) {
@@ -796,6 +808,6 @@ public final class ApplicationHandler {
      * @return application configuration.
      */
     public ResourceConfig getConfiguration() {
-        return resourceConfig;
+        return runtimeConfig;
     }
 }

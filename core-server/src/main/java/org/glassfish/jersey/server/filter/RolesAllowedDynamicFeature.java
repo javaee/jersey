@@ -47,7 +47,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 
 import javax.annotation.security.DenyAll;
@@ -79,19 +79,19 @@ import org.glassfish.jersey.server.model.AnnotatedMethod;
 public class RolesAllowedDynamicFeature implements DynamicFeature {
 
     @Override
-    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+    public void configure(final ResourceInfo resourceInfo, final FeatureContext configuration) {
         AnnotatedMethod am = new AnnotatedMethod(resourceInfo.getResourceMethod());
 
         // DenyAll on the method take precedence over RolesAllowed and PermitAll
         if (am.isAnnotationPresent(DenyAll.class)) {
-            configurable.register(new RolesAllowedRequestFilter());
+            configuration.register(new RolesAllowedRequestFilter());
             return;
         }
 
         // RolesAllowed on the method takes precedence over PermitAll
         RolesAllowed ra = am.getAnnotation(RolesAllowed.class);
         if (ra != null) {
-            configurable.register(new RolesAllowedRequestFilter(ra.value()));
+            configuration.register(new RolesAllowedRequestFilter(ra.value()));
             return;
         }
 
@@ -106,7 +106,7 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
         // RolesAllowed on the class takes precedence over PermitAll
         ra = resourceInfo.getResourceClass().getAnnotation(RolesAllowed.class);
         if (ra != null) {
-            configurable.register(new RolesAllowedRequestFilter(ra.value()));
+            configuration.register(new RolesAllowedRequestFilter(ra.value()));
         }
     }
 

@@ -134,11 +134,11 @@ public class ResourceNotFoundTest {
 
         rb = Resource.builder("/dynamic");
         rb.addMethod("GET").handledBy(new MyInflector());
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         rb = Resource.builder("/foo/dynamic");
         rb.addMethod("GET").handledBy(new MyInflector());
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         return new ApplicationHandler(rc);
     }

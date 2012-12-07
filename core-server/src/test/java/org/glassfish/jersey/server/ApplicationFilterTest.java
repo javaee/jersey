@@ -83,7 +83,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addBinders(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
+                .registerBinders(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -93,7 +93,7 @@ public class ApplicationFilterTest {
                 return Response.ok().build();
             }
         });
-        resourceConfig.addResources(rb.build());
+        resourceConfig.registerResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
@@ -113,7 +113,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .addBinders(new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
+                .registerBinders(new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -123,7 +123,7 @@ public class ApplicationFilterTest {
                 return Response.ok().build();
             }
         });
-        resourceConfig.addResources(rb.build());
+        resourceConfig.registerResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
@@ -213,7 +213,7 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = new ResourceConfig().addBinders(
+        final ResourceConfig resourceConfig = new ResourceConfig().registerBinders(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
@@ -224,7 +224,7 @@ public class ApplicationFilterTest {
                 return Response.ok().build();
             }
         });
-        resourceConfig.addResources(rb.build());
+        resourceConfig.registerResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(200, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
@@ -243,7 +243,7 @@ public class ApplicationFilterTest {
         List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
-        final ResourceConfig resourceConfig = new ResourceConfig().addBinders(
+        final ResourceConfig resourceConfig = new ResourceConfig().registerBinders(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
@@ -254,7 +254,7 @@ public class ApplicationFilterTest {
                 return Response.ok().build();
             }
         });
-        resourceConfig.addResources(rb.build());
+        resourceConfig.registerResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         assertEquals(500, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());

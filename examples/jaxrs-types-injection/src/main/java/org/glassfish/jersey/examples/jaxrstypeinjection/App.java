@@ -108,6 +108,6 @@ public class App {
         final Resource.Builder resourceBuilder = Resource.builder(ROOT_PATH_PROGRAMMATIC);
         resourceBuilder.addMethod("GET").handledBy(JaxrsInjectionReportingInflector.class);
 
-        return resourceConfig.addResources(resourceBuilder.build());
+        return resourceConfig.registerResources(resourceBuilder.build());
     }
 }

@@ -54,8 +54,9 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -165,8 +166,8 @@ public class DynamicFeatureTest {
     public static class PreMatchingDynamicFeature implements DynamicFeature {
 
         @Override
-        public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
-            configurable.register(PreMatchingRequestFilter.class);
+        public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
+            context.register(PreMatchingRequestFilter.class);
         }
     }
 
@@ -184,10 +185,10 @@ public class DynamicFeatureTest {
     public static class SubResourceDynamicFeature implements DynamicFeature {
 
         @Override
-        public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+        public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
             if (resourceInfo.getResourceClass().equals(SubResource.class)
                     && "get".equals(resourceInfo.getResourceMethod().getName())) {
-                configurable.register(new CustomResponseFilter());
+                context.register(new CustomResponseFilter());
             }
         }
     }
@@ -236,16 +237,16 @@ public class DynamicFeatureTest {
     public static class SupportedProvidersDynamicFeature implements DynamicFeature {
 
         @Override
-        public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
-            configurable.register(ProviderBall.class);
-            configurable.register(new ContainerRequestFilter() {
+        public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
+            context.register(ProviderBall.class);
+            context.register(new ContainerRequestFilter() {
                 @Override
                 public void filter(final ContainerRequestContext requestContext) throws IOException {
                     requestContext.getHeaders().add("foo", "bar");
                 }
             });
             //noinspection unchecked
-            configurable.register(new CustomResponseFilter(), MessageBodyReader.class);
+            context.register(new CustomResponseFilter(), MessageBodyReader.class);
         }
     }
 
@@ -284,31 +285,31 @@ public class DynamicFeatureTest {
 
     public static class InjectConfigurableProvider implements ContainerResponseFilter {
 
-        private final Configurable configurable;
+        private final Configuration configuration;
 
         @Inject
-        public InjectConfigurableProvider(final Configurable configurable) {
-            this.configurable = configurable;
+        public InjectConfigurableProvider(final Configuration configuration) {
+            this.configuration = configuration;
         }
 
         @Override
         public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
                 throws IOException {
 
-            assertNotNull(configurable);
-            assertEquals("bar", configurable.getProperty("foo"));
-            assertEquals("world", configurable.getProperty("hello"));
+            assertNotNull(configuration);
+            assertEquals("bar", configuration.getProperty("foo"));
+            assertEquals("world", configuration.getProperty("hello"));
         }
     }
 
     public static class InjectConfigurableDynamicFeature implements DynamicFeature {
 
         @Override
-        public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
-            configurable.register(InjectConfigurableProvider.class);
-            configurable.setProperty("foo", "bar");
+        public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
+            context.register(InjectConfigurableProvider.class);
+            context.setProperty("foo", "bar");
 
-            assertEquals("world", configurable.getProperty("hello"));
+            assertEquals("world", context.getConfiguration().getProperty("hello"));
         }
     }
 
@@ -335,8 +336,8 @@ public class DynamicFeatureTest {
 
     private ResourceConfig getTestResourceConfig(final Class<?>... dynamicFeatures) {
         return new ResourceConfig().
-                addClasses(Resource.class, SubResource.class).
-                addClasses(dynamicFeatures);
+                registerClasses(Resource.class, SubResource.class).
+                registerClasses(dynamicFeatures);
     }
 
     private ApplicationHandler createApplication(final ResourceConfig resourceConfig) {

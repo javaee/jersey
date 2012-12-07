@@ -62,7 +62,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig().addSingletons(new Jersey780());
+        return new ResourceConfig().registerInstances(new Jersey780());
     }
 
     @Override

@@ -98,7 +98,7 @@ public class ResourcePathOverrideTest {
                 });
 
         final Resource resource = resourceBuilder.build();
-        resourceConfig.addResources(resource);
+        resourceConfig.registerResources(resource);
 
         ApplicationHandler app = createApplication(resourceConfig);
 

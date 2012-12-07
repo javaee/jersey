@@ -165,7 +165,7 @@ public class EventSource implements EventListener {
         }
 
         // TODO replace with SseFeature once common config is fully implemented.
-        target.configuration().register(InboundEventReader.class).register(EventInputReader.class);
+        target.register(InboundEventReader.class).register(EventInputReader.class);
         this.target = target;
 
         if (open) {

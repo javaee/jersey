@@ -71,7 +71,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
     @Test
     public void testHelloWorld() throws Exception {
         WebTarget t = target();
-        t.configuration().register(new LoggingFilter());
+        t.register(new LoggingFilter());
         Response r = t.path("helloworld").request().get();
         assertEquals(200, r.getStatus());
         assertEquals("Hello World!", r.readEntity(String.class));

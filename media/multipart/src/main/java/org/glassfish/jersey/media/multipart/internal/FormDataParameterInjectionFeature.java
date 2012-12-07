@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.media.multipart.internal;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
@@ -57,11 +57,11 @@ import org.glassfish.hk2.api.TypeLiteral;
 public class FormDataParameterInjectionFeature implements Feature {
 
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean configure(final Configurable config) {
-        config.register(FormDataParamValueFactoryProvider.class, ValueFactoryProvider.class);
-        config.register(FormDataParamValueFactoryProvider.InjectionResolver.class,
-                new TypeLiteral<InjectionResolver<FormDataParam>>() {}.getRawType());
+    public boolean configure(final FeatureContext context) {
+        context.register(FormDataParamValueFactoryProvider.class, ValueFactoryProvider.class);
+        context.register(FormDataParamValueFactoryProvider.InjectionResolver.class,
+                new TypeLiteral<InjectionResolver<FormDataParam>>() {
+                }.getRawType());
         return true;
     }
 }

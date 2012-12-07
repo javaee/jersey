@@ -49,11 +49,15 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -106,7 +110,7 @@ public class JerseyClientTest {
         client.close(); // closing multiple times is ok
 
         try {
-            client.configuration();
+            client.getConfiguration();
             fail("IllegalStateException expected if a method is called on a closed client instance.");
         } catch (IllegalStateException ex) {
             // ignored
@@ -121,33 +125,33 @@ public class JerseyClientTest {
 
     @Test
     public void testConfiguration() {
-        final ClientConfig configuration = client.configuration();
+        final ClientConfig configuration = client.getConfiguration();
         assertNotNull(configuration);
 
         configuration.setProperty("hello", "world");
 
-        assertEquals("world", client.configuration().getProperty("hello"));
+        assertEquals("world", client.getConfiguration().getProperty("hello"));
     }
 
     @Test
     public void testTarget() {
         final JerseyWebTarget target = client.target("http://jersey.java.net/examples");
         assertNotNull(target);
-        assertEquals(client.configuration(), target.configuration());
+        assertEquals(client.getConfiguration(), target.getConfiguration());
     }
 
     @Test
     public void testTargetConfigUpdate() {
         final JerseyWebTarget target = client.target("http://jersey.java.net/examples");
 
-        target.configuration().register(new ClientRequestFilter() {
+        target.getConfiguration().register(new ClientRequestFilter() {
             @Override
             public void filter(ClientRequestContext clientRequestContext) throws IOException {
                 throw new UnsupportedOperationException("Not supported yet");
             }
         });
 
-        assertEquals(1, target.configuration().getProviderInstances().size());
+        assertEquals(1, target.getConfiguration().getInstances().size());
     }
 
     /**
@@ -226,5 +230,44 @@ public class JerseyClientTest {
         } catch (Exception e) {
             assertEquals("Jersey/" + Version.getVersion(), e.getCause().getMessage());
         }
+    }
+
+    public static interface CustomContract {
+        public String getFoo();
+    }
+
+    public static class CustomService implements CustomContract {
+
+        @Override
+        public String getFoo() {
+            return "Foo";
+        }
+    }
+
+    public static class CustomBinder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(CustomService.class).to(CustomContract.class);
+        }
+    }
+
+    public static class CustomProvider implements ClientRequestFilter {
+        @Inject
+        private CustomContract customContract;
+
+        @Override
+        public void filter(ClientRequestContext requestContext) throws IOException {
+            requestContext.abortWith(Response.ok(customContract.getFoo()).build());
+        }
+    }
+
+    @Test
+    public void testCustomBinders() {
+        final CustomBinder binder = new CustomBinder();
+        Client client = ClientFactory.newClient().register(binder).register(CustomProvider.class);
+
+        Response resp = client.target("test").request().get();
+        assertEquals("Foo", resp.readEntity(String.class));
     }
 }

@@ -59,24 +59,29 @@ import org.glassfish.jersey.uri.UriComponent;
  * Jar entries are reported to a {@link ResourceProcessor}.
  *
  * @author Paul Sandoz
- * @author gerard.davison@oracle.com
+ * @author Gerard Davison (gerard.davison@oracle.com)
  */
 class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
 
+    @Override
     public Set<String> getSchemes() {
         return new HashSet<String>(Arrays.asList("jar", "zip"));
     }
 
+    /**
+     * Create new "jar" and "zip" scheme URI scanner factory.
+     */
     JarZipSchemeResourceFinderFactory() {
     }
 
-    public JarZipSchemeScanner create(final URI uri) {
+    @Override
+    public JarZipSchemeScanner create(final URI uri, boolean recursive) {
         final String ssp = uri.getRawSchemeSpecificPart();
         final String jarUrlString = ssp.substring(0, ssp.lastIndexOf('!'));
         final String parent = ssp.substring(ssp.lastIndexOf('!') + 2);
 
         try {
-            return new JarZipSchemeScanner(getInputStream(jarUrlString), parent);
+            return new JarZipSchemeScanner(getInputStream(jarUrlString), parent, recursive);
         } catch (IOException e) {
             throw new ResourceFinderException(e);
         }
@@ -87,9 +92,9 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         private InputStream inputStream;
         private JarFileScanner jarFileScanner;
 
-        private JarZipSchemeScanner(InputStream inputStream, String parent) throws IOException {
+        private JarZipSchemeScanner(InputStream inputStream, String parent, boolean recursive) throws IOException {
             this.inputStream = inputStream;
-            this.jarFileScanner = new JarFileScanner(inputStream, parent);
+            this.jarFileScanner = new JarFileScanner(inputStream, parent, recursive);
         }
 
         @Override
@@ -126,7 +131,6 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         public void reset() {
             jarFileScanner.reset();
         }
-
     }
 
     /**

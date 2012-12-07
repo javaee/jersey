@@ -125,13 +125,13 @@ public class UriTest extends AbstractTest {
         @GET
         @Path("1")
         public String doGet1() {
-            return (String) webTarget1.configuration().getProperties().get("test-property");
+            return (String) webTarget1.getConfiguration().getProperties().get("test-property");
         }
 
         @GET
         @Path("2")
         public String doGet2(@Uri("http://oracle.com") WebTarget webTarget2) {
-            return (String) webTarget2.configuration().getProperties().get("test-property");
+            return (String) webTarget2.getConfiguration().getProperties().get("test-property");
         }
 
     }

@@ -250,7 +250,7 @@ public class WebComponent {
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
-        resourceConfig.addBinders(new WebComponentBinder());
+        resourceConfig.registerBinders(new WebComponentBinder());
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
@@ -359,7 +359,7 @@ public class WebComponent {
 
             final String webApp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
             if (webApp != null && !"false".equals(webApp)) {
-                rc.addFinder(new WebAppResourcesScanner(config.getServletContext()));
+                rc.registerFinder(new WebAppResourcesScanner(config.getServletContext()));
             }
             return rc;
         }

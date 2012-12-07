@@ -47,6 +47,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -59,8 +60,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.message.internal.SaxParserFactoryInjectionProvider;
-import org.glassfish.jersey.model.internal.DefaultConfig;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.junit.Test;
 
@@ -69,7 +70,7 @@ public class JaxbStringReaderProviderTest {
     public void stringReaderDoesNotReadExternalDtds() {
 
         Provider<SAXParserFactory> saxParserFactoryProvider = new Provider<SAXParserFactory>() {
-            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new DefaultConfig());
+            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new CommonConfig(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL));
 
             @Override
             public SAXParserFactory get() {

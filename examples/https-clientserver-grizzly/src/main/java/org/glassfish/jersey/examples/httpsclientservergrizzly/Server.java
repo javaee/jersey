@@ -91,7 +91,7 @@ public class Server {
         sslContext.setTrustStorePass("asdfgh");
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
+        rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         try {
             webServer = GrizzlyHttpServerFactory.createHttpServer(

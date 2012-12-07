@@ -39,11 +39,15 @@
  */
 package org.glassfish.jersey.servlet;
 
-import java.util.Enumeration;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
+
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -61,8 +65,14 @@ class ServletPropertiesDelegate implements PropertiesDelegate {
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
-        return request.getAttributeNames();
+    public Collection<String> getPropertyNames() {
+        return Lists.newLinkedList(new Iterable<String>() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public Iterator<String> iterator() {
+                return Iterators.forEnumeration(request.getAttributeNames());
+            }
+        });
     }
 
     @Override

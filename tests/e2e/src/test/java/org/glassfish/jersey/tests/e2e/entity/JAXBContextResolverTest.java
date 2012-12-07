@@ -172,7 +172,7 @@ public class JAXBContextResolverTest {
         @Override
         protected Application configure() {
             cr = new JAXBContextResolver();
-            return new ResourceConfig(JaxbBeanResource.class).addSingletons(cr);
+            return new ResourceConfig(JaxbBeanResource.class).registerInstances(cr);
         }
 
         @Test
@@ -193,7 +193,7 @@ public class JAXBContextResolverTest {
             cr = new JAXBContextResolver();
             mr = new MarshallerResolver();
             umr = new UnmarshallerResolver();
-            return new ResourceConfig(JaxbBeanResource.class).addSingletons(cr, mr, umr);
+            return new ResourceConfig(JaxbBeanResource.class).registerInstances(cr, mr, umr);
         }
 
         @Test
@@ -234,7 +234,7 @@ public class JAXBContextResolverTest {
         protected Application configure() {
             cr = new JAXBContextResolver();
             crApp = new JAXBContextResolverApp();
-            return new ResourceConfig(JaxbBeanResourceApp.class).addSingletons(cr, crApp);
+            return new ResourceConfig(JaxbBeanResourceApp.class).registerInstances(cr, crApp);
         }
 
         @Test
@@ -259,7 +259,7 @@ public class JAXBContextResolverTest {
             umr = new UnmarshallerResolver();
             mrApp = new MarshallerResolverApp();
             umrApp = new UnmarshallerResolverApp();
-            return new ResourceConfig(JaxbBeanResourceApp.class).addSingletons(cr, mr, umr, mrApp, umrApp);
+            return new ResourceConfig(JaxbBeanResourceApp.class).registerInstances(cr, mr, umr, mrApp, umrApp);
         }
 
         @Test
@@ -311,7 +311,7 @@ public class JAXBContextResolverTest {
         protected Application configure() {
             cr = new JAXBContextResolver();
             crText = new JAXBContextResolverText();
-            return new ResourceConfig(JaxbBeanResourceText.class).addSingletons(cr, crText);
+            return new ResourceConfig(JaxbBeanResourceText.class).registerInstances(cr, crText);
         }
 
         @Test
@@ -336,7 +336,7 @@ public class JAXBContextResolverTest {
             umr = new UnmarshallerResolver();
             mrText = new MarshallerResolverText();
             umrText = new UnmarshallerResolverText();
-            return new ResourceConfig(JaxbBeanResourceText.class).addSingletons(cr, mr, umr, mrText, umrText);
+            return new ResourceConfig(JaxbBeanResourceText.class).registerInstances(cr, mr, umr, mrText, umrText);
         }
 
         @Test
@@ -380,7 +380,7 @@ public class JAXBContextResolverTest {
             umr = new UnmarshallerResolver();
             mrFoo = new MarshallerResolverFoo();
             umrFoo = new UnmarshallerResolverFoo();
-            return new ResourceConfig(JaxbBeanResourceFoo.class).addSingletons(cr, mr, umr, mrFoo, umrFoo);
+            return new ResourceConfig(JaxbBeanResourceFoo.class).registerInstances(cr, mr, umr, mrFoo, umrFoo);
         }
 
         @Test
@@ -436,7 +436,7 @@ public class JAXBContextResolverTest {
             cr = new JAXBContextResolver();
             crApp = new JAXBContextResolverApp();
             crText = new JAXBContextResolverText();
-            return new ResourceConfig(JaxbBeanResourceAll.class).addSingletons(cr, crApp, crText);
+            return new ResourceConfig(JaxbBeanResourceAll.class).registerInstances(cr, crApp, crText);
         }
 
         @Test
@@ -480,7 +480,7 @@ public class JAXBContextResolverTest {
             umrApp = new UnmarshallerResolverApp();
             mrText = new MarshallerResolverText();
             umrText = new UnmarshallerResolverText();
-            return new ResourceConfig(JaxbBeanResourceAll.class).addSingletons(cr, crApp, crText, mr, umr,
+            return new ResourceConfig(JaxbBeanResourceAll.class).registerInstances(cr, crApp, crText, mr, umr,
                     mrApp, umrApp, mrText, umrText);
         }
 
@@ -575,7 +575,7 @@ public class JAXBContextResolverTest {
             cr = new JAXBContextResolver();
             crApp = new JAXBContextResolverApp();
             crText = new JAXBContextResolverText();
-            return new ResourceConfig(JaxbBeanResourceAllOtherJaxbBean.class).addSingletons(cr, crApp, crText);
+            return new ResourceConfig(JaxbBeanResourceAllOtherJaxbBean.class).registerInstances(cr, crApp, crText);
         }
 
         @Test

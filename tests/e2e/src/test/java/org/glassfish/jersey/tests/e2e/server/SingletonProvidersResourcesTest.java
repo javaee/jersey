@@ -77,21 +77,19 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
         final Resource.Builder resourceBuilder = Resource.builder();
         resourceBuilder.name("programmatic").path("programmatic").addMethod("GET").handledBy
                 (ResourceProgrammaticNotSingleton.class);
-        resourceConfig.addResources(resourceBuilder.build());
+        resourceConfig.registerResources(resourceBuilder.build());
 
         return resourceConfig;
     }
 
-
     @Test
     public void testResourceAsFilter() {
         String str = target().path("singleton").request().header("singleton", "singleton").get(String.class);
-        Assert.assertTrue(str.startsWith("true/"));
+        Assert.assertTrue(str, str.startsWith("true/"));
         String str2 = target().path("singleton").request().header("singleton", "singleton").get(String.class);
-        Assert.assertTrue(str2.startsWith("true/"));
+        Assert.assertTrue(str2, str2.startsWith("true/"));
         Assert.assertEquals(str, str2);
     }
-
 
     @Test
     public void testResourceAsFilterAnnotatedPerLookup() {
@@ -102,7 +100,6 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
         Assert.assertNotSame(str, str2);
     }
 
-
     @Test
     public void testResourceProgrammatic() {
         String str = target().path("programmatic").request().header("programmatic", "programmatic").get(String.class);
@@ -111,7 +108,6 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
         Assert.assertTrue(str2.startsWith("false/"));
         Assert.assertNotSame(str, str2);
     }
-
 
     // this should be singleton, it means the same instance for the usage as a filter and as an resource
     @Path("singleton")
@@ -151,7 +147,6 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
                     filterClass);
         }
     }
-
 
     // should not be a singleton as this is only programmatic resource and is not registered as provider
     public static class ResourceProgrammaticNotSingleton implements ContainerRequestFilter,

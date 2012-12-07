@@ -40,8 +40,6 @@
 package org.glassfish.jersey.internal;
 
 import javax.ws.rs.core.Application;
-import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 

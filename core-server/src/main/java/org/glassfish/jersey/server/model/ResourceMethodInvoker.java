@@ -46,14 +46,13 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -70,7 +69,7 @@ import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
 import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.NameBound;
-import org.glassfish.jersey.model.internal.ProviderBag;
+import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -132,7 +131,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         @Inject
         private ServiceLocator locator;
         @Inject
-        private Configurable globalConfig;
+        private Configuration globalConfig;
 
         /**
          * Build a new resource method invoker instance.
@@ -191,7 +190,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors,
             Iterable<DynamicFeature> dynamicFeatures,
             ServiceLocator locator,
-            Configurable globalConfig) {
+            Configuration globalConfig) {
 
         this.routingContextProvider = routingContextProvider;
         this.asyncContextProvider = asyncContextProvider;
@@ -210,19 +209,20 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             dynamicFeature.configure(this, config);
         }
 
-        final ProviderBag providerBag = config.getProviderBag();
-        final List<Object> providers = Lists.newArrayList(providerBag.getInstances());
+        final ComponentBag componentBag = config.getComponentBag();
+        final List<Object> providers = Lists.newArrayList(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS));
 
         // Get instances of providers.
-        if (!providerBag.getClasses().isEmpty()) {
+        final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
+        if (!providerClasses.isEmpty()) {
             locator = Injections.createLocator(locator, new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bind(config).to(Configurable.class);
+                    bind(config).to(Configuration.class);
                 }
             });
 
-            for (final Class<?> providerClass : providerBag.getClasses()) {
+            for (final Class<?> providerClass : providerClasses) {
                 providers.add(locator.create(providerClass));
             }
         }
@@ -232,9 +232,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final List<RankedProvider<ContainerRequestFilter>> _requestFilters = Lists.newLinkedList();
         final List<RankedProvider<ContainerResponseFilter>> _responseFilters = Lists.newLinkedList();
 
-        final Map<Class<?>, ContractProvider> models = providerBag.getModels();
         for (final Object provider : providers) {
-            final ContractProvider model = models.get(provider.getClass());
+            final ContractProvider model = componentBag.getModel(provider.getClass());
             final Set<Class<?>> contracts = model.getContracts();
 
             if (contracts.contains(WriterInterceptor.class)) {

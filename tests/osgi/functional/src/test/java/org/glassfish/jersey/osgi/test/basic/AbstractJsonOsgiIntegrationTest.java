@@ -78,7 +78,7 @@ public abstract class AbstractJsonOsgiIntegrationTest {
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();
-        c.configuration().register(getJsonProviderFeature());
+        c.register(getJsonProviderFeature());
 
         final String result = c.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).get(String.class);
 
@@ -94,7 +94,7 @@ public abstract class AbstractJsonOsgiIntegrationTest {
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();
-        c.configuration().register(getJsonProviderFeature());
+        c.register(getJsonProviderFeature());
 
         final Response response = c.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).get();
         final String result = response.readEntity(String.class);

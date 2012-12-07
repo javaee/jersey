@@ -119,10 +119,10 @@ public class MainTest {
         }
 
         Client client = ClientFactory.newClient();
-        client.configuration().setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         // client basic auth demonstration
-        client.configuration().register(new HttpBasicAuthFilter("user", "password"));
+        client.register(new HttpBasicAuthFilter("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -164,12 +164,12 @@ public class MainTest {
         }
 
         Client client = ClientFactory.newClient();
-        client.configuration().setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter());
+        target.register(new LoggingFilter());
 
         Response response;
 
@@ -205,12 +205,12 @@ public class MainTest {
         }
 
         Client client = ClientFactory.newClient();
-        client.configuration().setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
-        target.configuration().register(new LoggingFilter());
+        target.register(new LoggingFilter());
 
         boolean caught = false;
 

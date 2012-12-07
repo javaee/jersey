@@ -50,7 +50,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
 import javax.inject.Inject;
@@ -89,7 +90,12 @@ public class SaxParserFactoryInjectionProviderTest {
         locator = createServiceLocator();
     }
 
-    private static final Configurable EMPTY_CONFIG = new Configurable() {
+    private static final Configuration EMPTY_CONFIG = new Configuration() {
+
+        @Override
+        public RuntimeType getRuntimeType() {
+            return null;
+        }
 
         @Override
         public Object getProperty(String propertyName) {
@@ -97,75 +103,48 @@ public class SaxParserFactoryInjectionProviderTest {
         }
 
         @Override
-        public Configurable setProperties(final Map<String, ?> properties) {
-            return this;
+        public Collection<String> getPropertyNames() {
+            return Collections.emptyList();
         }
 
         @Override
-        public Configurable setProperty(final String name, final Object value) {
-            return this;
+        public boolean isEnabled(Feature feature) {
+            return false;
         }
 
         @Override
-        public Collection<Feature> getFeatures() {
-            return Collections.emptySet();
+        public boolean isEnabled(Class<? extends Feature> featureClass) {
+            return false;
         }
 
         @Override
-        public Set<Class<?>> getProviderClasses() {
-            return Collections.emptySet();
+        public boolean isRegistered(Object provider) {
+            return false;
         }
 
         @Override
-        public Set<Object> getProviderInstances() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        public Configurable register(final Class<?> providerClass) {
-            return this;
-        }
-
-        @Override
-        public Configurable register(final Class<?> providerClass, final int bindingPriority) {
-            return this;
-        }
-
-        @Override
-        public <T> Configurable register(final Class<T> providerClass, final Class<? super T>... contracts) {
-            return this;
-        }
-
-        @Override
-        public <T> Configurable register(final Class<T> providerClass,
-                                         final int bindingPriority,
-                                         final Class<? super T>... contracts) {
-            return this;
-        }
-
-        @Override
-        public Configurable register(final Object provider) {
-            return this;
-        }
-
-        @Override
-        public Configurable register(final Object provider, final int bindingPriority) {
-            return this;
-        }
-
-        @Override
-        public <T> Configurable register(final Object provider, final Class<? super T>... contracts) {
-            return this;
-        }
-
-        @Override
-        public <T> Configurable register(final Object provider, final int bindingPriority, final Class<? super T>... contracts) {
-            return this;
+        public boolean isRegistered(Class<?> providerClass) {
+            return false;
         }
 
         @Override
         public Map<String, Object> getProperties() {
             return Collections.emptyMap();
+        }
+
+        @Override
+        public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public Set<Class<?>> getClasses() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<Object> getInstances() {
+            return Collections.emptySet();
         }
     };
 
@@ -175,17 +154,17 @@ public class SaxParserFactoryInjectionProviderTest {
         binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(new Factory<Configurable>() {
+                bindFactory(new Factory<Configuration>() {
                     @Override
-                    public Configurable provide() {
+                    public Configuration provide() {
                         return EMPTY_CONFIG;
                     }
 
                     @Override
-                    public void dispose(Configurable instance) {
+                    public void dispose(Configuration instance) {
                         //not used
                     }
-                }).to(Configurable.class);
+                }).to(Configuration.class);
 
                 bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).
                         to(SAXParserFactory.class).

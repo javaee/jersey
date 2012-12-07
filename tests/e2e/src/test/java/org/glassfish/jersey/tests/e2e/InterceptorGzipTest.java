@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,7 +68,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests gzip interceptors.
@@ -88,7 +88,7 @@ public class InterceptorGzipTest extends JerseyTest {
 
     @Test
     public void testGzipInterceptorOnlyOnServer() throws IOException {
-        client().configuration().register(GZIPWriterTestInterceptor.class);
+        client().register(GZIPWriterTestInterceptor.class);
         WebTarget target = target().path("test");
         String entity = "hello, this is text entity";
         Response response = target.request().put(Entity.entity(entity, MediaType.TEXT_PLAIN_TYPE));
@@ -101,7 +101,7 @@ public class InterceptorGzipTest extends JerseyTest {
 
     @Test
     public void testGzipInterceptorOnServerandClient() throws IOException {
-        client().configuration().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class);
+        client().register(GZIPReaderTestInterceptor.class).register(GZIPWriterTestInterceptor.class);
         WebTarget target = target().path("test");
         String entity = "hello, this is text entity";
         Response response = target.request().put(Entity.entity(entity, MediaType.TEXT_PLAIN_TYPE));

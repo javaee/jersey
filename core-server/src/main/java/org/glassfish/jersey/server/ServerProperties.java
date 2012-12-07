@@ -71,6 +71,27 @@ public final class ServerProperties {
     public static final String PROVIDER_PACKAGES = "jersey.config.server.provider.packages";
 
     /**
+     * Sets the recursion strategy for package scanning. The value of {@code true} indicates
+     * that the {@link #PROVIDER_PACKAGES list of provided package names} should be scanned
+     * recursively including any nested packages. Value of {@code false} indicates that only
+     * packages in the list should be scanned. In such case any nested packages will be ignored.
+     * <p>
+     * The property value MUST be an instance of {@code Boolean} type or a {@code String} convertible
+     * to {@code Boolean} type.
+     * </p>
+     * <p>
+     * A default value is {@code true}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     *
+     * @see #PROVIDER_PACKAGES
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String PROVIDER_SCANNING_RECURSIVE = "jersey.config.server.provider.scanning.recursive";
+
+    /**
      * Defines class-path that contains application-specific resources and
      * providers. If the property is set, the specified class-path will be scanned
      * for JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path})

@@ -97,7 +97,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
      * @param rc Resource config this filter should be enabled for.
      */
     public static void enableFor(ResourceConfig rc, Class<? extends ContentEncoder>... encoders) {
-        rc.addClasses(encoders).addClasses(EncodingFilter.class);
+        rc.registerClasses(encoders).registerClasses(EncodingFilter.class);
     }
 
     @Override

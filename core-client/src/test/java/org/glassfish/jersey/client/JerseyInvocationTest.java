@@ -94,7 +94,7 @@ public class JerseyInvocationTest {
     @Test
     public void testNullResponseType() throws Exception {
         final Client client = ClientFactory.newClient();
-        client.configuration().register(new ClientRequestFilter() {
+        client.register(new ClientRequestFilter() {
             @Override
             public void filter(final ClientRequestContext requestContext) throws IOException {
                 requestContext.abortWith(Response.ok().build());

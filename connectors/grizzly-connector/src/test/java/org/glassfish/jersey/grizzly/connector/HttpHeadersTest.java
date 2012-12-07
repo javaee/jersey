@@ -85,7 +85,7 @@ public class HttpHeadersTest extends JerseyTest{
     @Test
     public void testPost() {
         final URI u = target().getUri();
-        Client c = ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().configuration())));
+        Client c = ClientFactory.newClient(new ClientConfig().connector(new GrizzlyConnector(client().getConfiguration())));
         WebTarget t = c.target(u);
 
         Response response = t.path("test").request().header("X-CLIENT", "client").post(null);

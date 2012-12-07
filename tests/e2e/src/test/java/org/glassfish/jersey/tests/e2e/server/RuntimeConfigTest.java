@@ -47,8 +47,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -61,8 +62,8 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -81,7 +82,7 @@ public class RuntimeConfigTest extends JerseyTest {
     public static class EmptyFeature implements Feature {
 
         @Override
-        public boolean configure(final Configurable configurable) {
+        public boolean configure(final FeatureContext context) {
             return true;
         }
     }
@@ -89,32 +90,33 @@ public class RuntimeConfigTest extends JerseyTest {
     public static class ClientFeature implements Feature {
 
         @Override
-        public boolean configure(final Configurable configurable) {
-            configurable.register(ClientReaderInterceptor.class);
-            configurable.setProperty("foo", "bar");
+        public boolean configure(final FeatureContext context) {
+            context.register(ClientReaderInterceptor.class);
+            context.setProperty("foo", "bar");
             return true;
         }
     }
 
     public static class ClientReaderInterceptor implements ReaderInterceptor {
 
-        private final Configurable config;
+        private final Configuration config;
 
         @Inject
-        public ClientReaderInterceptor(final Configurable configurable) {
-            this.config = configurable;
+        public ClientReaderInterceptor(final Configuration configuration) {
+            this.config = configuration;
         }
 
         @Override
         public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
-            assertEquals(1, config.getProviderClasses().size());
-            assertEquals(ClientReaderInterceptor.class, config.getProviderClasses().iterator().next());
+            assertEquals(2, config.getClasses().size());
+            assertTrue(config.isRegistered(ClientFeature.class));
+            assertTrue(config.isRegistered(ClientReaderInterceptor.class));
 
             assertEquals(1, config.getProperties().size());
             assertEquals("bar", config.getProperty("foo"));
 
-            assertTrue(config.getProviderInstances().isEmpty());
-            assertTrue(!config.getFeatures().isEmpty());
+            assertTrue(config.getInstances().isEmpty());
+            assertTrue(config.isEnabled(ClientFeature.class));
 
             context.getHeaders().add("CustomHeader", "ClientReaderInterceptor");
 
@@ -131,18 +133,22 @@ public class RuntimeConfigTest extends JerseyTest {
     public void testRuntimeClientConfig() throws Exception {
         final WebTarget target = target();
 
-        target.configuration().register(ClientFeature.class);
+        target.register(ClientFeature.class);
 
         final Response response = target.request(MediaType.WILDCARD_TYPE).get(Response.class);
 
-        for (final Configurable config : new Configurable[] {target.configuration(), target().configuration()}) {
-            assertTrue(config.getProviderClasses().isEmpty());
-            assertTrue(config.getProviderInstances().isEmpty());
-            assertTrue(config.getProperties().isEmpty());
-        }
+        assertEquals(1, target.getConfiguration().getClasses().size());
+        assertTrue(target.getConfiguration().isRegistered(ClientFeature.class));
+        assertTrue(target.getConfiguration().getInstances().isEmpty());
+        assertTrue(target.getConfiguration().getProperties().isEmpty());
+        assertFalse(target.getConfiguration().isEnabled(ClientFeature.class));
 
-        assertEquals(1, target.configuration().getFeatures().size());
-        assertEquals(0, target().configuration().getFeatures().size());
+        WebTarget t = target();
+        assertEquals(0, t.getConfiguration().getClasses().size());
+        assertFalse(t.getConfiguration().isRegistered(ClientFeature.class));
+        assertTrue(t.getConfiguration().getInstances().isEmpty());
+        assertTrue(t.getConfiguration().getProperties().isEmpty());
+        assertFalse(t.getConfiguration().isEnabled(ClientFeature.class));
 
         assertEquals("get", response.readEntity(String.class));
         assertEquals("ClientReaderInterceptor", response.getHeaderString("CustomHeader"));

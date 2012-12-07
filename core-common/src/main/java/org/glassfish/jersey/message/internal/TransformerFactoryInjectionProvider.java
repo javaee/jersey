@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
 import javax.xml.transform.TransformerFactory;
@@ -61,7 +61,7 @@ public class TransformerFactoryInjectionProvider extends AbstractXmlFactory impl
      */
     // TODO This provider should be registered and configured via a feature.
     @Inject
-    public TransformerFactoryInjectionProvider(final Configurable config) {
+    public TransformerFactoryInjectionProvider(final Configuration config) {
         super(config);
     }
 

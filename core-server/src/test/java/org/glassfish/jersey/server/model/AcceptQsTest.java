@@ -118,7 +118,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("application/baz")).handledBy(stringResponse("baz"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestAcceptGet(new ApplicationHandler(rc));
     }
 
@@ -175,7 +175,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.5"), MediaType.valueOf("application/bar"))
                 .handledBy(stringResponse("GET"));
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestAcceptMultiple(new ApplicationHandler(rc));
     }
 
@@ -250,7 +250,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("text/html;qs=0.7")).handledBy(stringResponse("html"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestAcceptSubType(new ApplicationHandler(rc));
     }
 
@@ -332,7 +332,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("text/html;qs=0.5")).handledBy(stringResponse("html"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestAcceptSubTypeNotIntuitive(new ApplicationHandler(rc));
     }
 
@@ -408,7 +408,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").handledBy(stringResponse("GET"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestAcceptNoProduces(new ApplicationHandler(rc));
     }
 
@@ -446,7 +446,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1"), MediaType.valueOf("application/bar"))
                 .handledBy(stringResponse("FOOBAR"));
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestFooBar(new ApplicationHandler(rc), "FOOBAR", "FOOBAR");
     }
 
@@ -473,7 +473,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("application/bar")).handledBy(stringResponse("BAR"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestFooBar(new ApplicationHandler(rc), "FOO", "BAR");
     }
 
@@ -505,7 +505,7 @@ public class AcceptQsTest {
         rb.addMethod("GET").produces(MediaType.valueOf("application/foo;qs=0.1")).handledBy(stringResponse("FOO"));
 
         ResourceConfig rc = new ResourceConfig();
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
         runTestFooBar(new ApplicationHandler(rc), "FOO", "BAR");
     }
 

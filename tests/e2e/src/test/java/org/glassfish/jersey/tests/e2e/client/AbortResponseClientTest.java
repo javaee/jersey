@@ -116,7 +116,7 @@ public class AbortResponseClientTest extends JerseyTest {
         };
 
         WebTarget target = target().path("test");
-        target.configuration().register(outFilter).register(inFilter);
+        target.register(outFilter).register(inFilter);
         Invocation i = target.request().buildGet();
         Response r = i.invoke();
 

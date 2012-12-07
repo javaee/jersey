@@ -76,7 +76,7 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).addSingletons(new MyFilter());
+        return ((ResourceConfig) super.configure()).registerInstances(new MyFilter());
     }
 
     @Override

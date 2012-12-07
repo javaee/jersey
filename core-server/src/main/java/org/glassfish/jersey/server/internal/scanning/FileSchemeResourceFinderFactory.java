@@ -64,20 +64,27 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         return Collections.singleton("file");
     }
 
+    /**
+     * Create new "file" scheme URI scanner factory.
+     */
     FileSchemeResourceFinderFactory() {
     }
 
     @Override
-    public FileSchemeScanner create(URI uri) {
-        return new FileSchemeScanner(uri);
+    public FileSchemeScanner create(URI uri, boolean recursive) {
+        return new FileSchemeScanner(uri, recursive);
     }
 
     private class FileSchemeScanner implements ResourceFinder {
 
-        private ResourceFinderStack resourceFinderStack = null;
+        private final ResourceFinderStack resourceFinderStack;
+        private final boolean recursive;
 
-        private FileSchemeScanner(final URI uri) {
-            resourceFinderStack = new ResourceFinderStack();
+
+        private FileSchemeScanner(final URI uri, boolean recursive) {
+            this.resourceFinderStack = new ResourceFinderStack();
+            this.recursive = recursive;
+
             processFile(new File(uri.getPath()));
         }
 
@@ -111,8 +118,11 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
 
                 Stack<File> files = new Stack<File>() {{
                     if(f.isDirectory()) {
-                        for(File file : f.listFiles()) {
-                            push(file);
+                        final File[] subDirFiles = f.listFiles();
+                        if (subDirFiles != null) {
+                            for(File file : subDirFiles) {
+                                push(file);
+                            }
                         }
                     } else {
                         push(f);
@@ -128,7 +138,9 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
                         next = files.pop();
 
                         if(next.isDirectory()) {
-                            processFile(next);
+                            if (recursive) {
+                                processFile(next);
+                            }
                             next = null;
                         }
                     }

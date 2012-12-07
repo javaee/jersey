@@ -46,13 +46,13 @@ import java.util.Map;
 import javax.ws.rs.Uri;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 
 import javax.inject.Inject;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.uri.ExtendedUriInfo;
@@ -70,7 +70,7 @@ import com.google.common.collect.Maps;
 final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
     @Context
-    private ResourceConfig resourceConfig;
+    private Configuration config;
 
     /**
      * {@link Uri} injection resolver.
@@ -142,7 +142,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
         final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == WebTarget.class) {
-            final Object o = resourceConfig.getProperties().get(ServerProperties.WEBTARGET_CONFIGURATION);
+            final Object o = config.getProperty(ServerProperties.WEBTARGET_CONFIGURATION);
             ClientConfig clientConfig = null;
             if(o != null && (o instanceof Map)) {
                 Map<String, ClientConfig> clientConfigMap = (Map<String, ClientConfig>) o;

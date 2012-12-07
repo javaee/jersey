@@ -42,8 +42,8 @@ package org.glassfish.jersey.moxy.xml;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 /**
  * Feature used to register MOXy XML providers.
@@ -83,8 +83,8 @@ public class MoxyXmlFeature implements Feature {
     }
 
     @Override
-    public boolean configure(Configurable configuration) {
-        configuration.register(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
+    public boolean configure(FeatureContext context) {
+        context.register(new MoxyContextResolver(properties, classLoader, oxmMappingLookup, classes));
         return true;
     }
 }

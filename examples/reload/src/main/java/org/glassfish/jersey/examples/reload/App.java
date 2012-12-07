@@ -108,7 +108,7 @@ public class App {
                         final String className = r.readLine();
                         if (!className.startsWith("#")) {
                             try {
-                                rc.addClasses(Class.forName(className));
+                                rc.registerClasses(Class.forName(className));
                                 System.out.printf(" + loaded class %s.\n", className);
                             } catch (ClassNotFoundException ex) {
                                 System.out.printf(" ! class %s not found.\n", className);
@@ -133,7 +133,7 @@ public class App {
             System.out.println("Resource Config Reload Jersey Example App");
 
             final ResourceConfig resourceConfig = new ResourceConfig(ArrivalsResource.class);
-            resourceConfig.addSingletons(new ContainerLifecycleListener(){
+            resourceConfig.registerInstances(new ContainerLifecycleListener() {
                 @Override
                 public void onStartup(Container container) {
                     App.container = container;

@@ -130,11 +130,11 @@ public class AsyncApplicationBuildingTest {
 
         rb = Resource.builder("a/b/c");
         rb.addMethod("GET").handledBy(new AsyncInflector("A-B-C"));
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         rb = Resource.builder("a/b/d");
         rb.addMethod("GET").handledBy(new AsyncInflector("A-B-D"));
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         return new ApplicationHandler(rc);
     }
@@ -245,7 +245,7 @@ public class AsyncApplicationBuildingTest {
     @Test
     public void testJaxrsApplicationInjection() throws InterruptedException, ExecutionException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceB.class)
-                .addSingletons(new ResourceAReader());
+                .registerInstances(new ResourceAReader());
 
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 

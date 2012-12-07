@@ -133,7 +133,7 @@ final class IntrospectionModeller {
 
     private Resource.Builder doCreateResourceBuilder(final boolean skipAcceptableCheck) {
         if (!skipAcceptableCheck && !Resource.isAcceptable(handlerClass)) {
-            Errors.fatal(handlerClass, LocalizationMessages.NON_INSTANTIABLE_CLASS(handlerClass));
+            Errors.fatal(handlerClass, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(handlerClass));
         }
 
         checkForNonPublicMethodIssues();

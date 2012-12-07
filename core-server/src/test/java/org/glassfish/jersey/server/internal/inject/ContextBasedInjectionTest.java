@@ -142,11 +142,11 @@ public class ContextBasedInjectionTest {
         Resource.Builder rb;
         rb = Resource.builder("a/b/c");
         rb.addMethod("GET").handledBy(new AsyncInflector("A-B-C"));
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         rb = Resource.builder("a/b/d");
         rb.addMethod("GET").handledBy(new AsyncInflector("A-B-D"));
-        rc.addResources(rb.build());
+        rc.registerResources(rb.build());
 
         app = new ApplicationHandler(rc);
     }

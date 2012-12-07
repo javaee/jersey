@@ -145,7 +145,7 @@ public class ResourceConfigTest extends JerseyTest {
     public static class Jersey1094 extends ResourceConfig {
 
         public Jersey1094() {
-            addClasses(Resource.class, JettisonFeature.class);
+            registerClasses(Resource.class, JettisonFeature.class);
         }
 
     }

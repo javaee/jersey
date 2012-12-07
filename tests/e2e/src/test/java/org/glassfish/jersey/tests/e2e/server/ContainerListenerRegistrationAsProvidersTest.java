@@ -62,7 +62,7 @@ public class ContainerListenerRegistrationAsProvidersTest extends JerseyTest {
     @Override
     public ResourceConfig configure() {
         listener = new MyListener();
-        final ResourceConfig result = new ResourceConfig(One.class, YetAnotherListener.class).addSingletons(listener);
+        final ResourceConfig result = new ResourceConfig(One.class, YetAnotherListener.class).registerInstances(listener);
         return result;
     }
 

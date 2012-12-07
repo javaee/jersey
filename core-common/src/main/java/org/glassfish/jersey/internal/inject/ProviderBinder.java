@@ -40,21 +40,15 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Feature;
+import javax.ws.rs.RuntimeType;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.model.ContractProvider;
-import org.glassfish.jersey.model.internal.FeatureBag;
-import org.glassfish.jersey.model.internal.FeatureConfig;
-import org.glassfish.jersey.model.internal.ProviderBag;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -63,6 +57,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AliasDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 
 /**
@@ -166,21 +161,22 @@ public class ProviderBinder {
     /**
      * Bind contract provider model to a provider class using the supplied HK2 dynamic configuration.
      *
-     * @param provider contract provider model.
-     * @param dc HK2 dynamic service locator configuration.
+     * @param providerClass provider class.
+     * @param model      contract provider model.
+     * @param dc            HK2 dynamic service locator configuration.
      */
     public static void bindProvider(
-            final Class<?> providerClass, final ContractProvider provider, final DynamicConfiguration dc) {
+            final Class<?> providerClass, final ContractProvider model, final DynamicConfiguration dc) {
 
-        for (Class contract : provider.getContracts()) {
+        for (Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
-                    .in(provider.getScope())
+                    .in(model.getScope())
                     .qualifiedBy(new CustomAnnotationImpl());
 
             //noinspection unchecked
             bindingBuilder.to(contract);
 
-            final int priority = provider.getPriority(contract);
+            final int priority = model.getPriority(contract);
             if (priority > ContractProvider.NO_PRIORITY) {
                 bindingBuilder.ranked(priority);
             }
@@ -197,13 +193,13 @@ public class ProviderBinder {
      * is ignored as instances can only be bound as "singletons".
      *
      * @param providerInstance provider instance.
-     * @param provider contract provider model.
-     * @param dc HK2 dynamic service locator configuration.
+     * @param model         contract provider model.
+     * @param dc               HK2 dynamic service locator configuration.
      */
     public static void bindProvider(
-            final Object providerInstance, final ContractProvider provider, final DynamicConfiguration dc) {
+            final Object providerInstance, final ContractProvider model, final DynamicConfiguration dc) {
 
-        for (Class contract : provider.getContracts()) {
+        for (Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections.
                     newBinder(providerInstance).
                     qualifiedBy(new CustomAnnotationImpl());
@@ -211,7 +207,7 @@ public class ProviderBinder {
             //noinspection unchecked
             bindingBuilder.to(contract);
 
-            final int priority = provider.getPriority(contract);
+            final int priority = model.getPriority(contract);
             if (priority > ContractProvider.NO_PRIORITY) {
                 bindingBuilder.ranked(priority);
             }
@@ -224,28 +220,28 @@ public class ProviderBinder {
      * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
      * also committed.
      *
-     * @param providerBag bag of provider classes and instances.
-     * @param locator HK2 service locator the binder will use to bind the providers into.
+     * @param componentBag bag of provider classes and instances.
+     * @param locator      HK2 service locator the binder will use to bind the providers into.
      */
-    public static void bindProviders(final ProviderBag providerBag, final ServiceLocator locator) {
-        bindProviders(providerBag, null, Collections.<Class<?>>emptySet(), locator);
+    public static void bindProviders(final ComponentBag componentBag, final ServiceLocator locator) {
+        bindProviders(componentBag, null, Collections.<Class<?>>emptySet(), locator);
     }
 
     /**
      * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
      * also committed.
      *
-     * @param providerBag bag of provider classes and instances.
-     * @param constrainedTo current runtime (client or server).
+     * @param componentBag      bag of provider classes and instances.
+     * @param constrainedTo     current runtime (client or server).
      * @param registeredClasses classes which are manually registered by the user (not found by the classpath scanning).
-     * @param locator HK2 service locator the binder will use to bind the providers into.
+     * @param locator           HK2 service locator the binder will use to bind the providers into.
      */
-    public static void bindProviders(final ProviderBag providerBag,
-                                     final ConstrainedTo.Type constrainedTo,
+    public static void bindProviders(final ComponentBag componentBag,
+                                     final RuntimeType constrainedTo,
                                      final Set<Class<?>> registeredClasses,
                                      final ServiceLocator locator) {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        bindProviders(providerBag, constrainedTo, registeredClasses, dc);
+        bindProviders(componentBag, constrainedTo, registeredClasses, dc);
         dc.commit();
     }
 
@@ -253,83 +249,61 @@ public class ProviderBinder {
      * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
      * not committed.
      *
-     * @param providerBag bag of provider classes and instances.
-     * @param constrainedTo current runtime (client or server).
-     * @param registeredClasses classes which are manually registered by the user (not found by the classpath scanning).
+     * @param componentBag         bag of provider classes and instances.
+     * @param constrainedTo        current runtime (client or server).
+     * @param registeredClasses    classes which are manually registered by the user (not found by the classpath scanning).
      * @param dynamicConfiguration HK2 dynamic service locator configuration.
      */
-    public static void bindProviders(final ProviderBag providerBag,
-                                     final ConstrainedTo.Type constrainedTo,
+    public static void bindProviders(final ComponentBag componentBag,
+                                     final RuntimeType constrainedTo,
                                      final Set<Class<?>> registeredClasses,
                                      final DynamicConfiguration dynamicConfiguration) {
-        // Bind pure provider classes
-        Set<Class<?>> classes = Sets.newLinkedHashSet(providerBag.getClasses());
+        Predicate<ContractProvider> filter = new Predicate<ContractProvider>() {
+            @Override
+            public boolean apply(ContractProvider input) {
+                return ComponentBag.EXCLUDE_EMPTY.apply(input) && ComponentBag.EXCLUDE_META_PROVIDERS.apply(input);
+            }
+        };
+
+        // Bind provider classes except for pure meta-providers and providers with empty contract models (e.g. resources)
+        Set<Class<?>> classes = Sets.newLinkedHashSet(componentBag.getClasses(filter));
         if (constrainedTo != null) {
-            classes = Providers.filterByConstraint(classes, constrainedTo, registeredClasses);
+            classes = Sets.filter(classes, new Predicate<Class<?>>() {
+                @Override
+                public boolean apply(Class<?> componentClass) {
+                    return Providers.checkProviderRuntime(
+                            componentClass,
+                            componentBag.getModel(componentClass),
+                            constrainedTo,
+                            registeredClasses == null || !registeredClasses.contains(componentClass),
+                            false);
+                }
+            });
         }
         for (Class<?> providerClass : classes) {
-            final ContractProvider model = providerBag.getModels().get(providerClass);
+            final ContractProvider model = componentBag.getModel(providerClass);
             ProviderBinder.bindProvider(providerClass, model, dynamicConfiguration);
         }
 
-        // Bind pure provider instances
-        Set<Object> instances = providerBag.getInstances();
+        // Bind pure provider instances except for pure meta-providers and providers with empty contract models (e.g. resources)
+        Set<Object> instances = componentBag.getInstances(filter);
         if (constrainedTo != null) {
-            instances = Providers.filterInstancesByConstraint(instances, constrainedTo, registeredClasses);
+            instances = Sets.filter(instances, new Predicate<Object>() {
+                @Override
+                public boolean apply(Object component) {
+                    final Class<?> componentClass = component.getClass();
+                    return Providers.checkProviderRuntime(
+                            componentClass,
+                            componentBag.getModel(componentClass),
+                            constrainedTo,
+                            registeredClasses == null || !registeredClasses.contains(componentClass),
+                            false);
+                }
+            });
         }
         for (Object provider : instances) {
-            final ContractProvider model = providerBag.getModels().get(provider.getClass());
+            final ContractProvider model = componentBag.getModel(provider.getClass());
             ProviderBinder.bindProvider(provider, model, dynamicConfiguration);
-        }
-    }
-
-    /**
-     * Enable features from the {@link FeatureBag feature bag}. Invoke the
-     * {@link javax.ws.rs.core.Feature#configure(javax.ws.rs.core.Configurable)} method for every feature.
-     *
-     * @param featureBag features to be enabled.
-     * @param configuration {@link Configurable config} to configure feature in.
-     * @param locator HK2 service locator to instantiate features.
-     * @throws IllegalStateException if a feature has been already enabled.
-     */
-    public static void configureFeatures(final FeatureBag featureBag,
-                                         final Configurable configuration, final ServiceLocator locator) {
-        configureFeatures(featureBag, featureBag.getUnconfiguredFeatures(), Sets.<FeatureBag.RegisteredFeature>newHashSet(),
-                configuration, locator);
-    }
-
-    private static void configureFeatures(final FeatureBag featureBag,
-                                          final Collection<FeatureBag.RegisteredFeature> unprocessed,
-                                          final Collection<FeatureBag.RegisteredFeature> processed,
-                                          final Configurable configuration,
-                                          final ServiceLocator locator) {
-
-        for (final FeatureBag.RegisteredFeature registeredFeature : unprocessed) {
-            Feature feature = registeredFeature.getFeature();
-
-            if (feature == null) {
-                feature = locator.create(registeredFeature.getFeatureClass());
-            } else {
-                locator.inject(feature);
-            }
-
-            if (featureBag.isEnabled(feature)
-                    || processed.contains(registeredFeature)) {
-                throw new IllegalStateException(LocalizationMessages.FEATURE_HAS_ALREADY_BEEN_ENABLED(feature));
-            }
-
-            final FeatureConfig featureConfig = new FeatureConfig(configuration);
-            boolean success = feature.configure(featureConfig);
-
-            if (success) {
-                processed.add(registeredFeature);
-
-                configureFeatures(featureBag, featureConfig.getUnprocessedFeatures(), processed, configuration, locator);
-
-                if (featureBag.isRegistered(registeredFeature)) {
-                    featureBag.setEnabled(feature);
-                }
-            }
         }
     }
 

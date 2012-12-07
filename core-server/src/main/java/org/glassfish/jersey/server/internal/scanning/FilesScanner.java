@@ -60,39 +60,33 @@ public class FilesScanner implements ResourceFinder {
 
     private ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
 
-    /**
-     * Scan from a set of packages.
-     *
-     * @param files a {@link String} containing package names.
-     */
-    public FilesScanner(final String files) {
-        this(new String[]{files});
-    }
-
     private final File[] files;
+    private final boolean recursive;
 
     /**
      * Scan from a set of packages.
      *
      * @param fileNames an array of package names.
+     * @param recursive flag indicating whether sub-directories of any directories in the list of
+     *                  files should be included in the scanning ({@code true}) or not ({@code false}).
      */
-    public FilesScanner(final String[] fileNames) {
-        files = new File[Tokenizer.tokenize(fileNames, Tokenizer.COMMON_DELIMITERS).length];
+    public FilesScanner(final String[] fileNames, boolean recursive) {
+        this.recursive = recursive;
+        this.files = new File[Tokenizer.tokenize(fileNames, Tokenizer.COMMON_DELIMITERS).length];
         for (int i = 0; i < files.length; i++) {
             files[i] = new File(fileNames[i]);
         }
 
-        for(final File f : files) {
+        for (final File f : files) {
             processFile(f);
         }
     }
 
     private void processFile(final File f) {
-
-        if(f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) {
+        if (f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) {
             try {
-                resourceFinderStack.push(new JarFileScanner(new FileInputStream(f), ""));
-            } catch(IOException e) {
+                resourceFinderStack.push(new JarFileScanner(new FileInputStream(f), "", true));
+            } catch (IOException e) {
                 // logging might be sufficient in this case
                 throw new ResourceFinderException(e);
             }
@@ -101,9 +95,12 @@ public class FilesScanner implements ResourceFinder {
             resourceFinderStack.push(new ResourceFinder() {
 
                 Stack<File> files = new Stack<File>() {{
-                    if(f.isDirectory()) {
-                        for(File file : f.listFiles()) {
-                            push(file);
+                    if (f.isDirectory()) {
+                        final File[] subDirFiles = f.listFiles();
+                        if (subDirFiles != null) {
+                            for (File file : subDirFiles) {
+                                push(file);
+                            }
                         }
                     } else {
                         push(f);
@@ -115,10 +112,15 @@ public class FilesScanner implements ResourceFinder {
 
                 @Override
                 public boolean hasNext() {
-                    while(next == null && !files.empty()) {
+                    while (next == null && !files.empty()) {
                         next = files.pop();
 
-                        if(next.isDirectory() || next.getName().endsWith(".jar") || next.getName().endsWith(".zip")) {
+                        if (next.isDirectory()) {
+                            if (recursive) {
+                                processFile(next);
+                            }
+                            next = null;
+                        } else if(next.getName().endsWith(".jar") || next.getName().endsWith(".zip")) {
                             processFile(next);
                             next = null;
                         }
@@ -129,7 +131,7 @@ public class FilesScanner implements ResourceFinder {
 
                 @Override
                 public String next() {
-                    if(next != null || hasNext()) {
+                    if (next != null || hasNext()) {
                         current = next;
                         next = null;
                         return current.getName();
@@ -182,7 +184,7 @@ public class FilesScanner implements ResourceFinder {
     public void reset() {
         this.resourceFinderStack = new ResourceFinderStack();
 
-        for(File f : files) {
+        for (File f : files) {
             processFile(f);
         }
     }

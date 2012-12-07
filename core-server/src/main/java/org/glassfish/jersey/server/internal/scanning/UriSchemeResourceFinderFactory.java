@@ -59,6 +59,14 @@ interface UriSchemeResourceFinderFactory {
      */
     Set<String> getSchemes();
 
-    ResourceFinder create(URI u);
+    /**
+     * Create new {@link ResourceFinder} for a given resource URI.
+     *
+     * @param uri       resource URI.
+     * @param recursive defines whether a resource finder should recursively scan any recognized sub-resource
+     *                  URIs (value of {@code true}) or not (value of {@code false}).
+     * @return resource finder for a given URI.
+     */
+    ResourceFinder create(URI uri, boolean recursive);
 }
 

@@ -43,8 +43,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -246,7 +246,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
+    public Collection<String> getPropertyNames() {
         return propertiesDelegate.getPropertyNames();
     }
 

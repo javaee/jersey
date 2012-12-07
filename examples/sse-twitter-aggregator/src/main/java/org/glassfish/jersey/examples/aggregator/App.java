@@ -143,7 +143,7 @@ public class App {
      */
     public static ResourceConfig createResourceConfig() {
         return new ResourceConfig()
-                .addClasses(MessageStreamResource.class, OutboundEventWriter.class, MoxyJsonFeature.class);
+                .registerClasses(MessageStreamResource.class, OutboundEventWriter.class, MoxyJsonFeature.class);
     }
 
     /**

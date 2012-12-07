@@ -67,15 +67,13 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
     }
 
     @Override
-    public VfsSchemeScanner create(final URI uri) {
+    public VfsSchemeScanner create(final URI uri, boolean recursive) {
         ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
 
-        if(!uri.getScheme().equalsIgnoreCase("vfszip")) {
+        if (!uri.getScheme().equalsIgnoreCase("vfszip")) {
             resourceFinderStack.push(
-                    new FileSchemeResourceFinderFactory().create(UriBuilder.fromUri(uri).scheme("file").build()));
+                    new FileSchemeResourceFinderFactory().create(UriBuilder.fromUri(uri).scheme("file").build(), true));
         } else {
-
-
             final String su = uri.toString();
             final int webInfIndex = su.indexOf("/WEB-INF/classes");
             if (webInfIndex != -1) {
@@ -92,10 +90,11 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
                     final String warName = su.substring(warParentIndex + 1, war.length());
                     try {
 
-                        final JarFileScanner jarFileScanner = new JarFileScanner(new URL(warParent.replace("vfszip", "file")).openStream(), "");
+                        final JarFileScanner jarFileScanner =
+                                new JarFileScanner(new URL(warParent.replace("vfszip", "file")).openStream(), "", true);
 
-                        while(jarFileScanner.hasNext()) {
-                            if(jarFileScanner.next().equals(warName)) {
+                        while (jarFileScanner.hasNext()) {
+                            if (jarFileScanner.next().equals(warName)) {
 
                                 resourceFinderStack.push(new JarFileScanner(new FilterInputStream(jarFileScanner.open()) {
                                     // This is required so that the underlying ear
@@ -104,7 +103,7 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
                                     @Override
                                     public void close() throws IOException {
                                     }
-                                }, ""));
+                                }, "", true));
                             }
                         }
 
@@ -113,14 +112,15 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
                     }
                 } else {
                     try {
-                        resourceFinderStack.push(new JarFileScanner(new URL(war.replace("vfszip", "file")).openStream(), path));
+                        resourceFinderStack.push(
+                                new JarFileScanner(new URL(war.replace("vfszip", "file")).openStream(), path, recursive));
                     } catch (IOException e) {
                         throw new ResourceFinderException("IO error when scanning war " + uri, e);
                     }
                 }
             } else {
                 try {
-                    resourceFinderStack.push(new JarFileScanner(new URL(su).openStream(), ""));
+                    resourceFinderStack.push(new JarFileScanner(new URL(su).openStream(), "", true));
                 } catch (IOException e) {
                     throw new ResourceFinderException("IO error when scanning jar " + uri, e);
                 }

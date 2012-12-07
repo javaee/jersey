@@ -99,7 +99,7 @@ import com.google.common.collect.Sets;
  *         });
  *
  * // Register the new programmatic resource in the application's configuration.
- * resourceConfig.addResources(resourceBuilder.build());
+ * resourceConfig.registerResources(resourceBuilder.build());
  * </pre>
  * The following table illustrates the supported requests and provided responses
  * for the application configured in the example above.

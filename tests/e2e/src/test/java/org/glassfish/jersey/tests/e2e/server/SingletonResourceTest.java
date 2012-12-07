@@ -72,9 +72,14 @@ import junit.framework.Assert;
 public class SingletonResourceTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
-        final ResourceConfig resourceConfig = new ResourceConfig(SingletonResource.class, ChildInheritsParentAnnotation.class,
-                ChildImplementsInterfaceAnnotation.class, TestResource.class, RequestScopeResource.class,
-                PerLookupScopeResource.class, SingletonScopeResource.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(
+                SingletonResource.class,
+                ChildInheritsParentAnnotation.class,
+                ChildImplementsInterfaceAnnotation.class,
+                TestResource.class,
+                RequestScopeResource.class,
+                PerLookupScopeResource.class,
+                SingletonScopeResource.class);
 
         final Resource.Builder resourceBuilder1 = Resource.builder();
         resourceBuilder1.name("resource-programmatic/instance/").path("programmatic/instance/").addMethod("GET")
@@ -86,22 +91,22 @@ public class SingletonResourceTest extends JerseyTest {
                         return Response.ok("prg-instance:" + counter++).build();
                     }
                 });
-        resourceConfig.addResources(resourceBuilder1.build());
+        resourceConfig.registerResources(resourceBuilder1.build());
 
         final Resource.Builder resourceBuilder2 = Resource.builder();
         resourceBuilder2.name("resource-programmatic/singleton/").path("programmatic/singleton/").addMethod("GET").handledBy
                 (SingletonProgrammatic.class);
-        resourceConfig.addResources(resourceBuilder2.build());
+        resourceConfig.registerResources(resourceBuilder2.build());
 
         final Resource.Builder resourceBuilder3 = Resource.builder();
         resourceBuilder3.name("resource-programmatic/reused-singleton/").path("programmatic/reused-singleton/").addMethod
                 ("GET").handledBy(SubResourceSingleton.class);
-        resourceConfig.addResources(resourceBuilder3.build());
+        resourceConfig.registerResources(resourceBuilder3.build());
 
         final Resource.Builder resourceBuilder4 = Resource.builder();
         resourceBuilder4.name("resource-programmatic/not-singleton/").path("programmatic/not-singleton/").addMethod("GET")
                 .handledBy(NotSingletonProgrammatic.class);
-        resourceConfig.addResources(resourceBuilder4.build());
+        resourceConfig.registerResources(resourceBuilder4.build());
 
         return resourceConfig;
     }
@@ -213,7 +218,6 @@ public class SingletonResourceTest extends JerseyTest {
         String str = target().path("testScope/singleton").request().get().readEntity(String.class);
         Assert.assertEquals("same-instances", str);
     }
-
 
     @Path("test-requestScope")
     public static class RequestScopeResource {

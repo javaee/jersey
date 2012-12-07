@@ -42,7 +42,7 @@ package org.glassfish.jersey.tests.e2e.server.scanning;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
 
@@ -51,7 +51,6 @@ import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext2WriterInterceptor;
 import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext3WriterInterceptor;
 import org.glassfish.jersey.tests.e2e.server.scanning.ext.Ext4WriterInterceptor;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -60,24 +59,32 @@ import static org.junit.Assert.assertTrue;
 @Path("/")
 public class Resource {
 
-    private final Configurable config;
+    private final Configuration config;
 
     @Inject
-    public Resource(final Configurable config) {
+    public Resource(final Configuration config) {
         this.config = config;
     }
 
     @GET
     public String get() {
-        assertEquals(1, config.getFeatures().size());
-        assertEquals(2, config.getProviderClasses().size());
-        assertEquals(2, config.getProviderInstances().size());
+        assertTrue(config.getClasses().size() >= 4); // e.g. WADL resource can be there too.
+        assertTrue(config.isRegistered(CustomFeature.class));
+        assertTrue(config.isRegistered(Ext2WriterInterceptor.class));
+        assertTrue(config.isRegistered(Ext3WriterInterceptor.class));
+        assertTrue(config.isRegistered(Resource.class));
+        assertTrue(config.getClasses().contains(CustomFeature.class));
+        assertTrue(config.getClasses().contains(Ext2WriterInterceptor.class));
+        assertTrue(config.getClasses().contains(Ext3WriterInterceptor.class));
+        assertTrue(config.getClasses().contains(Resource.class));
 
-        assertEquals(CustomFeature.class, config.getFeatures().iterator().next().getClass());
-        assertTrue(config.getProviderClasses().contains(Ext2WriterInterceptor.class));
-        assertTrue(config.getProviderClasses().contains(Ext3WriterInterceptor.class));
-        assertTrue(config.getProviderInstances().contains(Ext1WriterInterceptor.INSTANCE));
-        assertTrue(config.getProviderInstances().contains(Ext4WriterInterceptor.INSTANCE));
+        assertTrue(config.getInstances().size() >= 2);
+        assertTrue(config.getInstances().contains(Ext1WriterInterceptor.INSTANCE));
+        assertTrue(config.getInstances().contains(Ext4WriterInterceptor.INSTANCE));
+        assertTrue(config.isRegistered(Ext1WriterInterceptor.class));
+        assertTrue(config.isRegistered(Ext4WriterInterceptor.class));
+
+        assertTrue(config.isEnabled(CustomFeature.class));
 
         return "get";
     }

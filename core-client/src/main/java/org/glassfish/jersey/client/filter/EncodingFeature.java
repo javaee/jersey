@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.client.filter;
 
-import javax.ws.rs.client.Configuration;
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.spi.ContentEncoder;
@@ -49,8 +48,9 @@ import org.glassfish.jersey.spi.ContentEncoder;
 /**
  * Feature that configures support for content encodings on the client side.
  * This feature registers {@link EncodingFilter} and the specified set of
- * {@link org.glassfish.jersey.spi.ContentEncoder encoding providers} to the {@link Configuration client
- * configuration}. It also allows setting the value of {@link ClientProperties#USE_ENCODING} property.
+ * {@link org.glassfish.jersey.spi.ContentEncoder encoding providers} to the
+ * {@link javax.ws.rs.core.Configurable client configuration}. It also allows
+ * setting the value of {@link ClientProperties#USE_ENCODING} property.
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
@@ -82,19 +82,19 @@ public class EncodingFeature implements Feature {
 
 
     @Override
-    public boolean configure(Configurable configuration) {
+    public boolean configure(FeatureContext context) {
         if (useEncoding != null) {
             // properties take precedence over the constructor value
-            if (!configuration.getProperties().containsKey(ClientProperties.USE_ENCODING)) {
-                configuration.setProperty(ClientProperties.USE_ENCODING, useEncoding);
+            if (!context.getConfiguration().getProperties().containsKey(ClientProperties.USE_ENCODING)) {
+                context.setProperty(ClientProperties.USE_ENCODING, useEncoding);
             }
         }
         for (Class<? extends ContentEncoder> provider : encodingProviders) {
-            configuration.register(provider);
+            context.register(provider);
         }
         boolean enable = useEncoding != null || encodingProviders.length > 0;
         if (enable) {
-            configuration.register(EncodingFilter.class);
+            context.register(EncodingFilter.class);
         }
         return enable;
     }

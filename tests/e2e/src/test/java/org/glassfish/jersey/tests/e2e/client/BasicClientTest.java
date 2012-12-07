@@ -56,7 +56,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -374,7 +373,7 @@ public class BasicClientTest extends JerseyTest {
 
     protected WebTarget abortingTarget() {
         Client client = ClientFactory.newClient();
-        client.configuration().register(new ClientRequestFilter() {
+        client.register(new ClientRequestFilter() {
             @Override
             public void filter(ClientRequestContext ctx) throws IOException {
                 Response r = Response.ok("aborted").build();
@@ -447,7 +446,7 @@ public class BasicClientTest extends JerseyTest {
         protected abstract String process(T result);
 
         @Override
-        public void failed(ClientException error) {
+        public void failed(Throwable error) {
             if (error.getCause() instanceof WebApplicationException) {
                 setException(error.getCause());
             } else {

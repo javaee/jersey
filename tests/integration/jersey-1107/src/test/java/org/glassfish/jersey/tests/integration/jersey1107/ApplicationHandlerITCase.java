@@ -72,7 +72,7 @@ public class ApplicationHandlerITCase extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig().addSingletons(new Jersey1107());
+        return new ResourceConfig().registerInstances(new Jersey1107());
     }
 
     @Override

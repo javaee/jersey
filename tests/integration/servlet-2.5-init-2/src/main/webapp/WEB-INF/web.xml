@@ -49,6 +49,10 @@
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>org.glassfish.jersey.tests.integration.servlet_25_init_2</param-value>
         </init-param>
+        <init-param>
+            <param-name>jersey.config.server.provider.scanning.recursive</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>

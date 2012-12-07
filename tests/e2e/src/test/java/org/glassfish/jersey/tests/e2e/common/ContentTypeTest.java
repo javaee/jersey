@@ -65,7 +65,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -148,10 +148,10 @@ public class ContentTypeTest extends JerseyTest {
     public static class ContentTypeFixFeature implements DynamicFeature {
 
         @Override
-        public void configure(ResourceInfo resourceInfo, Configurable configurable) {
+        public void configure(ResourceInfo resourceInfo, FeatureContext context) {
             final CtFix annotation = resourceInfo.getResourceMethod().getAnnotation(CtFix.class);
             if (annotation != null) {
-                configurable.register(ContentTypeFixProvider.class, annotation.value());
+                context.register(ContentTypeFixProvider.class, annotation.value());
             }
         }
     }
@@ -188,8 +188,8 @@ public class ContentTypeTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig().
-                addClasses(ContentTypeResource.class, ContentTypeFixFeature.class, FooBarStringWriter.class).
-                addSingletons(new LoggingFilter(LOGGER, true));
+                registerClasses(ContentTypeResource.class, ContentTypeFixFeature.class, FooBarStringWriter.class).
+                registerInstances(new LoggingFilter(LOGGER, true));
     }
 
     @Test
@@ -227,8 +227,7 @@ public class ContentTypeTest extends JerseyTest {
 
         // filter test
         target = target().path("ContentType").path("changeTest");
-        target.configuration()
-                .register(ContentTypeFixProvider.class, ClientResponseFilter.class)
+        target.register(ContentTypeFixProvider.class, ClientResponseFilter.class)
                 .register(FooBarStringWriter.class);
 
         response = target
@@ -241,8 +240,7 @@ public class ContentTypeTest extends JerseyTest {
 
         // interceptor test
         target = target().path("ContentType").path("changeTest");
-        target.configuration()
-                .register(ContentTypeFixProvider.class, ReaderInterceptor.class)
+        target.register(ContentTypeFixProvider.class, ReaderInterceptor.class)
                 .register(FooBarStringWriter.class);
 
         response = target

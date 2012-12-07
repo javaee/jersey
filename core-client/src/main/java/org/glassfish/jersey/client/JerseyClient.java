@@ -40,10 +40,11 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 
@@ -58,7 +59,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
-    private final ClientConfig configuration;
+    private final ClientConfig config;
     private final LinkedBlockingDeque<LifecycleListener> listeners = new LinkedBlockingDeque<LifecycleListener>();
 
     /**
@@ -75,16 +76,16 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * Create a new Jersey client instance using a default configuration.
      */
     protected JerseyClient() {
-        this.configuration = new ClientConfig(this);
+        this.config = new ClientConfig(this);
     }
 
     /**
      * Create a new Jersey client instance.
      *
-     * @param configuration jersey client configuration.
+     * @param config jersey client configuration.
      */
-    protected JerseyClient(final Configurable configuration) {
-        this.configuration = new ClientConfig(this, configuration);
+    protected JerseyClient(final Configuration config) {
+        this.config = new ClientConfig(this, config);
     }
 
     @Override
@@ -114,7 +115,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     /**
      * Check client state.
      *
-     * @return {@code true} if current {@link JerseyClient} instance is closed, otherwise {@code false}.
+     * @return {@code true} if current {@code JerseyClient} instance is closed, otherwise {@code false}.
      * @see #close()
      */
     public boolean isClosed() {
@@ -128,12 +129,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     void checkNotClosed() throws IllegalStateException {
         checkState(!closedFlag.get(), "Client instance has been closed.");
-    }
-
-    @Override
-    public ClientConfig configuration() {
-        checkNotClosed();
-        return configuration;
     }
 
     @Override
@@ -171,5 +166,81 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         JerseyWebTarget t = new JerseyWebTarget(link, this);
         final String acceptType = link.getType();
         return (acceptType != null) ? t.request(acceptType) : t.request();
+    }
+
+    @Override
+    public JerseyClient replaceWith(Configuration configuration) {
+        checkNotClosed();
+        this.config.replaceWith(configuration);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Class<?> providerClass) {
+        checkNotClosed();
+        config.register(providerClass);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Object provider) {
+        checkNotClosed();
+        config.register(provider);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Class<?> providerClass, int bindingPriority) {
+        checkNotClosed();
+        config.register(providerClass, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Class<?> providerClass, Class<?>... contracts) {
+        checkNotClosed();
+        config.register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+        checkNotClosed();
+        config.register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Object provider, int bindingPriority) {
+        checkNotClosed();
+        config.register(provider, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Object provider, Class<?>... contracts) {
+        checkNotClosed();
+        config.register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyClient register(Object provider, Map<Class<?>, Integer> contracts) {
+        checkNotClosed();
+        config.register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyClient setProperty(String name, Object value) {
+        checkNotClosed();
+        config.setProperty(name, value);
+        return this;
+    }
+
+    @Override
+    public ClientConfig getConfiguration() {
+        checkNotClosed();
+        return config.getConfiguration();
     }
 }

@@ -45,6 +45,7 @@ import java.io.IOException;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.ClientRequestContext;
@@ -99,7 +100,7 @@ public class ConstrainedToTest extends JerseyTest {
                 response.getHeaderString("ClientFilterConstrainedToServer"));
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class ClientFilterConstrainedToClient implements ClientResponseFilter {
 
         @Override
@@ -119,7 +120,7 @@ public class ConstrainedToTest extends JerseyTest {
     /**
      * Wrong configuration of Client filter which is constrained to server. This filter will be never called.
      */
-    @ConstrainedTo(ConstrainedTo.Type.SERVER)
+    @ConstrainedTo(RuntimeType.SERVER)
     public static class ClientFilterConstrainedToServer implements ClientResponseFilter {
 
         @Override

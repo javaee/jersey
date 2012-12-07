@@ -87,7 +87,7 @@ public class MixedResourceConfigurationTest {
                 return Response.ok().build();
             }
         });
-        resourceConfig.addResources(resourceBuilder.build());
+        resourceConfig.registerResources(resourceBuilder.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         final ContainerResponse response = application.apply(

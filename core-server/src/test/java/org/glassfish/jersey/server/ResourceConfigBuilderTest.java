@@ -81,7 +81,7 @@ public class ResourceConfigBuilderTest {
     public void testSingletons() {
         final ResourceConfigBuilderTest resourceConfigBuilderTest = new ResourceConfigBuilderTest();
 
-        ResourceConfig resourceConfig = new ResourceConfig().addSingletons(resourceConfigBuilderTest);
+        ResourceConfig resourceConfig = new ResourceConfig().registerInstances(resourceConfigBuilderTest);
 
         assertTrue(resourceConfig.getClasses() != null);
         assertTrue(resourceConfig.getClasses().isEmpty());

@@ -137,7 +137,7 @@ public class RequestScopedReadEntityTest extends JerseyTest {
     @Test
     public void testReadAfterClose() {
         final Invocation.Builder request = target().path("simple").request();
-        request.configuration().register(ScopedMessageEntityProvider.class);
+        request.register(ScopedMessageEntityProvider.class);
 
         final Response response = request.get(Response.class);
         // reading entity "out-of-scope"

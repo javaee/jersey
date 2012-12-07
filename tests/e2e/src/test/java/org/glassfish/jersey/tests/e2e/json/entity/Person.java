@@ -46,6 +46,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
 
@@ -56,6 +57,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
 @SuppressWarnings("UnusedDeclaration")
 @XmlRootElement(name = "person")
 @XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlType(propOrder = {"name", "children"})
 public class Person {
 
     public static Object createTestInstance() {

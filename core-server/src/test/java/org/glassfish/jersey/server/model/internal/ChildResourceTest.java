@@ -117,7 +117,7 @@ public class ChildResourceTest {
 
 
         Resource resource = rootBuilder.build();
-        ResourceConfig resourceConfig = new ResourceConfig().addResources(resource);
+        ResourceConfig resourceConfig = new ResourceConfig().registerResources(resource);
 
         return new ApplicationHandler(resourceConfig);
     }

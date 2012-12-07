@@ -40,13 +40,13 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
-import java.util.Enumeration;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -65,7 +65,7 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
  */
 public class ClientRequest extends OutboundMessageContext implements ClientRequestContext {
     // Request-scoped configuration instance
-    private final ClientConfig configuration;
+    private final ClientConfig clientConfig;
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
     // Absolute request URI
@@ -83,15 +83,15 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * Create new Jersey client request context.
      *
      * @param requestUri         request Uri.
-     * @param configuration      request configuration.
+     * @param clientConfig      request configuration.
      * @param propertiesDelegate properties delegate.
      */
-    public ClientRequest(
-            URI requestUri, ClientConfig configuration, PropertiesDelegate propertiesDelegate) {
-        configuration.checkClient();
+    protected ClientRequest(
+            URI requestUri, ClientConfig clientConfig, PropertiesDelegate propertiesDelegate) {
+        clientConfig.checkClient();
 
         this.requestUri = requestUri;
-        this.configuration = configuration;
+        this.clientConfig = clientConfig;
         this.propertiesDelegate = propertiesDelegate;
     }
 
@@ -105,7 +105,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         this.requestUri = original.requestUri;
         this.httpMethod = original.httpMethod;
         this.workers = original.workers;
-        this.configuration = original.configuration.snapshot();
+        this.clientConfig = original.clientConfig.snapshot();
         this.asynchronous = original.isAsynchronous();
 
         this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);
@@ -117,7 +117,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
+    public Collection<String> getPropertyNames() {
         return propertiesDelegate.getPropertyNames();
     }
 
@@ -146,7 +146,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @return underlying client runtime.
      */
     ClientRuntime getClientRuntime() {
-        return configuration.getRuntime();
+        return clientConfig.getRuntime();
     }
 
     @Override
@@ -171,7 +171,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
 
     @Override
     public JerseyClient getClient() {
-        return configuration.getClient();
+        return clientConfig.getClient();
     }
 
     @Override
@@ -190,7 +190,16 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
 
     @Override
     public Configuration getConfiguration() {
-        return configuration.getRuntimeConfig() != null ? configuration.getRuntimeConfig() : configuration;
+        return clientConfig.getRuntime().getConfig();
+    }
+
+    /**
+     * Get internal client configuration state.
+     *
+     * @return internal client configuration state.
+     */
+    ClientConfig getClientConfig() {
+        return clientConfig;
     }
 
     @Override

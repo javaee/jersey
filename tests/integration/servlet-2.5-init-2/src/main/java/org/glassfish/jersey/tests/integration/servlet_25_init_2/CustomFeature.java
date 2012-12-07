@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.tests.integration.servlet_25_init_2;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.tests.integration.servlet_25_init_2.ext.Ext1WriterInterceptor;
@@ -56,11 +56,11 @@ import org.glassfish.jersey.tests.integration.servlet_25_init_2.ext.Ext4WriterIn
 public class CustomFeature implements Feature {
 
     @Override
-    public boolean configure(final Configurable configurable) {
-        configurable.register(Ext3WriterInterceptor.class, 1000);
-        configurable.register(Ext2WriterInterceptor.class, 100);
-        configurable.register(Ext1WriterInterceptor.INSTANCE, 500);
-        configurable.register(Ext4WriterInterceptor.INSTANCE, 1);
+    public boolean configure(final FeatureContext context) {
+        context.register(Ext3WriterInterceptor.class, 1000);
+        context.register(Ext2WriterInterceptor.class, 100);
+        context.register(Ext1WriterInterceptor.INSTANCE, 500);
+        context.register(Ext4WriterInterceptor.INSTANCE, 1);
         return true;
     }
 }

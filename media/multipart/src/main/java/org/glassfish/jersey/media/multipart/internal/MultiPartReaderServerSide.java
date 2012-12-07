@@ -45,6 +45,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -68,7 +69,7 @@ import org.jvnet.mimepull.MIMEParsingException;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Singleton
-@ConstrainedTo(ConstrainedTo.Type.SERVER)
+@ConstrainedTo(RuntimeType.SERVER)
 public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
 
     private final Provider<CloseableService> closeableServiceProvider;

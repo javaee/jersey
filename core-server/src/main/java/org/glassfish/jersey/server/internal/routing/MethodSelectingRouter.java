@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -115,7 +115,7 @@ final class MethodSelectingRouter implements Router {
 
         @Inject
         @Optional
-        private Configurable config;
+        private Configuration config;
 
         @Inject
         @Optional

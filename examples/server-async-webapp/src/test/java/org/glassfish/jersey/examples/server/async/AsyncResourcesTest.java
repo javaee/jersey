@@ -54,7 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
@@ -252,7 +251,7 @@ public class AsyncResourcesTest extends JerseyTest {
                     }
 
                     @Override
-                    public void failed(ClientException error) {
+                    public void failed(Throwable error) {
                         if (failures.incrementAndGet() > 3) {
                             return;
                         }

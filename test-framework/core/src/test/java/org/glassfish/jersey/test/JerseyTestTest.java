@@ -108,7 +108,7 @@ public class JerseyTestTest {
     private static class MyJerseyTest extends JerseyTest {
 
         private MyJerseyTest() throws TestContainerException {
-            super(new ResourceConfig(MyResource.class).addBinders(new MyBinder()));
+            super(new ResourceConfig(MyResource.class).registerBinders(new MyBinder()));
         }
     }
 

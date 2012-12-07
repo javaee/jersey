@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +80,7 @@ public final class MapPropertiesDelegate implements PropertiesDelegate {
             this.store = new HashMap<String, Object>(((MapPropertiesDelegate) that).store);
         } else {
             this.store = new HashMap<String, Object>();
-            for (String name : Collections.list(that.getPropertyNames())) {
+            for (String name : that.getPropertyNames()) {
                 this.store.put(name, that.getProperty(name));
             }
         }
@@ -92,8 +92,8 @@ public final class MapPropertiesDelegate implements PropertiesDelegate {
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
-        return Collections.enumeration(store.keySet());
+    public Collection<String> getPropertyNames() {
+        return Collections.unmodifiableCollection(store.keySet());
     }
 
     @Override

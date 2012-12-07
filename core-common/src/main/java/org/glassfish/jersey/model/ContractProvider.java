@@ -42,16 +42,11 @@ package org.glassfish.jersey.model;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
-import javax.ws.rs.NameBinding;
-
-import javax.inject.Scope;
 import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.Providers;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -66,99 +61,6 @@ public final class ContractProvider implements Scoped, NameBound {
      * "No priority" constant.
      */
     public static final int NO_PRIORITY = -1;
-
-    /**
-     * Create a contract provider model by introspecting a contract provider/service
-     * class.
-     *
-     * @param serviceClass contract provider/service class.
-     * @return contract provider model for the class or {@code null} if the class does not
-     *         implement any recognized provider contracts.
-     */
-    public static ContractProvider from(final Class<?> serviceClass) {
-        return from(serviceClass, NO_PRIORITY, null);
-    }
-
-    /**
-     * Create a contract provider model by introspecting a contract provider/service
-     * class.
-     *
-     * @param serviceClass contract provider/service class.
-     * @param bindingPriority binding priority of contracts.
-     * @param contracts contracts to bind the provider/service to.
-     * @return contract provider model for the class or {@code null} if the class does not
-     *         implement any recognized provider contracts.
-     */
-    public static ContractProvider from(final Class<?> serviceClass,
-                                        final int bindingPriority,
-                                        Set<Class<?>> contracts) {
-        final Builder builder = builder();
-
-        // Contracts.
-        if (contracts == null || contracts.isEmpty()) {
-            contracts = Providers.getProviderContracts(serviceClass);
-
-            if (contracts.isEmpty()) {
-                return null;
-            }
-        }
-
-        // Priority.
-        if (bindingPriority > NO_PRIORITY) {
-            builder.defaultPriority(bindingPriority);
-        }
-
-        // Annotations.
-        for (Annotation annotation : serviceClass.getAnnotations()) {
-            if (annotation instanceof BindingPriority) {
-                if (bindingPriority == NO_PRIORITY) {
-                    builder.defaultPriority(((BindingPriority) annotation).value());
-                }
-            } else {
-                for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {
-                    if (metaAnnotation instanceof NameBinding) {
-                        builder.addNameBinding(annotation.annotationType());
-                    }
-                    if (metaAnnotation instanceof Scope) {
-                        builder.scope(annotation.annotationType());
-                    }
-                }
-            }
-        }
-
-        // Add contracts - default priority has been set.
-        builder.addContracts(contracts);
-
-        return builder.build();
-    }
-
-    /**
-     * Create a contract provider model by introspecting the class of a contract provider/service
-     * instance.
-     *
-     * @param service contract provider/service instance.
-     * @return contract provider model for the instance or {@code null} if the instance does not
-     *         implement any recognized provider contracts.
-     */
-    public static ContractProvider from(final Object service) {
-        return from(service.getClass());
-    }
-
-    /**
-     * Create a contract provider model by introspecting the class of a contract provider/service
-     * instance.
-     *
-     * @param service contract provider/service instance.
-     * @param bindingPriority binding priority of contracts.
-     * @param contracts contracts to bind the provider/service to.
-     * @return contract provider model for the instance or {@code null} if the instance does not
-     *         implement any recognized provider contracts.
-     */
-    public static ContractProvider from(final Object service,
-                                        final int bindingPriority,
-                                        final Set<Class<?>> contracts) {
-        return from(service.getClass(), bindingPriority, contracts);
-    }
 
     /**
      * Create new contract provider model builder.
@@ -184,7 +86,13 @@ public final class ContractProvider implements Scoped, NameBound {
      */
     public static final class Builder {
 
-        private Class<? extends Annotation> scope = Singleton.class;
+        private static final ContractProvider EMPTY_MODEL = new ContractProvider(
+                Singleton.class,
+                Collections.<Class<?>, Integer>emptyMap(),
+                NO_PRIORITY,
+                Collections.<Class<? extends Annotation>>emptySet());
+
+        private Class<? extends Annotation> scope = null;
         private Map<Class<?>, Integer> contracts = Maps.newHashMap();
         private int defaultPriority = NO_PRIORITY;
         private Set<Class<? extends Annotation>> nameBindings = Sets.newIdentityHashSet();
@@ -279,12 +187,61 @@ public final class ContractProvider implements Scoped, NameBound {
         }
 
         /**
+         * Get the scope of the built contract provider model.
+         *
+         * @return scope associated with the model or {@code null} if no scope
+         *         has been set explicitly.
+         */
+        public Class<? extends Annotation> getScope() {
+            return scope;
+        }
+
+        /**
+         * Get the map of contracts for the built contract provider model.
+         *
+         * @return contracts associated with the model.
+         */
+        public Map<Class<?>, Integer> getContracts() {
+            return contracts;
+        }
+
+        /**
+         * Get the default priority of the built contract provider model.
+         *
+         * @return default priority associated with the model.
+         */
+        public int getDefaultPriority() {
+            return defaultPriority;
+        }
+
+        /**
+         * Get name bindings of the built contract provider model.
+         *
+         * @return name bindings associated with the model.
+         */
+        public Set<Class<? extends Annotation>> getNameBindings() {
+            return nameBindings;
+        }
+
+        /**
          * Build a new contract provider model.
          *
          * @return new contract provider model.
          */
         public ContractProvider build() {
-            return new ContractProvider(scope, contracts, defaultPriority, nameBindings);
+            if (scope == null) {
+                scope = Singleton.class;
+            }
+
+            if (scope == Singleton.class && contracts.isEmpty() && defaultPriority == NO_PRIORITY && nameBindings.isEmpty()) {
+                return EMPTY_MODEL;
+            }
+
+            return new ContractProvider(
+                    scope,
+                    Collections.unmodifiableMap(contracts),
+                    defaultPriority,
+                    Collections.unmodifiableSet(nameBindings));
         }
     }
 
@@ -320,19 +277,33 @@ public final class ContractProvider implements Scoped, NameBound {
         return contracts.keySet();
     }
 
+    /**
+     * Get the map of contracts and their priorities.
+     *
+     * @return contracts and their priorities.
+     */
+    public Map<Class<?>, Integer> getContractMap() {
+        return contracts;
+    }
+
     @Override
     public boolean isNameBound() {
         return !nameBindings.isEmpty();
     }
 
     /**
-     * Get the default provider priority, if set, {@code -1} if not set.
+     * Get the provider contract priority, if set, default component provider, if not set.
      *
+     * @param contract provider contract.
      * @return provider priority.
      * @see javax.ws.rs.BindingPriority
      */
     public int getPriority(final Class<?> contract) {
-        return contracts.containsKey(contract) ? contracts.get(contract) : defaultPriority;
+        if (contracts.containsKey(contract)) {
+            final int priority = contracts.get(contract);
+            return (priority != NO_PRIORITY) ? priority : defaultPriority;
+        }
+        return defaultPriority;
     }
 
     @Override

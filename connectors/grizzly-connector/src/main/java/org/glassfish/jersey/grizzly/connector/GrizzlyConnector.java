@@ -52,7 +52,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.Configuration;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -87,14 +87,14 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
     /**
      * Create the new Grizzly async client connector.
      *
-     * @param configuration client configuration.
+     * @param config client configuration.
      */
-    public GrizzlyConnector(Configuration configuration) {
+    public GrizzlyConnector(Configuration config) {
         AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
         ExecutorService executorService;
-        if (configuration != null) {
-            final Object threadPoolSize = configuration.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
+        if (config != null) {
+            final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
 
             if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
                 executorService = Executors.newFixedThreadPool((Integer) threadPoolSize);
@@ -104,18 +104,18 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
 
             builder = builder.setExecutorService(executorService);
 
-            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
+            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
                     ClientProperties.CONNECT_TIMEOUT, 0));
 
-            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(configuration.getProperties(),
+            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
                     ClientProperties.READ_TIMEOUT, 0));
         } else {
             executorService = Executors.newCachedThreadPool();
             builder.setExecutorService(executorService);
         }
 
-        AsyncHttpClientConfig config = builder.setAllowPoolingConnection(true).build();
-        this.client = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(config), config);
+        AsyncHttpClientConfig asyncClientConfig = builder.setAllowPoolingConnection(true).build();
+        this.client = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
     }
 
     /*

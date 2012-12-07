@@ -129,7 +129,7 @@ public class SseTest {
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientFactory.newClient();
-        c.configuration().register(SseFeature.class);
+        c.register(SseFeature.class);
 
         final List<String> data = new LinkedList<String>();
         final CountDownLatch latch = new CountDownLatch(2);

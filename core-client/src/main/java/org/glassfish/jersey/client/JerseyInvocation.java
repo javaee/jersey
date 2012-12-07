@@ -59,11 +59,10 @@ import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -222,7 +221,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Invocation.Builder cookie(String name, String value) {
+        public Builder cookie(String name, String value) {
             requestContext.cookie(new Cookie(name, value));
             return this;
         }
@@ -240,14 +239,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Invocation.Builder headers(MultivaluedMap<String, Object> headers) {
+        public Builder headers(MultivaluedMap<String, Object> headers) {
             requestContext.replaceHeaders(headers);
             return this;
-        }
-
-        @Override
-        public Configuration configuration() {
-            return requestContext.getConfiguration();
         }
 
         @Override
@@ -396,6 +390,71 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke(responseType);
+        }
+
+        @Override
+        public Builder setProperty(String name, Object value) {
+            requestContext.getClientConfig().setProperty(name, value);
+            return this;
+        }
+
+        @Override
+        public Builder register(Class<?> providerClass) {
+            requestContext.getClientConfig().register(providerClass);
+            return this;
+        }
+
+        @Override
+        public Builder register(Class<?> providerClass, int bindingPriority) {
+            requestContext.getClientConfig().register(providerClass, bindingPriority);
+            return this;
+        }
+
+        @Override
+        public Builder register(Class<?> providerClass, Class<?>... contracts) {
+            requestContext.getClientConfig().register(providerClass, contracts);
+            return this;
+        }
+
+        @Override
+        public Builder register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+            requestContext.getClientConfig().register(providerClass, contracts);
+            return this;
+        }
+
+        @Override
+        public Builder register(Object provider) {
+            requestContext.getClientConfig().register(provider);
+            return this;
+        }
+
+        @Override
+        public Builder register(Object provider, int bindingPriority) {
+            requestContext.getClientConfig().register(provider, bindingPriority);
+            return this;
+        }
+
+        @Override
+        public Builder register(Object provider, Class<?>... contracts) {
+            requestContext.getClientConfig().register(provider, contracts);
+            return this;
+        }
+
+        @Override
+        public Builder register(Object provider, Map<Class<?>, Integer> contracts) {
+            requestContext.getClientConfig().register(provider, contracts);
+            return this;
+        }
+
+        @Override
+        public Builder replaceWith(Configuration config) {
+            requestContext.getClientConfig().replaceWith(config);
+            return this;
+        }
+
+        @Override
+        public ClientConfig getConfiguration() {
+            return requestContext.getClientConfig();
         }
     }
 
@@ -838,6 +897,71 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
+    @Override
+    public JerseyInvocation setProperty(String name, Object value) {
+        requestContext.getClientConfig().setProperty(name, value);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Class<?> providerClass) {
+        requestContext.getClientConfig().register(providerClass);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Class<?> providerClass, int bindingPriority) {
+        requestContext.getClientConfig().register(providerClass, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Class<?> providerClass, Class<?>... contracts) {
+        requestContext.getClientConfig().register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+        requestContext.getClientConfig().register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Object provider) {
+        requestContext.getClientConfig().register(provider);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Object provider, int bindingPriority) {
+        requestContext.getClientConfig().register(provider, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Object provider, Class<?>... contracts) {
+        requestContext.getClientConfig().register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation register(Object provider, Map<Class<?>, Integer> contracts) {
+        requestContext.getClientConfig().register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyInvocation replaceWith(Configuration config) {
+        requestContext.getClientConfig().replaceWith(config);
+        return this;
+    }
+
+    @Override
+    public ClientConfig getConfiguration() {
+        return requestContext.getClientConfig();
+    }
+
     private ClientException convertToException(Response response) {
         try {
             WebApplicationException webAppException;
@@ -886,11 +1010,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         } catch (Throwable t) {
             return new ClientException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }
-    }
-
-    @Override
-    public Configuration configuration() {
-        return requestContext.getConfiguration();
     }
 
     /**

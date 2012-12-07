@@ -41,7 +41,8 @@ package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Enumeration;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.InterceptorContext;
@@ -90,7 +91,7 @@ abstract class InterceptorExecutor implements InterceptorContext {
     }
 
     @Override
-    public Enumeration<String> getPropertyNames() {
+    public Collection<String> getPropertyNames() {
         return propertiesDelegate.getPropertyNames();
     }
 

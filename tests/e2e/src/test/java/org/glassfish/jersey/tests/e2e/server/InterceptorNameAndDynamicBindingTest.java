@@ -56,7 +56,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -227,25 +227,26 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     @Override
     protected Application configure() {
         return new ResourceConfig(MethodBindingResource.class, ClassBindingResource.class,
-                MixedBindingResource.class, NameBoundReaderInterceptor.class, NameBoundWriterInterceptor.class).addSingletons(
+                MixedBindingResource.class, NameBoundReaderInterceptor.class, NameBoundWriterInterceptor.class).registerInstances(
                 new DynamicFeature() {
 
                     @Override
-                    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+                    public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
                         if (ReaderMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()) {
-                            configurable.register(DynamicallyBoundReaderInterceptor.class);
+                            context.register(DynamicallyBoundReaderInterceptor.class);
                         }
                     }
                 },
                 new DynamicFeature() {
 
                     @Override
-                    public void configure(final ResourceInfo resourceInfo, final Configurable configurable) {
+                    public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
                         if (WriterMETHOD.matcher(resourceInfo.getResourceMethod().getName()).matches()) {
-                            configurable.register(DynamicallyBoundWriterInterceptor.class);
+                            context.register(DynamicallyBoundWriterInterceptor.class);
                         }
                     }
-                });
+                }
+        );
     }
 
     @Test

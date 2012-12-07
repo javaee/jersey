@@ -82,6 +82,71 @@ public abstract class AbstractJsonTest extends JerseyTest {
 
     private static final String PKG_NAME = "org/glassfish/jersey/tests/e2e/json/entity/";
 
+
+    /**
+     * Helper class representing configuration for one test case.
+     */
+    protected final static class JsonTestSetup {
+
+        private final JsonTestProvider jsonProvider;
+        private final Class<?>[] testClasses;
+
+        protected JsonTestSetup(final Class<?> testClass, final JsonTestProvider jsonProvider) {
+            this(new Class<?>[]{testClass}, jsonProvider);
+        }
+
+        protected JsonTestSetup(final Class<?>[] testClasses, final JsonTestProvider jsonProvider) {
+            this.testClasses = testClasses;
+            this.jsonProvider = jsonProvider;
+        }
+
+        public JsonTestProvider getJsonProvider() {
+            return jsonProvider;
+        }
+
+        public Set<Object> getProviders() {
+            return jsonProvider.getProviders();
+        }
+
+        public Class<?> getEntityClass() {
+            return testClasses[0];
+        }
+
+        public Class<?>[] getTestClasses() {
+            return testClasses;
+        }
+
+        public Object getTestEntity() throws Exception {
+            return getEntityClass().getDeclaredMethod("createTestInstance").invoke(null);
+        }
+    }
+
+    @Provider
+    private final static class JAXBContextResolver implements ContextResolver<JAXBContext> {
+
+        private final JAXBContext context;
+        private final Set<Class<?>> types;
+
+        public JAXBContextResolver(final JettisonConfiguration jsonConfiguration, final Class<?>[] classes,
+                                   final boolean forMoxyProvider) throws Exception {
+            this.types = new HashSet<Class<?>>(Arrays.asList(classes));
+
+            if (jsonConfiguration != null) {
+                this.context = new JettisonJaxbContext(jsonConfiguration, classes);
+            } else {
+                this.context = forMoxyProvider ?
+                        JAXBContextFactory.createContext(classes, new HashMap()) : JAXBContext.newInstance(classes);
+            }
+        }
+
+        @Override
+        public JAXBContext getContext(Class<?> objectType) {
+            return (types.contains(objectType)) ? context : null;
+        }
+    }
+
+    private final JsonTestSetup jsonTestSetup;
+
     /**
      * Creates and configures a JAX-RS {@link Application} for given {@link JsonTestSetup}. The {@link Application} will
      * contain one resource that can be accessed via {@code POST} method at {@code <jsonProviderName>/<entityClassName>} path.
@@ -144,14 +209,24 @@ public abstract class AbstractJsonTest extends JerseyTest {
                 });
 
         final ResourceConfig resourceConfig = new ResourceConfig().
-                addResources(resourceBuilder.build()).
+                registerResources(resourceBuilder.build()).
                 register(jsonTestSetup.getJsonProvider().getFeature());
 
+        resourceConfig.registerInstances(getJaxbContextResolver(jsonTestSetup));
+
         if (jsonTestSetup.getProviders() != null) {
-            resourceConfig.addSingletons(jsonTestSetup.getProviders());
+            resourceConfig.registerInstances(jsonTestSetup.getProviders());
         }
 
         return resourceConfig;
+    }
+
+    private static JAXBContextResolver getJaxbContextResolver(final JsonTestSetup jsonTestSetup) {
+        try {
+            return createJaxbContextResolver(jsonTestSetup.getJsonProvider(), jsonTestSetup.getTestClasses());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static boolean isRunningOnJdk7() {
@@ -163,21 +238,58 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns entity path part for current test case (based on the name of the entity).
-     *
-     * @return entity path part.
-     */
-    protected String getEntityPathPart() {
-        return getEntityPathPart(jsonTestSetup);
-    }
-
-    /**
      * Returns entity path part for given {@link JsonTestSetup} (based on the name of the entity).
      *
      * @return entity path part.
      */
     protected static String getEntityPathPart(final JsonTestSetup jsonTestSetup) {
         return jsonTestSetup.getEntityClass().getSimpleName();
+    }
+
+
+    /**
+     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity class.
+     *
+     * @param jsonProvider provider to create a context resolver for.
+     * @param clazz        JAXB element class for JAXB context.
+     * @return an instance of JAXB context resolver.
+     * @throws Exception if the creation of {@code JAXBContextResolver} fails.
+     */
+    protected static JAXBContextResolver createJaxbContextResolver(final JsonTestProvider jsonProvider,
+                                                                   final Class<?> clazz) throws Exception {
+        return createJaxbContextResolver(jsonProvider, new Class<?>[]{clazz});
+    }
+
+    /**
+     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity
+     * classes.
+     *
+     * @param jsonProvider provider to create a context resolver for.
+     * @param classes      JAXB element classes for JAXB context.
+     * @return an instance of JAXB context resolver.
+     * @throws Exception if the creation of {@code JAXBContextResolver} fails.
+     */
+    protected static JAXBContextResolver createJaxbContextResolver(final JsonTestProvider jsonProvider, final Class<?>[] classes)
+            throws Exception {
+        return new JAXBContextResolver(jsonProvider.getConfiguration(), classes,
+                jsonProvider instanceof JsonTestProvider.MoxyJsonTestProvider);
+    }
+
+    protected AbstractJsonTest(final JsonTestSetup jsonTestSetup) throws Exception {
+        super(configureJaxrsApplication(jsonTestSetup));
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
+
+        this.jsonTestSetup = jsonTestSetup;
+    }
+
+    /**
+     * Returns entity path part for current test case (based on the name of the entity).
+     *
+     * @return entity path part.
+     */
+    protected String getEntityPathPart() {
+        return getEntityPathPart(jsonTestSetup);
     }
 
     /**
@@ -198,16 +310,6 @@ public abstract class AbstractJsonTest extends JerseyTest {
         return jsonTestSetup.jsonProvider.getClass().getSimpleName();
     }
 
-    private final JsonTestSetup jsonTestSetup;
-
-    protected AbstractJsonTest(final JsonTestSetup jsonTestSetup) throws Exception {
-        super(configureJaxrsApplication(jsonTestSetup));
-        enable(TestProperties.LOG_TRAFFIC);
-        enable(TestProperties.DUMP_ENTITY);
-
-        this.jsonTestSetup = jsonTestSetup;
-    }
-
     protected JsonTestSetup getJsonTestSetup() {
         return jsonTestSetup;
     }
@@ -215,12 +317,14 @@ public abstract class AbstractJsonTest extends JerseyTest {
     @Override
     protected Client getClient(final TestContainer tc, final ApplicationHandler applicationHandler) {
         final Client client = super.getClient(tc, applicationHandler);
-        client.configuration().register(getJsonTestSetup().getJsonProvider().getFeature());
+        client.register(getJsonTestSetup().getJsonProvider().getFeature());
+
+        client.register(getJaxbContextResolver(jsonTestSetup));
 
         // Register additional providers.
         if (getJsonTestSetup().getProviders() != null) {
             for (Object provider : getJsonTestSetup().getProviders()) {
-                client.configuration().register(provider);
+                client.register(provider);
             }
         }
 
@@ -245,91 +349,4 @@ public abstract class AbstractJsonTest extends JerseyTest {
                 getJsonTestSetup().getJsonProvider().getClass().getSimpleName(),
                 getJsonTestSetup().getEntityClass().getSimpleName()), entity, receivedEntity);
     }
-
-    /**
-     * Helper class representing configuration for one test case.
-     */
-    protected final static class JsonTestSetup {
-
-        private final JsonTestProvider jsonProvider;
-        private final Class<?>[] testClasses;
-
-        protected JsonTestSetup(final Class<?> testClass, final JsonTestProvider jsonProvider) {
-            this(new Class<?>[] {testClass}, jsonProvider);
-        }
-
-        protected JsonTestSetup(final Class<?>[] testClasses, final JsonTestProvider jsonProvider) {
-            this.testClasses = testClasses;
-            this.jsonProvider = jsonProvider;
-        }
-
-        public JsonTestProvider getJsonProvider() {
-            return jsonProvider;
-        }
-
-        public Set<Object> getProviders() {
-            return jsonProvider.getProviders();
-        }
-
-        public Class<?> getEntityClass() {
-            return testClasses[0];
-        }
-
-        public Object getTestEntity() throws Exception {
-            return getEntityClass().getDeclaredMethod("createTestInstance").invoke(null);
-        }
-    }
-
-    /**
-     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity class.
-     *
-     * @param jsonProvider provider to create a context resolver for.
-     * @param clazz JAXB element class for JAXB context.
-     * @return an instance of JAXB context resolver.
-     * @throws Exception if the creation of {@code JAXBContextResolver} fails.
-     */
-    protected static JAXBContextResolver createJaxbContextResolver(final JsonTestProvider jsonProvider,
-                                                                   final Class<?> clazz) throws Exception {
-        return createJaxbContextResolver(jsonProvider, new Class<?>[]{clazz});
-    }
-
-    /**
-     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity
-     * classes.
-     *
-     * @param jsonProvider provider to create a context resolver for.
-     * @param classes JAXB element classes for JAXB context.
-     * @return an instance of JAXB context resolver.
-     * @throws Exception if the creation of {@code JAXBContextResolver} fails.
-     */
-    protected static JAXBContextResolver createJaxbContextResolver(final JsonTestProvider jsonProvider, final Class<?>[] classes)
-            throws Exception {
-        return new JAXBContextResolver(jsonProvider.getConfiguration(), classes,
-                jsonProvider instanceof JsonTestProvider.MoxyJsonTestProvider);
-    }
-
-    @Provider
-    private final static class JAXBContextResolver implements ContextResolver<JAXBContext> {
-
-        private final JAXBContext context;
-        private final Set<Class<?>> types;
-
-        public JAXBContextResolver(final JettisonConfiguration jsonConfiguration, final Class<?>[] classes,
-                                   final boolean forMoxyProvider) throws Exception {
-            this.types = new HashSet<Class<?>>(Arrays.asList(classes));
-
-            if (jsonConfiguration != null) {
-                this.context = new JettisonJaxbContext(jsonConfiguration, classes);
-            } else {
-                this.context = forMoxyProvider ?
-                        JAXBContextFactory.createContext(classes, new HashMap()) : JAXBContext.newInstance(classes);
-            }
-        }
-
-        @Override
-        public JAXBContext getContext(Class<?> objectType) {
-            return (types.contains(objectType)) ? context : null;
-        }
-    }
-
 }

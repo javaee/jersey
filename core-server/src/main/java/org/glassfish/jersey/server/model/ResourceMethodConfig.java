@@ -40,31 +40,39 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.model.internal.DefaultConfig;
+import org.glassfish.jersey.model.ContractProvider;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 import com.google.common.collect.Sets;
 
 /**
- * Default {@link javax.ws.rs.core.Configurable config} for resource methods. Only allowed contracts for this config are:
- *
+ * Default {@link javax.ws.rs.core.Configuration configuration} for resource methods.
+ * The only allowed contract types for this configuration are:
+ * <ul>
  * <li>ContainerRequestFilter</li>
  * <li>ContainerResponseFilter</li>
  * <li>ReaderInterceptor</li>
  * <li>WriterInterceptor</li>
+ * </ul>
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ResourceMethodConfig extends DefaultConfig {
+class ResourceMethodConfig extends CommonConfig {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodConfig.class.getName());
 
@@ -72,28 +80,39 @@ public class ResourceMethodConfig extends DefaultConfig {
 
     static {
         //noinspection unchecked
-        allowedContracts = Sets.newHashSet(
-                ContainerRequestFilter.class, ContainerResponseFilter.class, ReaderInterceptor.class, WriterInterceptor.class);
+        Set<Class<?>> tempSet = Sets.newIdentityHashSet();
+        tempSet.add(ContainerRequestFilter.class);
+        tempSet.add(ContainerResponseFilter.class);
+        tempSet.add(ReaderInterceptor.class);
+        tempSet.add(WriterInterceptor.class);
+        allowedContracts = Collections.unmodifiableSet(tempSet);
     }
 
-    public ResourceMethodConfig(final Map<String, Object> properties) {
-        super(properties);
+    /**
+     * Create new resource method runtime configuration.
+     *
+     * @param properties inherited properties.
+     */
+    ResourceMethodConfig(final Map<String, Object> properties) {
+        super(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY);
+        setProperties(properties);
     }
 
     @Override
-    protected Set<Class<?>> checkContracts(final Class<?> providerClass,
-                                           final Set<Class<?>> allProviderContracts,
-                                           Set<Class<?>> bindingContracts) {
-        bindingContracts = super.checkContracts(providerClass, allProviderContracts, bindingContracts);
-        final Set<Class<?>> checkedContracts = Sets.newIdentityHashSet();
+    protected Inflector<ContractProvider.Builder, ContractProvider> getModelEnhancer(final Class<?> providerClass) {
+        return new Inflector<ContractProvider.Builder, ContractProvider>() {
+            @Override
+            public ContractProvider apply(ContractProvider.Builder builder) {
+                for (Iterator<Class<?>> it =  builder.getContracts().keySet().iterator(); it.hasNext(); ) {
+                    final Class<?> contract = it.next();
+                    if (!allowedContracts.contains(contract)) {
+                        LOGGER.warning(LocalizationMessages.CONTRACT_CANNOT_BE_BOUND_TO_RESOURCE_METHOD(contract, providerClass));
+                        it.remove();
+                    }
+                }
 
-        for (final Class<?> contract : bindingContracts) {
-            if (allowedContracts.contains(contract)) {
-                checkedContracts.add(contract);
-            } else {
-                LOGGER.warning(LocalizationMessages.CONTRACT_CANNOT_BE_BOUND_TO_RESOURCE_METHOD(contract, providerClass));
+                return builder.build();
             }
-        }
-        return checkedContracts;
+        };
     }
 }

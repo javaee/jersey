@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
 import javax.xml.stream.XMLInputFactory;
@@ -62,7 +62,7 @@ public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory impleme
      */
     // TODO This provider should be registered and configured via a feature.
     @Inject
-    public XmlInputFactoryInjectionProvider(final Configurable config) {
+    public XmlInputFactoryInjectionProvider(final Configuration config) {
         super(config);
     }
 

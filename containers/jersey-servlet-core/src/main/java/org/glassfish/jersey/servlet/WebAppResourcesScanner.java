@@ -110,7 +110,7 @@ class WebAppResourcesScanner implements ResourceFinder {
                             next = null;
                         } else if (next.endsWith(".jar")) {
                             try {
-                                resourceFinderStack.push(new JarFileScanner(sc.getResourceAsStream(next), ""));
+                                resourceFinderStack.push(new JarFileScanner(sc.getResourceAsStream(next), "", true));
                             } catch (IOException ioe) {
                                 throw new ResourceFinderException(ioe);
                             }

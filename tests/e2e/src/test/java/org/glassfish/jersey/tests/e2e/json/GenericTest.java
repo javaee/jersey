@@ -65,7 +65,6 @@ public class GenericTest extends AbstractJsonTest {
         final Class<?>[] classes = {Jersey1199List.class, ColorHolder.class};
 
         for (JsonTestProvider jsonProvider : new JsonTestProvider[]{new JsonTestProvider.MoxyJsonTestProvider()}) {
-            jsonProvider.getProviders().add(createJaxbContextResolver(jsonProvider, classes));
             jsonTestSetups.add(new JsonTestSetup[]{new JsonTestSetup(classes, jsonProvider)});
         }
 

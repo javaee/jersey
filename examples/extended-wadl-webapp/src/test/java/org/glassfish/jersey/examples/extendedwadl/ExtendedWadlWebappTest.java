@@ -73,7 +73,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
         resourceBuilder.name("resource-programmatic").path("programmatic").addMethod("GET")
 
                 .handledBy(new ProgrammaticResource());
-        resourceConfig.addResources(resourceBuilder.build());
+        resourceConfig.registerResources(resourceBuilder.build());
         return resourceConfig;
     }
 

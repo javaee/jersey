@@ -44,6 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
@@ -58,7 +59,7 @@ import com.google.common.base.Preconditions;
  */
 public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
 
-    private final ClientConfig configuration;
+    private final ClientConfig config;
     private final UriBuilder targetUri;
 
     /**
@@ -68,7 +69,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(String uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), parent.configuration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.getConfiguration().snapshot());
     }
 
 
@@ -79,7 +80,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(URI uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), parent.configuration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.getConfiguration().snapshot());
     }
 
 
@@ -90,7 +91,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent     parent client.
      */
     /*package*/ JerseyWebTarget(UriBuilder uriBuilder, JerseyClient parent) {
-        this(uriBuilder.clone(), parent.configuration().snapshot());
+        this(uriBuilder.clone(), parent.getConfiguration().snapshot());
     }
 
     /**
@@ -101,7 +102,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      */
     /*package*/ JerseyWebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
-        this(UriBuilder.fromUri(link.getUri()), parent.configuration().snapshot());
+        this(UriBuilder.fromUri(link.getUri()), parent.getConfiguration().snapshot());
     }
 
     /**
@@ -111,7 +112,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param that       original target to copy the internal data from.
      */
     protected JerseyWebTarget(UriBuilder uriBuilder, JerseyWebTarget that) {
-        this(uriBuilder, that.configuration.snapshot());
+        this(uriBuilder, that.config.snapshot());
     }
 
     /**
@@ -124,12 +125,12 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         clientConfig.checkClient();
 
         this.targetUri = uriBuilder;
-        this.configuration = clientConfig;
+        this.config = clientConfig;
     }
 
     @Override
     public URI getUri() {
-        configuration.getClient().checkNotClosed();
+        checkNotClosed();
         try {
             return targetUri.build();
         } catch (IllegalArgumentException ex) {
@@ -138,19 +139,13 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     private void checkNotClosed() {
-        configuration.getClient().checkNotClosed();
+        config.getClient().checkNotClosed();
     }
 
     @Override
     public UriBuilder getUriBuilder() {
         checkNotClosed();
         return targetUri.clone();
-    }
-
-    @Override
-    public ClientConfig configuration() {
-        checkNotClosed();
-        return configuration;
     }
 
     @Override
@@ -217,13 +212,13 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request() {
         checkNotClosed();
-        return new JerseyInvocation.Builder(getUri(), configuration.snapshot());
+        return new JerseyInvocation.Builder(getUri(), config.snapshot());
     }
 
     @Override
     public JerseyInvocation.Builder request(String... acceptedResponseTypes) {
         checkNotClosed();
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), config.snapshot());
         b.request().accept(acceptedResponseTypes);
         return b;
     }
@@ -231,7 +226,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     @Override
     public JerseyInvocation.Builder request(MediaType... acceptedResponseTypes) {
         checkNotClosed();
-        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), configuration.snapshot());
+        JerseyInvocation.Builder b = new JerseyInvocation.Builder(getUri(), config.snapshot());
         b.request().accept(acceptedResponseTypes);
         return b;
     }
@@ -258,7 +253,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         Preconditions.checkNotNull(value, "value is 'null'.");
 
         return new JerseyWebTarget(getUriBuilder().resolveTemplateFromEncoded(name, value), this);
-
     }
 
     @Override
@@ -283,5 +277,81 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
 
         return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
+    }
+
+    @Override
+    public JerseyWebTarget replaceWith(Configuration configuration) {
+        checkNotClosed();
+        this.config.replaceWith(configuration);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Class<?> providerClass) {
+        checkNotClosed();
+        config.register(providerClass);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Object provider) {
+        checkNotClosed();
+        config.register(provider);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Class<?> providerClass, int bindingPriority) {
+        checkNotClosed();
+        config.register(providerClass, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Class<?> providerClass, Class<?>... contracts) {
+        checkNotClosed();
+        config.register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+        checkNotClosed();
+        config.register(providerClass, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Object provider, int bindingPriority) {
+        checkNotClosed();
+        config.register(provider, bindingPriority);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Object provider, Class<?>... contracts) {
+        checkNotClosed();
+        config.register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget register(Object provider, Map<Class<?>, Integer> contracts) {
+        checkNotClosed();
+        config.register(provider, contracts);
+        return this;
+    }
+
+    @Override
+    public JerseyWebTarget setProperty(String name, Object value) {
+        checkNotClosed();
+        config.setProperty(name, value);
+        return this;
+    }
+
+    @Override
+    public ClientConfig getConfiguration() {
+        checkNotClosed();
+        return config.getConfiguration();
     }
 }

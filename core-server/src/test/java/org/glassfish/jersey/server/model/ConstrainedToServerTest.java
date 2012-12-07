@@ -51,6 +51,7 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -89,7 +90,7 @@ public class ConstrainedToServerTest {
     public void testFiltersAnnotated() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(MyServerFilter.class, MyClientFilter.class,
                 MyServerWrongFilter.class, MyServerFilterWithoutConstraint.class, Resource.class);
-        resourceConfig.addSingletons(new MyServerWrongFilter2(), new MyServerFilter2());
+        resourceConfig.registerInstances(new MyServerWrongFilter2(), new MyServerFilter2());
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
         Assert.assertEquals("called", response.getHeaderString("MyServerFilter"));
@@ -158,7 +159,7 @@ public class ConstrainedToServerTest {
         Assert.assertEquals(200, response.getStatus());
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.SERVER)
+    @ConstrainedTo(RuntimeType.SERVER)
     public static class MyServerFilter implements ContainerResponseFilter {
 
         @Override
@@ -175,7 +176,7 @@ public class ConstrainedToServerTest {
         }
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.SERVER)
+    @ConstrainedTo(RuntimeType.SERVER)
     public static class MyServerFilter2 implements ContainerResponseFilter {
 
         @Override
@@ -184,7 +185,7 @@ public class ConstrainedToServerTest {
         }
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class MyServerWrongFilter implements ContainerResponseFilter {
 
         @Override
@@ -194,7 +195,7 @@ public class ConstrainedToServerTest {
     }
 
 
-    @ConstrainedTo(ConstrainedTo.Type.SERVER)
+    @ConstrainedTo(RuntimeType.SERVER)
     public static class MyServerAndClientFilter implements ContainerResponseFilter, ClientResponseFilter {
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
@@ -206,7 +207,7 @@ public class ConstrainedToServerTest {
         }
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class MyServerAndClientContrainedToClientFilter implements ContainerResponseFilter, ClientResponseFilter,
             MessageBodyWriter<String> {
         @Override
@@ -235,7 +236,7 @@ public class ConstrainedToServerTest {
         }
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class MyServerWrongFilter2 implements ContainerResponseFilter {
 
         @Override
@@ -244,7 +245,7 @@ public class ConstrainedToServerTest {
         }
     }
 
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class MyClientFilter implements ClientRequestFilter {
 
         @Override
@@ -272,7 +273,7 @@ public class ConstrainedToServerTest {
     }
 
     @Path("resource-and-provider")
-    @ConstrainedTo(ConstrainedTo.Type.CLIENT)
+    @ConstrainedTo(RuntimeType.CLIENT)
     public static class ResourceAndProviderConstrainedToClient implements ContainerResponseFilter {
 
         @GET
@@ -287,12 +288,11 @@ public class ConstrainedToServerTest {
     }
 
     @Path("resource-and-provider-server")
-    @ConstrainedTo(ConstrainedTo.Type.SERVER)
+    @ConstrainedTo(RuntimeType.SERVER)
     public static class ResourceAndProviderConstrainedToServer implements ContainerResponseFilter {
 
         @GET
         public Response get() {
-
             return Response.ok().entity("ok").build();
         }
 

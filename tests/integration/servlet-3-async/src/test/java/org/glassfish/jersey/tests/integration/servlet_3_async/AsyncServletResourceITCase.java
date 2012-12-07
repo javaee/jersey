@@ -108,7 +108,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
     @Test
     public void testAsyncServlet() throws InterruptedException {
         final WebTarget resourceTarget = target("async");
-        resourceTarget.configuration().register(new LoggingFilter());
+        resourceTarget.register(new LoggingFilter());
         final String expectedResponse = AsyncServletResource.HELLO_ASYNC_WORLD;
 
         final int MAX_MESSAGES = 50;
@@ -194,7 +194,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
     @Test
     public void testAsyncRequestCanceling() throws InterruptedException {
         final WebTarget resourceTarget = target("async/canceled");
-        resourceTarget.configuration().register(new LoggingFilter());
+        resourceTarget.register(new LoggingFilter());
 
         final int MAX_MESSAGES = 10;
         final int LATCH_WAIT_TIMEOUT = 10;

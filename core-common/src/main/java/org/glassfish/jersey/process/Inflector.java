@@ -41,8 +41,6 @@ package org.glassfish.jersey.process;
 
 /**
  * A generic interface for transforming data into a result.
- * <p/>
- * The interface is designed primarily as asynchronous.
  *
  * @param <DATA> transformable data type.
  * @param <RESULT> type of result produced by a successful inflector data transformation.

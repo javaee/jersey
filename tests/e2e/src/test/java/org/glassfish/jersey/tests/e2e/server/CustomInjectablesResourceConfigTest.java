@@ -140,8 +140,8 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     @Override
     protected Application configure() {
         ResourceConfig rc = new ResourceConfig();
-        rc.addClasses(Resource.class);
-        rc.addBinders(new MyHK2Binder());
+        rc.registerClasses(Resource.class);
+        rc.registerBinders(new MyHK2Binder());
 
         return rc;
     }

@@ -99,7 +99,7 @@ public class ReloadTest extends JerseyTest {
 
     private ResourceConfig _createRC(Reloader r) {
         final ResourceConfig result = new ResourceConfig(One.class);
-        result.addSingletons(r);
+        result.registerInstances(r);
 
         return result;
     }
@@ -117,7 +117,7 @@ public class ReloadTest extends JerseyTest {
         assertEquals("one", target().path("one").request().get().readEntity(String.class));
         assertEquals(404, target().path("two").request().get().getStatus());
 
-        rc = _createRC(reloader).addClasses(Two.class);
+        rc = _createRC(reloader).registerClasses(Two.class);
         reloader.reload(rc);
 
         assertEquals("one", target().path("one").request().get().readEntity(String.class));

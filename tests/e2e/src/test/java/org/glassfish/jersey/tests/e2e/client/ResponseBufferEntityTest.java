@@ -116,13 +116,13 @@ public class ResponseBufferEntityTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(Resource.class).addSingletons(new LoggingFilter(LOGGER, true));
+        return new ResourceConfig(Resource.class).registerInstances(new LoggingFilter(LOGGER, true));
     }
 
     @Test
     public void testBufferEntityReadsOriginalStreamTest() throws Exception {
         final WebTarget target = target("response/corrupted");
-        target.configuration().register(new ClientResponseFilter() {
+        target.register(new ClientResponseFilter() {
 
             @Override
             public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)

@@ -79,7 +79,7 @@ public class JerseyWebTargetTest {
             // ignore
         }
         try {
-            target.configuration();
+            target.getConfiguration();
             fail("IllegalStateException was expected.");
         } catch (IllegalStateException e) {
             // ignore

@@ -82,7 +82,7 @@ public class CustomConnectorTest {
 
     @Test
     public void testNullConnector() {
-        Client client = ClientFactory.newClient(new ClientConfig().connector(new NullConnector()));
+        Client client = ClientFactory.newClient(new ClientConfig().connector(new NullConnector()).getConfiguration());
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
         } catch (ClientException ce) {
