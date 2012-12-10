@@ -92,8 +92,8 @@ import org.jvnet.hk2.annotations.Optional;
 import com.google.common.collect.Lists;
 
 /**
- * A factory for managing {@link MessageBodyReader} and {@link MessageBodyWriter}
- * instances.
+ * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter}, {@link ReaderInterceptor}
+ * and {@link WriterInterceptor} instances.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)

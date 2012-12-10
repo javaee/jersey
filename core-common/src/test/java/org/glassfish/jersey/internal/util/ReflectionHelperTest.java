@@ -37,43 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.util;
 
-package org.glassfish.jersey.server.model;
-
-import java.util.List;
-
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Resource model of the deployed application which contains set of root resources. As it implements {@link
- * ResourceModelComponent} it can be validated by {@link ComponentModelValidator component model validator} which will perform
- * validation of the entire resource model including all sub components ({@link Resource resources},
- * {@link ResourceMethod resource methods} ...).
- *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ResourceModel implements ResourceModelComponent {
-    private final List<Resource> resources;
+public class ReflectionHelperTest {
+
+    public static interface I <T> {
+    }
+
+    public static class A <T>  implements I <T> {
+    }
+
+    public static class TestNoInterface extends A <byte[]> {
+    }
+
+    public static class TestInterface extends A <byte[]> implements I <byte[]> {
+    }
 
     /**
-     * Creates new instance from root resources.
-     * @param resources Root resource of the resource model.
+     * See JERSEY-1598.
      */
-    public ResourceModel(List<Resource> resources) {
-        this.resources = resources;
-    }
+    @Test
+    public void getParameterizedClassArgumentsTest() {
 
-    public List<Resource> getResources() {
-        return resources;
-    }
+        ReflectionHelper.DeclaringClassInterfacePair dcip = ReflectionHelper.getClass(TestNoInterface.class, I.class);
+        Class[] arguments = ReflectionHelper.getParameterizedClassArguments(dcip);
+        Class aClass = arguments[0];
 
-    @Override
-    public void accept(ResourceModelVisitor visitor) {
-        visitor.visitResourceModel(this);
-    }
-
-    @Override
-    public List<? extends ResourceModelComponent> getComponents() {
-        return resources;
+        dcip = ReflectionHelper.getClass(TestInterface.class, I.class);
+        arguments = ReflectionHelper.getParameterizedClassArguments(dcip);
+        assertEquals(aClass, arguments[0]);
     }
 }

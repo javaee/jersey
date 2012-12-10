@@ -729,6 +729,12 @@ public class ReflectionHelper {
                     final TypeVariable tv = (TypeVariable) a;
                     ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, tv);
                     cas[i] = (ctp != null) ? ctp.rawClass() : (Class<?>)(tv.getBounds()[0]);
+                } else if (a instanceof GenericArrayType) {
+                    final GenericArrayType gat = (GenericArrayType) a;
+                    Type t = gat.getGenericComponentType();
+                    if (t instanceof Class) {
+                        cas[i] = getArrayForComponentType((Class<?>) t);
+                    }
                 }
             }
             return cas;
