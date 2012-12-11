@@ -81,9 +81,6 @@ final class IntrospectionModeller {
 
     // introspected annotated JAX-RS resource class
     private final Class<?> handlerClass;
-    // if not null then introspection modeller is instance based
-    private final Object handlerInstance;
-
 
     /**
      * Create a new introspection modeller for a given JAX-RS resource class.
@@ -92,24 +89,6 @@ final class IntrospectionModeller {
      */
     public IntrospectionModeller(Class<?> handlerClass) {
         this.handlerClass = handlerClass;
-        this.handlerInstance = null;
-    }
-
-    /**
-     * Create a new introspection modeller for a given JAX-RS resource instance. The instance will be used for
-     * introspection and also created {@link MethodHandler method handlers} will be based on this instance. In other
-     * words the final resource will be singleton resource based on the given instance.
-     *
-     * @param handlerInstance Instance of JAX-RS resource class.
-     */
-    public IntrospectionModeller(Object handlerInstance) {
-        if (handlerInstance instanceof Class<?>) {
-            this.handlerClass = (Class) handlerInstance;
-            this.handlerInstance = null;
-        } else {
-            this.handlerInstance = handlerInstance;
-            this.handlerClass = handlerInstance.getClass();
-        }
     }
 
     /**
@@ -117,25 +96,18 @@ final class IntrospectionModeller {
      *
      * The model returned is filled with the introspected data.
      *
-     * @param skipAcceptableCheck if {@code true}, the check if the introspected class
-     *                            is a valid, {@link Resource#isAcceptable(Class) acceptable}
-     *                            resource class is skipped.
      * @return new resource model builder for the introspected class.
      */
-    public Resource.Builder createResourceBuilder(final boolean skipAcceptableCheck) {
+    public Resource.Builder createResourceBuilder() {
         return Errors.processWithException(new Errors.Closure<Resource.Builder>() {
             @Override
             public Resource.Builder invoke() {
-                return doCreateResourceBuilder(skipAcceptableCheck);
+                return doCreateResourceBuilder();
             }
         });
     }
 
-    private Resource.Builder doCreateResourceBuilder(final boolean skipAcceptableCheck) {
-        if (!skipAcceptableCheck && !Resource.isAcceptable(handlerClass)) {
-            Errors.fatal(handlerClass, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(handlerClass));
-        }
-
+    private Resource.Builder doCreateResourceBuilder() {
         checkForNonPublicMethodIssues();
 
         final Class<?> annotatedResourceClass = getAnnotatedResourceClass(handlerClass);
@@ -351,12 +323,8 @@ final class IntrospectionModeller {
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
-                            .nameBindings(am.getAnnotations());
-            if (handlerInstance != null) {
-                methodBuilder.handledBy(handlerInstance, am.getMethod());
-            } else {
-                methodBuilder.handledBy(handlerClass, am.getMethod());
-            }
+                            .nameBindings(am.getAnnotations())
+                            .handledBy(handlerClass, am.getMethod());
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -380,12 +348,9 @@ final class IntrospectionModeller {
                             .produces(resolveProducedTypes(am, defaultProducedTypes))
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
-                            .nameBindings(am.getAnnotations());
-            if (handlerInstance != null) {
-                methodBuilder.handledBy(handlerInstance, am.getMethod());
-            } else {
-                methodBuilder.handledBy(handlerClass, am.getMethod());
-            }
+                            .nameBindings(am.getAnnotations())
+                            .handledBy(handlerClass, am.getMethod());
+
             introspectAsyncFeatures(am, methodBuilder);
         }
     }

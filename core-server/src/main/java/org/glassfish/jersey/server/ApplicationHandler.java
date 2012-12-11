@@ -324,7 +324,7 @@ public final class ApplicationHandler {
 
         for (Object o : runtimeConfig.getSingletons()) {
             try {
-                Resource resource = Resource.from(o);
+                Resource resource = Resource.from(o.getClass());
                 if (resource != null) {
                     resourceBagBuilder.registerResource(o, resource);
                 }

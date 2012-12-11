@@ -114,7 +114,7 @@ class SubResourceLocatorRouter implements Router {
         final Resource subResourceModel;
 
         // TODO: what to do with the issues?
-        final Resource.Builder builder = Resource.builder(subResource);
+        final Resource.Builder builder = Resource.builder(subResource.getClass());
         if (builder == null) {
             // resource is empty
             throw new NotFoundException();

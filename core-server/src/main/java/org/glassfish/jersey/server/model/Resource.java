@@ -536,25 +536,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      *                                  as a JAX-RS resource.
      */
     public static Builder builder(Class<?> resourceClass) throws IllegalArgumentException {
-        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder(false);
-        return builder.isEmpty() ? null : builder;
-    }
-
-    /**
-     * Create a resource model builder initialized by introspecting an annotated
-     * JAX-RS resource instance.
-     * <p/>
-     * Unlike {@link #builder(Class)}, this method does not perform
-     * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
-     * assumed that the instance of the resource has already been created and is
-     * acceptable.
-     *
-     * @param resource  resource instance to be modelled.
-     * @return resource model builder initialized by instance or {@code null} if the
-     *         instance does not represent a resource.
-     */
-    public static Builder builder(Object resource) {
-        final Builder builder = new IntrospectionModeller(resource.getClass()).createResourceBuilder(true);
+        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder();
         return builder.isEmpty() ? null : builder;
     }
 
@@ -573,29 +555,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      *                                  as a JAX-RS resource.
      */
     public static Resource from(Class<?> resourceClass) throws IllegalArgumentException {
-        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder(false);
-        return builder.isEmpty() ? null : builder.build();
-    }
-
-    /**
-     * Create a resource model initialized by introspecting an annotated
-     * JAX-RS resource instance. The instance will also be used as
-     * {@link MethodHandler method handler} for {@link Invocable invocables}
-     * of {@link ResourceMethod resource methods}. In other words the final resource
-     * will be singleton resource based on the given instance.
-     *
-     * <p/>
-     * Unlike {@link #builder(Class)}, this method does not perform
-     * the {@link #isAcceptable(java.lang.Class) acceptability} check, since it is
-     * assumed that the instance of the resource has already been created and is
-     * acceptable.
-     *
-     * @param resource  resource instance to be modelled.
-     * @return resource model initialized by instance or {@code null} if the
-     *         instance does not represent a JAX-RS resource.
-     */
-    public static Resource from(Object resource) {
-        final Builder builder = new IntrospectionModeller(resource).createResourceBuilder(true);
+        final Builder builder = new IntrospectionModeller(resourceClass).createResourceBuilder();
         return builder.isEmpty() ? null : builder.build();
     }
 

@@ -342,11 +342,11 @@ public class ApplicationHandlerTest {
         }
     }
 
-    public static class ProgrammaticDefault implements Inflector<Request, Response> {
+    public static class ProgrammaticDefault implements Inflector<ContainerRequestContext, Response> {
         private int counter = 0;
 
         @Override
-        public Response apply(Request data) {
+        public Response apply(ContainerRequestContext data) {
             return Response.ok(++counter + "").build();
         }
     }
@@ -362,6 +362,10 @@ public class ApplicationHandlerTest {
 
         rb = org.glassfish.jersey.server.model.Resource.builder();
         rb.path("default").addMethod("GET").handledBy(ProgrammaticDefault.class);
+        rc.registerResources(rb.build());
+
+        rb = org.glassfish.jersey.server.model.Resource.builder();
+        rb.path("defaultinstance").addMethod("GET").handledBy(new ProgrammaticDefault());
         rc.registerResources(rb.build());
 
         ApplicationHandler ah = new ApplicationHandler(rc);
@@ -380,5 +384,13 @@ public class ApplicationHandlerTest {
         response = ah.apply(RequestContextBuilder.from("/default", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("1", response.getEntity());
+
+        response = ah.apply(RequestContextBuilder.from("/defaultinstance", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("1", response.getEntity());
+
+        response = ah.apply(RequestContextBuilder.from("/defaultinstance", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("2", response.getEntity());
     }
 }
