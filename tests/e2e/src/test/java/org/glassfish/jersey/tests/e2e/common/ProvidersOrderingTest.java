@@ -401,12 +401,12 @@ public class ProvidersOrderingTest extends JerseyTest {
                 MediaType mediaType,
                 MultivaluedMap<String, Object> httpHeaders,
                 OutputStream entityStream) throws IOException {
+            counter++;
             entityStream.write(t);
         }
 
         @Override
         public long getSize(byte[] t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            counter++;
             return t.length;
         }
     }

@@ -89,7 +89,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
      * Constructs a new executor to write given type to provided {@link InputStream entityStream}.
      * List of interceptors to be used is taken from given {@link MessageBodyWorkers workers} instance
      * unless {@value #INTERCEPTORS} property is set in {@link PropertiesDelegate propertiesDelegate}.
-     * If such a property is present, the executor tries to cast it to <code>List&lt;WriterInterceptor&gt;</code>
+     * If such a property is present, the executor tries to cast it to {@code List<WriterInterceptor>}
      * and the list is then used to build the interceptor chain.
      *
      * @param entity entity object to be processed.
@@ -125,8 +125,9 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
         final List<WriterInterceptor> effectiveInterceptors = new ArrayList<WriterInterceptor>();
 
         final Object writerInterceptorsProperty = propertiesDelegate.getProperty(INTERCEPTORS);
-        final Collection<WriterInterceptor> writerInterceptors =
-                (writerInterceptorsProperty != null) ? (Collection<WriterInterceptor>)writerInterceptorsProperty : workers.getWriterInterceptors();
+        @SuppressWarnings("unchecked")
+        final Collection<WriterInterceptor> writerInterceptors = (writerInterceptorsProperty instanceof Collection) ?
+                (Collection<WriterInterceptor>) writerInterceptorsProperty : workers.getWriterInterceptors();
 
         for (WriterInterceptor interceptor : writerInterceptors) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
@@ -220,9 +221,10 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
                         context.getMediaType(), context.getType(), context.getGenericType()));
             }
             if (sizeCallback != null) {
-                long size = writer.getSize(context.getEntity(), context.getType(), context.getGenericType(),
-                        context.getAnnotations(), context.getMediaType());
-                sizeCallback.onRequestEntitySize(size);
+//                long size = writer.getSize(context.getEntity(), context.getType(), context.getGenericType(),
+//                        context.getAnnotations(), context.getMediaType());
+                // TODO try computing the value and then call the callback
+                sizeCallback.onRequestEntitySize(-1);
             }
 
             if(writeEntity) {

@@ -96,15 +96,6 @@ public class RequestWriter {
     protected interface RequestEntityWriter {
 
         /**
-         * Get the size, in bytes, of the request entity, otherwise -1
-         * if the size cannot be determined before serialization.
-         *
-         * @return size the size, in bytes, of the request entity, otherwise -1
-         *         if the size cannot be determined before serialization.
-         */
-        long getSize();
-
-        /**
          * Write the request entity.
          *
          * @param out the output stream to write the request entity.
@@ -119,7 +110,6 @@ public class RequestWriter {
     private static final class DefaultRequestEntityWriter implements RequestEntityWriter {
 
         private final ClientRequest requestContext;
-        private final long size;
         private final MessageBodyWriter writer;
 
         /**
@@ -159,20 +149,6 @@ public class RequestWriter {
 
                 throw new ClientException(message);
             }
-
-            this.size = requestContext.getHeaders().containsKey(HttpHeaders.CONTENT_ENCODING)
-                    ? -1
-                    : writer.getSize(
-                    requestContext.getEntity(),
-                    entityRawType,
-                    entityType,
-                    entityAnnotations,
-                    mediaType);
-        }
-
-        @Override
-        public long getSize() {
-            return size;
         }
 
         @Override
