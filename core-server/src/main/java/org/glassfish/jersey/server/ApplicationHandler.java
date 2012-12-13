@@ -300,8 +300,7 @@ public final class ApplicationHandler {
         }
 
         // Configure binders and features.
-        runtimeConfig.configureBinders(locator);
-        runtimeConfig.configureFeatures(locator);
+        runtimeConfig.configureMetaProviders(locator);
 
         // Add WADL support.
         boolean wadlDisabled = runtimeConfig.isProperty(ServerProperties.FEATURE_DISABLE_WADL);

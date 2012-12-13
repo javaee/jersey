@@ -45,8 +45,6 @@ import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 /**
  * Immutable runtime configuration.
  *
@@ -130,11 +128,6 @@ public class ImmutableCommonConfig extends CommonConfig {
 
     @Override
     public CommonConfig replaceWith(Configuration config) {
-        throw new IllegalStateException(errorMessage);
-    }
-
-    @Override
-    public void configureFeatures(ServiceLocator locator) {
         throw new IllegalStateException(errorMessage);
     }
 }

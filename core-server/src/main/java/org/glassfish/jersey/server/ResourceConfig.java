@@ -278,12 +278,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureBinders(ServiceLocator locator) {
-            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
-        }
-
-        @Override
-        public void configureFeatures(ServiceLocator locator) {
+        public void configureMetaProviders(ServiceLocator locator) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -762,17 +757,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
      *
      * @param locator service locator to update with the custom binders.
      */
-    final void configureBinders(final ServiceLocator locator) {
-        state.configureBinders(locator);
-    }
-
-    /**
-     * Configure custom features registered in the resource config.
-     *
-     * @param locator service locator to use for feature provisioning.
-     */
-    final void configureFeatures(ServiceLocator locator) {
-        state.configureFeatures(locator);
+    final void configureMetaProviders(final ServiceLocator locator) {
+        state.configureMetaProviders(locator);
     }
 
     @Override

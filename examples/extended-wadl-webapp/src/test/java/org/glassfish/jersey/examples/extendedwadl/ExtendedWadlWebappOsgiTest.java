@@ -40,16 +40,13 @@
 
 package org.glassfish.jersey.examples.extendedwadl;
 
-import aQute.lib.osgi.Constants;
 import java.net.URI;
-import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemsResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
@@ -58,27 +55,26 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.test.TestProperties;
 
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOption;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
+
+import aQute.lib.osgi.Constants;
 
 /**
  *

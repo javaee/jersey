@@ -83,6 +83,12 @@ import com.google.common.collect.Sets;
  */
 public class CommonConfig implements FeatureContext, ExtendedConfig {
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
+    private static final Function<Object,Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
+        @Override
+        public Binder apply(Object input) {
+            return Binder.class.cast(input);
+        }
+    };
 
     /**
      * Configuration runtime type.
@@ -500,40 +506,51 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     /**
-     * Configure HK2 binders into the HK2 service locator.
+     * Configure HK2 binders in the HK2 service locator and enable JAX-RS features.
      *
-     * @param locator locator in which the binders should be configured.
+     * @param locator locator in which the binders and features should be configured.
      */
-    public void configureBinders(final ServiceLocator locator) {
-        final Collection<Binder> binders = Collections2.transform(componentBag.getInstances(ComponentBag.BINDERS_ONLY),
-                new Function<Object, Binder>() {
-                    @Override
-                    public Binder apply(Object input) {
-                        return Binder.class.cast(input);
-                    }
-                });
-        if (binders.isEmpty()) {
-            return;
-        }
+    public void configureMetaProviders(final ServiceLocator locator) {
+        // First, configure existing binders
+        final Set<Binder> configuredBinders = configureBinders(locator, Collections.<Binder>emptySet());
 
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-        for (Binder binder : binders) {
-            binder.bind(dc);
-        }
-        dc.commit();
-    }
-
-    /**
-     * Enable configured features.
-     *
-     * @param locator HK2 service locator to instantiate feature classes.
-     */
-    public void configureFeatures(final ServiceLocator locator) {
+        // Next, configure all features
         configureFeatures(
                 locator,
                 new HashSet<FeatureRegistration>(),
                 resetRegistrations());
+
+        // At last, configure any new binders added by features
+        configureBinders(locator, configuredBinders);
+    }
+
+    private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
+        Set<Binder> allConfigured = Sets.newIdentityHashSet();
+        allConfigured.addAll(configured);
+
+        final Collection<Binder> binders = getBinders(configured);
+        if (!binders.isEmpty()) {
+            final DynamicConfiguration dc = Injections.getConfiguration(locator);
+
+            for (Binder binder : binders) {
+                binder.bind(dc);
+                allConfigured.add(binder);
+            }
+            dc.commit();
+        }
+
+        return allConfigured;
+    }
+
+    private Collection<Binder> getBinders(final Set<Binder> configured) {
+        return Collections2.filter(
+                Collections2.transform(componentBag.getInstances(ComponentBag.BINDERS_ONLY), CAST_TO_BINDER),
+                new Predicate<Binder>() {
+                    @Override
+                    public boolean apply(Binder binder) {
+                        return !configured.contains(binder);
+                    }
+                });
     }
 
     private void configureFeatures(final ServiceLocator locator,

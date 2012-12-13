@@ -60,6 +60,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -280,7 +281,7 @@ public class CommonConfigTest {
         }
 
         final ContractProvider contractProvider =
-                    config.getComponentBag().getModel(ComplexEmptyProvider.class);
+                config.getComponentBag().getModel(ComplexEmptyProvider.class);
         final Set<Class<?>> contracts = contractProvider.getContracts();
 
         assertEquals(3, contracts.size());
@@ -796,7 +797,7 @@ public class CommonConfigTest {
     public void testConfigureFeatureHierarchy() throws Exception {
         config.register(ComplexFeature.class);
 
-        config.configureFeatures(Injections.createLocator());
+        config.configureMetaProviders(Injections.createLocator());
 
         assertTrue(config.getConfiguration().isEnabled(ComplexFeature.class));
 
@@ -807,7 +808,7 @@ public class CommonConfigTest {
     @Test
     public void testConfigureFeatureRecursive() throws Exception {
         config.register(RecursiveFeature.class);
-        config.configureFeatures(Injections.createLocator());
+        config.configureMetaProviders(Injections.createLocator());
 
         assertTrue(config.getConfiguration().isEnabled(RecursiveFeature.class));
         assertEquals(1, config.getInstances().size());
@@ -821,7 +822,7 @@ public class CommonConfigTest {
         final SimpleFeatureA f2 = new SimpleFeatureA(true);
         config.register(f2);
 
-        config.configureFeatures(Injections.createLocator());
+        config.configureMetaProviders(Injections.createLocator());
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -837,7 +838,7 @@ public class CommonConfigTest {
         final InstanceFeatureA f2 = new InstanceFeatureA(true);
         config.register(f2);
 
-        config.configureFeatures(Injections.createLocator());
+        config.configureMetaProviders(Injections.createLocator());
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -864,11 +865,50 @@ public class CommonConfigTest {
     @Test
     public void testConfigureFeatureInstanceRecursive() throws Exception {
         config.register(new RecursiveInstanceFeature());
-        config.configureFeatures(Injections.createLocator());
+        config.configureMetaProviders(Injections.createLocator());
         assertEquals(0, config.getClasses().size());
         assertEquals(2, config.getInstances().size());
         final Set<Object> pureProviders = config.getComponentBag().getInstances(ComponentBag.EXCLUDE_META_PROVIDERS);
         assertEquals(1, pureProviders.size());
         assertSame(CustomReaderA.class, pureProviders.iterator().next().getClass());
+    }
+
+    public static interface Contract {
+    }
+
+    public static class Service implements Contract {
+    }
+
+    public static class ContractBinder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(Service.class).to(Contract.class);
+        }
+    }
+
+    public static class ContractBinderFeature implements Feature {
+
+        @Override
+        public boolean configure(FeatureContext context) {
+            context.register(new ContractBinder());
+            return true;
+        }
+    }
+
+    @Test
+    public void testBinderConfiguringFeature() throws Exception {
+        config.register(ContractBinderFeature.class);
+        final ServiceLocator locator = Injections.createLocator();
+        config.configureMetaProviders(locator);
+
+        assertTrue(config.isEnabled(ContractBinderFeature.class));
+        assertEquals(1, config.getInstances().size());
+        assertSame(ContractBinder.class, config.getInstances().iterator().next().getClass());
+
+        final Contract service = locator.getService(Contract.class);
+        assertNotNull(service);
+        assertSame(Service.class, service.getClass());
+
     }
 }

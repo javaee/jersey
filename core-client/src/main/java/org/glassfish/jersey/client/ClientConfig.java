@@ -347,8 +347,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             final ServiceLocator locator = Injections.createLocator(new ClientBinder());
 
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
-            runtimeConfig.configureBinders(locator);
-            runtimeConfig.configureFeatures(locator);
+            runtimeConfig.configureMetaProviders(locator);
 
             // Bind configuration.
             final ExtendedConfig configuration = runtimeConfig.getConfiguration();
