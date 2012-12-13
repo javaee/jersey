@@ -127,7 +127,7 @@ public class ResourceConfigTest {
         // Add myBinder + one default.
         final MyOtherBinder defaultBinder = new MyOtherBinder();
         ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
-        rc.registerBinders(defaultBinder);
+        rc.register(defaultBinder);
         ah = new ApplicationHandler(rc);
         assertEquals(2, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
         assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
@@ -135,7 +135,7 @@ public class ResourceConfigTest {
 
     public static class MyResourceConfig1 extends ResourceConfig {
         public MyResourceConfig1() {
-            registerBinders(new MyBinder());
+            register(new MyBinder());
         }
     }
 

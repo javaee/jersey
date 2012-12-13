@@ -465,7 +465,18 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register resource, provider or feature classes in the {@code ResourceConfig}.
+     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider or JAX-RS feature
+     * in the {@code ResourceConfig}.
+     * <p>
+     * Note that registered JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * otherwise ignored by server-side runtime, unless they implement also another contract
+     * recognized by Jersey runtime.
+     * </p>
+     * <p>
+     * Also note that registration of {@link Binder HK2 binder} classes is note supported. HK2 binders
+     * must be {@link #registerInstances(Object...) registered as instances}.
+     * </p>
      *
      * @param classes classes to register.
      * @return updated resource configuration instance.
@@ -482,7 +493,18 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register resource, provider or feature classes in the {@code ResourceConfig}.
+     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider or JAX-RS feature
+     * in the {@code ResourceConfig}.
+     * <p>
+     * Note that registered JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * otherwise ignored by server-side runtime, unless they implement also another contract
+     * recognized by Jersey runtime.
+     * </p>
+     * <p>
+     * Also note that registration of {@link Binder HK2 binder} classes is note supported. HK2 binders
+     * must be {@link #registerInstances(Object...) registered as instances}.
+     * </p>
      *
      * @param classes classes to register.
      * @return updated resource configuration instance.
@@ -496,7 +518,14 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register resource, provider or feature instances (singletons) in the {@code ResourceConfig}.
+     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider, JAX-RS feature
+     * or {@link Binder HK2 binder} instances (singletons) in the {@code ResourceConfig}.
+     * <p>
+     * Note that registered HK2 binders and JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * otherwise ignored by server-side runtime, unless they implement also another contract
+     * recognized by Jersey runtime.
+     * </p>
      *
      * @param instances instances to register.
      * @return updated resource configuration instance.
@@ -513,7 +542,14 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register resource, provider or feature instances (singletons) in the {@code ResourceConfig}.
+     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider, JAX-RS feature
+     * or {@link Binder HK2 binder} instances (singletons) in the {@code ResourceConfig}.
+     * <p>
+     * Note that registered HK2 binders and JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * otherwise ignored by server-side runtime, unless they implement also another contract
+     * recognized by Jersey runtime.
+     * </p>
      *
      * @param instances instances to register.
      * @return updated resource configuration instance.
@@ -527,7 +563,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register new resource models in the {@code ResourceConfig}.
+     * Register new programmatic resource models in the {@code ResourceConfig}.
      *
      * @param resources resource models to register.
      * @return updated resource configuration instance.
@@ -568,45 +604,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         this.state.registerFinder(resourceFinder);
         return this;
-    }
-
-    /**
-     * Register new {@link Binder HK2 binders} in the {@code ResourceConfig}.
-     *
-     * These binders will be used to configure a Jersey runtime {@link ServiceLocator} instance
-     * during application deployment.
-     *
-     * @param binders custom binders to register.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig registerBinders(Set<Binder> binders) {
-        if (binders == null) {
-            return this;
-        }
-
-        invalidateCache();
-        for (Binder binder : binders) {
-            state.register(binder);
-        }
-
-        return this;
-    }
-
-    /**
-     * Register new {@link Binder HK2 binders} in the {@code ResourceConfig}.
-     *
-     * These binders will be used to configure a Jersey runtime {@link ServiceLocator} instance
-     * during application deployment.
-     *
-     * @param binders custom binders to register.
-     * @return updated resource configuration instance.
-     */
-    public final ResourceConfig registerBinders(Binder... binders) {
-        if (binders == null) {
-            return this;
-        }
-
-        return registerBinders(Sets.newHashSet(binders));
     }
 
     /**

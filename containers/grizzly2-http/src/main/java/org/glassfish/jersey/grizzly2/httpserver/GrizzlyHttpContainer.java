@@ -322,7 +322,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload(ResourceConfig configuration) {
-        appHandler = new ApplicationHandler(configuration.registerBinders(new GrizzlyBinder()));
+        appHandler = new ApplicationHandler(configuration.register(new GrizzlyBinder()));
         containerListener.onReload(this);
     }
 

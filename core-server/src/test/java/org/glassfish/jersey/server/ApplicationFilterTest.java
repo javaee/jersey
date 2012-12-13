@@ -83,7 +83,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .registerBinders(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
+                .register(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -112,8 +112,8 @@ public class ApplicationFilterTest {
             }
         });
 
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .registerBinders(new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig().register(
+                new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -213,7 +213,7 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = new ResourceConfig().registerBinders(
+        final ResourceConfig resourceConfig = new ResourceConfig().register(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");
@@ -243,7 +243,7 @@ public class ApplicationFilterTest {
         List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
-        final ResourceConfig resourceConfig = new ResourceConfig().registerBinders(
+        final ResourceConfig resourceConfig = new ResourceConfig().register(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
         Resource.Builder rb = Resource.builder("test");

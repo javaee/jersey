@@ -250,7 +250,7 @@ public class WebComponent {
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
-        resourceConfig.registerBinders(new WebComponentBinder());
+        resourceConfig.register(new WebComponentBinder());
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&

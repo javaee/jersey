@@ -116,7 +116,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest() throws TestContainerException {
         ResourceConfig config =  getResourceConfig(configure());
-        config.registerBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
@@ -136,7 +136,7 @@ public abstract class JerseyTest {
         setTestContainerFactory(testContainerFactory);
 
         ResourceConfig config =  getResourceConfig(configure());
-        config.registerBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, testContainerFactory);
@@ -158,7 +158,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
         ResourceConfig config = getResourceConfig(jaxrsApplication);
-        config.registerBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());
@@ -175,7 +175,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
         ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
-        config.registerBinders(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
         this.application = new ApplicationHandler(config);
 
         this.tc = getContainer(application, getTestContainerFactory());

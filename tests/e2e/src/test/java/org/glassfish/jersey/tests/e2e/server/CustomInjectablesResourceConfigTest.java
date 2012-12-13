@@ -141,7 +141,7 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     protected Application configure() {
         ResourceConfig rc = new ResourceConfig();
         rc.registerClasses(Resource.class);
-        rc.registerBinders(new MyHK2Binder());
+        rc.register(new MyHK2Binder());
 
         return rc;
     }
