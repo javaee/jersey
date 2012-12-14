@@ -280,6 +280,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                 LOGGER.log(Level.WARNING, "Unable to send a failure response.", e);
             } finally {
                 commit();
+                rethrow(error);
             }
         }
 
@@ -287,6 +288,19 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         public void commit() {
             if (closed.compareAndSet(false, true)) {
                 exchange.close();
+            }
+        }
+
+        /**
+         * Rethrow the original exception as required by JAX-RS, 3.3.4
+         *
+         * @param error throwable to be re-thrown
+         */
+        private void rethrow(Throwable error) {
+            if (error instanceof RuntimeException) {
+                throw (RuntimeException) error;
+            } else {
+                throw new ContainerException(error);
             }
         }
 

@@ -59,6 +59,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 
 import com.google.common.util.concurrent.SettableFuture;
+import javax.ws.rs.WebApplicationException;
 
 /**
  * An internal implementation of {@link ContainerResponseWriter} for Servlet containers.
@@ -163,18 +164,35 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     @Override
     public void failure(Throwable error) {
-        if (!response.isCommitted()) {
-            try {
-                response.reset();
-                response.sendError(500, "Request failed.");
-            } catch (IllegalStateException ex) {
-                // a race condition externally committing the response can still occur...
-                LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
-            } catch (IOException ex) {
-                throw new ContainerException("I/O exception occurred while sending 'Request failed.' error response.", ex);
-            } finally {
-                asyncExt.complete();
+        try {
+            if (!response.isCommitted()) {
+                try {
+                    response.reset();
+                    response.sendError(500, "Request failed.");
+                } catch (IllegalStateException ex) {
+                    // a race condition externally committing the response can still occur...
+                    LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
+                } catch (IOException ex) {
+                    throw new ContainerException("I/O exception occurred while sending 'Request failed.' error response.", ex);
+                } finally {
+                    asyncExt.complete();
+                }
             }
+        } finally {
+            rethrow(error);
+        }
+    }
+
+    /**
+     * Rethrow the original exception as required by JAX-RS, 3.3.4
+     *
+     * @param error throwable to be re-thrown
+     */
+    private void rethrow(Throwable error) {
+        if (error instanceof RuntimeException) {
+            throw (RuntimeException) error;
+        } else {
+            throw new ContainerException(error);
         }
     }
 

@@ -57,6 +57,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.ws.rs.WebApplicationException;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -253,6 +254,20 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 logger.log(Level.SEVERE, "Unable to send 500 error response.", e);
             } finally {
                 logger.debugLog("{0} - failure(...) called", name);
+                rethrow(error);
+            }
+        }
+
+        /**
+         * Rethrow the original exception as required by JAX-RS, 3.3.4
+         *
+         * @param error throwable to be re-thrown
+         */
+        private void rethrow(Throwable error) {
+            if (error instanceof RuntimeException) {
+                throw (RuntimeException) error;
+            } else {
+                throw new ContainerException(error);
             }
         }
     }
