@@ -574,6 +574,11 @@
                     <artifactId>buildnumber-maven-plugin</artifactId>
                     <version>1.1</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>maven-jetty-plugin</artifactId>
+                    <version>6.1.24</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <extensions>
@@ -901,6 +906,22 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>${validation.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${validation.ri.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>${jboss.logging.version}</version>
+            </dependency>
+
             <!-- Test scope -->
 
             <dependency>
@@ -1007,6 +1028,10 @@
         <pax-swissbox-version>1.3.1</pax-swissbox-version>
         <jetty-version>6.1.22</jetty-version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
+
+        <validation.api.version>1.1.0.Beta2</validation.api.version>
+        <validation.ri.version>5.0.0.Alpha2</validation.ri.version>
+        <jboss.logging.version>3.1.1.GA</jboss.logging.version>
 
         <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

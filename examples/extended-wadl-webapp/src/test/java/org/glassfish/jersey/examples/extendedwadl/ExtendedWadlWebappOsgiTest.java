@@ -142,6 +142,9 @@ public class ExtendedWadlWebappOsgiTest {
                 // jettison
                 mavenBundle().groupId("org.codehaus.jettison").artifactId("jettison").versionAsInProject(),
 
+                // validation
+                mavenBundle().groupId("javax.validation").artifactId("validation-api").versionAsInProject(),
+
                 // Grizzly
                 systemPackage("sun.misc"),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-framework").versionAsInProject(),

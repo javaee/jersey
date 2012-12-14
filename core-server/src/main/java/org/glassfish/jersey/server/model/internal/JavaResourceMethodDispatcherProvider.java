@@ -71,24 +71,29 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
     @Override
     public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler invocationHandler) {
-
         final List<Factory<?>> valueProviders = resourceMethod.getValueProviders(serviceLocator);
-
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
+
+        ResourceMethodDispatcher resourceMethodDispatcher;
         if (Response.class.isAssignableFrom(returnType)) {
-            return new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders);
+            resourceMethodDispatcher = new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders);
 // TODO should we support JResponse?
 //        } else if (JResponse.class.isAssignableFrom(returnType)) {
 //            return new JResponseOutInvoker(resourceMethod, pp, invocationHandler);
         } else if (returnType != void.class) {
             if (returnType == Object.class || GenericEntity.class.isAssignableFrom(returnType)) {
-                return new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders);
+                resourceMethodDispatcher = new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders);
             } else {
-                return new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders);
+                resourceMethodDispatcher = new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders);
             }
         } else {
-            return new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders);
+            resourceMethodDispatcher = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders);
         }
+
+        // Inject validator.
+        serviceLocator.inject(resourceMethodDispatcher);
+
+        return resourceMethodDispatcher;
     }
 
     /**

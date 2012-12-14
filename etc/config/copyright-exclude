@@ -45,3 +45,4 @@ truststore_client
 truststore_server
 /examples/reload/resources
 /core-server/etc
+bootstrap

@@ -58,6 +58,7 @@
     <description>Jersey examples</description>
 
     <modules>
+        <module>bean-validation-webapp</module>
         <module>bookmark</module>
         <module>bookmark-em</module>
         <module>clipboard</module>

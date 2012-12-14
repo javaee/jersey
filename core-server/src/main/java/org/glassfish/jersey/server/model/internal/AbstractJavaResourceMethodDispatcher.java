@@ -43,14 +43,23 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Set;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
+
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+
+import com.google.common.collect.Sets;
 
 /**
  * Abstract resource method dispatcher that provides skeleton implementation of
@@ -60,6 +69,9 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDispatcher {
+
+    @Inject
+    private javax.inject.Provider<ConfiguredValidator> validatorProvider;
 
     private final Method method;
     private final InvocationHandler methodHandler;
@@ -105,7 +117,17 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      */
     final Object invoke(Object resource, Object... args) throws ProcessingException {
         try {
-            return methodHandler.invoke(resource, method, args);
+            final ConfiguredValidator validator = validatorProvider.get();
+
+            // Validate resource class & method input parameters.
+            validateInput(validator, resource, args);
+
+            final Object invocationResult = methodHandler.invoke(resource, method, args);
+
+            // Validate response entity.
+            validateResult(validator, resource, invocationResult);
+
+            return invocationResult;
         } catch (IllegalAccessException ex) {
             throw new ProcessingException("Resource Java method invocation error.", ex);
         } catch (InvocationTargetException ex) {
@@ -124,6 +146,60 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             throw new MappableException(ex);
         } catch (Throwable t) {
             throw new ProcessingException(t);
+        }
+    }
+
+    /**
+     * Validates resource class instance and input parameters of the {@code method}. {@link ConstraintViolationException} raised
+     * from this method should be mapped to HTTP 400 status.
+     *
+     * @param validator validator used to validate.
+     * @param resource resource class instance.
+     * @param args input method parameters.
+     * @throws ConstraintViolationException if {@link ConstraintViolation} occurs (should be mapped to HTTP 400 status).
+     */
+    private void validateInput(final Validator validator, final Object resource, final Object[] args)
+            throws ConstraintViolationException {
+
+        if (validator != null) {
+            final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
+
+            // Resource validation.
+            constraintViolations.addAll(validator.validate(resource));
+
+            // Resource method validation - input parameters.
+            constraintViolations.addAll(validator.forMethods().validateParameters(resource, method, args));
+
+            if (!constraintViolations.isEmpty()) {
+                throw new ConstraintViolationException(constraintViolations);
+            }
+        }
+    }
+
+    /**
+     * Validates response instance / response entity of the {@code method}. {@link ConstraintViolationException} raised
+     * from this method should be mapped to HTTP 500 status.
+     *
+     * @param validator validator used to validate.
+     * @param resource resource class instance.
+     * @param invocationResult response.
+     * @throws ConstraintViolationException if {@link ConstraintViolation} occurs (should be mapped to HTTP 500 status).
+     */
+    private void validateResult(final Validator validator, final Object resource, final Object invocationResult) {
+        // Resource method validation - return invocationResult.
+        if (validator != null) {
+            final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
+
+            constraintViolations.addAll(validator.forMethods().validateReturnValue(resource, method, invocationResult));
+
+            if (invocationResult instanceof Response) {
+                constraintViolations.addAll(
+                        validator.forMethods().validateReturnValue(resource, method, ((Response) invocationResult).getEntity()));
+            }
+
+            if (!constraintViolations.isEmpty()) {
+                throw new ConstraintViolationException(constraintViolations);
+            }
         }
     }
 

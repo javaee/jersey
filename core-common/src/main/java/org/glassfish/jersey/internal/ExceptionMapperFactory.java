@@ -42,7 +42,7 @@ package org.glassfish.jersey.internal;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,7 +94,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         }
     }
 
-    private Set<ExceptionMapperType> exceptionMapperTypes = new HashSet<ExceptionMapperType>();
+    private Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<ExceptionMapperType>();
 
     /**
      * Create new exception mapper factory initialized with {@link ServiceLocator

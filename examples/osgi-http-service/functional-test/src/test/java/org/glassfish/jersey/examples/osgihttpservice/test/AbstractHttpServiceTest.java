@@ -124,6 +124,9 @@ public abstract class AbstractHttpServiceTest {
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
 
+                // validation
+                mavenBundle().groupId("javax.validation").artifactId("validation-api").versionAsInProject(),
+
                 // Jersey bundles
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),

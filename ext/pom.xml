@@ -66,6 +66,7 @@
         <module>servlet-portability</module>
         <module>proxy-client</module>
         <module>wadl-doclet</module>
+        <module>bean-validation</module>
     </modules>
 
     <dependencies>

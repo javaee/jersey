@@ -243,12 +243,12 @@ public final class ServerProperties {
     public static final String PROPERTY_WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
 
     /**
-     * If true then disable WADL generation.
+     * If {@code true} then disable WADL generation.
      * <p>
      * By default WADL generation is automatically enabled, if JAXB is
      * present in the classpath.
      * <p>
-     * The default value is false.
+     * The default value is {@code false}.
      * </p>
      * <p>
      * The name of the configuration property is <code>{@value}</code>.
@@ -256,6 +256,20 @@ public final class ServerProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
+
+    /**
+     * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering
+     * {@code ValidationFeature} in the application).
+     * <p>
+     * The default value is {@code false} and only status code is sent in the {@code Response}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY
+            = "jersey.config.server.validation.enableOutputValidationErrorEntity";
 
     private ServerProperties() {
         // prevents instantiation

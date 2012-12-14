@@ -1,0 +1,127 @@
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<div>
+    <div class="container">
+        <div class="row">
+            <div class="page-header">
+                <h1>Contact List <small>Bean Validation Example</small></h1>
+            </div>
+            <div class="span3">
+                <form>
+                    <fieldset>
+                        <legend>Search</legend>
+                        <div class="input-prepend input-append">
+                            <div class="btn-group" ng-class="{open: !searchCollapse}">
+                                <button class="btn dropdown-toggle" ng-click="searchCollapse=!searchCollapse"><i class="icon-{{searchIcon}}"></i> <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li><a ng-click="changeSearchType('name')"><i class="icon-user"></i> Name</a></li>
+                                    <li><a ng-click="changeSearchType('email')"><i class="icon-envelope"></i> Email</a></li>
+                                    <li><a ng-click="changeSearchType('phone')"><i class="icon-home"></i> Phone</a></li>
+                                    <li><a ng-click="changeSearchType('unknown')"><i class="icon-question-sign"></i> Invalid</a></li>
+                                </ul>
+                            </div>
+                            <input class="span2" type="text" ng-model="searchValue" />
+                            <button class="btn" type="button" ng-click="search()"><i class="icon-search"></i></button>
+                        </div>
+                    </fieldset>
+                </form>
+                <form>
+                    <fieldset>
+                        <legend>Add Contact</legend>
+                        <div class="input-prepend">
+                            <span class="add-on"><i class="icon-user"></i></span>
+                            <input type="text" placeholder="Name" ng-model="contact.fullName" null-if-empty />
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on"><i class="icon-envelope"></i></span>
+                            <input type="text" placeholder="Email" ng-model="contact.email" null-if-empty />
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on"><i class="icon-home"></i></span>
+                            <input type="text" placeholder="Phone" ng-model="contact.phone" null-if-empty />
+                        </div>
+                        <button class="btn" type="submit" ng-click="addContact()">Add</button>
+                    </fieldset>
+                </form>
+                <form>
+                    <fieldset>
+                        <legend>Refresh</legend>
+                        <button class="btn" type="submit" ng-click="refresh()"><i class="icon-refresh"></i> Refresh</button>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="span9">
+                <div ng-show="errors[0]" class="alert alert-error">
+                    <button type="button" class="close" ng-click="clearErrors()">&times;</button>
+                    <h4>Errors! (HTTP {{httpStatus}})</h4>
+                    <br/>
+                    <ul class="unstyled">
+                        <li ng-repeat="error in errors">{{error.path}} - {{error.message}}</li>
+                    </ul>
+                </div>
+                <table class="table table-hover" style="margin-top: 0.3em">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-hide="contacts[0]">
+                            <td colspan="5" style="text-align: center">No contacts found.</td>
+                        </tr>
+                        <tr ng-show="contacts[0]" ng-repeat="contact in contacts">
+                            <td>{{contact.id}}</td>
+                            <td>{{contact.fullName}}</td>
+                            <td>{{contact.email}}</td>
+                            <td>{{contact.phone}}</td>
+                            <td><a ng-click="removeContact(contact.id)"><i class="icon-trash"></i></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

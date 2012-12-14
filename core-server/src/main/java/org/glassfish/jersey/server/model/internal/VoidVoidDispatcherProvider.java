@@ -41,6 +41,8 @@ package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
 
+import javax.ws.rs.container.ResourceContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
@@ -61,6 +63,9 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 @Singleton
 final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
+    @Context
+    private ResourceContext resourceContext;
+
     private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {
 
         private VoidToVoidDispatcher(Invocable resourceMethod, InvocationHandler handler) {
@@ -80,6 +85,6 @@ final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provi
             return null;
         }
 
-        return new VoidToVoidDispatcher(resourceMethod, handler);
+        return resourceContext.initResource(new VoidToVoidDispatcher(resourceMethod, handler));
     }
 }
