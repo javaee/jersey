@@ -101,6 +101,11 @@
             <artifactId>jersey-media-multipart</artifactId>
             <version>${project.version}</version>
         </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-bean-validation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
    </dependencies>
     <build>
         <plugins>
@@ -121,6 +126,7 @@
                                ,org.glassfish.jersey.containers,
                                ,org.glassfish.jersey.containers.glassfish,
                                ,org.glassfish.jersey.media,
+                               ,org.glassfish.jersey.ext,
                                ,javax.ws.rs,
                                ,com.google.guava,
                                ,org.codehaus.jackson,
