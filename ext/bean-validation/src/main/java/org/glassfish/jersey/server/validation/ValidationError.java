@@ -68,34 +68,74 @@ public class ValidationError {
         this.invalidValue = invalidValue;
     }
 
+    /**
+     * Return the interpolated error message for this validation error.
+     *
+     * @return the interpolated error message for this validation error.
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Return the interpolated error message for this validation error.
+     *
+     * @param message the interpolated error message for this validation error.
+     */
     public void setMessage(final String message) {
         this.message = message;
     }
 
+    /**
+     * Return the string representation of the property path to the value.
+     *
+     * @return the string representation of the property path to the value.
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * Set the string representation of the property path to the value.
+     *
+     * @param path the string representation of the property path to the value.
+     */
     public void setPath(final String path) {
         this.path = path;
     }
 
+    /**
+     * Returns the string representation of the value failing to pass the constraint.
+     *
+     * @return the value failing to pass the constraint.
+     */
     public String getInvalidValue() {
         return invalidValue;
     }
 
+    /**
+     * Set the value failing to pass the constraint.
+     *
+     * @param invalidValue the value failing to pass the constraint.
+     */
     public void setInvalidValue(final String invalidValue) {
         this.invalidValue = invalidValue;
     }
 
+    /**
+     * Return the non-interpolated error message for this validation error.
+     *
+     * @return the non-interpolated error message for this validation error.
+     */
     public String getMessageTemplate() {
         return messageTemplate;
     }
 
+    /**
+     * Set the non-interpolated error message for this validation error.
+     *
+     * @param messageTemplate the non-interpolated error message for this validation error.
+     */
     public void setMessageTemplate(final String messageTemplate) {
         this.messageTemplate = messageTemplate;
     }

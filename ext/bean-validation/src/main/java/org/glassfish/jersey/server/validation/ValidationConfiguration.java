@@ -57,34 +57,78 @@ public class ValidationConfiguration {
     private ConstraintValidatorFactory constraintValidatorFactory;
     private ParameterNameProvider parameterNameProvider;
 
+    /**
+     * Return {@code MessageInterpolator} implementation used for configuration.
+     *
+     * @return instance of {@code MessageInterpolator} or {@code null} if not defined.
+     */
     public MessageInterpolator getMessageInterpolator() {
         return messageInterpolator;
     }
 
+    /**
+     * Return {@code TraversableResolver} implementation used for configuration.
+     *
+     * @return instance of {@code TraversableResolver} or {@code null} if not defined.
+     */
     public TraversableResolver getTraversableResolver() {
         return traversableResolver;
     }
 
+    /**
+     * Return {@code ConstraintValidatorFactory} implementation used for configuration.
+     *
+     * @return instance of {@code ConstraintValidatorFactory} or {@code null} if not defined.
+     */
     public ConstraintValidatorFactory getConstraintValidatorFactory() {
         return constraintValidatorFactory;
     }
 
+    /**
+     * Return {@code ParameterNameProvider} implementation used for configuration.
+     *
+     * @return instance of {@code ParameterNameProvider} or {@code null} if not defined.
+     */
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider;
     }
 
+    /**
+     * Defines the message interpolator.
+     * If {@code null} is passed, the default message interpolator is used.
+     *
+     * @param messageInterpolator message interpolator implementation.
+     */
     public void setMessageInterpolator(final MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
     }
 
+    /**
+     * Defines the traversable resolver.
+     * If {@code null} is passed, the default traversable resolver is used.
+     *
+     * @param traversableResolver traversable resolver implementation.
+     */
     public void setTraversableResolver(final TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
     }
 
+    /**
+     * Defines the constraint validator factory.
+     * If {@code null} is passed, the default constraint validator factory is used.
+     *
+     * @param constraintValidatorFactory constraint factory implementation.
+     */
     public void setConstraintValidatorFactory(final ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
     }
 
+    /**
+     * Defines the parameter name provider.
+     * If {@code null} is passed, the default parameter name provider is used.
+     *
+     * @param parameterNameProvider parameter name provider implementation.
+     */
     public void setParameterNameProvider(final ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
     }
