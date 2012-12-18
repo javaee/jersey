@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.collect.Lists;

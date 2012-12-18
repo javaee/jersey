@@ -48,7 +48,7 @@ import java.util.Set;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.base.Function;
@@ -259,7 +259,7 @@ public final class Resource implements Routed, ResourceModelComponent {
          * done automatically when the resource is built.
          *
          * @param relativePath The path of the new child resource relative to this resource.
-         * @return
+         * @return child resource builder.
          */
         public Builder addChildResource(String relativePath) {
             if (this.parentResource != null) {
@@ -274,6 +274,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         /**
          * Add an existing Resource as a child resource of current resource.
+         *
          * @param resource Resource to be added as child resource.
          */
         public void addChildResource(Resource resource) {
@@ -291,14 +292,11 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.childResources.addAll(resource.childResources);
 
             if (resourceLocator != null && resource.subResourceLocator != null) {
-                Errors.processWithException(new Errors.Closure<Object>() {
+                Errors.processWithException(new Runnable() {
                     @Override
-                    public Object invoke() {
-
+                    public void run() {
                         Errors.error(this, LocalizationMessages.RESOURCE_MERGE_CONFLICT_LOCATORS(Resource.Builder.this,
                                 resource, path), true);
-
-                        return null;
                     }
                 });
             } else if (resource.subResourceLocator != null) {
@@ -332,14 +330,11 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.resourceMethods.addAll(resourceBuilder.resourceMethods);
             this.childResources.addAll(resourceBuilder.childResources);
             if (Resource.Builder.this.resourceLocator != null && resourceBuilder.resourceLocator != null) {
-                Errors.processWithException(new Errors.Closure<Object>() {
+                Errors.processWithException(new Runnable() {
                     @Override
-                    public Object invoke() {
-
+                    public void run() {
                         Errors.warning(this, LocalizationMessages.RESOURCE_MERGE_CONFLICT_LOCATORS(Resource.Builder.this,
                                 resourceBuilder, path));
-
-                        return null;
                     }
                 });
             } else if (resourceBuilder.resourceLocator != null) {
@@ -373,12 +368,10 @@ public final class Resource implements Routed, ResourceModelComponent {
                     break;
                 case SUB_RESOURCE_LOCATOR:
                     if (resourceLocator != null) {
-                        Errors.processWithException(new Errors.Closure<Void>() {
+                        Errors.processWithException(new Runnable() {
                             @Override
-                            public Void invoke() {
-
+                            public void run() {
                                 Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS(this, path), true);
-                                return null;
                             }
                         });
 
@@ -723,6 +716,7 @@ public final class Resource implements Routed, ResourceModelComponent {
     /**
      * Provides resource methods and resource locator are available on the resource. The list is ordered so that resource
      * methods are positioned first before resource locator.
+     *
      * @return List of resource methods and resource locator.
      */
     public List<ResourceMethod> getAllMethods() {
@@ -736,6 +730,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     /**
      * Returns the list of child resources available on this resource.
+     *
      * @return Non-null list of child resources (may be empty).
      */
     public List<Resource> getChildResources() {

@@ -65,10 +65,11 @@ import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -306,9 +307,9 @@ public class ValidatorTest {
 
 
     private List<ResourceModelIssue> testResourceValidation(final Class<?>... resourceClasses) {
-        return Errors.process(new Errors.Closure<List<ResourceModelIssue>>() {
+        return Errors.process(new Producer<List<ResourceModelIssue>>() {
             @Override
-            public List<ResourceModelIssue> invoke() {
+            public List<ResourceModelIssue> call() {
                 List<Resource> resources = Lists.newArrayList();
                 for (Class<?> clazz : resourceClasses) {
                     resources.add(Resource.builder(clazz).build());
@@ -622,9 +623,9 @@ public class ValidatorTest {
     @Test
     public void testAmbiguousParams() throws Exception {
         LOGGER.info("A warning should be reported if ambiguous source of a parameter is seen");
-        Errors.process(new Errors.Closure<Void>() {
+        Errors.process(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
                 ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(resource);
@@ -632,8 +633,6 @@ public class ValidatorTest {
                 assertTrue(!validator.fatalIssuesFound());
                 assertEquals(4, validator.getIssueList().size());
                 assertEquals(6, Errors.getErrorMessages().size());
-
-                return null;
             }
         });
     }
@@ -691,9 +690,9 @@ public class ValidatorTest {
     @Test
     public void testTypeVariableResource() throws Exception {
         LOGGER.info("");
-        Errors.process(new Errors.Closure<Void>() {
+        Errors.process(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
                 ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(resource);
@@ -701,8 +700,6 @@ public class ValidatorTest {
                 assertTrue(!validator.fatalIssuesFound());
                 assertEquals(5, validator.getIssueList().size());
                 assertEquals(7, Errors.getErrorMessages().size());
-
-                return null;
             }
         });
     }

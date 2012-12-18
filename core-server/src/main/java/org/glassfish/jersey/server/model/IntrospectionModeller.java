@@ -64,11 +64,12 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -99,9 +100,9 @@ final class IntrospectionModeller {
      * @return new resource model builder for the introspected class.
      */
     public Resource.Builder createResourceBuilder() {
-        return Errors.processWithException(new Errors.Closure<Resource.Builder>() {
+        return Errors.processWithException(new Producer<Resource.Builder>() {
             @Override
-            public Resource.Builder invoke() {
+            public Resource.Builder call() {
                 return doCreateResourceBuilder();
             }
         });

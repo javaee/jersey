@@ -61,7 +61,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -71,11 +71,15 @@ import org.glassfish.hk2.api.ServiceLocator;
  * methods and sub resource locators.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
     private final ServiceLocator locator;
 
+    /**
+     * Create new resource method validator.
+     *
+     * @param locator HK2 service locator.
+     */
     public ResourceMethodValidator(ServiceLocator locator) {
         this.locator = locator;
     }
@@ -224,9 +228,9 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                                   final Object source,
                                   final String reportedSourceName,
                                   final String reportedParameterName, final boolean injectionsForbidden) {
-        Errors.processWithException(new Errors.Closure<Void>() {
+        Errors.processWithException(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 int counter = 0;
                 final Annotation[] annotations = parameter.getAnnotations();
                 for (Annotation a : annotations) {
@@ -250,8 +254,6 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                     Errors.warning(source, LocalizationMessages.PARAMETER_UNRESOLVABLE(reportedParameterName, paramType,
                             reportedSourceName));
                 }
-
-                return null;
             }
         });
     }

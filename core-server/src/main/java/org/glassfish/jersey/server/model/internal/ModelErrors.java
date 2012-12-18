@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.model.internal;
 import java.util.List;
 
 import org.glassfish.jersey.server.model.ResourceModelIssue;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
