@@ -47,7 +47,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.PerLookup;
 

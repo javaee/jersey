@@ -67,7 +67,7 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
@@ -1119,9 +1119,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         private void registerComponentsOf(final Application application) {
-            Errors.processWithException(new Errors.Closure<Object>() {
+            Errors.processWithException(new Runnable() {
                 @Override
-                public Object invoke() {
+                public void run() {
                     // First register instances that should take precedence over classes
                     // in case of duplicate registrations
                     final Set<Object> singletons = application.getSingletons();
@@ -1149,7 +1149,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
                             }
                         }));
                     }
-                    return null;
                 }
             });
         }

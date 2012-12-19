@@ -102,7 +102,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
@@ -231,11 +231,10 @@ public final class ApplicationHandler {
         this.application = createApplication(jaxrsApplicationClass);
         this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
 
-        Errors.processWithException(new Errors.Closure<Void>() {
+        Errors.processWithException(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 initialize();
-                return null;
             }
         });
     }
@@ -258,11 +257,10 @@ public final class ApplicationHandler {
         }
         this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
 
-        Errors.processWithException(new Errors.Closure<Void>() {
+        Errors.processWithException(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 initialize();
-                return null;
             }
         });
     }

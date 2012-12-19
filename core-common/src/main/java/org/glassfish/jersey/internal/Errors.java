@@ -37,21 +37,21 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.spi;
+package org.glassfish.jersey.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.Producer;
 
 /**
  * Errors utility used to file processing errors (e.g. validation, provider, resource building errors).
  * <p/>
  * Error filing methods ({@code #warning}, {@code #error}, {@code #fatal}) can be invoked only in the "error scope" which is
- * created by {@link #process(org.glassfish.jersey.spi.Errors.Closure)} or
- * {@link #processWithException(org.glassfish.jersey.spi.Errors.Closure)} methods. Filed error messages are present also in this
+ * created by {@link #process(Producer)} or
+ * {@link #processWithException(Producer)} methods. Filed error messages are present also in this
  * scope.
  * <p/>
  *
@@ -78,7 +78,7 @@ public class Errors {
     /**
      * Add an error message to the list of errors.
      *
-     * @param source source of the error.
+     * @param source  source of the error.
      * @param message message of the error.
      * @param isFatal indicates whether this error should be treated as fatal error.
      */
@@ -89,7 +89,7 @@ public class Errors {
     /**
      * Add a fatal error message to the list of errors.
      *
-     * @param source source of the error.
+     * @param source  source of the error.
      * @param message message of the error.
      */
     public static void fatal(final Object source, final String message) {
@@ -99,7 +99,7 @@ public class Errors {
     /**
      * Add a warning message to the list of errors.
      *
-     * @param source source of the error.
+     * @param source  source of the error.
      * @param message message of the error.
      */
     public static void warning(final Object source, final String message) {
@@ -137,7 +137,9 @@ public class Errors {
     }
 
     /**
-     * Indicates whether a fatal error message is present in the list of all errors.
+     * Check whether a fatal error message is present in the list of all errors.
+     *
+     * @return {@code true} if there are any fatal issues in this error context, {@code false} otherwise.
      */
     public static boolean fatalIssuesFound() {
         for (final ErrorMessage message : getInstance().issues) {
@@ -149,37 +151,69 @@ public class Errors {
     }
 
     /**
-     * Closure interface.
+     * Invoke given producer task and gather errors.
+     *
+     * After the task is complete all gathered errors are logged. No exception is thrown
+     * even if there is a fatal error present in the list of errors.
+     *
+     * @param producer producer task to be invoked.
+     * @return the result produced by the task.
      */
-    public static interface Closure<T> {
-
-        /**
-         * Invoke the closure.
-         */
-        public T invoke();
+    public static <T> T process(final Producer<T> producer) {
+        return process(producer, false);
     }
 
     /**
-     * Invoke given closure and gather errors. After the closure method returns all gathered errors are
-     * logged and even if there is a fatal error present in the list of errors no exception is thrown.
+     * Invoke given producer task and gather errors.
      *
-     * @param closure closure to be invoked.
+     * After the task is complete all gathered errors are logged. If there is a fatal error
+     * present in the list of errors an {@link ErrorMessagesException exception} is thrown.
+     *
+     * @param producer producer task to be invoked.
+     * @return the result produced by the task.
      */
-    public static <T> T process(final Closure<T> closure) {
-        return process(closure, false);
+    public static <T> T processWithException(final Producer<T> producer) {
+        return process(producer, true);
     }
 
     /**
-     * Invoke given closure and gather errors. After the closure method returns all gathered errors are
-     * logged and if there is a fatal error present in the list of errors an {@link ErrorMessagesException exception} is thrown.
+     * Invoke given task and gather errors.
      *
-     * @param closure closure to be invoked.
+     * After the task is complete all gathered errors are logged. No exception is thrown
+     * even if there is a fatal error present in the list of errors.
+     *
+     * @param task task to be invoked.
      */
-    public static <T> T processWithException(final Closure<T> closure) {
-        return process(closure, true);
+    public static void process(final Runnable task) {
+        process(new Producer<Void>() {
+
+            @Override
+            public Void call() {
+                task.run();
+                return null;
+            }
+        }, false);
     }
 
-    private static <T> T process(final Closure<T> closure, final boolean throwException) {
+    /**
+     * Invoke given task and gather errors.
+     *
+     * After the task is complete all gathered errors are logged. If there is a fatal error
+     * present in the list of errors an {@link ErrorMessagesException exception} is thrown.
+     *
+     * @param task task to be invoked.
+     */
+    public static void processWithException(final Runnable task) {
+        process(new Producer<Void>() {
+            @Override
+            public Void call() {
+                task.run();
+                return null;
+            }
+        }, true);
+    }
+
+    private static <T> T process(final Producer<T> producer, final boolean throwException) {
         Errors instance = errors.get();
         if (instance == null) {
             instance = new Errors();
@@ -189,7 +223,7 @@ public class Errors {
 
         RuntimeException caught = null;
         try {
-            return closure.invoke();
+            return producer.call();
         } catch (RuntimeException re) {
             // If a runtime exception is caught then report errors and rethrow.
             caught = re;
@@ -217,31 +251,47 @@ public class Errors {
     }
 
     /**
-     * Return all error messages.
+     * Get the list of all error messages.
      *
-     * @return non-null error list.
+     * @return non-null error message list.
      */
     public static List<ErrorMessage> getErrorMessages() {
         return getErrorMessages(false);
     }
 
     /**
-     * Return list of error messages filed after the mark flag was set.
+     * Get the list of error messages.
      *
+     * The {@code afterMark} flag indicates whether only those issues should be returned that were
+     * added after a {@link #mark() mark has been set}.
+     *
+     * @param afterMark if {@code true}, only issues added after a mark has been set are returned,
+     *                  if {@code false} all issues are returned.
      * @return non-null error list.
      */
     public static List<ErrorMessage> getErrorMessages(final boolean afterMark) {
         return getInstance()._getErrorMessages(afterMark);
     }
 
+    /**
+     * Set a mark at a current position in the errors messages list.
+     */
     public static void mark() {
         getInstance()._mark();
     }
 
+    /**
+     * Remove a previously set mark, if any.
+     */
     public static void unmark() {
         getInstance()._unmark();
     }
 
+    /**
+     * Removes all issues that have been added since the last marked position.
+     *
+     * If no mark has been set in the errors list, the method call is ignored.
+     */
     public static void reset() {
         getInstance()._reset();
     }
@@ -307,9 +357,9 @@ public class Errors {
         }
 
         /**
-         * Get encountered errors.
+         * Get encountered error messages.
          *
-         * @return encountered errors.
+         * @return encountered error messages.
          */
         public List<ErrorMessage> getMessages() {
             return messages;

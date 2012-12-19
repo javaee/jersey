@@ -54,7 +54,7 @@ import java.util.List;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -146,16 +146,15 @@ public final class ComponentModelValidator implements ResourceModelVisitor {
      * @param component resource model component.
      */
     public void validate(final ResourceModelComponent component) {
-        Errors.process(new Errors.Closure<Void>() {
+        Errors.process(new Runnable() {
             @Override
-            public Void invoke() {
+            public void run() {
                 Errors.mark();
 
                 validateWithErrors(component);
                 issueList.addAll(ModelErrors.getErrorsAsResourceModelIssues(true));
 
                 Errors.unmark();
-                return null;
             }
         });
     }

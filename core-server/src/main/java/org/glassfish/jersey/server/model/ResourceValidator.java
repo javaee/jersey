@@ -40,7 +40,7 @@
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 
 /**
  * Validator ensuring that resource are correct (for example that root resources contains path, etc.).

@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.model;
 import java.util.Map;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.collect.Maps;

@@ -55,7 +55,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.Errors;
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Assert;

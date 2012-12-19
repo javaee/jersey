@@ -52,11 +52,12 @@ import javax.ws.rs.core.Feature;
 
 import javax.inject.Scope;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.spi.Errors;
 
 import org.glassfish.hk2.utilities.Binder;
 
@@ -393,9 +394,9 @@ public class ComponentBag {
                                   final Map<Class<?>, Integer> contractMap,
                                   final Inflector<ContractProvider.Builder, ContractProvider> modelEnhancer) {
 
-        return Errors.process(new Errors.Closure<Boolean>() {
+        return Errors.process(new Producer<Boolean>() {
             @Override
-            public Boolean invoke() {
+            public Boolean call() {
                 if (models.containsKey(componentClass)) {
                     Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass), false);
                     return false;
