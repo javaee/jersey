@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,6 +52,9 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.ProviderInstanceBindingBinder;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
 import org.junit.Test;

@@ -188,7 +188,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                 RoutingContext rc = locator.getService(RoutingContext.class);
 
                 Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
-                        new RankedComparator<ContainerResponseFilter>(), filters, rc.getBoundResponseFilters()
+                        new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), filters, rc.getBoundResponseFilters()
                 );
 
                 for (ContainerResponseFilter filter : sortedResponseFilters) {
