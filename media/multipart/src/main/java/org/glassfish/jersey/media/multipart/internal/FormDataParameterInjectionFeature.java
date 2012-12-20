@@ -43,6 +43,9 @@ package org.glassfish.jersey.media.multipart.internal;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
@@ -56,12 +59,20 @@ import org.glassfish.hk2.api.TypeLiteral;
  */
 public class FormDataParameterInjectionFeature implements Feature {
 
+    private static class ResolverBinder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(FormDataParamValueFactoryProvider.InjectionResolver.class)
+                    .to(new TypeLiteral<InjectionResolver<FormDataParam>>() {
+                    }).in(Singleton.class);
+        }
+    }
+
     @Override
     public boolean configure(final FeatureContext context) {
         context.register(FormDataParamValueFactoryProvider.class, ValueFactoryProvider.class);
-        context.register(FormDataParamValueFactoryProvider.InjectionResolver.class,
-                new TypeLiteral<InjectionResolver<FormDataParam>>() {
-                }.getRawType());
+        context.register(new ResolverBinder());
         return true;
     }
 }

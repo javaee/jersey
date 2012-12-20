@@ -44,39 +44,25 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * Field-injected version of the {@link FormDataParam} injection testing resource.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Path("/form")
-public class MultiPartResource {
-
-    @POST
-    @Path("part")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public String post(@FormDataParam("part") String s) {
-        return s;
-    }
-
-    @POST
-    @Path("part-file-name")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public String post(
-            @FormDataParam("part") String s,
-            @FormDataParam("part") FormDataContentDisposition d) {
-        return s + ":" + d.getFileName();
-    }
+@Path("/form-field-injected")
+public class MultiPartFieldInjectedResource {
+    @FormDataParam("string") private String s;
+    @FormDataParam("string") private FormDataContentDisposition sd;
+    @FormDataParam("bean") private Bean b;
+    @FormDataParam("bean") private FormDataContentDisposition bd;
 
     @POST
     @Path("xml-jaxb-part")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public String post(
-            @FormDataParam("string") String s,
-            @FormDataParam("string") FormDataContentDisposition sd,
-            @FormDataParam("bean") Bean b,
-            @FormDataParam("bean") FormDataContentDisposition bd) {
+    public String post() {
         return s + ":" + sd.getFileName() + "," + b.value + ":" + bd.getFileName();
     }
 }
