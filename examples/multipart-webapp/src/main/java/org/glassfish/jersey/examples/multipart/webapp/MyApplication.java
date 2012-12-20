@@ -51,6 +51,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication extends ResourceConfig {
 
     public MyApplication() {
-        super(MultiPartResource.class, MultiPartFeature.class);
+        super(MultiPartResource.class, MultiPartFieldInjectedResource.class, MultiPartFeature.class);
     }
 }

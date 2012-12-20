@@ -157,6 +157,21 @@ public class MultiPartWebAppTest extends JerseyTest {
         assertEquals("STRING:string,BEAN:bean", s);
     }
 
+    @Test
+    public void testFieldInjectedXmlJAXBPart() {
+        final WebTarget target = target().path("form-field-injected/xml-jaxb-part");
+
+        final FormDataMultiPart mp = new FormDataMultiPart();
+        mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("bean").fileName("bean").build(),
+                new Bean("BEAN"),
+                MediaType.APPLICATION_XML_TYPE));
+        mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("string").fileName("string").build(),
+                "STRING"));
+
+        final String s = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
+        assertEquals("STRING:string,BEAN:bean", s);
+    }
+
     class NSResolver implements NamespaceContext {
 
         private String prefix;
