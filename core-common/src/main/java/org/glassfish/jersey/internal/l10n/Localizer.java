@@ -39,11 +39,15 @@
  */
 package org.glassfish.jersey.internal.l10n;
 
+import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import org.glassfish.hk2.osgiresourcelocator.ResourceFinder;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -108,17 +112,25 @@ public class Localizer {
                                 if (osgiRegistry != null) {
                                     bundle = osgiRegistry.getResourceBundle(bundlename);
                                 } else {
-                                    return getDefaultMessage(l);
+                                    final String path = new StringBuilder(bundlename.replace('.', '/')).append(".properties").toString();
+                                    final URL bundleUrl = ResourceFinder.findEntry(path);
+                                    if (bundleUrl != null) {
+                                        try {
+                                            bundle = new PropertyResourceBundle(bundleUrl.openStream());
+                                        } catch (IOException ex) {
+                                            // ignore
+                                        }
+                                    }
                                 }
                         }
                     }
                 }
 
-                _resourceBundles.put(bundlename, bundle);
-            }
-
-            if (bundle == null) {
-                return getDefaultMessage(l);
+                if (bundle == null) {
+                    return getDefaultMessage(l);
+                } else {
+                    _resourceBundles.put(bundlename, bundle);
+                }
             }
 
             if (key == null) {
