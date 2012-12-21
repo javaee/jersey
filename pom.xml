@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-m11</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -1001,8 +1001,7 @@
         <!--
             Change jaxrs.api.version also in:
                 examples/osgi-helloworld-webapp/lib-bundle/pom.xml
-                examples/server-async-webapp/standalone/pom.xml <- change jersey version
-        -->
+                examples/server-async-webapp/standalone/pom.xml <- change jersey version -->
         <jaxrs.api.version>2.0-m15</jaxrs.api.version>
         <hk2.version>2.1.51</hk2.version>
         <grizzly2.version>2.3-beta8</grizzly2.version>
