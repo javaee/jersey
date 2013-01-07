@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -818,9 +818,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
-
     private <T> T translate(ClientResponse response, RequestScope scope, GenericType<T> responseType)
             throws ClientException {
+        if (responseType.getRawType() == Response.class) {
+            //noinspection unchecked
+            return (T) new ScopedJaxrsResponse(response, scope);
+        }
+
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
                 return new InboundJaxrsResponse(response).readEntity(responseType);

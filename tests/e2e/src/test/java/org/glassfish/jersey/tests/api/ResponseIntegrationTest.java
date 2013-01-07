@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -117,6 +118,14 @@ public class ResponseIntegrationTest extends JerseyTest {
         assertEquals(status, response.getStatus());
     }
 
+    private void testGenericStatus(int status) {
+        final GenericType<Response> genericType = new GenericType<Response>(Response.class);
+        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN).get(genericType);
+
+        assertEquals(status, response.getStatus());
+    }
+
+
     /*
      * Client send request to a resource,
      * verify that correct status code returned
@@ -149,5 +158,39 @@ public class ResponseIntegrationTest extends JerseyTest {
             testStatus(i);
         }
     }
+
+    /*
+     * Client send request to a resource,
+     * verify that correct status code returned
+     */
+    @Test
+    public void testGenericStatuses() {
+        final int[] statuses = new int[]{
+            200,
+            201,
+            202,
+            204,
+            303,
+            304,
+            307,
+            401,
+            403,
+            404,
+            406,
+            409,
+            410,
+            411,
+            412,
+            415,
+            500,
+            503
+        };
+
+        for (Integer i : statuses) {
+            System.out.println("### Testing status: " + i);
+            testGenericStatus(i);
+        }
+    }
+
 
 }
