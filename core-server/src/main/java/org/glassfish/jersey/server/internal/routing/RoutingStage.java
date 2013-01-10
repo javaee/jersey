@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
+import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
@@ -101,11 +102,13 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
         final TransformableData<ContainerRequest, ContainerResponse> result =
                 _apply(request, routingRoot);
 
+        Stage<ContainerRequest> nextStage = null;
         if (result.hasInflector()) {
             routingContextFactory.get().setInflector(result.inflector());
+            nextStage = getDefaultNext();
         }
 
-        return Continuation.of(result.data(), getDefaultNext());
+        return Continuation.of(result.data(), nextStage);
     }
 
     @SuppressWarnings("unchecked")

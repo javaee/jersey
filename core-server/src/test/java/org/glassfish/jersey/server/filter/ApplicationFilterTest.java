@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.BindingPriority;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -53,6 +55,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.inject.ProviderInstanceBindingBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
@@ -62,6 +65,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 
+import junit.framework.Assert;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -133,6 +137,47 @@ public class ApplicationFilterTest {
         assertEquals(1, called.intValue());
     }
 
+    @Test
+    public void testFilterCalledOn200() throws Exception {
+        final SimpleFilter simpleFilter = new SimpleFilter();
+        final ResourceConfig resourceConfig = new ResourceConfig(SimpleResource.class).register(simpleFilter);
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
+        final ContainerResponse response = application.apply(RequestContextBuilder.from("/simple", "GET").build()).get();
+        assertEquals(200, response.getStatus());
+        Assert.assertTrue(simpleFilter.called);
+    }
+
+    @Test
+    public void testFilterNotCalledOn404() throws Exception {
+        // not found
+        final SimpleFilter simpleFilter = new SimpleFilter();
+        final ResourceConfig resourceConfig = new ResourceConfig(SimpleResource.class).register(simpleFilter);
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
+        final ContainerResponse response = application.apply(RequestContextBuilder.from("/NOT-FOUND", "GET").build()).get();
+        assertEquals(404, response.getStatus());
+        Assert.assertFalse(simpleFilter.called);
+    }
+
+    @Test
+    public void testFilterNotCalledOn405() throws Exception {
+        // method not allowed
+        final SimpleFilter simpleFilter = new SimpleFilter();
+        final ResourceConfig resourceConfig = new ResourceConfig(SimpleResource.class).register(simpleFilter);
+        final ApplicationHandler application = new ApplicationHandler(resourceConfig);
+        final ContainerResponse response = application.apply(RequestContextBuilder.from("/simple", "POST").entity("entity")
+                .build()).get();
+        assertEquals(405, response.getStatus());
+        Assert.assertFalse(simpleFilter.called);
+    }
+
+    @Path("simple")
+    public static class SimpleResource {
+        @GET
+        public String get() {
+            return "get";
+        }
+    }
+
     public abstract class CommonFilter implements ContainerRequestFilter {
 
         public boolean called = false;
@@ -144,6 +189,13 @@ public class ApplicationFilterTest {
         }
 
         protected abstract void verify();
+    }
+
+    public class SimpleFilter extends CommonFilter {
+
+        @Override
+        protected void verify() {
+        }
     }
 
     @BindingPriority(1)

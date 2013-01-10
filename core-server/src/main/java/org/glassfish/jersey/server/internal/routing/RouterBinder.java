@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.UriInfo;
 
 import javax.inject.Inject;
@@ -100,6 +101,7 @@ public class RouterBinder extends AbstractBinder {
         bindAsContract(UriRoutingContext.class).in(RequestScoped.class);
         bindFactory(UriRoutingContextFactory.class).
                 to(RoutingContext.class).
+                to(ResourceInfo.class).
                 to(ExtendedUriInfo.class).
                 to(UriInfo.class).
                 in(RequestScoped.class);
