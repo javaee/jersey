@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,7 +79,7 @@ public class WadlGeneratorConfigurationLoaderTest {
         resourceConfig.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
                 MyWadlGeneratorConfig.class.getName());
 
-        final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig)
+        final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator();
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
 
@@ -91,7 +91,7 @@ public class WadlGeneratorConfigurationLoaderTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, config);
-        final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig)
+        final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator();
         Assert.assertTrue(config.createWadlGenerator() instanceof MyWadlGenerator);
     }

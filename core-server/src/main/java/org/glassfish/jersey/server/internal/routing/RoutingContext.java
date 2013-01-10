@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -185,4 +186,14 @@ public interface RoutingContext extends ResourceInfo {
      * collection if no inflector matched yet).
      */
     public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors();
+
+    /**
+     * Push {@code resource} containing {@link org.glassfish.jersey.server.model.ResourceMethod resource method}
+     * matched by resource matching algorithm. The resource can be both, resource and child resource, and the flag
+     * {@code isChildResource} distinguish between them.
+     *
+     * @param resource Resource or child resource to be pushed.
+     * @param isChildResource True if the {@code resource} is child resource, false otherwise.
+     */
+    public void pushMatchedResource(Resource resource, boolean isChildResource);
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,7 +95,6 @@ public final class ComponentModelValidator implements ResourceModelVisitor {
         this.locator = locator;
 
         validators = Lists.newArrayList();
-        validators.add(new ResourceModelValidator());
         validators.add(new ResourceValidator());
         validators.add(new AmbiguousMethodValidator(locator.getService(MessageBodyWorkers.class)));
         validators.add(new ResourceMethodValidator(locator));
@@ -132,7 +131,7 @@ public final class ComponentModelValidator implements ResourceModelVisitor {
 
     /**
      * Removes all issues from the current issue list. The method could be used
-     * to re-use the same ResourceModelValidator for another resource model.
+     * to re-use the same {@link ComponentModelValidator} for another resource model.
      */
     public void cleanIssueList() {
         issueList.clear();

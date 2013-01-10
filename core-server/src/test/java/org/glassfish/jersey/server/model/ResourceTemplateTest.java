@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
+import java.util.concurrent.ExecutionException;
+
 import javax.ws.rs.GET;
-import javax.ws.rs.OPTIONS;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -51,64 +53,62 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
- * Runtime model builder test.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
- * @author Jakub Podlesak
  */
-public class RMBuilderTest {
-
-    @Path("/helloworld")
-    public static class HelloWorldResource {
-
+public class ResourceTemplateTest {
+    @Path("{templateA}")
+    public static class ResourceA {
         @GET
-        @Produces("text/plain")
-        public String getHello() {
-            return "hello";
+        public String getA() {
+            return "getA";
         }
+    }
 
-        @OPTIONS
-        @Produces("text/plain")
-        public String getOptions() {
-            return "GET";
+    @Path("{templateB}")
+    public static class ResourceB {
+        @POST
+        public String postB(String entity) {
+            return "postB";
         }
+    }
 
+
+    @Path("resq")
+    public static class ResourceQ {
         @GET
-        @Path("another/{b}")
-        @Produces("text/plain")
-        public String getAnother() {
-            return "another";
+        @Path("{path}")
+        public String getA() {
+            return "getA";
+        }
+
+        @POST
+        @Path("{temp}")
+        public String post() {
+            return "getB";
         }
     }
 
-    private ApplicationHandler createApplication(Class<?>... classes) {
-        return new ApplicationHandler(new ResourceConfig(classes));
+    @Test
+    public void test() throws ExecutionException, InterruptedException {
+        ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class, ResourceB.class);
+        ApplicationHandler app = new ApplicationHandler(resourceConfig);
+        final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("aaa", "OPTIONS")
+                .accept(MediaType.TEXT_PLAIN).build()).get();
+        System.out.println((String) containerResponse.getEntity());
+
+
     }
 
     @Test
-    public void testHelloWorld() throws Exception {
-        ApplicationHandler app = createApplication(HelloWorldResource.class);
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld", "GET").build()).get();
+    public void testChild() throws ExecutionException, InterruptedException {
+        ResourceConfig resourceConfig = new ResourceConfig(ResourceQ.class);
+        ApplicationHandler app = new ApplicationHandler(resourceConfig);
+        final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("resq/a", "GET").build()).get();
 
-        assertEquals("hello", response.getEntity());
+
     }
 
-    @Test
-    public void testOptions() throws Exception {
-        ApplicationHandler app = createApplication(HelloWorldResource.class);
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld", "OPTIONS")
-                .accept(MediaType.TEXT_PLAIN_TYPE).build()).get();
-
-        assertEquals("GET", response.getEntity());
-    }
-
-    @Test
-    public void testSubResMethod() throws Exception {
-        ApplicationHandler app = createApplication(HelloWorldResource.class);
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/helloworld/another/b", "GET").build()).get();
-
-        assertEquals("another", response.getEntity());
-    }
 }

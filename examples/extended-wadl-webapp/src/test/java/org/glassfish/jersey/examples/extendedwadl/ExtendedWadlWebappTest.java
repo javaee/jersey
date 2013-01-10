@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,6 +86,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     public void testExtendedWadl() throws Exception {
         String wadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
 
+        System.out.println(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
@@ -97,6 +98,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     public void testWadlOptionsMethod() throws Exception {
         String wadl = target().path("items").request(MediaTypes.WADL).options(String.class);
 
+        System.out.println(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));

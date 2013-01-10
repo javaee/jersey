@@ -48,7 +48,7 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.uri.ExtendedUriInfo;
+import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.api.Factory;

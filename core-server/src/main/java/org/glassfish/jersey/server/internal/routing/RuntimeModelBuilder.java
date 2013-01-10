@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -118,6 +118,7 @@ public final class RuntimeModelBuilder {
     private TreeMap<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> subResourceAcceptors =
             Maps.newTreeMap(PathPattern.COMPARATOR);
 
+
     /**
      * Injection constructor.
      *
@@ -184,7 +185,48 @@ public final class RuntimeModelBuilder {
             // ignore sub-resources if not in a sub-resource modelling mode.
             return;
         }
+
+        final PushMatchedResourceRouter pushMatchedResourceRouter = locator.createAndInitialize(PushMatchedResourceRouter.Builder.class)
+                .setResource(resource).build();
+
         // prepare & add resource method acceptors
+        if (!resource.getAllMethods().isEmpty()) {
+            storeResourceMethods(resource, subResourceMode, pushMatchedResourceRouter);
+        }
+
+        // prepare & add sub-resource method and locator acceptors.
+        if (!resource.getChildResources().isEmpty()) {
+            storeChildResourceMethods(resource, subResourceMode, pushMatchedResourceRouter);
+        }
+    }
+
+    private void storeChildResourceMethods(Resource resource, boolean subResourceMode, PushMatchedResourceRouter
+            pushMatchedResourceRouter) {
+        final PathPattern resourcePath =
+                (subResourceMode) ? PathPattern.OPEN_ROOT_PATH_PATTERN : resource.getPathPattern();
+
+        final TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resource,
+                resourcePath);
+        for (Resource child : resource.getChildResources()) {
+            final PushMatchedResourceRouter childPushMatchedResourceRouter = locator.createAndInitialize(PushMatchedResourceRouter
+                    .Builder.class).setResource(child).setChildResourceMode(true).build();
+            PathPattern childRelativePath = new PathPattern(child.getPath());
+
+            List<MethodAcceptorPair> samePathMethodAcceptorPairs = getAcceptorList(sameResourcePathMap,
+                    childRelativePath);
+
+            for (ResourceMethod resourceMethod : child.getAllMethods()) {
+                samePathMethodAcceptorPairs.add(
+                        new MethodAcceptorPair(resourceMethod, child, pushMatchedResourceRouter, childPushMatchedResourceRouter,
+                                createSingleMethodAcceptor(resourceMethod,
+                                        subResourceMode)));
+            }
+        }
+    }
+
+    private void storeResourceMethods(final Resource resource, final boolean subResourceMode,
+                                      final PushMatchedResourceRouter pushMatchedResourceRouter) {
+
         if (!resource.getResourceMethods().isEmpty()) {
             final PathPattern closedResourcePathPattern =
                     (subResourceMode) ? PathPattern.END_OF_PATH_PATTERN : PathPattern.asClosed(resource.getPathPattern());
@@ -195,7 +237,7 @@ public final class RuntimeModelBuilder {
                     new Function<ResourceMethod, MethodAcceptorPair>() {
                         @Override
                         public MethodAcceptorPair apply(ResourceMethod methodModel) {
-                            return new MethodAcceptorPair(methodModel, resource,
+                            return new MethodAcceptorPair(methodModel, resource, pushMatchedResourceRouter,
                                     createSingleMethodAcceptor(methodModel, subResourceMode));
                         }
                     }));
@@ -203,44 +245,26 @@ public final class RuntimeModelBuilder {
 
         final ResourceMethod resourceLocator = resource.getResourceLocator();
         if (resourceLocator != null) {
-            TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resource
-                    .getPathPattern());
+            final TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resource,
+                    resource
+                            .getPathPattern());
 
             List<MethodAcceptorPair> locatorList = getAcceptorList(sameResourcePathMap, PathPattern.OPEN_ROOT_PATH_PATTERN);
 
             locatorList.add(
-                    new MethodAcceptorPair(resourceLocator, resource, createSingleMethodAcceptor(resourceLocator,
-                            subResourceMode)));
-        }
-
-        // prepare & add sub-resource method and locator acceptors.
-        if (resource.getChildResources().size() > 0) {
-            final PathPattern resourcePath =
-                    (subResourceMode) ? PathPattern.OPEN_ROOT_PATH_PATTERN : resource.getPathPattern();
-
-            TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = getPatternAcceptorListMap(resourcePath);
-            for (Resource child : resource.getChildResources()) {
-                PathPattern childRelativePath = new PathPattern(child.getPath());
-
-                List<MethodAcceptorPair> samePathMethodAcceptorPairs = getAcceptorList(sameResourcePathMap,
-                        childRelativePath);
-
-                for (ResourceMethod resourceMethod : child.getAllMethods()) {
-                    samePathMethodAcceptorPairs.add(
-                            new MethodAcceptorPair(resourceMethod, resource, createSingleMethodAcceptor(resourceMethod,
+                    new MethodAcceptorPair(resourceLocator, resource, pushMatchedResourceRouter,
+                            createSingleMethodAcceptor(resourceLocator,
                                     subResourceMode)));
-                }
-
-            }
         }
     }
 
-    private TreeMap<PathPattern, List<MethodAcceptorPair>> getPatternAcceptorListMap(PathPattern pathPattern) {
+    private TreeMap<PathPattern, List<MethodAcceptorPair>> getPatternAcceptorListMap(Resource resource, PathPattern pathPattern) {
         TreeMap<PathPattern, List<MethodAcceptorPair>> sameResourcePathMap = subResourceAcceptors.get(pathPattern);
         if (sameResourcePathMap == null) {
             sameResourcePathMap = Maps.newTreeMap(PathPattern.COMPARATOR);
             subResourceAcceptors.put(pathPattern, sameResourcePathMap);
         }
+
         return sameResourcePathMap;
     }
 
@@ -268,11 +292,7 @@ public final class RuntimeModelBuilder {
         }
 
         // TODO: solve this via instance-based method handler model?
-        if (subResourceMode) {
-            return methodAcceptor;
-        } else {
-            return pushHandlerAcceptorBuilder.build(resourceMethod.getInvocable().getHandler(), methodAcceptor);
-        }
+        return pushHandlerAcceptorBuilder.build(resourceMethod.getInvocable().getHandler(), methodAcceptor, subResourceMode);
     }
 
 
@@ -327,6 +347,7 @@ public final class RuntimeModelBuilder {
             return routedBuilder(lastRoutedBuilder).route(pathPattern)
                     .to(methodAcceptor);
         } else {
+
             return routedBuilder(lastRoutedBuilder).route(pathPattern)
                     .to(uriPushingAcceptor)
                     .to(methodAcceptor);
@@ -360,42 +381,55 @@ public final class RuntimeModelBuilder {
 
         // route sub-resource method and locator acceptors
         if (!subResourceAcceptors.isEmpty()) {
-            for (Map.Entry<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> singleResourcePathEntry
-                    : subResourceAcceptors.entrySet()) {
-
+            for (Map.Entry<PathPattern, TreeMap<PathPattern, List<MethodAcceptorPair>>> singleResourcePathEntry :
+                    subResourceAcceptors.entrySet()) {
                 RouteToPathBuilder<PathPattern> srRoutedBuilder = null;
-                for (Map.Entry<PathPattern, List<MethodAcceptorPair>> singlePathEntry :
-                        singleResourcePathEntry.getValue().entrySet()) {
+
+                final TreeMap<PathPattern, List<MethodAcceptorPair>> subAcceptors = singleResourcePathEntry.getValue();
+                for (Map.Entry<PathPattern, List<MethodAcceptorPair>> singlePathEntry
+                        : subAcceptors.entrySet()) {
+                    Resource childResource = null;
 
                     // there can be multiple sub-resource methods on the same path
                     // but only a single sub-resource locator.
                     List<MethodAcceptorPair> resourceMethods = Lists.newLinkedList();
                     MethodAcceptorPair resourceLocator = null;
 
-                    for (MethodAcceptorPair methodAcceptorPair : singlePathEntry.getValue()) {
+                    final List<MethodAcceptorPair> methodAcceptorPairs = singlePathEntry.getValue();
+                    for (MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
+                        if (childResource == null) {
+                            childResource = methodAcceptorPair.resource;
+                        }
+
                         if (methodAcceptorPair.model.getType() == ResourceMethod.JaxrsType.RESOURCE_METHOD) {
                             resourceMethods.add(methodAcceptorPair);
                         } else {
                             resourceLocator = methodAcceptorPair;
                         }
                     }
+                    final PathPattern childResourcePathPattern = singlePathEntry.getKey();
+
                     if (!resourceMethods.isEmpty()) {
-                        final PathPattern subResourceMethodPath = PathPattern.asClosed(singlePathEntry.getKey());
+                        final PathPattern subResourceMethodPath = PathPattern.asClosed(childResourcePathPattern);
                         srRoutedBuilder = routedBuilder(srRoutedBuilder).route(subResourceMethodPath)
                                 .to(uriPushingRouter)
                                 .to(methodSelectingAcceptorBuilder.build(workers, resourceMethods));
                     }
 
                     if (resourceLocator != null) {
-                        srRoutedBuilder = routedBuilder(srRoutedBuilder).route(singlePathEntry.getKey())
-                                .to(uriPushingRouter)
-                                .to(resourceLocator.router);
+                        srRoutedBuilder = routedBuilder(srRoutedBuilder).route(childResourcePathPattern)
+                                .to(uriPushingRouter);
+                        for (Router router : resourceLocator.router) {
+                            srRoutedBuilder = srRoutedBuilder.to(router);
+                        }
                     }
                 }
                 assert srRoutedBuilder != null;
+
+
                 lastRoutedBuilder = routeMethodAcceptor(
-                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter, srRoutedBuilder.build(),
-                        subResourceMode);
+                        lastRoutedBuilder, singleResourcePathEntry.getKey(), uriPushingRouter,
+                        srRoutedBuilder.build(), subResourceMode);
             }
             subResourceAcceptors.clear();
         }

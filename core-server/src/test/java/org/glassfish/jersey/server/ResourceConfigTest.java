@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -117,7 +117,7 @@ public class ResourceConfigTest {
     @Test
     public void testResourceConfigMergeApplications() throws Exception {
         // No custom binder.
-        ApplicationHandler ah = new ApplicationHandler(ResourceConfig.class);
+        ApplicationHandler ah = new ApplicationHandler(EmtpyResourceConfigWithoutWadl.class);
         assertEquals(0, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
 
         // with MyBinder
@@ -133,8 +133,15 @@ public class ResourceConfigTest {
         assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
     }
 
+    public static class EmtpyResourceConfigWithoutWadl extends ResourceConfig {
+        public EmtpyResourceConfigWithoutWadl() {
+            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+        }
+    }
+
     public static class MyResourceConfig1 extends ResourceConfig {
         public MyResourceConfig1() {
+            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
             register(new MyBinder());
         }
     }
@@ -148,6 +155,7 @@ public class ResourceConfigTest {
         }
 
         public MyResourceConfig2(int id) {
+            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
             this.id = id;
             registerClasses(MyResource.class);
         }

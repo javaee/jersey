@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,6 +59,9 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ExtendedResourceContext;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceModel;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -72,12 +76,15 @@ import com.google.common.collect.Sets;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyResourceContext implements ResourceContext {
+public class JerseyResourceContext implements ExtendedResourceContext {
 
     private final ServiceLocator locator;
 
     private final Set<Class<?>> bindingCache;
     private final Object bindingCacheLock;
+
+    private volatile ResourceModel resourceModel;
+
 
     /**
      * Injection constructor.
@@ -255,6 +262,20 @@ public class JerseyResourceContext implements ResourceContext {
         bindingCache.add(resourceClass);
     }
 
+    @Override
+    public ResourceModel getResourceModel() {
+        return this.resourceModel;
+    }
+
+    /**
+     * Set the {@link ResourceModel resource mode} of the application associated with this context.
+     * @param resourceModel Resource model on which the {@link org.glassfish.jersey.server.ApplicationHandler application}
+     *                      is based.
+     */
+    public void setResourceModel(ResourceModel resourceModel) {
+        this.resourceModel = resourceModel;
+    }
+
     /**
      * Injection binder for {@link JerseyResourceContext}.
      */
@@ -262,7 +283,8 @@ public class JerseyResourceContext implements ResourceContext {
 
         @Override
         protected void configure() {
-            bindAsContract(JerseyResourceContext.class).to(ResourceContext.class).in(Singleton.class);
+            bindAsContract(JerseyResourceContext.class).to(ResourceContext.class).to(ExtendedResourceContext.class)
+                    .in(Singleton.class);
         }
     }
 

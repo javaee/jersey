@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,19 +46,19 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
- * Validator ensuring that {@link Resource resource} does not contain ambiguous resource methods. Resource method is
- * ambiguous if it process same HTTP method on the same path, produces and consumes same media types
- * as any other method in the resource.
+ * Validator ensuring that {@link ResourceModel resource model } does not contain ambiguous resource methods. Resource method is
+ * ambiguous if it process same HTTP method on the same {@link PathPattern path pattern}, produces and consumes same media types
+ * as any other method in the resource model. Resource methods can be ambiguous even if they are defined in different resource if
+ * these resource have the same {@link PathPattern path pattern}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
@@ -73,34 +73,47 @@ public class AmbiguousMethodValidator extends AbstractResourceModelVisitor {
 
 
     @Override
-    public void visitResource(final Resource resource) {
-        checkConsumesProducesAmbiguities(resource);
+    public void visitResourceModel(final ResourceModel resourceModel) {
+        for (Map.Entry<PathPattern, List<Resource>> resourceEntry : resourceModel.getPathPatternToResources().entrySet()) {
+            final List<Resource> resources = resourceEntry.getValue();
+            final PathPattern resourceGroupPathPattern = resourceEntry.getKey();
+
+            checkResourceGroup(resourceModel, resourceGroupPathPattern, resources);
+        }
+
+        // validate non-root resources
+        final List<Resource> nonRootResources = Lists.newArrayList(resourceModel.getResources());
+        nonRootResources.removeAll(resourceModel.getRootResources());
+        for (Resource nonRootResource : nonRootResources) {
+            checkResourceGroup(resourceModel, PathPattern.EMPTY_PATTERN, Lists.newArrayList(nonRootResource));
+        }
+
+
     }
 
-    private void checkConsumesProducesAmbiguities(Resource resource) {
-        final Map<PathPattern, List<ResourceMethod>> methodMap = Maps.newHashMap();
-        for (Resource childResource : resource.getChildResources()) {
-            if (childResource.getAllMethods().size() > 0) {
-                getMethodList(methodMap, childResource.getPathPattern()).addAll(childResource.getAllMethods());
-            }
+    private void checkResourceGroup(ResourceModel resourceModel, PathPattern resourceGroupPathPattern, List<Resource> resources) {
+        final List<ResourceMethod> resourceMethods = Resource.getAggregatedAllMethods(resources);
+        checkMethods(resourceModel, resourceMethods, resourceGroupPathPattern);
+
+        final Map<PathPattern, List<Resource>> groupedResources = Resource.groupResourcesByPathPattern(
+                Resource.getAggregatedChildResources(resources));
+
+        for (Map.Entry<PathPattern, List<Resource>> childEntry : groupedResources.entrySet()) {
+            PathPattern pathPattern = new PathPattern(resourceGroupPathPattern.getTemplate().getTemplate()
+                    + childEntry.getKey().getTemplate().getTemplate());
+            checkMethods(resourceModel, Resource.getAggregatedAllMethods(childEntry.getValue()), pathPattern);
         }
+    }
 
-        if (resource.getResourceMethods().size() > 0) {
-            getMethodList(methodMap, null).addAll(resource.getResourceMethods());
-        }
-
-        for (Map.Entry<PathPattern, List<ResourceMethod>> pathMethodsEntry : methodMap.entrySet()) {
-            final List<ResourceMethod> methodPaths = pathMethodsEntry.getValue();
-
-            if (methodPaths.size() >= 2) {
-                for (ResourceMethod m1 : methodPaths.subList(0, methodPaths.size() - 1)) {
-                    for (ResourceMethod m2 : methodPaths.subList(methodPaths.indexOf(m1) + 1, methodPaths.size())) {
-                        if (m1.getHttpMethod() == null && m2.getHttpMethod() == null) {
-                            Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(this,
-                                    pathMethodsEntry.getKey()), true);
-                        } else if (m1.getHttpMethod() != null && m2.getHttpMethod() != null && sameHttpMethod(m1, m2)) {
-                            checkIntersectingMediaTypes(resource, m1.getHttpMethod(), m1, m2);
-                        }
+    private void checkMethods(ResourceModel resourceModel, List<ResourceMethod> resourceMethods, PathPattern pathPattern) {
+        if (resourceMethods.size() >= 2) {
+            for (ResourceMethod m1 : resourceMethods.subList(0, resourceMethods.size() - 1)) {
+                for (ResourceMethod m2 : resourceMethods.subList(resourceMethods.indexOf(m1) + 1, resourceMethods.size())) {
+                    if (m1.getHttpMethod() == null && m2.getHttpMethod() == null) {
+                        Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(
+                                pathPattern), true);
+                    } else if (m1.getHttpMethod() != null && m2.getHttpMethod() != null && sameHttpMethod(m1, m2)) {
+                        checkIntersectingMediaTypes(resourceModel, m1.getHttpMethod(), m1, m2);
                     }
                 }
             }
@@ -116,9 +129,8 @@ public class AmbiguousMethodValidator extends AbstractResourceModelVisitor {
         return methodList;
     }
 
-
     private void checkIntersectingMediaTypes(
-            Resource resource,
+            ResourceModel resourceModel,
             String httpMethod,
             ResourceMethod m1,
             ResourceMethod m2) {
@@ -152,19 +164,17 @@ public class AmbiguousMethodValidator extends AbstractResourceModelVisitor {
 
         if (consumesFails && producesFails) {
             // fatal
-            final String rcName = resource.getName();
-            Errors.fatal(resource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(rcName, httpMethod, m1.getInvocable()
+            Errors.fatal(resourceModel, LocalizationMessages.AMBIGUOUS_FATAL_RMS(httpMethod, m1.getInvocable()
                     .getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
         } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
                 (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
-            final String rcName = resource.getName();
             if (m1.getInvocable().requiresEntity()) {
-                Errors.warning(resource, LocalizationMessages.AMBIGUOUS_RMS_IN(
-                        rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+                Errors.warning(resourceModel, LocalizationMessages.AMBIGUOUS_RMS_IN(
+                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             } else {
-                Errors.warning(resource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
-                        rcName, httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+                Errors.warning(resourceModel, LocalizationMessages.AMBIGUOUS_RMS_OUT(
+                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
             }
         }
 

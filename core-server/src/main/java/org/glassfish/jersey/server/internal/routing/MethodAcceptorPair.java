@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,15 +39,19 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import java.util.List;
+
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
+
+import com.google.common.collect.Lists;
 
 /**
  * A pair of resource method model and a corresponding resource method router.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class MethodAcceptorPair {
+class MethodAcceptorPair {
     /**
      * Resource method model.
      */
@@ -56,22 +60,39 @@ final class MethodAcceptorPair {
     /**
      * Parent resource.
      */
-    final Resource parentResource;
+    final Resource resource;
+
 
     /**
-     * Resource method router.
+     * Resource method routers.
      */
-    final Router router;
+    final List<Router> router;
 
     /**
-     * Create a new [resource method model, resource method router] pair.
+     * Create a new instance.
      *
-     * @param model  resource method model.
-     * @param router resource method router.
+     * @param model Resource method handler.
+     * @param resource Resource that contains resource method.
+     * @param router List of routers that are needed to execute the {@code model}. These routers should contain
+     *               final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router
+     *               in the list.
      */
-    MethodAcceptorPair(ResourceMethod model, Resource parentResource, Router router) {
-        this.parentResource = parentResource;
+    MethodAcceptorPair(ResourceMethod model, Resource resource, List<Router> router) {
+        this.resource = resource;
         this.model = model;
         this.router = router;
+    }
+
+    /**
+     * Create a new instance.
+     * @param model Resource method handler.
+     * @param resource Resource that contains resource method.
+     * @param routers Routers that are needed to execute the {@code model}. These routers should contain
+     *                final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router.
+     */
+    MethodAcceptorPair(ResourceMethod model, Resource resource, Router... routers) {
+        this.resource = resource;
+        this.model = model;
+        this.router = Lists.newArrayList(routers);
     }
 }

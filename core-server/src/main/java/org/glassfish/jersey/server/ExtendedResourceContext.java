@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,34 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
 
-import java.util.Map;
+package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.uri.PathPattern;
+import javax.ws.rs.container.ResourceContext;
 
-import com.google.common.collect.Maps;
+import org.glassfish.jersey.server.model.ResourceModel;
 
 /**
- * Validator ensuring that resource model is correct (for example that resources do not have ambiguous path).
+ * Jersey extension of {@link ResourceContext}.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-class ResourceModelValidator extends AbstractResourceModelVisitor {
-
-    @Override
-    public void visitResourceModel(ResourceModel resourceModel) {
-        Map<PathPattern, Resource> resourceMap = Maps.newHashMap();
-        for (Resource resource : resourceModel.getResources()) {
-            final PathPattern pathPattern = resource.getPathPattern();
-            final Resource resourceFromMap = resourceMap.get(pathPattern);
-            if (resourceFromMap != null) {
-                Errors.error(resource, LocalizationMessages.RESOURCE_AMBIGUOUS(resource, resourceFromMap,
-                        pathPattern), true);
-            }
-            resourceMap.put(pathPattern, resource);
-        }
-    }
+public interface ExtendedResourceContext extends ResourceContext {
+    /**
+     * Return {@link ResourceModel resource model} from which the current jersey application is built.
+     *
+     * @return Resource model with all resources including resources created
+     * by {@link org.glassfish.jersey.server.internal.scanning.ResourceProcessor resource processor}.
+     */
+    public ResourceModel getResourceModel();
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +49,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -61,23 +56,14 @@ import javax.ws.rs.core.Response.Status;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.server.wadl.WadlApplicationContext;
-import org.glassfish.jersey.server.wadl.internal.WadlResource;
-
-import org.jvnet.hk2.annotations.Optional;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Sets;
@@ -103,24 +89,12 @@ final class MethodSelectingRouter implements Router {
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
     private final Router router;
 
-    private final boolean disableWadl;
-    private final WadlApplicationContext wadlApplicationContext;
-
     /**
      * Injectable builder of a {@link MethodSelectingRouter} instance.
      */
     static class Builder {
         @Inject
         private Provider<RespondingContext> respondingContextFactory;
-
-        @Inject
-        @Optional
-        private Configuration config;
-
-        @Inject
-        @Optional
-        private WadlApplicationContext wadlApplicationContext;
-
 
         /**
          * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
@@ -137,26 +111,19 @@ final class MethodSelectingRouter implements Router {
 
             return new MethodSelectingRouter(respondingContextFactory,
                     workers,
-                    methodAcceptorPairs,
-                    PropertiesHelper.isProperty(config.getProperty(ServerProperties.FEATURE_DISABLE_WADL)),
-                    wadlApplicationContext);
+                    methodAcceptorPairs);
         }
-
     }
 
     private MethodSelectingRouter(
             Provider<RespondingContext> respondingContextFactory,
             MessageBodyWorkers msgWorkers,
-            List<MethodAcceptorPair> methodAcceptorPairs,
-            boolean disableWadl,
-            WadlApplicationContext wadlApplicationContext) {
+            List<MethodAcceptorPair> methodAcceptorPairs) {
         this.respondingContextFactory = respondingContextFactory;
         this.workers = msgWorkers;
-        this.disableWadl = disableWadl;
-        this.wadlApplicationContext = wadlApplicationContext;
+
         this.consumesProducesAcceptors = new HashMap<String, List<ConsumesProducesAcceptor>>();
 
-        Resource resource = null;
         for (final MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
             String httpMethod = methodAcceptorPair.model.getHttpMethod();
 
@@ -166,19 +133,12 @@ final class MethodSelectingRouter implements Router {
                 consumesProducesAcceptors.put(httpMethod, httpMethodBoundAcceptors);
             }
             addAllConsumesProducesCombinations(httpMethodBoundAcceptors, methodAcceptorPair);
-
-            if (methodAcceptorPair.parentResource != null) {
-                resource = methodAcceptorPair.parentResource;
-            }
         }
 
         if (!consumesProducesAcceptors.containsKey(HttpMethod.HEAD)) {
             this.router = createHeadEnrichedRouter();
         } else {
             this.router = createInternalRouter();
-        }
-        if (!consumesProducesAcceptors.containsKey(HttpMethod.OPTIONS)) {
-            addOptionsSupport(resource);
         }
     }
 
@@ -415,7 +375,7 @@ final class MethodSelectingRouter implements Router {
         }
     }
 
-    private Router getMethodRouter(final ContainerRequest requestContext) {
+    private List<Router> getMethodRouter(final ContainerRequest requestContext) {
         List<ConsumesProducesAcceptor> acceptors = consumesProducesAcceptors.get(requestContext.getMethod());
         if (acceptors == null) {
             throw new WebApplicationException(
@@ -510,21 +470,6 @@ final class MethodSelectingRouter implements Router {
         }
     }
 
-    private void addOptionsSupport(Resource resource) {
-        final Set<String> allowedMethods = new HashSet<String>(consumesProducesAcceptors.keySet());
-        allowedMethods.add(HttpMethod.HEAD);
-        allowedMethods.add(HttpMethod.OPTIONS);
-
-        List<ConsumesProducesAcceptor> optionsAcceptors = new LinkedList<ConsumesProducesAcceptor>();
-        optionsAcceptors.add(createPlainTextOptionsEndpoint(allowedMethods));
-        optionsAcceptors.add(createGenericOptionsEndpoint(allowedMethods));
-        if (!disableWadl && wadlApplicationContext != null) {
-            optionsAcceptors.add(createWadlOptionsEndpoint(resource, allowedMethods, wadlApplicationContext));
-        }
-
-        consumesProducesAcceptors.put(HttpMethod.OPTIONS, optionsAcceptors);
-    }
-
     private Router createHeadEnrichedRouter() {
         return new Router() {
 
@@ -546,105 +491,4 @@ final class MethodSelectingRouter implements Router {
             }
         };
     }
-
-    private ConsumesProducesAcceptor createPlainTextOptionsEndpoint(final Set<String> allowedMethods) {
-
-        final String allowedList = allowedMethods.toString();
-        final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
-
-        return new ConsumesProducesAcceptor(
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.TEXT_PLAIN_TYPE, false),
-                new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Endpoint() {
-
-                            @Override
-                            public ContainerResponse apply(ContainerRequest requestContext) {
-
-                                final Response response = Response.ok(optionsBody, MediaType.TEXT_PLAIN_TYPE)
-                                        .allow(allowedMethods)
-                                        .build();
-                                return new ContainerResponse(requestContext, response);
-                            }
-                        })));
-    }
-
-    private ConsumesProducesAcceptor createGenericOptionsEndpoint(final Set<String> allowedMethods) {
-
-        return new ConsumesProducesAcceptor(
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaType.WILDCARD_TYPE, false),
-                new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Endpoint() {
-
-                            @Override
-                            public ContainerResponse apply(ContainerRequest requestContext) {
-                                final Response response = Response.ok()
-                                        .allow(allowedMethods)
-                                        .header(HttpHeaders.CONTENT_LENGTH, "0")
-                                        .type(requestContext.getAcceptableMediaTypes().get(0))
-                                        .build();
-                                return new ContainerResponse(requestContext, response);
-                            }
-                        })));
-    }
-
-    private ConsumesProducesAcceptor createWadlOptionsEndpoint(final Resource resource,
-                                                               final Set<String> allowedMethods,
-                                                               final WadlApplicationContext wadlApplicationContext) {
-
-        return new ConsumesProducesAcceptor(
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaTypes.WADL, false),
-                new CombinedClientServerMediaType.EffectiveMediaType(MediaTypes.WADL, false),
-                new MethodAcceptorPair(null, null, Routers.asTreeAcceptor(
-                        new Endpoint() {
-
-                            private final String lastModified =
-                                    new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());
-
-                            @Override
-                            public ContainerResponse apply(ContainerRequest requestContext) {
-                                Response response;
-
-
-                                if (wadlApplicationContext == null || resource == null) {
-                                    response = Response.ok()
-                                            .allow(allowedMethods)
-                                            .header(HttpHeaders.CONTENT_LENGTH, "0")
-                                            .type(requestContext.getAcceptableMediaTypes().get(0))
-                                            .build();
-                                } else {
-                                    final String lastMatchedPathSegment = ((UriRoutingContext) requestContext.getUriInfo())
-                                            .getMatchedTemplates()
-                                            .get(0).getTemplate().substring(1);
-
-                                    Resource resourceForWadlModel = null;
-                                    if (lastMatchedPathSegment
-                                            .equals("") || lastMatchedPathSegment.equals(resource.getPath())) {
-                                        resourceForWadlModel = resource;
-                                    } else {
-                                        for (Resource childResource : resource.getChildResources()) {
-
-                                            if (childResource.getPath().equals(lastMatchedPathSegment) ||
-                                                    childResource.getPath().equals("/" + lastMatchedPathSegment)) {
-                                                resourceForWadlModel = childResource;
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    response = Response.ok()
-                                            .allow(allowedMethods)
-                                            .type(MediaTypes.WADL)
-                                            .header("Last-modified", lastModified)
-                                            .entity(wadlApplicationContext.getApplication(
-                                                    requestContext.getUriInfo(),
-                                                    resourceForWadlModel))
-                                            .build();
-                                }
-                                return new ContainerResponse(requestContext, response);
-                            }
-                        })));
-    }
-
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,12 @@
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
+import java.util.Map;
+
+import org.glassfish.jersey.uri.PathPattern;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 
 /**
@@ -53,16 +59,106 @@ import java.util.List;
  *
  */
 public class ResourceModel implements ResourceModelComponent {
+
+    /**
+     * Builder used to create {@link ResourceModel resource model} instances.
+     */
+    public static class Builder {
+        private final List<Resource> resources;
+
+        /**
+         * Create new builder with empty resources.
+         */
+        public Builder() {
+            this.resources = Lists.newArrayList();
+
+        }
+
+        /**
+         * Create new builder pre initialized with {@code resource}.
+         * @param resources Resources (root and non root resources).
+         */
+        public Builder(List<Resource> resources) {
+            this.resources = resources;
+        }
+
+        /**
+         * Add a resource to the builder.
+         * @param resource Resource to be added to the builder (root or non root resource).
+         * @return Current builder.
+         */
+        public Builder addResource(Resource resource) {
+            this.resources.add(resource);
+            return this;
+        }
+
+        /**
+         * Build the {@link ResourceModel resource model}. Resources with the same path are merged.
+         * @return Resource model.
+         */
+        public ResourceModel build() {
+            List<Resource> allResource = Lists.newArrayList();
+
+            Map<String, Resource> rootResourceMap = Maps.newLinkedHashMap();
+            for (Resource resource : resources) {
+                final String path = resource.getPath();
+
+                if (resource.isRootResource()) {
+                    final Resource fromMap = rootResourceMap.get(path);
+                    if (fromMap == null) {
+                        rootResourceMap.put(path, resource);
+                    } else {
+                        rootResourceMap.put(path, Resource.builder(fromMap).mergeWith(resource).build());
+                    }
+                } else {
+                    allResource.add(resource);
+                }
+            }
+            final List<Resource> rootResources = Lists.newArrayList(rootResourceMap.values());
+            allResource.addAll(rootResources);
+            return new ResourceModel(rootResources, resources);
+        }
+    }
+
+    private final List<Resource> rootResources;
     private final List<Resource> resources;
+
+    private final Map<PathPattern, List<Resource>> pathPatternChildResourceMap;
+
 
     /**
      * Creates new instance from root resources.
      * @param resources Root resource of the resource model.
      */
-    public ResourceModel(List<Resource> resources) {
+    private ResourceModel(List<Resource> rootResources, List<Resource> resources) {
         this.resources = resources;
+        this.rootResources = rootResources;
+        this.pathPatternChildResourceMap = Resource.groupResourcesByPathPattern(this.rootResources);
     }
 
+
+    /**
+     * Return map with root resources grouped by path pattern.
+     * @return Map where key is the resource {@link PathPattern path pattern}
+     * ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of resource
+     * having this path pattern.
+     */
+    public Map<PathPattern, List<Resource>> getPathPatternToResources() {
+        return pathPatternChildResourceMap;
+    }
+
+    /**
+     * Return root resources from this {@link ResourceModel resource model}.
+     * @return List of root resources.
+     */
+    public List<Resource> getRootResources() {
+        return rootResources;
+    }
+
+    /**
+     * Return all resources from this {@link ResourceModel resource model}.
+     * @return List of all resources (root and non root resources).
+     */
     public List<Resource> getResources() {
         return resources;
     }

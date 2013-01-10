@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.uri;
+package org.glassfish.jersey.server;
 
 import java.util.List;
 import java.util.regex.MatchResult;
 
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
+
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.uri.UriTemplate;
 
 /**
  * Extensions to {@link UriInfo}.
@@ -84,7 +87,7 @@ public interface ExtendedUriInfo extends UriInfo {
     List<MatchResult> getMatchedResults();
 
     /**
-     * Get a read-only list of {@link UriTemplate} for matched resources.
+     * Get a read-only list of {@link org.glassfish.jersey.uri.UriTemplate} for matched resources.
      * Each entry is a URI template that is the value of the
      * {@link javax.ws.rs.Path} that is a partial path that matched a resource
      * class, a sub-resource method or a sub-resource locator.
@@ -116,4 +119,81 @@ public interface ExtendedUriInfo extends UriInfo {
      *         not contain the template
      */
     List<PathSegment> getPathSegments(String name, boolean decode);
+
+    /**
+     * Return all matched {@link Resource model resources} including child resources. The list is ordered so that the
+     * {@link Resource resource} currently being processed is the first element in the list.
+     *
+     * <p/>
+     * The following example
+     * <pre>&#064;Path("foo")
+     * public class FooResource {
+     *  &#064;GET
+     *  public String getFoo() {...}
+     *
+     *  &#064;Path("bar")
+     *  public BarResource getBarResource() {...}
+     * }
+     *
+     * public class BarResource {
+     *  &#064;GET
+     *  public String getBar() {...}
+     * }
+     * </pre>
+     *
+     * <p>The values returned by this method based on request uri and where
+     * the method is called from are:</p>
+     *
+     * <table border="1">
+     * <tr>
+     * <th>Request</th>
+     * <th>Called from</th>
+     * <th>Value(s)</th>
+     * </tr>
+     * <tr>
+     * <td>GET /foo</td>
+     * <td>FooResource.getFoo</td>
+     * <td>Resource["foo"]</td>
+     * </tr>
+     * <tr>
+     * <td>GET /foo/bar</td>
+     * <td>FooResource.getBarResource</td>
+     * <td>Child-Resource["foo/bar"], Resource["foo"]</td>
+     * </tr>
+     * <tr>
+     * <td>GET /foo/bar</td>
+     * <td>BarResource.getBar</td>
+     * <td>Resource[no path; based on BarResource.class], Child-Resource["foo/bar"], Resource["foo"]</td>
+     * </tr>
+     * </table>
+
+     * @return List of resources and child resources that were processed during request matching.
+     */
+    public List<Resource> getMatchedAllModelResources();
+
+    /**
+     * Return all matched {@link Resource model resources} except child resources. The result list is the same as result from
+     * method {@link #getMatchedAllModelResources()} except it does not contain child resources.
+     * @return List of resources that were processed during request matching.
+     */
+    public List<Resource> getMatchedModelResources();
+
+
+    /**
+     * Return a last matched {@link Resource model resource}. Returned resource is the resource which contains the resource
+     * method or resource locator from which {@link #getMatchedModelResource()} is executed. Returned resource is not a
+     * child resource; if the method is executed from child resource then the resource containing this child resource is returned.
+     *
+     * @return Last matched model resource.
+     */
+    public Resource getMatchedModelResource();
+
+    /**
+     * Return a last matched {@link Resource model child resource}. Returned child resource resource is the child resource which
+     * contains the resource method or resource locator from which {@link #getMatchedChildModelResource()} is executed.
+     * If the method is not executed from child resource null is returned.
+     *
+     * @return Last matched model child resource if the method is executed from child resource; false otherwise.
+     */
+    public Resource getMatchedChildModelResource();
 }

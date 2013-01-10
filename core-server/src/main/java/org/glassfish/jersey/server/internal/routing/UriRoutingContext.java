@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,8 +65,9 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.uri.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
@@ -89,6 +90,17 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private final LinkedList<String> paths = Lists.newLinkedList();
     private Inflector<ContainerRequest, ContainerResponse> inflector;
+    private final LinkedList<HierarchyAwareResource> matchedModelResources = Lists.newLinkedList();
+
+    private static class HierarchyAwareResource {
+        private final Resource resource;
+        private final boolean isChildResource;
+
+        private HierarchyAwareResource(Resource resource, boolean childResource) {
+            this.resource = resource;
+            isChildResource = childResource;
+        }
+    }
 
     /**
      * Injection constructor.
@@ -209,6 +221,11 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getWriterInterceptors() : null);
+    }
+
+    @Override
+    public void pushMatchedResource(Resource resource, boolean isChildResource) {
+        this.matchedModelResources.push(new HierarchyAwareResource(resource, isChildResource));
     }
 
     // UriInfo
@@ -438,5 +455,47 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public Class<?> getResourceClass() {
         return inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getResourceClass() : null;
+    }
+
+    @Override
+    public List<Resource> getMatchedAllModelResources() {
+        return Lists.transform(matchedModelResources, new Function<HierarchyAwareResource, Resource>() {
+            @Override
+            public Resource apply(final HierarchyAwareResource input) {
+                return input.resource;
+            }
+        });
+    }
+
+    @Override
+    public List<Resource> getMatchedModelResources() {
+        List<Resource> list = Lists.newArrayList();
+        for (HierarchyAwareResource resource : matchedModelResources) {
+            if (!resource.isChildResource) {
+                list.add(resource.resource);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public Resource getMatchedModelResource() {
+        final HierarchyAwareResource lastResource = this.matchedModelResources.peek();
+        if (lastResource.isChildResource) {
+            return this.matchedModelResources.get(1).resource;
+        } else {
+            return lastResource.resource;
+        }
+    }
+
+    @Override
+    public Resource getMatchedChildModelResource() {
+        final HierarchyAwareResource lastResource = this.matchedModelResources.peek();
+        if (lastResource.isChildResource) {
+            return lastResource.resource;
+        } else {
+            // no child resource - called from resource method
+            return null;
+        }
     }
 }

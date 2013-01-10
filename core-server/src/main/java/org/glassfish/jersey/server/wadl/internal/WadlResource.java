@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,18 +78,22 @@ public final class WadlResource {
     private byte[] wadlXmlRepresentation;
     private String lastModified;
 
+    @Context
+    private WadlApplicationContext wadlContext;
+
+
     public WadlResource() {
         this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
     }
 
     @Produces({"application/vnd.sun.wadl+xml", "application/xml"})
     @GET
-    public synchronized Response getWadl(@Context UriInfo uriInfo, @Context WadlApplicationContext wadlContext) {
-        if(!wadlContext.isWadlGenerationEnabled()) {
+    public synchronized Response getWadl(@Context UriInfo uriInfo) {
+        if (!wadlContext.isWadlGenerationEnabled()) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        if ((wadlXmlRepresentation == null) || ((lastBaseUri != null) && !lastBaseUri.equals(uriInfo.getBaseUri())) ) {
+        if ((wadlXmlRepresentation == null) || ((lastBaseUri != null) && !lastBaseUri.equals(uriInfo.getBaseUri()))) {
             this.lastBaseUri = uriInfo.getBaseUri();
             this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
 
@@ -118,11 +122,10 @@ public final class WadlResource {
     @Path("{path}")
     public synchronized Response geExternalGrammar(
             @Context UriInfo uriInfo,
-            @Context WadlApplicationContext wadlContext,
             @PathParam("path") String path) {
 
         // Fail if wadl generation is disabled
-        if(!wadlContext.isWadlGenerationEnabled()) {
+        if (!wadlContext.isWadlGenerationEnabled()) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
@@ -130,14 +133,14 @@ public final class WadlResource {
                 wadlContext.getApplication(uriInfo);
 
         // Fail is we don't have any metadata for this path
-        ApplicationDescription.ExternalGrammar externalMetadata = applicationDescription.getExternalGrammar( path );
+        ApplicationDescription.ExternalGrammar externalMetadata = applicationDescription.getExternalGrammar(path);
 
-        if( externalMetadata==null ) {
+        if (externalMetadata == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         // Return the data
-        return Response.ok().type( externalMetadata.getType() )
+        return Response.ok().type(externalMetadata.getType())
                 .entity(externalMetadata.getContent())
                 .build();
     }

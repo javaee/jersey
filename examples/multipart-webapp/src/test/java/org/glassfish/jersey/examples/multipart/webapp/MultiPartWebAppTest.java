@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import javax.xml.XMLConstants;
@@ -68,6 +69,8 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import static org.junit.Assert.assertEquals;
+
+import junit.framework.Assert;
 
 /**
  * Tests for {@code MultipartResource} class.
@@ -96,7 +99,9 @@ public class MultiPartWebAppTest extends JerseyTest {
     public void testApplicationWadl() throws Exception {
         final WebTarget target = target().path("application.wadl");
 
-        final File tmpFile = target.request().get(File.class);
+        final Response response = target.request().get();
+        Assert.assertEquals(200, response.getStatus());
+        final File tmpFile = response.readEntity(File.class);
 
         final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
         bf.setNamespaceAware(true);
@@ -112,7 +117,8 @@ public class MultiPartWebAppTest extends JerseyTest {
         final XPath xp = XPathFactory.newInstance().newXPath();
         xp.setNamespaceContext(new NSResolver("wadl", "http://wadl.dev.java.net/2009/02"));
         String val = (String) xp.evaluate(
-                "//wadl:resource[@path='part']/wadl:method/wadl:request/wadl:representation/@mediaType", d, XPathConstants.STRING);
+                "//wadl:resource[@path='part']/wadl:method[@name='POST']/wadl:request/wadl:representation/@mediaType",
+                d, XPathConstants.STRING);
 
         assertEquals("multipart/form-data", val);
     }

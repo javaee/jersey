@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,16 +41,17 @@
 package org.glassfish.jersey.server.wadl.internal;
 
 import java.net.URI;
-import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
-import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
@@ -72,17 +73,18 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
     private static final Logger LOG = Logger.getLogger(WadlApplicationContextImpl.class.getName());
 
+    @Context
+    private ExtendedResourceContext resourceContext;
+
+
     private boolean wadlGenerationEnabled = true;
 
-    private final List<org.glassfish.jersey.server.model.Resource> rootResources;
+
     private final WadlGeneratorConfig wadlGeneratorConfig;
     private JAXBContext jaxbContext;
 
-    public WadlApplicationContextImpl(
-            List<org.glassfish.jersey.server.model.Resource> rootResources,
-            ResourceConfig resourceConfig) {
-        this.rootResources = rootResources;
-        this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig);
+    public WadlApplicationContextImpl(@Context Configuration configuration) {
+        this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
 
         try {
             // TODO perhaps this should be done another way for the moment
@@ -95,21 +97,18 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         }
     }
 
-//    public ApplicationDescription getApplication() {
-//        return getWadlBuilder().generate(rootResources);
-//    }
-
     @Override
     public ApplicationDescription getApplication(UriInfo uriInfo) {
-        ApplicationDescription a = getWadlBuilder().generate(rootResources);
-        final Application application = a.getApplication();
+        ApplicationDescription applicationDescription = getWadlBuilder()
+                .generate(resourceContext.getResourceModel().getRootResources());
+        final Application application = applicationDescription.getApplication();
         for (Resources resources : application.getResources()) {
             if (resources.getBase() == null) {
                 resources.setBase(uriInfo.getBaseUri().toString());
             }
         }
-        attachExternalGrammar(application, a, uriInfo.getRequestUri());
-        return a;
+        attachExternalGrammar(application, applicationDescription, uriInfo.getRequestUri());
+        return applicationDescription;
     }
 
     @Override
@@ -122,17 +121,18 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         ApplicationDescription description = getApplication(info);
 
         WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator();
-        Application a = new WadlBuilder(wadlGenerator).generate(description, resource);
+        Application application = new WadlBuilder(wadlGenerator).generate(description, resource);
 
-        for (Resources resources : a.getResources())
+        for (Resources resources : application.getResources()) {
             resources.setBase(info.getBaseUri().toString());
+        }
 
         // Attach any grammar we may have
 
-        attachExternalGrammar(a, description,
+        attachExternalGrammar(application, description,
                 info.getRequestUri());
 
-        for (Resources resources : a.getResources()) {
+        for (Resources resources : application.getResources()) {
             final Resource r = resources.getResource().get(0);
             r.setPath(info.getBaseUri().relativize(info.getAbsolutePath()).toString());
 
@@ -140,7 +140,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             r.getParam().clear();
         }
 
-        return a;
+        return application;
     }
 
     // TODO probably no longer required
@@ -211,9 +211,6 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         for (String path : applicationDescription.getExternalMetadataKeys()) {
             URI schemaURI =
                     extendedPath.clone().path(path).build();
-
-            String schemaURIS = schemaURI.toString();
-            String requestURIs = requestURI.toString();
 
             String schemaPath = rootURI != null ?
                     requestURI.relativize(schemaURI).toString()

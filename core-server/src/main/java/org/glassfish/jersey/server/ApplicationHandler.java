@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,6 +74,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -83,6 +84,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -93,16 +95,14 @@ import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.wadl.WadlApplicationContext;
-import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
-import org.glassfish.jersey.server.wadl.internal.WadlResource;
-import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.server.wadl.processor.WadlModelProcessorFeature;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
@@ -297,14 +297,11 @@ public final class ApplicationHandler {
             ((ResourceConfig) application).lock();
         }
 
+        // add WADL support
+        runtimeConfig.register(WadlModelProcessorFeature.class);
+
         // Configure binders and features.
         runtimeConfig.configureMetaProviders(locator);
-
-        // Add WADL support.
-        boolean wadlDisabled = runtimeConfig.isProperty(ServerProperties.FEATURE_DISABLE_WADL);
-        if (!wadlDisabled && !runtimeConfig.isRegistered(WadlResource.class)) {
-            runtimeConfig.register(WadlResource.class);
-        }
 
         // Introspecting classes & instances
         final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
@@ -348,7 +345,7 @@ public final class ApplicationHandler {
         }
 
         final ComponentBag componentBag = runtimeConfig.getComponentBag();
-        bindProvidersAndResources(componentProviders, componentBag, resourceBag);
+        bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
         for (ComponentProvider componentProvider : componentProviders) {
             componentProvider.done();
         }
@@ -380,20 +377,19 @@ public final class ApplicationHandler {
                 = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings);
         final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
 
-        // validate the models
-        validate(resourceBag.models);
+        ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources()).build();
 
-        // create a router
-        DynamicConfiguration dynamicConfiguration = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(new WadlApplicationContextImpl(resourceBag.getRootResources(), runtimeConfig))
-                .to(WadlApplicationContext.class), dynamicConfiguration);
-        dynamicConfiguration.commit();
+        resourceModel = processResourceModel(resourceModel);
+        // validate the models
+        validate(resourceModel.getRootResources());
+
+        bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
                 nameBoundWriterInterceptors, dynamicFeatures);
-        for (Resource resource : resourceBag.models) {
+        for (Resource resource : resourceModel.getRootResources()) {
             runtimeModelBuilder.process(resource, false);
         }
 
@@ -431,12 +427,46 @@ public final class ApplicationHandler {
             locator.inject(instance);
         }
 
+        // initiate resource model into JerseyResourceContext
+        JerseyResourceContext jerseyResourceContext = locator.getService(JerseyResourceContext.class);
+        jerseyResourceContext.setResourceModel(resourceModel);
+
         this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage);
 
         // inject self
         locator.inject(this);
     }
 
+    private ResourceModel processResourceModel(ResourceModel resourceModel) {
+        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(locator,
+                ModelProcessor.class);
+        final Iterable<ModelProcessor> modelProcessors = Providers.sortRankedProviders(new RankedComparator<ModelProcessor>(),
+                allRankedProviders);
+
+        for (ModelProcessor modelProcessor : modelProcessors) {
+            resourceModel = modelProcessor.processResourceModel(resourceModel, getConfiguration());
+        }
+        return resourceModel;
+    }
+
+    private void bindEnhancingResourceClasses(ResourceModel resourceModel, ResourceBag resourceBag, Set<ComponentProvider> componentProviders) {
+        Set<Class<?>> newClasses = Sets.newHashSet();
+        Set<Object> newInstances = Sets.newHashSet();
+        for (Resource res : resourceModel.getRootResources()) {
+            newClasses.addAll(res.getHandlerClasses());
+            newInstances.addAll(res.getHandlerInstances());
+        }
+        newClasses.removeAll(resourceBag.classes);
+        newInstances.removeAll(resourceBag.instances);
+
+        ComponentBag emptyComponentBag = ComponentBag.newInstance(new Predicate<ContractProvider>() {
+            @Override
+            public boolean apply(ContractProvider input) {
+                return false;
+            }
+        });
+        bindProvidersAndResources(componentProviders, emptyComponentBag, newClasses, newInstances);
+    }
 
     /**
      * Takes collection of all filters/interceptors (either request/reader or response/writer)
@@ -502,7 +532,8 @@ public final class ApplicationHandler {
     private void bindProvidersAndResources(
             final Set<ComponentProvider> componentProviders,
             final ComponentBag componentBag,
-            final ResourceBag resourceBag) {
+            final Set<Class<?>> resourceClasses,
+            final Set<Object> resourceInstances) {
 
         final JerseyResourceContext resourceContext = locator.getService(JerseyResourceContext.class);
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
@@ -519,15 +550,15 @@ public final class ApplicationHandler {
                                 componentBag.getModel(componentClass),
                                 RuntimeType.SERVER,
                                 !registeredClasses.contains(componentClass),
-                                resourceBag.classes.contains(componentClass));
+                                resourceClasses.contains(componentClass));
                     }
                 }));
-        classes.addAll(resourceBag.classes);
+        classes.addAll(resourceClasses);
 
         // Bind classes.
         for (Class<?> componentClass : classes) {
             ContractProvider model = componentBag.getModel(componentClass);
-            if (resourceBag.classes.contains(componentClass)) {
+            if (resourceClasses.contains(componentClass)) {
                 if (bindWithComponentProvider(componentClass, model, componentProviders)) {
                     continue;
                 }
@@ -563,15 +594,15 @@ public final class ApplicationHandler {
                                 componentBag.getModel(componentClass),
                                 RuntimeType.SERVER,
                                 !registeredClasses.contains(componentClass),
-                                resourceBag.instances.contains(component));
+                                resourceInstances.contains(component));
                     }
                 }));
-        instances.addAll(resourceBag.instances);
+        instances.addAll(resourceInstances);
 
         // Bind instances.
         for (Object component : instances) {
             ContractProvider model = componentBag.getModel(component.getClass());
-            if (resourceBag.instances.contains(component)) {
+            if (resourceInstances.contains(component)) {
                 if (model != null && !Providers.checkProviderRuntime(
                         component.getClass(),
                         model,
@@ -620,7 +651,7 @@ public final class ApplicationHandler {
     private void validate(List<Resource> resources) {
         final ComponentModelValidator validator = new ComponentModelValidator(locator);
 
-        validator.validate(new ResourceModel(resources));
+        validator.validate(new ResourceModel.Builder(resources).build());
 
         if (Errors.fatalIssuesFound()) {
             throw new ModelValidationException(ModelErrors.getErrorsAsResourceModelIssues());

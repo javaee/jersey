@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -172,7 +172,8 @@ public class ApplicationHandlerTest {
     public static final class CustomResponseFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws
+                IOException {
             responseContext.setEntity(
                     responseContext.getEntity() + "-filtered",
                     responseContext.getEntityAnnotations(),
@@ -226,7 +227,8 @@ public class ApplicationHandlerTest {
 
     @Test
     public void testProviderAsServerProperty() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(ProviderPropertyResource.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(ProviderPropertyResource.class).setProperty(ServerProperties
+                .FEATURE_DISABLE_WADL, true);
         resourceConfig.setProperty(ServerProperties.PROVIDER_CLASSNAMES, CustomFeature.class.getName());
 
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
@@ -271,7 +273,8 @@ public class ApplicationHandlerTest {
 
     @Test
     public void testRuntimeResourceConfig() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(RuntimeConfigResource.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(RuntimeConfigResource.class).setProperty(ServerProperties
+                .FEATURE_DISABLE_WADL, true);
         resourceConfig.register(CustomFeature.class);
 
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);

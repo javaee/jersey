@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -312,9 +312,13 @@ public class ValidatorTest {
             public List<ResourceModelIssue> call() {
                 List<Resource> resources = Lists.newArrayList();
                 for (Class<?> clazz : resourceClasses) {
-                    resources.add(Resource.builder(clazz).build());
+                    final Resource res = Resource.builder(clazz).build();
+                    if (res.isRootResource()) {
+                        resources.add(res);
+                    }
                 }
-                ResourceModel model = new ResourceModel(resources);
+
+                ResourceModel model = new ResourceModel.Builder(resources).build();
                 ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
@@ -361,6 +365,7 @@ public class ValidatorTest {
         assertTrue(!issues.isEmpty());
     }
 
+    @Path("test")
     public static class TestGetRMReturningVoid {
 
         @GET
@@ -392,6 +397,7 @@ public class ValidatorTest {
         assertTrue(issues.isEmpty());
     }
 
+    @Path("test")
     public static class TestGetRMConsumingEntity {
 
         @GET
@@ -408,6 +414,7 @@ public class ValidatorTest {
         assertTrue(!issues.get(0).isFatal());
     }
 
+    @Path("test")
     public static class TestGetRMConsumingFormParam {
 
         @GET
@@ -424,6 +431,7 @@ public class ValidatorTest {
         assertTrue(issues.get(0).isFatal());
     }
 
+    @Path("test")
     public static class TestSRLReturningVoid {
 
         @Path("srl")
@@ -440,6 +448,7 @@ public class ValidatorTest {
         assertTrue(validator.fatalIssuesFound());
     }
 
+    @Path("test")
     public static class TestGetSRMReturningVoid {
 
         @GET
@@ -457,6 +466,7 @@ public class ValidatorTest {
         assertTrue(!issues.get(0).isFatal());
     }
 
+    @Path("test")
     public static class TestGetSRMConsumingEntity {
 
         @Path("p")
@@ -802,13 +812,9 @@ public class ValidatorTest {
 
     @Test
     public void testPercentEncoded() throws Exception {
-        Resource resource = Resource.builder(PercentEncodedTest.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
-        validator.validate(resource);
-
-        final List<ResourceModelIssue> errorMessages = validator.getIssueList();
-        assertEquals(1, errorMessages.size());
-        assertTrue(errorMessages.get(0).isFatal());
+        List<ResourceModelIssue> issues = testResourceValidation(PercentEncodedTest.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
     }
 
 
@@ -829,14 +835,9 @@ public class ValidatorTest {
 
     @Test
     public void testPercentEncodedCaseSensitive() throws Exception {
-        Resource resource = Resource.builder(PercentEncodedCaseSensitiveTest.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createLocator());
-        validator.validate(resource);
-
-        final List<ResourceModelIssue> errorMessages = validator.getIssueList();
-
-        assertEquals(1, errorMessages.size());
-        assertTrue(errorMessages.get(0).isFatal());
+        List<ResourceModelIssue> issues = testResourceValidation(PercentEncodedCaseSensitiveTest.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
     }
 
     @Path("ambiguous-parameter")
@@ -1019,7 +1020,7 @@ public class ValidatorTest {
 
     @Path("{def}")
     public static class AmbiguousResource2 {
-        @Path("y")
+        @Path("x")
         public String get() {
             return "get";
         }
@@ -1027,7 +1028,7 @@ public class ValidatorTest {
 
     @Path("unique")
     public static class UniqueResource {
-        @Path("y")
+        @Path("x")
         public String get() {
             return "get";
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,15 +46,26 @@ import java.util.List;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.MappableException;
+import org.glassfish.jersey.server.model.ComponentModelValidator;
+import org.glassfish.jersey.server.model.ModelProcessor;
+import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.ResourceModel;
+import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
 import org.glassfish.hk2.api.Factory;
@@ -76,6 +87,7 @@ class SubResourceLocatorRouter implements Router {
     private final List<Factory<?>> valueProviders;
     private final RuntimeModelBuilder runtimeModelBuilderOriginal;
     private final JerseyResourceContext resourceContext;
+
 
     /**
      * Create a new sub-resource locator router.
@@ -106,12 +118,11 @@ class SubResourceLocatorRouter implements Router {
 
         if (subResource.getClass().isAssignableFrom(Class.class)) {
             final Class<?> clazz = (Class<?>) subResource;
-            resourceContext.bindResource(clazz);
             subResource = Injections.getOrCreate(locator, clazz);
         }
         resourceContext.bindResourceIfSingleton(subResource);
 
-        final Resource subResourceModel;
+        Resource subResourceModel;
 
         // TODO: what to do with the issues?
         final Resource.Builder builder = Resource.builder(subResource.getClass());
@@ -121,6 +132,12 @@ class SubResourceLocatorRouter implements Router {
         }
         subResourceModel = builder.build();
 
+        subResourceModel = processSubResource(subResourceModel);
+        validate(subResourceModel);
+
+        for (Class<?> handlerClass : subResourceModel.getHandlerClasses()) {
+            resourceContext.bindResource(handlerClass);
+        }
 
         final RuntimeModelBuilder runtimeModelBuilder = runtimeModelBuilderOriginal.copy();
         runtimeModelBuilder.process(subResourceModel, true);
@@ -129,6 +146,35 @@ class SubResourceLocatorRouter implements Router {
         routingCtx.pushMatchedResource(subResource);
         Router subResourceAcceptor = runtimeModelBuilder.buildModel(true);
         return Continuation.of(request, subResourceAcceptor);
+    }
+
+    private Resource processSubResource(Resource subResourceModel) {
+        final Configuration configuration = locator.getService(Configuration.class);
+        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(locator,
+                ModelProcessor.class);
+        final Iterable<ModelProcessor> modelProcessors = Providers.sortRankedProviders(new RankedComparator<ModelProcessor>(),
+                allRankedProviders);
+
+        for (ModelProcessor modelProcessor : modelProcessors) {
+            subResourceModel = modelProcessor.processSubResource(subResourceModel, configuration);
+        }
+        return subResourceModel;
+    }
+
+    private void validate(final Resource subResourceModel) {
+        Errors.process(new Runnable() {
+            @Override
+            public void run() {
+                final ComponentModelValidator validator = new ComponentModelValidator(locator);
+                validator.validate(new ResourceModel.Builder().addResource(subResourceModel).build());
+
+                if (Errors.fatalIssuesFound()) {
+                    throw new ModelValidationException(LocalizationMessages.ERROR_VALIDATION_SUBRESOURCE(),
+                            ModelErrors.getErrorsAsResourceModelIssues());
+                }
+            }
+        });
+
     }
 
     private Object getResource(RoutingContext routingCtx) {

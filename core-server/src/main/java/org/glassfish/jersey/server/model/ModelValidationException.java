@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,6 +55,7 @@ public class ModelValidationException extends RuntimeException {
 
     private static final long serialVersionUID = 4076015716487596210L;
     private final List<ResourceModelIssue> issues;
+    private final String message;
 
     /**
      * Create new resource model validation exception with the list of validation issues.
@@ -63,6 +64,19 @@ public class ModelValidationException extends RuntimeException {
      */
     public ModelValidationException(List<ResourceModelIssue> issues) {
         this.issues = Collections.unmodifiableList(new ArrayList<ResourceModelIssue>(issues));
+        this.message = null;
+    }
+
+
+    /**
+     * Creates new resource model validation exception with the list of validation issues and the message.
+     * @param message message for the exception. The final message returned by {@link #getMessage()} will
+     *               contains the {@code message} and other information about exception.
+     * @param issues validation issues.
+     */
+    public ModelValidationException(String message, List<ResourceModelIssue> issues) {
+        this.issues = issues;
+        this.message = message;
     }
 
     /**
@@ -76,6 +90,6 @@ public class ModelValidationException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return issues.toString();
+        return (message == null ? (message + "\n") : "") + issues.toString();
     }
 }

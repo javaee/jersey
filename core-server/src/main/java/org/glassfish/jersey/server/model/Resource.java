@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,17 +43,19 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Path;
 
-import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -144,7 +146,6 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final Set<Class<?>> handlerClasses;
         private final Set<Object> handlerInstances;
 
-
         private final Resource.Builder parentResource;
 
 
@@ -152,13 +153,12 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.methodBuilders = Sets.newIdentityHashSet();
             this.childResourceBuilders = Sets.newIdentityHashSet();
             this.childResources = Lists.newLinkedList();
-
             this.resourceMethods = Lists.newLinkedList();
-
             this.handlerClasses = Sets.newIdentityHashSet();
             this.handlerInstances = Sets.newIdentityHashSet();
 
             this.parentResource = parentResource;
+
             name("[unnamed]");
         }
 
@@ -435,6 +435,14 @@ public final class Resource implements Routed, ResourceModelComponent {
             processMethodBuilders();
             processChildResourceBuilders();
 
+            final List<Resource> mergedChildResources = mergeResources(childResources);
+            Set<Class<?>> classes = Sets.newHashSet(handlerClasses);
+            Set<Object> instances = Sets.newHashSet(handlerInstances);
+            for (Resource childResource : mergedChildResources) {
+                classes.addAll(childResource.getHandlerClasses());
+                instances.addAll(childResource.getHandlerInstances());
+            }
+
             final Resource resource = new Resource(
                     immutableCopy(names),
                     path,
@@ -442,14 +450,14 @@ public final class Resource implements Routed, ResourceModelComponent {
                     parentResource != null,
                     immutableCopy(resourceMethods),
                     resourceLocator,
-                    mergeResources(childResources),
-                    immutableCopy(handlerClasses),
-                    immutableCopy(handlerInstances));
+                    mergedChildResources,
+                    immutableCopy(classes),
+                    immutableCopy(instances));
             if (parentResource != null) {
                 parentResource.onBuildChildResource(this, resource);
             }
-            return resource;
 
+            return resource;
         }
 
         private static <T> List<T> immutableCopy(List<T> list) {
@@ -512,6 +520,35 @@ public final class Resource implements Routed, ResourceModelComponent {
      */
     public static Builder builder(final String path) {
         return new Builder(path);
+    }
+
+    /**
+     * Creates a {@link Builder resource builder} instance from the list of {@code resource} which can be merged
+     * into a single resource. It must be possible to merge the {@code resources} into a single valid resource.
+     * For example all resources must have the same {@link Resource#getPath() path}, they cannot have ambiguous methods
+     * on the same path, etc.
+     *
+     * @param resources Resources with the same path.
+     * @return Resource builder initialized from merged resources.
+     */
+    public static Builder builder(List<Resource> resources) {
+        Builder builder = null;
+        String path = null;
+
+        for (Resource resource : resources) {
+            if (builder == null) {
+                builder = Resource.builder(resource);
+                path = resource.getPath();
+            } else {
+                if ((resource.getPath() == null && path == null) || (path != null && path.equals(resource.getPath()))) {
+                    builder.mergeWith(resource);
+                } else {
+                    throw new IllegalArgumentException(LocalizationMessages.ERROR_RESOURCES_CANNOT_MERGE());
+                }
+            }
+        }
+        return builder;
+
     }
 
     /**
@@ -599,7 +636,12 @@ public final class Resource implements Routed, ResourceModelComponent {
      * @return new resource model builder.
      */
     public static Builder builder(Resource resource) {
-        final Builder b = new Builder(resource.path);
+        final Builder b;
+        if (resource.path == null) {
+            b = new Builder();
+        } else {
+            b = new Builder(resource.path);
+        }
 
         b.resourceMethods.addAll(resource.resourceMethods);
         b.childResources.addAll(resource.getChildResources());
@@ -625,6 +667,9 @@ public final class Resource implements Routed, ResourceModelComponent {
     private final Set<Class<?>> handlerClasses;
     private final Set<Object> handlerInstances;
 
+    private final Map<PathPattern, List<Resource>> pathPatternChildResourceMap;
+
+
     private Resource(
             final List<String> names,
             final String path,
@@ -648,7 +693,79 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         this.handlerClasses = handlerClasses;
         this.handlerInstances = handlerInstances;
+
+        this.pathPatternChildResourceMap = Collections.unmodifiableMap(groupResourcesByPathPattern(childResources));
     }
+
+    /**
+     * Static method that group resources by the path pattern.
+     *
+     * @param resources Resources that should be grouped.
+     *
+     * @return Map where key is the resource {@link PathPattern path pattern}
+     *      ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of resource
+     *      having this path pattern.
+     */
+    public static Map<PathPattern, List<Resource>> groupResourcesByPathPattern(List<Resource> resources) {
+        Map<PathPattern, List<Resource>> childGroupingMap = Maps.newHashMap();
+        for (Resource childResource : resources) {
+            final PathPattern pattern = childResource.getPathPattern();
+            List<Resource> groupedResources = childGroupingMap.get(pattern);
+            if (groupedResources == null) {
+                groupedResources = Lists.newArrayList();
+                childGroupingMap.put(pattern, groupedResources);
+            }
+            groupedResources.add(childResource);
+        }
+        return childGroupingMap;
+    }
+
+
+    /**
+     * Return resource methods from all given {@code resources} ignoring resource methods of child resources and all
+     * resource locators.
+
+     * @param resources List of resources from which resource method should be extracted.
+     * @return List of resource methods.
+     */
+    public static List<ResourceMethod> getAggregatedResourceMethods(List<Resource> resources) {
+        List<ResourceMethod> allMethods = Lists.newArrayList();
+
+        for (Resource resource : resources) {
+            allMethods.addAll(resource.getResourceMethods());
+        }
+        return allMethods;
+    }
+
+    /**
+     * Return resource methods and resource locators from all given {@code resources} ignoring resource
+     * methods and locators of child resources.
+
+     * @param resources List of resources from which resource method should be extracted.
+     * @return List of resource methods.
+     */
+    public static List<ResourceMethod> getAggregatedAllMethods(List<Resource> resources) {
+        List<ResourceMethod> allMethods = Lists.newArrayList();
+
+        for (Resource resource : resources) {
+            allMethods.addAll(resource.getAllMethods());
+        }
+        return allMethods;
+    }
+
+    /**
+     * Returns all child resources of the given {@code resources}.
+     * @param resources Resources from which child resources should be extracted.
+     * @return List of child resources.
+     */
+    public static List<Resource> getAggregatedChildResources(List<Resource> resources) {
+        List<Resource> childResources = Lists.newArrayList();
+        for (Resource resource : resources) {
+            childResources.addAll(resource.getChildResources());
+        }
+        return childResources;
+    }
+
 
     /**
      * Check if this resource model models a JAX-RS root resource.
@@ -663,6 +780,17 @@ public final class Resource implements Routed, ResourceModelComponent {
     @Override
     public String getPath() {
         return path;
+    }
+
+    /**
+     * Return map with child resources of this resource grouped by path pattern.
+     * @return Map where key is the child resource {@link PathPattern path pattern}
+     * ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of child resource
+     * having this path pattern.
+     */
+
+    public Map<PathPattern, List<Resource>> getPathPatternToChildResources() {
+        return pathPatternChildResourceMap;
     }
 
     @Override

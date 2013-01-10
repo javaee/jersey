@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,6 +91,7 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
@@ -126,7 +127,7 @@ import static junit.framework.Assert.assertTrue;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({WadlResourceTest.Wadl1Test.class, WadlResourceTest.Wadl2Test.class, WadlResourceTest.Wadl3Test.class,
-        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class})
+        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class})
 public class WadlResourceTest {
     private static Document extractWadlAsDocument(Response response) throws ParserConfigurationException, SAXException,
             IOException {
@@ -320,26 +321,26 @@ public class WadlResourceTest {
             assertEquals(val, getBaseUri().toString());
             // check total number of resources is 4
             val = (String) xp.evaluate("count(//wadl:resource)", d, XPathConstants.STRING);
-            assertEquals(val, "6");
+            assertEquals("6", val);
             // check only once resource with for {id}
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only once resource with for {id}/verbose
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}/verbose'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only once resource with for widgets
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check 3 methods for {id}
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "3");
+            assertEquals("6", val);
             // check 2 methods for widgets
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "2");
+            assertEquals("5", val);
             // check 1 matrix param on resource
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:param[@name='test'])", d,
                     XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check type of {id} is int
             String prefix = getXmlSchemaNamespacePrefix(
                     (Node) xp.evaluate("//wadl:resource[@path='{id}']/wadl:param[@name='id']", d, XPathConstants.NODE));
@@ -348,11 +349,11 @@ public class WadlResourceTest {
             // check number of output representations is two
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl" +
                     ":representation)", d, XPathConstants.STRING);
-            assertEquals(val, "2");
+            assertEquals("2", val);
             // check number of output representations is one
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl" +
                     ":representation)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check type of {id}/verbose is int
             prefix = getXmlSchemaNamespacePrefix(
                     (Node) xp.evaluate("//wadl:resource[@path='{id}/verbose']/wadl:param[@name='id']", d, XPathConstants.NODE));
@@ -373,7 +374,7 @@ public class WadlResourceTest {
         public void testLastModifiedOPTIONS() {
             final WebTarget target = target("/widgets/3/verbose");
 
-            Response r = target.request().options();
+            Response r = target.request(MediaTypes.WADL).options();
             System.out.println(r.readEntity(String.class));
             assertTrue(r.getHeaders().containsKey("Last-modified"));
         }
@@ -382,7 +383,10 @@ public class WadlResourceTest {
         public void testOptionsResourceWadl() throws ParserConfigurationException, XPathExpressionException, IOException,
                 SAXException {
             // test WidgetsResource
-            File tmpFile = target("/widgets").request().options(File.class);
+            Response response = target("/widgets").request(MediaTypes.WADL).options();
+            Assert.assertEquals(200, response.getStatus());
+//            System.out.println(response.readEntity(String.class));
+            File tmpFile = response.readEntity(File.class);
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
             bf.setValidating(false);
@@ -400,22 +404,22 @@ public class WadlResourceTest {
             assertEquals(val, getBaseUri().toString());
             // check total number of resources is 3 (no ExtraResource details included)
             val = (String) xp.evaluate("count(//wadl:resource)", d, XPathConstants.STRING);
-            assertEquals(val, "3");
+            assertEquals("3", val);
             // check only once resource with for {id}
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only once resource with for {id}/verbose
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}/verbose'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only once resource with for widgets
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check 3 methods for {id}
             val = (String) xp.evaluate("count(//wadl:resource[@path='{id}']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "3");
+            assertEquals("6", val);
             // check 2 methods for widgets
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "2");
+            assertEquals("5", val);
             // check type of {id} is int
             String prefix = getXmlSchemaNamespacePrefix(
                     (Node) xp.evaluate("//wadl:resource[@path='{id}']/wadl:param[@name='id']", d, XPathConstants.NODE));
@@ -424,13 +428,15 @@ public class WadlResourceTest {
             // check number of output representations is two
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl" +
                     ":representation)", d, XPathConstants.STRING);
-            assertEquals(val, "2");
+            assertEquals("2", val);
             // check number of output representations is one
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl" +
                     ":representation)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
 
-            tmpFile = target("/foo").request().options(File.class);
+            response = target("/foo").request(MediaTypes.WADL).options();
+            Assert.assertEquals(200, response.getStatus());
+            tmpFile = response.readEntity(File.class);
             b = bf.newDocumentBuilder();
             d = b.parse(tmpFile);
             printSource(new DOMSource(d));
@@ -439,13 +445,13 @@ public class WadlResourceTest {
             assertEquals(val, getBaseUri().toString());
             // check total number of resources is 1 (no ExtraResource details included)
             val = (String) xp.evaluate("count(//wadl:resource)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only once resource with path foo
             val = (String) xp.evaluate("count(//wadl:resource[@path='foo'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check 1 methods for foo
             val = (String) xp.evaluate("count(//wadl:resource[@path='foo']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("4", val);
         }
 
         @Test
@@ -476,7 +482,7 @@ public class WadlResourceTest {
             assertEquals(val, "1");
             // check 1 methods
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets/3/verbose']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("4", val);
         }
 
         @Test
@@ -499,13 +505,13 @@ public class WadlResourceTest {
             assertEquals(val, getBaseUri().toString());
             // check total number of resources is 1
             val = (String) xp.evaluate("count(//wadl:resource)", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check only one resource with for {id}
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets/3'])", d, XPathConstants.STRING);
-            assertEquals(val, "1");
+            assertEquals("1", val);
             // check 3 methods
             val = (String) xp.evaluate("count(//wadl:resource[@path='widgets/3']/wadl:method)", d, XPathConstants.STRING);
-            assertEquals(val, "3");
+            assertEquals("6", val);
         }
 
         // TODO: migrate rest of tests
@@ -1005,6 +1011,12 @@ public class WadlResourceTest {
         }
 
         @Test
+        public void mytest() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+            final Response response = target().path("root/test").request().get();
+            System.out.println(response.readEntity(String.class));
+        }
+
+        @Test
         public void testRecursive2() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
             _testRecursiveWadl("root/loc/loc");
         }
@@ -1120,45 +1132,6 @@ public class WadlResourceTest {
         }
     }
 
-
-    private static void _testFieldAndSetterParam(Response response, String path) throws ParserConfigurationException,
-            SAXException, IOException, XPathExpressionException {
-
-        Document d = extractWadlAsDocument(response);
-        XPath xp = XPathFactory.newInstance().newXPath();
-        xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
-
-        final String resourcePath = String.format("//wadl:resource[@path='%s/{pp}']", path);
-        final String methodPath = resourcePath + "/wadl:method[@name='GET']";
-
-        // check number of resource methods is one
-        int methodCount = ((Double) xp.evaluate("count(" + methodPath + ")", d, XPathConstants.NUMBER)).intValue();
-        assertEquals(1, methodCount);
-
-        Map<String, String> paramStyles = new HashMap<String, String>();
-
-        paramStyles.put("hp", "header");
-        paramStyles.put("mp", "matrix");
-        paramStyles.put("pp", "template");
-        paramStyles.put("q", "query");
-
-        for (Map.Entry<String, String> param : paramStyles.entrySet()) {
-
-            String pName = param.getKey();
-            String pStyle = param.getValue();
-
-            String paramXPath = String.format("%s/wadl:param[@name='%s']", resourcePath, pName);
-
-            // check number of params is one
-            int pc = ((Double) xp.evaluate("count(" + paramXPath + ")", d, XPathConstants.NUMBER)).intValue();
-            assertEquals(1, pc);
-
-            // check the style of the param
-            String style = (String) xp.evaluate(paramXPath + "/@style", d, XPathConstants.STRING);
-            assertEquals(pStyle, style);
-        }
-    }
-
     @Ignore // TODO - fails -> fix it and unignore
     public static class Wadl4Test extends JerseyTest {
         @Override
@@ -1190,6 +1163,44 @@ public class WadlResourceTest {
         public void testFieldParam() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
             final String path = "fieldParam";
             _testFieldAndSetterParam(target("/application.wadl").request().get(), path);
+        }
+
+        private static void _testFieldAndSetterParam(Response response, String path) throws ParserConfigurationException,
+                SAXException, IOException, XPathExpressionException {
+
+            Document d = extractWadlAsDocument(response);
+            XPath xp = XPathFactory.newInstance().newXPath();
+            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+
+            final String resourcePath = String.format("//wadl:resource[@path='%s/{pp}']", path);
+            final String methodPath = resourcePath + "/wadl:method[@name='GET']";
+
+            // check number of resource methods is one
+            int methodCount = ((Double) xp.evaluate("count(" + methodPath + ")", d, XPathConstants.NUMBER)).intValue();
+            assertEquals(1, methodCount);
+
+            Map<String, String> paramStyles = new HashMap<String, String>();
+
+            paramStyles.put("hp", "header");
+            paramStyles.put("mp", "matrix");
+            paramStyles.put("pp", "template");
+            paramStyles.put("q", "query");
+
+            for (Map.Entry<String, String> param : paramStyles.entrySet()) {
+
+                String pName = param.getKey();
+                String pStyle = param.getValue();
+
+                String paramXPath = String.format("%s/wadl:param[@name='%s']", resourcePath, pName);
+
+                // check number of params is one
+                int pc = ((Double) xp.evaluate("count(" + paramXPath + ")", d, XPathConstants.NUMBER)).intValue();
+                assertEquals(1, pc);
+
+                // check the style of the param
+                String style = (String) xp.evaluate(paramXPath + "/@style", d, XPathConstants.STRING);
+                assertEquals(pStyle, style);
+            }
         }
     }
 
@@ -1257,5 +1268,81 @@ public class WadlResourceTest {
         }
     }
 
+    public static class Wadl8Test extends JerseyTest {
+        @Override
+        protected Application configure() {
+            return new ResourceConfig(ResourceA.class, ResourceB.class, ResourceSpecific.class);
+        }
 
+        @Path("{a}")
+        public static class ResourceA {
+
+            @GET
+            public String getA() {
+                return "a";
+            }
+        }
+
+        @Path("{b}")
+        public static class ResourceB {
+
+            @POST
+            public String postB(String str) {
+                return "b";
+            }
+        }
+
+        @Path("resource")
+        public static class ResourceSpecific {
+
+            @GET
+            @Path("{templateA}")
+            public String getTemplateA() {
+                return "template-a";
+            }
+
+
+            @POST
+            @Path("{templateB}")
+            public String postTemplateB(String str) {
+                return "template-b";
+            }
+        }
+
+        @Test
+        @Ignore("WADL Options invoked on resources with same template returns only methods from one of these resources")
+        // TODO: fix
+        public void testWadlForAmbiguousResourceTemplates() throws IOException, SAXException, ParserConfigurationException,
+                XPathExpressionException {
+            final Response response = target().path("foo").request(MediaTypes.WADL).options();
+            Document d = extractWadlAsDocument(response);
+            XPath xp = XPathFactory.newInstance().newXPath();
+            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+
+            String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
+            Assert.assertEquals("getA", result);
+
+
+            result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='POST']/@id", d, XPathConstants.STRING);
+            Assert.assertEquals("postB", result);
+        }
+
+        @Test
+        @Ignore("WADL Options invoked on resources with same template returns only methods from one of these resources")
+        // TODO: fix
+        public void testWadlForAmbiguousChildResourceTemplates() throws IOException, SAXException, ParserConfigurationException,
+                XPathExpressionException {
+            final Response response = target().path("resource/bar").request(MediaTypes.WADL).options();
+
+            Document d = extractWadlAsDocument(response);
+            XPath xp = XPathFactory.newInstance().newXPath();
+            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+
+            String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
+            Assert.assertEquals("getTemplateA", result);
+
+            result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='POST']/@id", d, XPathConstants.STRING);
+            Assert.assertEquals("postTemplateB", result);
+        }
+    }
 }

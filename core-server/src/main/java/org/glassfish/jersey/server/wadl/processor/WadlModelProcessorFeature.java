@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model.internal;
+
+package org.glassfish.jersey.server.wadl.processor;
+
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.ModelProcessor;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
+import org.glassfish.jersey.server.wadl.WadlApplicationContext;
+import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
+
 
 /**
- * Configures injection bindings for resource modeling API.
+ * Feature enabling WADL {@link ModelProcessor model processor}. The feature registers model processor
+ * which enhance the resource model with WADL resource extensions.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class ResourceModelBinder extends AbstractBinder {
+public class WadlModelProcessorFeature implements Feature {
 
     @Override
-    protected void configure() {
-        // Model bindings
-        bindAsContract(RuntimeModelBuilder.class);
+    public boolean configure(FeatureContext context) {
+        final boolean disabled = PropertiesHelper.isProperty(context.getConfiguration().getProperty(ServerProperties
+                .FEATURE_DISABLE_WADL));
+        if (disabled) {
+            return false;
+        }
 
-        // Resource method invocation bindings
-        bindAsContract(ResourceMethodInvoker.Builder.class);
-        bindAsContract(ResourceMethodDispatcherFactory.class);
-        bindAsContract(ResourceMethodInvocationHandlerFactory.class);
-
-        // Dispatcher providers
-        bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-        bind(JavaResourceMethodDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-
-        bind(OptionsMethodProcessor.class).to(ModelProcessor.class);
+        context.register(WadlModelProcessor.class);
+        context.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(WadlApplicationContextImpl.class).to(WadlApplicationContext.class).in(Singleton.class);
+            }
+        });
+        return true;
     }
+
+
 }
