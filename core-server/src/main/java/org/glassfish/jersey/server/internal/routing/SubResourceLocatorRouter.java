@@ -116,21 +116,25 @@ class SubResourceLocatorRouter implements Router {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        if (subResource.getClass().isAssignableFrom(Class.class)) {
-            final Class<?> clazz = (Class<?>) subResource;
-            subResource = Injections.getOrCreate(locator, clazz);
-        }
-        resourceContext.bindResourceIfSingleton(subResource);
-
         Resource subResourceModel;
+        if (subResource.getClass().isAssignableFrom(Resource.class)) {
+            subResourceModel = (Resource) subResource;
+        } else {
+            if (subResource.getClass().isAssignableFrom(Class.class)) {
+                final Class<?> clazz = (Class<?>) subResource;
+                subResource = Injections.getOrCreate(locator, clazz);
+            } else {
+                routingCtx.pushMatchedResource(subResource);
+                resourceContext.bindResourceIfSingleton(subResource);
+            }
 
-        // TODO: what to do with the issues?
-        final Resource.Builder builder = Resource.builder(subResource.getClass());
-        if (builder == null) {
-            // resource is empty
-            throw new NotFoundException();
+            final Resource.Builder builder = Resource.builder(subResource.getClass());
+            if (builder == null) {
+                // resource is empty
+                throw new NotFoundException();
+            }
+            subResourceModel = builder.build();
         }
-        subResourceModel = builder.build();
 
         subResourceModel = processSubResource(subResourceModel);
         validate(subResourceModel);
@@ -143,7 +147,7 @@ class SubResourceLocatorRouter implements Router {
         runtimeModelBuilder.process(subResourceModel, true);
 
         // TODO: implement generated sub-resource methodAcceptorPair caching
-        routingCtx.pushMatchedResource(subResource);
+
         Router subResourceAcceptor = runtimeModelBuilder.buildModel(true);
         return Continuation.of(request, subResourceAcceptor);
     }

@@ -73,13 +73,10 @@ class PushMethodHandlerRouter implements Router {
          * @param methodHandler method handler model providing the method handler
          *                      instance.
          * @param next          next router to be invoked after the this one.
-         * @param subResourceMode flag indicating whether the router will be used in the sub resource model ({@code true})
-         *                        created from sub resource locator or whether the router will be part of root
-         *                        resource model ({@code false}).
          * @return new {@code PushMethodHandlerRouter} instance.
          */
-        public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next, boolean subResourceMode) {
-            return new PushMethodHandlerRouter(routingContextFactory, locator, methodHandler, next, subResourceMode);
+        public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next) {
+            return new PushMethodHandlerRouter(routingContextFactory, locator, methodHandler, next);
         }
 
     }
@@ -88,29 +85,26 @@ class PushMethodHandlerRouter implements Router {
     private final Provider<RoutingContext> routingContextFactory;
     private final MethodHandler methodHandler;
     private final Router next;
-    private final boolean subResourceMode;
 
     private PushMethodHandlerRouter(
             final Provider<RoutingContext> routingContextFactory,
             final ServiceLocator locator,
             final MethodHandler methodHandler,
-            final Router next,
-            final boolean subResourceMode) {
+            final Router next) {
         this.locator = locator;
         this.routingContextFactory = routingContextFactory;
         this.methodHandler = methodHandler;
         this.next = next;
-        this.subResourceMode = subResourceMode;
     }
 
     @Override
     public Continuation apply(final ContainerRequest request) {
-        // TODO: this should be improved probably by instance based handlers
-        if (!subResourceMode || !routingContextFactory.get().peekMatchedResource().getClass().equals(methodHandler.getHandlerClass())) {
+
+        final Object storedResource = routingContextFactory.get().peekMatchedResource();
+        if (storedResource == null || !storedResource.getClass().equals(methodHandler.getHandlerClass())) {
             Object handlerInstance = methodHandler.getInstance(locator);
             routingContextFactory.get().pushMatchedResource(handlerInstance);
         }
-
         return Continuation.of(request, next);
     }
 }
