@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,13 @@
  */
 package org.glassfish.jersey.server.internal;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.junit.Test;
 import static org.junit.Assert.assertSame;
+
+import junit.framework.Assert;
 
 /**
  * Unit test that checks that the right RuntimeDelegateImpl is loaded by JAX-RS.
@@ -50,6 +53,20 @@ import static org.junit.Assert.assertSame;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class RuntimeDelegateImplTest {
+
+    @Test
+    public void testCreateEndpoint() {
+        RuntimeDelegate delegate = RuntimeDelegate.getInstance();
+        try {
+            delegate.createEndpoint((Application) null, com.sun.net.httpserver.HttpHandler.class);
+            Assert.fail("IllegalArgumentException should be thrown");
+        } catch (IllegalArgumentException iae) {
+            // ok - should be thrown
+        } catch (Exception e) {
+            Assert.fail("IllegalArgumentException should be thrown");
+        }
+    }
+
     @Test
     public void testRuntimeDelegateInstance() {
         assertSame(RuntimeDelegateImpl.class, RuntimeDelegate.getInstance().getClass());
