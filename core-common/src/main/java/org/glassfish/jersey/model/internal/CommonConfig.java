@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.model.internal;
 
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ import com.google.common.collect.Sets;
  */
 public class CommonConfig implements FeatureContext, ExtendedConfig {
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
-    private static final Function<Object,Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
+    private static final Function<Object, Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
         @Override
         public Binder apply(Object input) {
             return Binder.class.cast(input);
@@ -289,7 +288,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     @Override
     public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
         final ContractProvider model = componentBag.getModel(componentClass);
-        return (model == null) ? null : model.getContractMap();
+        return (model == null) ? Collections.<Class<?>, Integer>emptyMap() : model.getContractMap();
     }
 
     @Override
