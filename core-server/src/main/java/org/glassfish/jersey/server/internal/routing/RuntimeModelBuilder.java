@@ -218,8 +218,7 @@ public final class RuntimeModelBuilder {
             for (ResourceMethod resourceMethod : child.getAllMethods()) {
                 samePathMethodAcceptorPairs.add(
                         new MethodAcceptorPair(resourceMethod, child, pushMatchedResourceRouter, childPushMatchedResourceRouter,
-                                createSingleMethodAcceptor(resourceMethod,
-                                        subResourceMode)));
+                                createSingleMethodAcceptor(resourceMethod)));
             }
         }
     }
@@ -238,7 +237,7 @@ public final class RuntimeModelBuilder {
                         @Override
                         public MethodAcceptorPair apply(ResourceMethod methodModel) {
                             return new MethodAcceptorPair(methodModel, resource, pushMatchedResourceRouter,
-                                    createSingleMethodAcceptor(methodModel, subResourceMode));
+                                    createSingleMethodAcceptor(methodModel));
                         }
                     }));
         }
@@ -253,8 +252,7 @@ public final class RuntimeModelBuilder {
 
             locatorList.add(
                     new MethodAcceptorPair(resourceLocator, resource, pushMatchedResourceRouter,
-                            createSingleMethodAcceptor(resourceLocator,
-                                    subResourceMode)));
+                            createSingleMethodAcceptor(resourceLocator)));
         }
     }
 
@@ -279,7 +277,7 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod, final boolean subResourceMode) {
+    private Router createSingleMethodAcceptor(final ResourceMethod resourceMethod) {
         Router methodAcceptor = null;
         switch (resourceMethod.getType()) {
             case RESOURCE_METHOD:
@@ -291,8 +289,7 @@ public final class RuntimeModelBuilder {
                 break;
         }
 
-        // TODO: solve this via instance-based method handler model?
-        return pushHandlerAcceptorBuilder.build(resourceMethod.getInvocable().getHandler(), methodAcceptor, subResourceMode);
+        return pushHandlerAcceptorBuilder.build(resourceMethod.getInvocable().getHandler(), methodAcceptor);
     }
 
 
