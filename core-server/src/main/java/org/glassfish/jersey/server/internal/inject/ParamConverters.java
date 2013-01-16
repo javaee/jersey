@@ -82,11 +82,11 @@ class ParamConverters {
                 if (value.length() == 0) {
                     return null;
                 }
-                Throwable target = ex.getTargetException();
-                if (target instanceof WebApplicationException) {
-                    throw (WebApplicationException) target;
+                Throwable cause = ex.getCause();
+                if (cause instanceof WebApplicationException) {
+                    throw (WebApplicationException) cause;
                 } else {
-                    throw new ExtractorException(target);
+                    throw new ExtractorException(cause);
                 }
             } catch (Exception ex) {
                 throw new ProcessingException(ex);
