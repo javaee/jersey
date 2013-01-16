@@ -67,7 +67,9 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
+import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
@@ -90,17 +92,10 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private final LinkedList<String> paths = Lists.newLinkedList();
     private Inflector<ContainerRequest, ContainerResponse> inflector;
-    private final LinkedList<HierarchyAwareResource> matchedModelResources = Lists.newLinkedList();
+    private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
+    volatile private ResourceMethod matchedResourceMethod = null;
+    volatile private Resource matchedResourceModel = null;
 
-    private static class HierarchyAwareResource {
-        private final Resource resource;
-        private final boolean isChildResource;
-
-        private HierarchyAwareResource(Resource resource, boolean childResource) {
-            this.resource = resource;
-            isChildResource = childResource;
-        }
-    }
 
     /**
      * Injection constructor.
@@ -224,8 +219,18 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public void pushMatchedResource(Resource resource, boolean isChildResource) {
-        this.matchedModelResources.push(new HierarchyAwareResource(resource, isChildResource));
+    public void setMatchedResourceMethod(ResourceMethod resourceMethod) {
+        this.matchedResourceMethod = resourceMethod;
+    }
+
+    @Override
+    public void setMatchedResource(Resource resourceModel) {
+        this.matchedResourceModel = resourceModel;
+    }
+
+    @Override
+    public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
+        this.matchedRuntimeResources.push(runtimeResource);
     }
 
     // UriInfo
@@ -458,44 +463,17 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public List<Resource> getMatchedAllModelResources() {
-        return Lists.transform(matchedModelResources, new Function<HierarchyAwareResource, Resource>() {
-            @Override
-            public Resource apply(final HierarchyAwareResource input) {
-                return input.resource;
-            }
-        });
+    public List<RuntimeResource> getMatchedRuntimeResources() {
+        return this.matchedRuntimeResources;
     }
 
     @Override
-    public List<Resource> getMatchedModelResources() {
-        List<Resource> list = Lists.newArrayList();
-        for (HierarchyAwareResource resource : matchedModelResources) {
-            if (!resource.isChildResource) {
-                list.add(resource.resource);
-            }
-        }
-        return list;
+    public ResourceMethod getMatchedResourceMethod() {
+        return matchedResourceMethod;
     }
 
     @Override
     public Resource getMatchedModelResource() {
-        final HierarchyAwareResource lastResource = this.matchedModelResources.peek();
-        if (lastResource.isChildResource) {
-            return this.matchedModelResources.get(1).resource;
-        } else {
-            return lastResource.resource;
-        }
-    }
-
-    @Override
-    public Resource getMatchedChildModelResource() {
-        final HierarchyAwareResource lastResource = this.matchedModelResources.peek();
-        if (lastResource.isChildResource) {
-            return lastResource.resource;
-        } else {
-            // no child resource - called from resource method
-            return null;
-        }
+        return matchedResourceModel;
     }
 }

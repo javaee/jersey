@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,8 @@
  */
 package org.glassfish.jersey.server.model;
 
-import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * Validator ensuring that resource are correct (for example that root resources contains path, etc.).
@@ -55,18 +55,12 @@ class ResourceValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkResource(final Resource resource) {
-        // uri template of the resource, if present should not contain a null value
-        if (resource.isRootResource() && (null == resource.getPath())) {
-            // TODO: is it really a fatal issue?
-            Errors.fatal(resource, LocalizationMessages.RES_URI_PATH_INVALID(resource.getName(), resource.getPath()));
-        }
-
         if (!resource.getResourceMethods().isEmpty() && resource.getResourceLocator() != null) {
             Errors.warning(resource, LocalizationMessages.RESOURCE_CONTAINS_RES_METHODS_AND_LOCATOR(resource,
                     resource.getPath()));
         }
 
-        if (resource.isRootResource() && resource.getResourceMethods().isEmpty() && resource.getChildResources()
+        if (resource.getPath() != null && resource.getResourceMethods().isEmpty() && resource.getChildResources()
                 .isEmpty() &&
                 resource.getResourceLocator() == null) {
             Errors.warning(resource, LocalizationMessages.RESOURCE_EMPTY(resource, resource.getPath()));

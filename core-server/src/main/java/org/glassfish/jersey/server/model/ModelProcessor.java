@@ -80,12 +80,15 @@ public interface ModelProcessor {
     public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration);
 
     /**
-     * Process {@code subResource} which is created from sub resource locator. Returning input {@code subResource} will
-     * cause no effect on the final sub resource model.
+     * Process {@code subResourceModel} which was returned a sub resource locator.
+     * <p/>
+     * The {@code subResourceModel} contains only one {@link Resource resource} representing model that should be processed
+     * by further matching. The method must return also exactly one resource in the model. Returning input
+     * {@code subResourceModel} instance will cause no effect on the final sub resource model.
      *
-     * @param subResource {@link Resource Sub resource} which is based on sub resource returned from sub resource locator.
+     * @param subResourceModel {@link Resource Sub resource} which is based on sub resource returned from sub resource locator.
      * @param configuration Runtime configuration.
-     * @return Processed resource which should be used for handling sub resource.
+     * @return Processed resource model with one {@link Resource resource} which should be used for handling sub resource.
      */
-    public Resource processSubResource(Resource subResource, Configuration configuration);
+    public ResourceModel processSubResource(ResourceModel subResourceModel, Configuration configuration);
 }

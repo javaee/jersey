@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.ResourceTestUtils;
 
 import org.junit.Test;
 
@@ -128,44 +128,17 @@ public class ResourceMergeTest {
         }
     }
 
-    private void containsExactMethods(Resource resource, boolean shouldContainLocator, String... httpMethods) {
-        Assert.assertEquals(shouldContainLocator, resource.getResourceLocator() != null);
-        for (String httpMethod : httpMethods) {
-            containsMethod(resource, httpMethod);
-        }
-        Assert.assertEquals(httpMethods.length, resource.getResourceMethods().size());
-    }
-
-    private void containsMethod(Resource resource, String httpMethod) {
-        for (ResourceMethod method : resource.getResourceMethods()) {
-            if (method.getHttpMethod().equals(httpMethod)) {
-                return;
-            }
-        }
-        Assert.fail("Resource " + resource + " does not contain resource method " + httpMethod + "!");
-    }
-
-    private Resource getResource(List<Resource> resources, String path) {
-        for (Resource resource : resources) {
-            if (resource.getPath().equals(path)) {
-                return resource;
-            }
-        }
-        Assert.fail("Resource with path '" + path + "' is not in the list of resources " + resources + "!");
-        return null;
-    }
-
 
     @Test
     public void testResourceMerge() {
         final List<Resource> rootResources = createRootResources();
         Assert.assertEquals(2, rootResources.size());
 
-        final Resource resourceC = getResource(rootResources, "different-path");
-        containsExactMethods(resourceC, false, "POST");
+        final Resource resourceC = ResourceTestUtils.getResource(rootResources, "different-path");
+        ResourceTestUtils.containsExactMethods(resourceC, false, "POST");
 
-        final Resource resourceAB = getResource(rootResources, "a");
-        containsExactMethods(resourceAB, false, "POST", "GET");
+        final Resource resourceAB = ResourceTestUtils.getResource(rootResources, "a");
+        ResourceTestUtils.containsExactMethods(resourceAB, false, "POST", "GET");
     }
 
     private List<Resource> createRootResources() {
@@ -184,23 +157,23 @@ public class ResourceMergeTest {
     public void testChildResourceMerge() {
         final List<Resource> rootResources = createRootResources();
         Assert.assertEquals(2, rootResources.size());
-        final Resource resourceAB = getResource(rootResources, "a");
+        final Resource resourceAB = ResourceTestUtils.getResource(rootResources, "a");
         Assert.assertEquals(2, resourceAB.getChildResources().size());
-        final Resource child = getResource(resourceAB.getChildResources(), "child");
-        final Resource child2 = getResource(resourceAB.getChildResources(), "child2");
+        final Resource child = ResourceTestUtils.getResource(resourceAB.getChildResources(), "child");
+        final Resource child2 = ResourceTestUtils.getResource(resourceAB.getChildResources(), "child2");
 
-        containsExactMethods(child, true, "GET", "POST");
-        containsExactMethods(child2, false, "GET");
+        ResourceTestUtils.containsExactMethods(child, true, "GET", "POST");
+        ResourceTestUtils.containsExactMethods(child2, false, "GET");
 
 
-        final Resource resourceC = getResource(rootResources, "different-path");
+        final Resource resourceC = ResourceTestUtils.getResource(rootResources, "different-path");
         final List<Resource> childResourcesC = resourceC.getChildResources();
         Assert.assertEquals(2, childResourcesC.size());
-        final Resource childC1 = getResource(childResourcesC, "child");
-        containsExactMethods(childC1, false, "PUT");
+        final Resource childC1 = ResourceTestUtils.getResource(childResourcesC, "child");
+        ResourceTestUtils.containsExactMethods(childC1, false, "PUT");
 
-        final Resource childC2 = getResource(childResourcesC, "locator");
-        containsExactMethods(childC2, true);
+        final Resource childC2 = ResourceTestUtils.getResource(childResourcesC, "locator");
+        ResourceTestUtils.containsExactMethods(childC2, true);
 
         child.getResourceMethods().size();
     }
@@ -220,13 +193,13 @@ public class ResourceMergeTest {
         final List<Resource> rootResources = getResourcesFromProgrammatic();
 
         Assert.assertEquals(1, rootResources.size());
-        final Resource root = getResource(rootResources, "root");
+        final Resource root = ResourceTestUtils.getResource(rootResources, "root");
         final List<Resource> childResources = root.getChildResources();
         Assert.assertEquals(2, childResources.size());
-        final Resource child = getResource(childResources, "child");
-        containsExactMethods(child, true, "GET", "POST", "DELETE");
-        final Resource child2 = getResource(childResources, "child2");
-        containsExactMethods(child2, false, "PUT");
+        final Resource child = ResourceTestUtils.getResource(childResources, "child");
+        ResourceTestUtils.containsExactMethods(child, true, "GET", "POST", "DELETE");
+        final Resource child2 = ResourceTestUtils.getResource(childResources, "child2");
+        ResourceTestUtils.containsExactMethods(child2, false, "PUT");
     }
 
     private List<Resource> getResourcesFromProgrammatic() {
@@ -309,17 +282,17 @@ public class ResourceMergeTest {
 
     private void testMergingTemplateResources(List<Resource> resources) {
         Assert.assertEquals(2, resources.size());
-        final Resource resB = getResource(resources, "root/{b}");
-        containsExactMethods(resB, false, "GET");
-        final Resource resA = getResource(resources, "root/{a}");
+        final Resource resB = ResourceTestUtils.getResource(resources, "root/{b}");
+        ResourceTestUtils.containsExactMethods(resB, false, "GET");
+        final Resource resA = ResourceTestUtils.getResource(resources, "root/{a}");
 
         Assert.assertTrue(resA.getResourceMethods().isEmpty());
         final List<Resource> childResources = resA.getChildResources();
         Assert.assertEquals(2, childResources.size());
-        final Resource childQ = getResource(childResources, "{q}");
-        containsExactMethods(childQ, false, "GET", "PUT");
-        final Resource childPost = getResource(childResources, "{post}");
-        containsExactMethods(childPost, false, "POST");
+        final Resource childQ = ResourceTestUtils.getResource(childResources, "{q}");
+        ResourceTestUtils.containsExactMethods(childQ, false, "GET", "PUT");
+        final Resource childPost = ResourceTestUtils.getResource(childResources, "{post}");
+        ResourceTestUtils.containsExactMethods(childPost, false, "POST");
     }
 
     private List<Resource> createResources(Class<?>... resourceClass) {

@@ -75,6 +75,8 @@ import com.google.common.collect.Lists;
 import junit.framework.Assert;
 
 /**
+ * Test model processor.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
@@ -93,7 +95,7 @@ public class ModelProcessorTest extends JerseyTest {
 
             @Override
             public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-                ResourceModel.Builder modelBuilder = new ResourceModel.Builder();
+                ResourceModel.Builder modelBuilder = new ResourceModel.Builder(false);
                 final Resource modelResource = Resource.from(ModelResource.class);
                 modelBuilder.addResource(modelResource);
 
@@ -124,7 +126,6 @@ public class ModelProcessorTest extends JerseyTest {
                             });
                 }
 
-
                 final Inflector<ContainerRequestContext, Object> inflector = new Inflector<ContainerRequestContext, Object>() {
 
                     @Override
@@ -150,11 +151,10 @@ public class ModelProcessorTest extends JerseyTest {
                 return resBuilder.build();
             }
 
-
             @Override
-            public Resource processSubResource(Resource subResource, Configuration configuration) {
-                final Resource resource = enhanceResource(subResource);
-                return resource;
+            public ResourceModel processSubResource(ResourceModel subResource, Configuration configuration) {
+                final Resource resource = enhanceResource(subResource.getResources().get(0));
+                return new ResourceModel.Builder(true).addResource(resource).build();
             }
         }
 
@@ -168,7 +168,16 @@ public class ModelProcessorTest extends JerseyTest {
             public String get() {
                 final ResourceModel resourceModel = resourceContext.getResourceModel();
                 StringBuilder sb = new StringBuilder();
-                for (Resource resource : resourceModel.getRootResources()) {
+                List<Resource> sortedResources = resourceModel.getRootResources();
+                Collections.sort(sortedResources, new Comparator<Resource>() {
+                    @Override
+                    public int compare(Resource o1, Resource o2) {
+                        final String path1 = o1.getPath() == null ? "" : o1.getPath();
+                        final String path2 = o2.getPath() == null ? "" : o2.getPath();
+                        return path1.compareTo(path2);
+                    }
+                });
+                for (Resource resource : sortedResources) {
                     final String path = resource.getPath();
                     sb.append(path == null ? "<no-path>" : path).append("|");
                 }

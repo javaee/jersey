@@ -53,6 +53,8 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -188,12 +190,28 @@ public interface RoutingContext extends ResourceInfo {
     public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors();
 
     /**
-     * Push {@code resource} containing {@link org.glassfish.jersey.server.model.ResourceMethod resource method}
-     * matched by resource matching algorithm. The resource can be both, resource and child resource, and the flag
-     * {@code isChildResource} distinguish between them.
+     * Set the matched {@link ResourceMethod resource method}. This method needs to be called only if the method was
+     * matched. This method should be called only for setting the final resource method and not for setting sub resource
+     * locators invoked during matching.
      *
-     * @param resource Resource or child resource to be pushed.
-     * @param isChildResource True if the {@code resource} is child resource, false otherwise.
+     * @param resourceMethod Resource method that was matched.
      */
-    public void pushMatchedResource(Resource resource, boolean isChildResource);
+    public void setMatchedResourceMethod(ResourceMethod resourceMethod);
+
+    /**
+     * Set the matched {@link Resource resource or child resource}. This method needs to be called only if the resource was
+     * matched. This method should be called only setting for final resource which contains matched resource method
+     * and not for setting resources which contains sub resource locators invoked during matching.
+     *
+     * @param resource Resource that was matched.
+     */
+    public void setMatchedResource(Resource resource);
+
+    /**
+     * Push a matched {@link RuntimeResource runtime resource} that was visited during matching phase. This method must
+     * be called for any matched runtime resource.
+     *
+     * @param runtimeResource Runtime resource that was matched during matching.
+     */
+    public void pushMatchedRuntimeResource(RuntimeResource runtimeResource);
 }

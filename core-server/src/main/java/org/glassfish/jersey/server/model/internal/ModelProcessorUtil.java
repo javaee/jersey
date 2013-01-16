@@ -41,7 +41,6 @@
 package org.glassfish.jersey.server.model.internal;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.HttpMethod;
@@ -53,10 +52,8 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.glassfish.jersey.uri.PathPattern;
+import org.glassfish.jersey.server.model.RuntimeResource;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -72,7 +69,7 @@ public class ModelProcessorUtil {
      * @param resource Resource for which resource methods should be found.
      * @return Set of resource methods that can be invoked on the given resource.
      */
-    public static Set<String> getAllowedMethods(Resource resource) {
+    public static Set<String> getAllowedMethods(RuntimeResource resource) {
         Set<String> allowedMethods = Sets.newHashSet();
         for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
             final String httpMethod = resourceMethod.getHttpMethod();
@@ -84,7 +81,8 @@ public class ModelProcessorUtil {
     }
 
 
-    private static boolean isMethodOverriden(ResourceMethod resourceMethod, String httpMethod, MediaType consumes, MediaType produces) {
+    private static boolean isMethodOverriden(ResourceMethod resourceMethod, String httpMethod, MediaType consumes,
+                                             MediaType produces) {
         if (!resourceMethod.getHttpMethod().equals(httpMethod)) {
             return false;
         }
@@ -130,8 +128,8 @@ public class ModelProcessorUtil {
          * @param produces Produces media type.
          * @param inflector Inflector handling the resource method.
          */
-        public Method(String httpMethod, MediaType consumes, MediaType produces, Class<? extends Inflector<ContainerRequestContext,
-                Response>> inflector) {
+        public Method(String httpMethod, MediaType consumes, MediaType produces,
+                      Class<? extends Inflector<ContainerRequestContext, Response>> inflector) {
             this.httpMethod = httpMethod;
             this.consumes = consumes;
             this.produces = produces;
@@ -146,102 +144,53 @@ public class ModelProcessorUtil {
      * that new resource methods with same HTTP method can define only more specific media type.
      *
      * @param resourceModel Resource model to be enhanced.
+     * @param subResourceModel {@code true} if the {@code resourceModel} to be enhanced is a sub resource model, {@code false}
+     *                                     if it is application resource model.
      * @param methods List of enhancing methods.
-     * @return New resource model enhanced by {@code methods}.
+     * @return New resource model builder enhanced by {@code methods}.
      */
-    public static ResourceModel enhanceResourceModel(ResourceModel resourceModel, List<Method> methods) {
-        List<Resource> newResources = Lists.newArrayList();
-        for (Map.Entry<PathPattern, List<Resource>> entry : resourceModel.getPathPatternToResources().entrySet()) {
-            final List<Resource> resources = entry.getValue();
-            addMethods(resources, null, methods, newResources);
-            resources.subList(1, resources.size());
-        }
+    public static ResourceModel.Builder enhanceResourceModel(ResourceModel resourceModel, boolean subResourceModel,
+                                                             List<Method> methods) {
+        ResourceModel.Builder newModelBuilder = new ResourceModel.Builder(resourceModel, subResourceModel);
 
-        for (Resource resource : resourceModel.getRootResources()) {
-            newResources.add(resource);
+        for (RuntimeResource resource : resourceModel.getRuntimeResourceModel().getRuntimeResources()) {
+            enhanceResource(resource, newModelBuilder, methods);
         }
-        return new ResourceModel.Builder(newResources).build();
+        return newModelBuilder;
     }
 
+    private static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder, List<Method> methods) {
 
-    /**
-     * Enhance {@code resource} by list of methods. The {@code resource} is traversed and for each available endpoint
-     * URI in the resource (resource path and child resource paths) {@code methods} are added to the resource. In case of method
-     * conflicts currently existing methods will never be 'overriden' by any method from {@code methods}. Overriding check takes
-     * into account media types of methods so that new resource methods with same HTTP method can define only more specific
-     * media type.
-     *
-     * @param resource Resource to be enhanced.
-     * @param methods List of enhancing methods.
-     * @return New resource enhanced by {@code methods}.
-     */
-    public static Resource enhanceResourceModel(Resource resource, List<Method> methods) {
-        List<Resource> newResources = Lists.newArrayList();
-        addMethods(Lists.newArrayList(resource), null, methods, newResources);
-        newResources.add(resource);
-        return Resource.builder(newResources).build();
-
-    }
-
-    private static Resource.Builder addMethods(final List<Resource> samePathPatternResources,
-                                               final Resource.Builder parentBuilder,
-                                               List<Method> enhancingMethods, List<Resource> newResources) {
-        final List<ResourceMethod> resourceMethods = Resource.getAggregatedResourceMethods(samePathPatternResources);
-        final Resource firstResource = samePathPatternResources.get(0);
-
-        if (resourceMethods.size() > 0) {
-            Resource.Builder resourceBuilder;
-            if (parentBuilder == null) {
-                resourceBuilder = Resource.builder(firstResource.getPath());
-            } else {
-                resourceBuilder = parentBuilder.addChildResource(firstResource.getPath());
-            }
-
-            for (Method method : enhancingMethods) {
+        if (resource.getResourceMethods().size() > 0) {
+            for (Method method : methods) {
                 boolean found = false;
-                for (ResourceMethod resourceMethod : resourceMethods) {
-
+                for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
                     if (ModelProcessorUtil.isMethodOverriden(resourceMethod, method.httpMethod, method.consumes,
                             method.produces)) {
                         found = true;
                     }
                 }
                 if (!found) {
-                    resourceBuilder.addMethod(method.httpMethod).consumes(method.consumes).produces(method.produces).handledBy
-                            (method.inflector);
+                    final Resource firstResource = resource.getResources().get(0);
+                    final Resource.Builder resourceBuilder = Resource.builder(firstResource.getPath());
+                    resourceBuilder.addMethod(method.httpMethod).consumes(method.consumes).produces(method.produces)
+                            .handledBy(method.inflector).build();
+
+                    final Resource newResource = resourceBuilder.build();
+                    final Resource parentResource = resource.getParentResources().get(0);
+                    if (parentResource != null) {
+                        final Resource.Builder parentBuilder = Resource.builder(parentResource.getPath());
+                        parentBuilder.addChildResource(newResource);
+                        newModelBuilder.addResource(parentBuilder.build());
+                    } else {
+                        newModelBuilder.addResource(newResource);
+                    }
                 }
             }
-            if (parentBuilder == null) {
-                newResources.add(resourceBuilder.build());
-            } else {
-                return resourceBuilder;
-            }
         }
 
-        Map<Resource, Resource> parentMap = Maps.newHashMap();
-
-        final List<Resource> mergedChildResources = Lists.newArrayList();
-        for (Resource parent : samePathPatternResources) {
-            for (Resource resource : parent.getChildResources()) {
-                parentMap.put(resource, parent);
-                mergedChildResources.add(resource);
-            }
+        for (RuntimeResource child : resource.getChildRuntimeResources()) {
+            enhanceResource(child, newModelBuilder, methods);
         }
-
-        Map<PathPattern, List<Resource>> groupedResources = Resource.groupResourcesByPathPattern(mergedChildResources);
-
-
-        for (Map.Entry<PathPattern, List<Resource>> groupedEntry : groupedResources.entrySet()) {
-            final Resource child = groupedEntry.getValue().get(0);
-            final Resource parent = parentMap.get(child);
-            Resource.Builder resourceBuilder = Resource.builder(parent.getPath());
-            final Resource.Builder builder = addMethods(groupedEntry.getValue(), resourceBuilder, enhancingMethods,
-                    newResources);
-            if (builder != null) {
-                newResources.add(resourceBuilder.build());
-            }
-        }
-
-        return null;
     }
 }

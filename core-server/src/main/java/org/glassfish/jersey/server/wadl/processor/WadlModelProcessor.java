@@ -62,6 +62,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
+import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
@@ -100,9 +101,9 @@ public class WadlModelProcessor implements ModelProcessor {
 
         final Resource wadlResource = Resource.builder(WadlResource.class).build();
 
-        final List<Resource> enhanced = ModelProcessorUtil.enhanceResourceModel(resourceModel, methodList).getRootResources();
-        enhanced.add(wadlResource);
-        return new ResourceModel.Builder(enhanced).build();
+        final ResourceModel.Builder builder = ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList);
+        builder.addResource(wadlResource);
+        return builder.build();
 
     }
 
@@ -120,11 +121,11 @@ public class WadlModelProcessor implements ModelProcessor {
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
 
+            final RuntimeResource resource = extendedUriInfo.getMatchedRuntimeResources().get(0);
             // TODO: support multiple resources, see ignored tests in WadlResourceTest.Wadl8Test
-            final Resource resource = extendedUriInfo.getMatchedAllModelResources().get(0);
             final Application wadlApplication = wadlApplicationContext.getApplication(
                     containerRequestContext.getUriInfo(),
-                    resource);
+                    resource.getResources().get(0));
             Response response = Response.ok()
                     .type(MediaTypes.WADL)
                     .allow(ModelProcessorUtil.getAllowedMethods(resource))
@@ -137,14 +138,11 @@ public class WadlModelProcessor implements ModelProcessor {
     }
 
     @Override
-    public Resource processSubResource(Resource subResource,
-                                       Configuration configuration) {
-        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty
-                (ServerProperties.FEATURE_DISABLE_WADL));
+    public ResourceModel processSubResource(ResourceModel resourceModel, Configuration configuration) {
+        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.FEATURE_DISABLE_WADL));
         if (disabled) {
-            return subResource;
+            return resourceModel;
         }
-        return ModelProcessorUtil.enhanceResourceModel(subResource, methodList);
-
+        return ModelProcessorUtil.enhanceResourceModel(resourceModel, true, methodList).build();
     }
 }

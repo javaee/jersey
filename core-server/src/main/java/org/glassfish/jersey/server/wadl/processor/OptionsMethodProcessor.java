@@ -93,7 +93,8 @@ public class OptionsMethodProcessor implements ModelProcessor {
 
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
-            Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(extendedUriInfo.getMatchedAllModelResources().get(0));
+            Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(extendedUriInfo
+                    .getMatchedRuntimeResources().get(0));
 
             final String allowedList = allowedMethods.toString();
             final String optionsBody = allowedList.substring(1, allowedList.length() - 1);
@@ -112,7 +113,7 @@ public class OptionsMethodProcessor implements ModelProcessor {
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
             final Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(
-                    (extendedUriInfo.getMatchedAllModelResources().get(0)));
+                    (extendedUriInfo.getMatchedRuntimeResources().get(0)));
             return Response.ok()
                     .allow(allowedMethods)
                     .header(HttpHeaders.CONTENT_LENGTH, "0")
@@ -123,13 +124,11 @@ public class OptionsMethodProcessor implements ModelProcessor {
 
     @Override
     public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-        return ModelProcessorUtil.enhanceResourceModel(resourceModel, methodList);
+        return ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList).build();
     }
 
-
     @Override
-    public Resource processSubResource(Resource subResource,
-                                       Configuration configuration) {
-        return ModelProcessorUtil.enhanceResourceModel(subResource, methodList);
+    public ResourceModel processSubResource(ResourceModel subResourceModel, Configuration configuration) {
+        return ModelProcessorUtil.enhanceResourceModel(subResourceModel, true, methodList).build();
     }
 }

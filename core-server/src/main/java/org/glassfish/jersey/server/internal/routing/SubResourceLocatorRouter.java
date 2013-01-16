@@ -79,13 +79,14 @@ import org.glassfish.hk2.api.ServiceLocator;
  * <p/>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 class SubResourceLocatorRouter implements Router {
 
     private final ServiceLocator locator;
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
-    private final RuntimeModelBuilder runtimeModelBuilderOriginal;
+    private final RuntimeModelBuilder runtimeModelBuilder;
     private final JerseyResourceContext resourceContext;
 
 
@@ -93,15 +94,15 @@ class SubResourceLocatorRouter implements Router {
      * Create a new sub-resource locator router.
      *
      * @param locator                     HK2 locator.
-     * @param runtimeModelBuilderOriginal original runtime model builder.
+     * @param runtimeModelBuilder original runtime model builder.
      * @param locatorModel                resource locator method model.
      */
     public SubResourceLocatorRouter(
             final ServiceLocator locator,
-            final RuntimeModelBuilder runtimeModelBuilderOriginal,
+            final RuntimeModelBuilder runtimeModelBuilder,
             final ResourceMethod locatorModel) {
         this.locator = locator;
-        this.runtimeModelBuilderOriginal = runtimeModelBuilderOriginal;
+        this.runtimeModelBuilder = runtimeModelBuilder;
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
         this.resourceContext = locator.getService(JerseyResourceContext.class);
@@ -111,48 +112,48 @@ class SubResourceLocatorRouter implements Router {
     public Continuation apply(final ContainerRequest request) {
         final RoutingContext routingCtx = Injections.getOrCreate(locator, RoutingContext.class);
 
-        Object subResource = getResource(routingCtx);
-        if (subResource == null) {
+        Object subResourceInstance = getResource(routingCtx);
+        if (subResourceInstance == null) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
 
-        Resource subResourceModel;
-        if (subResource.getClass().isAssignableFrom(Resource.class)) {
-            subResourceModel = (Resource) subResource;
+        Resource subResource;
+        if (subResourceInstance.getClass().isAssignableFrom(Resource.class)) {
+            subResource = (Resource) subResourceInstance;
         } else {
-            if (subResource.getClass().isAssignableFrom(Class.class)) {
-                final Class<?> clazz = (Class<?>) subResource;
-                subResource = Injections.getOrCreate(locator, clazz);
+            if (subResourceInstance.getClass().isAssignableFrom(Class.class)) {
+                final Class<?> clazz = (Class<?>) subResourceInstance;
+                subResourceInstance = Injections.getOrCreate(locator, clazz);
             } else {
-                routingCtx.pushMatchedResource(subResource);
-                resourceContext.bindResourceIfSingleton(subResource);
+                routingCtx.pushMatchedResource(subResourceInstance);
+                resourceContext.bindResourceIfSingleton(subResourceInstance);
             }
 
-            final Resource.Builder builder = Resource.builder(subResource.getClass());
+            final Resource.Builder builder = Resource.builder(subResourceInstance.getClass());
             if (builder == null) {
                 // resource is empty
                 throw new NotFoundException();
             }
-            subResourceModel = builder.build();
+            subResource = builder.build();
         }
 
-        subResourceModel = processSubResource(subResourceModel);
-        validate(subResourceModel);
+        ResourceModel resourceModel = new ResourceModel.Builder(true).addResource(subResource).build();
+        resourceModel = processSubResource(resourceModel);
+        validate(resourceModel);
 
-        for (Class<?> handlerClass : subResourceModel.getHandlerClasses()) {
+        subResource = resourceModel.getResources().get(0);
+
+        for (Class<?> handlerClass : subResource.getHandlerClasses()) {
             resourceContext.bindResource(handlerClass);
         }
 
-        final RuntimeModelBuilder runtimeModelBuilder = runtimeModelBuilderOriginal.copy();
-        runtimeModelBuilder.process(subResourceModel, true);
-
         // TODO: implement generated sub-resource methodAcceptorPair caching
+        Router subResourceAcceptor = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), true);
 
-        Router subResourceAcceptor = runtimeModelBuilder.buildModel(true);
         return Continuation.of(request, subResourceAcceptor);
     }
 
-    private Resource processSubResource(Resource subResourceModel) {
+    private ResourceModel processSubResource(ResourceModel subResourceModel) {
         final Configuration configuration = locator.getService(Configuration.class);
         final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(locator,
                 ModelProcessor.class);
@@ -161,16 +162,25 @@ class SubResourceLocatorRouter implements Router {
 
         for (ModelProcessor modelProcessor : modelProcessors) {
             subResourceModel = modelProcessor.processSubResource(subResourceModel, configuration);
+            validateEnhancedModel(subResourceModel, modelProcessor);
         }
         return subResourceModel;
     }
 
-    private void validate(final Resource subResourceModel) {
+    private void validateEnhancedModel(final ResourceModel subResourceModel, final ModelProcessor modelProcessor) {
+        if (subResourceModel.getResources().size() != 1) {
+            throw new ProcessingException(LocalizationMessages.ERROR_SUB_RESOURCE_LOCATOR_MORE_RESOURCES(
+                    subResourceModel.getResources().size()));
+        }
+
+    }
+
+    private void validate(final ResourceModel resourceModel) {
         Errors.process(new Runnable() {
             @Override
             public void run() {
                 final ComponentModelValidator validator = new ComponentModelValidator(locator);
-                validator.validate(new ResourceModel.Builder().addResource(subResourceModel).build());
+                validator.validate(resourceModel);
 
                 if (Errors.fatalIssuesFound()) {
                     throw new ModelValidationException(LocalizationMessages.ERROR_VALIDATION_SUBRESOURCE(),
@@ -178,7 +188,6 @@ class SubResourceLocatorRouter implements Router {
                 }
             }
         });
-
     }
 
     private Object getResource(RoutingContext routingCtx) {

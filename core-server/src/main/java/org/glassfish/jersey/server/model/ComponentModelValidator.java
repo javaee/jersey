@@ -52,9 +52,9 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -86,7 +86,7 @@ import com.google.common.collect.Lists;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class ComponentModelValidator implements ResourceModelVisitor {
+public final class ComponentModelValidator {
 
     private final List<ResourceModelIssue> issueList = Lists.newLinkedList();
     private final ServiceLocator locator;
@@ -96,7 +96,7 @@ public final class ComponentModelValidator implements ResourceModelVisitor {
 
         validators = Lists.newArrayList();
         validators.add(new ResourceValidator());
-        validators.add(new AmbiguousMethodValidator(locator.getService(MessageBodyWorkers.class)));
+        validators.add(new RuntimeResourceModelValidator(locator.getService(MessageBodyWorkers.class)));
         validators.add(new ResourceMethodValidator(locator));
         validators.add(new InvocableValidator());
     }
@@ -169,40 +169,5 @@ public final class ComponentModelValidator implements ResourceModelVisitor {
                 validateWithErrors(subComponent);
             }
         }
-    }
-
-    @Override
-    public void visitInvocable(final Invocable invocable) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitResource(Resource resource) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitChildResource(Resource resource) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitResourceMethod(ResourceMethod method) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitMethodHandler(MethodHandler methodHandler) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitResourceHandlerConstructor(HandlerConstructor constructor) {
-        // do nothing; default implementation of visitor methods
-    }
-
-    @Override
-    public void visitResourceModel(ResourceModel resourceModel) {
-        // do nothing; default implementation of visitor methods
     }
 }

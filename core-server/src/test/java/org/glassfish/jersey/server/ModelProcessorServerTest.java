@@ -75,7 +75,7 @@ public class ModelProcessorServerTest {
 
             @Override
             public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-                ResourceModel.Builder modelBuilder = new ResourceModel.Builder(resourceModel.getRootResources());
+                ResourceModel.Builder modelBuilder = new ResourceModel.Builder(resourceModel, false);
                 final Resource modelResource = Resource.from(ModelResource.class);
                 modelBuilder.addResource(modelResource);
 
@@ -111,9 +111,9 @@ public class ModelProcessorServerTest {
             }
 
             @Override
-            public Resource processSubResource(Resource subResource, Configuration configuration) {
-                final Resource resource = enhanceResource(subResource);
-                return resource;
+            public ResourceModel processSubResource(ResourceModel resourceModel, Configuration configuration) {
+                final Resource resource = enhanceResource(resourceModel.getResources().get(0));
+                return new ResourceModel.Builder(true).addResource(resource).build();
             }
         }
 

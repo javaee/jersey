@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model;
+package org.glassfish.jersey.server.internal.routing;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.model.RuntimeResource;
 
 /**
- * Abstract implementation of {@link ResourceModelVisitor resource model visitor} containing empty implementations
- * of interface methods. This class can be derivered by validator implementing only methods needed for specific
- * validations.
+ * Router that pushes {@link RuntimeResource runtime resource} matched during a any routing phase
+ * to {@link org.glassfish.jersey.server.internal.routing.RoutingContext routing context}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
-public abstract class AbstractResourceModelVisitor implements ResourceModelVisitor {
-    @Override
-    public void visitResource(Resource resource) {
+
+class PushMatchedRuntimeResourceRouter implements Router {
+
+    /**
+     * Builder for creating
+     * {@link org.glassfish.jersey.server.internal.routing.PushMatchedRuntimeResourceRouter push matched resource router}
+     * instances.  New builder instance must be injected and not directly created by constructor call.
+     */
+    static class Builder {
+        @Inject
+        private Provider<RoutingContext> routingContext;
+
+        /**
+         * Builds new instance of the router.
+         * @param runtimeResource RuntimeResource runtime to be pushed into the {@link RoutingContext routing context}.
+         * @return New instance of router created from this builder.
+         */
+        PushMatchedRuntimeResourceRouter build(RuntimeResource runtimeResource) {
+            return new PushMatchedRuntimeResourceRouter(runtimeResource, routingContext);
+        }
+    }
+
+
+    private final RuntimeResource resource;
+
+
+    private final Provider<RoutingContext> routingContext;
+
+    private PushMatchedRuntimeResourceRouter(RuntimeResource resource, Provider<RoutingContext> routingContext) {
+        this.resource = resource;
+        this.routingContext = routingContext;
     }
 
     @Override
-    public void visitChildResource(Resource resource) {
-    }
-
-    @Override
-    public void visitResourceMethod(ResourceMethod method) {
-    }
-
-    @Override
-    public void visitInvocable(Invocable invocable) {
-    }
-
-    @Override
-    public void visitMethodHandler(MethodHandler methodHandler) {
-    }
-
-    @Override
-    public void visitResourceHandlerConstructor(HandlerConstructor constructor) {
-    }
-
-    @Override
-    public void visitResourceModel(ResourceModel resourceModel) {
-    }
-
-    @Override
-    public void visitRuntimeResource(RuntimeResource runtimeResource) {
+    public Continuation apply(ContainerRequest data) {
+        routingContext.get().pushMatchedRuntimeResource(resource);
+        return Continuation.of(data);
     }
 }

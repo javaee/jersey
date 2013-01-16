@@ -46,13 +46,11 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
+import org.glassfish.jersey.server.model.ResourceTestUtils;
 
 import org.junit.Test;
 
@@ -64,23 +62,6 @@ import junit.framework.Assert;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ExtendedResourceContextTest {
-
-    private static void containsExactMethods(Resource resource, boolean shouldContainLocator, String... httpMethods) {
-        Assert.assertEquals(shouldContainLocator, resource.getResourceLocator() != null);
-        for (String httpMethod : httpMethods) {
-            containsMethod(resource, httpMethod);
-        }
-        Assert.assertEquals(httpMethods.length, resource.getResourceMethods().size());
-    }
-
-    private static void containsMethod(Resource resource, String httpMethod) {
-        for (ResourceMethod method : resource.getResourceMethods()) {
-            if (method.getHttpMethod().equals(httpMethod)) {
-                return;
-            }
-        }
-        Assert.fail("Resource " + resource + " does not contain resource method " + httpMethod + "!");
-    }
 
     private static Resource getResource(List<Resource> resources, String path) {
         for (Resource resource : resources) {
@@ -114,14 +95,14 @@ public class ExtendedResourceContextTest {
             final ResourceModel resourceModel = resourceContext.getResourceModel();
             final List<Resource> resources = resourceModel.getRootResources();
             final Resource a = getResource(resources, "a");
-            containsMethod(a, "GET");
-            containsMethod(a, "POST");
+            ResourceTestUtils.containsMethod(a, "GET");
+            ResourceTestUtils.containsMethod(a, "POST");
 
             final Resource b = getResource(resources, "b");
-            containsMethod(b, "GET");
+            ResourceTestUtils.containsMethod(b, "GET");
 
             final Resource q = getResource(resources, "b");
-            containsMethod(q, "GET");
+            ResourceTestUtils.containsMethod(q, "GET");
 
 
             Assert.assertEquals(3, resources.size());
@@ -153,28 +134,6 @@ public class ExtendedResourceContextTest {
         }
     }
 
-    @Path("q")
-    public static class EnhancingResource {
-        @GET
-        public String get() {
-            return "get";
-        }
-    }
-
-
-    public static class MyModelProcessor implements ModelProcessor {
-
-        @Override
-        public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-            return new ResourceModel.Builder(resourceModel.getRootResources()).addResource(Resource.from(EnhancingResource.class))
-                    .build();
-        }
-
-        @Override
-        public Resource processSubResource(Resource subResource, Configuration configuration) {
-            return subResource;
-        }
-    }
 
     @Test
     public void testExtendedResourceContext() throws ExecutionException, InterruptedException {

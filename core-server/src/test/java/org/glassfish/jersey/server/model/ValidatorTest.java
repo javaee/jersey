@@ -313,12 +313,12 @@ public class ValidatorTest {
                 List<Resource> resources = Lists.newArrayList();
                 for (Class<?> clazz : resourceClasses) {
                     final Resource res = Resource.builder(clazz).build();
-                    if (res.isRootResource()) {
+                    if (res.getPath() != null) {
                         resources.add(res);
                     }
                 }
 
-                ResourceModel model = new ResourceModel.Builder(resources).build();
+                ResourceModel model = new ResourceModel.Builder(resources, false).build();
                 ComponentModelValidator validator = new ComponentModelValidator(createLocator());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
@@ -1013,6 +1013,7 @@ public class ValidatorTest {
     @Path("{abc}")
     public static class AmbiguousResource1 {
         @Path("x")
+        @GET
         public String get() {
             return "get";
         }
@@ -1021,6 +1022,7 @@ public class ValidatorTest {
     @Path("{def}")
     public static class AmbiguousResource2 {
         @Path("x")
+        @GET
         public String get() {
             return "get";
         }
@@ -1040,6 +1042,34 @@ public class ValidatorTest {
                 "results into same path pattern).");
         List<ResourceModelIssue> issues = testResourceValidation(AmbiguousResource1.class, AmbiguousResource2.class,
                 UniqueResource.class);
+        assertEquals(1, issues.size());
+        assertTrue(issues.get(0).isFatal());
+    }
+
+
+    @Path("{abc}")
+    public static class AmbiguousLocatorResource1 {
+        @Path("x")
+        public SubResource locator() {
+            return new SubResource();
+        }
+    }
+
+    @Path("{def}")
+    public static class AmbiguousLocatorResource2 {
+        @Path("x")
+        public SubResource locator2() {
+            return new SubResource();
+        }
+    }
+
+
+    @Test
+    public void testAmbiguousResourceLocators() throws Exception {
+        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} " +
+                "results into same path pattern).");
+        List<ResourceModelIssue> issues = testResourceValidation(AmbiguousLocatorResource1.class,
+                AmbiguousLocatorResource2.class);
         assertEquals(1, issues.size());
         assertTrue(issues.get(0).isFatal());
     }

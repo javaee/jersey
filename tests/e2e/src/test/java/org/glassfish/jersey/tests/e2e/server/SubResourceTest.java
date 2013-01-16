@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,6 @@ import java.util.concurrent.Future;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -143,6 +142,13 @@ public class SubResourceTest extends JerseyTest {
         Assert.assertEquals(SubResource.MESSAGE, response.readEntity(String.class));
 
         response = target("root/sub/sub2").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(SubResource.MESSAGE, response.readEntity(String.class));
+    }
+
+    @Test
+    public void subResourceWithoutPathTest() throws Exception {
+        Response response = target("root/sub").request().get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals(SubResource.MESSAGE, response.readEntity(String.class));
     }

@@ -45,6 +45,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import javax.inject.Inject;
 
@@ -54,6 +56,7 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.RuntimeResource;
 
 import org.junit.Test;
 
@@ -77,11 +80,12 @@ public class ResourcePushingTest {
         private ExtendedUriInfo extendedUriInfo;
 
         @GET
+        @Produces(MediaType.TEXT_PLAIN)
         public String get() {
             Assert.assertEquals("root", extendedUriInfo.getMatchedModelResource().getPath());
-            Assert.assertNull(extendedUriInfo.getMatchedChildModelResource());
-            Assert.assertEquals(1, extendedUriInfo.getMatchedAllModelResources().size());
-            Assert.assertEquals(1, extendedUriInfo.getMatchedModelResources().size());
+            Assert.assertEquals(MediaType.TEXT_PLAIN_TYPE, extendedUriInfo.getMatchedResourceMethod().getProducedTypes().get(0));
+            Assert.assertEquals("/root", extendedUriInfo.getMatchedRuntimeResources().get(0).getRegex());
+            Assert.assertEquals(1, extendedUriInfo.getMatchedRuntimeResources().size());
 
             return "root";
         }
@@ -89,13 +93,14 @@ public class ResourcePushingTest {
         @Path("child")
         @GET
         public String child() {
-            Assert.assertEquals("root", extendedUriInfo.getMatchedModelResource().getPath());
-            Assert.assertEquals("child", extendedUriInfo.getMatchedChildModelResource().getPath());
-            Assert.assertEquals(2, extendedUriInfo.getMatchedAllModelResources().size());
-            Assert.assertEquals(1, extendedUriInfo.getMatchedModelResources().size());
-            Assert.assertEquals("child;root", convertToString(extendedUriInfo.getMatchedAllModelResources()));
-            Assert.assertEquals("child", extendedUriInfo.getMatchedAllModelResources().get(0).getPath());
-            Assert.assertEquals("root", extendedUriInfo.getMatchedAllModelResources().get(1).getPath());
+            final Resource resource = extendedUriInfo.getMatchedModelResource();
+            Assert.assertEquals("child", resource.getPath());
+            final List<RuntimeResource> runtimeResources = extendedUriInfo.getMatchedRuntimeResources();
+            Assert.assertEquals("root", runtimeResources.get(0).getFirstParentResource(resource).getPath());
+            Assert.assertEquals(2, runtimeResources.size());
+            Assert.assertEquals("/child;/root", convertToString(runtimeResources));
+            Assert.assertEquals("/child", runtimeResources.get(0).getRegex());
+            Assert.assertEquals("/root", runtimeResources.get(1).getRegex());
             return "child";
         }
     }
@@ -136,33 +141,34 @@ public class ResourcePushingTest {
 
         @GET
         public String get() {
-            Assert.assertNull(extendedUriInfo.getMatchedChildModelResource());
-            Assert.assertFalse(extendedUriInfo.getMatchedModelResource().isRootResource());
-            final List<Resource> matchedModelResources = extendedUriInfo.getMatchedAllModelResources();
-            return convertToString(matchedModelResources);
+            Assert.assertFalse(extendedUriInfo.getMatchedModelResource().getPath() != null);
+            final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
+            return convertToString(matchedRuntimeResources);
         }
 
         @GET
         @Path("subget")
         public String subGet() {
-            Assert.assertEquals("subget", extendedUriInfo.getMatchedChildModelResource().getPath());
-            Assert.assertFalse(extendedUriInfo.getMatchedModelResource().isRootResource());
-            return convertToString(extendedUriInfo.getMatchedAllModelResources());
+            final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
+            Assert.assertEquals("/subget", matchedRuntimeResources.get(0).getRegex());
+            Assert.assertEquals("subget", extendedUriInfo.getMatchedModelResource().getPath());
+            return convertToString(matchedRuntimeResources);
         }
 
         @Path("sub")
         public Class<SubResourceLocator> getRecursive() {
-            Assert.assertEquals("sub", extendedUriInfo.getMatchedChildModelResource().getPath());
-            Assert.assertFalse(extendedUriInfo.getMatchedModelResource().isRootResource());
-
+            final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
+            Assert.assertEquals("/sub", matchedRuntimeResources.get(0).getRegex());
+            Assert.assertNull(extendedUriInfo.getMatchedModelResource());
+            Assert.assertNull(extendedUriInfo.getMatchedResourceMethod());
             return SubResourceLocator.class;
         }
     }
 
-    private static String convertToString(List<Resource> matchedModelResources) {
+    private static String convertToString(List<RuntimeResource> matchedResources) {
         StringBuffer sb = new StringBuffer();
-        for (Resource resource : matchedModelResources) {
-            final String path = resource.getPath();
+        for (RuntimeResource resource : matchedResources) {
+            final String path = resource.getRegex();
             sb.append(path == null ? "<no-path>" : path);
             sb.append(";");
         }
@@ -173,7 +179,7 @@ public class ResourcePushingTest {
     @Test
     public void testLocator() throws ExecutionException, InterruptedException {
         final String requestUri = "/locator-test";
-        final String expectedResourceList = "<no-path>;locator-test";
+        final String expectedResourceList = "<no-path>;/locator\\-test";
 
         _test(requestUri, expectedResourceList);
     }
@@ -182,33 +188,35 @@ public class ResourcePushingTest {
         ApplicationHandler applicationHandler = getApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri,
                 "GET").build()).get();
+        Assert.assertEquals(200, response.getStatus());
         final String resources = (String) response.getEntity();
         Assert.assertEquals(expectedResourceList, resources);
     }
 
     @Test
     public void testLocatorChild() throws ExecutionException, InterruptedException {
-        _test("/locator-test/subget", "subget;<no-path>;locator-test");
+        _test("/locator-test/subget", "/subget;<no-path>;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocator() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator", "<no-path>;sublocator;locator-test");
+        _test("/locator-test/sublocator", "<no-path>;/sublocator;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocatorSubGet() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/subget", "subget;<no-path>;sublocator;locator-test");
+        _test("/locator-test/sublocator/subget", "/subget;<no-path>;/sublocator;/locator\\-test");
     }
 
 
     @Test
     public void testSubResourceLocatorRecursive() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub", "<no-path>;sub;<no-path>;sublocator;locator-test");
+        _test("/locator-test/sublocator/sub", "<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocatorRecursive2() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub/sub/subget", "subget;<no-path>;sub;<no-path>;sub;<no-path>;sublocator;locator-test");
+        _test("/locator-test/sublocator/sub/sub/subget",
+                "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
     }
 }

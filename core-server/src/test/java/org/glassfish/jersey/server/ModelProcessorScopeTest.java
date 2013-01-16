@@ -62,6 +62,8 @@ import org.junit.Test;
 import junit.framework.Assert;
 
 /**
+ * Test scope of resources enhanced by model processors.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
@@ -79,7 +81,7 @@ public class ModelProcessorScopeTest {
 
             @Override
             public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-                ResourceModel.Builder builder = new ResourceModel.Builder(resourceModel.getRootResources());
+                ResourceModel.Builder builder = new ResourceModel.Builder(resourceModel.getRootResources(), false);
                 final Resource singletonResource = Resource.from(SingletonResource.class);
                 builder.addResource(singletonResource);
 
@@ -103,11 +105,11 @@ public class ModelProcessorScopeTest {
             }
 
             @Override
-            public Resource processSubResource(Resource subResource, Configuration configuration) {
+            public ResourceModel processSubResource(ResourceModel subResource, Configuration configuration) {
                 final Resource resource = Resource.builder().mergeWith(Resource.from(EnhancedSubResourceSingleton.class))
-                        .mergeWith(Resource.from(EnhancedSubResource.class)).mergeWith(subResource).build();
+                        .mergeWith(Resource.from(EnhancedSubResource.class)).mergeWith(subResource.getResources().get(0)).build();
 
-                return resource;
+                return new ResourceModel.Builder(true).addResource(resource).build();
             }
         }
 

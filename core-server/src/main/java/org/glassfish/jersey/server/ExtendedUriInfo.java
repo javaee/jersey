@@ -46,6 +46,8 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -54,15 +56,6 @@ import org.glassfish.jersey.uri.UriTemplate;
  * @author Paul Sandoz
  */
 public interface ExtendedUriInfo extends UriInfo {
-
-    /**
-     * Get get matched resource method that was invoked.
-     *
-     * @return the matched resource method, otherwise null if no resource
-     *         method was invoked.
-     */
-    // todo: add support
-    // ResourceMethod getMatchedMethod();
 
     /**
      * Get the throwable that was mapped to a response.
@@ -121,8 +114,9 @@ public interface ExtendedUriInfo extends UriInfo {
     List<PathSegment> getPathSegments(String name, boolean decode);
 
     /**
-     * Return all matched {@link Resource model resources} including child resources. The list is ordered so that the
-     * {@link Resource resource} currently being processed is the first element in the list.
+     * Return all matched {@link RuntimeResource runtime resources} including runtime resources
+     * based on child resources. The list is ordered so that the {@link RuntimeResource runtime resource}
+     * currently being processed is the first element in the list.
      *
      * <p/>
      * The following example
@@ -153,47 +147,42 @@ public interface ExtendedUriInfo extends UriInfo {
      * <tr>
      * <td>GET /foo</td>
      * <td>FooResource.getFoo</td>
-     * <td>Resource["foo"]</td>
+     * <td>RuntimeResource["/foo"]</td>
      * </tr>
      * <tr>
      * <td>GET /foo/bar</td>
      * <td>FooResource.getBarResource</td>
-     * <td>Child-Resource["foo/bar"], Resource["foo"]</td>
+     * <td>RuntimeResource["foo/bar"], Resource["foo"]</td>
      * </tr>
      * <tr>
      * <td>GET /foo/bar</td>
      * <td>BarResource.getBar</td>
-     * <td>Resource[no path; based on BarResource.class], Child-Resource["foo/bar"], Resource["foo"]</td>
+     * <td>RuntimeResource[no path; based on BarResource.class], RuntimeResource["foo/bar"], RuntimeResource["foo"]</td>
      * </tr>
      * </table>
 
      * @return List of resources and child resources that were processed during request matching.
      */
-    public List<Resource> getMatchedAllModelResources();
+    public List<RuntimeResource> getMatchedRuntimeResources();
 
     /**
-     * Return all matched {@link Resource model resources} except child resources. The result list is the same as result from
-     * method {@link #getMatchedAllModelResources()} except it does not contain child resources.
-     * @return List of resources that were processed during request matching.
-     */
-    public List<Resource> getMatchedModelResources();
-
-
-    /**
-     * Return a last matched {@link Resource model resource}. Returned resource is the resource which contains the resource
-     * method or resource locator from which {@link #getMatchedModelResource()} is executed. Returned resource is not a
-     * child resource; if the method is executed from child resource then the resource containing this child resource is returned.
+     * Get matched {@link ResourceMethod resource method} that is invoked.
+     * <p/>
+     * Note that sub resource locator is not not considered as a matched resource method and calling the method from
+     * sub resource locator will therefore return null.
      *
-     * @return Last matched model resource.
+     * @return The matched resource method that was invoked or null if no resource method was invoked.
+     */
+    public ResourceMethod getMatchedResourceMethod();
+
+    /**
+     * Get matched {@link Resource model resource} from which {@link #getMatchedResourceMethod() the matched} resource method
+     * was invoked. The resource can also be a child if the matched method is a sub resource method.
+     * <p/>
+     * Note that method return only resource containing finally matched {@link ResourceMethod resource method}
+     * and not intermediary processed resources (parent resources or resources containing sub resource locators).
+     *
+     * @return The matched model resource or null if no resource was matched.
      */
     public Resource getMatchedModelResource();
-
-    /**
-     * Return a last matched {@link Resource model child resource}. Returned child resource resource is the child resource which
-     * contains the resource method or resource locator from which {@link #getMatchedChildModelResource()} is executed.
-     * If the method is not executed from child resource null is returned.
-     *
-     * @return Last matched model child resource if the method is executed from child resource; false otherwise.
-     */
-    public Resource getMatchedChildModelResource();
 }

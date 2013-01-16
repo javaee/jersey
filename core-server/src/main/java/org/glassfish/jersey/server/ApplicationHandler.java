@@ -75,6 +75,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -377,11 +378,11 @@ public final class ApplicationHandler {
                 = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings);
         final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
 
-        ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources()).build();
+        ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
 
         resourceModel = processResourceModel(resourceModel);
         // validate the models
-        validate(resourceModel.getRootResources());
+        validate(resourceModel);
 
         bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
@@ -389,16 +390,13 @@ public final class ApplicationHandler {
         runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
         runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
                 nameBoundWriterInterceptors, dynamicFeatures);
-        for (Resource resource : resourceModel.getRootResources()) {
-            runtimeModelBuilder.process(resource, false);
-        }
 
         // assembly request processing chain
         /**
          * Root hierarchical request matching acceptor.
          * Invoked in a single linear stage as part of the main linear accepting chain.
          */
-        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(false);
+        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), false);
 
         final ContainerFilteringStage preMatchRequestFilteringStage =
                 locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
@@ -449,7 +447,8 @@ public final class ApplicationHandler {
         return resourceModel;
     }
 
-    private void bindEnhancingResourceClasses(ResourceModel resourceModel, ResourceBag resourceBag, Set<ComponentProvider> componentProviders) {
+    private void bindEnhancingResourceClasses(ResourceModel resourceModel, ResourceBag resourceBag,
+                                              Set<ComponentProvider> componentProviders) {
         Set<Class<?>> newClasses = Sets.newHashSet();
         Set<Object> newInstances = Sets.newHashSet();
         for (Resource res : resourceModel.getRootResources()) {
@@ -648,11 +647,9 @@ public final class ApplicationHandler {
         dc.commit();
     }
 
-    private void validate(List<Resource> resources) {
+    private void validate(ResourceModel resourceModel) {
         final ComponentModelValidator validator = new ComponentModelValidator(locator);
-
-        validator.validate(new ResourceModel.Builder(resources).build());
-
+        validator.validate(resourceModel);
         if (Errors.fatalIssuesFound()) {
             throw new ModelValidationException(ModelErrors.getErrorsAsResourceModelIssues());
         }

@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.List;
 
-import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 import com.google.common.collect.Lists;
@@ -58,12 +57,6 @@ class MethodAcceptorPair {
     final ResourceMethod model;
 
     /**
-     * Parent resource.
-     */
-    final Resource resource;
-
-
-    /**
      * Resource method routers.
      */
     final List<Router> router;
@@ -72,13 +65,11 @@ class MethodAcceptorPair {
      * Create a new instance.
      *
      * @param model Resource method handler.
-     * @param resource Resource that contains resource method.
      * @param router List of routers that are needed to execute the {@code model}. These routers should contain
      *               final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router
      *               in the list.
      */
-    MethodAcceptorPair(ResourceMethod model, Resource resource, List<Router> router) {
-        this.resource = resource;
+    MethodAcceptorPair(ResourceMethod model, List<Router> router) {
         this.model = model;
         this.router = router;
     }
@@ -86,12 +77,10 @@ class MethodAcceptorPair {
     /**
      * Create a new instance.
      * @param model Resource method handler.
-     * @param resource Resource that contains resource method.
      * @param routers Routers that are needed to execute the {@code model}. These routers should contain
      *                final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router.
      */
-    MethodAcceptorPair(ResourceMethod model, Resource resource, Router... routers) {
-        this.resource = resource;
+    MethodAcceptorPair(ResourceMethod model, Router... routers) {
         this.model = model;
         this.router = Lists.newArrayList(routers);
     }

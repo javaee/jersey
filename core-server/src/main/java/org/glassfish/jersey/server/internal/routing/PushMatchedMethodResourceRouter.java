@@ -44,73 +44,50 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
- * Router that pushes matched resource or child resource to {@link RoutingContext routing context}.
- * The router can work in child resource mode in which it pushes resource as child resource.
+ * Router that pushes matched {@link Resource resource or child resource} and {@link ResourceMethod resourceMethod}
+ * to {@link RoutingContext routing context}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class PushMatchedResourceRouter implements Router {
+
+class PushMatchedMethodResourceRouter implements Router {
 
     /**
-     * Builder for creating {@link PushMatchedResourceRouter push matched resource router} instances.
+     * Builder for creating {@link PushMatchedMethodResourceRouter push matched resource router} instances. New builder instance
+     * must be injected and not directly created by constructor call.
      */
     static class Builder {
         @Inject
         private Provider<RoutingContext> routingContext;
 
-        private Resource resource;
-        private boolean childResourceMode;
-
-
         /**
          * Builds new instance of router.
-         * @return Instances created from builder.
+         * @param resource The matched resource that should be pushed into the {@link RoutingContext routing context}.
+         * @param method The matched resource method that should be pushed into the {@link RoutingContext routing context}.
+         * @return New instance of the router.
          */
-        PushMatchedResourceRouter build() {
-            return new PushMatchedResourceRouter(resource, childResourceMode, routingContext);
-        }
-
-
-        /**
-         * Set the resource or child resources.
-         * @param resource Resource or child resource.
-         * @return Builder.
-         */
-        Builder setResource(Resource resource) {
-            this.resource = resource;
-            return this;
-        }
-
-        /**
-         * Sets flag denoting whether resource set by {@link #setResource(org.glassfish.jersey.server.model.Resource)}
-         * is child resource.
-         *
-         * @param childResourceMode {@code true} if the resource is child resource, {@code false} otherwise.
-         * @return Builder.
-         */
-        Builder setChildResourceMode(boolean childResourceMode) {
-            this.childResourceMode = childResourceMode;
-            return this;
+        PushMatchedMethodResourceRouter build(Resource resource, ResourceMethod method) {
+            return new PushMatchedMethodResourceRouter(method, resource, routingContext);
         }
     }
 
-
+    private final ResourceMethod resourceMethod;
     private final Resource resource;
-    private final boolean childResourceMode;
-
     private final Provider<RoutingContext> routingContext;
 
-    private PushMatchedResourceRouter(Resource resource, boolean childResourceMode, Provider<RoutingContext> routingContext) {
+    private PushMatchedMethodResourceRouter(ResourceMethod resourceMethod, Resource resource, Provider<RoutingContext> routingContext) {
+        this.resourceMethod = resourceMethod;
         this.resource = resource;
-        this.childResourceMode = childResourceMode;
         this.routingContext = routingContext;
     }
 
     @Override
     public Continuation apply(ContainerRequest data) {
-        routingContext.get().pushMatchedResource(resource, childResourceMode);
+        routingContext.get().setMatchedResource(resource);
+        routingContext.get().setMatchedResourceMethod(resourceMethod);
         return Continuation.of(data);
     }
 }

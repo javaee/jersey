@@ -43,7 +43,6 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -55,7 +54,6 @@ import org.glassfish.jersey.uri.PathPattern;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -134,7 +132,6 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         private List<String> names;
         private String path;
-        private boolean isRoot;
 
         private final Set<ResourceMethod.Builder> methodBuilders;
         private final Set<Resource.Builder> childResourceBuilders;
@@ -156,7 +153,6 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.resourceMethods = Lists.newLinkedList();
             this.handlerClasses = Sets.newIdentityHashSet();
             this.handlerInstances = Sets.newIdentityHashSet();
-
             this.parentResource = parentResource;
 
             name("[unnamed]");
@@ -177,7 +173,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         private boolean isEmpty() {
-            return !isRoot &&
+            return this.path == null &&
                     methodBuilders.isEmpty() &&
                     childResourceBuilders.isEmpty() &&
                     resourceMethods.isEmpty() &&
@@ -210,9 +206,6 @@ public final class Resource implements Routed, ResourceModelComponent {
          */
         public Builder path(final String path) {
             this.path = path;
-            // we need to maintain a separate flag because the entered path value
-            // can be null.
-            this.isRoot = true;
             return this;
         }
 
@@ -446,8 +439,6 @@ public final class Resource implements Routed, ResourceModelComponent {
             final Resource resource = new Resource(
                     immutableCopy(names),
                     path,
-                    isRoot,
-                    parentResource != null,
                     immutableCopy(resourceMethods),
                     resourceLocator,
                     mergedChildResources,
@@ -494,11 +485,6 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     /**
      * Get a new unbound resource model builder.
-     * <p/>
-     * Note that a resource built from the returned builder is <i>NOT</i>
-     * automatically marked to be a {@link #isRootResource() root resource}.
-     * This can be changed by invoking the {@link Builder#path(java.lang.String)
-     * path(...)} method on the returned builder.
      *
      * @return new unbound resource model builder.
      * @see Resource.Builder#path(java.lang.String)
@@ -510,9 +496,6 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     /**
      * Get a new resource model builder for a resource bound to a given path.
-     * <p/>
-     * Note that a resource built from the returned builder is automatically
-     * marked to be a {@link #isRootResource() root resource}.
      *
      * @param path resource path.
      * @return new resource model builder.
@@ -548,7 +531,6 @@ public final class Resource implements Routed, ResourceModelComponent {
             }
         }
         return builder;
-
     }
 
     /**
@@ -657,8 +639,6 @@ public final class Resource implements Routed, ResourceModelComponent {
     private transient String name;
     private final String path;
     private final PathPattern pathPattern;
-    private final boolean isRoot;
-
 
     private final List<ResourceMethod> resourceMethods;
     private final ResourceMethod subResourceLocator;
@@ -667,14 +647,9 @@ public final class Resource implements Routed, ResourceModelComponent {
     private final Set<Class<?>> handlerClasses;
     private final Set<Object> handlerInstances;
 
-    private final Map<PathPattern, List<Resource>> pathPatternChildResourceMap;
-
-
     private Resource(
             final List<String> names,
             final String path,
-            final boolean isRoot,
-            final boolean isChild,
             final List<ResourceMethod> resourceMethods,
             final ResourceMethod subResourceLocator,
             final List<Resource> childResources,
@@ -683,8 +658,6 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         this.names = names;
         this.path = path;
-        this.isRoot = !isChild && isRoot;
-
         this.pathPattern = (path == null || path.isEmpty()) ?
                 PathPattern.OPEN_ROOT_PATH_PATTERN : new PathPattern(path, PathPattern.RightHandPath.capturingZeroOrMoreSegments);
         this.resourceMethods = resourceMethods;
@@ -693,104 +666,11 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         this.handlerClasses = handlerClasses;
         this.handlerInstances = handlerInstances;
-
-        this.pathPatternChildResourceMap = Collections.unmodifiableMap(groupResourcesByPathPattern(childResources));
-    }
-
-    /**
-     * Static method that group resources by the path pattern.
-     *
-     * @param resources Resources that should be grouped.
-     *
-     * @return Map where key is the resource {@link PathPattern path pattern}
-     *      ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of resource
-     *      having this path pattern.
-     */
-    public static Map<PathPattern, List<Resource>> groupResourcesByPathPattern(List<Resource> resources) {
-        Map<PathPattern, List<Resource>> childGroupingMap = Maps.newHashMap();
-        for (Resource childResource : resources) {
-            final PathPattern pattern = childResource.getPathPattern();
-            List<Resource> groupedResources = childGroupingMap.get(pattern);
-            if (groupedResources == null) {
-                groupedResources = Lists.newArrayList();
-                childGroupingMap.put(pattern, groupedResources);
-            }
-            groupedResources.add(childResource);
-        }
-        return childGroupingMap;
-    }
-
-
-    /**
-     * Return resource methods from all given {@code resources} ignoring resource methods of child resources and all
-     * resource locators.
-
-     * @param resources List of resources from which resource method should be extracted.
-     * @return List of resource methods.
-     */
-    public static List<ResourceMethod> getAggregatedResourceMethods(List<Resource> resources) {
-        List<ResourceMethod> allMethods = Lists.newArrayList();
-
-        for (Resource resource : resources) {
-            allMethods.addAll(resource.getResourceMethods());
-        }
-        return allMethods;
-    }
-
-    /**
-     * Return resource methods and resource locators from all given {@code resources} ignoring resource
-     * methods and locators of child resources.
-
-     * @param resources List of resources from which resource method should be extracted.
-     * @return List of resource methods.
-     */
-    public static List<ResourceMethod> getAggregatedAllMethods(List<Resource> resources) {
-        List<ResourceMethod> allMethods = Lists.newArrayList();
-
-        for (Resource resource : resources) {
-            allMethods.addAll(resource.getAllMethods());
-        }
-        return allMethods;
-    }
-
-    /**
-     * Returns all child resources of the given {@code resources}.
-     * @param resources Resources from which child resources should be extracted.
-     * @return List of child resources.
-     */
-    public static List<Resource> getAggregatedChildResources(List<Resource> resources) {
-        List<Resource> childResources = Lists.newArrayList();
-        for (Resource resource : resources) {
-            childResources.addAll(resource.getChildResources());
-        }
-        return childResources;
-    }
-
-
-    /**
-     * Check if this resource model models a JAX-RS root resource.
-     *
-     * @return {@code true}, if this is a model of a JAX-RS root resource,
-     *         {@code false} otherwise.
-     */
-    public boolean isRootResource() {
-        return isRoot;
     }
 
     @Override
     public String getPath() {
         return path;
-    }
-
-    /**
-     * Return map with child resources of this resource grouped by path pattern.
-     * @return Map where key is the child resource {@link PathPattern path pattern}
-     * ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of child resource
-     * having this path pattern.
-     */
-
-    public Map<PathPattern, List<Resource>> getPathPatternToChildResources() {
-        return pathPatternChildResourceMap;
     }
 
     @Override

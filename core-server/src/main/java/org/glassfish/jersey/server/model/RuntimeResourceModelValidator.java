@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
@@ -50,87 +50,50 @@ import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.collect.Lists;
 
 /**
- * Validator ensuring that {@link ResourceModel resource model } does not contain ambiguous resource methods. Resource method is
- * ambiguous if it process same HTTP method on the same {@link PathPattern path pattern}, produces and consumes same media types
- * as any other method in the resource model. Resource methods can be ambiguous even if they are defined in different resource if
- * these resource have the same {@link PathPattern path pattern}.
+ * Runtime resource model validator validating ambiguity of resource methods.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
-public class AmbiguousMethodValidator extends AbstractResourceModelVisitor {
+public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor {
 
     private final MessageBodyWorkers workers;
 
-    public AmbiguousMethodValidator(MessageBodyWorkers workers) {
+    /**
+     * Create a new validator instance.
+     *
+     * @param workers Message body workers.
+     */
+    public RuntimeResourceModelValidator(MessageBodyWorkers workers) {
         this.workers = workers;
     }
 
-
     @Override
-    public void visitResourceModel(final ResourceModel resourceModel) {
-        for (Map.Entry<PathPattern, List<Resource>> resourceEntry : resourceModel.getPathPatternToResources().entrySet()) {
-            final List<Resource> resources = resourceEntry.getValue();
-            final PathPattern resourceGroupPathPattern = resourceEntry.getKey();
-
-            checkResourceGroup(resourceModel, resourceGroupPathPattern, resources);
-        }
-
-        // validate non-root resources
-        final List<Resource> nonRootResources = Lists.newArrayList(resourceModel.getResources());
-        nonRootResources.removeAll(resourceModel.getRootResources());
-        for (Resource nonRootResource : nonRootResources) {
-            checkResourceGroup(resourceModel, PathPattern.EMPTY_PATTERN, Lists.newArrayList(nonRootResource));
-        }
-
-
+    public void visitRuntimeResource(RuntimeResource runtimeResource) {
+        checkMethods(runtimeResource);
     }
 
-    private void checkResourceGroup(ResourceModel resourceModel, PathPattern resourceGroupPathPattern, List<Resource> resources) {
-        final List<ResourceMethod> resourceMethods = Resource.getAggregatedAllMethods(resources);
-        checkMethods(resourceModel, resourceMethods, resourceGroupPathPattern);
-
-        final Map<PathPattern, List<Resource>> groupedResources = Resource.groupResourcesByPathPattern(
-                Resource.getAggregatedChildResources(resources));
-
-        for (Map.Entry<PathPattern, List<Resource>> childEntry : groupedResources.entrySet()) {
-            PathPattern pathPattern = new PathPattern(resourceGroupPathPattern.getTemplate().getTemplate()
-                    + childEntry.getKey().getTemplate().getTemplate());
-            checkMethods(resourceModel, Resource.getAggregatedAllMethods(childEntry.getValue()), pathPattern);
-        }
-    }
-
-    private void checkMethods(ResourceModel resourceModel, List<ResourceMethod> resourceMethods, PathPattern pathPattern) {
+    private void checkMethods(RuntimeResource resource) {
+        final List<ResourceMethod> resourceMethods = Lists.newArrayList(resource.getResourceMethods());
+        resourceMethods.addAll(resource.getResourceLocators());
         if (resourceMethods.size() >= 2) {
             for (ResourceMethod m1 : resourceMethods.subList(0, resourceMethods.size() - 1)) {
                 for (ResourceMethod m2 : resourceMethods.subList(resourceMethods.indexOf(m1) + 1, resourceMethods.size())) {
                     if (m1.getHttpMethod() == null && m2.getHttpMethod() == null) {
-                        Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(
-                                pathPattern), true);
+                        Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(resource.getFullPathRegex()), true);
                     } else if (m1.getHttpMethod() != null && m2.getHttpMethod() != null && sameHttpMethod(m1, m2)) {
-                        checkIntersectingMediaTypes(resourceModel, m1.getHttpMethod(), m1, m2);
+                        checkIntersectingMediaTypes(resource, m1.getHttpMethod(), m1, m2);
                     }
                 }
             }
         }
     }
 
-    private List<ResourceMethod> getMethodList(Map<PathPattern, List<ResourceMethod>> methodMap, PathPattern pathPattern) {
-        List<ResourceMethod> methodList = methodMap.get(pathPattern);
-        if (methodList == null) {
-            methodList = Lists.newArrayList();
-            methodMap.put(pathPattern, methodList);
-        }
-        return methodList;
-    }
-
     private void checkIntersectingMediaTypes(
-            ResourceModel resourceModel,
+            RuntimeResource runtimeResource,
             String httpMethod,
             ResourceMethod m1,
             ResourceMethod m2) {
@@ -164,20 +127,21 @@ public class AmbiguousMethodValidator extends AbstractResourceModelVisitor {
 
         if (consumesFails && producesFails) {
             // fatal
-            Errors.fatal(resourceModel, LocalizationMessages.AMBIGUOUS_FATAL_RMS(httpMethod, m1.getInvocable()
-                    .getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+            Errors.fatal(runtimeResource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(httpMethod, m1.getInvocable()
+                    .getHandlingMethod(), m2.getInvocable().getHandlingMethod(), runtimeResource.getRegex()));
         } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
                 (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
             if (m1.getInvocable().requiresEntity()) {
-                Errors.warning(resourceModel, LocalizationMessages.AMBIGUOUS_RMS_IN(
-                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+                Errors.warning(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_IN(
+                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod(),
+                        runtimeResource.getRegex()));
             } else {
-                Errors.warning(resourceModel, LocalizationMessages.AMBIGUOUS_RMS_OUT(
-                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod()));
+                Errors.warning(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
+                        httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod(),
+                        runtimeResource.getRegex()));
             }
         }
-
     }
 
     private static final List<MediaType> StarTypeList = Arrays.asList(new MediaType("*", "*"));

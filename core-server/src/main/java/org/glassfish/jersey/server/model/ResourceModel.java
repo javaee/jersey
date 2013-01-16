@@ -42,11 +42,14 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.glassfish.jersey.uri.PathPattern;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -65,25 +68,48 @@ public class ResourceModel implements ResourceModelComponent {
      */
     public static class Builder {
         private final List<Resource> resources;
+        private final boolean subResourceModel;
+
 
         /**
-         * Create new builder with empty resources.
+         * Create new builder pre initialized with {@code resourceModel}.
+         *
+         * @param resourceModel Resource model.
+         * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
+         *                  {@code false} if it is a application root resource model.
          */
-        public Builder() {
-            this.resources = Lists.newArrayList();
-
+        public Builder(ResourceModel resourceModel, boolean subResourceModel) {
+            this.resources = resourceModel.getResources();
+            this.subResourceModel = subResourceModel;
         }
 
         /**
          * Create new builder pre initialized with {@code resource}.
-         * @param resources Resources (root and non root resources).
+         *
+         * @param resources Resources (root and non root).
+         * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
+         *                  {@code false} if it is a application root resource model.
          */
-        public Builder(List<Resource> resources) {
+        public Builder(List<Resource> resources, boolean subResourceModel) {
             this.resources = resources;
+            this.subResourceModel = subResourceModel;
         }
 
         /**
+         * Create new builder with empty resources.
+         *
+         * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
+         *                  {@code false} if it is a application root resource model.
+         */
+        public Builder(boolean subResourceModel) {
+            this.resources = Lists.newArrayList();
+            this.subResourceModel = subResourceModel;
+        }
+
+
+        /**
          * Add a resource to the builder.
+         *
          * @param resource Resource to be added to the builder (root or non root resource).
          * @return Current builder.
          */
@@ -94,58 +120,63 @@ public class ResourceModel implements ResourceModelComponent {
 
         /**
          * Build the {@link ResourceModel resource model}. Resources with the same path are merged.
+         *
          * @return Resource model.
          */
         public ResourceModel build() {
-            List<Resource> allResource = Lists.newArrayList();
+            Map<String, Resource> resourceMap = Maps.newLinkedHashMap();
+            final Set<Resource> separateResources = Sets.newIdentityHashSet(); // resource with no path that should not be merged
 
-            Map<String, Resource> rootResourceMap = Maps.newLinkedHashMap();
             for (Resource resource : resources) {
                 final String path = resource.getPath();
-
-                if (resource.isRootResource()) {
-                    final Resource fromMap = rootResourceMap.get(path);
-                    if (fromMap == null) {
-                        rootResourceMap.put(path, resource);
-                    } else {
-                        rootResourceMap.put(path, Resource.builder(fromMap).mergeWith(resource).build());
-                    }
+                if (path == null && !subResourceModel) {
+                    separateResources.add(resource);
                 } else {
-                    allResource.add(resource);
+                    final Resource fromMap = resourceMap.get(path);
+                    if (fromMap == null) {
+                        resourceMap.put(path, resource);
+                    } else {
+                        resourceMap.put(path, Resource.builder(fromMap).mergeWith(resource).build());
+                    }
                 }
             }
-            final List<Resource> rootResources = Lists.newArrayList(rootResourceMap.values());
-            allResource.addAll(rootResources);
-            return new ResourceModel(rootResources, resources);
+            List<Resource> rootResources = Lists.newArrayList();
+            List<Resource> allResources = Lists.newArrayList();
+
+            for (Map.Entry<String, Resource> entry : resourceMap.entrySet()) {
+                if (entry.getKey() != null) {
+                    rootResources.add(entry.getValue());
+                }
+                allResources.add(entry.getValue());
+            }
+            if (!subResourceModel) {
+                allResources.addAll(separateResources);
+            }
+
+            return new ResourceModel(rootResources, allResources);
         }
     }
 
     private final List<Resource> rootResources;
     private final List<Resource> resources;
 
-    private final Map<PathPattern, List<Resource>> pathPatternChildResourceMap;
-
+    private final Value<RuntimeResourceModel> runtimeRootResourceModelValue;
 
     /**
-     * Creates new instance from root resources.
-     * @param resources Root resource of the resource model.
+     * Creates new instance from root allResources.
+     * @param allResources Root resource of the resource model.
      */
-    private ResourceModel(List<Resource> rootResources, List<Resource> resources) {
-        this.resources = resources;
+    private ResourceModel(List<Resource> rootResources, List<Resource> allResources) {
+        this.resources = allResources;
         this.rootResources = rootResources;
-        this.pathPatternChildResourceMap = Resource.groupResourcesByPathPattern(this.rootResources);
+        this.runtimeRootResourceModelValue = Values.lazy(new Value<RuntimeResourceModel>() {
+            @Override
+            public RuntimeResourceModel get() {
+                return new RuntimeResourceModel(ResourceModel.this.resources);
+            }
+        });
     }
 
-
-    /**
-     * Return map with root resources grouped by path pattern.
-     * @return Map where key is the resource {@link PathPattern path pattern}
-     * ({@link org.glassfish.jersey.server.model.Resource#getPathPattern()}) and value is list of resource
-     * having this path pattern.
-     */
-    public Map<PathPattern, List<Resource>> getPathPatternToResources() {
-        return pathPatternChildResourceMap;
-    }
 
     /**
      * Return root resources from this {@link ResourceModel resource model}.
@@ -170,6 +201,19 @@ public class ResourceModel implements ResourceModelComponent {
 
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
-        return resources;
+        List<ResourceModelComponent> components = Lists.newArrayList();
+
+        components.addAll(resources);
+        components.addAll(getRuntimeResourceModel().getRuntimeResources());
+        return components;
+    }
+
+    /**
+     * Return {@link RuntimeResourceModel runtime resource model} based on this this resource model.
+     *
+     * @return Runtime resource model created from this resource model.
+     */
+    public RuntimeResourceModel getRuntimeResourceModel() {
+        return runtimeRootResourceModelValue.get();
     }
 }
