@@ -223,12 +223,14 @@ class ParamConverters {
          */
         public AggregatedProvider(@Context ServiceLocator locator) {
             providers = new ParamConverterProvider[]{
+                    // custom converters
+                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class),
+                    locator.createAndInitialize(DateProvider.class),
+                    // spec converters
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
                     locator.createAndInitialize(TypeFromString.class),
-                    locator.createAndInitialize(StringConstructor.class),
-                    locator.createAndInitialize(DateProvider.class),
-                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
+                    locator.createAndInitialize(StringConstructor.class)
             };
         }
 
