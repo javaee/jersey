@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -78,7 +78,8 @@
         <module>json-jettison</module>
         <module>json-moxy</module>
         <module>json-with-padding</module>
-        <module>xml-moxy</module>
+        <module>managed-client</module>
+        <module>managed-client-webapp</module>
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>
@@ -90,6 +91,7 @@
         <module>simple-console</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
+        <module>xml-moxy</module>
     </modules>
 
     <build>

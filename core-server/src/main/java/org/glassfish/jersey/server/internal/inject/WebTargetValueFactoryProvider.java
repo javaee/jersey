@@ -39,13 +39,19 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.Uri;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
@@ -53,13 +59,24 @@ import javax.ws.rs.core.UriBuilder;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.server.ClientBinding;
 import org.glassfish.jersey.server.ExtendedUriInfo;
-import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Maps;
 
 /**
@@ -68,9 +85,152 @@ import com.google.common.collect.Maps;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
+    private final Configuration serverConfig;
+    private final ConcurrentMap<BindingModel, Value<ManagedClient>> managedClients;
 
-    @Context
-    private Configuration config;
+    private static class ManagedClient {
+        private final Client instance;
+        private final String customBaseUri;
+
+        private ManagedClient(Client instance, String customBaseUri) {
+            this.instance = instance;
+            this.customBaseUri = customBaseUri;
+        }
+    }
+
+    private static class BindingModel {
+        public static final BindingModel EMPTY = new BindingModel(null);
+
+        /**
+         * Create a client binding model from a {@link ClientBinding client binding} annotation.
+         *
+         * @param binding client binding annotation.
+         * @return binding model representing a single client binding annotation.
+         */
+        public static BindingModel create(Annotation binding) {
+            if (binding == null || binding.annotationType().getAnnotation(ClientBinding.class) == null) {
+                return EMPTY;
+            } else {
+                return new BindingModel(binding);
+            }
+        }
+
+        /**
+         * Create a client binding model from a set of {@link ClientBinding client binding}
+         * annotation candidates.
+         * <p>
+         * A {@code ClientBinding} marker meta-annotation is used to select the set of binding
+         * annotations. Only those annotations that are annotated with the binding marker
+         * meta-annotation are considered as binding annotations. All other annotations are filtered
+         * out and ignored.
+         * </p>
+         *
+         * @param bindingCandidates candidate binding annotations.
+         * @return composite binding representing the union of the individual binding annotations
+         *         found among the binding candidates.
+         */
+        public static BindingModel create(final Collection<Annotation> bindingCandidates) {
+            final Collection<Annotation> filtered =
+                    Collections2.filter(bindingCandidates, new Predicate<Annotation>() {
+                        @Override
+                        public boolean apply(Annotation input) {
+                            return input != null && input.annotationType().getAnnotation(ClientBinding.class) != null;
+                        }
+                    });
+
+            if (filtered.isEmpty()) {
+                return EMPTY;
+            } else if (filtered.size() > 1) {
+                throw new ProcessingException("Too many client binding annotations.");
+            } else {
+                return new BindingModel(filtered.iterator().next());
+            }
+        }
+
+        private final Annotation annotation;
+        private final Class<? extends Configuration> configClass;
+        private final boolean inheritProviders;
+        private final String baseUri;
+
+        private BindingModel(Annotation annotation) {
+            if (annotation == null) {
+                this.annotation = null;
+                this.configClass = ClientConfig.class;
+                this.inheritProviders = true;
+                this.baseUri = "";
+            } else {
+                this.annotation = annotation;
+                final ClientBinding cba = annotation.annotationType().getAnnotation(ClientBinding.class);
+                this.configClass = cba.configClass();
+                this.inheritProviders = cba.inheritServerProviders();
+                this.baseUri = cba.baseUri();
+            }
+        }
+
+        /**
+         * Get the client binding annotation this model represents.
+         *
+         * @return client binding annotation.
+         */
+        public Annotation getAnnotation() {
+            return annotation;
+        }
+
+        /**
+         * Get the configuration class to be used.
+         *
+         * @return client configuration class to be used.
+         */
+        public Class<? extends Configuration> getConfigClass() {
+            return configClass;
+        }
+
+        /**
+         * Check if the server-side providers should be inherited.
+         *
+         * @return {@code true} if server-side providers should be inherited, {@code false} otherwise.
+         */
+        public boolean inheritProviders() {
+            return inheritProviders;
+        }
+
+        /**
+         * Get the client base URI.
+         *
+         * @return client base URI.
+         */
+        public String baseUri() {
+            return baseUri;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            BindingModel that = (BindingModel) o;
+            return annotation != null ? annotation.equals(that.annotation) : that.annotation == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return annotation != null ? annotation.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "BindingModel{" +
+                    "binding=" + annotation +
+                    ", configClass=" + configClass +
+                    ", inheritProviders=" + inheritProviders +
+                    ", baseUri=" + baseUri +
+                    '}';
+        }
+    }
 
     /**
      * {@link Uri} injection resolver.
@@ -87,12 +247,12 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
     private static final class WebTargetValueFactory extends AbstractHttpContextValueFactory<WebTarget> {
 
-        private final String uriValue;
-        private final ClientConfig clientConfig;
+        private final String uri;
+        private final Value<ManagedClient> client;
 
-        WebTargetValueFactory(String uriValue, ClientConfig clientConfig) {
-            this.uriValue = uriValue;
-            this.clientConfig = clientConfig;
+        WebTargetValueFactory(String uri, Value<ManagedClient> client) {
+            this.uri = uri;
+            this.client = client;
         }
 
 
@@ -101,7 +261,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
             final ExtendedUriInfo uriInfo = context.getUriInfo();
-            URI uri = UriBuilder.fromUri(uriValue).buildFromEncodedMap(Maps.transformValues(
+            URI uri = UriBuilder.fromUri(this.uri).buildFromEncodedMap(Maps.transformValues(
                     uriInfo.getPathParameters(),
                     new Function<List<String>, Object>() {
                         @Override
@@ -110,48 +270,152 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                         }
                     }
             ));
+
+            ManagedClient mc = client.get();
+
             if (!uri.isAbsolute()) {
-                uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path(uri.toString()).build();
+                String rootUri = (mc.customBaseUri.isEmpty()) ? uriInfo.getBaseUri().toString() : mc.customBaseUri;
+                uri = UriBuilder.fromUri(rootUri).path(uri.toString()).build();
             }
 
-            if (clientConfig == null) {
-                return ClientFactory.newClient().target(uri);
-            } else {
-                return ClientFactory.newClient(clientConfig).target(uri);
-            }
+            return mc.instance.target(uri);
         }
     }
 
     /**
      * Initialize the provider.
      *
-     * @param locator service locator to be used for injecting into the values factory.
+     * @param locator      service locator to be used for injecting into the values factory.
+     * @param serverConfig server-side configuration.
      */
     @Inject
-    public WebTargetValueFactoryProvider(ServiceLocator locator) {
+    public WebTargetValueFactoryProvider(final ServiceLocator locator, @Context final Configuration serverConfig) {
         super(null, locator, Parameter.Source.URI);
+
+        this.serverConfig = serverConfig;
+
+        this.managedClients = new ConcurrentHashMap<BindingModel, Value<ManagedClient>>();
+        // init default client
+        this.managedClients.put(BindingModel.EMPTY, Values.lazy(new Value<ManagedClient>() {
+            @Override
+            public ManagedClient get() {
+                final Client client;
+                if (serverConfig == null) {
+                    client =  ClientFactory.newClient();
+                } else {
+                    ClientConfig clientConfig = new ClientConfig();
+                    copyProviders(serverConfig, clientConfig);
+                    client = ClientFactory.newClient(clientConfig);
+                }
+                return new ManagedClient(client, "");
+            }
+        }));
+    }
+
+    private void copyProviders(Configuration source, Configurable<?> target) {
+        for (Class<?> c : source.getClasses()) {
+            target.register(c, source.getContracts(c));
+        }
+
+        for (Object o : source.getInstances()) {
+            Class<?> c = o.getClass();
+            target.register(c, source.getContracts(c));
+        }
     }
 
     @Override
-    protected AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
-        String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
-            // Invalid URI parameter name
-            return null;
-        }
+    protected AbstractHttpContextValueFactory<?> createValueFactory(final Parameter parameter) {
+        return Errors.processWithException(new Producer<AbstractHttpContextValueFactory<?>>() {
 
-        final Class<?> rawParameterType = parameter.getRawType();
-        if (rawParameterType == WebTarget.class) {
-            final Object o = config.getProperty(ServerProperties.WEBTARGET_CONFIGURATION);
-            ClientConfig clientConfig = null;
-            if (o != null && (o instanceof Map)) {
-                Map<String, ClientConfig> clientConfigMap = (Map<String, ClientConfig>) o;
-                clientConfig = clientConfigMap.get(parameterName);
+            @Override
+            public AbstractHttpContextValueFactory<?> call() {
+                String targetUriTemplate = parameter.getSourceName();
+                if (targetUriTemplate == null || targetUriTemplate.length() == 0) {
+                    // Invalid URI parameter name
+                    Errors.warning(this, LocalizationMessages.INJECTED_WEBTARGET_URI_INVALID(targetUriTemplate));
+                    return null;
+                }
+
+                final Class<?> rawParameterType = parameter.getRawType();
+                if (rawParameterType == WebTarget.class) {
+                    final BindingModel binding = BindingModel.create(Arrays.<Annotation>asList(parameter.getAnnotations()));
+
+                    Value<ManagedClient> client = managedClients.get(binding);
+                    if (client == null) {
+                        client = Values.lazy(new Value<ManagedClient>() {
+                            @Override
+                            public ManagedClient get() {
+                                final String prefix = binding.getAnnotation().annotationType().getName() + ".";
+                                final String baseUriProperty = prefix + "baseUri";
+                                final Object bu = serverConfig.getProperty(baseUriProperty);
+                                final String customBaseUri= (bu != null) ? bu.toString() : binding.baseUri();
+
+                                final String configClassProperty = prefix + "configClass";
+                                final ClientConfig cfg = resolveConfig(configClassProperty, binding);
+
+                                final String inheritProvidersProperty = prefix + "inheritServerProviders";
+                                if (PropertiesHelper.isProperty(serverConfig.getProperty(inheritProvidersProperty)) ||
+                                        binding.inheritProviders()) {
+                                    copyProviders(serverConfig, cfg);
+                                }
+
+                                final String propertyPrefix = prefix + "property.";
+                                Collection<String> clientProperties =
+                                        Collections2.filter(serverConfig.getPropertyNames(), new Predicate<String>() {
+                                            @Override
+                                            public boolean apply(String property) {
+                                                return property.startsWith(propertyPrefix);
+                                            }
+                                        });
+
+                                for (String property : clientProperties) {
+                                    cfg.setProperty(property.substring(propertyPrefix.length()),
+                                            serverConfig.getProperty(property));
+                                }
+
+                                return new ManagedClient(ClientFactory.newClient(cfg), customBaseUri);
+                            }
+                        });
+                        final Value<ManagedClient> previous = managedClients.putIfAbsent(binding, client);
+                        if (previous != null) {
+                            client = previous;
+                        }
+                    }
+                    return new WebTargetValueFactory(targetUriTemplate, client);
+                } else {
+                    Errors.warning(this, LocalizationMessages.UNSUPPORTED_CLIENT_ARTEFACT_INJECTION_TYPE(rawParameterType));
+                    return null;
+                }
+            }
+        });
+    }
+
+    private ClientConfig resolveConfig(final String configClassProperty, final BindingModel binding) {
+        Class<? extends Configuration> configClass = binding.getConfigClass();
+        final Object _cc = serverConfig.getProperty(configClassProperty);
+        if (_cc != null) {
+            Class<?> cc;
+            if (_cc instanceof String) {
+                cc = ReflectionHelper.classForName((String) _cc);
+            } else if (_cc instanceof Class) {
+                cc = (Class<?>) _cc;
+            } else {
+                cc = null; // will cause a warning
             }
 
-            return new WebTargetValueFactory(parameterName, clientConfig);
+            if (cc != null && Configuration.class.isAssignableFrom(cc)) {
+                configClass = cc.asSubclass(Configuration.class);
+            } else {
+                Errors.warning(this, LocalizationMessages.ILLEGAL_CLIENT_CONFIG_CLASS_PROPERTY_VALUE(
+                        configClassProperty,
+                        _cc,
+                        configClass.getName()
+                ));
+            }
         }
 
-        return null;
+        final Configuration cfg = Injections.getOrCreate(getLocator(), configClass);
+
+        return (cfg instanceof ClientConfig) ? (ClientConfig) cfg : new ClientConfig().replaceWith(cfg);
     }
 }
