@@ -173,14 +173,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
             <!-- Extended Wadl Config: this plugin generates the jaxb beans from xsd schemas -->
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
