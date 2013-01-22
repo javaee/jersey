@@ -61,7 +61,8 @@ import org.junit.Test;
  */
 public class AsyncResponseTest extends JerseyTest {
 
-    public static CountDownLatch callbackCalledSignal = new AsyncCallbackTest.TestLatch(3, "cancel() return value");
+    public static CountDownLatch callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1");
+    public static CountDownLatch callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2");
 
     @Override
     protected Application configure() {
@@ -70,29 +71,57 @@ public class AsyncResponseTest extends JerseyTest {
 
     @Test
     public void testMultipleCancel() throws InterruptedException, IOException {
-        final Response response = target().path("resource").request().get();
+        final Response response = target().path("resource/1").request().get();
         final InputStream inputStream = response.readEntity(InputStream.class);
         for (int i = 0; i < 500; i++) {
             inputStream.read();
         }
         response.close();
-        System.out.println("Response closed.");
-        callbackCalledSignal.await();
+        callbackCalledSignal1.await();
+    }
+
+    @Test
+    public void testCancelAfterResume() throws InterruptedException, IOException {
+        final Response response = target().path("resource/2").request().get();
+        final InputStream inputStream = response.readEntity(InputStream.class);
+        for (int i = 0; i < 500; i++) {
+            inputStream.read();
+        }
+        response.close();
+        callbackCalledSignal2.await();
     }
 
     @Path("resource")
     public static class Resource {
         @GET
+        @Path("1")
         @ManagedAsync
-        public void get(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
+        public void get1(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
             if (asyncResponse.cancel()) {
-                callbackCalledSignal.countDown();
+                callbackCalledSignal1.countDown();
             }
             if (asyncResponse.cancel()) {
-                callbackCalledSignal.countDown();
+                callbackCalledSignal1.countDown();
             }
             if (asyncResponse.cancel()) {
-                callbackCalledSignal.countDown();
+                callbackCalledSignal1.countDown();
+            }
+        }
+
+        @GET
+        @Path("2")
+        @ManagedAsync
+        public void get2(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
+            asyncResponse.resume("ok");
+
+            if (!asyncResponse.cancel()) {
+                callbackCalledSignal2.countDown();
+            }
+            if (!asyncResponse.cancel()) {
+                callbackCalledSignal2.countDown();
+            }
+            if (!asyncResponse.cancel()) {
+                callbackCalledSignal2.countDown();
             }
         }
     }
