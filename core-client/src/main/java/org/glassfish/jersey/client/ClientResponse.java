@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,13 +71,13 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
      */
     public ClientResponse(final ClientRequest requestContext, final Response response) {
         this(response.getStatusInfo(), requestContext);
-        this.headers(OutboundJaxrsResponse.unwrap(response).getContext().getStringHeaders());
+        this.headers(OutboundJaxrsResponse.from(response).getContext().getStringHeaders());
 
         final Object entity = response.getEntity();
         if (entity != null) {
             InputStream entityStream = new InputStream() {
 
-                ByteArrayInputStream byteArrayInputStream = null;
+                private ByteArrayInputStream byteArrayInputStream = null;
 
                 @Override
                 public int read() throws IOException {

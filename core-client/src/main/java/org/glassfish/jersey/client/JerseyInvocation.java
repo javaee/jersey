@@ -970,7 +970,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         try {
             WebApplicationException webAppException;
             final int statusCode = response.getStatus();
-            switch (Response.Status.fromStatusCode(statusCode)) {
+            final Response.Status status = Response.Status.fromStatusCode(statusCode);
+
+            if (status == null) {
+                final Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
+                webAppException = createExceptionForFamily(response, statusFamily);
+            } else switch (status) {
                 case BAD_REQUEST:
                     webAppException = new BadRequestException(response);
                     break;
@@ -996,24 +1001,32 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     webAppException = new ServiceUnavailableException(response);
                     break;
                 default:
-                    switch (response.getStatusInfo().getFamily()) {
-                        case REDIRECTION:
-                            webAppException = new RedirectionException(response);
-                            break;
-                        case CLIENT_ERROR:
-                            webAppException = new ClientErrorException(response);
-                            break;
-                        case SERVER_ERROR:
-                            webAppException = new ServerErrorException(response);
-                            break;
-                        default:
-                            webAppException = new WebApplicationException(response);
-                    }
+                    final Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
+                    webAppException = createExceptionForFamily(response, statusFamily);
             }
+
             return new ClientException(webAppException);
         } catch (Throwable t) {
             return new ClientException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }
+    }
+
+    private WebApplicationException createExceptionForFamily(Response response, Response.Status.Family statusFamily) {
+        WebApplicationException webAppException;
+        switch (statusFamily) {
+            case REDIRECTION:
+                webAppException = new RedirectionException(response);
+                break;
+            case CLIENT_ERROR:
+                webAppException = new ClientErrorException(response);
+                break;
+            case SERVER_ERROR:
+                webAppException = new ServerErrorException(response);
+                break;
+            default:
+                webAppException = new WebApplicationException(response);
+        }
+        return webAppException;
     }
 
     /**

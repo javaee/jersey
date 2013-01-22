@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Arrays;
@@ -78,18 +79,20 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     private boolean closed = false;
 
     /**
-     * Unwrap an OutboundJaxrsResponse instance from a given response.
+     * Get an OutboundJaxrsResponse instance for a given JAX-RS response.
      *
-     * @param response response instance to unwrap.
-     * @return down-casted {@code OutboundJaxrsResponse} instance.
-     * @throws IllegalArgumentException in case the instance cannot be down-casted.
+     * @param response response instance to from.
+     * @return corresponding {@code OutboundJaxrsResponse} instance.
      */
-    public static OutboundJaxrsResponse unwrap(javax.ws.rs.core.Response response) {
+    public static OutboundJaxrsResponse from(javax.ws.rs.core.Response response) {
         if (response instanceof OutboundJaxrsResponse) {
             return (OutboundJaxrsResponse) response;
         } else {
-            throw new IllegalArgumentException("Unsupported response implementation type: " +
-                    response.getClass().getName());
+            final StatusType status = response.getStatusInfo();
+            final OutboundMessageContext context = new OutboundMessageContext();
+            context.getHeaders().putAll(response.getMetadata());
+            context.setEntity(response.readEntity(InputStream.class));
+            return new OutboundJaxrsResponse(status, context);
         }
     }
 
