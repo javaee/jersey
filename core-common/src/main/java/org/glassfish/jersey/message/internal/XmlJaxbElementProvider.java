@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,24 +39,24 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import org.glassfish.hk2.api.Factory;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Singleton;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
+
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Base XML-based message body provider for {@link JAXBElement JAXB element} instances.
@@ -112,8 +112,8 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
      * Provider for marshalling/un-marshalling {@link JAXBElement JAXB elements}
      * from/to entities of {@code <type>/<sub-type>+xml} media types.
      */
-    @Produces("*/*")
-    @Consumes("*/*")
+    @Produces("*/*,*/*+xml")
+    @Consumes("*/*,*/*+xml")
     @Singleton
     public static final class General extends XmlJaxbElementProvider {
 
@@ -129,13 +129,13 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
 
     @Override
     protected final JAXBElement<?> readFrom(Class<?> type, MediaType mediaType,
-            Unmarshaller u, InputStream entityStream) throws JAXBException {
+                                            Unmarshaller u, InputStream entityStream) throws JAXBException {
         return u.unmarshal(getSAXSource(spf.provide(), entityStream), type);
     }
 
     @Override
     protected final void writeTo(JAXBElement<?> t, MediaType mediaType, Charset c,
-            Marshaller m, OutputStream entityStream) throws JAXBException {
+                                 Marshaller m, OutputStream entityStream) throws JAXBException {
         m.marshal(t, entityStream);
     }
 }
