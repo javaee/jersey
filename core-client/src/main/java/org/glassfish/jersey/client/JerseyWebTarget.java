@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -353,5 +353,19 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     public ClientConfig getConfiguration() {
         checkNotClosed();
         return config.getConfiguration();
+    }
+
+    /**
+     * Pre initializes the {@link Configuration configuration} of this web target in order to improve
+     * performance during the first request.
+     * <p/>
+     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
+     * on this pre initialized web target otherwise configuration will change back to uninitialized.
+     *
+     * @return Jersey web target.
+     */
+    public JerseyWebTarget preInitialize() {
+        config.preInitialize();
+        return this;
     }
 }

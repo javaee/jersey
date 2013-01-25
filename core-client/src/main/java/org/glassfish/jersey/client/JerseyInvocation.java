@@ -456,6 +456,21 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         public ClientConfig getConfiguration() {
             return requestContext.getClientConfig();
         }
+
+
+        /**
+         * Pre initializes the {@link Configuration configuration} of this invocation builder in order to improve
+         * performance during the first request.
+         * <p/>
+         * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} must be called
+         * on this pre initialized invocation builder otherwise invocation builder will change back to uninitialized.
+         *
+         * @return Jersey invocation builder.
+         */
+        public Builder preInitialize() {
+            this.getConfiguration().preInitialize();
+            return this;
+        }
     }
 
     private static class AsyncInvoker implements javax.ws.rs.client.AsyncInvoker {
@@ -1036,5 +1051,19 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     ClientRequest request() {
         return requestContext;
+    }
+
+    /**
+     * Pre initializes the {@link Configuration configuration} of this invocation in order to improve
+     * performance during the first request.
+     * <p/>
+     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
+     * on this pre initialized invocation builder otherwise invocation will change back to uninitialized.
+     *
+     * @return Jersey invocation.
+     */
+    public JerseyInvocation preInitialize() {
+        this.getConfiguration().preInitialize();
+        return this;
     }
 }
