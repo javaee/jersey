@@ -111,7 +111,9 @@ public class HttpUrlConnectorTest {
 				}
 
 				public long getContentLengthLong() {
-					return delegate.getContentLengthLong();
+					return delegate.getContentLength();
+					// java6 compatibility
+					// return delegate.getContentLengthLong();
 				}
 
 				public String getContentType() {
@@ -158,8 +160,11 @@ public class HttpUrlConnectorTest {
 					return delegate.getHeaderFieldInt(name, Default);
 				}
 
-				public long getHeaderFieldLong(String name, long Default) {
-					return delegate.getHeaderFieldLong(name, Default);
+				public long getHeaderFieldLong(String name, long Default) 
+				{
+					return delegate.getHeaderFieldInt(name, (int)Default);
+					// java6 compatibility
+					// return delegate.getHeaderFieldLong(name, Default);
 				}
 
 				public Object getContent() throws IOException {
@@ -236,7 +241,8 @@ public class HttpUrlConnectorTest {
 				}
 
 				public void setFixedLengthStreamingMode(long contentLength) {
-					delegate.setFixedLengthStreamingMode(contentLength);
+					// Ignored for compatibility on java6
+					// delegate.setFixedLengthStreamingMode(contentLength);
 				}
 
 				public void setInstanceFollowRedirects(boolean followRedirects) {
