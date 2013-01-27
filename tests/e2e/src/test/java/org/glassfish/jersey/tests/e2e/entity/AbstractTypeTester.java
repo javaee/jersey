@@ -130,7 +130,6 @@ public abstract class AbstractTypeTester extends JerseyTest {
 
     protected <T> void _test(T in, Class resource, MediaType m, boolean verify) {
         WebTarget target = target(resource.getSimpleName());
-
         Response response = target.request().post(Entity.entity(in, m));
 
         byte[] inBytes = requestEntity;

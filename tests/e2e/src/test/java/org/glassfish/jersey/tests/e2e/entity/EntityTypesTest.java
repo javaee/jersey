@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -297,6 +297,17 @@ public class EntityTypesTest extends AbstractTypeTester {
         _test(new JaxbBean("CONTENT"), JAXBElementBeanTextResource.class, MediaType.TEXT_XML_TYPE);
     }
 
+    @Path("JaxbBeanResourceAtom")
+    @Produces("application/atom+xml")
+    @Consumes("application/atom+xml")
+    public static class JaxbBeanResourceAtom extends AResource<JAXBElement<JaxbBean>> {
+    }
+
+    @Test
+    public void testJaxbBeanRepresentationMediaTypeAtom() {
+        _test(new JaxbBean("CONTENT"), JaxbBeanResourceAtom.class, MediaType.valueOf("application/atom+xml"));
+    }
+
     @Path("JAXBTypeResource")
     @Produces("application/xml")
     @Consumes("application/xml")
@@ -430,7 +441,7 @@ public class EntityTypesTest extends AbstractTypeTester {
         for (Map.Entry<String, List<String>> entry : fp.asMap().entrySet()) {
             List<String> s = response.asMap().get(entry.getKey());
             assertEquals(entry.getValue().size(), s.size());
-            for (Iterator<String> it1 = entry.getValue().listIterator(), it2 = s.listIterator(); it1.hasNext();) {
+            for (Iterator<String> it1 = entry.getValue().listIterator(), it2 = s.listIterator(); it1.hasNext(); ) {
                 assertEquals(it1.next(), it2.next());
             }
         }
@@ -967,6 +978,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/fastinfoset")
     public static class JAXBListResourceFastInfoset extends JAXBListResource {
     }
+
 
     /**
      * TODO, the unmarshalling fails.
