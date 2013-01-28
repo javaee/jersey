@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -330,7 +330,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             } else {
                 return null;
             }
-        } else if (parameter.getAnnotation().annotationType() == FormDataParam.class) {
+        } else if (parameter.getSourceAnnotation().annotationType() == FormDataParam.class) {
             String parameterName = parameter.getSourceName();
             if (parameterName == null || parameterName.length() == 0) {
                 // Invalid query parameter name

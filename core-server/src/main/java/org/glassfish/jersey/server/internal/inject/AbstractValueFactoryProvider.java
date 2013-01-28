@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 public abstract class AbstractValueFactoryProvider implements ValueFactoryProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
-    private final ServiceLocator injector;
+    private final ServiceLocator locator;
     private final Set<Parameter.Source> compatibleSources;
 
     /**
@@ -75,7 +75,7 @@ public abstract class AbstractValueFactoryProvider implements ValueFactoryProvid
                                            ServiceLocator locator,
                                            Parameter.Source... compatibleSources) {
         this.mpep = mpep;
-        this.injector = locator;
+        this.locator = locator;
         this.compatibleSources = new HashSet<Parameter.Source>(Arrays.asList(compatibleSources));
     }
 
@@ -133,7 +133,7 @@ public abstract class AbstractValueFactoryProvider implements ValueFactoryProvid
 
         final Factory<?> valueFactory = createValueFactory(parameter);
         if (valueFactory != null) {
-            injector.inject(valueFactory);
+            locator.inject(valueFactory);
         }
         return valueFactory;
     }
@@ -143,4 +143,12 @@ public abstract class AbstractValueFactoryProvider implements ValueFactoryProvid
         return Priority.NORMAL;
     }
 
+    /**
+     * Get the service locator.
+     *
+     * @return service locator.
+     */
+    protected final ServiceLocator getLocator() {
+        return locator;
+    }
 }

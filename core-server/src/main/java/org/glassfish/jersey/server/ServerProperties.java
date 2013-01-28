@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -197,7 +197,7 @@ public final class ServerProperties {
      * common delimiters: {@code " ,;\n"}.
      * </p>
      * <p>
-     *     The default value is {@code "HEADER, QUERY"}.
+     * The default value is {@code "HEADER, QUERY"}.
      * </p>
      * <p>
      * The name of the configuration property is <code>{@value}</code>.
@@ -205,26 +205,6 @@ public final class ServerProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_METHOD_OVERRIDE = "jersey.config.server.httpMethodOverride";
-
-    /**
-     * Defines configuration ({@link org.glassfish.jersey.client.ClientConfig}) for injectable
-     * {@link javax.ws.rs.client.WebTarget} instances.
-     * <p>
-     *     The property value must be an instance of {@code Map&lt;String, }
-     *     {@link org.glassfish.jersey.client.ClientConfig}{@code &gt;}.
-     *     The key represents {@link javax.ws.rs.client.WebTarget} URI ({@link javax.ws.rs.Uri} value) and the
-     *     value is the configuration which will be used to create injected {@link javax.ws.rs.client.WebTarget}.
-     *
-     * </p>
-     * <p>
-     *     The default value is {@code null} (default configuration will be used).
-     * </p>
-     * <p>
-     * The name of the configuration property is <code>{@value}</code>.
-     * </p>
-     */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String WEBTARGET_CONFIGURATION = "jersey.config.server.webTargetConfiguration";
 
     /**
      * If set the wadl generator configuration that provides a {@link org.glassfish.jersey.server.wadl.WadlGenerator}.

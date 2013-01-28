@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -330,7 +330,8 @@ public class Parameter implements AnnotatedElement {
                 concreteClass, declaringClass, rawType, type);
 
         return new Parameter(
-                annotations, paramAnnotation,
+                annotations,
+                paramAnnotation,
                 paramSource,
                 paramName,
                 ct.rawClass(),
@@ -443,7 +444,7 @@ public class Parameter implements AnnotatedElement {
 
         return new Parameter(
                 original.annotations,
-                original.annotation,
+                original.sourceAnnotation,
                 source,
                 source.name(),
                 original.rawType,
@@ -470,7 +471,7 @@ public class Parameter implements AnnotatedElement {
 
     // Instance
     private final Annotation[] annotations;
-    private final Annotation annotation;
+    private final Annotation sourceAnnotation;
     private final Parameter.Source source;
     private final String sourceName;
     private final boolean encoded;
@@ -488,7 +489,7 @@ public class Parameter implements AnnotatedElement {
             boolean encoded,
             String defaultValue) {
         this.annotations = markers;
-        this.annotation = marker;
+        this.sourceAnnotation = marker;
         this.source = source;
         this.sourceName = sourceName;
         this.rawType = rawType;
@@ -498,12 +499,12 @@ public class Parameter implements AnnotatedElement {
     }
 
     /**
-     * Get the parameter annotations.
+     * Get the parameter source annotation.
      *
-     * @return parameter annotations.
+     * @return parameter source annotation.
      */
-    public Annotation getAnnotation() {
-        return annotation;
+    public Annotation getSourceAnnotation() {
+        return sourceAnnotation;
     }
 
     /**
@@ -516,9 +517,9 @@ public class Parameter implements AnnotatedElement {
     }
 
     /**
-     * Get the parameter value source name.
+     * Get the parameter source name, i.e. value of the parameter source annotation.
      *
-     * @return parameter value source name.
+     * @return parameter source name.
      */
     public String getSourceName() {
         return sourceName;

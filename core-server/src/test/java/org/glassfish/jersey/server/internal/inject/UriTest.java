@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -48,11 +50,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Uri;
 import javax.ws.rs.client.WebTarget;
 
-import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.server.ClientBinding;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,8 @@ public class UriTest extends AbstractTest {
     @Path("test")
     public static class Resource1 {
 
-        @Uri("http://oracle.com") WebTarget webTarget1;
+        @Uri("http://oracle.com")
+        WebTarget webTarget1;
 
         @GET
         @Path("1")
@@ -84,7 +86,8 @@ public class UriTest extends AbstractTest {
     @Path("test")
     public static class Resource2 {
 
-        @Uri("http://oracle.com/{param}") WebTarget webTarget1;
+        @Uri("http://oracle.com/{param}")
+        WebTarget webTarget1;
 
         @GET
         @Path("1")
@@ -102,7 +105,8 @@ public class UriTest extends AbstractTest {
     @Path("test")
     public static class Resource3 {
 
-        @Uri("{param}") WebTarget webTarget1;
+        @Uri("{param}")
+        WebTarget webTarget1;
 
         @GET
         @Path("1")
@@ -117,10 +121,20 @@ public class UriTest extends AbstractTest {
         }
     }
 
+
+    @ClientBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.FIELD, ElementType.PARAMETER})
+    public static @interface Managed {
+
+    }
+
     @Path("test")
     public static class Resource4 {
 
-        @Uri("http://oracle.com") WebTarget webTarget1;
+        @Uri("http://oracle.com")
+        @Managed
+        WebTarget webTarget1;
 
         @GET
         @Path("1")
@@ -130,12 +144,16 @@ public class UriTest extends AbstractTest {
 
         @GET
         @Path("2")
-        public String doGet2(@Uri("http://oracle.com") WebTarget webTarget2) {
+        public String doGet2(@Uri("http://oracle.com") @Managed WebTarget webTarget2) {
             return (String) webTarget2.getConfiguration().getProperties().get("test-property");
         }
 
+        @GET
+        @Path("3")
+        public String doGet3(@Uri("relative") @Managed WebTarget relativeTarget) {
+            return relativeTarget.getUri().toString();
+        }
     }
-
 
     @Test
     public void testGet1() throws ExecutionException, InterruptedException {
@@ -218,14 +236,10 @@ public class UriTest extends AbstractTest {
     }
 
     @Test
-    public void testConfiguredInjection1() throws ExecutionException, InterruptedException {
+    public void testManagedClientInjection1() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
-        final ClientConfig clientConfig = new ClientConfig();
-        clientConfig.setProperty("test-property", "test-value");
-        Map<String, ClientConfig> clientConfigMap = new HashMap<String, ClientConfig>();
-        clientConfigMap.put("http://oracle.com", clientConfig);
-        resourceConfig.setProperty(ServerProperties.WEBTARGET_CONFIGURATION, clientConfigMap);
-
+        // TODO introduce new ResourceConfig.setClientProperty(Class<? extends Annotation>, String name, Object value) helper method
+        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
         initiateWebApplication(resourceConfig);
 
         final ContainerResponse response = apply(
@@ -237,14 +251,9 @@ public class UriTest extends AbstractTest {
     }
 
     @Test
-    public void testConfiguredInjection2() throws ExecutionException, InterruptedException {
+    public void testManagedClientInjection2() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
-        final ClientConfig clientConfig = new ClientConfig();
-        clientConfig.setProperty("test-property", "test-value");
-        Map<String, ClientConfig> clientConfigMap = new HashMap<String, ClientConfig>();
-        clientConfigMap.put("http://oracle.com", clientConfig);
-        resourceConfig.setProperty(ServerProperties.WEBTARGET_CONFIGURATION, clientConfigMap);
-
+        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
         initiateWebApplication(resourceConfig);
 
         final ContainerResponse response = apply(
@@ -253,5 +262,20 @@ public class UriTest extends AbstractTest {
         );
 
         assertEquals("test-value", response.getEntity());
+    }
+
+    @Test
+    public void testManagedClientInjection3() throws ExecutionException, InterruptedException {
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
+        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
+        resourceConfig.setProperty(Managed.class.getName() + ".baseUri", "http://oracle.com");
+        initiateWebApplication(resourceConfig);
+
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/test/3", "GET").
+                        build()
+        );
+
+        assertEquals("http://oracle.com/relative", response.getEntity());
     }
 }
