@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.proxy;
-
-import java.util.Collections;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
+package org.glassfish.jersey.simple;
 
 import org.junit.Test;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import static org.junit.Assert.assertEquals;
 
-public class WebResourceFactoryTest extends JerseyTest {
-    private MyResourceIfc resource;
+/**
+ * @author Paul.Sandoz@Sun.Com
+ */
+public class ExceptionTest extends AbstractSimpleServerTester {
+    @Path("{status}")
+    public static class ExceptionResource {
+        @GET
+        public String get(@PathParam("status") int status) {
+            throw new WebApplicationException(status);
+        }
 
-    @Override
-    protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
-        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
     }
 
     @Test
-    public void testGetIt() {
-        assertEquals("Got it!", resource.getIt());
+    public void test400StatusCode() {
+        startServer(ExceptionResource.class);
+        Client client = ClientFactory.newClient();
+        WebTarget r = client.target(getUri().path("400").build());
+        assertEquals(400, r.request().get(Response.class).getStatus());
     }
 
     @Test
-    public void testPostIt() {
-        MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
-    }
+    public void test500StatusCode() {
+        startServer(ExceptionResource.class);
+        Client client = ClientFactory.newClient();
+        WebTarget r = client.target(getUri().path("500").build());
 
-    @Test
-    public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
-    }
-
-    @Test
-    public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
-    }
-
-    @Test
-    public void testSubResource() {
-        assertEquals("Got it!", resource.getSubResource().getMyBean().name);
+        assertEquals(500, r.request().get(Response.class).getStatus());
     }
 }

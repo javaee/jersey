@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,62 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.proxy;
+package org.glassfish.jersey.simple;
 
-import java.util.Collections;
-
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-
 import org.junit.Test;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+
 import static org.junit.Assert.assertEquals;
 
-public class WebResourceFactoryTest extends JerseyTest {
-    private MyResourceIfc resource;
+/**
+ * @author Paul.Sandoz@Sun.Com
+ */
+public class GZIPContentEncodingTest extends AbstractSimpleServerTester {
 
-    @Override
-    protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
-        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
-    }
+    @Path("/")
+    public static class Resource {
+        @GET
+        public String get() {
+            return "GET";
+        }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
-    }
-
-    @Test
-    public void testGetIt() {
-        assertEquals("Got it!", resource.getIt());
+        @POST
+        public String post(String content) {
+            return content;
+        }
     }
 
     @Test
-    public void testPostIt() {
-        MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
+    public void testGet() {
+        ResourceConfig rc = new ResourceConfig(Resource.class);
+        rc.register(GZipEncoder.class);
+        startServer(rc);
+
+        Client client = ClientFactory.newClient(new ClientConfig(GZipEncoder.class));
+        WebTarget r = client.target(getUri().build());
+
+        assertEquals("GET", r.request().get(String.class));
     }
 
     @Test
-    public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
-    }
+    public void testPost() {
+        ResourceConfig rc = new ResourceConfig(Resource.class);
+        rc.register(GZipEncoder.class);
+        startServer(rc);
 
-    @Test
-    public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
-    }
+        Client client = ClientFactory.newClient(new ClientConfig(GZipEncoder.class));
+        WebTarget r = client.target(getUri().build());
 
-    @Test
-    public void testSubResource() {
-        assertEquals("Got it!", resource.getSubResource().getMyBean().name);
+        assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
     }
 }

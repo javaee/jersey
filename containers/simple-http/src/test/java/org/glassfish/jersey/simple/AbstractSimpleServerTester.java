@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,72 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.proxy;
+package org.glassfish.jersey.simple;
 
-import java.util.Collections;
-
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
+import org.junit.After;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import javax.ws.rs.core.UriBuilder;
+import java.io.Closeable;
+import java.net.URI;
 
-public class WebResourceFactoryTest extends JerseyTest {
-    private MyResourceIfc resource;
+/**
+ * @author Paul.Sandoz@Sun.Com
+ * @author Arul Dhesiaseelan (aruld@acm.org)
+ */
+public abstract class AbstractSimpleServerTester {
 
-    @Override
-    protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
-        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
+    public static final String CONTEXT = "";
+
+    private int port = getEnvVariable("JERSEY_HTTP_PORT", 9998);
+
+    private static int getEnvVariable(final String varName, int defaultValue) {
+        if (null == varName) {
+            return defaultValue;
+        }
+        String varValue = System.getenv(varName);
+        if (null != varValue) {
+            try {
+                return Integer.parseInt(varValue);
+            } catch (NumberFormatException e) {
+                // will return default value bellow
+            }
+        }
+        return defaultValue;
     }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
+    private Closeable server;
+
+    public UriBuilder getUri() {
+        return UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT);
     }
 
-    @Test
-    public void testGetIt() {
-        assertEquals("Got it!", resource.getIt());
+    public void startServer(Class... resources) {
+        ResourceConfig config = new ResourceConfig(resources);
+        config.register(LoggingFilter.class);
+        server = SimpleContainerFactory.create(getBaseUri(), config);
     }
 
-    @Test
-    public void testPostIt() {
-        MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
+    public void startServer(ResourceConfig config) {
+        server = SimpleContainerFactory.create(getBaseUri(), config);
     }
 
-    @Test
-    public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
+    public URI getBaseUri() {
+        return UriBuilder.fromUri("http://localhost/").port(port).build();
     }
 
-    @Test
-    public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
+    public void stopServer() {
+        try {
+            server.close();
+            server = null;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @Test
-    public void testSubResource() {
-        assertEquals("Got it!", resource.getSubResource().getMyBean().name);
+    @After
+    public void tearDown() {
+        stopServer();
     }
 }
