@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,14 +48,16 @@ import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
+import org.glassfish.jersey.ExtendedConfig;
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.CommonConfig;
-import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -182,6 +184,14 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
 
         void markAsShared() {
             strategy = COPY_ON_CHANGE;
+        }
+
+        State preInitialize() {
+            final State state = strategy.onChange(this);
+            state.strategy = COPY_ON_CHANGE;
+            state.runtime.get().preInitialize();
+            return state;
+
         }
 
         public State setProperties(final Map<String, ?> properties) {
@@ -656,6 +666,21 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
      */
     public JerseyClient getClient() {
         return state.getClient();
+    }
+
+
+    /**
+     * Pre initializes this configuration by initializing {@link ClientRuntime client runtime}
+     * including {@link org.glassfish.jersey.message.MessageBodyWorkers message body workers}.
+     * Once this method is called no other method implementing {@link Configurable} should be called
+     * on this pre initialized configuration otherwise configuration will change back to uninitialized.
+     * <p/>
+     * Note that this method must be called only when configuration is attached to the client.
+     * @return Client configuration.
+     */
+    ClientConfig preInitialize() {
+        state = state.preInitialize();
+        return this;
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,10 +47,11 @@ import java.util.concurrent.Future;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.ExtendedConfig;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -73,6 +74,8 @@ class ClientRuntime {
     private final RequestScope requestScope;
     private final ClientAsyncExecutorsFactory asyncExecutorsFactory;
 
+    private final ServiceLocator locator;
+
     /**
      * Create new client request processing runtime.
      *
@@ -81,7 +84,6 @@ class ClientRuntime {
      * @param locator   HK2 service locator.
      */
     public ClientRuntime(final ExtendedConfig config, final Connector connector, final ServiceLocator locator) {
-
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
         final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
@@ -97,6 +99,8 @@ class ClientRuntime {
 
         this.requestScope = locator.getService(RequestScope.class);
         this.asyncExecutorsFactory = new ClientAsyncExecutorsFactory(locator);
+
+        this.locator = locator;
     }
 
     /**
@@ -244,5 +248,13 @@ class ClientRuntime {
      */
     public void close() {
         connector.close();
+    }
+
+    /**
+     * Pre-initialize the client runtime.
+     */
+    public void preInitialize() {
+        // pre-initialize MessageBodyWorkers
+        locator.getService(MessageBodyWorkers.class);
     }
 }
