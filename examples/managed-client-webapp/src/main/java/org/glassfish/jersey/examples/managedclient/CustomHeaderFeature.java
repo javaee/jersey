@@ -50,7 +50,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 
 /**
- *Dynamic feature that appends a properly configured {@link CustomHeaderFilter} instance
+ * Dynamic feature that appends a properly configured {@link CustomHeaderFilter} instance
  * to every method that is annotated with {@link org.glassfish.jersey.examples.managedclient.CustomHeaderFeature.Require &#64;Require} internal feature
  * annotation.
  *
