@@ -248,10 +248,8 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * Pre initializes the {@link Configuration configuration} of this client in order to improve
      * performance during the first request.
      * <p/>
-     * Pre initialized configuration cannot be changed. Once this method is called no other
-     * method implementing {@link javax.ws.rs.core.Configurable} must be called
-     * on this pre initialized client or any other object derived from this client otherwise
-     * exception will be thrown.
+     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
+     * on this pre initialized {@link JerseyClient} otherwise configuration will change back to uninitialized.
      *
      * @return Jersey client.
      */
