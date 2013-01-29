@@ -57,26 +57,28 @@ import com.google.common.collect.Lists;
  * Runtime resource can have child runtime resources which are groups of child resources of all resources constructing this
  * runtime resource.
  * <p/>
- * The following example shows how Runtime resource sructure is built from Resource model:
- * <pre>&#064;Path("{foo}")
+ * The following example shows how Runtime resource structure is built from Resource model:
+ * <pre>
+ * &#064;Path("{foo}")
  * public class TemplateResourceFoo {
- *  &#064;GET
- *  &#064;Path("child")
- *  public String getFoo() {...}
+ *     &#064;GET
+ *     &#064;Path("child")
+ *     public String getFoo() {...}
  *
- *  &#064;Path("{x}")
- *  &#064;GET
- *  public String getX() {...}
+ *     &#064;Path("{x}")
+ *     &#064;GET
+ *     public String getX() {...}
  *
- *  &#064;Path("{y}")
- *  &#064;GET
- *  public String getX() {...}
+ *     &#064;Path("{y}")
+ *     &#064;POST
+ *     public String postY(String entity) {...}
+ * }
  *
- * <pre>&#064;Path("{bar}")
+ * &#064;Path("{bar}")
  * public class TemplateResourceBar {
- *  &#064;Path("{z}")
- *  &#064;GET
- *  public String getZ() {...}
+ *     &#064;Path("{z}")
+ *     &#064;PUT
+ *     public String putZ(String entity) {...}
  * }
  * </pre>
  *
