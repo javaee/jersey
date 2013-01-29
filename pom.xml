@@ -1006,7 +1006,7 @@
                 examples/osgi-helloworld-webapp/lib-bundle/pom.xml
                 examples/server-async-webapp/standalone/pom.xml <- change jersey version -->
         <jaxrs.api.version>2.0-m15</jaxrs.api.version>
-        <hk2.version>2.1.51</hk2.version>
+        <hk2.version>2.1.54</hk2.version>
         <grizzly2.version>2.3-rc2</grizzly2.version>
         <jackson.version>1.9.8</jackson.version>
         <jersey1.version>1.15</jersey1.version>

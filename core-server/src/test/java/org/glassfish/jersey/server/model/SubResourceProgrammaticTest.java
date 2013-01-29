@@ -61,7 +61,7 @@ import org.junit.Test;
 import junit.framework.Assert;
 
 /**
- * Test sub resource locators returning {@Resource programmatic resources}.
+ * Test sub resource locators returning {@link Resource programmatic resources}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
@@ -71,8 +71,7 @@ public class SubResourceProgrammaticTest {
     public static class RootResource {
         @Path("locator")
         public Resource subResourceLocator() {
-            final Resource resource = getResource();
-            return resource;
+            return getResource();
         }
 
         private Resource getResource() {
@@ -87,14 +86,12 @@ public class SubResourceProgrammaticTest {
 
         @Path("singleton")
         public Resource subResourceSingleton() {
-            final Resource resource = Resource.from(SingletonResource.class);
-            return resource;
+            return Resource.from(SingletonResource.class);
         }
 
         @Path("standard")
         public Resource subResourceStandard() {
-            final Resource resource = Resource.from(StandardResource.class);
-            return resource;
+            return Resource.from(StandardResource.class);
         }
 
         @Path("standard-instance")
@@ -103,7 +100,7 @@ public class SubResourceProgrammaticTest {
         }
 
         @Path("complex")
-        public Resource complextSubResource() throws NoSuchMethodException {
+        public Resource complexSubResource() throws NoSuchMethodException {
             Resource.Builder builder = Resource.builder();
             builder.addChildResource("singleton-method").addMethod("GET").handledBy(SingletonResource.class,
                     SingletonResource.class.getDeclaredMethod("getCounter"));
@@ -119,7 +116,6 @@ public class SubResourceProgrammaticTest {
         }
     }
 
-
     @Singleton
     @Path("root-singleton")
     public static class SingletonResource {
@@ -132,8 +128,7 @@ public class SubResourceProgrammaticTest {
 
         @Path("iteration")
         public Resource subResourceSingleton() {
-            final Resource resource = Resource.from(SingletonResource.class);
-            return resource;
+            return Resource.from(SingletonResource.class);
         }
 
         @Path("iteration-class")
@@ -148,8 +143,7 @@ public class SubResourceProgrammaticTest {
 
         @Path("iteration-standard")
         public Resource subResourceStandard() {
-            final Resource resource = Resource.from(StandardResource.class);
-            return resource;
+            return Resource.from(StandardResource.class);
         }
     }
 
@@ -164,14 +158,12 @@ public class SubResourceProgrammaticTest {
 
         @Path("iteration")
         public Resource subResourceStandard() {
-            final Resource resource = Resource.from(StandardResource.class);
-            return resource;
+            return Resource.from(StandardResource.class);
         }
 
         @Path("iteration-singleton")
         public Resource subResourceSingleton() {
-            final Resource resource = Resource.from(SingletonResource.class);
-            return resource;
+            return Resource.from(SingletonResource.class);
         }
 
     }
