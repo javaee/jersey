@@ -52,7 +52,7 @@ import javax.ws.rs.core.Configuration;
  * {@link javax.ws.rs.client.WebTarget WebTarget} instances and clients (and their configurations) that are used to create
  * the injected web target instances.
  * <p>
- * Jersey refers to client instance configured using custom bound configurations as <i>managed clients</em>. As a first step,
+ * Jersey refers to client instance configured using custom bound configurations as <em>managed clients</em>. As a first step,
  * when using a managed client in a server-side JAX-RS/Jersey application, a custom client binding annotation has to be
  * defined:
  * <pre>
@@ -104,9 +104,36 @@ import javax.ws.rs.core.Configuration;
  * the {@link org.glassfish.jersey.client.ClientConfig} class that provides reusable implementation of JAX-RS
  * {@link Configuration} as well as {@link javax.ws.rs.core.Configurable Configurable} APIs.
  * </p>
+ * <p>
+ * In case a managed client needs special properties, these properties can also be provided via custom {@code Configuration}
+ * implementation class. Another way how to pass custom properties to a managed client configuration is to define the managed
+ * client properties in the server configuration using a special
+ * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.property.</code> prefix. This can be either done programmatically,
+ * for example:
+ * <pre>
+ * MyResourceConfig.setProperty(
+ *     "my.package.MyClient.property.<b>custom-client-property</b>", "custom-value");
+ * </pre>
+ * </p>
+ * <p>
+ * Or declaratively via {@code web.xml}:
+ * <pre>
+ * &lt;init-param&gt;
+ *     &lt;param-name&gt;my.package.MyClient.property.<b>custom-client-property</b>&lt;/param-name&gt;
+ *     &lt;param-value&gt;custom-value&lt;/param-value&gt;
+ * &lt;/init-param&gt;
+ * </pre>
+ * Properties defined this way can be accessed from the proper managed client instances using the custom property names:
+ * <pre>
+ * Object value = customTarget.getConfiguration().getProperty("<b>custom-client-property</b>");
+ * </pre>
+ * Note that the technique of defining managed client properties via server-side configuration described above can be also used
+ * to override the default property values defined programmatically in a custom configuration implementation class.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@SuppressWarnings("HtmlTagCanBeJavadocTag")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 @Documented
