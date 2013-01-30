@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,12 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -51,10 +53,15 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -63,10 +70,15 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.sun.research.ws.wadl.Application;
+
+import junit.framework.Assert;
+
 /**
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class OptionsTest {
 
@@ -75,6 +87,7 @@ public class OptionsTest {
     @HttpMethod("patch")
     public @interface PATCH {
     }
+
     private ApplicationHandler app;
 
     private void initiateWebApplication(Class<?>... classes) {
@@ -186,5 +199,95 @@ public class OptionsTest {
         assertTrue(allow.contains("PATCH"));
 
         assertEquals("OVERRIDE", response.getHeaderString("X-TEST"));
+    }
+
+
+    @Path("resource")
+    public static class WadlResource {
+        @GET
+        public String get() {
+            return "get";
+        }
+    }
+
+    @Test
+    public void testRequestNoType() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class));
+        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        final MediaType type = response.getMediaType();
+        Assert.assertTrue(type.equals(MediaTypes.WADL) || type.equals(MediaType.TEXT_HTML_TYPE)
+                || type.equals(MediaType.TEXT_PLAIN));
+
+    }
+
+    @Test
+    public void testRequestTextPlain() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseTextFilter.class));
+        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(MediaType.TEXT_PLAIN_TYPE)
+                .build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        final MediaType type = response.getMediaType();
+        Assert.assertEquals(MediaType.TEXT_PLAIN_TYPE, type);
+        final String entity = (String) response.getEntity();
+        Assert.assertTrue(entity.contains("GET"));
+    }
+
+    @Test
+    public void testRequestTextHtml() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseHtmlFilter.class));
+        final MediaType requestType = MediaType.TEXT_HTML_TYPE;
+        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(requestType)
+                .build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        final MediaType type = response.getMediaType();
+        Assert.assertEquals(requestType, type);
+        Assert.assertTrue(response.getAllowedMethods().contains("GET"));
+    }
+
+    @Test
+    public void testRequestWadl() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseWadlFilter.class));
+        final MediaType requestType = MediaTypes.WADL;
+        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(requestType)
+                .build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        final MediaType type = response.getMediaType();
+        Assert.assertEquals(requestType, type);
+    }
+
+    private static class ResponseTextFilter implements ContainerResponseFilter {
+
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            final MediaType type = responseContext.getMediaType();
+            Assert.assertEquals(MediaType.TEXT_PLAIN_TYPE, type);
+
+        }
+    }
+
+    private static class ResponseHtmlFilter implements ContainerResponseFilter {
+
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            final MediaType type = responseContext.getMediaType();
+            Assert.assertEquals(MediaType.TEXT_HTML_TYPE, type);
+
+        }
+    }
+
+    private static class ResponseWadlFilter implements ContainerResponseFilter {
+
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            final MediaType type = responseContext.getMediaType();
+            Assert.assertEquals(MediaTypes.WADL, type);
+            responseContext.getEntity().getClass().equals(Application.class);
+
+        }
     }
 }
