@@ -49,6 +49,7 @@ import javax.ws.rs.Path;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.internal.ModelHelper;
 import org.glassfish.jersey.uri.PathPattern;
 
 import com.google.common.base.Function;
@@ -608,7 +609,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      *         the class is a root resource class), or {@code null} otherwise.
      */
     public static Path getPath(Class<?> resourceClass) {
-        return IntrospectionModeller.getAnnotatedResourceClass(resourceClass).getAnnotation(Path.class);
+        return ModelHelper.getAnnotatedResourceClass(resourceClass).getAnnotation(Path.class);
     }
 
     /**
@@ -631,6 +632,8 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         b.handlerClasses.addAll(resource.handlerClasses);
         b.handlerInstances.addAll(resource.handlerInstances);
+
+        b.names.addAll(resource.names);
 
         return b;
     }
@@ -700,6 +703,15 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         return name;
+    }
+
+    /**
+     * Return a list of resource names.
+     *
+     * @return a list of resource names.
+     */
+    public List<String> getNames() {
+        return Lists.newArrayList(names);
     }
 
     /**

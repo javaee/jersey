@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -148,6 +148,24 @@ public final class ServletProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
+
+    /**
+     * If {@code true} then disable {@link org.glassfish.jersey.servlet.mvc.internal.JspTemplateProcessor JSP template processor}.
+     * <p></p>
+     * By default JSP template processor is automatically enabled.
+     * <p></p>
+     * The default value is {@code false}.
+     * <p></p>
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String FEATURE_DISABLE_JSP_TEMPLATE_PROCESSOR = "jersey.config.servlet.jsp.disableJspTemplateProcessor";
+
+    /**
+     * The base path in the Web Pages where JSP templates, associated with viewables of resource classes, are located.
+     * <p></p>
+     * If this property is not set then the base path will be the root path of the Web Pages.
+     */
+    public static final String JSP_TEMPLATES_BASE_PATH = "jersey.config.servlet.JspTemplatesBasePath";
 
     private ServletProperties() {
         // prevents instantiation

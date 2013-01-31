@@ -61,10 +61,12 @@
         <module>bean-validation-webapp</module>
         <module>bookmark</module>
         <module>bookmark-em</module>
+        <module>bookstore-webapp</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
         <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>
+        <module>freemarker-webapp</module>
         <module>helloworld</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
