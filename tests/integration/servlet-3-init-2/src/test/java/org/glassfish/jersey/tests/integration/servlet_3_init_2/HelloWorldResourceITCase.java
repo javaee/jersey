@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,9 @@
 
 package org.glassfish.jersey.tests.integration.servlet_3_init_2;
 
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -56,6 +54,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class HelloWorldResourceITCase extends JerseyTest {
 
@@ -71,9 +70,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        WebTarget t = target();
-        t.configuration().register(new LoggingFilter());
-        Response r = t.path("helloworld").request().get();
+        Response r = target().path("helloworld").request().get();
         assertEquals(200, r.getStatus());
         assertEquals("Hello World!-ext4-ext2-ext1-ext3", r.readEntity(String.class));
     }
