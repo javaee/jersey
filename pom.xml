@@ -256,7 +256,7 @@
                     <version>2.8.1</version>
                     <configuration>
                         <doctitle>Jersey ${project.version} API Documentation</doctitle>
-                        <bottom>Copyright © 2007-2012 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
+                        <bottom>Copyright © 2007-2013 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
                         <links>
                             <link>http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
@@ -380,7 +380,7 @@
                                 <version>2.8.1</version>
                                 <configuration>
                                     <doctitle>Jersey ${project.version} API Documentation</doctitle>
-                                    <bottom>Copyright © 2007-2012 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
+                                    <bottom>Copyright © 2007-2013 Oracle Corporation. All Rights Reserved. Use is subject to license terms.</bottom>
                                     <excludePackageNames>
                                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                                     </excludePackageNames>
