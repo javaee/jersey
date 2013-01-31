@@ -39,23 +39,15 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
-
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteBuilder;
 import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteToPathBuilder;
@@ -87,15 +79,7 @@ public final class RuntimeModelBuilder {
     private final MessageBodyWorkers workers;
     private final PushMatchedMethodResourceRouter.Builder pushedMatchedMethodResourceBuilder;
     private final PushMatchedRuntimeResourceRouter.Builder pushedMatchedRuntimeResourceBuilder;
-
-
-    private MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters;
-    private MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters;
-    private Iterable<RankedProvider<ReaderInterceptor>> globalReaderInterceptors;
-    private Iterable<RankedProvider<WriterInterceptor>> globalWriterInterceptors;
-    private MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors;
-    private MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors;
-    private Iterable<DynamicFeature> dynamicFeatures;
+    private ProcessingProviders processingProviders;
 
     /**
      * Injection constructor.
@@ -149,13 +133,7 @@ public final class RuntimeModelBuilder {
 
         return resourceMethodInvokerBuilder.build(
                 method,
-                nameBoundRequestFilters,
-                nameBoundResponseFilters,
-                globalReaderInterceptors,
-                globalWriterInterceptors,
-                nameBoundReaderInterceptors,
-                nameBoundWriterInterceptors,
-                dynamicFeatures
+                processingProviders
         );
     }
 
@@ -223,7 +201,7 @@ public final class RuntimeModelBuilder {
 
             // resource methods
             if (resource.getResourceMethods().size() > 0) {
-                final List<MethodAcceptorPair> methodAcceptors = createAcceptors(resource, subResourceMode);
+                final List<MethodAcceptorPair> methodAcceptors = createAcceptors(resource);
                 final PathPattern resourceClosedPattern =
                         (subResourceMode) ? PathPattern.END_OF_PATH_PATTERN : PathPattern.asClosed(resource.getPathPattern());
 
@@ -245,7 +223,7 @@ public final class RuntimeModelBuilder {
 
                     // sub resource methods
                     if (child.getResourceMethods().size() > 0) {
-                        final List<MethodAcceptorPair> childMethodAcceptors = createAcceptors(child, subResourceMode);
+                        final List<MethodAcceptorPair> childMethodAcceptors = createAcceptors(child);
 
                         srRoutedBuilder = routedBuilder(srRoutedBuilder)
                                 .route(childClosedPattern)
@@ -285,7 +263,7 @@ public final class RuntimeModelBuilder {
         return createRootTreeAcceptor(lastRoutedBuilder, subResourceMode);
     }
 
-    private List<MethodAcceptorPair> createAcceptors(RuntimeResource runtimeResource, boolean subResourceMode) {
+    private List<MethodAcceptorPair> createAcceptors(RuntimeResource runtimeResource) {
         List<MethodAcceptorPair> acceptorPairList = Lists.newArrayList();
         for (Resource resource : runtimeResource.getResources()) {
             for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
@@ -303,37 +281,10 @@ public final class RuntimeModelBuilder {
     }
 
     /**
-     * Set global reader and writer interceptors.
-     *
-     * @param readerInterceptors global reader interceptors.
-     * @param writerInterceptors global writer interceptors.
+     * Set {@link ProcessingProviders processing providers}.
+     * @param processingProviders processing providers.
      */
-    public void setGlobalInterceptors(Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors,
-                                      Iterable<RankedProvider<WriterInterceptor>> writerInterceptors) {
-        this.globalReaderInterceptors = readerInterceptors;
-        this.globalWriterInterceptors = writerInterceptors;
-    }
-
-    /**
-     * Set the name bound filters and dynamic binders.
-     *
-     * @param nameBoundRequestFilters name bound request filters.
-     * @param nameBoundResponseFilters name bound response filters.
-     * @param nameBoundReaderInterceptors name bound reader interceptors.
-     * @param nameBoundWriterInterceptors name bound writer interceptors.
-     * @param dynamicFeatures dynamic features.
-     */
-    public void setBoundProviders(
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors,
-            Iterable<DynamicFeature> dynamicFeatures
-    ) {
-        this.nameBoundRequestFilters = nameBoundRequestFilters;
-        this.nameBoundResponseFilters = nameBoundResponseFilters;
-        this.nameBoundReaderInterceptors = nameBoundReaderInterceptors;
-        this.nameBoundWriterInterceptors = nameBoundWriterInterceptors;
-        this.dynamicFeatures = dynamicFeatures;
+    public void setProcessingProviders(ProcessingProviders processingProviders) {
+        this.processingProviders = processingProviders;
     }
 }

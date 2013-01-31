@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -921,6 +921,25 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
+     * Gets the most internal wrapped {@link Application application} class. This method is similar to {@link #getApplication()}
+     * except ff this config was created by wrapping multiple resource configs this method returns the original application
+     * and not the wrapped resource config.
+     *
+     * @return Application.
+     */
+    final Application getWrappedApplication() {
+        Application app = this;
+        while (app instanceof  ResourceConfig) {
+            final Application wrappedApplication = ((ResourceConfig) app).getApplication();
+            if (wrappedApplication == app) {
+                break;
+            }
+            app = wrappedApplication;
+        }
+        return app;
+    }
+
+    /**
      * Method used by ApplicationHandler to retrieve application class
      * (this method is overridden by WrappingResourceConfig).
      *
@@ -1091,7 +1110,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
             this.application = original;
 
-            Application customRootApp = ResourceConfig.uwrapCustomRootApplication(original);
+            Application customRootApp = ResourceConfig.unwrapCustomRootApplication(original);
             if (customRootApp != null) {
                 registerComponentsOf(customRootApp);
             }
@@ -1189,7 +1208,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
     }
 
-    private static Application uwrapCustomRootApplication(ResourceConfig resourceConfig) {
+    private static Application unwrapCustomRootApplication(ResourceConfig resourceConfig) {
         Application app = null;
         while (resourceConfig != null) {
             app = resourceConfig.getApplication();

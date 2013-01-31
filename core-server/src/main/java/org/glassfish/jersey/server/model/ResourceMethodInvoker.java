@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -53,6 +54,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -75,6 +77,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
@@ -137,24 +140,12 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
          * Build a new resource method invoker instance.
          *
          * @param method                      resource method model.
-         * @param nameBoundRequestFilters     name bound request filters.
-         * @param nameBoundResponseFilters    name bound response filters.
-         * @param globalReaderInterceptors    global reader interceptors.
-         * @param globalWriterInterceptors    global writer interceptors.
-         * @param nameBoundReaderInterceptors name-bound reader interceptors.
-         * @param nameBoundWriterInterceptors name-bound writer interceptors.
-         * @param dynamicFeatures             dynamic features.
+         * @param processingProviders Processing providers.
          * @return new resource method invoker instance.
          */
         public ResourceMethodInvoker build(
                 ResourceMethod method,
-                MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters,
-                MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters,
-                Iterable<RankedProvider<ReaderInterceptor>> globalReaderInterceptors,
-                Iterable<RankedProvider<WriterInterceptor>> globalWriterInterceptors,
-                MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors,
-                MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors,
-                Iterable<DynamicFeature> dynamicFeatures
+                ProcessingProviders processingProviders
         ) {
             return new ResourceMethodInvoker(
                     routingContextProvider,
@@ -163,13 +154,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     dispatcherProviderFactory,
                     invocationHandlerProviderFactory,
                     method,
-                    nameBoundRequestFilters,
-                    nameBoundResponseFilters,
-                    globalReaderInterceptors,
-                    globalWriterInterceptors,
-                    nameBoundReaderInterceptors,
-                    nameBoundWriterInterceptors,
-                    dynamicFeatures,
+                    processingProviders,
                     locator,
                     globalConfig);
         }
@@ -182,13 +167,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             ResourceMethod method,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters,
-            Iterable<RankedProvider<ReaderInterceptor>> globalReaderInterceptors,
-            Iterable<RankedProvider<WriterInterceptor>> globalWriterInterceptors,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors,
-            MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors,
-            Iterable<DynamicFeature> dynamicFeatures,
+            ProcessingProviders processingProviders,
             ServiceLocator locator,
             Configuration globalConfig) {
 
@@ -205,7 +184,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
         // Configure dynamic features.
         final ResourceMethodConfig config = new ResourceMethodConfig(globalConfig.getProperties());
-        for (final DynamicFeature dynamicFeature : dynamicFeatures) {
+        for (final DynamicFeature dynamicFeature : processingProviders.getDynamicFeatures()) {
             dynamicFeature.configure(this, config);
         }
 
@@ -265,12 +244,12 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             }
         }
 
-        _readerInterceptors.addAll(Lists.newLinkedList(globalReaderInterceptors));
-        _writerInterceptors.addAll(Lists.newLinkedList(globalWriterInterceptors));
+        _readerInterceptors.addAll(Lists.newLinkedList(processingProviders.getGlobalReaderInterceptors()));
+        _writerInterceptors.addAll(Lists.newLinkedList(processingProviders.getGlobalWriterInterceptors()));
 
         if (resourceMethod != null) {
             addNameBoundFiltersAndInterceptors(
-                    nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors, nameBoundWriterInterceptors,
+                    processingProviders,
                     _requestFilters, _responseFilters, _readerInterceptors, _writerInterceptors,
                     method);
         }
@@ -281,36 +260,49 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         this.responseFilters.addAll(_responseFilters);
     }
 
+    private <T> void addNameBoundProviders(Collection<RankedProvider<T>> targetCollection, final NameBound nameBound,
+                                           final MultivaluedMap<Class<? extends Annotation>,
+                                                   RankedProvider<T>> nameBoundProviders, final MultivaluedMap<RankedProvider<T>,
+            Class<? extends Annotation>> nameBoundProvidersInverse) {
+        MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> foundBindingsMap
+                = new MultivaluedHashMap<RankedProvider<T>, Class<? extends Annotation>>();
+        for (Class<? extends Annotation> nameBinding : nameBound.getNameBindings()) {
+            Iterable<RankedProvider<T>> providers = nameBoundProviders.get(nameBinding);
+            if (providers != null) {
+                for (RankedProvider<T> provider : providers) {
+                    foundBindingsMap.add(provider, nameBinding);
+                }
+            }
+        }
+
+        for (Map.Entry<RankedProvider<T>, List<Class<? extends Annotation>>> entry : foundBindingsMap.entrySet()) {
+            final RankedProvider<T> provider = entry.getKey();
+            final List<Class<? extends Annotation>> foundBindings = entry.getValue();
+            final List<Class<? extends Annotation>> providerBindings = nameBoundProvidersInverse.get(provider);
+            if (foundBindings.size() == providerBindings.size()) {
+                targetCollection.add(provider);
+            }
+        }
+    }
+
     private void addNameBoundFiltersAndInterceptors(
-            final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters,
-            final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters,
-            final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors,
-            final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors,
+            final ProcessingProviders processingProviders,
             final Collection<RankedProvider<ContainerRequestFilter>> targetRequestFilters,
             final Collection<RankedProvider<ContainerResponseFilter>> targetResponseFilters,
             final Collection<RankedProvider<ReaderInterceptor>> targetReaderInterceptors,
             final Collection<RankedProvider<WriterInterceptor>> targetWriterInterceptors,
-            final NameBound target
+            final NameBound nameBound
     ) {
-        for (Class<? extends Annotation> nameBinding : target.getNameBindings()) {
-            Iterable<RankedProvider<ContainerRequestFilter>> reqF = nameBoundRequestFilters.get(nameBinding);
-            if (reqF != null) {
-                targetRequestFilters.addAll(Lists.newLinkedList(reqF));
-            }
-            Iterable<RankedProvider<ContainerResponseFilter>> resF = nameBoundResponseFilters.get(nameBinding);
-            if (resF != null) {
-                targetResponseFilters.addAll(Lists.newLinkedList(resF));
-            }
-            Iterable<RankedProvider<ReaderInterceptor>> _readerInterceptors = nameBoundReaderInterceptors.get(nameBinding);
-            if (_readerInterceptors != null) {
-                targetReaderInterceptors.addAll(Lists.newLinkedList(_readerInterceptors));
-            }
-            Iterable<RankedProvider<WriterInterceptor>> _writerInterceptors = nameBoundWriterInterceptors.get(nameBinding);
-            if (_writerInterceptors != null) {
-                targetWriterInterceptors.addAll(Lists.newLinkedList(_writerInterceptors));
-            }
-        }
+        addNameBoundProviders(targetRequestFilters, nameBound, processingProviders.getNameBoundRequestFilters(),
+                processingProviders.getNameBoundRequestFiltersInverse());
+        addNameBoundProviders(targetResponseFilters, nameBound, processingProviders.getNameBoundResponseFilters(),
+                processingProviders.getNameBoundResponseFiltersInverse());
+        addNameBoundProviders(targetReaderInterceptors, nameBound, processingProviders.getNameBoundReaderInterceptors(),
+                processingProviders.getNameBoundReaderInterceptorsInverse());
+        addNameBoundProviders(targetWriterInterceptors, nameBound, processingProviders.getNameBoundWriterInterceptors(),
+                processingProviders.getNameBoundWriterInterceptorsInverse());
     }
+
 
     @Override
     public Method getResourceMethod() {
@@ -330,7 +322,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS,
                 Providers.sortRankedProviders(new RankedComparator<ReaderInterceptor>(), getReaderInterceptors()));
         requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS,
-                Providers.sortRankedProviders(new RankedComparator<WriterInterceptor>(),  getWriterInterceptors()));
+                Providers.sortRankedProviders(new RankedComparator<WriterInterceptor>(), getWriterInterceptors()));
 
         if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
             asyncContextProvider.get().suspend();

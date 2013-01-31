@@ -75,7 +75,6 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -91,6 +90,7 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
@@ -351,32 +351,7 @@ public final class ApplicationHandler {
             componentProvider.done();
         }
 
-        // scan for NameBinding annotations attached to the application class
-        Collection<Class<? extends Annotation>> applicationNameBindings =
-                ReflectionHelper.getAnnotationTypes(application.getClass(), NameBinding.class);
-
-        // find all filters, interceptors and dynamic features
-        final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters = Providers.getAllRankedProviders(locator,
-                ContainerResponseFilter.class);
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
-                = filterNameBound(responseFilters, null, componentBag, applicationNameBindings);
-
-        final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters = Providers.getAllRankedProviders(locator,
-                ContainerRequestFilter.class);
-        final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters
-                = filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings);
-
-        final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors = Providers.getAllRankedProviders(locator,
-                ReaderInterceptor.class);
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors
-                = filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings);
-
-        final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors = Providers.getAllRankedProviders(locator,
-                WriterInterceptor.class);
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors
-                = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings);
-        final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
+        final ProcessingProviders processingProviders = getProcessingProviders(componentBag);
 
         ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
 
@@ -387,9 +362,7 @@ public final class ApplicationHandler {
         bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
-        runtimeModelBuilder.setGlobalInterceptors(readerInterceptors, writerInterceptors);
-        runtimeModelBuilder.setBoundProviders(nameBoundRequestFilters, nameBoundResponseFilters, nameBoundReaderInterceptors,
-                nameBoundWriterInterceptors, dynamicFeatures);
+        runtimeModelBuilder.setProcessingProviders(processingProviders);
 
         // assembly request processing chain
         /**
@@ -399,11 +372,13 @@ public final class ApplicationHandler {
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), false);
 
         final ContainerFilteringStage preMatchRequestFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(preMatchFilters, responseFilters);
+                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(processingProviders.getPreMatchFilters(),
+                        processingProviders.getGlobalResponseFilters());
         final RoutingStage routingStage =
                 locator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
         final ContainerFilteringStage resourceFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(requestFilters, null);
+                locator.createAndInitialize(ContainerFilteringStage.Builder.class)
+                        .build(processingProviders.getGlobalRequestFilters(), null);
         final RoutedInflectorExtractorStage routedInflectorExtractorStage =
                 locator.createAndInitialize(RoutedInflectorExtractorStage.class);
         /**
@@ -434,6 +409,61 @@ public final class ApplicationHandler {
         // inject self
         locator.inject(this);
     }
+
+    private ProcessingProviders getProcessingProviders(ComponentBag componentBag) {
+
+        // scan for NameBinding annotations attached to the application class
+        Collection<Class<? extends Annotation>> applicationNameBindings =
+                ReflectionHelper.getAnnotationTypes(runtimeConfig.getWrappedApplication().getClass(), NameBinding.class);
+
+
+        // find all filters, interceptors and dynamic features
+        final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters = Providers.getAllRankedProviders(locator,
+                ContainerResponseFilter.class);
+
+        MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse =
+                new MultivaluedHashMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>>();
+        MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse =
+                new MultivaluedHashMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>>();
+        MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
+                new MultivaluedHashMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>>();
+        MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse =
+                new MultivaluedHashMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>>();
+
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
+                = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundResponseFiltersInverse);
+
+        final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters = Providers.getAllRankedProviders(locator,
+                ContainerRequestFilter.class);
+
+        final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
+
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters
+                = filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings, nameBoundRequestFiltersInverse);
+
+
+        final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors = Providers.getAllRankedProviders(locator,
+                ReaderInterceptor.class);
+
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors
+                = filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings, nameBoundReaderInterceptorsInverse);
+
+        final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors = Providers.getAllRankedProviders(locator,
+                WriterInterceptor.class);
+
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors
+                = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings, nameBoundWriterInterceptorsInverse);
+
+        final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
+
+
+        return new ProcessingProviders(nameBoundRequestFilters, nameBoundRequestFiltersInverse, nameBoundResponseFilters,
+                nameBoundResponseFiltersInverse, nameBoundReaderInterceptors, nameBoundReaderInterceptorsInverse,
+                nameBoundWriterInterceptors, nameBoundWriterInterceptorsInverse, requestFilters, preMatchFilters, responseFilters,
+                readerInterceptors, writerInterceptors, dynamicFeatures);
+
+    }
+
 
     private ResourceModel processResourceModel(ResourceModel resourceModel) {
         final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(locator,
@@ -470,7 +500,8 @@ public final class ApplicationHandler {
     /**
      * Takes collection of all filters/interceptors (either request/reader or response/writer)
      * and separates out all name-bound filters/interceptors, returns them as a separate MultivaluedMap,
-     * mapping the name-bound annotation to the list of name-bound filters/interceptors.
+     * mapping the name-bound annotation to the list of name-bound filters/interceptors. The same key values
+     * are also added into the inverse map passed in {@code inverseNameBoundMap}.
      *
      * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
      * If non-null collection is passed in the postMatching parameter (applicable for filters only),
@@ -479,14 +510,19 @@ public final class ApplicationHandler {
      * parameter.
      *
      * @param all                     Collection of all filters to be processed.
-     * @param applicationNameBindings collection of name binding annotations attached to the JAX-RS application.
+     * @param preMatching             Collection into which pre-matching filters should be added.
+     * @param componentBag            Component bag
+     * @param applicationNameBindings Collection of name binding annotations attached to the JAX-RS application.
+     * @param inverseNameBoundMap     Inverse name bound map into which the name bound providers should be inserted. The keys
+     *                                are providers (filters, interceptor)
      * @return {@link MultivaluedMap} of all name-bound filters.
      */
     private static <T> MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> filterNameBound(
             final Iterable<RankedProvider<T>> all,
             final Collection<RankedProvider<ContainerRequestFilter>> preMatching,
             final ComponentBag componentBag,
-            final Collection<Class<? extends Annotation>> applicationNameBindings) {
+            final Collection<Class<? extends Annotation>> applicationNameBindings,
+            final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
                 = new MultivaluedHashMap<Class<? extends Annotation>, RankedProvider<T>>();
@@ -508,19 +544,16 @@ public final class ApplicationHandler {
             }
 
             boolean nameBound = model.isNameBound();
-            if (nameBound && !applicationNameBindings.isEmpty()) {
-                for (Class<? extends Annotation> binding : model.getNameBindings()) {
-                    if (applicationNameBindings.contains(binding)) {
-                        // override the name-bound flag
-                        nameBound = false;
-                        break;
-                    }
-                }
+            if (nameBound && !applicationNameBindings.isEmpty() && applicationNameBindings.containsAll(model.getNameBindings())) {
+                // override the name-bound flag
+                nameBound = false;
             }
+
             if (nameBound) { // not application-bound
                 it.remove();
                 for (Class<? extends Annotation> binding : model.getNameBindings()) {
                     result.add(binding, provider);
+                    inverseNameBoundMap.add(provider, binding);
                 }
             }
         }
