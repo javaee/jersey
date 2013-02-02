@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.proxy;
-
-import java.util.Collections;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
+package org.glassfish.jersey.simple;
 
 import org.junit.Test;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+
 import static org.junit.Assert.assertEquals;
 
-public class WebResourceFactoryTest extends JerseyTest {
-    private MyResourceIfc resource;
 
-    @Override
-    protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
-        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
-    }
-
-    @Test
-    public void testGetIt() {
-        assertEquals("Got it!", resource.getIt());
-    }
-
-    @Test
-    public void testPostIt() {
-        MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
-    }
-
-    @Test
-    public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
+/**
+ * @author Paul.Sandoz@Sun.Com
+ */
+public class QueryParamTest extends AbstractSimpleServerTester {
+    @Path("/test")
+    public static class QueryParamResource {
+        @GET
+        public String get(@QueryParam("x") String x, @QueryParam("y") String y) {
+            return y;
+        }
     }
 
     @Test
     public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
-    }
+        startServer(QueryParamResource.class);
 
-    @Test
-    public void testSubResource() {
-        assertEquals("Got it!", resource.getSubResource().getMyBean().name);
+        WebTarget r = ClientFactory.newClient().target(getUri().path("test").build());
+
+        URI u = UriBuilder.fromPath("").
+                queryParam("y", "1 %2B 2").build();
+        assertEquals("1 + 2", r.queryParam("y", "1 %2B 2").request().get(String.class));
+
+        u = UriBuilder.fromPath("").
+                queryParam("x", "1").
+                queryParam("y", "1 + 2").build();
+        assertEquals("1 + 2", r.queryParam("x", "1").queryParam("y", "1 + 2").request().get(String.class));
+
+        u = UriBuilder.fromPath("").
+                queryParam("x", "1").
+                queryParam("y", "1 %26 2").build();
+        assertEquals("1 & 2", r.queryParam("x", "1").queryParam("y", "1 %26 2").request().get(String.class));
+
+        u = UriBuilder.fromPath("").
+                queryParam("x", "1").
+                queryParam("y", "1 %7C%7C 2").build();
+        assertEquals("1 || 2", r.queryParam("x", "1").queryParam("y", "1 %7C%7C 2").request().get(String.class));
     }
 }

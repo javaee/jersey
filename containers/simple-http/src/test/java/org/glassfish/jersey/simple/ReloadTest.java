@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,38 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.tests.e2e.server;
-
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+package org.glassfish.jersey.simple;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import static org.junit.Assert.assertEquals;
 
-/**
- * Reload capability test.
- *
- * For jdk http server test container, run with:
- *
- * mvn -Dtest=ReloadTest -Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory clean test
- *
- * For simple test container, run with:
- *
- * mvn -Dtest=ReloadTest -Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory clean test
- *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- */
-public class ReloadTest extends JerseyTest {
 
-    @Path("one")
+/**
+ * Simple Reload Test
+ *
+ * @author Paul.Sandoz@Sun.Com
+ */
+public class ReloadTest extends AbstractSimpleServerTester {
+
+    @Path("/one")
     public static class One {
         @GET
         public String get() {
@@ -76,7 +68,7 @@ public class ReloadTest extends JerseyTest {
         }
     }
 
-    @Path("two")
+    @Path("/two")
     public static class Two {
         @GET
         public String get() {
@@ -84,47 +76,44 @@ public class ReloadTest extends JerseyTest {
         }
     }
 
-    private static class Reloader extends AbstractContainerLifecycleListener {
+    public static class Reloader extends AbstractContainerLifecycleListener {
         Container container;
 
+        public void reload(ResourceConfig newConfig) {
+            container.reload(newConfig);
+        }
 
-        public void reload(ResourceConfig rc) {
-            container.reload(rc);
+        public void reload() {
+            container.reload();
         }
 
         @Override
         public void onStartup(Container container) {
             this.container = container;
         }
+
     }
-
-    ResourceConfig rc;
-    Reloader reloader;
-
-    private ResourceConfig _createRC(Reloader r) {
-        final ResourceConfig result = new ResourceConfig(One.class);
-        result.registerInstances(r);
-
-        return result;
-    }
-
-    @Override
-    public ResourceConfig configure() {
-        reloader = new Reloader();
-        return rc = _createRC(reloader);
-    }
-
 
     @Test
     public void testReload() {
+        final ResourceConfig rc = new ResourceConfig(One.class);
 
-        assertEquals("one", target().path("one").request().get().readEntity(String.class));
-        assertEquals(404, target().path("two").request().get().getStatus());
+        Reloader reloader = new Reloader();
+        rc.registerInstances(reloader);
 
-        rc = _createRC(reloader).registerClasses(Two.class);
-        reloader.reload(rc);
+        startServer(rc);
 
-        assertEquals("one", target().path("one").request().get().readEntity(String.class));
-        assertEquals("two", target().path("two").request().get().readEntity(String.class));
+        WebTarget r = ClientFactory.newClient().target(getUri().path("/").build());
+
+        assertEquals("one", r.path("one").request().get(String.class));
+        assertEquals(404, r.path("two").request().get(Response.class).getStatus());
+
+        // add Two resource
+        reloader.reload(new ResourceConfig(One.class, Two.class));
+
+        assertEquals("one", r.path("one").request().get(String.class));
+        assertEquals("two", r.path("two").request().get(String.class));
     }
+
+
 }
