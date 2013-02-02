@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,17 +43,6 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_2;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Configurable;
-
-import javax.inject.Inject;
-
-import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext1WriterInterceptor;
-import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext2WriterInterceptor;
-import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext3WriterInterceptor;
-import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext4WriterInterceptor;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -61,26 +50,9 @@ import static org.junit.Assert.assertTrue;
 @Path("helloworld")
 public class HelloWorldResource {
 
-    private final Configurable config;
-
-    @Inject
-    public HelloWorldResource(final Configurable config) {
-        this.config = config;
-    }
-
     @GET
     @Produces("text/plain")
     public String get() {
-        assertEquals(1, config.getFeatures().size());
-        assertEquals(2, config.getProviderClasses().size());
-        assertEquals(2, config.getProviderInstances().size());
-
-        assertEquals(CustomFeature.class, config.getFeatures().iterator().next().getClass());
-        assertTrue(config.getProviderClasses().contains(Ext2WriterInterceptor.class));
-        assertTrue(config.getProviderClasses().contains(Ext3WriterInterceptor.class));
-        assertTrue(config.getProviderInstances().contains(Ext1WriterInterceptor.INSTANCE));
-        assertTrue(config.getProviderInstances().contains(Ext4WriterInterceptor.INSTANCE));
-
         return "Hello World!";
     }
 }

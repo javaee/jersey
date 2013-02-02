@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.tests.integration.servlet_3_init_2;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext1WriterInterceptor;
@@ -56,11 +56,11 @@ import org.glassfish.jersey.tests.integration.servlet_3_init_2.ext.Ext4WriterInt
 public class CustomFeature implements Feature {
 
     @Override
-    public boolean configure(final Configurable configurable) {
-        configurable.register(Ext3WriterInterceptor.class, 1000);
-        configurable.register(Ext2WriterInterceptor.class, 100);
-        configurable.register(Ext1WriterInterceptor.INSTANCE, 500);
-        configurable.register(Ext4WriterInterceptor.INSTANCE, 1);
+    public boolean configure(final FeatureContext context) {
+        context.register(Ext3WriterInterceptor.class, 1000);
+        context.register(Ext2WriterInterceptor.class, 100);
+        context.register(Ext1WriterInterceptor.INSTANCE, 500);
+        context.register(Ext4WriterInterceptor.INSTANCE, 1);
         return true;
     }
 }
