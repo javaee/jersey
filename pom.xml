@@ -835,6 +835,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.simpleframework</groupId>
+                <artifactId>simple</artifactId>
+                <version>${simple.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.jettison</groupId>
                 <artifactId>jettison</artifactId>
                 <version>1.3.1</version>
@@ -1018,6 +1024,7 @@
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>
         <moxy.version>2.5.0-M6</moxy.version>
         <mimepull.version>1.8</mimepull.version>
+        <simple.version>5.0.4</simple.version>
 
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>

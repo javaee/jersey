@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,58 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.proxy;
-
-import java.util.Collections;
+package org.glassfish.jersey.simple;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-
+import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+
 import static org.junit.Assert.assertEquals;
 
-public class WebResourceFactoryTest extends JerseyTest {
-    private MyResourceIfc resource;
-
-    @Override
-    protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
-        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
+/**
+ * @author Paul.Sandoz@Sun.Com
+ */
+@Ignore("This needs to be enabled after fixing on the URI processing bug.")
+public class EscapedURITest extends AbstractSimpleServerTester {
+    @Path("x%20y")
+    public static class EscapedURIResource {
+        @GET
+        public String get(@Context UriInfo info) {
+            assertEquals(CONTEXT + "/x%20y", info.getAbsolutePath().getRawPath());
+            assertEquals(CONTEXT + "/", info.getBaseUri().getRawPath());
+            assertEquals("x y", info.getPath());
+            assertEquals("x%20y", info.getPath(false));
+            return "CONTENT";
+        }
     }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
-    }
-
-    @Test
-    public void testGetIt() {
-        assertEquals("Got it!", resource.getIt());
+    @Path("x y")
+    public static class NonEscapedURIResource extends EscapedURIResource {
     }
 
     @Test
-    public void testPostIt() {
-        MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
+    public void testEscaped() {
+        ResourceConfig config = new ResourceConfig(EscapedURIResource.class);
+        startServer(config);
+        Client client = ClientFactory.newClient();
+        WebTarget r = client.target(getUri().userInfo("x.y").path("x%20y").build());
+        assertEquals("CONTENT", r.request().get(String.class));
     }
 
     @Test
-    public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
+    public void testNonEscaped() {
+        startServer(NonEscapedURIResource.class);
+        Client client = ClientFactory.newClient();
+        WebTarget r = client.target(getUri().userInfo("x.y").path("x%20y").build());
+        assertEquals("CONTENT", r.request().get(String.class));
     }
 
-    @Test
-    public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
-    }
-
-    @Test
-    public void testSubResource() {
-        assertEquals("Got it!", resource.getSubResource().getMyBean().name);
-    }
 }
