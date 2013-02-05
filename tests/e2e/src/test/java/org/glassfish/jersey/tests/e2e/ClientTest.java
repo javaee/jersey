@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,24 +39,34 @@
  */
 package org.glassfish.jersey.tests.e2e;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ClientTest extends JerseyTest {
@@ -74,9 +84,26 @@ public class ClientTest extends JerseyTest {
         }
     }
 
+    @Path("headers")
+    @Produces(MediaType.TEXT_PLAIN)
+    public static class HeadersTestResource {
+
+        @POST
+        @Path("content")
+        public String contentHeaders(@Context HttpHeaders headers, String entity) {
+            StringBuilder sb = new StringBuilder(entity).append('\n');
+
+            for (Map.Entry<String, List<String>> header : headers.getRequestHeaders().entrySet()) {
+                sb.append(header.getKey()).append(':').append(header.getValue().toString()).append('\n');
+            }
+
+            return sb.toString();
+        }
+    }
+
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(HelloWorldResource.class);
+        return new ResourceConfig(HelloWorldResource.class, HeadersTestResource.class);
     }
 
     @Test
@@ -104,5 +131,41 @@ public class ClientTest extends JerseyTest {
         }
 
         fail("Expected WebApplicationException has not been thrown.");
+    }
+
+    @Test
+    // Inspired by JERSEY-1502
+    public void testContextHeaders() {
+        final WebTarget target = target().path("headers").path("content");
+
+        Invocation.Builder ib;
+        Invocation i;
+        Response r;
+        String expected;
+        String reqHeaders;
+
+        ib = target.request("*/*");
+        ib.header("custom-header", "custom-value");
+        ib.header("content-encoding", "deflate");
+        i = ib.build("POST", Entity.entity("aaa", MediaType.WILDCARD_TYPE));
+        r = i.invoke();
+
+        expected = "custom-header:[custom-value]";
+        reqHeaders = r.readEntity(String.class).toLowerCase();
+        assertTrue(String.format("Request headers do not contain expected '%s' entry:\n%s", expected, reqHeaders),
+                reqHeaders.contains(expected));
+        final String unexpected = "content-encoding";
+        assertFalse(String.format("Request headers contains unexpected '%s' entry:\n%s", unexpected, reqHeaders),
+                reqHeaders.contains(unexpected));
+
+        ib = target.request("*/*");
+        i = ib.build("POST",
+                Entity.entity("aaa", Variant.mediaTypes(MediaType.WILDCARD_TYPE).encodings("deflate").build().get(0)));
+        r = i.invoke();
+
+        expected = "content-encoding:[deflate]";
+        reqHeaders = r.readEntity(String.class).toLowerCase();
+        assertTrue(String.format("Request headers do not contain expected '%s' entry:\n%s", expected, reqHeaders),
+                reqHeaders.contains(expected));
     }
 }
