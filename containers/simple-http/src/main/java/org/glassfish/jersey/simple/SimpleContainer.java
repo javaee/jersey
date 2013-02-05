@@ -84,7 +84,6 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
 
-
     /**
      * Referencing factory for Simple request.
      */
@@ -123,13 +122,12 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         }
     }
 
-
     private volatile ApplicationHandler appHandler;
-    private final ContainerLifecycleListener containerListener;
+    private volatile ContainerLifecycleListener containerListener;
 
     private final static class Writer implements ContainerResponseWriter {
-        final Response response;
-        final Request request;
+        private final Response response;
+        private final Request request;
 
         Writer(Request request, Response response) {
             this.response = response;
@@ -311,7 +309,17 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     public void reload(ResourceConfig configuration) {
         appHandler = new ApplicationHandler(configuration.register(new SimpleBinder()));
         containerListener.onReload(this);
+        containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
+
+    /**
+     * Inform this container that the server was started. This method must be implicitly called after
+     * the server containing this container is started.
+     */
+    void onServerStart() {
+        this.containerListener.onStartup(this);
+    }
+
 
     /**
      * Creates a new Grizzly container.

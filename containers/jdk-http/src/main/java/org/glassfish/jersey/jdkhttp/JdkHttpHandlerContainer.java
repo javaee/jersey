@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,8 +82,8 @@ import com.sun.net.httpserver.HttpsExchange;
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
      private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
 
-    transient private ApplicationHandler appHandler;
-    private final ContainerLifecycleListener containerListener;
+    private volatile ApplicationHandler appHandler;
+    private volatile ContainerLifecycleListener containerListener;
 
     /**
      * Creates a new Container connected to given {@link ApplicationHandler Jersey application}.
@@ -208,11 +208,20 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
     public void reload(ResourceConfig configuration) {
         appHandler = new ApplicationHandler(configuration);
         containerListener.onReload(this);
+        containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+    }
+
+    /**
+     * Inform this container that the server was started. This method must be implicitly called after
+     * the server containing this container is started.
+     */
+    void onServerStart() {
+        this.containerListener.onStartup(this);
     }
 
     private final static class ResponseWriter implements ContainerResponseWriter {
 
-        HttpExchange exchange;
+        private final HttpExchange exchange;
         private final AtomicBoolean closed;
 
         /**

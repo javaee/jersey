@@ -54,7 +54,7 @@ import javax.ws.rs.core.UriInfo;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
 @Ignore("This needs to be enabled after fixing on the URI processing bug.")
 public class EscapedURITest extends AbstractSimpleServerTester {

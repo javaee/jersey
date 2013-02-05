@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,11 @@
  */
 package org.glassfish.jersey.jdkhttp;
 
-import org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer;
-import com.sun.net.httpserver.HttpHandler;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ContainerProvider;
+
+import com.sun.net.httpserver.HttpHandler;
 
 /**
  * {@link ContainerProvider Container Service Provider} which provides {@link JdkHttpHandlerContainer JDK HttpServer Container}.
@@ -54,7 +54,7 @@ public final class JdkHttpHandlerContainerProvider implements ContainerProvider 
 
     @Override
     public <T> T createContainer(Class<T> type, ApplicationHandler application) throws ProcessingException {
-        if (type != HttpHandler.class) {
+        if (type != HttpHandler.class && type != JdkHttpHandlerContainer.class) {
             return null;
         }
         return type.cast(new JdkHttpHandlerContainer(application));
