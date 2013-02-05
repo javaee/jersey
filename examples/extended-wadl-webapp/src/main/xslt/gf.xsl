@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,38 +40,72 @@
     holder.
 
 -->
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pom="http://maven.apache.org/POM/4.0.0" version="1.0">
-    <xsl:output method="xml" indent="yes"/>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pom="http://maven.apache.org/POM/4.0.0" version="1.0" >
 
-    <xsl:template match="/">
-        <xsl:apply-templates/>
-    </xsl:template>
+          <xsl:output method="xml" indent="yes" />
 
-    <xsl:template
-            match="pom:profile[pom:id='default']/pom:dependencies/pom:dependency[pom:groupId='com.sun.jersey.contribs' or pom:groupId='com.sun.jersey' or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
-        <scope>provided</scope>
-    </xsl:template>
+          <xsl:template match="/">
+                <xsl:apply-templates/>
+          </xsl:template>
 
-    <xsl:template
-            match="pom:profile[pom:id='default']/pom:dependencies/pom:dependency[pom:groupId='com.sun.jersey.contribs' or pom:groupId='com.sun.jersey'  or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']">
-        <xsl:copy>
-            <xsl:apply-templates/>
-            <xsl:if test="count(pom:scope)=0">
-                <scope>provided</scope>
-            </xsl:if>
-        </xsl:copy>
-    </xsl:template>
+          <xsl:template match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core' or pom:groupId='org.glassfish.jersey.containers' or pom:groupId='org.glassfish.jersey.media' or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
+            <scope>provided</scope>
+          </xsl:template>
 
-    <xsl:template match="comment()">
-        <xsl:comment>
-            <xsl:value-of select="."/>
-        </xsl:comment>
-    </xsl:template>
+          <xsl:template match="pom:dependencies/pom:dependency[pom:groupId='javax.validation' or pom:groupId='org.glassfish.jersey.core' or pom:groupId='org.glassfish.jersey.containers' or pom:groupId='org.glassfish.jersey.media' or pom:groupId='com.sun.xml.bind' or pom:groupId='javax.servlet']">
+            <xsl:copy>
+              <xsl:apply-templates/>
+              <xsl:if test="count(pom:scope)=0">
+                    <scope>provided</scope>
+              </xsl:if>
+            </xsl:copy>
+          </xsl:template>
 
-    <xsl:template match="*">
-        <xsl:copy>
-            <xsl:apply-templates/>
-        </xsl:copy>
-    </xsl:template>
+          <xsl:template
+                 match="pom:plugins/pom:plugin[pom:artifactId='maven-surefire-plugin']/pom:configuration">
+              <xsl:copy>
+                <xsl:apply-templates/>
+                <excludes><exclude>**/ExtendedWadlWebappOsgiTest.java</exclude></excludes>
+              </xsl:copy>
+          </xsl:template>
 
-</xsl:stylesheet>
+          <!-- remove <packagingExcludes>WEB-INF/glassfish-web.xml</packagingExcludes>
+               as this file is required in Glassfish bundle since <class-loader>
+               is defined in it -->
+          <xsl:template match="pom:plugin[pom:artifactId='maven-war-plugin']/pom:configuration[pom:packagingExcludes]">
+          </xsl:template>
+
+          <!--build war even if web.xml is missing as it's not required,
+              <packagingIncludes> defaults to 'all' so it includes
+              <packagingIncludes>WEB-INF/glassfish-web.xml</packagingIncludes>
+              to pick up <class-loader> -->
+          <xsl:template match="pom:plugin[pom:artifactId='maven-war-plugin']">
+              <xsl:copy>
+                <xsl:apply-templates/>
+                <xsl:if test="count(pom:configuration)=1">
+                    <configuration>
+                      <failOnMissingWebXml>false</failOnMissingWebXml>
+                    </configuration>
+                </xsl:if>
+              </xsl:copy>
+          </xsl:template>
+
+          <!-- remove xslt-maven-plugin -->
+          <xsl:template match="pom:plugin[pom:artifactId='xslt-maven-plugin']">
+          </xsl:template>
+
+           <!-- remove maven-assembly-plugin -->
+          <xsl:template match="pom:plugin[pom:artifactId='maven-assembly-plugin']">
+          </xsl:template>
+
+           <xsl:template match="comment()">
+            <xsl:comment><xsl:value-of select="."/></xsl:comment>
+          </xsl:template>
+
+          <xsl:template match="*">
+                <xsl:copy>
+                <xsl:apply-templates/>
+                </xsl:copy>
+          </xsl:template>
+
+     </xsl:stylesheet>

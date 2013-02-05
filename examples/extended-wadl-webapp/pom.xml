@@ -270,6 +270,21 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>xslt-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-example-gf-pom</id>
+                        <phase>package</phase> <!-- append to the packaging phase. -->
+                        <goals>
+                            <goal>transform</goal> <!-- goals == mojos -->
+                        </goals>
+                        <configuration>
+                          <xslFile>src/main/xslt/gf.xsl</xslFile>
+                          <srcDir>.</srcDir>
+                          <srcIncludes>pom.xml</srcIncludes>
+                          <destDir>target/gf-pom-file</destDir>
+                       </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
