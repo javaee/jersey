@@ -40,9 +40,12 @@
 
 package org.glassfish.jersey.examples.extendedwadl;
 
+import java.net.URI;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
 import org.glassfish.jersey.message.internal.MediaTypes;
@@ -53,6 +56,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -75,6 +79,11 @@ public class ExtendedWadlWebappTest extends JerseyTest {
                 .handledBy(new ProgrammaticResource());
         resourceConfig.registerResources(resourceBuilder.build());
         return resourceConfig;
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("extended-wadl-webapp").build();
     }
 
     /**
