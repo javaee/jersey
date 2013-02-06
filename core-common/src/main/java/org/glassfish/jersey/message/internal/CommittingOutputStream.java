@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,13 +44,13 @@ import java.io.OutputStream;
 
 /**
  * An abstract committing output stream adapter that performs a
- * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#commit()
- * commit} and then retrieves the
- * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
+ * {@link OutboundMessageContext.StreamProvider#commit() commit} and then retrieves the
+ * {@link OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
  * before the first byte is written to the provided stream.
- *
+ * <p>
  * Concrete implementations of the class typically override the commit operation
  * to perform any initialization on the adapted output stream.
+ * </p>
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
