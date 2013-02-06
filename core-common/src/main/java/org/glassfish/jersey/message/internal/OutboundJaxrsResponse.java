@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
@@ -77,6 +80,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     private final StatusType status;
 
     private boolean closed = false;
+    private boolean buffered = false;
 
     /**
      * Get an OutboundJaxrsResponse instance for a given JAX-RS response.
@@ -99,7 +103,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     /**
      * Create new outbound JAX-RS response message instance.
      *
-     * @param status response status.
+     * @param status  response status.
      * @param context underlying outbound message context.
      */
     public OutboundJaxrsResponse(StatusType status, OutboundMessageContext context) {
@@ -128,7 +132,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public Object getEntity() {
-        if(closed) {
+        if (closed) {
             throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
         }
         return context.getEntity();
@@ -136,25 +140,21 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public <T> T readEntity(Class<T> type) throws MessageProcessingException {
-        // TODO implement additional support if entity object is InputStream ?
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
     public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
-        // TODO implement additional support if entity object is InputStream ?
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
     public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
-        // TODO implement additional support if entity object is InputStream ?
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
-        // TODO implement additional support if entity object is InputStream ?
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
@@ -165,17 +165,55 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public boolean bufferEntity() throws MessageProcessingException {
-        if(closed) {
+        if (closed) {
             throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
         }
-        // TODO implement additional support if entity object is InputStream ?
-        return false;
+
+        if (!context.hasEntity() || !InputStream.class.isAssignableFrom(context.getEntityClass())) {
+            return false;
+        }
+
+        if (buffered) {
+            // already buffered
+            return true;
+        }
+        final InputStream in = InputStream.class.cast(context.getEntity());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        try {
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        } catch (IOException ex) {
+            throw new MessageProcessingException(ex);
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ex) {
+                throw new MessageProcessingException(ex);
+            }
+        }
+
+        context.setEntity(new ByteArrayInputStream(out.toByteArray()));
+        buffered = true;
+        return true;
     }
 
     @Override
     public void close() throws MessageProcessingException {
         closed = true;
-        // TODO implement additional support if entity object is InputStream ?
+        context.close();
+        if (buffered) {
+            // release buffer
+            context.setEntity(null);
+        } else if (context.hasEntity() && InputStream.class.isAssignableFrom(context.getEntityClass())) {
+            try {
+                InputStream.class.cast(context.getEntity()).close();
+            } catch (IOException ex) {
+                throw new MessageProcessingException(ex);
+            }
+        }
     }
 
     @Override
@@ -266,7 +304,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
      * outbound message context}. Upon a call to a {@link #build()} method
      * a new instance of {@link OutboundJaxrsResponse} is produced.
      */
-    public static  class Builder extends ResponseBuilder {
+    public static class Builder extends ResponseBuilder {
         private StatusType status;
         private final OutboundMessageContext context;
 
@@ -274,7 +312,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         /**
          * Create new outbound JAX-RS response builder.
          *
-         * @param status response status.
+         * @param status  response status.
          * @param context underlying outbound message context.
          */
         public Builder(final StatusType status, final OutboundMessageContext context) {
@@ -506,8 +544,8 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder links(Link... links) {
-            if(links != null) {
-                for(Link link : links) {
+            if (links != null) {
+                for (Link link : links) {
                     header(HttpHeaders.LINK, link);
                 }
             } else {
@@ -530,8 +568,8 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder allow(String... methods) {
-            if(methods == null || (methods.length == 1 && methods[0] == null)) {
-                return allow((Set<String>)null);
+            if (methods == null || (methods.length == 1 && methods[0] == null)) {
+                return allow((Set<String>) null);
             } else {
                 return allow(new HashSet<String>(Arrays.asList(methods)));
             }
@@ -539,7 +577,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder allow(Set<String> methods) {
-            if(methods == null) {
+            if (methods == null) {
                 return header(HttpHeaders.ALLOW, null, true);
             }
 

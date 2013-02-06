@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -92,7 +92,7 @@ public class OutboundMessageContext {
     private OutputStream entityStream;
 
     /**
-     * Output stream provider.
+     * Output stream provider that provides access to the entity output stream.
      */
     public static interface StreamProvider {
         /**
@@ -110,7 +110,7 @@ public class OutboundMessageContext {
          * Perform the commit functionality.
          *
          * The method is called once as part of a "commit" operation before the first byte
-         * is written to the provider stream.
+         * is written to the provided output stream.
          *
          * @throws java.io.IOException in case of an IO error.
          */
@@ -188,11 +188,11 @@ public class OutboundMessageContext {
     /**
      * Get a single typed header value.
      *
-     * @param <T>       header value type.
-     * @param name      header name.
-     * @param valueType header value class.
-     * @param converter from string conversion function. Is expected to throw {@link ProcessingException}
-     *                  if conversion fails.
+     * @param <T>         header value type.
+     * @param name        header name.
+     * @param valueType   header value class.
+     * @param converter   from string conversion function. Is expected to throw {@link ProcessingException}
+     *                    if conversion fails.
      * @param convertNull if {@code true} this method calls the provided converter even for {@code null}. Otherwise this
      *                    method returns the {@code null} without calling the converter.
      * @return value of the header, or (possibly converted) {@code null} if not present.
@@ -807,6 +807,7 @@ public class OutboundMessageContext {
 
     /**
      * Returns {@code true} if the entity stream has been committed.
+     *
      * @return {@code true} if the entity stream has been committed. Otherwise returns {@code false}.
      */
     public boolean isCommitted() {
