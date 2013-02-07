@@ -56,7 +56,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Simple Reload Test
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
 public class ReloadTest extends AbstractSimpleServerTester {
 

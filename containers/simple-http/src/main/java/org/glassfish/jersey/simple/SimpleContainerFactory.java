@@ -67,7 +67,7 @@ import java.net.URI;
  * This will be used to decrypt and encrypt information sent over the
  * connected TCP socket channel.
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Arul Dhesiaseelan (aruld@acm.org)
  */
 public final class SimpleContainerFactory {
@@ -97,7 +97,7 @@ public final class SimpleContainerFactory {
             throws ProcessingException {
 
         final SimpleContainer container = ContainerFactory.createContainer(SimpleContainer.class, config);
-        return create(address, null, container, ConfigHelper.getContainerLifecycleListener(new ApplicationHandler(config)));
+        return create(address, null, container);
     }
 
     /**
@@ -122,7 +122,7 @@ public final class SimpleContainerFactory {
     public static Closeable create(URI address, SSLContext context, ResourceConfig config)
             throws ProcessingException {
         final SimpleContainer container = ContainerFactory.createContainer(SimpleContainer.class, config);
-        return create(address, context, container, ConfigHelper.getContainerLifecycleListener(new ApplicationHandler(config)));
+        return create(address, context, container);
     }
 
     /**
@@ -134,19 +134,20 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException Thrown when problems during server creation
      */
     public static Closeable create(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return create(uri, null, new SimpleContainer(appHandler), ConfigHelper.getContainerLifecycleListener(appHandler));
+        return create(uri, null, new SimpleContainer(appHandler));
     }
 
     /**
      * Creates HttpServer instance.
      *
      * @param uri        URI on which the Jersey web application will be deployed.
+     * @param context    this is the SSL context used for SSL connections
      * @param appHandler web application handler.
      * @return the closeable connection, with the endpoint started
      * @throws ProcessingException Thrown when problems during server creation
      */
     public static Closeable create(final URI uri, SSLContext context, final ApplicationHandler appHandler) throws ProcessingException {
-        return create(uri, context, new SimpleContainer(appHandler), ConfigHelper.getContainerLifecycleListener(appHandler));
+        return create(uri, context, new SimpleContainer(appHandler));
     }
 
     /**
@@ -163,7 +164,7 @@ public final class SimpleContainerFactory {
      * @return the closeable connection, with the endpoint started
      * @throws ProcessingException Thrown when problems during server creation
      */
-    public static Closeable create(final URI address, final SSLContext context, final SimpleContainer container, final ContainerLifecycleListener containerListener)
+    public static Closeable create(final URI address, final SSLContext context, final SimpleContainer container)
             throws ProcessingException {
         if (address == null) {
             throw new IllegalArgumentException("The URI must not be null");
@@ -193,12 +194,10 @@ public final class SimpleContainerFactory {
             connection = new SocketConnection(server);
 
             connection.connect(listen, context);
+            container.onServerStart();
         } catch (IOException ex) {
             throw new ProcessingException("IOException thrown when trying to create simple server", ex);
         }
-
-        containerListener.onStartup(container);
-
         return connection;
     }
 }

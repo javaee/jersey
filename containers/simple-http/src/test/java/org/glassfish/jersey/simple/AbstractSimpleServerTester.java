@@ -39,63 +39,85 @@
  */
 package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.After;
-
-import javax.ws.rs.core.UriBuilder;
 import java.io.Closeable;
 import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.After;
 
 /**
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public abstract class AbstractSimpleServerTester {
 
     public static final String CONTEXT = "";
+    private final int DEFAULT_PORT = 9998;
 
-    private int port = getEnvVariable("JERSEY_HTTP_PORT", 9998);
+    private static final Logger LOGGER = Logger.getLogger(AbstractSimpleServerTester.class.getName());
 
-    private static int getEnvVariable(final String varName, int defaultValue) {
-        if (null == varName) {
-            return defaultValue;
-        }
-        String varValue = System.getenv(varName);
-        if (null != varValue) {
+    /**
+     * Get the port to be used for test application deployments.
+     *
+     * @return The HTTP port of the URI
+     */
+    protected final int getPort() {
+        final String value = System.getProperty("jersey.config.test.container.port");
+        if (value != null) {
+
             try {
-                return Integer.parseInt(varValue);
+                final int i = Integer.parseInt(value);
+                if (i <= 0) {
+                    throw new NumberFormatException("Value not positive.");
+                }
+                return i;
             } catch (NumberFormatException e) {
-                // will return default value bellow
+                LOGGER.log(Level.CONFIG,
+                        "Value of 'jersey.config.test.container.port'"
+                                + " property is not a valid positive integer [" + value + "]."
+                                + " Reverting to default [" + DEFAULT_PORT + "].",
+                        e);
             }
         }
-        return defaultValue;
+        return DEFAULT_PORT;
     }
 
-    private Closeable server;
+    private volatile Closeable server;
 
     public UriBuilder getUri() {
-        return UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT);
+        return UriBuilder.fromUri("http://localhost").port(getPort()).path(CONTEXT);
     }
 
     public void startServer(Class... resources) {
         ResourceConfig config = new ResourceConfig(resources);
         config.register(LoggingFilter.class);
-        server = SimpleContainerFactory.create(getBaseUri(), config);
+        final URI baseUri = getBaseUri();
+        server = SimpleContainerFactory.create(baseUri, config);
+        LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
 
     public void startServer(ResourceConfig config) {
-        server = SimpleContainerFactory.create(getBaseUri(), config);
+        final URI baseUri = getBaseUri();
+        server = SimpleContainerFactory.create(baseUri, config);
+        LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
 
     public URI getBaseUri() {
-        return UriBuilder.fromUri("http://localhost/").port(port).build();
+        return UriBuilder.fromUri("http://localhost/").port(getPort()).build();
     }
 
     public void stopServer() {
         try {
             server.close();
             server = null;
+            LOGGER.log(Level.INFO, "Simple-http server stopped.");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

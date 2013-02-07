@@ -39,61 +39,62 @@
  */
 package org.glassfish.jersey.test.simple;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.simple.SimpleContainer;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.simple.SimpleContainer;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
  * Test class for {@link SimpleContainer}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class SimpleContainerTest extends JerseyTest {
 
-  /**
-   * Creates new instance.
-   */
-  public SimpleContainerTest() {
-    super(new SimpleTestContainerFactory());
-  }
+    /**
+     * Creates new instance.
+     */
+    public SimpleContainerTest() {
+        super(new SimpleTestContainerFactory());
+    }
 
-  @Override
-  protected ResourceConfig configure() {
-    return new ResourceConfig(Resource.class);
-  }
-
-  /**
-   * Test resource class.
-   */
-  @Path("one")
-  public static class Resource {
+    @Override
+    protected ResourceConfig configure() {
+        return new ResourceConfig(Resource.class);
+    }
 
     /**
-     * Test resource method.
-     *
-     * @return Test simple string response.
+     * Test resource class.
      */
-    @GET
-    public String getSomething() {
-      return "get";
+    @Path("one")
+    public static class Resource {
+
+        /**
+         * Test resource method.
+         *
+         * @return Test simple string response.
+         */
+        @GET
+        public String getSomething() {
+            return "get";
+        }
     }
-  }
 
-  @Test
-  /**
-   * Test {@link Simple HttpServer} container.
-   */
-  public void testSimpleContainerTarget() {
-    final Response response = target().path("one").request().get();
+    @Test
+    /**
+     * Test {@link Simple HttpServer} container.
+     */
+    public void testSimpleContainerTarget() {
+        final Response response = target().path("one").request().get();
 
-    assertEquals("Response status unexpected.", 200, response.getStatus());
-    assertEquals("Response entity unexpected.", "get", response.readEntity(String.class));
-  }
+        assertEquals("Response status unexpected.", 200, response.getStatus());
+        assertEquals("Response entity unexpected.", "get", response.readEntity(String.class));
+    }
 }

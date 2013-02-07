@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 
 
 /**
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
 public class QueryParamTest extends AbstractSimpleServerTester {
     @Path("/test")

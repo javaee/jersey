@@ -60,7 +60,7 @@ import static org.junit.Assert.assertEquals;
 
 
 /**
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Arul Dhesiaseelan (aruld@acm.org)
  */
 public class OutputStreamTest extends AbstractSimpleServerTester {

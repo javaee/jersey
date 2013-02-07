@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,8 +49,6 @@ import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ConfigHelper;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsServer;
@@ -77,7 +75,7 @@ public class JdkHttpServerFactory {
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
         final JdkHttpHandlerContainer handler = ContainerFactory.createContainer(JdkHttpHandlerContainer.class, configuration);
-        return createHttpServer(uri, handler, ConfigHelper.getContainerLifecycleListener(new ApplicationHandler(configuration)));
+        return createHttpServer(uri, handler);
     }
 
     /**
@@ -93,10 +91,10 @@ public class JdkHttpServerFactory {
      * occurs.
      */
     public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), ConfigHelper.getContainerLifecycleListener(appHandler));
+        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler));
     }
 
-    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, final ContainerLifecycleListener containerListener) throws ProcessingException {
+    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler) throws ProcessingException {
 
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
@@ -129,8 +127,7 @@ public class JdkHttpServerFactory {
         server.setExecutor(Executors.newCachedThreadPool());
         server.createContext(path, handler);
         server.start();
-
-        containerListener.onStartup(handler);
+        handler.onServerStart();
 
         return server;
     }
