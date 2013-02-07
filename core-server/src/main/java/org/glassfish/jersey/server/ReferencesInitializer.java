@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,17 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.UriInfo;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import javax.ws.rs.core.Request;
+
+import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
+import org.glassfish.jersey.internal.inject.RequestInjectee;
+import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
+import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -62,11 +66,19 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
     @Inject
     private ServiceLocator locator;
     @Inject
-    private Provider<Ref<Request>> requestReference;
+    private Provider<Ref<Request>> requestRefProvider;
     @Inject
-    private Provider<Ref<ContainerRequest>> requestContextReference;
+    private Provider<Ref<ContainerRequest>> containerRequestRefProvider;
     @Inject
-    private Provider<UriInfo> uriInfoFactory;
+    private Provider<UriRoutingContext> uriRoutingCtxProvider;
+    @Inject
+    private UriInfoInjectee uriInfoInjectee;
+    @Inject
+    private HttpHeadersInjectee httpHeadersInjectee;
+    @Inject
+    private RequestInjectee requestInjectee;
+    @Inject
+    private SecurityContextInjectee securityContextInjectee;
 
     /**
      * Initialize the request references using the incoming request and register
@@ -74,21 +86,29 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
      * {@link org.glassfish.jersey.server.internal.process.RespondingContext
      * responding context}.
      *
-     * @param requestContext incoming request context.
+     * @param containerRequest incoming request context.
      * @return same (unmodified) request context.
      */
     @Override
-    public ContainerRequest apply(final ContainerRequest requestContext) {
-        requestReference.get().set(requestContext.getRequest());
-        requestContextReference.get().set(requestContext);
+    public ContainerRequest apply(final ContainerRequest containerRequest) {
+        requestRefProvider.get().set(containerRequest.getRequest());
+        containerRequestRefProvider.get().set(containerRequest);
 
-        final RequestScopedInitializer requestScopedInitializer = requestContext.getRequestScopedInitializer();
+        final RequestScopedInitializer requestScopedInitializer = containerRequest.getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
             requestScopedInitializer.initialize(locator);
         }
 
-        requestContext.setUriInfo(uriInfoFactory.get());
+        final UriRoutingContext uriRoutingCtx = uriRoutingCtxProvider.get();
 
-        return requestContext;
+        containerRequest.setUriInfo(uriRoutingCtx);
+
+        // JAX-RS proxies initialization
+        uriInfoInjectee.set(uriRoutingCtx);
+        httpHeadersInjectee.set(containerRequest);
+        requestInjectee.set(containerRequest);
+        securityContextInjectee.setRequest(containerRequest);
+
+        return containerRequest;
     }
 }

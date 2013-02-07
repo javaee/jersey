@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,12 +50,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.inject.Provider;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * Test class for testing security context in the Filter and resource.
@@ -103,6 +102,22 @@ public class SecurityContextTest {
                         public String getName() {
                             return PRINCIPAL_NAME;
                         }
+
+                        @Override
+                        public int hashCode() {
+                            return super.hashCode();
+                        }
+
+                        @Override
+                        public boolean equals(Object obj) {
+                            return (obj instanceof Principal) &&
+                                        PRINCIPAL_NAME.equals(((Principal)obj).getName());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return super.toString();
+                        }
                     };
                 }
 
@@ -110,6 +125,23 @@ public class SecurityContextTest {
                 public String getAuthenticationScheme() {
                     return null;
                 }
+
+                @Override
+                public int hashCode() {
+                    return super.hashCode();
+                }
+
+                @Override
+                public boolean equals(Object that) {
+                    return (that != null && that.getClass() == this.getClass());
+                }
+
+                @Override
+                public String toString() {
+                    return super.toString();
+                }
+
+
             });
         }
     }
@@ -118,14 +150,13 @@ public class SecurityContextTest {
     @BindingPriority(101)
     private static class SecurityContextFilterSecondInChain implements ContainerRequestFilter {
         @Context
-        Provider<SecurityContext> sc;
+        SecurityContext sc;
 
         @Override
         public void filter(ContainerRequestContext rc) throws IOException {
-            Assert.assertNotNull(sc);
-            Assert.assertNotNull(sc.get());
-            assertEquals(sc.get().getUserPrincipal().getName(), PRINCIPAL_NAME);
-            assertEquals(sc.get(), rc.getSecurityContext());
+            assertNotNull(sc);
+            assertEquals(sc.getUserPrincipal().getName(), PRINCIPAL_NAME);
+            assertEquals(sc, rc.getSecurityContext());
 
             String header = rc.getHeaders().getFirst(SKIP_FILTER);
             if ("true".equals(header)) {
@@ -153,12 +184,43 @@ public class SecurityContextTest {
                         public String getName() {
                             return PRINCIPAL_NAME_SECOND;
                         }
+
+                        @Override
+                        public int hashCode() {
+                            return super.hashCode();
+                        }
+
+                        @Override
+                        public boolean equals(Object obj) {
+                            return (obj instanceof Principal) &&
+                                        PRINCIPAL_NAME_SECOND.equals(((Principal)obj).getName());
+                        }
+
+                        @Override
+                        public String toString() {
+                            return super.toString();
+                        }
                     };
                 }
 
                 @Override
                 public String getAuthenticationScheme() {
                     return null;
+                }
+
+                @Override
+                public int hashCode() {
+                    return super.hashCode();
+                }
+
+                @Override
+                public boolean equals(Object that) {
+                    return (that != null && that.getClass() == this.getClass());
+                }
+
+                @Override
+                public String toString() {
+                    return super.toString();
                 }
             });
         }
@@ -227,7 +289,7 @@ public class SecurityContextTest {
          */
         @GET
         public String getSomething(@Context ContainerRequestContext cr) {
-            Assert.assertNotNull(cr.getSecurityContext());
+            assertNotNull(cr.getSecurityContext());
             Principal userPrincipal = cr.getSecurityContext().getUserPrincipal();
             return userPrincipal == null ? PRINCIPAL_IS_NULL : userPrincipal.getName();
         }
@@ -242,7 +304,7 @@ public class SecurityContextTest {
         @GET
         @Path("2")
         public String getSomething2(@Context SecurityContext sc, @Context ContainerRequestContext cr) {
-            Assert.assertEquals(cr.getSecurityContext(), sc);
+            assertEquals(sc, cr.getSecurityContext());
             Principal userPrincipal = sc.getUserPrincipal();
             return userPrincipal == null ? PRINCIPAL_IS_NULL : userPrincipal.getName();
         }

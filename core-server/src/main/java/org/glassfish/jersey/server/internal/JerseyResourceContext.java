@@ -42,25 +42,22 @@ package org.glassfish.jersey.server.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.container.ResourceContext;
 
 import javax.inject.Inject;
 import javax.inject.Scope;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import javax.ws.rs.container.ResourceContext;
+
 import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedResourceContext;
-import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
@@ -68,6 +65,7 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AliasDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.collect.Sets;
 

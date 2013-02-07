@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,9 +56,10 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 import junit.framework.Assert;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -71,6 +72,7 @@ public class EncodedParamsTest extends AbstractTest {
 
     @Path("/{u}")
     public static class EncodedOnPostClass {
+
         public EncodedOnPostClass(
                 @PathParam("u") String u,
                 @QueryParam("q") String q,
@@ -131,6 +133,7 @@ public class EncodedParamsTest extends AbstractTest {
     @Encoded
     @Path("/{u}")
     public static class EncodedOnClass {
+
         public EncodedOnClass(
                 @PathParam("u") String u,
                 @QueryParam("q") String q,
@@ -162,6 +165,7 @@ public class EncodedParamsTest extends AbstractTest {
 
     @Path("/{u}")
     public static class EncodedOnAccessibleObject {
+
         @Encoded
         public EncodedOnAccessibleObject(
                 @PathParam("u") String u,
@@ -194,6 +198,7 @@ public class EncodedParamsTest extends AbstractTest {
 
     @Path("/{u}")
     public static class EncodedOnParameters {
+
         public EncodedOnParameters(
                 @Encoded @PathParam("u") String u,
                 @Encoded @QueryParam("q") String q,
@@ -224,6 +229,7 @@ public class EncodedParamsTest extends AbstractTest {
 
     @Path("/{u}")
     public static class MixedEncodedOnParameters {
+
         public MixedEncodedOnParameters(
                 @PathParam("u") String du,
                 @QueryParam("q") String dq,

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,9 +42,11 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
+import javax.inject.Inject;
+
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
@@ -52,24 +54,24 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.google.common.net.HttpHeaders;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import com.google.common.net.HttpHeaders;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)

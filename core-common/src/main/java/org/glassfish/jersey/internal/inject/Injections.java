@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,6 +50,10 @@ import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.hk2.utilities.binding.BindingBuilder;
+import org.glassfish.hk2.utilities.binding.BindingBuilderFactory;
+import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 
@@ -193,11 +197,7 @@ public class Injections {
      * @param configuration HK2 dynamic configuration.
      */
     public static void addBinding(BindingBuilder<?> builder, DynamicConfiguration configuration) {
-        if (builder instanceof AbstractBindingBuilder) {
-            ((AbstractBindingBuilder<?>) builder).complete(configuration, null);
-        } else {
-            throw new IllegalArgumentException("Unknown binding builder type: " + builder.getClass().getName());
-        }
+        BindingBuilderFactory.addBinding(builder, configuration);
     }
 
     /**
@@ -209,11 +209,7 @@ public class Injections {
      *                      in case a custom loader has not been set.
      */
     public static void addBinding(BindingBuilder<?> builder, DynamicConfiguration configuration, HK2Loader defaultLoader) {
-        if (builder instanceof AbstractBindingBuilder) {
-            ((AbstractBindingBuilder<?>) builder).complete(configuration, defaultLoader);
-        } else {
-            throw new IllegalArgumentException("Unknown binding builder type: " + builder.getClass().getName());
-        }
+        BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
     }
 
     /**
@@ -226,7 +222,7 @@ public class Injections {
      */
     public static <T> ServiceBindingBuilder<T> newFactoryBinder(
             Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        return AbstractBindingBuilder.<T>createFactoryBinder(factoryType, factoryScope);
+        return BindingBuilderFactory.newFactoryBinder(factoryType, factoryScope);
     }
 
     /**
@@ -239,7 +235,7 @@ public class Injections {
      * @return initialized binding builder.
      */
     public static <T> ServiceBindingBuilder<T> newFactoryBinder(Class<? extends Factory<T>> factoryType) {
-        return AbstractBindingBuilder.<T>createFactoryBinder(factoryType, null);
+        return BindingBuilderFactory.newFactoryBinder(factoryType);
     }
 
     /**
@@ -250,7 +246,7 @@ public class Injections {
      * @return initialized binding builder.
      */
     public static <T> ServiceBindingBuilder<T> newFactoryBinder(Factory<T> factory) {
-        return AbstractBindingBuilder.createFactoryBinder(factory);
+        return BindingBuilderFactory.newFactoryBinder(factory);
     }
 
     /**
@@ -263,7 +259,7 @@ public class Injections {
      * @return initialized binding builder.
      */
     public static <T> ServiceBindingBuilder<T> newBinder(Class<T> serviceType) {
-        return AbstractBindingBuilder.create(serviceType, false);
+        return BindingBuilderFactory.newBinder(serviceType);
     }
 
     /**
@@ -277,6 +273,6 @@ public class Injections {
      * @return initialized binding builder.
      */
     public static <T> ScopedBindingBuilder<T> newBinder(T service) {
-        return AbstractBindingBuilder.create(service);
+        return BindingBuilderFactory.newBinder(service);
     }
 }
