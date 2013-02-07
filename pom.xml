@@ -835,6 +835,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.2.3</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.simpleframework</groupId>
                 <artifactId>simple</artifactId>
                 <version>${simple.version}</version>
