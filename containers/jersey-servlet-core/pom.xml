@@ -56,11 +56,15 @@
     <description>Jersey core Servlet 2.x implementation</description>
 
     <dependencies>
-
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>${servlet2.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -92,6 +96,7 @@
                     <instructions>
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Import-Package>
+                            javax.persistence.*;resolution:=optional,
                             javax.servlet.*;version="[2.4,4.0)",
                             *
                         </Import-Package>

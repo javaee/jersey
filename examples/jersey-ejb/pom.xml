@@ -59,8 +59,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.ejb</artifactId>
+            <groupId>javax.ejb</groupId>
+            <artifactId>javax.ejb-api</artifactId>
             <version>${ejb.version}</version>
             <scope>provided</scope>
         </dependency>

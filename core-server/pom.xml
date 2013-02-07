@@ -77,7 +77,8 @@
                     <instructions>
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Export-Package>org.glassfish.jersey.server.*;version=${project.version},com.sun.research.ws.wadl.*;version=${project.version}</Export-Package>
-                        <Import-Package>javax.annotation.*;resolution:=optional;version="${range;[==,+);${javax.annotation.version}}", *</Import-Package>
+                        <!-- TODO change to ${range;[==,+);${javax.annotation.version}} once javax.annotation has not *-b01 in version -->
+                        <Import-Package>javax.annotation.*;resolution:=optional;version="[1,2)", *</Import-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
@@ -136,7 +137,6 @@
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>jsr250-api</artifactId>
-            <version>${javax.annotation.version}</version>
             <scope>provided</scope>
         </dependency>
 

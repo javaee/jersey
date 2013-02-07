@@ -48,59 +48,16 @@
     </parent>
 
     <groupId>org.glassfish.jersey.examples</groupId>
-    <artifactId>server-async-webapp</artifactId>
+    <artifactId>server-async-standalone-project</artifactId>
     <version>2.0-SNAPSHOT</version>
-    <packaging>war</packaging>
-    <name>jersey-examples-server-async-webapp</name>
+    <packaging>pom</packaging>
+    <name>jersey-examples-server-async-standalone-project</name>
 
-    <description>Jersey JAX-RS server-side asynchronous processing WAR example</description>
+    <description>Standalone Jersey JAX-RS server-side asynchronous processing example</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <!--  Maven Exec Plug-In: http://mojo.codehaus.org/exec-maven-plugin/  -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>org.glassfish.jersey.examples.server.async.Client</mainClass>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>client</module>
+        <module>webapp</module>
+    </modules>
 
 </project>

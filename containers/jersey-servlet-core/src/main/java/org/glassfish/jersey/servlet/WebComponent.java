@@ -82,6 +82,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
+import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
@@ -179,11 +180,12 @@ public class WebComponent {
                 }
             }).to(ServletContext.class).in(Singleton.class);
 
+            final ServletConfig servletConfig = webConfig.getServletConfig();
             if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
                 bindFactory(new Factory<ServletConfig>() {
                     @Override
                     public ServletConfig provide() {
-                        return webConfig.getServletConfig();
+                        return servletConfig;
                     }
 
                     @Override
@@ -191,6 +193,16 @@ public class WebComponent {
                         //not used
                     }
                 }).to(ServletConfig.class).in(Singleton.class);
+
+                // @PersistenceUnit
+                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements();) {
+                    final String initParamName = (String) initParams.nextElement();
+
+                    if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
+                        install(new PersistenceUnitBinder());
+                        break;
+                    }
+                }
             } else {
                 bindFactory(new Factory<FilterConfig>() {
                     @Override
