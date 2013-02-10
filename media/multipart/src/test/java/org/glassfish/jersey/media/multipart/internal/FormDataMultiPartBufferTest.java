@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,6 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -61,9 +60,12 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.google.common.collect.Sets;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Test cases for inspecting an {@code FormDataMultiPart} entity in a {@code RequestFilter} and following injection of this
@@ -115,8 +117,8 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
         @PUT
         @Consumes("multipart/form-data")
         @Produces("text/plain")
-        public Response get(@Context Request request, FormDataMultiPart multiPart) {
-            Object p = ((ContainerRequest)request).getProperty("filtered");
+        public Response get(@Context ContainerRequest request, FormDataMultiPart multiPart) {
+            Object p = request.getProperty("filtered");
             assertNotNull(p);
             assertEquals("true", p);
 

@@ -49,6 +49,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -60,10 +63,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.Producer;
@@ -88,6 +87,7 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

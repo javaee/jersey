@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,8 @@ package org.glassfish.jersey.server;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 
@@ -53,9 +55,13 @@ import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.RequestInjectee;
+import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
+import org.glassfish.jersey.internal.inject.UriInfoInjectee;
+
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -70,9 +76,8 @@ import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Server injection binder.
@@ -80,32 +85,6 @@ import org.glassfish.hk2.api.TypeLiteral;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerBinder extends AbstractBinder {
-
-    private static class RequestReferencingFactory extends ReferencingFactory<Request> {
-        @Inject
-        public RequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    private static class HttpHeadersFactory implements Factory<HttpHeaders> {
-        private final Provider<ContainerRequest> containerRequestContextProvider;
-
-        @Inject
-        public HttpHeadersFactory(Provider<ContainerRequest> containerRequestContextProvider) {
-            this.containerRequestContextProvider = containerRequestContextProvider;
-        }
-
-        @Override
-        public HttpHeaders provide() {
-            return containerRequestContextProvider.get();
-        }
-
-        @Override
-        public void dispose(HttpHeaders httpHeaders) {
-            // nothing to dispose
-        }
-    }
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
@@ -131,7 +110,6 @@ public class ServerBinder extends AbstractBinder {
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ContainerFilteringStage.Binder(),
-                new SecurityContextBinder(),
                 new ParameterInjectionBinder(),
                 new ResourceModelBinder(),
                 new RouterBinder(),
@@ -140,12 +118,8 @@ public class ServerBinder extends AbstractBinder {
                 new JerseyResourceContext.Binder());
 
         // Request/Response injection interfaces
-        bindFactory(RequestReferencingFactory.class).to(Request.class).in(PerLookup.class);
         bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
         }).in(RequestScoped.class);
-
-
-        bindFactory(HttpHeadersFactory.class, Singleton.class).to(HttpHeaders.class).in(PerLookup.class);
 
         // server-side processing chain
         bindFactory(RequestContextInjectionFactory.class).to(ContainerRequest.class).in(RequestScoped.class);
@@ -163,5 +137,11 @@ public class ServerBinder extends AbstractBinder {
         bind(JsonWithPaddingInterceptor.class).to(WriterInterceptor.class).in(Singleton.class);
 
         bindAsContract(ReferencesInitializer.class);
+
+        // JAX-RS proxiable request scoped injections
+        bind(UriInfoInjectee.class).to(UriInfoInjectee.class).to(UriInfo.class).proxy(true).in(RequestScoped.class);
+        bind(HttpHeadersInjectee.class).to(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).in(RequestScoped.class);
+        bind(RequestInjectee.class).to(RequestInjectee.class).to(Request.class).proxy(true).in(RequestScoped.class);
+        bind(SecurityContextInjectee.class).to(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).in(RequestScoped.class);
     }
 }

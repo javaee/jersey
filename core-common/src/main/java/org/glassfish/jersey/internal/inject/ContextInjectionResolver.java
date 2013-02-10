@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,10 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.reflect.Type;
 
-import javax.ws.rs.core.Context;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -56,6 +56,7 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.InjecteeImpl;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.

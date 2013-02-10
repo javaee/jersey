@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,32 +42,34 @@ package org.glassfish.jersey.tests.e2e.server;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import javax.inject.Inject;
+import javax.inject.Qualifier;
+import javax.inject.Singleton;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Singleton;
+import org.glassfish.hk2.api.AnnotationLiteral;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 
-import org.glassfish.hk2.api.AnnotationLiteral;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 

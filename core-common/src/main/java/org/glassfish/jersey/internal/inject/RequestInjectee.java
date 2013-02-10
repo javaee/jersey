@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,32 +39,78 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import java.util.Date;
+import java.util.List;
+
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Variant;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
- * Utility Injection binder that may be used for registering provider instances of provider
- * type {@code T} in HK2.
+ * Proxiable wrapper for request scoped {@link Request} instance.
  *
- * @param <T>
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ProviderInstanceBindingBinder<T> extends AbstractBinder {
-    private final Iterable<? extends T> providers;
-    private final Class<T> providerType;
+public class RequestInjectee implements Request {
+
+    private Request wrapped;
 
     /**
-     * Create an injection binder for the supplied collection of provider instances.
+     * Set wrapped instance. Should be invoked on each incoming request,
+     * when a new injectee instance is created by HK2.
      *
-     * @param providers list of provider instances.
-     * @param providerType registered provider contract type.
+     * @param request actual request instance.
      */
-    public ProviderInstanceBindingBinder(Iterable<? extends T> providers, Class<T> providerType) {
-        this.providers = providers;
-        this.providerType = providerType;
+    public void set(final Request request) {
+        if (wrapped != null) {
+            throw new IllegalStateException(LocalizationMessages.REQUEST_WAS_ALREADY_SET());
+        }
+        wrapped = request;
     }
 
     @Override
-    protected void configure() {
-        for(T provider : providers) {
-            bind(provider).to(providerType);
+    public String getMethod() {
+        checkState();
+        return wrapped.getMethod();
+    }
+
+    @Override
+    public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
+        checkState();
+        return wrapped.selectVariant(variants);
+    }
+
+    @Override
+    public ResponseBuilder evaluatePreconditions(EntityTag eTag) {
+        checkState();
+        return wrapped.evaluatePreconditions(eTag);
+    }
+
+    @Override
+    public ResponseBuilder evaluatePreconditions(Date lastModified) {
+        checkState();
+        return wrapped.evaluatePreconditions(lastModified);
+    }
+
+    @Override
+    public ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
+        checkState();
+        return wrapped.evaluatePreconditions(lastModified, eTag);
+    }
+
+    @Override
+    public ResponseBuilder evaluatePreconditions() {
+        checkState();
+        return wrapped.evaluatePreconditions();
+    }
+
+    private void checkState() {
+        if (wrapped == null) {
+            throw new IllegalStateException(LocalizationMessages.REQUEST_WAS_NOT_SET());
         }
     }
+
 }

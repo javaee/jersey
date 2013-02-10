@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
+import javax.inject.Inject;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -56,8 +58,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -83,7 +83,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @RequestScoped
-class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
+public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
@@ -95,7 +95,6 @@ class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     volatile private ResourceMethod matchedResourceMethod = null;
     volatile private Resource matchedResourceModel = null;
-
 
     /**
      * Injection constructor.

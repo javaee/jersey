@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,18 +52,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.WebApplicationException;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
+
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -79,6 +78,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -273,7 +273,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     }
 
     private volatile ApplicationHandler appHandler;
-    private final ContainerLifecycleListener containerListener;
+    private volatile ContainerLifecycleListener containerListener;
 
     /**
      * Creates a new Grizzly container.
@@ -339,6 +339,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     public void reload(ResourceConfig configuration) {
         appHandler = new ApplicationHandler(configuration.register(new GrizzlyBinder()));
         containerListener.onReload(this);
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 
     @Override

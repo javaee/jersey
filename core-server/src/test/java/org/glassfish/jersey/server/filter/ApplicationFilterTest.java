@@ -52,7 +52,6 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.ProviderInstanceBindingBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -60,13 +59,16 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 
 import junit.framework.Assert;
+
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for JAX-RS filters.
@@ -75,6 +77,34 @@ import static junit.framework.Assert.assertEquals;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ApplicationFilterTest {
+
+    /**
+     * Utility Injection binder that may be used for registering provider instances of provider
+     * type {@code T} in HK2.
+     */
+    static class ProviderInstanceBindingBinder<T> extends AbstractBinder {
+
+        private final Iterable<? extends T> providers;
+        private final Class<T> providerType;
+
+        /**
+         * Create an injection binder for the supplied collection of provider instances.
+         *
+         * @param providers list of provider instances.
+         * @param providerType registered provider contract type.
+         */
+        public ProviderInstanceBindingBinder(Iterable<? extends T> providers, Class<T> providerType) {
+            this.providers = providers;
+            this.providerType = providerType;
+        }
+
+        @Override
+        protected void configure() {
+            for(T provider : providers) {
+                bind(provider).to(providerType);
+            }
+        }
+    }
 
     @Test
     public void testSingleRequestFilter() throws Exception {

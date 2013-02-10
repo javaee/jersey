@@ -40,17 +40,18 @@
 
 package org.glassfish.jersey.server.wadl.processor;
 
+import javax.inject.Singleton;
+
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 
 /**

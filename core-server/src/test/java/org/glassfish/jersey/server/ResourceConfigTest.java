@@ -47,11 +47,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;

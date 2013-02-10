@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,9 +43,9 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.ws.rs.RuntimeType;
-
 import javax.inject.Singleton;
+
+import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -56,6 +56,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AliasDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;

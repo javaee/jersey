@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.security.Principal;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -55,6 +56,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.inject.Singleton;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
@@ -72,12 +75,9 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -95,12 +95,12 @@ import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStag
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
 import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.wadl.processor.WadlModelProcessorFeature;
@@ -109,6 +109,7 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;

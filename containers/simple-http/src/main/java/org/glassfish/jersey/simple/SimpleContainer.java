@@ -39,30 +39,6 @@
  */
 package org.glassfish.jersey.simple;
 
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.ExtendedLogger;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.*;
-import org.glassfish.jersey.server.internal.ConfigHelper;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-import org.simpleframework.http.Address;
-import org.simpleframework.http.Request;
-import org.simpleframework.http.Response;
-import org.simpleframework.http.Status;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -75,6 +51,34 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import javax.ws.rs.core.SecurityContext;
+
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.*;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import org.simpleframework.http.Address;
+import org.simpleframework.http.Request;
+import org.simpleframework.http.Response;
+import org.simpleframework.http.Status;
+
 /**
  * Simple Jersey HTTP Container.
  *
@@ -83,7 +87,6 @@ import java.util.logging.Logger;
 public final class SimpleContainer implements org.simpleframework.http.core.Container, Container {
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
-
 
     /**
      * Referencing factory for Simple request.
@@ -123,13 +126,12 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         }
     }
 
-
     private volatile ApplicationHandler appHandler;
-    private final ContainerLifecycleListener containerListener;
+    private volatile ContainerLifecycleListener containerListener;
 
     private final static class Writer implements ContainerResponseWriter {
-        final Response response;
-        final Request request;
+        private final Response response;
+        private final Request request;
 
         Writer(Request request, Response response) {
             this.response = response;
@@ -311,7 +313,17 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     public void reload(ResourceConfig configuration) {
         appHandler = new ApplicationHandler(configuration.register(new SimpleBinder()));
         containerListener.onReload(this);
+        containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
+
+    /**
+     * Inform this container that the server was started. This method must be implicitly called after
+     * the server containing this container is started.
+     */
+    void onServerStart() {
+        this.containerListener.onStartup(this);
+    }
+
 
     /**
      * Creates a new Grizzly container.

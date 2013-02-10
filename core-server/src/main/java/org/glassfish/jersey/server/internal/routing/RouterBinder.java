@@ -41,18 +41,17 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.UriInfo;
-
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import javax.ws.rs.container.ResourceInfo;
+
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Provides routing configuration functionality.
@@ -103,7 +102,6 @@ public class RouterBinder extends AbstractBinder {
                 to(RoutingContext.class).
                 to(ResourceInfo.class).
                 to(ExtendedUriInfo.class).
-                to(UriInfo.class).
                 in(RequestScoped.class);
 
         // "Assisted" bindings

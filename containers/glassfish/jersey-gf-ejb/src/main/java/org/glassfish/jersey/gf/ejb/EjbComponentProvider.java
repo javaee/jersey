@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,20 +47,20 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ext.ExceptionMapper;
-
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import javax.ws.rs.ext.ExceptionMapper;
+
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.ServiceBindingBuilder;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 /**
  * EJB component provider.
