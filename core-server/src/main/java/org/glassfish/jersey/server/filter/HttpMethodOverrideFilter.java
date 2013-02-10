@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -57,6 +57,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -93,7 +95,7 @@ import static org.glassfish.jersey.internal.util.Tokenizer.COMMON_DELIMITERS;
  * @author Florian Hars (florian at hars.de)
  */
 @PreMatching
-@BindingPriority(BindingPriority.HEADER_DECORATOR + 50) // must go after UriConnegFilter (if present)
+@Priority(Priorities.HEADER_DECORATOR + 50) // must go after UriConnegFilter (if present)
 public class HttpMethodOverrideFilter implements ContainerRequestFilter {
 
     /**
@@ -157,7 +159,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      */
     public static void enableFor(ResourceConfig rc, Source... sources) {
         rc.registerClasses(HttpMethodOverrideFilter.class);
-        rc.setProperty(ServerProperties.HTTP_METHOD_OVERRIDE, sources);
+        rc.property(ServerProperties.HTTP_METHOD_OVERRIDE, sources);
     }
 
     /**

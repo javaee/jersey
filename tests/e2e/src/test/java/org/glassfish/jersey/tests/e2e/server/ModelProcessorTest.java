@@ -251,7 +251,7 @@ public class ModelProcessorTest extends JerseyTest {
     @Override
     protected Application configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class, ResourceB.class, ModelProcessorFeature.class);
-        resourceConfig.setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+        resourceConfig.property(ServerProperties.FEATURE_DISABLE_WADL, true);
         return resourceConfig;
     }
 

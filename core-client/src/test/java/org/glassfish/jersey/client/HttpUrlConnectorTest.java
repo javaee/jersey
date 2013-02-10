@@ -57,17 +57,18 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocketFactory;
-import javax.ws.rs.client.ClientFactory;
+
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory;
 import org.junit.Test;
 
 public class HttpUrlConnectorTest {
-   
+
 	@Test
     public void testSSLConnection(){
-    	JerseyClient client = (JerseyClient) ClientFactory.newClient();
+    	JerseyClient client = (JerseyClient) ClientBuilder.newClient();
     	ClientRequest request=client.target("https://localhost:8080").request().buildGet().request();
     	ConnectionFactory factory=new ConnectionFactory() {
 			@Override
@@ -160,7 +161,7 @@ public class HttpUrlConnectorTest {
 					return delegate.getHeaderFieldInt(name, Default);
 				}
 
-				public long getHeaderFieldLong(String name, long Default) 
+				public long getHeaderFieldLong(String name, long Default)
 				{
 					return delegate.getHeaderFieldInt(name, (int)Default);
 					// java6 compatibility
@@ -171,7 +172,7 @@ public class HttpUrlConnectorTest {
 					return delegate.getContent();
 				}
 
-				
+
 				public Object getContent(@SuppressWarnings("rawtypes") Class[] classes) throws IOException {
 					return delegate.getContent(classes);
 				}
@@ -340,11 +341,11 @@ public class HttpUrlConnectorTest {
 				public void setSSLSocketFactory(SSLSocketFactory sf) {
 					delegate.setSSLSocketFactory(sf);
 				}
-				
+
 			};
 		}
 		return result;
 	}
-	
-	
+
+
 }

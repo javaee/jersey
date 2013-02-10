@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -65,6 +64,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.message.internal.HeadersFactory;
 
 /**
@@ -76,7 +77,7 @@ import org.glassfish.jersey.message.internal.HeadersFactory;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 @PreMatching
-@BindingPriority(Integer.MIN_VALUE)
+@Priority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
 public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,
         ClientResponseFilter, WriterInterceptor {

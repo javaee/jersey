@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -127,13 +127,13 @@ public class InMemoryConnector implements Connector {
             }
         } catch (InterruptedException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new ClientException("In-memory transport can't process incoming request", e);
+            throw new ProcessingException("In-memory transport can't process incoming request", e);
         } catch (ExecutionException e) {
             Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new ClientException("In-memory transport can't process incoming request", e);
+            throw new ProcessingException("In-memory transport can't process incoming request", e);
         }
 
-        throw new ClientException("In-memory transport can't process incoming request");
+        throw new ProcessingException("In-memory transport can't process incoming request");
     }
 
     @Override
@@ -143,7 +143,7 @@ public class InMemoryConnector implements Connector {
             public void run() {
                 try {
                     callback.response(apply(request));
-                } catch (ClientException ex) {
+                } catch (ProcessingException ex) {
                     throw ex;
                 } catch (Throwable t) {
                     callback.failure(t);
@@ -194,7 +194,7 @@ public class InMemoryConnector implements Connector {
                     outboundContext.setEntityStream(entityStream);
                     outboundContext.commitStream();
                 } catch (IOException e) {
-                    throw new ClientException(e.getMessage(), e);
+                    throw new ProcessingException(e.getMessage(), e);
                 } finally {
                     if (entityStream != null) {
                         try {

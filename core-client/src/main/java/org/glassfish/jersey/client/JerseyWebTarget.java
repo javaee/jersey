@@ -343,9 +343,9 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public JerseyWebTarget setProperty(String name, Object value) {
+    public JerseyWebTarget property(String name, Object value) {
         checkNotClosed();
-        config.setProperty(name, value);
+        config.property(name, value);
         return this;
     }
 

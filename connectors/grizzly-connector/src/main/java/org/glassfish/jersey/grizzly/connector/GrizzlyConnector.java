@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -131,11 +131,11 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
             connectorResponse = respFuture.get();
         } catch (ExecutionException ex) {
             Throwable e = ex.getCause() == null ? ex : ex.getCause();
-            throw new ClientException(e.getMessage(), e);
+            throw new ProcessingException(e.getMessage(), e);
         } catch (InterruptedException ex) {
-            throw new ClientException(ex.getMessage(), ex);
+            throw new ProcessingException(ex.getMessage(), ex);
         } catch (IOException ex) {
-            throw new ClientException(ex.getMessage(), ex);
+            throw new ProcessingException(ex.getMessage(), ex);
         }
 
         return translate(requestContext, connectorResponse);
@@ -160,13 +160,13 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
 
                 @Override
                 public void onThrowable(Throwable t) {
-                    t = t instanceof IOException ? new ClientException(t.getMessage(), t) : t;
+                    t = t instanceof IOException ? new ProcessingException(t.getMessage(), t) : t;
                     callback.failure(t);
                 }
             });
         } catch (IOException ex) {
             failure = ex;
-            callback.failure(new ClientException(ex.getMessage(), ex.getCause()));
+            callback.failure(new ProcessingException(ex.getMessage(), ex.getCause()));
         } catch (Throwable t) {
             failure = t;
             callback.failure(t);

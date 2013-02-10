@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,7 @@ package org.glassfish.jersey.client;
 
 import java.io.IOException;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
@@ -113,7 +113,7 @@ class ClientFilteringStages {
                         throw new AbortException(new ClientResponse(requestContext, abortResponse));
                     }
                 } catch (IOException ex) {
-                    throw new ClientException(ex);
+                    throw new ProcessingException(ex);
                 }
             }
             return Continuation.of(requestContext, getDefaultNext());
@@ -134,7 +134,7 @@ class ClientFilteringStages {
                     filter.filter(responseContext.getRequestContext(), responseContext);
                 }
             } catch (IOException ex) {
-                throw new ClientException(ex);
+                throw new ProcessingException(ex);
             }
 
             return Continuation.of(responseContext, getDefaultNext());

@@ -48,8 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import javax.inject.Inject;
-
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -58,6 +56,8 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -474,5 +474,25 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     @Override
     public Resource getMatchedModelResource() {
         return matchedResourceModel;
+    }
+
+    @Override
+    public URI resolve(URI uri) {
+        return null;  // TODO: implement method.
+    }
+
+    @Override
+    public URI resolve(URI baseUri, URI uri) {
+        return null;  // TODO: implement method.
+    }
+
+    @Override
+    public URI relativize(URI uri) {
+        return null;  // TODO: implement method.
+    }
+
+    @Override
+    public URI relativize(URI from, URI uri) {
+        return null;  // TODO: implement method.
     }
 }

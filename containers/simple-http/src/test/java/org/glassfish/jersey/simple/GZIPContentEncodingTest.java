@@ -48,7 +48,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 
@@ -78,7 +78,7 @@ public class GZIPContentEncodingTest extends AbstractSimpleServerTester {
         rc.register(GZipEncoder.class);
         startServer(rc);
 
-        Client client = ClientFactory.newClient(new ClientConfig(GZipEncoder.class));
+        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
         WebTarget r = client.target(getUri().build());
 
         assertEquals("GET", r.request().get(String.class));
@@ -90,7 +90,7 @@ public class GZIPContentEncodingTest extends AbstractSimpleServerTester {
         rc.register(GZipEncoder.class);
         startServer(rc);
 
-        Client client = ClientFactory.newClient(new ClientConfig(GZipEncoder.class));
+        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
         WebTarget r = client.target(getUri().build());
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));

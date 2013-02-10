@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.POST;
@@ -63,6 +62,8 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -115,7 +116,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     }
 
     @NameBoundReader
-    @BindingPriority(40)
+    @Priority(40)
     static class NameBoundReaderInterceptor extends PrefixAddingReaderInterceptor {
 
         @Override
@@ -124,7 +125,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
         }
     }
 
-    @BindingPriority(60)
+    @Priority(60)
     static class DynamicallyBoundReaderInterceptor extends PrefixAddingReaderInterceptor {
 
         @Override
@@ -134,7 +135,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     }
 
     @NameBinding
-    @BindingPriority(40)
+    @Priority(40)
     @Retention(RetentionPolicy.RUNTIME)
     static @interface NameBoundWriter {
     }
@@ -148,7 +149,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
         }
     }
 
-    @BindingPriority(20)
+    @Priority(20)
     public static class DynamicallyBoundWriterInterceptor extends PrefixAddingWriterInterceptor {
 
         @Override

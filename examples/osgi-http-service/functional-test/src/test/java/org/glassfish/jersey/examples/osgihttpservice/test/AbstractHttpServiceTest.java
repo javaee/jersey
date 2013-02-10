@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
@@ -88,6 +88,7 @@ public abstract class AbstractHttpServiceTest {
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty(BundleLocationProperty).value(bundleLocation),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
+                systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
                 // do not remove the following line
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
@@ -103,6 +104,9 @@ public abstract class AbstractHttpServiceTest {
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
 
+                // javax.annotation has to go first!
+                mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
+
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
                 mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").versionAsInProject(),
 
@@ -117,9 +121,6 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
-
-                // javax.annotation
-                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
 
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
@@ -214,7 +215,7 @@ public abstract class AbstractHttpServiceTest {
 
         semaphore.acquire();  // wait till the servlet gets really registered
 
-        Client c = ClientFactory.newClient();
+        Client c = ClientBuilder.newClient();
 
         final WebTarget target = c.target(baseUri);
 

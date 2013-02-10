@@ -47,7 +47,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 
@@ -77,7 +78,7 @@ public class Main {
         final Config config = Config.parse(args);
         System.out.println(String.format("\nStarting to execute %d requests:\n", config.requests));
         // Creating JAX-RS client
-        final Client client = ClientFactory.newClient();
+        final Client client = ClientBuilder.newClient();
         // Targeting echo resource at URI "<baseUri>/long-running/(sync|async)/{echo}"
         final WebTarget echoResource = client.target(config.baseUri).path("long-running/{mode}/{echo}")
                 .resolveTemplate("mode", (config.sync) ? "sync" : "async");
@@ -106,14 +107,14 @@ public class Main {
                 }
 
                 @Override
-                public void failed(Throwable throwable) {
-                    if (throwable.getCause() instanceof IOException && retries.getAndIncrement() < 3) {
+                public void failed(Throwable error) {
+                    if (error.getCause() instanceof IOException && retries.getAndIncrement() < 3) {
                         // resend
                         echoResource.resolveTemplate("echo", reqId).request().async().get(this);
                     } else {
                         System.out.print("!");
                         latch.countDown();
-                        errors.offer(String.format("Request '%d' has failed: %s", reqId, throwable.toString()));
+                        errors.offer(String.format("Request '%d' has failed: %s", reqId, error.toString()));
                     }
                 }
             });

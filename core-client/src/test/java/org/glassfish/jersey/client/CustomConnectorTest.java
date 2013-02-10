@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,8 @@ package org.glassfish.jersey.client;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientException;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
@@ -61,12 +61,12 @@ public class CustomConnectorTest {
 
         @Override
         public ClientResponse apply(ClientRequest request) {
-            throw new ClientException("test");
+            throw new ProcessingException("test");
         }
 
         @Override
         public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-            throw new ClientException("test-async");
+            throw new ProcessingException("test-async");
         }
 
         @Override
@@ -82,15 +82,15 @@ public class CustomConnectorTest {
 
     @Test
     public void testNullConnector() {
-        Client client = ClientFactory.newClient(new ClientConfig().connector(new NullConnector()).getConfiguration());
+        Client client = ClientBuilder.newClient(new ClientConfig().connector(new NullConnector()).getConfiguration());
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
-        } catch (ClientException ce) {
+        } catch (ProcessingException ce) {
             assertEquals("test", ce.getMessage());
         }
         try {
             client.target(UriBuilder.fromUri("/").build()).request().async().get();
-        } catch (ClientException ce) {
+        } catch (ProcessingException ce) {
             assertEquals("test-async", ce.getMessage());
         }
     }

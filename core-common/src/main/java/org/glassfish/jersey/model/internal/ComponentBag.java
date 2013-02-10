@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,10 +46,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.core.Feature;
 
+import javax.annotation.Priority;
 import javax.inject.Scope;
 
 import org.glassfish.jersey.internal.Errors;
@@ -380,7 +380,7 @@ public class ComponentBag {
      *
      * @param componentClass  registered component class.
      * @param defaultPriority default component priority. If {@value ContractProvider#NO_PRIORITY},
-     *                        the value from the component class {@link javax.ws.rs.BindingPriority} annotation will be used
+     *                        the value from the component class {@link javax.annotation.Priority} annotation will be used
      *                        (if any).
      * @param contractMap     map of contracts and their binding priorities. If {@code null}, the contracts will
      *                        gathered by introspecting the component class. Content of the contract map
@@ -431,7 +431,7 @@ public class ComponentBag {
      *
      * @param componentClass  component class to create contract provider model for.
      * @param defaultPriority default component priority. If {@value ContractProvider#NO_PRIORITY},
-     *                        the value from the component class {@link javax.ws.rs.BindingPriority} annotation will be used
+     *                        the value from the component class {@link javax.annotation.Priority} annotation will be used
      *                        (if any).
      * @param contractMap     map of contracts and their binding priorities. If {@code null}, the contracts will
      *                        gathered by introspecting the component class. Content of the contract map
@@ -476,9 +476,9 @@ public class ComponentBag {
         // Process annotations (priority, name bindings, scope)
         final boolean useAnnotationPriority = defaultPriority == ContractProvider.NO_PRIORITY;
         for (Annotation annotation : componentClass.getAnnotations()) {
-            if (annotation instanceof BindingPriority) {
+            if (annotation instanceof Priority) {
                 if (useAnnotationPriority) {
-                    builder.defaultPriority(((BindingPriority) annotation).value());
+                    builder.defaultPriority(((Priority) annotation).value());
                 }
             } else {
                 for (Annotation metaAnnotation : annotation.annotationType().getAnnotations()) {

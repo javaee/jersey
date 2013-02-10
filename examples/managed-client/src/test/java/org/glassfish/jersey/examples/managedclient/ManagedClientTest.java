@@ -66,7 +66,7 @@ public class ManagedClientTest extends JerseyTest {
         // enable(TestProperties.DUMP_ENTITY);
 
         // overriding ClientA base Uri property for test purposes
-        return App.create().setProperty(ClientA.class.getName() + ".baseUri", this.getBaseUri().toString() + "internal");
+        return App.create().property(ClientA.class.getName() + ".baseUri", this.getBaseUri().toString() + "internal");
     }
 
 //    Uncomment to use Grizzly async client

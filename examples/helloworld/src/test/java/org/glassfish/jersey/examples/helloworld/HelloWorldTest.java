@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
@@ -188,7 +188,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterClientClass() {
         Client client = client();
-        client.register(CustomLoggingFilter.class).setProperty("foo", "bar");
+        client.register(CustomLoggingFilter.class).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -199,7 +199,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterClientInstance() {
         Client client = client();
-        client.register(new CustomLoggingFilter()).setProperty("foo", "bar");
+        client.register(new CustomLoggingFilter()).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -210,7 +210,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterTargetClass() {
         WebTarget target = target().path(App.ROOT_PATH);
-        target.register(CustomLoggingFilter.class).setProperty("foo", "bar");
+        target.register(CustomLoggingFilter.class).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target.request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -221,7 +221,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterTargetInstance() {
         WebTarget target = target().path(App.ROOT_PATH);
-        target.register(new CustomLoggingFilter()).setProperty("foo", "bar");
+        target.register(new CustomLoggingFilter()).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target.request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -232,7 +232,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterInvocationClass() {
         Invocation.Builder inv = target().path(App.ROOT_PATH).request();
-        inv.register(CustomLoggingFilter.class).setProperty("foo", "bar");
+        inv.register(CustomLoggingFilter.class).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = inv.get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -243,7 +243,7 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testLoggingFilterInvocationInstance() {
         Invocation.Builder inv = target().path(App.ROOT_PATH).request();
-        inv.register(new CustomLoggingFilter()).setProperty("foo", "bar");
+        inv.register(new CustomLoggingFilter()).property("foo", "bar");
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = inv.get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
@@ -254,8 +254,8 @@ public class HelloWorldTest extends JerseyTest {
     @Test
     public void testConfigurationUpdate() {
         Client client = client();
-        client.register(CustomLoggingFilter.class).setProperty("foo", "bar");
-        client.replaceWith(ClientFactory.newClient().getConfiguration());
+        client.register(CustomLoggingFilter.class).property("foo", "bar");
+        client.replaceWith(ClientBuilder.newClient().getConfiguration());
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target().path(App.ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);

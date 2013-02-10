@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,7 @@ package org.glassfish.jersey.process.internal;
 import java.util.Collections;
 import java.util.List;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -88,27 +88,27 @@ public class RankedComparatorTest {
         }
     }
 
-    @BindingPriority(0)
+    @Priority(0)
     private static class F0 {
     }
 
-    @BindingPriority(100)
+    @Priority(100)
     private static class F100 {
     }
 
-    @BindingPriority(200)
+    @Priority(200)
     private static class F200 {
     }
 
-    @BindingPriority(200)
+    @Priority(200)
     private static class FF200 {
     }
 
-    @BindingPriority(300)
+    @Priority(300)
     private static class F300 {
     }
 
-    @BindingPriority(1000)
+    @Priority(1000)
     private static class F1000 {
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,8 +65,8 @@ public class UriConnegMappingFromProperty extends UriConnegLanguageMediaTypeTest
         languages.put("french", "fr");
 
         ResourceConfig rc = new ResourceConfig(UriConnegLanguageMediaTypeTest.LanguageVariantResource.class);
-        rc.setProperty(ServerProperties.MEDIA_TYPE_MAPPINGS, "foo : application/foo, bar : application/bar");
-        rc.setProperty(ServerProperties.LANGUAGE_MAPPINGS, "english : en, french : fr");
+        rc.property(ServerProperties.MEDIA_TYPE_MAPPINGS, "foo : application/foo, bar : application/bar");
+        rc.property(ServerProperties.LANGUAGE_MAPPINGS, "english : en, french : fr");
         // testing that the properties won't get overridden by new values
         UriConnegFilter.enableFor(rc, "foo : application/bar", "english : fr");
         return rc;

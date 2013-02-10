@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -73,7 +73,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -293,7 +292,7 @@ public class InboundMessageContext {
 
         try {
             return converter.apply(HeadersFactory.asString(value, null));
-        } catch (ProcessingException ex) {
+        } catch (org.glassfish.jersey.internal.ProcessingException ex) {
             throw exception(name, value, ex);
         }
     }
@@ -323,7 +322,7 @@ public class InboundMessageContext {
                 try {
                     return HttpHeaderReader.readDate(input);
                 } catch (ParseException ex) {
-                    throw new ProcessingException(ex);
+                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
                 }
             }
         }, false);
@@ -375,7 +374,7 @@ public class InboundMessageContext {
                 try {
                     return new LanguageTag(input).getAsLocale();
                 } catch (ParseException e) {
-                    throw new ProcessingException(e);
+                    throw new org.glassfish.jersey.internal.ProcessingException(e);
                 }
             }
         }, false);
@@ -394,7 +393,7 @@ public class InboundMessageContext {
                 try {
                     return (input != null && input.length() > 0) ? Integer.parseInt(input) : -1;
                 } catch (NumberFormatException ex) {
-                    throw new ProcessingException(ex);
+                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
                 }
             }
         }, true);
@@ -413,7 +412,7 @@ public class InboundMessageContext {
                 try {
                     return MediaType.valueOf(input);
                 } catch (IllegalArgumentException iae) {
-                    throw new ProcessingException(iae);
+                    throw new org.glassfish.jersey.internal.ProcessingException(iae);
                 }
             }
         }, false);
@@ -580,7 +579,7 @@ public class InboundMessageContext {
                 try {
                     return HttpHeaderReader.readDate(input);
                 } catch (ParseException e) {
-                    throw new ProcessingException(e);
+                    throw new org.glassfish.jersey.internal.ProcessingException(e);
                 }
             }
         }, false);
@@ -598,7 +597,7 @@ public class InboundMessageContext {
                 try {
                     return URI.create(value);
                 } catch (IllegalArgumentException ex) {
-                    throw new ProcessingException(ex);
+                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
                 }
             }
         }, false);
@@ -823,7 +822,7 @@ public class InboundMessageContext {
             }
             return t;
         } catch (IOException ex) {
-            throw new MessageProcessingException(LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
+            throw new ProcessingException(LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
         }
     }
 
@@ -831,9 +830,9 @@ public class InboundMessageContext {
      * Buffer the entity stream (if not empty).
      *
      * @return {@code true} if the entity input stream was successfully buffered.
-     * @throws MessageProcessingException in case of an IO error.
+     * @throws javax.ws.rs.ProcessingException in case of an IO error.
      */
-    public boolean bufferEntity() throws MessageProcessingException {
+    public boolean bufferEntity() throws ProcessingException {
         entityContent.ensureNotClosed();
 
         try {
@@ -853,7 +852,7 @@ public class InboundMessageContext {
 
             return true;
         } catch (IOException ex) {
-            throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFERING_FAILED(), ex);
+            throw new ProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFERING_FAILED(), ex);
         }
     }
 

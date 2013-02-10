@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,14 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 
 /**
  * Jersey processing exception signaling that no appropriate MessageBodyReader or MessageBodyWriter was found.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class MessageBodyProviderNotFoundException extends MessageProcessingException {
+public class MessageBodyProviderNotFoundException extends ProcessingException {
 
     private static final long serialVersionUID = 2093175681702118380L;
 

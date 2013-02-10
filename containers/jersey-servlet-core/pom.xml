@@ -98,6 +98,7 @@
                         <Import-Package>
                             javax.persistence.*;resolution:=optional,
                             javax.servlet.*;version="[2.4,4.0)",
+                            javax.annotation.*;version=!,
                             *
                         </Import-Package>
                     </instructions>

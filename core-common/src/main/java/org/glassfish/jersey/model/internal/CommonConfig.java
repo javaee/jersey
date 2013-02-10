@@ -360,7 +360,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     @Override
-    public CommonConfig setProperty(final String name, final Object value) {
+    public CommonConfig property(final String name, final Object value) {
         if (value == null) {
             properties.remove(name);
         } else {

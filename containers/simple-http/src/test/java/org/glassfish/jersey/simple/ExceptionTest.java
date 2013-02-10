@@ -46,7 +46,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -68,7 +68,7 @@ public class ExceptionTest extends AbstractSimpleServerTester {
     @Test
     public void test400StatusCode() {
         startServer(ExceptionResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("400").build());
         assertEquals(400, r.request().get(Response.class).getStatus());
     }
@@ -76,7 +76,7 @@ public class ExceptionTest extends AbstractSimpleServerTester {
     @Test
     public void test500StatusCode() {
         startServer(ExceptionResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("500").build());
 
         assertEquals(500, r.request().get(Response.class).getStatus());

@@ -142,6 +142,7 @@ public class Helper {
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)), rawPaxRunnerOption("clean"),
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
+                systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
                 // define maven repositories
                 repositories("http://repo1.maven.org/maven2",
@@ -165,6 +166,9 @@ public class Helper {
                 // HTTP SPEC
                 // mavenBundle("org.apache.geronimo.specs","geronimo-servlet_2.5_spec","1.1.2"),
 
+                // javax.annotation has to go first!
+                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject()),
+
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
 
@@ -176,9 +180,6 @@ public class Helper {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
-
-                // javax.annotation
-                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
 
                 // Grizzly
                 systemPackage("sun.misc"),

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,10 @@ package org.glassfish.jersey.tests.e2e.server.filter;
 
 import java.security.Principal;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -53,6 +53,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -71,7 +72,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class RolesAllowedTest extends JerseyTest {
     @PreMatching
-    @BindingPriority(BindingPriority.AUTHENTICATION)
+    @Priority(Priorities.AUTHENTICATION)
     public static class SecurityFilter implements ContainerRequestFilter {
         public void filter(ContainerRequestContext request) {
             String user = request.getHeaders().getFirst("X-USER");

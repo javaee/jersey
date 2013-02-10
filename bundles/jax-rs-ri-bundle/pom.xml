@@ -62,8 +62,7 @@
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
-            <version>${javax.annotation.version}</version>
+            <artifactId>javax.annotation-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -222,13 +221,13 @@
                             com.sun.research.ws.wadl.*;version=${project.version},
                             deprecated.javax.ws.rs;version=${project.version}
                         </Export-Package>
-                        <!-- TODO change to ${range;[==,+);${javax.annotation.version}} once javax.annotation has not *-b01 in version -->
+                        <!-- TODO specify correct javax.annotation.* version once the final version gets clarified -->
                         <Import-Package>
-                            javax.annotation.*;resolution:=optional;version="[1,2)",
-                            javax.persistence.*;resolution:=optional,
                             javax.servlet.annotation.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.descriptor.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.*;version="${range;[==,+);${servlet2.version}}",
+                            javax.annotation.*;version=!,
+                            javax.persistence.*;resolution:=optional,
                             *
                         </Import-Package>
                         <Private-Package>

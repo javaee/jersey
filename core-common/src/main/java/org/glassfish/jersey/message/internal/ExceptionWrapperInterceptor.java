@@ -43,7 +43,7 @@ import java.io.IOException;
 
 import javax.inject.Singleton;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
@@ -61,7 +61,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@BindingPriority(10)
+@Priority(10)
 @Singleton
 public class ExceptionWrapperInterceptor implements ReaderInterceptor, WriterInterceptor {
 

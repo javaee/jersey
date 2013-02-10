@@ -112,8 +112,7 @@
     <dependencies>
         <dependency>
             <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
-            <version>${javax.annotation.version}</version>
+            <artifactId>javax.annotation-api</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

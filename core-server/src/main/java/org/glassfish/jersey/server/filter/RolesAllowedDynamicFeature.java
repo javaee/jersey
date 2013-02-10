@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -50,6 +50,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 
+import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -110,7 +111,7 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
         }
     }
 
-    @BindingPriority(BindingPriority.AUTHORIZATION) // authorization filter - should go after any authentication filters
+    @Priority(Priorities.AUTHORIZATION) // authorization filter - should go after any authentication filters
     private static class RolesAllowedRequestFilter implements ContainerRequestFilter {
         private final boolean denyAll;
         private final String[] rolesAllowed;

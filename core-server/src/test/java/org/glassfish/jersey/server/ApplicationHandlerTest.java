@@ -227,9 +227,9 @@ public class ApplicationHandlerTest {
 
     @Test
     public void testProviderAsServerProperty() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(ProviderPropertyResource.class).setProperty(ServerProperties
+        final ResourceConfig resourceConfig = new ResourceConfig(ProviderPropertyResource.class).property(ServerProperties
                 .FEATURE_DISABLE_WADL, true);
-        resourceConfig.setProperty(ServerProperties.PROVIDER_CLASSNAMES, CustomFeature.class.getName());
+        resourceConfig.property(ServerProperties.PROVIDER_CLASSNAMES, CustomFeature.class.getName());
 
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
 
@@ -273,7 +273,7 @@ public class ApplicationHandlerTest {
 
     @Test
     public void testRuntimeResourceConfig() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(RuntimeConfigResource.class).setProperty(ServerProperties
+        final ResourceConfig resourceConfig = new ResourceConfig(RuntimeConfigResource.class).property(ServerProperties
                 .FEATURE_DISABLE_WADL, true);
         resourceConfig.register(CustomFeature.class);
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Link;
@@ -90,13 +90,13 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
-    public <T> T readEntity(Class<T> entityType) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(Class<T> entityType) throws ProcessingException, IllegalStateException {
         return context.readEntity(entityType, context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(GenericType<T> entityType) throws ProcessingException, IllegalStateException {
         return (T) context.readEntity(
                 entityType.getRawType(),
                 entityType.getType(),
@@ -104,13 +104,13 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
-    public <T> T readEntity(Class<T> entityType, Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(Class<T> entityType, Annotation[] annotations) throws ProcessingException, IllegalStateException {
         return context.readEntity(entityType, annotations, context.getRequestContext().getPropertiesDelegate());
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws ProcessingException, IllegalStateException {
         return (T) context.readEntity(
                 entityType.getRawType(),
                 entityType.getType(),
@@ -124,12 +124,12 @@ class InboundJaxrsResponse extends Response {
     }
 
     @Override
-    public boolean bufferEntity() throws MessageProcessingException {
+    public boolean bufferEntity() throws ProcessingException {
         return context.bufferEntity();
     }
 
     @Override
-    public void close() throws MessageProcessingException {
+    public void close() throws ProcessingException {
         context.close();
     }
 

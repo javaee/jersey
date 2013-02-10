@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,9 @@
 
 package org.glassfish.jersey.model.internal;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.model.ContractProvider;
 
@@ -56,8 +58,8 @@ public class RankedProvider<T> {
     private final int rank;
 
     /**
-     * Creates a new {@code RankedProvider} instance. The rank of the provider is obtained from the {@link BindingPriority}
-     * annotation or is set to {@value BindingPriority#USER} if the annotation is not present.
+     * Creates a new {@code RankedProvider} instance. The rank of the provider is obtained from the {@link javax.annotation.Priority}
+     * annotation or is set to {@value javax.ws.rs.Priorities#USER} if the annotation is not present.
      *
      * @param provider service provider to create a {@code RankedProvider} instance from.
      */
@@ -81,10 +83,10 @@ public class RankedProvider<T> {
         if (rank > 0) {
             return rank;
         } else {
-            if (provider.getClass().isAnnotationPresent(BindingPriority.class)) {
-                return provider.getClass().getAnnotation(BindingPriority.class).value();
+            if (provider.getClass().isAnnotationPresent(Priority.class)) {
+                return provider.getClass().getAnnotation(Priority.class).value();
             } else {
-                return BindingPriority.USER;
+                return Priorities.USER;
             }
         }
     }

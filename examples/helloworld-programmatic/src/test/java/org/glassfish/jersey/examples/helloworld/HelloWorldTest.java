@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,7 @@
 package org.glassfish.jersey.examples.helloworld;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -59,7 +59,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
 
         assertFalse(App.getMethodCalled);
         Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").get();
@@ -74,7 +74,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testHelloWorldOtherMethods() throws Exception {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         assertFalse(App.headMethodCalled);
         Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").head();
         assertTrue(App.headMethodCalled);

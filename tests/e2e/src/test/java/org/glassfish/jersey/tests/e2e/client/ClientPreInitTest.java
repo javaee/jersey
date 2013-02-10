@@ -50,7 +50,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
@@ -142,7 +142,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testNonInitialized() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(MyResponseFilter.class);
         client.register(TestReader.class);
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
@@ -154,7 +154,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void tesInitialitionSteps() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(TestReader.class);
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         final WebTarget childTarget = target.path("child");
@@ -171,7 +171,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void tesInitialitionSteps2() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(TestReader.class);
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         final WebTarget childTarget = target.path("child");
@@ -190,7 +190,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testSimplePreinitialize() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         target.register(MyResponseFilter.class);
         final WebTarget childTarget = target.path("child");
@@ -206,7 +206,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testReusingPreinitializedConfig() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(TestReader.class);
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         target.register(MyResponseFilter.class);
@@ -225,7 +225,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testReusingPreinitializedConfig2() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(TestReader.class);
         client.register(MyResponseFilter.class);
 
@@ -250,7 +250,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testRegisterOnPreinitialized1() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         target.register(MyRequestFilter.class);
         ((JerseyWebTarget) target).preInitialize();
@@ -261,7 +261,7 @@ public class ClientPreInitTest extends JerseyTest {
 
     @Test
     public void testRegisterOnPreinitialized2() {
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         target.register(MyResponseFilter.class);
         ((JerseyWebTarget) target).preInitialize();

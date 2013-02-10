@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,10 +43,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.ProcessingException;
 
 /**
  * Entity input stream customized for entity message processing:
@@ -126,17 +125,17 @@ class EntityInputStream extends InputStream {
      * {@inheritDoc}
      * <p>
      * The method is customized to not throw an {@link IOException} if the reset operation fails. Instead,
-     * a runtime {@link MessageProcessingException} is thrown.
+     * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws MessageProcessingException in case the reset operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException in case the reset operation on the underlying entity input stream failed.
      */
     @Override
     public void reset() {
         try {
             input.reset();
         } catch (IOException ex) {
-            throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFER_RESET_FAILED(), ex);
+            throw new ProcessingException(LocalizationMessages.MESSAGE_CONTENT_BUFFER_RESET_FAILED(), ex);
         }
     }
 
@@ -144,18 +143,18 @@ class EntityInputStream extends InputStream {
      * {@inheritDoc}
      * <p>
      * The method is customized to not throw an {@link IOException} if the close operation fails. Instead,
-     * a runtime {@link MessageProcessingException} is thrown.
+     * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws MessageProcessingException in case the close operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException in case the close operation on the underlying entity input stream failed.
      */
     @Override
-    public void close() throws MessageProcessingException {
+    public void close() throws ProcessingException {
         if (!closed && input != null) {
             try {
                 input.close();
             } catch (IOException ex) {
-                throw new MessageProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                throw new ProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
             } finally {
                 closed = true;
             }
@@ -203,7 +202,7 @@ class EntityInputStream extends InputStream {
                 return false;
             }
         } catch (IOException ex) {
-            throw new ProcessingException(ex);
+            throw new org.glassfish.jersey.internal.ProcessingException(ex);
         }
     }
 

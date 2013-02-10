@@ -44,7 +44,7 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
@@ -68,14 +68,14 @@ public class MatrixParamTest extends AbstractSimpleServerTester {
         startServer(MatrixParamResource.class);
 
         UriBuilder base = getUri().path("test");
-        WebTarget r = ClientFactory.newClient().target(base.clone()).matrixParam("y", "1");
+        WebTarget r = ClientBuilder.newClient().target(base.clone()).matrixParam("y", "1");
 
         assertEquals("1", r.request().get(String.class));
-        r = ClientFactory.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%2B%202");
+        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%2B%202");
         assertEquals("1 + 2", r.request().get(String.class));
-        r = ClientFactory.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%26%202");
+        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%26%202");
         assertEquals("1 & 2", r.request().get(String.class));
-        r = ClientFactory.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%7C%7C%202");
+        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%7C%7C%202");
         assertEquals("1 || 2", r.request().get(String.class));
     }
 }

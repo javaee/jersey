@@ -49,7 +49,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.Uri;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
@@ -301,11 +301,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             public ManagedClient get() {
                 final Client client;
                 if (serverConfig == null) {
-                    client =  ClientFactory.newClient();
+                    client =  ClientBuilder.newClient();
                 } else {
                     ClientConfig clientConfig = new ClientConfig();
                     copyProviders(serverConfig, clientConfig);
-                    client = ClientFactory.newClient(clientConfig);
+                    client = ClientBuilder.newClient(clientConfig);
                 }
                 return new ManagedClient(client, "");
             }
@@ -369,11 +369,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                                         });
 
                                 for (String property : clientProperties) {
-                                    cfg.setProperty(property.substring(propertyPrefix.length()),
+                                    cfg.property(property.substring(propertyPrefix.length()),
                                             serverConfig.getProperty(property));
                                 }
 
-                                return new ManagedClient(ClientFactory.newClient(cfg), customBaseUri);
+                                return new ManagedClient(ClientBuilder.newClient(cfg), customBaseUri);
                             }
                         });
                         final Value<ManagedClient> previous = managedClients.putIfAbsent(binding, client);

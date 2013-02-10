@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,17 +44,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.ws.rs.core.Link;
+
 import javax.inject.Singleton;
 
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Link.Builder;
-import javax.ws.rs.core.MultivaluedMap;
-
 import org.glassfish.jersey.internal.LocalizationMessages;
-
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-
 import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
@@ -73,14 +69,22 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public Link fromString(String value) throws IllegalArgumentException {
+        return initBuilder(new JerseyLink.Builder(), value).build();
+    }
 
+    /**
+     * Initialize an existing Jersey link builder with the link data provided in a form of a string.
+     *
+     * @param lb link builder to be initialized.
+     * @param value link data as a string.
+     * @return initialized link builder.
+     */
+    static JerseyLink.Builder initBuilder(JerseyLink.Builder lb, String value) {
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
-
-        Builder lb;
         StringTokenizer st = new StringTokenizer(value.trim(), "<>;=\"", true);
         try {
             checkToken(st, "<");
-            lb = Link.fromUri(st.nextToken().trim());
+            lb.uri(st.nextToken().trim());
             checkToken(st, ">");
             while (st.hasMoreTokens()) {
                 checkToken(st, ";");
@@ -97,10 +101,10 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
         if (lb == null) {
             throw new IllegalArgumentException("Unable to parse link " + value);
         }
-        return lb.build();
+        return lb;
     }
 
-    private void checkToken(StringTokenizer st, String expected) throws AssertionError {
+    private static void checkToken(StringTokenizer st, String expected) throws AssertionError {
         String token;
         do {
             token = st.nextToken().trim();
@@ -112,6 +116,16 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
 
     @Override
     public String toString(Link value) {
+        return stringfy(value);
+    }
+
+    /**
+     * Convert {@link Link} instance to a string version.
+     *
+     * @param value link instance to be stringified.
+     * @return string version of a given link instance.
+     */
+    static String stringfy(Link value) {
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
 
         Map<String, String> map = value.getParams();

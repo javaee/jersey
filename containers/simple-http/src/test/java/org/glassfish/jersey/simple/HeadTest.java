@@ -44,7 +44,7 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -83,7 +83,7 @@ public class HeadTest extends AbstractSimpleServerTester {
     public void testHead() throws Exception {
         startServer(Resource.class);
 
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("/").build());
 
         Response cr = r.path("string").request("text/plain").head();

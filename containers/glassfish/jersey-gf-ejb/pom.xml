@@ -96,7 +96,7 @@
                 <extensions>true</extensions>
                 <configuration>
                   <instructions>
-                     <Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package>
+                     <Import-Package>javax.interceptor;version=!,*</Import-Package>
                      <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                      <_nodefaultversion>false</_nodefaultversion>
                    </instructions>

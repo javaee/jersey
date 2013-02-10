@@ -49,7 +49,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -94,7 +94,7 @@ public class OutputStreamTest extends AbstractSimpleServerTester {
     public void testGet() {
         startServer(TestResource.class);
 
-        WebTarget r = ClientFactory.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().get(String.class));
     }
 
@@ -102,7 +102,7 @@ public class OutputStreamTest extends AbstractSimpleServerTester {
     public void testPost() {
         startServer(TestResource.class);
 
-        WebTarget r = ClientFactory.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         String s = r.request().post(Entity.text("RESOURCE"), String.class);
         assertEquals("RESOURCE", s);
     }
@@ -111,10 +111,10 @@ public class OutputStreamTest extends AbstractSimpleServerTester {
     public void testAll() {
         startServer(TestResource.class);
 
-        WebTarget r = ClientFactory.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().get(String.class));
 
-        r = ClientFactory.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
+        r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().post(Entity.text("RESOURCE"), String.class));
     }
 }

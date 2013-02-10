@@ -53,7 +53,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
@@ -139,22 +139,22 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public <T> T readEntity(Class<T> type) throws MessageProcessingException {
+    public <T> T readEntity(Class<T> type) throws ProcessingException {
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
-    public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType) throws ProcessingException {
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
-    public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException {
+    public <T> T readEntity(Class<T> type, Annotation[] annotations) throws ProcessingException {
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
     @Override
-    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException {
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws ProcessingException {
         throw new IllegalStateException("Not supported on an outbound message");
     }
 
@@ -164,7 +164,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public boolean bufferEntity() throws MessageProcessingException {
+    public boolean bufferEntity() throws ProcessingException {
         if (closed) {
             throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
         }
@@ -186,12 +186,12 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
                 out.write(buffer, 0, len);
             }
         } catch (IOException ex) {
-            throw new MessageProcessingException(ex);
+            throw new ProcessingException(ex);
         } finally {
             try {
                 in.close();
             } catch (IOException ex) {
-                throw new MessageProcessingException(ex);
+                throw new ProcessingException(ex);
             }
         }
 
@@ -201,7 +201,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     }
 
     @Override
-    public void close() throws MessageProcessingException {
+    public void close() throws ProcessingException {
         closed = true;
         context.close();
         if (buffered) {
@@ -211,7 +211,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
             try {
                 InputStream.class.cast(context.getEntity()).close();
             } catch (IOException ex) {
-                throw new MessageProcessingException(ex);
+                throw new ProcessingException(ex);
             }
         }
     }

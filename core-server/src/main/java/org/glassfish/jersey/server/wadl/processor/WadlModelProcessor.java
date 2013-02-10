@@ -44,7 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configuration;
@@ -78,7 +78,7 @@ import com.sun.research.ws.wadl.Application;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
  */
-@BindingPriority(10000)
+@Priority(10000)
 public class WadlModelProcessor implements ModelProcessor {
 
 

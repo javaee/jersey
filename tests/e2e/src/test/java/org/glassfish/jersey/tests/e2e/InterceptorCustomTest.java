@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,9 +44,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -61,6 +60,8 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -124,7 +125,7 @@ public class InterceptorCustomTest extends JerseyTest {
      * Interceptor which adds +1 to each byte written into the stream.
      */
     @Provider
-    @BindingPriority(300)
+    @Priority(300)
     public static class PlusOneWriterInterceptor implements WriterInterceptor {
 
         @Override
@@ -149,7 +150,7 @@ public class InterceptorCustomTest extends JerseyTest {
      * Interceptor which adds +1 to each byte read from the stream.
      */
     @Provider
-    @BindingPriority(300)
+    @Priority(300)
     public static class MinusOneReaderInterceptor implements ReaderInterceptor {
 
         @Override
@@ -179,7 +180,7 @@ public class InterceptorCustomTest extends JerseyTest {
      * empty array and finally to the original value.
      */
     @Provider
-    @BindingPriority(300)
+    @Priority(300)
     public static class AnnotationsReaderWriterInterceptor implements ReaderInterceptor, WriterInterceptor {
 
         @Override
@@ -228,7 +229,7 @@ public class InterceptorCustomTest extends JerseyTest {
     }
 
     @Provider
-    @BindingPriority(100)
+    @Priority(100)
     public static class IOExceptionReaderInterceptor implements ReaderInterceptor {
 
         @Override
@@ -247,8 +248,8 @@ public class InterceptorCustomTest extends JerseyTest {
 
         try {
             response.readEntity(String.class);
-            fail("MessageProcessingException expected.");
-        } catch (MessageProcessingException e) {
+            fail("ProcessingException expected.");
+        } catch (ProcessingException e) {
             assertTrue(e.getCause() instanceof IOException);
         }
     }

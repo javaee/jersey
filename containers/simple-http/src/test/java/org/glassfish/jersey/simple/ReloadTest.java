@@ -46,7 +46,7 @@ import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -103,7 +103,7 @@ public class ReloadTest extends AbstractSimpleServerTester {
 
         startServer(rc);
 
-        WebTarget r = ClientFactory.newClient().target(getUri().path("/").build());
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
 
         assertEquals("one", r.path("one").request().get(String.class));
         assertEquals(404, r.path("two").request().get(Response.class).getStatus());

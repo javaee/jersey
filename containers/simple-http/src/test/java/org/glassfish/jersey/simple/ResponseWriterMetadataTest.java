@@ -46,7 +46,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -101,7 +101,7 @@ public class ResponseWriterMetadataTest extends AbstractSimpleServerTester {
                 StringWriter.class);
         startServer(rc);
 
-        WebTarget r = ClientFactory.newClient().target(getUri().path("/").build());
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
         Response cr = r.request("text/plain").get(Response.class);
         assertEquals("x", cr.getHeaderString("X-BEFORE-WRITE"));
         assertNull(cr.getHeaderString("X-AFTER-WRITE"));

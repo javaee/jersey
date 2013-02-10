@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -118,8 +118,8 @@ public class MainTest {
 
         }
 
-        Client client = ClientFactory.newClient();
-        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         // client basic auth demonstration
         client.register(new HttpBasicAuthFilter("user", "password"));
@@ -163,8 +163,8 @@ public class MainTest {
 
         }
 
-        Client client = ClientFactory.newClient();
-        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -204,8 +204,8 @@ public class MainTest {
             System.out.println("KeyManagementException happened " + kme.getMessage());
         }
 
-        Client client = ClientFactory.newClient();
-        client.setProperty(ClientProperties.SSL_CONFIG, new SslConfig(context));
+        Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.SSL_CONFIG, new SslConfig(context));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 

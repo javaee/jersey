@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.examples.helloworld.jaxrs;
 
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
@@ -58,7 +58,7 @@ public class HelloWorldTest {
     public void testHelloWorld() throws Exception {
         HttpServer server = App.startServer();
 
-        WebTarget target = ClientFactory.newClient().target(App.getBaseURI() + "helloworld");
+        WebTarget target = ClientBuilder.newClient().target(App.getBaseURI() + "helloworld");
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, target.request(MediaType.TEXT_PLAIN).get(String.class));
 
         server.stop(0);

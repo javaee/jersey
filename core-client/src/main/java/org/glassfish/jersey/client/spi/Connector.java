@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.client.spi;
 
 import java.util.concurrent.Future;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -61,10 +61,10 @@ public interface Connector extends Inflector<ClientRequest, ClientResponse> {
      *
      * @param request Jersey client request to be sent.
      * @return Jersey client response received for the client request.
-     * @throws ClientException in case of any invocation failure.
+     * @throws javax.ws.rs.ProcessingException in case of any invocation failure.
      */
     @Override
-    ClientResponse apply(ClientRequest request) throws ClientException;
+    ClientResponse apply(ClientRequest request) throws ProcessingException;
 
     /**
      * Asynchronously process client request into a response.

@@ -54,7 +54,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -199,7 +199,7 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
         try {
             return _apply(request);
         } catch (IOException ex) {
-            throw new ClientException(ex);
+            throw new ProcessingException(ex);
         }
     }
 
@@ -211,7 +211,7 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
                 try {
                     callback.response(_apply(request));
                 } catch (IOException ex) {
-                    callback.failure(new ClientException(ex));
+                    callback.failure(new ProcessingException(ex));
                 } catch (Throwable t) {
                     callback.failure(t);
                 }
@@ -262,7 +262,7 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
             		SSLContext defaultSSLContext=SSLContext.getDefault();
             		sslConfig=new SslConfig(defaultSSLContext);
 				} catch (NoSuchAlgorithmException e) {
-					throw new ClientException("Unable to obtain the default SSL engine", e);
+					throw new ProcessingException("Unable to obtain the default SSL engine", e);
 				}
             }
             if (sslConfig.isHostnameVerifierSet()) {

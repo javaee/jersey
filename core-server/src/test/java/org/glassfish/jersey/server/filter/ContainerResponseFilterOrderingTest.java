@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.filter;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -51,13 +50,14 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -75,7 +75,7 @@ public class ContainerResponseFilterOrderingTest {
     }
 
     @Provider
-    @BindingPriority(1)
+    @Priority(1)
     public static class ResponseFilter1 implements ContainerResponseFilter {
 
         public static Boolean called = false;
@@ -91,7 +91,7 @@ public class ContainerResponseFilterOrderingTest {
     }
 
     @Provider
-    @BindingPriority(2)
+    @Priority(2)
     public static class ResponseFilter2 implements ContainerResponseFilter {
 
         public static Boolean called = false;
@@ -107,7 +107,7 @@ public class ContainerResponseFilterOrderingTest {
     }
 
     @Provider
-    @BindingPriority(3)
+    @Priority(3)
     public static class ResponseFilter3 implements ContainerResponseFilter {
 
         public static Boolean called = false;

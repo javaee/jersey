@@ -37,13 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.extendedwadl;
 
 import java.net.URI;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -71,6 +70,8 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOption;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
@@ -94,6 +95,9 @@ public class ExtendedWadlWebappOsgiTest {
     public static Option[] configuration() {
         return options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
+
+                systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
+
                 rawPaxRunnerOption("clean"),
 
                 // define maven repositories
@@ -116,6 +120,9 @@ public class ExtendedWadlWebappOsgiTest {
                 // mavenBundle("org.apache.felix", "org.apache.felix.prefs","1.0.2"),
 
 
+                // javax.annotation must go first!
+                mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
+
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
 
@@ -135,9 +142,6 @@ public class ExtendedWadlWebappOsgiTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
-
-                // javax.annotation
-//                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
 
                 // jettison
                 mavenBundle().groupId("org.codehaus.jettison").artifactId("jettison").versionAsInProject(),
@@ -177,7 +181,7 @@ public class ExtendedWadlWebappOsgiTest {
 
     ResourceConfig createResourceConfig() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
-        resourceConfig.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
+        resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
                 SampleWadlGeneratorConfig.class.getName());
         return resourceConfig;
     }
@@ -193,7 +197,7 @@ public class ExtendedWadlWebappOsgiTest {
         final ResourceConfig resourceConfig = createResourceConfig();
 
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
-        final Client client = ClientFactory.newClient();
+        final Client client = ClientBuilder.newClient();
 
         final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL).buildGet().invoke();
 
@@ -215,7 +219,7 @@ public class ExtendedWadlWebappOsgiTest {
         final ResourceConfig resourceConfig = createResourceConfig();
 
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
-        final Client client = ClientFactory.newClient();
+        final Client client = ClientBuilder.newClient();
 
         String wadl = client.target(baseUri).path("items").request(MediaTypes.WADL).options(String.class);
 

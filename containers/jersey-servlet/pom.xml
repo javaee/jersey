@@ -98,6 +98,7 @@
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Import-Package>
                             javax.servlet.*;version="[3.0,4.0)",
+                            javax.annotation.*;version=!,
                             *
                         </Import-Package>
                     </instructions>

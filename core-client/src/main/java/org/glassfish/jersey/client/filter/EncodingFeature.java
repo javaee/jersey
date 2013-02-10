@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,7 +86,7 @@ public class EncodingFeature implements Feature {
         if (useEncoding != null) {
             // properties take precedence over the constructor value
             if (!context.getConfiguration().getProperties().containsKey(ClientProperties.USE_ENCODING)) {
-                context.setProperty(ClientProperties.USE_ENCODING, useEncoding);
+                context.property(ClientProperties.USE_ENCODING, useEncoding);
             }
         }
         for (Class<? extends ContentEncoder> provider : encodingProviders) {

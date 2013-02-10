@@ -76,7 +76,7 @@ public class WadlGeneratorConfigurationLoaderTest {
     @Test
     public void testLoadConfigClass() throws URISyntaxException {
         final ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
+        resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
                 MyWadlGeneratorConfig.class.getName());
 
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
@@ -90,7 +90,7 @@ public class WadlGeneratorConfigurationLoaderTest {
         final WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class).build();
 
         final ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, config);
+        resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, config);
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator();
         Assert.assertTrue(config.createWadlGenerator() instanceof MyWadlGenerator);

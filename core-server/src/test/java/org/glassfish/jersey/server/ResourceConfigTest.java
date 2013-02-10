@@ -137,13 +137,13 @@ public class ResourceConfigTest {
 
     public static class EmtpyResourceConfigWithoutWadl extends ResourceConfig {
         public EmtpyResourceConfigWithoutWadl() {
-            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+            property(ServerProperties.FEATURE_DISABLE_WADL, true);
         }
     }
 
     public static class MyResourceConfig1 extends ResourceConfig {
         public MyResourceConfig1() {
-            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+            property(ServerProperties.FEATURE_DISABLE_WADL, true);
             register(new MyBinder());
         }
     }
@@ -157,7 +157,7 @@ public class ResourceConfigTest {
         }
 
         public MyResourceConfig2(int id) {
-            setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+            property(ServerProperties.FEATURE_DISABLE_WADL, true);
             this.id = id;
             registerClasses(MyResource.class);
         }
