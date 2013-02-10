@@ -40,6 +40,7 @@
 package org.glassfish.jersey.apache.connector;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -88,7 +89,7 @@ public class CookieTest extends AbstractGrizzlyServerTester {
         startServer(rc);
 
         ClientConfig cc = new ClientConfig();
-        cc.setProperty(ApacheClientProperties.DISABLE_COOKIES, true);
+        cc.setProperty(ClientProperties.DISABLE_COOKIES, true);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         WebTarget r = client.target(getUri().build());
 

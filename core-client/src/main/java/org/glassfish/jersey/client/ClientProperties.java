@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,18 @@ public final class ClientProperties {
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FOLLOW_REDIRECTS =
             "jersey.config.client.followRedirects";
+
+    /**
+     * A value of "false" indicates the client should handle cookies
+     * automatically using HttpClient's default cookie policy. A value
+     * of "true" will cause the client to ignore all cookies.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * If the property is absent the default value is "false"
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String DISABLE_COOKIES =
+            "jersey.config.client.handleCookies";
 
     /**
      * Read timeout interval, in milliseconds.

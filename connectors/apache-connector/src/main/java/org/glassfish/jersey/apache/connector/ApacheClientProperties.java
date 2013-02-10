@@ -50,18 +50,6 @@ package org.glassfish.jersey.apache.connector;
 public final class ApacheClientProperties {
 
     /**
-     * A value of "false" indicates the client should handle cookies
-     * automatically using HttpClient's default cookie policy. A value
-     * of "true" will cause the client to ignore all cookies.
-     * <p/>
-     * The value MUST be an instance of {@link java.lang.Boolean}.
-     * If the property is absent the default value is "false"
-     */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String DISABLE_COOKIES =
-            "jersey.config.client.httpclient.handleCookies";
-
-    /**
      * The credential provider that should be used to retrieve
      * credentials from a user. Credentials needed for proxy authentication
      * are stored here as well.

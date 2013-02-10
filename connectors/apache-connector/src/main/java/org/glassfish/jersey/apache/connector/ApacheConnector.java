@@ -96,7 +96,7 @@ import java.util.logging.Logger;
  * {@link ApacheClientProperties#CONNECTION_MANAGER}<br>
  * {@link ApacheClientProperties#HTTP_PARAMS}}<br>
  * {@link ApacheClientProperties#CREDENTIALS_PROVIDER}}<br>
- * {@link ApacheClientProperties#DISABLE_COOKIES}}<br>
+ * {@link ClientProperties#DISABLE_COOKIES}}<br>
  * {@link ApacheClientProperties#PROXY_URI}}<br>
  * {@link ApacheClientProperties#PROXY_USERNAME}}<br>
  * {@link ApacheClientProperties#PROXY_PASSWORD}}<br>
@@ -191,7 +191,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
             for (Map.Entry<String, Object> entry : config.getProperties().entrySet())
                 client.getParams().setParameter(entry.getKey(), entry.getValue());
 
-            Boolean disableCookies = (Boolean) config.getProperties().get(ApacheClientProperties.DISABLE_COOKIES);
+            Boolean disableCookies = (Boolean) config.getProperties().get(ClientProperties.DISABLE_COOKIES);
             disableCookies = (disableCookies != null) ? disableCookies : false;
             if (disableCookies)
                 client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.IGNORE_COOKIES);
@@ -390,7 +390,9 @@ public class ApacheConnector extends RequestWriter implements Connector {
                 }
             };
         }
-
+        request.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
+                PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
+                true));
         if (entity != null && request instanceof HttpEntityEnclosingRequestBase) {
             ((HttpEntityEnclosingRequestBase) request).setEntity(entity);
         } else if (entity != null) {
