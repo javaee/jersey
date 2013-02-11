@@ -62,7 +62,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CREDENTIALS_PROVIDER =
-            "jersey.config.client.httpclient.credentialsProvider";
+            "jersey.config.apache.client.credentialsProvider";
 
     /**
      * A value of {@code false} indicates the client should handle cookies
@@ -77,7 +77,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String DISABLE_COOKIES =
-            "jersey.config.httpclient.handleCookies";
+            "jersey.config.apache.client.handleCookies";
 
     /**
      * A value of {@code true} indicates that a client should send an
@@ -95,7 +95,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
-            "jersey.config.client.httpclient.preemptiveBasicAuthentication";
+            "jersey.config.apache.client.preemptiveBasicAuthentication";
 
     /**
      * Connection Manager which will be used to create {@link org.apache.http.client.HttpClient}.
@@ -111,7 +111,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CONNECTION_MANAGER =
-            "jersey.config.client.httpclient.connectionManager";
+            "jersey.config.apache.client.connectionManager";
 
     /**
      * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
@@ -124,7 +124,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_PARAMS =
-            "jersey.config.client.httpclient.httpParams";
+            "jersey.config.apache.client.httpParams";
 
     /**
      * A value of a URI to configure the proxy host and proxy port to proxy
@@ -139,7 +139,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_URI =
-            "jersey.config.client.httpclient.proxyUri";
+            "jersey.config.apache.client.proxyUri";
 
     /**
      * User name which will be used for proxy authentication.
@@ -152,7 +152,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_USERNAME =
-            "jersey.config.client.httpclient.proxyUsername";
+            "jersey.config.apache.client.proxyUsername";
 
     /**
      * Password which will be used for proxy authentication.
@@ -165,7 +165,7 @@ public final class ApacheClientProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_PASSWORD =
-            "jersey.config.client.httpclient.proxyPassword";
+            "jersey.config.apache.client.proxyPassword";
 
     private ApacheClientProperties() {
         // prevents instantiation
