@@ -98,7 +98,7 @@ public class CookieTest extends JerseyTest {
     @Test
     public void testDisabledCookies() {
         ClientConfig cc = new ClientConfig();
-        cc.setProperty(ClientProperties.DISABLE_COOKIES, true);
+        cc.setProperty(ApacheClientProperties.DISABLE_COOKIES, true);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         WebTarget r = client.target(getBaseUri());
 
