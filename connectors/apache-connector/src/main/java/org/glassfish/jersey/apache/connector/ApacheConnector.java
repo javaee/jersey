@@ -74,11 +74,11 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.ReaderWriter;
+import org.glassfish.jersey.message.internal.Statuses;
 
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
@@ -281,22 +281,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
                 response = client.execute(getHost(request), request);
             }
 
-            final ClientResponse responseContext = new ClientResponse(new Response.StatusType() {
-                @Override
-                public int getStatusCode() {
-                    return response.getStatusLine().getStatusCode();
-                }
-
-                @Override
-                public Response.Status.Family getFamily() {
-                    return Response.Status.Family.familyOf(response.getStatusLine().getStatusCode());
-                }
-
-                @Override
-                public String getReasonPhrase() {
-                    return response.getStatusLine().getReasonPhrase();
-                }
-            }, clientRequest);
+            final ClientResponse responseContext = new ClientResponse(Statuses.from(response.getStatusLine().getStatusCode()), clientRequest);
 
             final Header[] respHeaders = response.getAllHeaders();
             for (Header header : respHeaders) {
@@ -377,6 +362,8 @@ public class ApacheConnector extends RequestWriter implements Connector {
             request = new HttpOptions(uri);
         } else if (strMethod.equals(HttpPatch.METHOD_NAME)) {
             request = new HttpPatch(uri);
+        } else if (strMethod.equals(HttpTrace.METHOD_NAME)) {
+            request = new HttpTrace(uri);
         } else {
             request = new HttpEntityEnclosingRequestBase() {
                 @Override
