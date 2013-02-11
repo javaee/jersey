@@ -39,25 +39,35 @@
 */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.*;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
-public class CookieTest extends AbstractGrizzlyServerTester {
+public class CookieTest extends JerseyTest {
+
     @Path("/")
     public static class CookieResource {
         @GET
@@ -69,14 +79,16 @@ public class CookieTest extends AbstractGrizzlyServerTester {
         }
     }
 
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(CookieResource.class);
+    }
+
     @Test
     public void testCookieResource() {
-        ResourceConfig rc = new ResourceConfig(CookieResource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig();
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().build());
+        WebTarget r = client.target(getBaseUri());
 
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
@@ -85,13 +97,10 @@ public class CookieTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testDisabledCookies() {
-        ResourceConfig rc = new ResourceConfig(CookieResource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig();
         cc.setProperty(ClientProperties.DISABLE_COOKIES, true);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().build());
+        WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("NO-COOKIE", r.request().get(String.class));
@@ -105,12 +114,9 @@ public class CookieTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testCookies() {
-        ResourceConfig rc = new ResourceConfig(CookieResource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig();
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().build());
+        WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("value", r.request().get(String.class));

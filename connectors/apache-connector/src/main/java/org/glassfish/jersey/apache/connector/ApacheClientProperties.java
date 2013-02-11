@@ -43,9 +43,9 @@ package org.glassfish.jersey.apache.connector;
  * Configuration options specific to the Client API that utilizes {@link ApacheConnector}.
  *
  * @author jorgeluisw@mac.com
- * @author Paul.Sandoz@Sun.Com
- * @author pavel.bucek@oracle.com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public final class ApacheClientProperties {
 
@@ -54,16 +54,33 @@ public final class ApacheClientProperties {
      * credentials from a user. Credentials needed for proxy authentication
      * are stored here as well.
      * <p/>
-     * The value MUST be an instance of {@link
-     * org.apache.http.client.CredentialsProvider}.  If
-     * the property is absent a default provider will be used.
+     * The value MUST be an instance of {@link org.apache.http.client.CredentialsProvider}.
+     * <p/>
+     * If the property is absent a default provider will be used.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CREDENTIALS_PROVIDER =
             "jersey.config.client.httpclient.credentialsProvider";
 
     /**
-     * A value of "true" indicates that a client should send an
+     * A value of {@code false} indicates the client should handle cookies
+     * automatically using HttpClient's default cookie policy. A value
+     * of {@code true} will cause the client to ignore all cookies.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * <p/>
+     * The default value is {@code false}.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String DISABLE_COOKIES =
+            "jersey.config.httpclient.handleCookies";
+
+    /**
+     * A value of {@code true} indicates that a client should send an
      * authentication request even before the server gives a 401
      * response.
      * <p/>
@@ -71,7 +88,10 @@ public final class ApacheClientProperties {
      * instance.
      * <p/>
      * The value MUST be an instance of {@link java.lang.Boolean}.
-     * If the property is absent the default value is "false"
+     * <p/>
+     * The default value is {@code false}.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
@@ -81,9 +101,13 @@ public final class ApacheClientProperties {
      * Connection Manager which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
      * The value MUST be an instance of {@link org.apache.http.conn.ClientConnectionManager}.
-     * If the property is absent a default Connection Manager will be used ({@link org.apache.http.impl.conn.BasicClientConnectionManager}).
-     * If you want to use this client in multi-threaded environment, be sure you override
-     * default value with {@link org.apache.http.impl.conn.PoolingClientConnectionManager} instance.
+     * <p/>
+     * If the property is absent a default Connection Manager will be used
+     * ({@link org.apache.http.impl.conn.BasicClientConnectionManager}).
+     * If you want to use this client in multi-threaded environment, be sure you override default value with
+     * {@link org.apache.http.impl.conn.PoolingClientConnectionManager} instance.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CONNECTION_MANAGER =
@@ -93,7 +117,10 @@ public final class ApacheClientProperties {
      * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
      * The value MUST be an instance of {@link org.apache.http.params.HttpParams}.
+     * <p/>
      * If the property is absent default http parameters will be used.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_PARAMS =
@@ -102,20 +129,26 @@ public final class ApacheClientProperties {
     /**
      * A value of a URI to configure the proxy host and proxy port to proxy
      * HTTP requests and responses. If the port component of the URI is absent
-     * then a default port of 8080 be selected.
+     * then a default port of {@code 8080} will be selected.
      * <p/>
      * The value MUST be an instance of {@link String} or {@link java.net.URI}.
+     * <p/>
      * If the property absent then no proxy will be utilized.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_URI =
-            "jersey.config.client.httpclient.proxyURI";
+            "jersey.config.client.httpclient.proxyUri";
 
     /**
      * User name which will be used for proxy authentication.
      * <p/>
      * The value MUST be an instance of {@link String}.
+     * <p/>
      * If the property absent then no proxy authentication will be utilized.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_USERNAME =
@@ -125,7 +158,10 @@ public final class ApacheClientProperties {
      * Password which will be used for proxy authentication.
      * <p/>
      * The value MUST be an instance of {@link String}.
+     * <p/>
      * If the property absent then no proxy authentication will be utilized.
+     * <p/>
+     * The name of the configuration property is <code>{@value}</code>.
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_PASSWORD =

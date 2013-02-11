@@ -39,11 +39,7 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -52,11 +48,17 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.util.logging.Logger;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class NoEntityTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(NoEntityTest.class.getName());

@@ -82,9 +82,8 @@
 
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
+            <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
             <version>${project.version}</version>
-            <type>pom</type>
             <scope>test</scope>
         </dependency>
 
@@ -92,6 +91,16 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>maven-istack-commons-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

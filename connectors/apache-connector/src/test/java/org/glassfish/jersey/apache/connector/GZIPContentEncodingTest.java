@@ -39,11 +39,7 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
+import java.util.Arrays;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -51,17 +47,29 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
-public class GZIPContentEncodingTest extends AbstractGrizzlyServerTester {
+public class GZIPContentEncodingTest extends JerseyTest {
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
 
     @Path("/")
     public static class Resource {
@@ -73,12 +81,9 @@ public class GZIPContentEncodingTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPost() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().path("/").build());
+        WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
         assertTrue(Arrays.equals(content, r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));
@@ -90,14 +95,11 @@ public class GZIPContentEncodingTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostChunked() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
         cc.setProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
 
-        WebTarget r = client.target(getUri().path("/").build());
+        WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
         assertTrue(Arrays.equals(content, r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));

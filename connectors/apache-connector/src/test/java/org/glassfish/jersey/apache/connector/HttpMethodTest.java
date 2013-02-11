@@ -43,6 +43,8 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Test;
 
 import javax.ws.rs.*;
@@ -50,6 +52,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -59,10 +62,38 @@ import java.lang.annotation.Target;
 import static org.junit.Assert.*;
 
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
-public class HttpMethodTest extends AbstractGrizzlyServerTester {
+public class HttpMethodTest extends JerseyTest {
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(HttpMethodResource.class, ErrorResource.class);
+    }
+
+    protected Client createClient() {
+        ClientConfig cc = new ClientConfig();
+        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+    }
+
+    protected Client createPoolingClient() {
+        ClientConfig cc = new ClientConfig();
+        PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+        connectionManager.setMaxTotal(100);
+        connectionManager.setDefaultMaxPerRoute(100);
+        cc.setProperty(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+    }
+
+    private WebTarget getWebTarget(final Client client) {
+        return client.target(getBaseUri()).path("test");
+    }
+
+    private WebTarget getWebTarget() {
+        return getWebTarget(createClient());
+    }
+
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @HttpMethod("PATCH")
@@ -113,33 +144,16 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
         }
     }
 
-    protected Client createClient() {
-        ClientConfig cc = new ClientConfig();
-        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-    }
-
-    protected Client createPoolingClient() {
-        ClientConfig cc = new ClientConfig();
-        PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
-        connectionManager.setMaxTotal(100);
-        connectionManager.setDefaultMaxPerRoute(100);
-        cc.setProperty(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
-        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-    }
-
     @Test
     public void testHead() {
-        startServer(HttpMethodResource.class);
-
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         Response cr = r.request().head();
         assertFalse(cr.hasEntity());
     }
 
     @Test
     public void testOptions() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         Response cr = r.request().options();
         assertTrue(cr.hasEntity());
         cr.close();
@@ -147,8 +161,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testGet() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals("GET", r.request().get(String.class));
 
         Response cr = r.request().get();
@@ -158,8 +171,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPost() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
 
         Response cr = r.request().post(Entity.text("POST"));
@@ -169,13 +181,13 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostChunked() {
-        ResourceConfig rc = new ResourceConfig(HttpMethodResource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig();
         Client c = ClientFactory.newClient(cc);
-        Client client = ClientFactory.newClient(new ClientConfig().setProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 1024).connector(new ApacheConnector(c.getConfiguration())));
-        WebTarget r = client.target(getUri().path("test").build());
+        Client client = ClientFactory
+                .newClient(new ClientConfig()
+                        .setProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 1024)
+                        .connector(new ApacheConnector(c.getConfiguration())));
+        WebTarget r = getWebTarget(client);
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
 
@@ -186,8 +198,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostVoid() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createPoolingClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget(createPoolingClient());
 
         // This test will lock up if ClientResponse is not closed by WebResource.
         // TODO need a better way to detect this.
@@ -198,8 +209,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostNoProduce() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals(204, r.path("noproduce").request().post(Entity.text("POST")).getStatus());
 
         Response cr = r.path("noproduce").request().post(Entity.text("POST"));
@@ -210,8 +220,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostNoConsumeProduce() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals(204, r.path("noconsumeproduce").request().post(null).getStatus());
 
         Response cr = r.path("noconsumeproduce").request().post(Entity.text("POST"));
@@ -221,8 +230,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPut() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals("PUT", r.request().put(Entity.text("PUT"), String.class));
 
         Response cr = r.request().put(Entity.text("PUT"));
@@ -232,8 +240,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testDelete() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals("DELETE", r.request().delete(String.class));
 
         Response cr = r.request().delete();
@@ -243,8 +250,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPatch() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
         assertEquals("PATCH", r.request().method("PATCH", Entity.text("PATCH"), String.class));
 
         Response cr = r.request().method("PATCH", Entity.text("PATCH"));
@@ -254,8 +260,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testAll() {
-        startServer(HttpMethodResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = getWebTarget();
 
         assertEquals("GET", r.request().get(String.class));
 
@@ -271,7 +276,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
     }
 
 
-    @Path("/test")
+    @Path("/error")
     public static class ErrorResource {
         @POST
         public Response post(String entity) {
@@ -287,8 +292,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostError() {
-        startServer(ErrorResource.class);
-        WebTarget r = createClient().target(getUri().path("test").build());
+        WebTarget r = createClient().target(getBaseUri()).path("error");
 
         // This test will lock up if ClientResponse is not closed by WebResource.
         // TODO need a better way to detect this.
@@ -302,8 +306,7 @@ public class HttpMethodTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPostErrorWithEntity() {
-        startServer(ErrorResource.class);
-        WebTarget r = createPoolingClient().target(getUri().path("test/entity").build());
+        WebTarget r = createPoolingClient().target(getBaseUri()).path("error/entity");
 
         // This test will lock up if ClientResponse is not closed by WebResource.
         // TODO need a better way to detect this.

@@ -64,7 +64,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class FollowRedirectsTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(TimeoutTest.class.getName());

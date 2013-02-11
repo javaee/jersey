@@ -39,7 +39,35 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import com.google.common.util.concurrent.MoreExecutors;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.ClientException;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.RequestWriter;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.ReaderWriter;
+import org.glassfish.jersey.message.internal.Statuses;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -50,7 +78,16 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpTrace;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
@@ -66,41 +103,24 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.VersionInfo;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.ClientRequest;
-import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.RequestWriter;
-import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
-import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.internal.ReaderWriter;
-import org.glassfish.jersey.message.internal.Statuses;
 
-import javax.ws.rs.client.ClientException;
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.MultivaluedMap;
-import java.io.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * A {@link Connector} that utilizes the Apache HTTP Client to send and receive
  * HTTP request and responses.
  * <p/>
  * The following properties are only supported at construction of this class:
- * {@link ApacheClientProperties#CONNECTION_MANAGER}<br>
- * {@link ApacheClientProperties#HTTP_PARAMS}}<br>
- * {@link ApacheClientProperties#CREDENTIALS_PROVIDER}}<br>
- * {@link ClientProperties#DISABLE_COOKIES}}<br>
- * {@link ApacheClientProperties#PROXY_URI}}<br>
- * {@link ApacheClientProperties#PROXY_USERNAME}}<br>
- * {@link ApacheClientProperties#PROXY_PASSWORD}}<br>
- * {@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}}<br>
+ * <ul>
+ * <li>{@link ApacheClientProperties#CONNECTION_MANAGER}</li>
+ * <li>{@link ApacheClientProperties#HTTP_PARAMS}</li>
+ * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
+ * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
+ * <li>{@link ApacheClientProperties#PROXY_URI}</li>
+ * <li>{@link ApacheClientProperties#PROXY_USERNAME}</li>
+ * <li>{@link ApacheClientProperties#PROXY_PASSWORD}</li>
+ * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
+ * </ul>
  * <p/>
  * By default a request entity is buffered and repeatable such that
  * authorization may be performed automatically in response to a 401 response.
@@ -110,11 +130,11 @@ import java.util.logging.Logger;
  * and the request entity (if present) will not be buffered and is not
  * repeatable. For authorization to work in such scenarios the property
  * {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION} must
- * be set to true.
+ * be set to {@code true}.
  * <p/>
  * If a {@link org.glassfish.jersey.client.ClientResponse} is obtained and an
  * entity is not read from the response then
- * {@link org.glassfish.jersey.client.ClientResponse#close() } MUST be called
+ * {@link org.glassfish.jersey.client.ClientResponse#close()} MUST be called
  * after processing the response to release connection-based resources.
  * <p/>
  * Client operations are thread safe, the HTTP connection may
@@ -127,13 +147,15 @@ import java.util.logging.Logger;
  * The following methods are currently supported: HEAD, GET, POST, PUT, DELETE and OPTIONS.
  *
  * @author jorgeluisw@mac.com
- * @author Paul.Sandoz@Sun.Com
- * @author pavel.bucek@oracle.com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  *
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
 public class ApacheConnector extends RequestWriter implements Connector {
+
+    private final static Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
 
     private final HttpClient client;
     private CookieStore cookieStore = null;
@@ -147,6 +169,11 @@ public class ApacheConnector extends RequestWriter implements Connector {
         release = (vi != null) ? vi.getRelease() : VersionInfo.UNAVAILABLE;
     }
 
+    /**
+     * Create the new Apache HTTP Client connector.
+     *
+     * @param config client configuration.
+     */
     public ApacheConnector(Configuration config) {
         Object connectionManager = null;
         Object httpParams = null;
@@ -156,11 +183,12 @@ public class ApacheConnector extends RequestWriter implements Connector {
 
             if (connectionManager != null) {
                 if (!(connectionManager instanceof ClientConnectionManager)) {
-                    Logger.getLogger(ApacheConnector.class.getName()).log(
+                    LOGGER.log(
                             Level.WARNING,
-                            "Ignoring value of property " + ApacheClientProperties.CONNECTION_MANAGER +
-                                    " (" + connectionManager.getClass().getName() +
-                                    ") - not instance of org.apache.http.conn.ClientConnectionManager."
+                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                    ApacheClientProperties.CONNECTION_MANAGER,
+                                    connectionManager.getClass().getName(),
+                                    ClientConnectionManager.class.getName())
                     );
                     connectionManager = null;
                 }
@@ -169,11 +197,12 @@ public class ApacheConnector extends RequestWriter implements Connector {
             httpParams = config.getProperties().get(ApacheClientProperties.HTTP_PARAMS);
             if (httpParams != null) {
                 if (!(httpParams instanceof HttpParams)) {
-                    Logger.getLogger(ApacheConnector.class.getName()).log(
+                    LOGGER.log(
                             Level.WARNING,
-                            "Ignoring value of property " + ApacheClientProperties.HTTP_PARAMS +
-                                    " (" + httpParams.getClass().getName() +
-                                    ") - not instance of org.apache.http.params.HttpParams."
+                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                    ApacheClientProperties.HTTP_PARAMS,
+                                    httpParams.getClass().getName(),
+                                    HttpParams.class.getName())
                     );
                     httpParams = null;
                 }
@@ -188,13 +217,15 @@ public class ApacheConnector extends RequestWriter implements Connector {
             client.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,
                     PropertiesHelper.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0));
 
-            for (Map.Entry<String, Object> entry : config.getProperties().entrySet())
+            for (Map.Entry<String, Object> entry : config.getProperties().entrySet()) {
                 client.getParams().setParameter(entry.getKey(), entry.getValue());
+            }
 
-            Boolean disableCookies = (Boolean) config.getProperties().get(ClientProperties.DISABLE_COOKIES);
+            Boolean disableCookies = (Boolean) config.getProperties().get(ApacheClientProperties.DISABLE_COOKIES);
             disableCookies = (disableCookies != null) ? disableCookies : false;
-            if (disableCookies)
+            if (disableCookies) {
                 client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.IGNORE_COOKIES);
+            }
 
             Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
             if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
@@ -220,11 +251,13 @@ public class ApacheConnector extends RequestWriter implements Connector {
                 client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
             }
 
-            Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties().get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
+            Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
+                    .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
             this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
         }
 
-        if (client.getParams().getParameter(ClientPNames.COOKIE_POLICY) == null || !client.getParams().getParameter(ClientPNames.COOKIE_POLICY).equals(CookiePolicy.IGNORE_COOKIES)) {
+        if (client.getParams().getParameter(ClientPNames.COOKIE_POLICY) == null
+                || !client.getParams().getParameter(ClientPNames.COOKIE_POLICY).equals(CookiePolicy.IGNORE_COOKIES)) {
             this.cookieStore = new BasicCookieStore();
             ((DefaultHttpClient) client).setCookieStore(cookieStore);
         }
@@ -242,8 +275,8 @@ public class ApacheConnector extends RequestWriter implements Connector {
     /**
      * Get the {@link CookieStore}.
      *
-     * @return the {@link CookieStore} instance or null when
-     *         ClientProperties.DISABLE_COOKIES set to true.
+     * @return the {@link CookieStore} instance or {@code null} when {@value ApacheClientProperties#DISABLE_COOKIES} set to
+     * {@code true}.
      */
     public CookieStore getCookieStore() {
         return cookieStore;
@@ -255,8 +288,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
         } else if (proxy instanceof String) {
             return URI.create((String) proxy);
         } else {
-            throw new ClientException("The proxy URI (" + ApacheClientProperties.PROXY_URI +
-                    ") property MUST be an instance of String or URI");
+            throw new ClientException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ApacheClientProperties.PROXY_URI));
         }
     }
 
@@ -297,7 +329,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
             try {
                 responseContext.setEntityStream(new HttpClientResponseInputStream(response));
             } catch (IOException e) {
-                Logger.getLogger(ApacheConnector.class.getName()).log(Level.SEVERE, null, e);
+                LOGGER.log(Level.SEVERE, null, e);
             }
 
             if (!responseContext.hasEntity()) {
@@ -383,7 +415,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
         if (entity != null && request instanceof HttpEntityEnclosingRequestBase) {
             ((HttpEntityEnclosingRequestBase) request).setEntity(entity);
         } else if (entity != null) {
-            throw new ClientException("Adding entity to http method " + clientRequest.getMethod() + " is not supported.");
+            throw new ClientException(LocalizationMessages.ENTITY_NOT_SUPPORTED(clientRequest.getMethod()));
         }
 
         return request;
@@ -392,8 +424,9 @@ public class ApacheConnector extends RequestWriter implements Connector {
     private HttpEntity getHttpEntity(final ClientRequest cr) {
         final Object entity = cr.getEntity();
 
-        if (entity == null)
+        if (entity == null) {
             return null;
+        }
 
         final RequestEntityWriter requestEntityWriter = getRequestEntityWriter(cr);
 
@@ -474,8 +507,9 @@ public class ApacheConnector extends RequestWriter implements Connector {
             return new ByteArrayInputStream(new byte[0]);
         } else {
             final InputStream i = response.getEntity().getContent();
-            if (i.markSupported())
+            if (i.markSupported()) {
                 return i;
+            }
             return new BufferedInputStream(i, ReaderWriter.BUFFER_SIZE);
         }
     }

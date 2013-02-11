@@ -39,32 +39,45 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.*;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
-public class AuthTest extends AbstractGrizzlyServerTester {
+public class AuthTest extends JerseyTest {
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(PreemptiveAuthResource.class, AuthResource.class);
+    }
 
     @Path("/")
     public static class PreemptiveAuthResource {
@@ -85,9 +98,6 @@ public class AuthTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testPreemptiveAuth() {
-        ResourceConfig rc = new ResourceConfig(PreemptiveAuthResource.class);
-        startServer(rc);
-
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -98,15 +108,12 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider).setProperty(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, true);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
 
-        WebTarget r = client.target(getUri().build());
+        WebTarget r = client.target(getBaseUri());
         assertEquals("GET", r.request().get(String.class));
     }
 
     @Test
     public void testPreemptiveAuthPost() {
-        ResourceConfig rc = new ResourceConfig(PreemptiveAuthResource.class);
-        startServer(rc);
-
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -117,7 +124,7 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider).setProperty(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, true);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
 
-        WebTarget r = client.target(getUri().build());
+        WebTarget r = client.target(getBaseUri());
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
     }
 
@@ -211,9 +218,6 @@ public class AuthTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testAuthGet() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -223,30 +227,23 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         ClientConfig cc = new ClientConfig();
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().path("test").build());
+        WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("GET", r.request().get(String.class));
     }
 
     @Test
     public void testAuthGetWithClientFilter() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
         ClientConfig cc = new ClientConfig();
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         client.register(new HttpBasicAuthFilter("name", "password"));
-        WebTarget r = client.target(getUri().path("test/filter").build());
+        WebTarget r = client.target(getBaseUri()).path("test/filter");
 
         assertEquals("GET", r.request().get(String.class));
     }
 
-    // doesn't work - apache http client uses interactive auth by default
-    // and currently ends with NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
-    @Ignore
-    public void _testAuthPost() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
+    @Test
+    public void testAuthPost() {
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -256,20 +253,17 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         ClientConfig cc = new ClientConfig();
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().path("test").build());
+        WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
     }
 
     @Test
     public void testAuthPostWithClientFilter() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
         ClientConfig cc = new ClientConfig();
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         client.register(new HttpBasicAuthFilter("name", "password"));
-        WebTarget r = client.target(getUri().path("test/filter").build());
+        WebTarget r = client.target(getBaseUri()).path("test/filter");
 
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
@@ -277,10 +271,6 @@ public class AuthTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testAuthDelete() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
-
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -289,7 +279,7 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         ClientConfig cc = new ClientConfig();
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().path("test").build());
+        WebTarget r = client.target(getBaseUri()).path("test");
 
         Response response = r.request().delete();
         assertEquals(response.getStatus(), 204);
@@ -297,12 +287,10 @@ public class AuthTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testAuthDeleteWithClientFilter() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
         ClientConfig cc = new ClientConfig();
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         client.register(new HttpBasicAuthFilter("name", "password"));
-        WebTarget r = client.target(getUri().path("test/filter").build());
+        WebTarget r = client.target(getBaseUri()).path("test/filter");
 
         Response response = r.request().delete();
         assertEquals(204, response.getStatus());
@@ -310,10 +298,6 @@ public class AuthTest extends AbstractGrizzlyServerTester {
 
     @Test
     public void testAuthInteractiveGet() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
-
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -323,18 +307,14 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
 
-        WebTarget r = client.target(getUri().path("test").build());
+        WebTarget r = client.target(getBaseUri()).path("test");
 
 
         assertEquals("GET", r.request().get(String.class));
     }
 
-    // disabled - interactive POST is not good thing to do by design - we don't want to send entity twice
-    @Ignore
-    public void _testAuthInteractivePost() {
-        ResourceConfig rc = new ResourceConfig(AuthResource.class);
-        startServer(rc);
-
+    @Test
+    public void testAuthInteractivePost() {
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
                 AuthScope.ANY,
@@ -344,7 +324,7 @@ public class AuthTest extends AbstractGrizzlyServerTester {
         ClientConfig cc = new ClientConfig();
         cc.setProperty(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        WebTarget r = client.target(getUri().path("test").build());
+        WebTarget r = client.target(getBaseUri()).path("test");
 
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));

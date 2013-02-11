@@ -39,20 +39,22 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientFactory;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
+
 /**
- * @author Paul.Sandoz@Sun.Com
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class HttpMethodWithClientFilterTest extends HttpMethodTest {
 
     @Override
     protected Client createClient() {
         ClientConfig cc = new ClientConfig();
+        cc.register(LoggingFilter.class);
         return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
     }
 
