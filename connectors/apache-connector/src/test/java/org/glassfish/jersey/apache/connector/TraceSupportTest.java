@@ -189,12 +189,12 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     @Test
-    public void testTraceWithEntityGrizzlyConnector() throws Exception {
+    public void testTraceWithEntityApacheConnector() throws Exception {
         _testTraceWithEntity(false, true);
     }
 
     @Test
-    public void testAsyncTraceWithEntityGrizzlyConnector() throws Exception {
+    public void testAsyncTraceWithEntityApacheConnector() throws Exception {
         _testTraceWithEntity(true, true);
     }
 
