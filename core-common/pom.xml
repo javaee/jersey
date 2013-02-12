@@ -82,9 +82,8 @@
                 <configuration>
                     <instructions>
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
-                        <Export-Package>org.glassfish.jersey.*;version=${project.version},
-                            deprecated.javax.ws.rs;version=${project.version}
-                        </Export-Package>
+                        <Import-Package>javax.annotation.*;version=!,*</Import-Package>
+                        <Export-Package>org.glassfish.jersey.*;version=${project.version}</Export-Package>
                         <Private-Package>org.glassfish.jersey.osgi</Private-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>

@@ -91,7 +91,6 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
@@ -243,7 +242,7 @@ public class WadlResourceTest {
         @Test
         public void testDisableWadl() throws ExecutionException, InterruptedException {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.setProperty(ServerProperties.FEATURE_DISABLE_WADL, true);
+            rc.property(ServerProperties.FEATURE_DISABLE_WADL, true);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -257,7 +256,7 @@ public class WadlResourceTest {
         @Test
         public void testEnableWadl() throws ExecutionException, InterruptedException {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.setProperty(ServerProperties.FEATURE_DISABLE_WADL, false);
+            rc.property(ServerProperties.FEATURE_DISABLE_WADL, false);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -854,7 +853,7 @@ public class WadlResourceTest {
         @Test
         public void testCustomWadlResourcesBaseUri() throws Exception {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.setProperty(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, MyWadlGeneratorConfig.class.getName());
+            rc.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, MyWadlGeneratorConfig.class.getName());
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -925,7 +924,7 @@ public class WadlResourceTest {
         @Test
         public void testEmptyProduces() throws Exception {
             ResourceConfig rc = new ResourceConfig(EmptyProducesTestResource.class);
-            rc.setProperty(ServerProperties.FEATURE_DISABLE_WADL, false);
+            rc.property(ServerProperties.FEATURE_DISABLE_WADL, false);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 

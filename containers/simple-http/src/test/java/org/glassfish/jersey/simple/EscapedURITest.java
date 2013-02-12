@@ -46,7 +46,7 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -78,7 +78,7 @@ public class EscapedURITest extends AbstractSimpleServerTester {
     public void testEscaped() {
         ResourceConfig config = new ResourceConfig(EscapedURIResource.class);
         startServer(config);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().userInfo("x.y").path("x%20y").build());
         assertEquals("CONTENT", r.request().get(String.class));
     }
@@ -86,7 +86,7 @@ public class EscapedURITest extends AbstractSimpleServerTester {
     @Test
     public void testNonEscaped() {
         startServer(NonEscapedURIResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().userInfo("x.y").path("x%20y").build());
         assertEquals("CONTENT", r.request().get(String.class));
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -142,6 +142,7 @@ public class Helper {
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)), rawPaxRunnerOption("clean"),
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
+                systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
                 // define maven repositories
                 repositories("http://repo1.maven.org/maven2",
@@ -165,6 +166,9 @@ public class Helper {
                 // HTTP SPEC
                 // mavenBundle("org.apache.geronimo.specs","geronimo-servlet_2.5_spec","1.1.2"),
 
+                // javax.annotation has to go first!
+                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject()),
+
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
 
@@ -176,9 +180,6 @@ public class Helper {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("cglib").versionAsInProject(),
-
-                // javax.annotation
-                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("jsr250-api").versionAsInProject()),
 
                 // Grizzly
                 systemPackage("sun.misc"),

@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-servlet</artifactId>
+            <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -42,7 +42,7 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -68,7 +68,7 @@ public class SecurityContextTest {
     private static final String SKIP_FILTER = "skipFilter";
     private static final String PRINCIPAL_IS_NULL = "principalIsNull";
 
-    @BindingPriority(100)
+    @Priority(100)
     private static class SecurityContextFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext rc) throws IOException {
@@ -147,7 +147,7 @@ public class SecurityContextTest {
     }
 
 
-    @BindingPriority(101)
+    @Priority(101)
     private static class SecurityContextFilterSecondInChain implements ContainerRequestFilter {
         @Context
         SecurityContext sc;

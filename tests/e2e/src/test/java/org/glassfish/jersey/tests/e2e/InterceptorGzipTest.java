@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.ws.rs.BindingPriority;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -65,6 +64,8 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -122,7 +123,7 @@ public class InterceptorGzipTest extends JerseyTest {
     }
 
     @Provider
-    @BindingPriority(200)
+    @Priority(200)
     public static class CustomWriterInterceptor<T> implements WriterInterceptor {
 
         @Override
@@ -149,7 +150,7 @@ public class InterceptorGzipTest extends JerseyTest {
     }
 
     @Provider
-    @BindingPriority(200)
+    @Priority(200)
     public static class GZIPWriterTestInterceptor implements WriterInterceptor {
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
@@ -171,7 +172,7 @@ public class InterceptorGzipTest extends JerseyTest {
     }
 
     @Provider
-    @BindingPriority(200)
+    @Priority(200)
     public static class GZIPReaderTestInterceptor implements ReaderInterceptor {
         @Override
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {

@@ -56,7 +56,7 @@
 
     <!-- we can use full maven properties incl. inheritance ! -->
     <properties>
-        <javax.annotation.version>1.0</javax.annotation.version>
+        <javax.annotation.version>1.2-b01</javax.annotation.version>
         <junit-version>4.5</junit-version>
         <pax-exam-version>1.2.3</pax-exam-version>
         <jetty-version>0.7.1</jetty-version>
@@ -93,7 +93,7 @@
     <dependencies>
         <dependency>
             <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
+            <artifactId>javax.annotation-api</artifactId>
             <version>${javax.annotation.version}</version>
             <scope>test</scope>
         </dependency>

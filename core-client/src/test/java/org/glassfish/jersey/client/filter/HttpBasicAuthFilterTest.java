@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,7 @@ package org.glassfish.jersey.client.filter;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -68,7 +68,7 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testGet() {
-        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
+        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
                 .connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
@@ -78,7 +78,7 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testBlankUsernamePassword() {
-        Client client = ClientFactory.newClient(new ClientConfig(new HttpBasicAuthFilter(null, (String)null))
+        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter(null, (String) null))
                 .connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();

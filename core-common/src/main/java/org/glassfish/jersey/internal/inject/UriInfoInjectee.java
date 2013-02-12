@@ -173,6 +173,30 @@ public class UriInfoInjectee implements UriInfo {
         return wrapped.getMatchedResources();
     }
 
+    @Override
+    public URI resolve(URI uri) {
+        checkStatus();
+        return wrapped.resolve(uri);
+    }
+
+    @Override
+    public URI resolve(URI baseUri, URI uri) {
+        checkStatus();
+        return wrapped.resolve(baseUri, uri);
+    }
+
+    @Override
+    public URI relativize(URI uri) {
+        checkStatus();
+        return wrapped.relativize(uri);
+    }
+
+    @Override
+    public URI relativize(URI from, URI uri) {
+        checkStatus();
+        return wrapped.relativize(from, uri);
+    }
+
     private void checkStatus() throws IllegalStateException {
         if (wrapped == null) {
             throw new IllegalStateException(LocalizationMessages.URI_INFO_WAS_NOT_SET());

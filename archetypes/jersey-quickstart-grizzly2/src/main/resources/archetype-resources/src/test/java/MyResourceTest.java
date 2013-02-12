@@ -1,7 +1,7 @@
 package $package;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -21,7 +21,7 @@ public class MyResourceTest {
         // start the server
         server = Main.startServer();
         // create the client
-        Client c = ClientFactory.newClient();
+        Client c = ClientBuilder.newClient();
 
         // uncomment the following line if you want to enable
         // support for JSON in the client (you also have to uncomment

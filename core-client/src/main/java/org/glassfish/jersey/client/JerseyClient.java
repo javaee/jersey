@@ -48,6 +48,8 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.net.ssl.SSLContext;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -232,9 +234,9 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public JerseyClient setProperty(String name, Object value) {
+    public JerseyClient property(String name, Object value) {
         checkNotClosed();
-        config.setProperty(name, value);
+        config.property(name, value);
         return this;
     }
 
@@ -242,6 +244,11 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     public ClientConfig getConfiguration() {
         checkNotClosed();
         return config.getConfiguration();
+    }
+
+    @Override
+    public SSLContext getSslContext() {
+        return null;  // TODO: implement method.
     }
 
     /**

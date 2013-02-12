@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 
@@ -79,7 +79,7 @@ public class HttpMethodTest extends AbstractSimpleServerTester {
     @Test
     public void testGet() {
         startServer(HttpMethodResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
         assertEquals("GET", r.request().get(String.class));
     }
@@ -87,7 +87,7 @@ public class HttpMethodTest extends AbstractSimpleServerTester {
     @Test
     public void testPost() {
         startServer(HttpMethodResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
@@ -96,7 +96,7 @@ public class HttpMethodTest extends AbstractSimpleServerTester {
     @Test
     public void testPut() {
         startServer(HttpMethodResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("PUT", r.request().put(Entity.text("PUT"), String.class));
@@ -105,7 +105,7 @@ public class HttpMethodTest extends AbstractSimpleServerTester {
     @Test
     public void testDelete() {
         startServer(HttpMethodResource.class);
-        Client client = ClientFactory.newClient();
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("DELETE", r.request().delete(String.class));
@@ -114,17 +114,17 @@ public class HttpMethodTest extends AbstractSimpleServerTester {
     @Test
     public void testAll() {
         startServer(HttpMethodResource.class);
-        WebTarget r = ClientFactory.newClient().target(getUri().path("test").build());
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("test").build());
 
         assertEquals("GET", r.request().get(String.class));
 
-        r = ClientFactory.newClient().target(getUri().path("test").build());
+        r = ClientBuilder.newClient().target(getUri().path("test").build());
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
 
-        r = ClientFactory.newClient().target(getUri().path("test").build());
+        r = ClientBuilder.newClient().target(getUri().path("test").build());
         assertEquals("PUT", r.request().put(Entity.text("PUT"), String.class));
 
-        r = ClientFactory.newClient().target(getUri().path("test").build());
+        r = ClientBuilder.newClient().target(getUri().path("test").build());
         assertEquals("DELETE", r.request().delete(String.class));
     }
 }

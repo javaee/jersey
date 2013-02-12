@@ -199,9 +199,9 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         }
 
         @Override
-        public State setProperty(final String name, final Object value) {
+        public State property(final String name, final Object value) {
             final State state = strategy.onChange(this);
-            state.commonConfig.setProperty(name, value);
+            state.commonConfig.property(name, value);
             return state;
         }
 
@@ -559,8 +559,8 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
     }
 
     @Override
-    public ClientConfig setProperty(final String name, final Object value) {
-        state = state.setProperty(name, value);
+    public ClientConfig property(final String name, final Object value) {
+        state = state.property(name, value);
         return this;
     }
 

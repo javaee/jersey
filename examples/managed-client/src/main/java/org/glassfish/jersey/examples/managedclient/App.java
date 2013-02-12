@@ -84,7 +84,7 @@ public class App {
      */
     public static ResourceConfig create() {
         return new ResourceConfig(PublicResource.class, InternalResource.class, CustomHeaderFeature.class)
-                .setProperty(ClientA.class.getName() + ".baseUri", BASE_URI.toString() + "internal");
+                .property(ClientA.class.getName() + ".baseUri", BASE_URI.toString() + "internal");
     }
 
     public static class MyClientAConfig extends ClientConfig {

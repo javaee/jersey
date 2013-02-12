@@ -67,7 +67,7 @@ public class ManagedClientTest extends JerseyTest {
 
         final MyApplication app = new MyApplication();
         // overriding ClientA base Uri property for test purposes
-        app.setProperty(ClientA.class.getName() + ".baseUri", this.getBaseUri().toString() + "internal");
+        app.property(ClientA.class.getName() + ".baseUri", this.getBaseUri().toString() + "internal");
         return app;
     }
 

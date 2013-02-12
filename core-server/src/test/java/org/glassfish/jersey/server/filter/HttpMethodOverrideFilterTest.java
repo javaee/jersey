@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,7 +77,7 @@ public class HttpMethodOverrideFilterTest {
 
     @Test
     public void testHeaderOnlyConfig() {
-        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().setProperty(
+        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "HEADER"
         ));
         assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
@@ -86,7 +86,7 @@ public class HttpMethodOverrideFilterTest {
 
     @Test
     public void testQueryOnlyConfig() {
-        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().setProperty(
+        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "QUERY"
         ));
         assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
@@ -95,7 +95,7 @@ public class HttpMethodOverrideFilterTest {
 
     @Test
     public void testHeaderAndQueryConfig() {
-        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().setProperty(
+        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "HEADER, QUERY"
         ));
         assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
@@ -104,7 +104,7 @@ public class HttpMethodOverrideFilterTest {
 
     @Test
     public void testInvalidAndQueryConfig() {
-        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().setProperty(
+        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "foo, QUERY"
         ));
         assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
@@ -113,8 +113,8 @@ public class HttpMethodOverrideFilterTest {
 
     @Test
     public void testInitWithStringArrayConfig() {
-        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().setProperty(
-                ServerProperties.HTTP_METHOD_OVERRIDE, new String[] {"HEADER"}
+        HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
+                ServerProperties.HTTP_METHOD_OVERRIDE, new String[]{"HEADER"}
         ));
         assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
                 !HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));

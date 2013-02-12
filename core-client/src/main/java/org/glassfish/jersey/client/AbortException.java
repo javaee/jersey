@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.client;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 
 /**
  * Internal exception indicating that request processing has been aborted
@@ -50,7 +50,7 @@ import javax.ws.rs.client.ClientException;
  *
  * @see javax.ws.rs.client.ClientRequestContext#abortWith(javax.ws.rs.core.Response)
  */
-class AbortException extends ClientException {
+class AbortException extends ProcessingException {
     private final transient ClientResponse abortResponse;
 
     /**

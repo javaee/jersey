@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response.Status;
+
+import javax.annotation.Priority;
 
 /**
  * Simple server-side request filter that implements CSRF protection as per the
@@ -63,7 +65,7 @@ import javax.ws.rs.core.Response.Status;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-@BindingPriority(BindingPriority.AUTHENTICATION) // should be one of the first post-matching filters to get executed
+@Priority(Priorities.AUTHENTICATION) // should be one of the first post-matching filters to get executed
 public class CsrfProtectionFilter implements ContainerRequestFilter {
 
     /**

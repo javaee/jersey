@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -90,7 +90,7 @@ public class ClientConfigTest {
 
     @Test
     public void testSnapshot() {
-        ClientConfig c_a = new ClientConfig().setProperty("common_name", "common_value");
+        ClientConfig c_a = new ClientConfig().property("common_name", "common_value");
 
         ClientConfig c_b = c_a.snapshot();
         assertNotNull(c_b);
@@ -99,7 +99,7 @@ public class ClientConfigTest {
         assertEquals("common_value", c_a.getProperty("common_name"));
         assertEquals("common_value", c_b.getProperty("common_name"));
 
-        c_b.setProperty("name", "value");
+        c_b.property("name", "value");
 
         assertFalse(c_a.equals(c_b));
         assertEquals("value", c_b.getProperty("name"));
@@ -112,7 +112,7 @@ public class ClientConfigTest {
         Map result = instance.getProperties();
         assertNotNull(result);
 
-        instance.setProperty("name", "value");
+        instance.property("name", "value");
         assertEquals("value", result.get("name"));
 
         try {
@@ -125,7 +125,7 @@ public class ClientConfigTest {
 
     @Test
     public void testGetProperty() {
-        ClientConfig instance = new ClientConfig().setProperty("name", "value");
+        ClientConfig instance = new ClientConfig().property("name", "value");
         assertEquals("value", instance.getProperty("name"));
         assertNull(instance.getProperty("other"));
     }
@@ -244,7 +244,7 @@ public class ClientConfigTest {
         ClientConfig instance = new ClientConfig();
         assertTrue(instance.getProperties().isEmpty());
 
-        instance.setProperty("name", "value");
+        instance.property("name", "value");
         assertFalse(instance.getProperties().isEmpty());
         assertEquals(1, instance.getProperties().size());
         assertEquals("value", instance.getProperty("name"));

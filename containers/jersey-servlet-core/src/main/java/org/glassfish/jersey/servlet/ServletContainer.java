@@ -117,9 +117,32 @@ import org.glassfish.jersey.uri.UriComponent;
  * be injected. If this class is used as a servlet filter then the {@link FilterConfig}
  * class may be injected. {@link WebConfig} may be injected to abstract
  * servlet or filter deployment.
+ * <p />
+ * Persistence units that may be injected must be configured in web.xml
+ * in the normal way plus an additional servlet parameter to enable the
+ * Jersey servlet to locate them in JNDI. E.g. with the following
+ * persistence unit configuration:
+ * <pre>{@code
+ * <persistence-unit-ref>
+ *     <persistence-unit-ref-name>persistence/widget</persistence-unit-ref-name>
+ *     <persistence-unit-name>WidgetPU</persistence-unit-name>
+ * </persistence-unit-ref>
+ * }</pre>
+ * the Jersey servlet requires an additional servlet parameter as
+ * follows:
+ * <pre>{@code
+ * <init-param>
+ *     <param-name>unit:WidgetPU</param-name>
+ *     <param-value>persistence/widget</param-value>
+ * </init-param>
+ * }</pre>
+ * Given the above, Jersey will inject the {@link javax.persistence.EntityManagerFactory EntityManagerFactory} found
+ * at {@code java:comp/env/persistence/widget} in JNDI when encountering a
+ * field or parameter annotated with {@code @PersistenceUnit(unitName="WidgetPU")}.
  *
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ServletContainer extends HttpServlet implements Filter, Container {
 

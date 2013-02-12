@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.client;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.process.internal.RequestScope;
 
@@ -63,5 +63,5 @@ interface ResponseCallback {
      *
      * @param error contains failure details.
      */
-    public void failed(ClientException error);
+    public void failed(ProcessingException error);
 }

@@ -43,7 +43,7 @@ package org.glassfish.jersey.server.wadl.processor;
 import java.util.List;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configuration;
@@ -68,7 +68,7 @@ import com.google.common.collect.Lists;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@BindingPriority(Integer.MAX_VALUE)
+@Priority(Integer.MAX_VALUE)
 public class OptionsMethodProcessor implements ModelProcessor {
 
     private final List<ModelProcessorUtil.Method> methodList;

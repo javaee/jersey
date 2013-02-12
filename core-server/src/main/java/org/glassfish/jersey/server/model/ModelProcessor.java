@@ -56,7 +56,7 @@ import org.glassfish.jersey.spi.Contract;
  * processor will be executed with resource model processed by the previous model processor. The first model
  * processor in the chain will be invoked with the initial resource model from which the application was initiated.
  * <p/>
- * Model processors implementations can define {@link javax.ws.rs.BindingPriority binding priority}
+ * Model processors implementations can define {@link javax.annotation.Priority binding priority}
  * to define the order in which they are executed (processors with a lower priority is invoked
  * before processor with a higher priority). The highest possible priority (Integer.MAX_VALUE) is used for
  * model processor which enhance resource models by the default OPTIONS method defined by JAX-RS specification and therefore

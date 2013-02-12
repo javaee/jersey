@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,6 @@ package org.glassfish.jersey.examples.bookmark;
 
 import javax.ws.rs.ApplicationPath;
 
-import org.glassfish.jersey.examples.bookmark.resource.BookmarkResource;
-import org.glassfish.jersey.examples.bookmark.resource.BookmarksResource;
-import org.glassfish.jersey.examples.bookmark.resource.UserResource;
 import org.glassfish.jersey.examples.bookmark.resource.UsersResource;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -55,7 +52,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class MyApplication extends ResourceConfig {
 
     public MyApplication() {
-        registerClasses(BookmarkResource.class, BookmarksResource.class, UserResource.class, UsersResource.class);
+        registerClasses(UsersResource.class);
         register(new JettisonFeature());
     }
 }

@@ -44,7 +44,7 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
@@ -68,7 +68,7 @@ public class QueryParamTest extends AbstractSimpleServerTester {
     public void testQueryParam() {
         startServer(QueryParamResource.class);
 
-        WebTarget r = ClientFactory.newClient().target(getUri().path("test").build());
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("test").build());
 
         URI u = UriBuilder.fromPath("").
                 queryParam("y", "1 %2B 2").build();

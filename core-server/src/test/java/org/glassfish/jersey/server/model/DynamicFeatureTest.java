@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -307,7 +307,7 @@ public class DynamicFeatureTest {
         @Override
         public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
             context.register(InjectConfigurableProvider.class);
-            context.setProperty("foo", "bar");
+            context.property("foo", "bar");
 
             assertEquals("world", context.getConfiguration().getProperty("hello"));
         }
@@ -316,7 +316,7 @@ public class DynamicFeatureTest {
     @Test
     public void testInjectedConfigurable() throws Exception {
         final ResourceConfig resourceConfig = getTestResourceConfig(InjectConfigurableDynamicFeature.class);
-        resourceConfig.setProperty("hello", "world");
+        resourceConfig.property("hello", "world");
 
         final ApplicationHandler application = createApplication(resourceConfig);
 

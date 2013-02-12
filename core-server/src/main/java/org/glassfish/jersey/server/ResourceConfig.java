@@ -228,7 +228,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public State setProperty(String name, Object value) {
+        public State property(String name, Object value) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -391,8 +391,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     @Override
-    public ResourceConfig setProperty(String name, Object value) {
-        state.setProperty(name, value);
+    public ResourceConfig property(String name, Object value) {
+        state.property(name, value);
         return this;
     }
 

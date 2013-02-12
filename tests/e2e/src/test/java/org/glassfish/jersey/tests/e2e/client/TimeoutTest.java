@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,7 @@ import java.net.SocketTimeoutException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -86,7 +86,7 @@ public class TimeoutTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.setProperty(ClientProperties.READ_TIMEOUT, 1000);
+        clientConfig.property(ClientProperties.READ_TIMEOUT, 1000);
     }
 
     @Test
@@ -100,7 +100,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
-        } catch (ClientException e) {
+        } catch (ProcessingException e) {
             if (!(e.getCause() instanceof SocketTimeoutException)) {
                 e.printStackTrace();
                 fail();

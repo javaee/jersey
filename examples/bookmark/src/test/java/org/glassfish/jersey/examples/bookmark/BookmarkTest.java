@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.examples.bookmark;
 
+import java.net.URI;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -72,6 +74,11 @@ public class BookmarkTest extends JerseyTest {
     }
 
     @Override
+    protected URI getBaseUri() {
+        return URI.create(super.getBaseUri().toString() + "Bookmark");
+    }
+
+    @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new ExternalTestContainerFactory();
     }
@@ -79,7 +86,7 @@ public class BookmarkTest extends JerseyTest {
     @Override
     protected Client getClient(final TestContainer tc, final ApplicationHandler applicationHandler) {
         final Client client = super.getClient(tc, applicationHandler);
-        client.register(new JettisonFeature());
+        client.register(JettisonFeature.class);
         return client;
     }
 
@@ -145,16 +152,18 @@ public class BookmarkTest extends JerseyTest {
             JSONObject user = target().path("resources/users/testuid").request("application/json").get(JSONObject.class);
             assertTrue(user != null);
 
+            final WebTarget webTarget = client().target(user.getString("bookmarks"));
+
             JSONObject bookmark = new JSONObject();
             bookmark.put("uri", "http://java.sun.com").put("sdesc", "test desc").put("ldesc", "long test description");
-            target(user.getString("bookmarks")).request().post(Entity.entity(bookmark, "application/json"));
+            webTarget.request().post(Entity.entity(bookmark, "application/json"));
 
-            JSONArray bookmarks = target().request("application/json").get(JSONArray.class);
+            JSONArray bookmarks = webTarget.request("application/json").get(JSONArray.class);
             assertTrue(bookmarks != null);
             int bookmarksSize = bookmarks.length();
 
             String testBookmarkUrl = bookmarks.getString(0);
-            final WebTarget bookmarkResource = target(testBookmarkUrl);
+            final WebTarget bookmarkResource = client().target(testBookmarkUrl);
 
             bookmark = bookmarkResource.request("application/json").get(JSONObject.class);
             assertTrue(bookmark != null);
@@ -164,7 +173,6 @@ public class BookmarkTest extends JerseyTest {
             bookmarks = target().path("resources/users/testuid/bookmarks").request("application/json").get(JSONArray.class);
             assertTrue(bookmarks != null);
             assertTrue(bookmarks.length() == (bookmarksSize - 1));
-
         } catch (Exception e) {
             e.printStackTrace();
             thrown = true;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -143,7 +143,7 @@ public class ContainerRequest extends InboundMessageContext
             PropertiesDelegate propertiesDelegate) {
 
         this.baseUri = baseUri == null ? DEFAULT_BASE_URI : normalizeBaseUri(baseUri);
-        this.requestUri = requestUri.normalize();
+        this.requestUri = requestUri;
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
         this.propertiesDelegate = propertiesDelegate;
@@ -348,7 +348,8 @@ public class ContainerRequest extends InboundMessageContext
         }
 
         String result;
-        final String requestUriRawPath = requestUri.getRawPath();
+        String requestUriRawPath = getRequestUriRawPath();
+
         if (baseUri == null) {
             result = requestUriRawPath;
         } else {
@@ -365,6 +366,39 @@ public class ContainerRequest extends InboundMessageContext
         }
 
         return encodedRelativePath = (result.charAt(0) == '/') ? result : '/' + result;
+    }
+
+    /**
+     * Return semi-normalized {@link URI} raw path of the request. If path contains another absolute {@code URI}
+     * (with {@code ://}) then part before this {@code URI} is normalized and the {@code URI} is appended to this path as is.
+     * Otherwise the whole path is normalized.
+     * <p/>
+     * This method make sure that if a {@code URI} is supposed to be a {@link javax.ws.rs.PathParam path parameter} value that
+     * it's not corrupted by normalization.
+     *
+     * @return raw path of the request {@code URI}.
+     */
+    private String getRequestUriRawPath() {
+        final String rawPath = requestUri.getRawPath();
+        final StringBuilder builder = new StringBuilder();
+
+        int lastSlashPos = 0;
+        int slashPos = rawPath.indexOf('/');
+
+        while (slashPos > -1) {
+            builder.append(rawPath.substring(lastSlashPos, slashPos + 1));
+
+            final String uriPart = rawPath.substring(slashPos + 1);
+
+            if (uriPart.matches("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+")) {
+                return URI.create(builder.toString()).normalize().toString() + uriPart;
+            }
+
+            lastSlashPos = slashPos;
+            slashPos = rawPath.indexOf('/', slashPos + 1);
+        }
+
+        return requestUri.normalize().getRawPath();
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
@@ -55,6 +55,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.message.internal.LanguageTag;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -98,7 +100,7 @@ import com.google.common.collect.Maps;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 @PreMatching
-@BindingPriority(BindingPriority.HEADER_DECORATOR)
+@Priority(Priorities.HEADER_DECORATOR)
 public class UriConnegFilter implements ContainerRequestFilter {
 
     protected final Map<String, MediaType> mediaTypeMappings;
@@ -230,7 +232,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
     private static void setIfNull(ResourceConfig rc, String property, Object value) {
         if (value != null && rc.getProperty(property) == null) {
-            rc.setProperty(property, value);
+            rc.property(property, value);
         }
     }
 

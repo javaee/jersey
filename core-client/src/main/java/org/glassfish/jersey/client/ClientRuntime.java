@@ -44,7 +44,7 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.glassfish.jersey.ExtendedConfig;
@@ -145,8 +145,8 @@ class ClientRuntime {
                     @Override
                     public void failure(Throwable failure) {
                         try {
-                            callback.failed(failure instanceof ClientException ?
-                                    (ClientException) failure : new ClientException(failure));
+                            callback.failed(failure instanceof ProcessingException ?
+                                    (ProcessingException) failure : new ProcessingException(failure));
                         } finally {
                             currentScopeInstance.release();
                         }
@@ -206,9 +206,9 @@ class ClientRuntime {
      *
      * @param request client request to be invoked.
      * @return client response.
-     * @throws ClientException in case of an invocation failure.
+     * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
-    public ClientResponse invoke(final ClientRequest request) throws ClientException {
+    public ClientResponse invoke(final ClientRequest request) throws ProcessingException {
         ClientResponse response;
         try {
             try {
@@ -218,10 +218,10 @@ class ClientRuntime {
             }
 
             return Stages.process(response, responseProcessingRoot);
-        } catch (ClientException ex) {
+        } catch (ProcessingException ex) {
             throw ex;
         } catch (Throwable t) {
-            throw new ClientException(t.getMessage(), t);
+            throw new ProcessingException(t.getMessage(), t);
         }
     }
 

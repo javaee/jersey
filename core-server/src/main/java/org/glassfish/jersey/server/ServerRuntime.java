@@ -43,9 +43,13 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -484,6 +488,8 @@ class ServerRuntime {
     }
 
     private static class AsyncResponder implements AsyncContext, ContainerResponseWriter.TimeoutHandler, CompletionCallback {
+        private static final Logger LOGGER = Logger.getLogger(AsyncResponder.class.getName());
+
         private static final TimeoutHandler DEFAULT_TIMEOUT_HANDLER = new TimeoutHandler() {
             @Override
             public void handleTimeout(AsyncResponse asyncResponse) {
@@ -719,8 +725,14 @@ class ServerRuntime {
         }
 
         @Override
-        public void setTimeout(long time, TimeUnit unit) throws IllegalStateException {
-            responder.request.getResponseWriter().setSuspendTimeout(time, unit);
+        public boolean setTimeout(long time, TimeUnit unit) {
+            try {
+                responder.request.getResponseWriter().setSuspendTimeout(time, unit);
+                return true;
+            } catch (IllegalStateException ex) {
+                LOGGER.log(Level.FINER, "Unable to set timeout on the AsyncResponse.", ex);
+                return false;
+            }
         }
 
         @Override
@@ -729,20 +741,19 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean register(final Class<?> callback) throws NullPointerException {
+        public Collection<Class<?>> register(final Class<?> callback) {
             return register(Injections.getOrCreate(locator, callback));
         }
 
         @Override
-        public boolean[] register(Class<?> callback, Class<?>... callbacks) throws NullPointerException {
-            final boolean[] results = new boolean[1 + ((callbacks == null) ? 0 : callbacks.length)];
+        public Map<Class<?>, Collection<Class<?>>> register(Class<?> callback, Class<?>... callbacks) {
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
-            int i = 0;
-            results[i++] = register(callback);
+            results.put(callback, register(callback));
 
             if (callbacks != null) {
                 for (Class<?> c : callbacks) {
-                    results[i++] = register(c);
+                    results.put(c, register(c));
                 }
             }
 
@@ -750,11 +761,13 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean register(Object callback) throws NullPointerException {
-            boolean result = false;
+        public Collection<Class<?>> register(Object callback) {
+            Collection<Class<?>> result = new LinkedList<Class<?>>();
             for (AbstractCallbackRunner<?> runner : callbackRunners) {
                 if (runner.supports(callback.getClass())) {
-                    result |= runner.register(callback);
+                    if (runner.register(callback)) {
+                        result.add(runner.getCallbackContract());
+                    }
                 }
             }
 
@@ -762,15 +775,14 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean[] register(Object callback, Object... callbacks) throws NullPointerException {
-            final boolean[] results = new boolean[1 + ((callbacks == null) ? 0 : callbacks.length)];
+        public Map<Class<?>, Collection<Class<?>>> register(Object callback, Object... callbacks) {
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
-            int i = 0;
-            results[i++] = register(callback);
+            results.put(callback.getClass(), register(callback));
 
             if (callbacks != null) {
                 for (Object c : callbacks) {
-                    results[i++] = register(c);
+                    results.put(c.getClass(), register(c));
                 }
             }
 
@@ -792,7 +804,16 @@ class ServerRuntime {
          * @param callbackClass Callback to be checked.
          * @return True if this callback runner supports the {@code callbackClass}; false otherwise.
          */
-        public abstract boolean supports(Class<?> callbackClass);
+        public final boolean supports(Class<?> callbackClass) {
+            return getCallbackContract().isAssignableFrom(callbackClass);
+        }
+
+        /**
+         * Get the callback contract supported by this callback runner.
+         *
+         * @return callback contract supported by this callback runner.
+         */
+        public abstract Class<?> getCallbackContract();
 
         @SuppressWarnings("unchecked")
         public boolean register(Object callback) {
@@ -818,8 +839,8 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean supports(Class<?> callbackClass) {
-            return CompletionCallback.class.isAssignableFrom(callbackClass);
+        public Class<?> getCallbackContract() {
+            return CompletionCallback.class;
         }
 
         @Override
@@ -844,8 +865,8 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean supports(Class<?> callbackClass) {
-            return ConnectionCallback.class.isAssignableFrom(callbackClass);
+        public Class<?> getCallbackContract() {
+            return ConnectionCallback.class;
         }
 
         @Override

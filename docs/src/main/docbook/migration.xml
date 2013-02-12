@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -287,7 +287,7 @@ rc.addBinders(new MyBinder());</programlisting></para>
         <tbody>
         <row>
           <entry><ulink href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/Client.html">com.sun.jersey.api.client.Client</ulink></entry>
-          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/ClientFactory.html">javax.ws.rs.client.ClientFactory</ulink></entry>
+          <entry><ulink href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/ClientBuilder.html">javax.ws.rs.client.ClientBuilder</ulink></entry>
           <entry>For the static factory methods and constructors.</entry>
         </row>
         <row>

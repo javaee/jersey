@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,7 @@ package org.glassfish.jersey.client.filter;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -67,7 +67,7 @@ import static org.junit.Assert.assertNull;
 public class EncodingFilterTest {
     @Test
     public void testAcceptEncoding() {
-        Client client = ClientFactory.newClient(new ClientConfig(
+        Client client = ClientBuilder.newClient(new ClientConfig(
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
@@ -80,11 +80,11 @@ public class EncodingFilterTest {
 
     @Test
     public void testContentEncoding() {
-        Client client = ClientFactory.newClient(new ClientConfig(
+        Client client = ClientBuilder.newClient(new ClientConfig(
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
-        ).setProperty(ClientProperties.USE_ENCODING, "gzip").connector(new TestConnector()));
+        ).property(ClientProperties.USE_ENCODING, "gzip").connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));
@@ -93,7 +93,7 @@ public class EncodingFilterTest {
 
     @Test
     public void testContentEncodingViaFeature() {
-        Client client = ClientFactory.newClient(new ClientConfig()
+        Client client = ClientBuilder.newClient(new ClientConfig()
                 .connector(new TestConnector())
                 .register(new EncodingFeature("gzip", GZipEncoder.class, DeflateEncoder.class)));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
@@ -104,11 +104,11 @@ public class EncodingFilterTest {
 
     @Test
     public void testUnsupportedContentEncoding() {
-        Client client = ClientFactory.newClient(new ClientConfig(
+        Client client = ClientBuilder.newClient(new ClientConfig(
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
-        ).setProperty(ClientProperties.USE_ENCODING, "non-gzip").connector(new TestConnector()));
+        ).property(ClientProperties.USE_ENCODING, "non-gzip").connector(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(HttpHeaders.ACCEPT_ENCODING));

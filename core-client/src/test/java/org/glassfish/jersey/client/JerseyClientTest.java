@@ -44,9 +44,9 @@ import java.util.concurrent.Future;
 
 import javax.inject.Inject;
 
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
@@ -93,7 +93,7 @@ public class JerseyClientTest {
 
     @Before
     public void setUp() {
-        this.client = (JerseyClient) ClientFactory.newClient();
+        this.client = (JerseyClient) ClientBuilder.newClient();
     }
 
     @After
@@ -130,7 +130,7 @@ public class JerseyClientTest {
         final ClientConfig configuration = client.getConfiguration();
         assertNotNull(configuration);
 
-        configuration.setProperty("hello", "world");
+        configuration.property("hello", "world");
 
         assertEquals("world", client.getConfiguration().getProperty("hello"));
     }
@@ -198,15 +198,15 @@ public class JerseyClientTest {
 
     @Test
     public void userAgentTest() {
-        Client client = ClientFactory.newClient(new ClientConfig().connector(new Connector() {
+        Client client = ClientBuilder.newClient(new ClientConfig().connector(new Connector() {
             @Override
-            public ClientResponse apply(ClientRequest request) throws ClientException {
-                throw new ClientException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
+            public ClientResponse apply(ClientRequest request) throws ProcessingException {
+                throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
             }
 
             @Override
             public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-                callback.failure(new ClientException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
+                callback.failure(new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
                 return null;
             }
 
@@ -223,7 +223,7 @@ public class JerseyClientTest {
 
         try {
             client.target("test").request().get();
-        } catch (ClientException e) {
+        } catch (ProcessingException e) {
             assertEquals("Jersey/" + Version.getVersion(), e.getMessage());
         }
 
@@ -267,7 +267,7 @@ public class JerseyClientTest {
     @Test
     public void testCustomBinders() {
         final CustomBinder binder = new CustomBinder();
-        Client client = ClientFactory.newClient().register(binder).register(CustomProvider.class);
+        Client client = ClientBuilder.newClient().register(binder).register(CustomProvider.class);
 
         Response resp = client.target("test").request().get();
         assertEquals("Foo", resp.readEntity(String.class));

@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -228,7 +228,7 @@ public class ApplicationFilterTest {
         }
     }
 
-    @BindingPriority(1)
+    @Priority(1)
     public class Filter1 extends CommonFilter {
 
         private Filter10 filter10;
@@ -246,7 +246,7 @@ public class ApplicationFilterTest {
         }
     }
 
-    @BindingPriority(10)
+    @Priority(10)
     public class Filter10 extends CommonFilter {
 
         private Filter1 filter1;
@@ -264,7 +264,7 @@ public class ApplicationFilterTest {
         }
     }
 
-    @BindingPriority(100)
+    @Priority(100)
     public class Filter100 extends CommonFilter {
 
         private Filter1 filter1;

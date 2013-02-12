@@ -46,7 +46,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -107,7 +108,7 @@ public class CommonConfigTest {
 
     @Test
     public void testSetProperties() throws Exception {
-        config = config.setProperty("foo", "bar");
+        config = config.property("foo", "bar");
         assertEquals("bar", config.getConfiguration().getProperty("foo"));
 
         final Map<String, String> properties = Maps.newHashMap();
@@ -127,11 +128,11 @@ public class CommonConfigTest {
 
     @Test
     public void testSetGetProperty() throws Exception {
-        config = config.setProperty("foo", "bar");
+        config = config.property("foo", "bar");
         assertEquals("bar", config.getConfiguration().getProperty("foo"));
 
-        config.setProperty("hello", "world");
-        config.setProperty("foo", null);
+        config.property("hello", "world");
+        config.property("foo", null);
 
         assertEquals(null, config.getConfiguration().getProperty("foo"));
         assertEquals(1, config.getConfiguration().getProperties().size());
@@ -181,13 +182,13 @@ public class CommonConfigTest {
 
     @Test
     public void testReplaceWith() throws Exception {
-        config.setProperty("foo", "bar");
+        config.property("foo", "bar");
         final EmptyFeature emptyFeature = new EmptyFeature();
         config.register(emptyFeature);
         config.register(ComplexEmptyProvider.class, ExceptionMapper.class);
 
         CommonConfig other = new CommonConfig(null, ComponentBag.INCLUDE_ALL);
-        other.setProperty("foo", "baz");
+        other.property("foo", "baz");
         other.register(UnconfigurableFeature.class);
         other.register(ComplexEmptyProvider.class, ReaderInterceptor.class, ContainerRequestFilter.class);
 
@@ -353,13 +354,13 @@ public class CommonConfigTest {
     public void testRegisterClassBingingPriority() throws Exception {
         try {
             final Class clazz = null;
-            config.register(clazz, BindingPriority.USER);
+            config.register(clazz, Priorities.USER);
             fail("Cannot register null.");
         } catch (IllegalArgumentException e) {
             // OK.
         }
 
-        for (int priority : new int[]{BindingPriority.USER, BindingPriority.AUTHENTICATION}) {
+        for (int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
             config.register(ComplexEmptyProvider.class, priority);
 
             final ContractProvider contractProvider =
@@ -372,16 +373,16 @@ public class CommonConfigTest {
             assertTrue(contracts.contains(ExceptionMapper.class));
 
             // All priorities are the same.
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ReaderInterceptor.class));
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ContainerRequestFilter.class));
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ExceptionMapper.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ReaderInterceptor.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ContainerRequestFilter.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ExceptionMapper.class));
         }
     }
 
     @Test
     public void testRegisterInstanceBingingPriority() throws Exception {
         try {
-            config.register(null, BindingPriority.USER);
+            config.register(null, Priorities.USER);
             fail("Cannot register null.");
         } catch (IllegalArgumentException e) {
             // OK.
@@ -389,7 +390,7 @@ public class CommonConfigTest {
 
         final Class<ComplexEmptyProvider> providerClass = ComplexEmptyProvider.class;
 
-        for (int priority : new int[]{BindingPriority.USER, BindingPriority.AUTHENTICATION}) {
+        for (int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
             config.register(providerClass, priority);
 
             final CommonConfig commonConfig = (CommonConfig) config;
@@ -403,9 +404,9 @@ public class CommonConfigTest {
             assertTrue(contracts.contains(ExceptionMapper.class));
 
             // All priorities are the same.
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ReaderInterceptor.class));
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ContainerRequestFilter.class));
-            assertEquals(BindingPriority.USER, contractProvider.getPriority(ExceptionMapper.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ReaderInterceptor.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ContainerRequestFilter.class));
+            assertEquals(Priorities.USER, contractProvider.getPriority(ExceptionMapper.class));
         }
     }
 
@@ -413,8 +414,8 @@ public class CommonConfigTest {
     public void testRegisterClassInstanceBindingPriorityClash() throws Exception {
         final ComplexEmptyProvider complexEmptyProvider = new ComplexEmptyProvider();
 
-        config.register(ComplexEmptyProvider.class, BindingPriority.AUTHENTICATION);
-        config.register(complexEmptyProvider, BindingPriority.USER);
+        config.register(ComplexEmptyProvider.class, Priorities.AUTHENTICATION);
+        config.register(complexEmptyProvider, Priorities.USER);
 
 
         assertTrue(config.getClasses().contains(ComplexEmptyProvider.class));
@@ -431,9 +432,9 @@ public class CommonConfigTest {
         assertTrue(contracts.contains(ExceptionMapper.class));
 
         // All priorities are the same.
-        assertEquals(BindingPriority.AUTHENTICATION, contractProvider.getPriority(ReaderInterceptor.class));
-        assertEquals(BindingPriority.AUTHENTICATION, contractProvider.getPriority(ContainerRequestFilter.class));
-        assertEquals(BindingPriority.AUTHENTICATION, contractProvider.getPriority(ExceptionMapper.class));
+        assertEquals(Priorities.AUTHENTICATION, contractProvider.getPriority(ReaderInterceptor.class));
+        assertEquals(Priorities.AUTHENTICATION, contractProvider.getPriority(ContainerRequestFilter.class));
+        assertEquals(Priorities.AUTHENTICATION, contractProvider.getPriority(ExceptionMapper.class));
     }
 
     @Test
@@ -548,7 +549,7 @@ public class CommonConfigTest {
         assertEquals(0, contracts.size());
     }
 
-    @BindingPriority(300)
+    @Priority(300)
     public static class LowPriorityProvider implements WriterInterceptor, ReaderInterceptor {
 
         @Override
@@ -562,7 +563,7 @@ public class CommonConfigTest {
         }
     }
 
-    @BindingPriority(200)
+    @Priority(200)
     public static class MidPriorityProvider implements WriterInterceptor, ReaderInterceptor {
 
         @Override
@@ -576,7 +577,7 @@ public class CommonConfigTest {
         }
     }
 
-    @BindingPriority(100)
+    @Priority(100)
     public static class HighPriorityProvider implements WriterInterceptor, ReaderInterceptor {
 
         @Override

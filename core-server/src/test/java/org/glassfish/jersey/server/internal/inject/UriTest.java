@@ -240,7 +240,7 @@ public class UriTest extends AbstractTest {
     public void testManagedClientInjection1() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
         // TODO introduce new ResourceConfig.setClientProperty(Class<? extends Annotation>, String name, Object value) helper method
-        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
+        resourceConfig.property(Managed.class.getName() + ".property.test-property", "test-value");
         initiateWebApplication(resourceConfig);
 
         final ContainerResponse response = apply(
@@ -254,7 +254,7 @@ public class UriTest extends AbstractTest {
     @Test
     public void testManagedClientInjection2() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
-        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
+        resourceConfig.property(Managed.class.getName() + ".property.test-property", "test-value");
         initiateWebApplication(resourceConfig);
 
         final ContainerResponse response = apply(
@@ -268,8 +268,8 @@ public class UriTest extends AbstractTest {
     @Test
     public void testManagedClientInjection3() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource4.class);
-        resourceConfig.setProperty(Managed.class.getName() + ".property.test-property", "test-value");
-        resourceConfig.setProperty(Managed.class.getName() + ".baseUri", "http://oracle.com");
+        resourceConfig.property(Managed.class.getName() + ".property.test-property", "test-value");
+        resourceConfig.property(Managed.class.getName() + ".baseUri", "http://oracle.com");
         initiateWebApplication(resourceConfig);
 
         final ContainerResponse response = apply(

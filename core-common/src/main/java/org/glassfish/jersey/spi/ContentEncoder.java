@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,13 +46,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.ws.rs.BindingPriority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import javax.annotation.Priority;
 
 import com.google.common.collect.Sets;
 
@@ -64,7 +66,7 @@ import com.google.common.collect.Sets;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-@BindingPriority(BindingPriority.ENTITY_CODER)
+@Priority(Priorities.ENTITY_CODER)
 @Contract
 public abstract class ContentEncoder implements ReaderInterceptor, WriterInterceptor {
     private final Set<String> supportedEncodings;

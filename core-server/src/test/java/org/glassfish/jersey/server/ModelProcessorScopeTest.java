@@ -42,7 +42,7 @@ package org.glassfish.jersey.server;
 
 import java.util.concurrent.ExecutionException;
 
-import javax.ws.rs.BindingPriority;
+import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -76,7 +76,7 @@ public class ModelProcessorScopeTest {
             return true;
         }
 
-        @BindingPriority(5000)
+        @Priority(5000)
         private static class SimpleModelProcessor implements ModelProcessor {
 
             @Override

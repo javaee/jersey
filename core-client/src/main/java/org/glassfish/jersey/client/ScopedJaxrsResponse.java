@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.client;
 
 import java.lang.annotation.Annotation;
 
-import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.internal.util.Producer;
@@ -70,7 +70,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
     }
 
     @Override
-    public <T> T readEntity(final Class<T> entityType) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(final Class<T> entityType) throws ProcessingException, IllegalStateException {
         return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
@@ -80,7 +80,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
     }
 
     @Override
-    public <T> T readEntity(final GenericType<T> entityType) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(final GenericType<T> entityType) throws ProcessingException, IllegalStateException {
         return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
@@ -90,7 +90,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
     }
 
     @Override
-    public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) throws ProcessingException, IllegalStateException {
         return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
@@ -100,7 +100,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
     }
 
     @Override
-    public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws MessageProcessingException, IllegalStateException {
+    public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws ProcessingException, IllegalStateException {
         return scope.runInScope(scopeInstance, new Producer<T>() {
             @Override
             public T call() {
@@ -110,7 +110,7 @@ class ScopedJaxrsResponse extends InboundJaxrsResponse {
     }
 
     @Override
-    public void close() throws MessageProcessingException {
+    public void close() throws ProcessingException {
         try {
             super.close();
         } finally {

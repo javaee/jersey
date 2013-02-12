@@ -111,7 +111,7 @@ import javax.ws.rs.core.Configuration;
  * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.property.</code> prefix. This can be either done programmatically,
  * for example:
  * <pre>
- * MyResourceConfig.setProperty(
+ * MyResourceConfig.property(
  *     "my.package.MyClient.property.<b>custom-client-property</b>", "custom-value");
  * </pre>
  * </p>
@@ -148,7 +148,7 @@ public @interface ClientBinding {
      * <p>
      * For example:
      * <pre>
-     * MyResourceConfig.setProperty(
+     * MyResourceConfig.property(
      *     "my.package.MyClient.configClass",
      *     "my.package.MyClientConfig");
      * </pre>
@@ -176,7 +176,7 @@ public @interface ClientBinding {
      * <p>
      * For example:
      * <pre>
-     * MyResourceConfig.setProperty(
+     * MyResourceConfig.property(
      *     "my.package.MyClient.inheritServerProviders", false);
      * </pre>
      * </p>
@@ -208,7 +208,7 @@ public @interface ClientBinding {
      * <p>
      * For example:
      * <pre>
-     * MyResourceConfig.setProperty(
+     * MyResourceConfig.property(
      *     "my.package.MyClient.baseUri", "http://jersey.java.net/examples/");
      * </pre>
      * </p>

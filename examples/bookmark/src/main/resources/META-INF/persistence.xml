@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,11 @@
     <persistence-unit name="BookmarkPU" transaction-type="JTA">
         <provider>oracle.toplink.essentials.PersistenceProvider</provider>
         <properties>
-            <property name="toplink.jdbc.url" value="jdbc:derby://localhost:1527/BookmarkDB;create=true"/>
+            <property name="toplink.jdbc.url" value="jdbc:derby://localhost:1527/BookmarkDB"/>
             <property name="toplink.jdbc.user" value="REST"/>
             <property name="toplink.jdbc.driver" value="org.apache.derby.jdbc.ClientDriver"/>
             <property name="toplink.jdbc.password" value="REST"/>
-            <property name="toplink.ddl-generation" value="create-tables"/>
+            <property name="toplink.ddl-generation" value="drop-and-create-tables"/>
         </properties>
     </persistence-unit>
 </persistence>
