@@ -49,7 +49,7 @@ import org.junit.Test;
 
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -74,7 +74,7 @@ public class HttpMethodTest extends JerseyTest {
 
     protected Client createClient() {
         ClientConfig cc = new ClientConfig();
-        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
     }
 
     protected Client createPoolingClient() {
@@ -82,8 +82,8 @@ public class HttpMethodTest extends JerseyTest {
         PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
         connectionManager.setMaxTotal(100);
         connectionManager.setDefaultMaxPerRoute(100);
-        cc.setProperty(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
-        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
     }
 
     private WebTarget getWebTarget(final Client client) {
@@ -182,10 +182,10 @@ public class HttpMethodTest extends JerseyTest {
     @Test
     public void testPostChunked() {
         ClientConfig cc = new ClientConfig();
-        Client c = ClientFactory.newClient(cc);
-        Client client = ClientFactory
+        Client c = ClientBuilder.newClient(cc);
+        Client client = ClientBuilder
                 .newClient(new ClientConfig()
-                        .setProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 1024)
+                        .property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024)
                         .connector(new ApacheConnector(c.getConfiguration())));
         WebTarget r = getWebTarget(client);
 

@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -93,7 +93,7 @@ public class TimeoutTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.setProperty(ClientProperties.READ_TIMEOUT, 1000);
+        clientConfig.property(ClientProperties.READ_TIMEOUT, 1000);
         clientConfig.connector(new ApacheConnector(clientConfig));
     }
 
@@ -108,7 +108,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
-        } catch (ClientException e) {
+        } catch (ProcessingException e) {
             if (!(e.getCause() instanceof SocketTimeoutException)) {
                 e.printStackTrace();
                 fail();

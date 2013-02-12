@@ -40,7 +40,7 @@
 package org.glassfish.jersey.apache.connector;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
@@ -55,7 +55,7 @@ public class HttpMethodWithClientFilterTest extends HttpMethodTest {
     protected Client createClient() {
         ClientConfig cc = new ClientConfig();
         cc.register(LoggingFilter.class);
-        return ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
     }
 
 }

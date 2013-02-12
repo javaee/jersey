@@ -44,7 +44,7 @@ import java.util.Arrays;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -82,7 +82,7 @@ public class GZIPContentEncodingTest extends JerseyTest {
     @Test
     public void testPost() {
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
-        Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
         WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
@@ -96,8 +96,8 @@ public class GZIPContentEncodingTest extends JerseyTest {
     @Test
     public void testPostChunked() {
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
-        cc.setProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
-        Client client = ClientFactory.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
+        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
 
         WebTarget r = client.target(getBaseUri());
 

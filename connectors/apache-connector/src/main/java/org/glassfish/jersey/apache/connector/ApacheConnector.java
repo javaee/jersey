@@ -54,7 +54,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.ClientException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -288,12 +288,12 @@ public class ApacheConnector extends RequestWriter implements Connector {
         } else if (proxy instanceof String) {
             return URI.create((String) proxy);
         } else {
-            throw new ClientException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ApacheClientProperties.PROXY_URI));
+            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ApacheClientProperties.PROXY_URI));
         }
     }
 
     @Override
-    public ClientResponse apply(final ClientRequest clientRequest) throws ClientException {
+    public ClientResponse apply(final ClientRequest clientRequest) throws ProcessingException {
         final HttpUriRequest request = getUriHttpRequest(clientRequest);
 
         writeOutBoundHeaders(clientRequest.getHeaders(), request);
@@ -339,7 +339,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
 
             return responseContext;
         } catch (Exception e) {
-            throw new ClientException(e);
+            throw new ProcessingException(e);
         }
     }
 
@@ -350,7 +350,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
             public void run() {
                 try {
                     callback.response(apply(request));
-                } catch (ClientException ex) {
+                } catch (ProcessingException ex) {
                     callback.failure(ex);
                 } catch (Throwable t) {
                     callback.failure(t);
@@ -415,7 +415,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
         if (entity != null && request instanceof HttpEntityEnclosingRequestBase) {
             ((HttpEntityEnclosingRequestBase) request).setEntity(entity);
         } else if (entity != null) {
-            throw new ClientException(LocalizationMessages.ENTITY_NOT_SUPPORTED(clientRequest.getMethod()));
+            throw new ProcessingException(LocalizationMessages.ENTITY_NOT_SUPPORTED(clientRequest.getMethod()));
         }
 
         return request;

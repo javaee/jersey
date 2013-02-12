@@ -42,7 +42,7 @@ package org.glassfish.jersey.apache.connector;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -94,7 +94,7 @@ public class FollowRedirectsTest extends JerseyTest {
     protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
         Client c = super.getClient(tc, applicationHandler);
         ClientConfig cc = new ClientConfig().connector(new ApacheConnector(c.getConfiguration()));
-        return ClientFactory.newClient(cc);
+        return ClientBuilder.newClient(cc);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class FollowRedirectsTest extends JerseyTest {
     @Test
     public void testDontFollow() {
         WebTarget t = target("test/redirect");
-        t.setProperty(ClientProperties.FOLLOW_REDIRECTS, false);
+        t.property(ClientProperties.FOLLOW_REDIRECTS, false);
         assertEquals(303, t.request().get().getStatus());
     }
 }
