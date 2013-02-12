@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,7 +77,9 @@ public @interface CustomValidation {
 
         @Override
         public boolean isValid(final CustomBean bean, final ConstraintValidatorContext context) {
-            return uriInfo.getPathParameters().getFirst("path").equals(bean.getPath());
+            // !bean.isValidate() - to make sure this validation passes for CustomConfigValidationTest#testTraversableResolver
+            // (TraversableResolver is not invoked for ElementType.TYPE anymore).
+            return !bean.isValidate() || uriInfo.getPathParameters().getFirst("path").equals(bean.getPath());
         }
     }
 }

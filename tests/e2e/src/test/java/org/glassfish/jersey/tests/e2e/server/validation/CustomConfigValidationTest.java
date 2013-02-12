@@ -112,8 +112,6 @@ public class CustomConfigValidationTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("un-ignore once HV-658 is resolved")
-    // TODO un-ignore once HV-658 is resolved (see https://hibernate.onjira.com/browse/HV-658)
     public void testParameterName() throws Exception {
         final Response response = target("customconfigvalidation").
                 path("ok").

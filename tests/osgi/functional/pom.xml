@@ -257,6 +257,11 @@
             <artifactId>jboss-logging</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml</groupId>
+            <artifactId>classmate</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

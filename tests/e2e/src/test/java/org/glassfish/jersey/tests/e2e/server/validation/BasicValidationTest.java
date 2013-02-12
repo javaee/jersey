@@ -394,8 +394,6 @@ public class BasicValidationTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("un-ignore once HV-656 is resolved")
-    // TODO un-ignore once HV-656 is resolved (see https://hibernate.onjira.com/browse/HV-656)
     public void testValidBeanParamNegative() throws Exception {
         final ContactBean contactBean = new ContactBean();
         final Response response = testBean("validBeanParam", contactBean);

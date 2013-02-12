@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -84,8 +84,6 @@ public class MyApplication extends ResourceConfig {
      *     <li>ParameterNameProvider - if method input parameters are invalid, this class returns actual parameter names
      *     instead of the default ones ({@code arg0, arg1, ..})</li>
      * </ul>
-     *
-     * TODO Add a test when HV-658 is fixed.
      */
     public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfiguration> {
 
@@ -100,6 +98,9 @@ public class MyApplication extends ResourceConfig {
             return config;
         }
 
+        /**
+         * See ContactCardTest#testAddInvalidContact.
+         */
         private class CustomParameterNameProvider implements ParameterNameProvider {
 
             private final ParameterNameProvider nameProvider;
@@ -115,6 +116,7 @@ public class MyApplication extends ResourceConfig {
 
             @Override
             public String[] getParameterNames(final Method method) {
+                // See ContactCardTest#testAddInvalidContact.
                 if ("addContact".equals(method.getName())) {
                     return new String[] {"contact"};
                 }

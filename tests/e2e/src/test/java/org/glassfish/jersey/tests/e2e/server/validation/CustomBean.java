@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.server.validation;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -53,11 +54,22 @@ public class CustomBean {
     @NotNull
     private String path;
 
+    private boolean validate = true;
+
     public void setPath(final String path) {
         this.path = path;
     }
 
     public String getPath() {
         return path;
+    }
+
+    @XmlTransient
+    public boolean isValidate() {
+        return validate;
+    }
+
+    public void setValidate(final boolean validate) {
+        this.validate = validate;
     }
 }

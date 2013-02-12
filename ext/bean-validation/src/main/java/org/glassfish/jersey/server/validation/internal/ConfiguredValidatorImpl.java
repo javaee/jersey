@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,7 @@ package org.glassfish.jersey.server.validation.internal;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.MethodValidator;
+import javax.validation.ExecutableValidator;
 import javax.validation.Validator;
 import javax.validation.metadata.BeanDescriptor;
 
@@ -91,7 +91,7 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
     }
 
     @Override
-    public MethodValidator forMethods() {
-        return delegate.forMethods();
+    public ExecutableValidator forExecutables() {
+        return delegate.forExecutables();
     }
 }

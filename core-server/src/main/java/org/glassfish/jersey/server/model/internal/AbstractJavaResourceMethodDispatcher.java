@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -168,7 +168,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             constraintViolations.addAll(validator.validate(resource));
 
             // Resource method validation - input parameters.
-            constraintViolations.addAll(validator.forMethods().validateParameters(resource, method, args));
+            constraintViolations.addAll(validator.forExecutables().validateParameters(resource, method, args));
 
             if (!constraintViolations.isEmpty()) {
                 throw new ConstraintViolationException(constraintViolations);
@@ -190,11 +190,11 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         if (validator != null) {
             final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
 
-            constraintViolations.addAll(validator.forMethods().validateReturnValue(resource, method, invocationResult));
+            constraintViolations.addAll(validator.forExecutables().validateReturnValue(resource, method, invocationResult));
 
             if (invocationResult instanceof Response) {
                 constraintViolations.addAll(
-                        validator.forMethods().validateReturnValue(resource, method, ((Response) invocationResult).getEntity()));
+                        validator.forExecutables().validateReturnValue(resource, method, ((Response) invocationResult).getEntity()));
             }
 
             if (!constraintViolations.isEmpty()) {

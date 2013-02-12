@@ -169,9 +169,15 @@ public class ContactCardTest extends JerseyTest {
         assertTrue(violationsMessageTemplates.contains("{contact.wrong.id}"));
     }
 
-    private Set<String> getValidationMessageTemplates(final Response response) {
-        final List<ValidationError> errors = response.readEntity(new GenericType<List<ValidationError>>() {});
+    private List<ValidationError> getValidationErrorList(final Response response) {
+        return response.readEntity(new GenericType<List<ValidationError>>() {});
+    }
 
+    private Set<String> getValidationMessageTemplates(final Response response) {
+        return getValidationMessageTemplates(getValidationErrorList(response));
+    }
+
+    private Set<String> getValidationMessageTemplates(final List<ValidationError> errors) {
         final Set<String> templates = new HashSet<String>();
         for (final ValidationError error : errors) {
             templates.add(error.getMessageTemplate());
@@ -191,7 +197,12 @@ public class ContactCardTest extends JerseyTest {
 
         assertEquals(400, response.getStatus());
 
-        final Set<String> messageTemplates = getValidationMessageTemplates(response);
+        final List<ValidationError> validationErrorList = getValidationErrorList(response);
+        for (final ValidationError validationError : validationErrorList) {
+            assertTrue(validationError.getPath().contains("ContactCard.addContact.contact."));
+        }
+
+        final Set<String> messageTemplates = getValidationMessageTemplates(validationErrorList);
         assertEquals(2, messageTemplates.size());
         assertTrue(messageTemplates.contains("{contact.wrong.name}"));
         assertTrue(messageTemplates.contains("{contact.wrong.phone}"));
