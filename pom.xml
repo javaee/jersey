@@ -1039,6 +1039,7 @@
         <!--
             Change jaxrs.api.version also in:
                 examples/osgi-helloworld-webapp/lib-bundle/pom.xml
+                examples/osgi-helloworld-webapp/war-bundle/pom.xml
                 examples/server-async-webapp/standalone/pom.xml <- change jersey version -->
         <jaxrs.api.version>2.0-m16</jaxrs.api.version>
         <hk2.version>2.1.59</hk2.version>
