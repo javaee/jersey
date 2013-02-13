@@ -41,10 +41,13 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.HK2Loader;
+import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extension.ServiceLocatorGenerator;
@@ -186,8 +189,25 @@ public class Injections {
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
     public static <T> T getOrCreate(ServiceLocator serviceLocator, Class<T> clazz) {
-        T component = serviceLocator.getService(clazz);
-        return component == null ? serviceLocator.createAndInitialize(clazz) : component;
+        try {
+            T component = serviceLocator.getService(clazz);
+            return component == null ? serviceLocator.createAndInitialize(clazz) : component;
+        } catch (MultiException e) {
+
+            // Look for WebApplicationException and return it if found. MultiException is thrown when *Param field is
+            // annotated and value cannot be provided (for example fromString(String) method can throw unchecked
+            // exception.
+            //
+            // see InvalidParamTest
+            // see JERSEY-1117
+            for(Throwable t: e.getErrors()) {
+                if(WebApplicationException.class.isAssignableFrom(t.getClass())) {
+                    throw (WebApplicationException)t;
+                }
+            }
+
+            throw e;
+        }
     }
 
     /**
