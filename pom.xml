@@ -892,12 +892,7 @@
                 <groupId>javax.persistence</groupId>
                 <artifactId>persistence-api</artifactId>
                 <version>${javax.persistence.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>jsr250-api</artifactId>
-                <version>${javax.annotation.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -1051,7 +1046,7 @@
         <!--
             Change javax.annotation.version also in:
                 examples/osgi-helloworld-webapp/functional-test/pom.xml-->
-        <javax.annotation.version>1.2-b01</javax.annotation.version>
+        <javax.annotation.version>1.2-b02</javax.annotation.version>
         <javax.annotation.bundle.version>1.1.99</javax.annotation.bundle.version>
         <ejb.version>3.2-b01</ejb.version>
         <javax.interceptor.version>1.2-b02</javax.interceptor.version>

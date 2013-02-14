@@ -95,14 +95,11 @@
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-            <version>1.2-b01</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
-            <version>${javax.persistence.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.transaction</groupId>
