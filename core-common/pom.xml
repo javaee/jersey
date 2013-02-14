@@ -81,8 +81,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
-                        <Import-Package>javax.annotation.*;version=!,*</Import-Package>
+                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri-bundle/pom.xml. -->
+                        <!--Import-Package>javax.annotation.*;version="1.1.99.b01",*</Import-Package-->
+                        <Import-Package>javax.annotation.*;version="[1.1,1.2]",*</Import-Package>
                         <Export-Package>org.glassfish.jersey.*;version=${project.version}</Export-Package>
                         <Private-Package>org.glassfish.jersey.osgi</Private-Package>
                     </instructions>
