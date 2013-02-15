@@ -266,9 +266,12 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         checkNotClosed();
         Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
 
-        return new JerseyWebTarget(getUriBuilder().resolveTemplates(templateValues, encodeSlashInPath), this);
+        if(templateValues.isEmpty()) {
+            return this;
+        } else {
+            return new JerseyWebTarget(getUriBuilder().resolveTemplates(templateValues, encodeSlashInPath), this);
+        }
     }
-
 
     @Override
     public JerseyWebTarget resolveTemplatesFromEncoded(Map<String, Object> templateValues)
@@ -276,7 +279,11 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         checkNotClosed();
         Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
 
-        return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
+        if(templateValues.isEmpty()) {
+            return this;
+        } else {
+            return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
+        }
     }
 
     @Override
