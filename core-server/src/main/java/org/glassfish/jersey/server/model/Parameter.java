@@ -61,12 +61,12 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.Uri;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+import org.glassfish.jersey.server.Uri;
 
 /**
  * Method parameter model.

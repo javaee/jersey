@@ -42,10 +42,11 @@ package org.glassfish.jersey.examples.managedclient;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Uri;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.server.Uri;
 
 /**
  * A resource that uses managed clients to retrieve values of internal

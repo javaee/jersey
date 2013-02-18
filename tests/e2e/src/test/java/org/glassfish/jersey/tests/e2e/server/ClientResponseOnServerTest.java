@@ -42,13 +42,13 @@ package org.glassfish.jersey.tests.e2e.server;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Uri;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;

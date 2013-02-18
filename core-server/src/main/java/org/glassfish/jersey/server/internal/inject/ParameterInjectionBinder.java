@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.inject.Singleton;
-
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
@@ -48,10 +46,12 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.Uri;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.ext.ParamConverterProvider;
 
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 import org.glassfish.hk2.api.InjectionResolver;
@@ -59,9 +59,9 @@ import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
- * Injection binder providing support for JAX-RS injection annotations. Namely, standard injection
- * support for the following set of JAX-RS context annotations is provided by
- * the binder:
+ * Injection binder providing support for JAX-RS and Jersey injection annotations.
+ * Namely, standard injection support for the following set of JAX-RS and Jersey
+ * annotations is provided by the binder:
  * <dl>
  *
  * <dt>{@link javax.ws.rs.core.Context @Context}</dt>
@@ -106,9 +106,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * Support for {@link javax.ws.rs.container.AsyncResponse} injection as defined by the JAX-RS specification.
  * </dd>
  *
- * <dt>{@link javax.ws.rs.Uri @Uri}</dt>
+ * <dt>{@link org.glassfish.jersey.server.Uri @Uri}</dt>
  * <dd>
- * Support for {@link javax.ws.rs.client.WebTarget} injection as defined by the JAX-RS specification.
+ * Jersey-specific support for {@link javax.ws.rs.client.WebTarget} injection.
  * </dd>
  *
  * </dl>

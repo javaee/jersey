@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
 import javax.ws.rs.core.Configuration;
 
 /**
- * Meta-annotation that provides a facility for creating bindings between an {@link javax.ws.rs.Uri &#64;Uri}-injectable
+ * Meta-annotation that provides a facility for creating bindings between an {@link Uri &#64;Uri}-injectable
  * {@link javax.ws.rs.client.WebTarget WebTarget} instances and clients (and their configurations) that are used to create
  * the injected web target instances.
  * <p>
@@ -61,10 +61,10 @@ import javax.ws.rs.core.Configuration;
  * </pre>
  * This defines new {@code @MyClient} binding annotation which will be configured using a default {@link #configClass()
  * configuration class}, will {@link #inheritServerProviders() inherit all server-side providers} as well as will use a
- * default {@link #baseUri() base URI} to resolve relative {@link javax.ws.rs.Uri &#64;Uri} web target URI values.
+ * default {@link #baseUri() base URI} to resolve relative {@link Uri &#64;Uri} web target URI values.
  * </p>
  * <p>
- * Once a custom client binding annotation is defined, it can be used when {@link javax.ws.rs.Uri injecting} new
+ * Once a custom client binding annotation is defined, it can be used when {@link Uri injecting} new
  * {@code WebTarget} instances created by a managed client. To complete a binding between a manged client and an injected
  * web target instance, put the custom client binding annotation into the definition of an injected web target field or
  * parameter. For example:
@@ -194,7 +194,7 @@ public @interface ClientBinding {
 
     /**
      * Define a custom base URI for managed {@link javax.ws.rs.client.WebTarget WebTarget} instances injected using
-     * {@link javax.ws.rs.Uri &#64;Uri} annotation with a relative web target URI value. By default, the base
+     * {@link Uri &#64;Uri} annotation with a relative web target URI value. By default, the base
      * URI is empty indicating that the current application base URI should be used.
      * <p>
      * Using a custom context root is useful in cases where the absolute URI of the target endpoint(s) is expected
