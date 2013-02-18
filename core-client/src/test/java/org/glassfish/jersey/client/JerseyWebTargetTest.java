@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -345,6 +346,31 @@ public class JerseyWebTargetTest {
 
         wt.resolveTemplateFromEncoded("name", null);
     }
+
+    @Test
+    public void testResolveTemplatesEncodedEmptyMap() {
+        WebTarget wt = target;
+        wt = wt.resolveTemplatesFromEncoded(Collections.<String, Object>emptyMap());
+
+        assertEquals(target, wt);
+    }
+
+    @Test
+    public void testResolveTemplatesEmptyMap() {
+        WebTarget wt = target;
+        wt = wt.resolveTemplates(Collections.<String, Object>emptyMap());
+
+        assertEquals(target, wt);
+    }
+
+    @Test
+    public void testResolveTemplatesEncodeSlashEmptyMap() {
+        WebTarget wt = target;
+        wt = wt.resolveTemplates(Collections.<String, Object>emptyMap(), false);
+
+        assertEquals(target, wt);
+    }
+
 }
 
 
