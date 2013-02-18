@@ -305,7 +305,8 @@ public final class ApplicationHandler {
         }
 
         // AutoDiscoverable.
-        if (!PropertiesHelper.isFeatureDisabledByProperty(runtimeConfig, CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY)) {
+        if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
+                CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, Boolean.FALSE, Boolean.class)) {
             runtimeConfig.configureAutoDiscoverableProviders(locator);
         }
 
@@ -830,6 +831,11 @@ public final class ApplicationHandler {
         @Override
         public void failure(Throwable error) {
             super.setException(error);
+        }
+
+        @Override
+        public boolean enableResponseBuffering() {
+            return true;
         }
 
         @Override

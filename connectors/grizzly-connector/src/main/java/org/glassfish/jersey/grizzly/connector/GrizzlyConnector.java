@@ -59,10 +59,10 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.RequestWriter;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
 import org.glassfish.grizzly.http.client.Version;
 
@@ -80,7 +80,7 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
-public class GrizzlyConnector extends RequestWriter implements Connector {
+public class GrizzlyConnector implements Connector {
 
     private AsyncHttpClient client;
 
@@ -238,7 +238,8 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
         return result;
     }
 
-    private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final com.ning.http.client.Request request) {
+    private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
+                                             final com.ning.http.client.Request request) {
         for (Map.Entry<String, List<Object>> e : headers.entrySet()) {
             List<Object> vs = e.getValue();
             if (vs.size() == 1) {
@@ -263,12 +264,18 @@ public class GrizzlyConnector extends RequestWriter implements Connector {
             return null;
         }
 
-        final RequestEntityWriter rew = this.getRequestEntityWriter(requestContext);
 
         return new com.ning.http.client.Request.EntityWriter() {
             @Override
-            public void writeEntity(OutputStream out) throws IOException {
-                rew.writeRequestEntity(out);
+            public void writeEntity(final OutputStream out) throws IOException {
+                requestContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+
+                    @Override
+                    public OutputStream getOutputStream(int contentLength) throws IOException {
+                        return out;
+                    }
+                });
+                requestContext.writeEntity();
             }
         };
     }

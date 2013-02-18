@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,6 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.MessageBodyWorkers.MessageBodySizeCallback;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.
@@ -106,16 +105,13 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
      * @param entityStream {@link java.io.InputStream} from which an entity will be read. The stream is not
      *            closed after reading the entity.
      * @param workers {@link MessageBodyWorkers Message body workers}.
-     * @param sizeCallback {@link MessageBodySizeCallback} instance. Can be null.
      * @param intercept if true, user interceptors will be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed on the client side.
-     * @param writeEntity if true, the entity will be written. Otherwise only headers will
-     *            be written to the underlying {@link OutputStream}.
      */
     public WriterInterceptorExecutor(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-            MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) {
+                                     MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
+                                     MessageBodyWorkers workers, boolean intercept) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
@@ -134,7 +130,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
                 effectiveInterceptors.add(interceptor);
             }
         }
-        effectiveInterceptors.add(new TerminalWriterInterceptor(workers, sizeCallback, writeEntity));
+        effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
 
         this.iterator = effectiveInterceptors.iterator();
     }
@@ -200,14 +196,10 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
      */
     private static class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
-        private final MessageBodySizeCallback sizeCallback;
-        private final boolean writeEntity;
 
-        public TerminalWriterInterceptor(MessageBodyWorkers workers, MessageBodySizeCallback sizeCallback, boolean writeEntity) {
+        public TerminalWriterInterceptor(MessageBodyWorkers workers) {
             super();
             this.workers = workers;
-            this.sizeCallback = sizeCallback;
-            this.writeEntity = writeEntity;
         }
 
         @Override
@@ -220,17 +212,9 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
                 throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
                         context.getMediaType(), context.getType(), context.getGenericType()));
             }
-            if (sizeCallback != null) {
-//                long size = writer.getSize(context.getEntity(), context.getType(), context.getGenericType(),
-//                        context.getAnnotations(), context.getMediaType());
-                // TODO try computing the value and then call the callback
-                sizeCallback.onRequestEntitySize(-1);
-            }
 
-            if(writeEntity) {
-                writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
-                        context.getMediaType(), context.getHeaders(), context.getOutputStream());
-            }
+            writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
+                    context.getMediaType(), context.getHeaders(), context.getOutputStream());
         }
     }
 

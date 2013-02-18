@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -155,7 +155,6 @@ public interface ContainerResponseWriter {
      * @param timeUnit time-out time unit.
      * @throws IllegalStateException in case the response writer has not been suspended
      *                               yet.
-     * @see #setSuspendTimeout(long, TimeUnit)
      */
     public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException;
 
@@ -186,4 +185,19 @@ public interface ContainerResponseWriter {
      * @see #commit()
      */
     public void failure(Throwable error);
+
+    /**
+     * Return {@code true} if the entity buffering should be enabled in Jersey.
+     *
+     * If enabled, the outbound entity is buffered by Jersey runtime up to a configured amount of bytes
+     * prior to being written to the output stream to determine its size that may be used to set the value
+     * of HTTP <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_LENGTH}</tt> header.
+     * <p>
+     * Containers that provide it's own solution for determining the message payload size may decide to
+     * return {@code false} to prevent Jersey from buffering message entities unnecessarily.
+     * </p>
+     *
+     * @return {@code true} to enable the entity buffering should by Jersey runtime, {@code false} otherwise.
+     */
+    public boolean enableResponseBuffering();
 }

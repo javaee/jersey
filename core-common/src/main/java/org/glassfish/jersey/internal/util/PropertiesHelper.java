@@ -43,7 +43,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import javax.ws.rs.core.Configuration;
+import javax.ws.rs.RuntimeType;
 
 /**
  * Helper class containing convenience methods for reading
@@ -52,8 +52,9 @@ import javax.ws.rs.core.Configuration;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class PropertiesHelper {
+
     /**
-     * Returns value of a specified property. If the property is not set or the real value type is not compatible with
+     * Return value of a specified property. If the property is not set or the real value type is not compatible with
      * defaultValue type, the specified defaultValue is returned. Calling this method is equivalent to calling
      * {@code PropertyHelper.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}
      *
@@ -64,7 +65,26 @@ public class PropertiesHelper {
      * @return Value of the property or defaultValue.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
-        return getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass());
+        return getValue(properties, null, key, defaultValue);
+    }
+
+
+    /**
+     * Return value of a specified property. If the property is not set or the real value type is not compatible with
+     * defaultValue type, the specified defaultValue is returned. Calling this method is equivalent to calling
+     * {@code PropertyHelper.getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass())}
+     *
+     * @param properties Map of properties to get the property value from.
+     * @param runtimeType Runtime type which is used to check whether there is a property with the same
+     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
+     *                    or <code>.client</code>) which would override the <code>key</code> property.
+     * @param key Name of the property.
+     * @param defaultValue Default value to be returned if the specified property is not set or cannot be read.
+     * @param <T> Type of the property value.
+     * @return Value of the property or defaultValue.
+     */
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue) {
+        return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass());
     }
 
     /**
@@ -79,12 +99,33 @@ public class PropertiesHelper {
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
-        T value = getValue(properties, key, type);
+        return getValue(properties, null, key, defaultValue, type);
+    }
+
+
+    /**
+     * Returns value of a specified property. If the property is not set or the real value type is not compatible with
+     * the specified value type, returns defaultValue.
+     *
+     * @param properties Map of properties to get the property value from.
+     * @param runtimeType Runtime type which is used to check whether there is a property with the same
+     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
+     *                    or <code>.client</code>) which would override the <code>key</code> property.
+     * @param key Name of the property.
+     * @param defaultValue Default value of the property.
+     * @param type Type to retrieve the value as.
+     * @param <T> Type of the property value.
+     * @return Value of the property or null.
+     */
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key,
+                                 T defaultValue, Class<T> type) {
+        T value = getValue(properties, runtimeType, key, type);
         if (value == null) {
             value = defaultValue;
         }
         return value;
     }
+
 
     /**
      * Returns value of a specified property. If the property is not set or the real value type is not compatible with
@@ -97,8 +138,31 @@ public class PropertiesHelper {
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
-        Object value = properties.get(key);
+        return getValue(properties, null, key, type);
+    }
 
+
+    /**
+     * Returns value of a specified property. If the property is not set or the real value type is not compatible with
+     * the specified value type, returns null.
+     *
+     * @param properties Map of properties to get the property value from.
+     * @param runtimeType Runtime type which is used to check whether there is a property with the same
+     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
+     *                    or <code>.client</code>) which would override the <code>key</code> property.
+     * @param key Name of the property.
+     * @param type Type to retrieve the value as.
+     * @param <T> Type of the property value.
+     * @return Value of the property or null.
+     */
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, Class<T> type) {
+        Object value = null;
+        if (runtimeType != null) {
+            value = properties.get(key + '.' + runtimeType.name().toLowerCase());
+        }
+        if (value == null) {
+            value = properties.get(key);
+        }
         if (value == null) {
             return null;
         }
@@ -155,30 +219,5 @@ public class PropertiesHelper {
         } else {
             return value != null && Boolean.parseBoolean(value.toString());
         }
-    }
-
-    /**
-     * Determine whether a Jersey feature ({@link javax.ws.rs.core.Feature}/
-     * {@link org.glassfish.jersey.internal.spi.AutoDiscoverable}) is disabled based on given global property name and it's
-     * client/server variants. If runtime (client/server) variant of the global property is set then the value of this property is
-     * returned, otherwise the return value is value of the global property.
-     * <p/>
-     * Client/Server variant of the property is derived using this pattern:
-     * {@code globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase()}
-     *
-     * @param config configuration to check the property.
-     * @param globalPropertyName global property name to be checked and to derive client/server variant of the property.
-     * @return {@code true} if the feature is disabled by the property value, {@code false} otherwise.
-     * @see org.glassfish.jersey.CommonProperties
-     */
-    public static boolean isFeatureDisabledByProperty(final Configuration config, final String globalPropertyName) {
-        // Runtime property.
-        final Object runtimeProperty = config.getProperty(globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase());
-        if (runtimeProperty != null) {
-            return isProperty(runtimeProperty);
-        }
-
-        // Global.
-        return isProperty(config.getProperty(globalPropertyName));
     }
 }

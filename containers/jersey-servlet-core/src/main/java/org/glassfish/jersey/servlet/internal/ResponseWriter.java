@@ -107,7 +107,8 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) throws ContainerException {
+    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
+            throws ContainerException {
         this.responseContext.set(responseContext);
 
         // first set the content length, so that if headers have an explicit value, it takes precedence over this one
@@ -184,6 +185,11 @@ public class ResponseWriter implements ContainerResponseWriter {
         } finally {
             rethrow(error);
         }
+    }
+
+    @Override
+    public boolean enableResponseBuffering() {
+        return true;
     }
 
     /**

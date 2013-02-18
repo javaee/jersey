@@ -57,6 +57,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
@@ -68,8 +70,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -84,37 +88,33 @@ public class OutboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
     private final MultivaluedMap<String, Object> headers;
-    private final CommittingOutputStream rootStream;
+    private final CommittingOutputStream committingOutputStream;
 
     private Object entity;
     private GenericType<?> entityType;
     private Annotation[] entityAnnotations = EMPTY_ANNOTATIONS;
     private OutputStream entityStream;
 
+
     /**
-     * Output stream provider that provides access to the entity output stream.
+     * The callback interface which is used to get the terminal output stream into which the entity should be
+     * written and to inform the implementation about the entity size.
      */
     public static interface StreamProvider {
         /**
-         * Get the output stream.
+         * Get the output stream. This method will be called after all the
+         * {@link javax.ws.rs.ext.WriterInterceptor writer interceptors} are called and written entity is buffered
+         * into the buffer or the buffer exceeds.
          *
-         * The method is called once as part of a "commit" operation immediately after
-         * the {@link #commit()} method has been invoked.
-         *
-         * @return the adapted output stream.
+         * @param contentLength the size of the buffered entity or -1 if the entity exceeded the maximum buffer
+         *                      size or if the buffering is disabled.
+         * @return the adapted output stream into which the serialized entity should be written. May return null
+         *                      which will cause ignoring the written entity (in that case the entity will
+         *                      still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
+         *                      but the output will be ignored).
          * @throws java.io.IOException in case of an IO error.
          */
-        public OutputStream getOutputStream() throws IOException;
-
-        /**
-         * Perform the commit functionality.
-         *
-         * The method is called once as part of a "commit" operation before the first byte
-         * is written to the provided output stream.
-         *
-         * @throws java.io.IOException in case of an IO error.
-         */
-        public void commit() throws IOException;
+        public OutputStream getOutputStream(int contentLength) throws IOException;
     }
 
     /**
@@ -122,8 +122,8 @@ public class OutboundMessageContext {
      */
     public OutboundMessageContext() {
         this.headers = HeadersFactory.createOutbound();
-        this.rootStream = new CommittingOutputStream();
-        this.entityStream = rootStream;
+        this.committingOutputStream = new CommittingOutputStream();
+        this.entityStream = committingOutputStream;
     }
 
     /**
@@ -135,8 +135,8 @@ public class OutboundMessageContext {
     public OutboundMessageContext(OutboundMessageContext original) {
         this.headers = HeadersFactory.createOutbound();
         this.headers.putAll(original.headers);
-        this.rootStream = new CommittingOutputStream();
-        this.entityStream = rootStream;
+        this.committingOutputStream = new CommittingOutputStream();
+        this.entityStream = committingOutputStream;
 
         this.entity = original.entity;
         this.entityType = original.entityType;
@@ -779,28 +779,47 @@ public class OutboundMessageContext {
     }
 
     /**
-     * Set the output stream provider.
+     * Enable a buffering of serialized entity. The buffering will be configured from configuration. The property
+     * determining the size of the buffer is {@link CommonProperties#CONTENT_LENGTH_BUFFER}.
+     * </p>
+     * The buffering functionality is by default disabled and could be enabled by calling this method. In this case
+     * this method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
      *
-     * @param streamProvider output stream provider.
+     * @param configuration runtime configuration.
      */
-    public void setStreamProvider(StreamProvider streamProvider) {
-        this.rootStream.setStreamProvider(streamProvider);
+    public void enableBuffering(Configuration configuration) {
+        final Integer bufferSize = PropertiesHelper.getValue(configuration.getProperties(),
+                configuration.getRuntimeType(), CommonProperties.CONTENT_LENGTH_BUFFER, Integer.class);
+        if (bufferSize != null) {
+            committingOutputStream.enableBuffering(bufferSize);
+        } else {
+            committingOutputStream.enableBuffering();
+        }
     }
 
     /**
-     * Commits the {@link #getEntityStream() entity stream} if it wasn't already committed.
+     * Set a stream provider callback.
+     * <p/>
+     * This method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
+     *
+     * @param streamProvider non-{@code null} output stream provider.
      */
-    public void commitStream() {
-        if (!rootStream.isCommitted()) {
-            try {
-                // flush the entity stream
-                entityStream.flush();
-                if (!rootStream.isCommitted()) {
-                    // flush the committing stream
-                    rootStream.flush();
-                }
-            } catch (Exception ioe) {
-                // Do nothing - we are already handling an exception.
+    public void setStreamProvider(StreamProvider streamProvider) {
+        committingOutputStream.setStreamProvider(streamProvider);
+    }
+
+
+    /**
+     * Commits the {@link #getEntityStream() entity stream} if it wasn't already committed.
+     *
+     * @throws IOException in case of the IO error.
+     */
+    public void commitStream() throws IOException {
+        if (!committingOutputStream.isCommitted()) {
+            entityStream.flush();
+            if (!committingOutputStream.isCommitted()) {
+                committingOutputStream.commit();
+                committingOutputStream.flush();
             }
         }
     }
@@ -811,7 +830,7 @@ public class OutboundMessageContext {
      * @return {@code true} if the entity stream has been committed. Otherwise returns {@code false}.
      */
     public boolean isCommitted() {
-        return rootStream.isCommitted();
+        return committingOutputStream.isCommitted();
     }
 
     /**
@@ -822,6 +841,10 @@ public class OutboundMessageContext {
             try {
                 getEntityStream().flush();
                 getEntityStream().close();
+
+                // In case some of the output stream wrapper does not delegate close() call we
+                // close the root stream manually to make sure it commits the data.
+                committingOutputStream.close();
             } catch (IOException e) {
                 // Happens when the client closed connection before receiving the full response.
                 // This is OK and not interesting in vast majority of the cases

@@ -64,6 +64,7 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.container.TimeoutHandler;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -78,7 +79,6 @@ import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
@@ -116,6 +116,8 @@ class ServerRuntime {
     private final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider;
     private final Provider<AsyncContext> asyncContextProvider;
     private final ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
+    private final Configuration configuration;
+    private static final Logger LOGGER = Logger.getLogger(ServerRuntime.class.getName());
 
     /**
      * Server-side request processing runtime builder.
@@ -135,6 +137,8 @@ class ServerRuntime {
         private Provider<AsyncContext> asyncContextProvider;
         @Inject
         private ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
+        @Inject
+        private Configuration configuration;
 
         /**
          * Create new server-side request processing runtime.
@@ -151,7 +155,8 @@ class ServerRuntime {
                     closeableServiceProvider,
                     asyncContextRefProvider,
                     asyncContextProvider,
-                    asyncExecutorsFactory);
+                    asyncExecutorsFactory,
+                    configuration);
         }
     }
 
@@ -162,7 +167,8 @@ class ServerRuntime {
                           Provider<CloseableService> closeableServiceProvider,
                           Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider,
                           Provider<AsyncContext> asyncContextProvider,
-                          ExecutorsFactory<ContainerRequest> asyncExecutorsFactory) {
+                          ExecutorsFactory<ContainerRequest> asyncExecutorsFactory,
+                          Configuration configuration) {
         this.requestProcessingRoot = requestProcessingRoot;
         this.locator = locator;
         this.requestScope = requestScope;
@@ -171,6 +177,7 @@ class ServerRuntime {
         this.asyncContextFactoryProvider = asyncContextFactoryProvider;
         this.asyncContextProvider = asyncContextProvider;
         this.asyncExecutorsFactory = asyncExecutorsFactory;
+        this.configuration = configuration;
     }
 
     /**
@@ -188,7 +195,7 @@ class ServerRuntime {
                         locator.<RespondingContext>getService(RespondingContext.class),
                         exceptionMappers,
                         closeableServiceProvider,
-                        asyncContextProvider);
+                        asyncContextProvider, configuration);
 
                 final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
                         responder, locator, requestScope, requestScope.referenceCurrent(), asyncExecutorsFactory);
@@ -267,6 +274,7 @@ class ServerRuntime {
         private final ExceptionMappers exceptionMappers;
         private final Provider<CloseableService> closeableService;
         private final Provider<AsyncContext> asyncContext;
+        private final Configuration configuration;
 
 
         private final CompletionCallbackRunner completionCallbackRunner = new CompletionCallbackRunner();
@@ -277,36 +285,42 @@ class ServerRuntime {
                          final RespondingContext respondingCtx,
                          final ExceptionMappers exceptionMappers,
                          final Provider<CloseableService> closeableService,
-                         final Provider<AsyncContext> asyncContext) {
+                         final Provider<AsyncContext> asyncContext, Configuration configuration) {
 
             this.request = request;
             this.respondingCtx = respondingCtx;
             this.exceptionMappers = exceptionMappers;
             this.closeableService = closeableService;
             this.asyncContext = asyncContext;
+            this.configuration = configuration;
         }
 
         public void process(ContainerResponse response) {
+            response = processResponse(response);
+            release(response);
+        }
+
+        private ContainerResponse processResponse(ContainerResponse response) {
             Stage<ContainerResponse> respondingRoot = respondingCtx.createRespondingRoot();
 
             if (respondingRoot != null) {
                 response = Stages.process(response, respondingRoot);
             }
-
             writeResponse(response);
 
             // no-exception zone
             // the methods below are guaranteed to not throw any exceptions
             completionCallbackRunner.onComplete(null);
-            release(response);
+            return response;
         }
 
         public void process(Throwable throwable) {
             ContainerResponse response = null;
             try {
                 response = convertResponse(mapException(throwable));
-                process(response);
+                processResponse(response);
             } catch (Throwable error) {
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_EXCEPTION_NON_MAPPABLE(), error);
                 try {
                     request.getResponseWriter().failure(error);
                 } finally {
@@ -375,25 +389,8 @@ class ServerRuntime {
             throw throwable;
         }
 
-        /**
-         * Used to set proper Content-Length header to outgoing {@link Response}s.
-         */
-        private static class MessageBodySizeCallback implements MessageBodyWorkers.MessageBodySizeCallback {
-            private long size = -1;
-
-            @Override
-            public void onRequestEntitySize(long size) throws IOException {
-                this.size = size;
-            }
-
-            public long getSize() {
-                return size;
-            }
-        }
-
         private ContainerResponse writeResponse(final ContainerResponse response) {
             final ContainerResponseWriter writer = request.getResponseWriter();
-            final MessageBodySizeCallback messageBodySizeCallback = new MessageBodySizeCallback();
 
             if (!response.hasEntity()) {
                 writer.writeResponseStatusAndHeaders(0, response);
@@ -402,26 +399,24 @@ class ServerRuntime {
 
             final Object entity = response.getEntity();
             boolean skipFinally = false;
+
+            final boolean isHead = request.getMethod().equals(HttpMethod.HEAD);
+
+
             try {
+
                 response.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-                    private OutputStream output;
-
                     @Override
-                    public void commit() throws IOException {
-                        final long size;
-                        if (response.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING) != null) {
-                            size = -1;
-                        } else {
-                            size = messageBodySizeCallback.getSize();
-                        }
-                        output = writer.writeResponseStatusAndHeaders(size, response);
-                    }
-
-                    @Override
-                    public OutputStream getOutputStream() throws IOException {
-                        return output;
+                    public OutputStream getOutputStream(int contentLength) throws IOException {
+                        final OutputStream outputStream = writer.writeResponseStatusAndHeaders(contentLength, response);
+                        return isHead ? null : outputStream;
                     }
                 });
+
+                if ((writer.enableResponseBuffering() || isHead) && !response.isChunked()) {
+                    response.enableBuffering(configuration);
+                }
+
                 try {
                     response.setEntityStream(request.getWorkers().writeTo(
                             entity,
@@ -432,9 +427,7 @@ class ServerRuntime {
                             response.getHeaders(),
                             request.getPropertiesDelegate(),
                             response.getEntityStream(),
-                            messageBodySizeCallback,
-                            true,
-                            !request.getMethod().equals(HttpMethod.HEAD)));
+                            true));
                 } catch (IOException ioe) {
                     connectionCallbackRunner.onDisconnect(asyncContext.get());
                     throw ioe;
@@ -453,9 +446,14 @@ class ServerRuntime {
                 }
             } finally {
                 if (!skipFinally) {
-                    response.commitStream();
 
                     if (response.isChunked()) {
+                        try {
+                            response.commitStream();
+                        } catch (Exception e) {
+                            LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                        }
+
                         try {
                             ((ChunkedOutput) entity).setContext(request, response, connectionCallbackRunner, asyncContext);
                         } catch (IOException ex) {
@@ -464,6 +462,14 @@ class ServerRuntime {
                         // suspend the writer
                         if (writer.suspend(0, TimeUnit.SECONDS, null)) {
                             // TODO already suspended - what to do? override the timeout value?
+                        }
+                    } else {
+                        try {
+                            // the response must be closed here instead of just flushed or committed. Some
+                            // output streams writes out bytes only on close (for example GZipOutputStream).
+                            response.close();
+                        } catch (Exception e) {
+                            LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_CLOSING_COMMIT_OUTPUT_STREAM(), e);
                         }
                     }
                 }
@@ -478,8 +484,10 @@ class ServerRuntime {
                 // Commit the container response writer if not in chunked mode
                 // responseContext may be null in case the request processing was cancelled.
                 if (responseContext != null && !responseContext.isChunked()) {
+//                    responseContext.commitStream();
                     responseContext.close();
                 }
+
             } catch (Throwable throwable) {
                 // TODO L10N
                 LOGGER.log(Level.WARNING, "Attempt to release single request processing resources has failed.", throwable);
@@ -672,7 +680,7 @@ class ServerRuntime {
 
         private boolean cancel(final Value<Response> responseValue) {
             synchronized (stateLock) {
-                if(cancelled) {
+                if (cancelled) {
                     return true;
                 }
 

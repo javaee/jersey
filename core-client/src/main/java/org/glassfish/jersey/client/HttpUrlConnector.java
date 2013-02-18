@@ -77,7 +77,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpUrlConnector extends RequestWriter implements Connector {
+public class HttpUrlConnector implements Connector {
     private final ConnectionFactory connectionFactory;
 
     /**
@@ -128,7 +128,7 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
         return new InputStream() {
             private final UnsafeValue<InputStream, IOException> in = Values.lazy(new UnsafeValue<InputStream, IOException>() {
                 @Override
-                public InputStream get() throws IOException{
+                public InputStream get() throws IOException {
                     if (uc.getResponseCode() < 300) {
                         return uc.getInputStream();
                     } else {
@@ -275,45 +275,16 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
                 }
             }
 
-            writeRequestEntity(request, new RequestEntityWriterListener() {
-                @Override
-                public void onRequestEntitySize(long size) {
-                    if (size != -1 && size < Integer.MAX_VALUE) {
-                        // HttpURLConnection uses the int type for content length
-
-                        // this just does not work for several consecutive requests.
-                        // another day wasted on HttpUrlConnection bug :/
-                        // uc.setFixedLengthStreamingMode((int)size);
-                    } else {
-                        // TODO (copied from Jersey 1.x) it appears HttpURLConnection has some bugs in
-                        // chunked encoding
-                        // uc.setChunkedStreamingMode(0);
-
-                        // TODO deal with chunked encoding
-//                        Integer chunkedEncodingSize = (Integer)request.getProperties().get(
-//                                ClientConfig.PROPERTY_CHUNKED_ENCODING_SIZE);
-//                        if (chunkedEncodingSize != null) {
-//                            uc.setChunkedStreamingMode(chunkedEncodingSize);
-//                        }
-                    }
-                }
+            request.setStreamProvider(new OutboundMessageContext.StreamProvider() {
 
                 @Override
-                public OutboundMessageContext.StreamProvider onGetStreamProvider() throws IOException {
-                    return new OutboundMessageContext.StreamProvider() {
-                        @Override
-                        public OutputStream getOutputStream() throws IOException {
-                            return uc.getOutputStream();
-                        }
-
-                        @Override
-                        public void commit() throws IOException {
-                            writeOutBoundHeaders(request.getStringHeaders(), uc);
-                        }
-                    };
+                public OutputStream getOutputStream(int contentLength) throws IOException {
+                    writeOutBoundHeaders(request.getStringHeaders(), uc);
+                    return uc.getOutputStream();
                 }
-
             });
+            request.writeEntity();
+
         } else {
             writeOutBoundHeaders(request.getStringHeaders(), uc);
         }

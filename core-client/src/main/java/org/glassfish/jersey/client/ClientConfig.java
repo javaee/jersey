@@ -353,7 +353,8 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
 
             // AutoDiscoverable.
-            if (!PropertiesHelper.isFeatureDisabledByProperty(runtimeConfig, CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY)) {
+            if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.CLIENT,
+                    CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, Boolean.FALSE, Boolean.class)) {
                 runtimeConfig.configureAutoDiscoverableProviders(locator);
             }
 

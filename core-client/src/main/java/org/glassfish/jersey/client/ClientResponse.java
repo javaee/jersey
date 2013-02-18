@@ -88,7 +88,7 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                             try {
                                 stream = requestContext.getWorkers().writeTo(
                                         entity, entity.getClass(), null, null, response.getMediaType(),
-                                        response.getMetadata(), requestContext.getPropertiesDelegate(), baos, null, false);
+                                        response.getMetadata(), requestContext.getPropertiesDelegate(), baos, false);
                             } finally {
                                 if (stream != null) {
                                     stream.close();

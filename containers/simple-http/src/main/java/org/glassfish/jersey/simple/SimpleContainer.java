@@ -203,6 +203,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
         }
 
+        @Override
+        public boolean enableResponseBuffering() {
+            return false;
+        }
+
         /**
          * Rethrow the original exception as required by JAX-RS, 3.3.4
          *
@@ -342,5 +347,4 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             add(new SimpleBinder());
         }});
     }
-
 }

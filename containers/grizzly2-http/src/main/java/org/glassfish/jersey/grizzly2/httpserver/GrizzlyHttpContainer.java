@@ -52,17 +52,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
-
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -256,6 +255,11 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                 logger.debugLog("{0} - failure(...) called", name);
                 rethrow(error);
             }
+        }
+
+        @Override
+        public boolean enableResponseBuffering() {
+            return true;
         }
 
         /**

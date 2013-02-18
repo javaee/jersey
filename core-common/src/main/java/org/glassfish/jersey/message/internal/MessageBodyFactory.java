@@ -198,7 +198,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public MessageBodyFactory(ServiceLocator locator, @Optional Configuration configuration) {
         this.locator = locator;
         this.legacyProviderOrdering = configuration != null
-                        && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
+                && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
         initReaders();
         initWriters();
@@ -294,18 +294,18 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         private int getMediaTypeDistance(MediaType wanted, List<MediaType> mtl) {
-            if(wanted == null) {
+            if (wanted == null) {
                 return 0;
             }
 
             int distance = 2;
 
-            for(MediaType mt : mtl) {
-                if(MediaTypes.typeEqual(wanted, mt)) {
+            for (MediaType mt : mtl) {
+                if (MediaTypes.typeEqual(wanted, mt)) {
                     return 0;
                 }
 
-                if(distance > 1 && MediaTypes.typeEqual(MediaTypes.getTypeWildCart(wanted), mt)) {
+                if (distance > 1 && MediaTypes.typeEqual(MediaTypes.getTypeWildCart(wanted), mt)) {
                     distance = 1;
                 }
             }
@@ -330,15 +330,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             while (!wantedType.equals(tmp2) && !classParam.equals(tmp1)) {
                 distance++;
 
-                if(!wantedType.equals(tmp2)) {
+                if (!wantedType.equals(tmp2)) {
                     tmp2 = it2.hasNext() ? it2.next() : null;
                 }
 
-                if(!classParam.equals(tmp1)) {
+                if (!classParam.equals(tmp1)) {
                     tmp1 = it1.hasNext() ? it1.next() : null;
                 }
 
-                if(tmp2 == null && tmp1 == null) {
+                if (tmp2 == null && tmp1 == null) {
                     return Integer.MAX_VALUE;
                 }
             }
@@ -355,7 +355,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             final LinkedList<Class<?>> unprocessed = new LinkedList<Class<?>>();
 
             unprocessed.add(classParam);
-            while(!unprocessed.isEmpty()) {
+            while (!unprocessed.isEmpty()) {
                 final Class<?> clazz = unprocessed.removeFirst();
 
                 classes.add(clazz);
@@ -441,7 +441,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         this.writerInterceptors = Collections.unmodifiableList(
                 Lists.newArrayList(
-                    Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<WriterInterceptor>())
+                        Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<WriterInterceptor>())
                 )
         );
     }
@@ -456,14 +456,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         providers.removeAll(customProviders);
         initReaders(readers, providers, false);
 
-        if(legacyProviderOrdering) {
+        if (legacyProviderOrdering) {
             Collections.sort(readers, new LegacyWorkerComparator<MessageBodyReader>(MessageBodyReader.class));
 
-            for(MessageBodyWorkerPair<MessageBodyReader> messageBodyWorkerPair : readers) {
-                for(MediaType mt : messageBodyWorkerPair.types) {
+            for (MessageBodyWorkerPair<MessageBodyReader> messageBodyWorkerPair : readers) {
+                for (MediaType mt : messageBodyWorkerPair.types) {
                     List<MessageBodyReader> readerList = readersCache.get(mt);
 
-                    if(readerList == null) {
+                    if (readerList == null) {
                         readerList = new ArrayList<MessageBodyReader>();
                         readersCache.put(mt, readerList);
                     }
@@ -493,14 +493,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         providers.removeAll(customProviders);
         initWriters(writers, providers, false);
 
-        if(legacyProviderOrdering) {
+        if (legacyProviderOrdering) {
             Collections.sort(writers, new LegacyWorkerComparator<MessageBodyWriter>(MessageBodyWriter.class));
 
-            for(MessageBodyWorkerPair<MessageBodyWriter> messageBodyWorkerPair : writers) {
-                for(MediaType mt : messageBodyWorkerPair.types) {
+            for (MessageBodyWorkerPair<MessageBodyWriter> messageBodyWorkerPair : writers) {
+                for (MediaType mt : messageBodyWorkerPair.types) {
                     List<MessageBodyWriter> writerList = writersCache.get(mt);
 
-                    if(writerList == null) {
+                    if (writerList == null) {
                         writerList = new ArrayList<MessageBodyWriter>();
                         writersCache.put(mt, writerList);
                     }
@@ -572,7 +572,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                          MediaType mediaType) {
 
         MessageBodyReader<T> p = null;
-        if(legacyProviderOrdering) {
+        if (legacyProviderOrdering) {
             if (mediaType != null) {
                 p = _getMessageBodyReader(c, t, as, mediaType, mediaType);
                 if (p == null) {
@@ -611,7 +611,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private <T> boolean isCompatible(Class<T> workerClass, MessageBodyWorkerPair<T> messageBodyWorkerPair, Class c,
                                      MediaType mediaType) {
 
-        if(messageBodyWorkerPair.providerClassParam == null) {
+        if (messageBodyWorkerPair.providerClassParam == null) {
             DeclaringClassInterfacePair p = ReflectionHelper.getClass(
                     messageBodyWorkerPair.provider.getClass(), workerClass);
 
@@ -619,21 +619,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             messageBodyWorkerPair.providerClassParam = (classArgs != null) ? classArgs[0] : null;
         }
 
-        if(messageBodyWorkerPair.providerClassParam == null) {
+        if (messageBodyWorkerPair.providerClassParam == null) {
             messageBodyWorkerPair.providerClassParam = Object.class;
         }
 
-        if(messageBodyWorkerPair.providerClassParam.equals(Object.class) ||
+        if (messageBodyWorkerPair.providerClassParam.equals(Object.class) ||
                 // looks weird. Could/(should?) be separated to Writer/Reader check
                 messageBodyWorkerPair.providerClassParam.isAssignableFrom(c) ||
                 c.isAssignableFrom(messageBodyWorkerPair.providerClassParam)
                 ) {
-            for(MediaType mt : messageBodyWorkerPair.types) {
-                if(mediaType == null) {
+            for (MediaType mt : messageBodyWorkerPair.types) {
+                if (mediaType == null) {
                     return true;
                 }
 
-                if(MediaTypes.typeEqual(mediaType, mt) ||
+                if (MediaTypes.typeEqual(mediaType, mt) ||
                         MediaTypes.typeEqual(MediaTypes.getTypeWildCart(mediaType), mt) ||
                         MediaTypes.typeEqual(MediaTypes.GENERAL_MEDIA_TYPE, mt)) {
                     return true;
@@ -651,11 +651,11 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            List<MessageBodyWorkerPair<MessageBodyReader>> workers) {
 
         List<MessageBodyWorkerPair<MessageBodyReader>> readers = mbrLookupCache.get(new TypeMediaTypePair(c, mediaType));
-        if(readers == null) {
+        if (readers == null) {
             readers = new ArrayList<MessageBodyWorkerPair<MessageBodyReader>>();
 
-            for(MessageBodyWorkerPair<MessageBodyReader> mbwp : workers) {
-                if(isCompatible(MessageBodyReader.class, mbwp, c, mediaType)) {
+            for (MessageBodyWorkerPair<MessageBodyReader> mbwp : workers) {
+                if (isCompatible(MessageBodyReader.class, mbwp, c, mediaType)) {
                     readers.add(mbwp);
                 }
             }
@@ -663,12 +663,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             mbrLookupCache.put(new TypeMediaTypePair(c, mediaType), readers);
         }
 
-        if(readers.isEmpty()) {
+        if (readers.isEmpty()) {
             return null;
         }
 
-        for(MessageBodyWorkerPair<MessageBodyReader> mbwp : readers) {
-            if(mbwp.provider.isReadable(c, t, as, mediaType)) {
+        for (MessageBodyWorkerPair<MessageBodyReader> mbwp : readers) {
+            if (mbwp.provider.isReadable(c, t, as, mediaType)) {
                 return mbwp.provider;
             }
         }
@@ -684,7 +684,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         List<MessageBodyReader> readers = readersCache.get(lookup);
 
-        if(readers == null) {
+        if (readers == null) {
             return null;
         }
 
@@ -703,7 +703,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                          MediaType mediaType) {
         MessageBodyWriter<T> p = null;
 
-        if(legacyProviderOrdering) {
+        if (legacyProviderOrdering) {
             if (mediaType != null) {
                 p = _getMessageBodyWriter(c, t, as, mediaType, mediaType);
                 if (p == null) {
@@ -728,12 +728,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            List<MessageBodyWorkerPair<MessageBodyWriter>> workers) {
 
         List<MessageBodyWorkerPair<MessageBodyWriter>> writers = mbwLookupCache.get(new TypeMediaTypePair(c, mediaType));
-        if(writers == null) {
+        if (writers == null) {
 
             writers = new ArrayList<MessageBodyWorkerPair<MessageBodyWriter>>();
 
-            for(MessageBodyWorkerPair<MessageBodyWriter> mbwp : workers) {
-                if(isCompatible(MessageBodyWriter.class, mbwp, c, mediaType)) {
+            for (MessageBodyWorkerPair<MessageBodyWriter> mbwp : workers) {
+                if (isCompatible(MessageBodyWriter.class, mbwp, c, mediaType)) {
                     writers.add(mbwp);
                 }
             }
@@ -741,13 +741,13 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             mbwLookupCache.put(new TypeMediaTypePair(c, mediaType), writers);
         }
 
-        if(writers.isEmpty()) {
+        if (writers.isEmpty()) {
             return null;
         }
 
 
-        for(MessageBodyWorkerPair<MessageBodyWriter> mbwp : writers) {
-            if(mbwp.provider.isWriteable(c, t, as, mediaType)) {
+        for (MessageBodyWorkerPair<MessageBodyWriter> mbwp : writers) {
+            if (mbwp.provider.isWriteable(c, t, as, mediaType)) {
                 return mbwp.provider;
             }
         }
@@ -761,7 +761,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            MediaType mediaType, MediaType lookup) {
         List<MessageBodyWriter> writers = writersCache.get(lookup);
 
-        if(writers == null) {
+        if (writers == null) {
             return null;
         }
 
@@ -798,8 +798,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         List<T> providers = new ArrayList<T>();
 
-        for(MessageBodyWorkerPair<T> mbpp : set) {
-            if(mbpp.types.contains(mediaType)) {
+        for (MessageBodyWorkerPair<T> mbpp : set) {
+            if (mbpp.types.contains(mediaType)) {
                 providers.add(mbpp.provider);
             }
         }
@@ -848,8 +848,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
-                               boolean intercept) throws WebApplicationException, IOException {
+                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate,
+                               InputStream entityStream, boolean intercept) throws WebApplicationException, IOException {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, intercept);
@@ -858,19 +858,11 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     @Override
     public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                    MessageBodySizeCallback sizeCallback, boolean intercept) throws IOException, WebApplicationException {
-
-        return writeTo(t, rawType, type, annotations, mediaType, httpHeaders, propertiesDelegate, entityStream, sizeCallback, intercept, true);
-    }
-
-    @Override
-    public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                    MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws IOException, WebApplicationException {
+                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
+                                    OutputStream entityStream, boolean intercept) throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, sizeCallback, intercept, writeEntity);
+                httpHeaders, propertiesDelegate, entityStream, this, intercept);
         executor.proceed();
         return executor.getOutputStream();
     }

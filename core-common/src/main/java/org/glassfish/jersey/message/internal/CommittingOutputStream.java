@@ -39,56 +39,133 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+
+import com.google.common.base.Preconditions;
 
 /**
- * An abstract committing output stream adapter that performs a
- * {@link OutboundMessageContext.StreamProvider#commit() commit} and then retrieves the
- * {@link OutboundMessageContext.StreamProvider#getOutputStream() provided output} stream
- * before the first byte is written to the provided stream.
+ * A committing output stream with optional serialized entity buffering functionality
+ * which allows measuring of the entity size.
  * <p>
- * Concrete implementations of the class typically override the commit operation
- * to perform any initialization on the adapted output stream.
+ * When buffering functionality is enabled the output stream buffers
+ * the written bytes into an internal buffer of a configurable size. After the last
+ * written byte the {@link #commit()} method is expected to be called to notify
+ * a {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}
+ * with an actual measured entity size. If the entity is too large to
+ * fit into the internal buffer and the buffer exceeds before the {@link #commit()}
+ * is called then the stream is automatically committed and the callback is called
+ * with parameter <code>size</code> -1.
  * </p>
+ * <p>
+ * Callback method also returns the output stream in which the output will be written. The committing output stream
+ * must be initialized with the callback using
+ * {@link #setStreamProvider(org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider)}
+ * before first byte is written.
+ * </p>
+ * The buffering is by default disabled and can be enabled by calling {@link #enableBuffering()}
+ * or {@link #enableBuffering(int)} before writing the first byte into this output stream. The former
+ * method enables buffering with the default size
+ * <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt> bytes specified
+ * in {@link #DEFAULT_BUFFER_SIZE}.
+ * </p>
+ *
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 final class CommittingOutputStream extends OutputStream {
 
+    private static final Logger LOGGER = Logger.getLogger(CommittingOutputStream.class.getName());
+    /**
+     * Default size of the buffer which will be used if no user defined size is specified.
+     */
+    static final int DEFAULT_BUFFER_SIZE = 8192;
     /**
      * Adapted output stream.
      */
     private OutputStream adaptedOutput;
     /**
-     * Determines whether the stream was already committed or not.
-     */
-    private boolean isCommitted = false;
-    /**
-     * Stream provider.
+     * Buffering stream provider.
      */
     private OutboundMessageContext.StreamProvider streamProvider;
+    /**
+     * Internal buffer size.
+     */
+    private int bufferSize = 0;
+    /**
+     * Entity buffer.
+     */
+    private ByteArrayOutputStream buffer;
+    /**
+     * When {@code true} the data are written directly to output stream and not to the buffer.
+     */
+    private boolean directWrite = true;
+    /**
+     * When {@code true} the stream is already committed (redirected to adaptedOutput).
+     */
+    private boolean isCommitted;
 
     /**
-     * Construct a new committing output stream using a deferred initialization
-     * of the adapted output stream via
-     * {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider stream provider}.
+     * Creates new committing output stream. The returned stream instance still needs to be initialized before
+     * writing first bytes.
      */
     public CommittingOutputStream() {
     }
 
+
     /**
-     * Set the output stream provider.
+     * Set the buffering output stream provider. If the committing output stream works in buffering mode
+     * this method must be called before first bytes are written into this stream.
      *
-     * @param streamProvider output stream provider.
+     * @param streamProvider non-null stream provider callback.
      */
     public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
+        Preconditions.checkNotNull(streamProvider);
+
+        if (this.streamProvider != null) {
+            LOGGER.log(Level.WARNING, LocalizationMessages.COMMITTING_STREAM_ALREADY_INITIALIZED());
+        }
         this.streamProvider = streamProvider;
     }
 
     /**
-     * Determines whether the stream was already committed or not.
+     * Enable buffering of the serialized entity.
+     *
+     * @param bufferSize size of the buffer. When the value is less or equal to zero then
+     *                   buffering will be disabled and -1 will be passed to the
+     *                   {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}.
+     */
+    public void enableBuffering(int bufferSize) {
+        Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
+                LocalizationMessages.COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE());
+        this.bufferSize = bufferSize;
+        if (bufferSize <= 0) {
+            this.directWrite = true;
+            this.buffer = null;
+        } else {
+            directWrite = false;
+            buffer = new ByteArrayOutputStream(bufferSize);
+        }
+    }
+
+
+    /**
+     * Enable buffering of the serialized entity with the {@link #DEFAULT_BUFFER_SIZE default buffer size }.
+     */
+    public void enableBuffering() {
+        enableBuffering(DEFAULT_BUFFER_SIZE);
+    }
+
+
+    /**
+     * Determine whether the stream was already committed or not.
      *
      * @return {@code true} if this stream was already committed, {@code false} otherwise.
      */
@@ -96,49 +173,122 @@ final class CommittingOutputStream extends OutputStream {
         return isCommitted;
     }
 
+    private void commitStream() throws IOException {
+        commitStream(-1);
+    }
+
+    private void commitStream(int currentSize) throws IOException {
+        if (!isCommitted) {
+            Preconditions.checkState(streamProvider != null, LocalizationMessages.STREAM_PROVIDER_NULL());
+            adaptedOutput = streamProvider.getOutputStream(currentSize);
+            if (adaptedOutput == null) {
+                adaptedOutput = new NullOutputStream();
+            }
+
+            directWrite = true;
+            isCommitted = true;
+        }
+    }
+
     @Override
     public void write(byte b[]) throws IOException {
-        if (b.length > 0) {
-            commitWrite();
+        if (directWrite) {
+            commitStream();
             adaptedOutput.write(b);
+        } else {
+            if (b.length + buffer.size() > bufferSize) {
+                flushBuffer(false);
+                adaptedOutput.write(b);
+            } else {
+                buffer.write(b);
+            }
         }
     }
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
-        if (len > 0) {
-            commitWrite();
+        if (directWrite) {
+            commitStream();
             adaptedOutput.write(b, off, len);
+        } else {
+            if (len + buffer.size() > bufferSize) {
+                flushBuffer(false);
+                adaptedOutput.write(b, off, len);
+            } else {
+                buffer.write(b, off, len);
+            }
         }
     }
 
     @Override
     public void write(int b) throws IOException {
-        commitWrite();
-        adaptedOutput.write(b);
+        if (directWrite) {
+            commitStream();
+            adaptedOutput.write(b);
+        } else {
+            if (buffer.size() + 1 > bufferSize) {
+                flushBuffer(false);
+                adaptedOutput.write(b);
+            } else {
+                buffer.write(b);
+            }
+        }
     }
 
-    @Override
-    public void flush() throws IOException {
-        commitWrite();
-        adaptedOutput.flush();
+    /**
+     * Commit the output stream.
+     *
+     * @throws IOException when underlying stream returned from the callback method throws the io exception.
+     */
+    void commit() throws IOException {
+        flushBuffer(true);
+        commitStream();
     }
 
     @Override
     public void close() throws IOException {
-        commitWrite();
+        commit();
         adaptedOutput.close();
     }
 
-    private void commitWrite() throws IOException {
-        if (!isCommitted) {
-            isCommitted = true;
+    @Override
+    public void flush() throws IOException {
+        if (isCommitted()) {
+            adaptedOutput.flush();
+        }
+    }
 
-            streamProvider.commit();
-
-            if (adaptedOutput == null) {
-                adaptedOutput = streamProvider.getOutputStream();
+    private void flushBuffer(boolean endOfStream) throws IOException {
+        if (!directWrite) {
+            int currentSize;
+            if (endOfStream) {
+                currentSize = buffer == null ? 0 : buffer.size();
+            } else {
+                currentSize = -1;
             }
+
+            commitStream(currentSize);
+            if (buffer != null) {
+                buffer.writeTo(adaptedOutput);
+            }
+        }
+    }
+
+    private static class NullOutputStream extends OutputStream {
+
+        @Override
+        public void write(int b) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            // do nothing
         }
     }
 }
