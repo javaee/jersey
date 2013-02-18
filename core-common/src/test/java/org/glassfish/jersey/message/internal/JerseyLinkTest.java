@@ -88,20 +88,6 @@ public class JerseyLinkTest {
     }
 
     @Test
-    public void testFromResourceMethod1() {
-//        Link l1 = Link.fromResourceMethod(MyResource.class, "self").build();
-//        Link l2 = Link.fromUri("/myresource").rel("self").type("text/plain").build();
-//        assertEquals(l1, l2);
-    }
-
-    @Test
-    public void testFromResourceMethod2() {
-//        Link l1 = Link.fromResourceMethod(MyResource.class, "notSelf", "self").build();
-//        Link l2 = Link.fromUri("/myresource").rel("self").type("application/xml").build();
-//        assertEquals(l1, l2);
-    }
-
-    @Test
     public void testGetUri() {
         URI u = URI.create("http://example.org/app/link1");
         Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
@@ -110,12 +96,18 @@ public class JerseyLinkTest {
     }
 
     @Test
+    public void testToString() {
+        Link link = Link.fromUri("http://example.org/app/link1").rel("self").build();
+        assertEquals("<http://example.org/app/link1>; rel=\"self\"", link.toString());
+    }
+
+    @Test
     public void testGetters() {
-//        Link l1 = Link.fromResourceMethod(MyResource.class, "self").build();
-//        assertEquals(URI.create("/myresource"), l1.getUri());
-//        assertEquals("self", l1.getRel());
-//        assertEquals(null, l1.getTitle());
-//        assertEquals("text/plain", l1.getType());
-//        assertEquals(2, l1.getParams().size());
+        Link link = Link.fromUri("http://example.org/app/link1").rel("self").type("text/plain").build();
+        assertEquals(URI.create("http://example.org/app/link1"), link.getUri());
+        assertEquals("self", link.getRel());
+        assertEquals(null, link.getTitle());
+        assertEquals("text/plain", link.getType());
+        assertEquals(2, link.getParams().size());
     }
 }
