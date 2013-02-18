@@ -67,6 +67,7 @@
         <module>proxy-client</module>
         <module>wadl-doclet</module>
         <module>bean-validation</module>
+        <module>mvc-freemarker</module>
     </modules>
 
     <dependencies>

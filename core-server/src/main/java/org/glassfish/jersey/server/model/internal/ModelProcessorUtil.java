@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.model.internal;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -61,6 +62,7 @@ import com.google.common.collect.Sets;
  * model processors}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ModelProcessorUtil {
     /**
@@ -81,8 +83,8 @@ public class ModelProcessorUtil {
     }
 
 
-    private static boolean isMethodOverriden(ResourceMethod resourceMethod, String httpMethod, MediaType consumes,
-                                             MediaType produces) {
+    private static boolean isMethodOverridden(ResourceMethod resourceMethod, String httpMethod, MediaType consumes,
+                                              MediaType produces) {
         if (!resourceMethod.getHttpMethod().equals(httpMethod)) {
             return false;
         }
@@ -115,14 +117,51 @@ public class ModelProcessorUtil {
      * Method bean containing basic information about enhancing resource method.
      */
     public static class Method {
-        private final String httpMethod;
-        private final MediaType consumes;
-        private final MediaType produces;
-        private final Class<? extends Inflector<ContainerRequestContext, Response>> inflector;
 
+        private final String httpMethod;
+        private final String path;
+
+        private final List<MediaType> consumes;
+        private final List<MediaType> produces;
+
+        private final Class<? extends Inflector<ContainerRequestContext, Response>> inflectorClass;
+        private final Inflector<ContainerRequestContext, Response> inflector;
+        /**
+         * Create new method instance.
+         *
+         * @param path relative path of the method.
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media type.
+         * @param produces Produces media type.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String path, String httpMethod, MediaType consumes, MediaType produces,
+                      Class<? extends Inflector<ContainerRequestContext, Response>> inflector) {
+            this(path, httpMethod, Arrays.asList(consumes), Arrays.asList(produces), inflector);
+        }
 
         /**
          * Create new method instance.
+         *
+         * @param path relative path of the method.
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media types.
+         * @param produces Produces media types.
+         * @param inflectorClass Inflector handling the resource method.
+         */
+        public Method(String path, String httpMethod, List<MediaType> consumes, List<MediaType> produces,
+                      Class<? extends Inflector<ContainerRequestContext, Response>> inflectorClass) {
+            this.path = path;
+            this.httpMethod = httpMethod;
+            this.consumes = consumes;
+            this.produces = produces;
+            this.inflectorClass = inflectorClass;
+            this.inflector = null;
+        }
+
+        /**
+         * Create new method instance.
+         *
          * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
          * @param consumes Consumed media type.
          * @param produces Produces media type.
@@ -130,17 +169,86 @@ public class ModelProcessorUtil {
          */
         public Method(String httpMethod, MediaType consumes, MediaType produces,
                       Class<? extends Inflector<ContainerRequestContext, Response>> inflector) {
+            this(null, httpMethod, consumes, produces, inflector);
+        }
+
+        /**
+         * Create new method instance.
+         *
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media types.
+         * @param produces Produces media types.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String httpMethod, List<MediaType> consumes, List<MediaType> produces,
+                      Class<? extends Inflector<ContainerRequestContext, Response>> inflector) {
+            this(null, httpMethod, consumes, produces, inflector);
+        }
+
+        /**
+         * Create new method instance.
+         *
+         * @param path relative path of the method.
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media types.
+         * @param produces Produces media types.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String path, String httpMethod, List<MediaType> consumes, List<MediaType> produces,
+                      Inflector<ContainerRequestContext, Response> inflector) {
+            this.path = path;
             this.httpMethod = httpMethod;
             this.consumes = consumes;
             this.produces = produces;
+            this.inflectorClass = null;
             this.inflector = inflector;
+        }
+
+        /**
+         * Create new method instance.
+         *
+         * @param path relative path of the method.
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media type.
+         * @param produces Produces media type.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String path, String httpMethod, MediaType consumes, MediaType produces,
+                      Inflector<ContainerRequestContext, Response> inflector) {
+            this(path, httpMethod, Arrays.asList(consumes), Arrays.asList(produces), inflector);
+        }
+
+        /**
+         * Create new method instance.
+         *
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media type.
+         * @param produces Produces media type.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String httpMethod, MediaType consumes, MediaType produces,
+                      Inflector<ContainerRequestContext, Response> inflector) {
+            this(null, httpMethod, consumes, produces, inflector);
+        }
+
+        /**
+         * Create new method instance.
+         *
+         * @param httpMethod HTTP method (eg. GET, POST, OPTIONS).
+         * @param consumes Consumed media types.
+         * @param produces Produces media types.
+         * @param inflector Inflector handling the resource method.
+         */
+        public Method(String httpMethod, List<MediaType> consumes, List<MediaType> produces,
+                      Inflector<ContainerRequestContext, Response> inflector) {
+            this(null, httpMethod, consumes, produces, inflector);
         }
     }
 
     /**
      * Enhance {@code resourceModel} by list of methods. The {@code resourceModel} is traversed and for each available endpoint
      * URI in the model {@code methods} are added. In case of method conflicts currently existing methods will
-     * never be 'overriden' by any method from {@code methods}. Overriding check takes into account media types of methods so
+     * never be 'overridden' by any method from {@code methods}. Overriding check takes into account media types of methods so
      * that new resource methods with same HTTP method can define only more specific media type.
      *
      * @param resourceModel Resource model to be enhanced.
@@ -159,25 +267,46 @@ public class ModelProcessorUtil {
         return newModelBuilder;
     }
 
-    private static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder, List<Method> methods) {
+    public static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder, List<Method> methods) {
+        final Resource firstResource = resource.getResources().get(0);
 
-        if (resource.getResourceMethods().size() > 0) {
+        if (methodsSuitableForResource(firstResource, methods)) {
             for (Method method : methods) {
-                boolean found = false;
+                final Set<MediaType> produces = Sets.newHashSet(method.produces);
+
                 for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
-                    if (ModelProcessorUtil.isMethodOverriden(resourceMethod, method.httpMethod, method.consumes,
-                            method.produces)) {
-                        found = true;
+                    for (final MediaType produce : method.produces) {
+                        if (ModelProcessorUtil.isMethodOverridden(
+                                resourceMethod,
+                                method.httpMethod,
+                                method.consumes.get(0),
+                                produce)) {
+                            produces.remove(produce);
+                        }
                     }
                 }
-                if (!found) {
-                    final Resource firstResource = resource.getResources().get(0);
+
+                if (!produces.isEmpty()) {
+                    final Resource parentResource = resource.getParentResources().get(0);
+                    if (parentResource != null && method.path != null) {
+                        continue;
+                    }
+
                     final Resource.Builder resourceBuilder = Resource.builder(firstResource.getPath());
-                    resourceBuilder.addMethod(method.httpMethod).consumes(method.consumes).produces(method.produces)
-                            .handledBy(method.inflector).build();
+                    final Resource.Builder builder = method.path != null
+                            ? resourceBuilder.addChildResource(method.path) : resourceBuilder;
+                    final ResourceMethod.Builder methodBuilder = builder
+                            .addMethod(method.httpMethod)
+                            .consumes(method.consumes)
+                            .produces(produces);
+
+                    if (method.inflector != null) {
+                        methodBuilder.handledBy(method.inflector);
+                    } else {
+                        methodBuilder.handledBy(method.inflectorClass);
+                    }
 
                     final Resource newResource = resourceBuilder.build();
-                    final Resource parentResource = resource.getParentResources().get(0);
                     if (parentResource != null) {
                         final Resource.Builder parentBuilder = Resource.builder(parentResource.getPath());
                         parentBuilder.addChildResource(newResource);
@@ -192,5 +321,28 @@ public class ModelProcessorUtil {
         for (RuntimeResource child : resource.getChildRuntimeResources()) {
             enhanceResource(child, newModelBuilder, methods);
         }
+    }
+
+    /**
+     * Determines whether the given methods can enhance the resource.
+     *
+     * @param resource resource to add the methods to.
+     * @param methods methods to add.
+     * @return {@code true} if methods can enhance the resource, {@code false} otherwise.
+     */
+    private static boolean methodsSuitableForResource(final Resource resource, final List<Method> methods) {
+        if (resource.getResourceMethods().size() > 0) {
+            return true;
+        }
+
+        // If there are no handler classes/instances we want to add only non-HEAD / non-OPTIONS methods.
+        if (resource.getHandlerInstances().isEmpty() && resource.getHandlerClasses().isEmpty()) {
+            for (final Method method : methods) {
+                if (!HttpMethod.HEAD.equals(method.httpMethod) && !HttpMethod.OPTIONS.equals(method.httpMethod)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

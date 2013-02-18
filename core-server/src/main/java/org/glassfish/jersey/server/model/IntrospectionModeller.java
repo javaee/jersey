@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,6 +70,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.internal.ModelHelper;
 
 /**
  * Utility class for constructing resource model from JAX-RS annotated POJO.
@@ -111,7 +112,7 @@ final class IntrospectionModeller {
     private Resource.Builder doCreateResourceBuilder() {
         checkForNonPublicMethodIssues();
 
-        final Class<?> annotatedResourceClass = getAnnotatedResourceClass(handlerClass);
+        final Class<?> annotatedResourceClass = ModelHelper.getAnnotatedResourceClass(handlerClass);
         final Path rPathAnnotation = annotatedResourceClass.getAnnotation(Path.class);
 
         final boolean keepEncodedParams =
@@ -229,28 +230,6 @@ final class IntrospectionModeller {
         });
 
         return result;
-    }
-
-    /**
-     * Get the class in the provided resource class ancestor hierarchy that
-     * is actually annotated with the {@link Path &#64;Path} annotation.
-     *
-     * @param resourceClass resource class.
-     * @return resource class or it's ancestor that is annotated with the {@link Path &#64;Path}
-     *         annotation.
-     */
-    static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
-        if (resourceClass.isAnnotationPresent(Path.class)) {
-            return resourceClass;
-        }
-
-        for (Class<?> i : resourceClass.getInterfaces()) {
-            if (i.isAnnotationPresent(Path.class)) {
-                return i;
-            }
-        }
-
-        return resourceClass;
     }
 
     private static List<MediaType> resolveConsumedTypes(final AnnotatedMethod am, final List<MediaType> defaultConsumedTypes) {

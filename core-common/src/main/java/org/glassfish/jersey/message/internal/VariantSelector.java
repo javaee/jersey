@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -51,6 +52,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * Utility for selecting variant that best matches request from a list of variants.
@@ -312,6 +316,19 @@ public final class VariantSelector {
      * @return selected variant.
      */
     public static Variant selectVariant(InboundMessageContext context, List<Variant> variants, Ref<String> varyHeaderValue) {
+        final List<Variant> selectedVariants = selectVariants(context, variants, varyHeaderValue);
+        return selectedVariants.isEmpty() ? null : selectedVariants.get(0);
+    }
+
+    /**
+     * Select possible representation variants in order in which they best matches the request.
+     *
+     * @param context inbound message context.
+     * @param variants list of possible variants.
+     * @param varyHeaderValue an output reference of vary header value that should be put into the response Vary header.
+     * @return possible variants.
+     */
+    public static List<Variant> selectVariants(InboundMessageContext context, List<Variant> variants, Ref<String> varyHeaderValue) {
         LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
 
         Set<String> vary = new HashSet<String>();
@@ -321,7 +338,7 @@ public final class VariantSelector {
         vhs = selectVariants(vhs, context.getQualifiedAcceptEncoding(), ENCODING_DC, vary);
 
         if (vhs.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         } else {
             StringBuilder varyHeader = new StringBuilder();
             for (String v : vary) {
@@ -334,7 +351,12 @@ public final class VariantSelector {
             if (!varyValue.isEmpty()) {
                 varyHeaderValue.set(varyValue);
             }
-            return vhs.iterator().next().v;
+            return Lists.transform(vhs, new Function<VariantHolder, Variant>() {
+                @Override
+                public Variant apply(final VariantHolder holder) {
+                    return holder.v;
+                }
+            });
         }
     }
 }

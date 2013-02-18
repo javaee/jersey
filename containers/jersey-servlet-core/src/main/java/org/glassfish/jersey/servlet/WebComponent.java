@@ -78,12 +78,14 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
+import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
+import org.glassfish.jersey.servlet.mvc.internal.JspTemplateProcessor;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
@@ -229,6 +231,12 @@ public class WebComponent {
                 }
             }).to(WebConfig.class).in(Singleton.class);
             install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
+
+            // MVC
+            final String disableJsp = webConfig.getInitParameter(ServletProperties.FEATURE_DISABLE_JSP_TEMPLATE_PROCESSOR);
+            if (!Boolean.valueOf(disableJsp)) {
+                bind(JspTemplateProcessor.class).to(TemplateProcessor.class).in(Singleton.class);
+            }
         }
     }
 

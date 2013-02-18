@@ -129,10 +129,10 @@ class SubResourceLocatorRouter implements Router {
                 resourceContext.bindResourceIfSingleton(subResourceInstance);
             }
 
-            final Resource.Builder builder = Resource.builder(subResourceInstance.getClass());
+            Resource.Builder builder = Resource.builder(subResourceInstance.getClass());
             if (builder == null) {
-                // resource is empty
-                throw new NotFoundException();
+                // resource is empty - do not throw 404, wait if ModelProcessors add any method
+                builder = Resource.builder().name(subResourceInstance.getClass().getName());
             }
             subResource = builder.build();
         }
