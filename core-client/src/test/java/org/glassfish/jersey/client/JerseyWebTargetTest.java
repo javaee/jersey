@@ -42,6 +42,7 @@ package org.glassfish.jersey.client;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.ClientBuilder;
@@ -54,6 +55,8 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import com.google.common.collect.Lists;
 
 import junit.framework.Assert;
 
@@ -171,6 +174,49 @@ public class JerseyWebTargetTest {
                 .toString());
         Assert.assertEquals("/path/a%2520%253F/*///b/", target.path("path/{a}/{b}").resolveTemplates(map,
                 false).getUri().toString());
+
+        List<Map<String,Object>> corruptedTemplateValuesList = Lists.<Map<String,Object>>newArrayList(
+                null,
+                new HashMap<String, Object>() {{ put(null, "value"); }},
+                new HashMap<String, Object>() {{ put("name", null); }},
+                new HashMap<String, Object>() {{ put("a", "foo"); put("name", null); }},
+                new HashMap<String, Object>() {{ put("name", null); put("a", "foo"); }}
+        );
+
+        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+            try {
+                target.path("path/{a}/{b}").resolveTemplatesFromEncoded(corruptedTemplateValues);
+                fail("NullPointerException expected. " + corruptedTemplateValues);
+            } catch (NullPointerException ex) {
+                // expected
+            } catch (Exception e) {
+                fail("NullPointerException expected for template values " + corruptedTemplateValues + ", caught: " + e);
+            }
+        }
+
+        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+            try {
+                target.path("path/{a}/{b}").resolveTemplates(corruptedTemplateValues);
+                fail("NullPointerException expected. " + corruptedTemplateValues);
+            } catch (NullPointerException ex) {
+                // expected
+            } catch (Exception e) {
+                fail("NullPointerException expected for template values " + corruptedTemplateValues + ", caught: " + e);
+            }
+        }
+
+        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+            for (final boolean encode : new boolean[] {true, false}) {
+                try {
+                    target.path("path/{a}/{b}").resolveTemplates(corruptedTemplateValues, encode);
+                    fail("NullPointerException expected. " + corruptedTemplateValues);
+                } catch (NullPointerException ex) {
+                    // expected
+                } catch (Exception e) {
+                    fail("NullPointerException expected for template values " + corruptedTemplateValues + ", caught: " + e);
+                }
+            }
+        }
     }
 
 
@@ -219,6 +265,13 @@ public class JerseyWebTargetTest {
 
         try {
             target.queryParam(null);
+            fail("NullPointerException expected.");
+        } catch (NullPointerException ex) {
+            // expected
+        }
+
+        try {
+            target.queryParam(null, "param");
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // expected
