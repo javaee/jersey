@@ -185,6 +185,8 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     private static void checkForNullValues(String name, Object[] values) {
+        Preconditions.checkNotNull(name, "name is 'null'.");
+
         List<Integer> indexes = new LinkedList<Integer>();
         for (int i = 0; i < values.length; i++) {
             if (values[i] == null) {
@@ -264,7 +266,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     public JerseyWebTarget resolveTemplates(Map<String, Object> templateValues, boolean encodeSlashInPath)
             throws NullPointerException {
         checkNotClosed();
-        Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
+        checkTemplateValues(templateValues);
 
         if(templateValues.isEmpty()) {
             return this;
@@ -277,12 +279,29 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     public JerseyWebTarget resolveTemplatesFromEncoded(Map<String, Object> templateValues)
             throws NullPointerException {
         checkNotClosed();
-        Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
+        checkTemplateValues(templateValues);
 
         if(templateValues.isEmpty()) {
             return this;
         } else {
             return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
+        }
+    }
+
+    /**
+     * Check template values for {@code null} values. Throws {@code NullPointerException} if the name-value map or any of the
+     * names or encoded values in the map is {@code null}.
+     *
+     * @param templateValues map to check.
+     * @throws NullPointerException if the name-value map or any of the names or encoded values in the map
+     * is {@code null}.
+     */
+    private void checkTemplateValues(final Map<String, Object> templateValues) throws NullPointerException {
+        Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
+
+        for(final Map.Entry entry : templateValues.entrySet()) {
+            Preconditions.checkNotNull(entry.getKey(), "name is 'null'.");
+            Preconditions.checkNotNull(entry.getValue(), "value is 'null'.");
         }
     }
 
