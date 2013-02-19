@@ -806,12 +806,15 @@ public class InboundMessageContext {
             return null;
         }
 
+        MediaType mediaType = getMediaType();
+        mediaType = mediaType == null ? MediaType.APPLICATION_OCTET_STREAM_TYPE : mediaType;
+
         try {
             T t = (T) workers.readFrom(
                     rawType,
                     type,
                     annotations,
-                    getMediaType(),
+                    mediaType,
                     headers,
                     propertiesDelegate,
                     entityContent.getWrappedStream(),
