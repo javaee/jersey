@@ -95,7 +95,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
             final StatusType status = response.getStatusInfo();
             final OutboundMessageContext context = new OutboundMessageContext();
             context.getHeaders().putAll(response.getMetadata());
-            context.setEntity(response.readEntity(InputStream.class));
+            context.setEntity(response.getEntity());
             return new OutboundJaxrsResponse(status, context);
         }
     }
