@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -77,7 +78,9 @@ public class TestBinder extends AbstractBinder {
     protected void configure() {
         install(
                 new RequestScope.Binder(),
+                new JerseyErrorService.Binder(),
                 new ContextInjectionResolver.Binder(),
+                new JerseyClassAnalyzer.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),

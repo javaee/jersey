@@ -150,7 +150,7 @@ public class CustomConfigValidationTest extends JerseyTest {
 
         private final ValidationConfiguration config;
 
-        private ValidationConfigurationContextResolver() {
+        public ValidationConfigurationContextResolver() {
             config = new ValidationConfiguration();
 
             // ConstraintValidatorFactory is set by default.

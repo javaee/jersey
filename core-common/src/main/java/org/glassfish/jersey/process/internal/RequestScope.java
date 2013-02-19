@@ -49,6 +49,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.internal.util.Producer;
@@ -59,7 +60,6 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.base.Objects;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -291,7 +291,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance oldInstance = currentScopeInstance.get();
         try {
             currentScopeInstance.set(scopeInstance.getReference());
-            task.run();
+            Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             scopeInstance.release();
@@ -314,7 +314,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance instance = createInstance();
         try {
             currentScopeInstance.set(instance);
-            task.run();
+            Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             instance.release();
@@ -341,7 +341,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance oldInstance = currentScopeInstance.get();
         try {
             currentScopeInstance.set(scopeInstance.getReference());
-            return task.call();
+            return Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             scopeInstance.release();
@@ -367,7 +367,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance instance = createInstance();
         try {
             currentScopeInstance.set(instance);
-            return task.call();
+            return Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             instance.release();
@@ -393,7 +393,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance oldInstance = currentScopeInstance.get();
         try {
             currentScopeInstance.set(scopeInstance.getReference());
-            return task.call();
+            return Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             scopeInstance.release();
@@ -418,7 +418,7 @@ public class RequestScope implements Context<RequestScoped> {
         Instance instance = createInstance();
         try {
             currentScopeInstance.set(instance);
-            return task.call();
+            return Errors.process(task);
         } finally {
             currentScopeInstance.set(oldInstance);
             instance.release();

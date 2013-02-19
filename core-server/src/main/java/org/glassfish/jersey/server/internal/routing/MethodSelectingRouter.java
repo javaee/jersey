@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -320,12 +321,12 @@ final class MethodSelectingRouter implements Router {
 
     private void addAllConsumesProducesCombinations(List<ConsumesProducesAcceptor> list,
                                                     MethodAcceptorPair methodAcceptorPair) {
-        final List<MediaType> effectiveInputTypes = new LinkedList<MediaType>();
+        final Set<MediaType> effectiveInputTypes = new LinkedHashSet<MediaType>();
         ResourceMethod resourceMethod = methodAcceptorPair.model;
 
         boolean consumesFromWorkers = fillMediaTypes(effectiveInputTypes, resourceMethod, resourceMethod.getConsumedTypes(),
                 true);
-        final List<MediaType> effectiveOutputTypes = new LinkedList<MediaType>();
+        final Set<MediaType> effectiveOutputTypes = new LinkedHashSet<MediaType>();
         boolean producesFromWorkers = fillMediaTypes(effectiveOutputTypes, resourceMethod, resourceMethod.getProducedTypes(),
                 false);
 
@@ -338,7 +339,7 @@ final class MethodSelectingRouter implements Router {
         }
     }
 
-    private boolean fillMediaTypes(List<MediaType> effectiveTypes, ResourceMethod resourceMethod, List<MediaType> methodTypes,
+    private boolean fillMediaTypes(Set<MediaType> effectiveTypes, ResourceMethod resourceMethod, List<MediaType> methodTypes,
                                    boolean inputTypes) {
         boolean consumesFromWorkers = false;
         effectiveTypes.addAll(methodTypes);
@@ -354,12 +355,12 @@ final class MethodSelectingRouter implements Router {
             }
         }
         if (effectiveTypes.isEmpty()) {
-            effectiveTypes.add(MediaType.valueOf("*/*"));
+            effectiveTypes.add(MediaType.WILDCARD_TYPE);
         }
         return consumesFromWorkers;
     }
 
-    private void fillOutputParameters(List<MediaType> effectiveOutputTypes, Invocable invocableMethod) {
+    private void fillOutputParameters(Set<MediaType> effectiveOutputTypes, Invocable invocableMethod) {
         final List<MediaType> messageBodyWriterMediaTypes = workers.getMessageBodyWriterMediaTypes(
                 invocableMethod.getRawResponseType(),
                 invocableMethod.getResponseType(),
@@ -367,12 +368,14 @@ final class MethodSelectingRouter implements Router {
         effectiveOutputTypes.addAll(messageBodyWriterMediaTypes);
     }
 
-    private void fillInputTypesFromWorkers(List<MediaType> effectiveInputTypes, Invocable invocableMethod) {
+    private void fillInputTypesFromWorkers(Set<MediaType> effectiveInputTypes, Invocable invocableMethod) {
         for (Parameter p : invocableMethod.getParameters()) {
             if (p.getSource() == Parameter.Source.ENTITY) {
                 final List<MediaType> messageBodyReaderMediaTypes = workers.getMessageBodyReaderMediaTypes(
                         p.getRawType(), p.getType(), p.getDeclaredAnnotations());
                 effectiveInputTypes.addAll(messageBodyReaderMediaTypes);
+                // there's at most one entity parameter
+                break;
             }
         }
     }

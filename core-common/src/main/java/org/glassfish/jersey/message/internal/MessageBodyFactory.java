@@ -58,9 +58,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -71,6 +68,9 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -591,6 +591,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> List<MediaType> getMessageBodyReaderMediaTypes(Class<T> type, Type genericType, Annotation[] annotations) {
         List<MediaType> mtl = new ArrayList<MediaType>();
 
@@ -606,6 +607,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         return mtl;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> boolean isCompatible(Class<T> workerClass, MessageBodyWorkerPair<T> messageBodyWorkerPair, Class c,
                                      MediaType mediaType) {
 
@@ -808,6 +810,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> List<MediaType> getMessageBodyWriterMediaTypes(Class<T> c, Type t,
                                                               Annotation[] as) {
         List<MediaType> mtl = new ArrayList<MediaType>();
@@ -825,6 +828,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> MediaType getMessageBodyWriterMediaType(Class<T> c, Type t,
                                                        Annotation[] as, List<MediaType> acceptableMediaTypes) {
         for (MediaType acceptable : acceptableMediaTypes) {

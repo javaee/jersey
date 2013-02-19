@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.util.Producer;
@@ -164,6 +165,20 @@ public class Errors {
     }
 
     /**
+     * Invoke given callable task and gather errors.
+     *
+     * After the task is complete all gathered errors are logged. Any exception thrown
+     * by the throwable is re-thrown.
+     *
+     * @param task callable task to be invoked.
+     * @return the result produced by the task.
+     * @throws Exception exception thrown by the task.
+     */
+    public static <T> T process(final Callable<T> task) throws Exception {
+        return process(task, true);
+    }
+
+    /**
      * Invoke given producer task and gather errors.
      *
      * After the task is complete all gathered errors are logged. If there is a fatal error
@@ -213,7 +228,17 @@ public class Errors {
         }, true);
     }
 
-    private static <T> T process(final Producer<T> producer, final boolean throwException) {
+    private static <T> T process(final Producer<T> task, final boolean throwException) {
+        try {
+            return process((Callable<T>) task, throwException);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static <T> T process(final Callable<T> task, final boolean throwException) throws Exception {
         Errors instance = errors.get();
         if (instance == null) {
             instance = new Errors();
@@ -221,10 +246,10 @@ public class Errors {
         }
         instance.preProcess();
 
-        RuntimeException caught = null;
+        Exception caught = null;
         try {
-            return producer.call();
-        } catch (RuntimeException re) {
+            return task.call();
+        } catch (Exception re) {
             // If a runtime exception is caught then report errors and rethrow.
             caught = re;
         } finally {

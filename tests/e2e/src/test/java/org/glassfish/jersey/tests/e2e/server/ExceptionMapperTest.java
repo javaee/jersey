@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,12 +56,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Providers;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -79,8 +84,16 @@ import junit.framework.Assert;
 public class ExceptionMapperTest extends JerseyTest {
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class, MyMessageBodyWritter.class, MyMessageBodyReader.class,
-                MyExceptionMapper.class, MyExceptionMapperCauseAnotherException.class);
+        return new ResourceConfig(
+                Resource.class,
+                MyMessageBodyWritter.class,
+                MyMessageBodyReader.class,
+                MyExceptionMapper.class,
+                MyExceptionMapperCauseAnotherException.class,
+                // JERSEY-1515
+                TestResource.class,
+                VisibilityExceptionMapper.class
+                );
     }
 
 
@@ -262,5 +275,84 @@ public class ExceptionMapperTest extends JerseyTest {
         }
     }
 
+    /**
+     * BEGIN: JERSEY-1515 reproducer code
+     */
+    public static class VisibilityException extends WebApplicationException {
 
+        private static final long serialVersionUID = -1159407312691372429L;
+
+    }
+
+    public static class VisibilityExceptionMapper implements ExceptionMapper<VisibilityException> {
+        private HttpHeaders headers;
+        private UriInfo info;
+        private Application application;
+        private Request request;
+        private Providers provider;
+
+        protected VisibilityExceptionMapper(@Context HttpHeaders headers,
+                                            @Context UriInfo info, @Context Application application,
+                                            @Context Request request, @Context Providers provider) {
+            super();
+            this.headers = headers;
+            this.info = info;
+            this.application = application;
+            this.request = request;
+            this.provider = provider;
+        }
+
+        public VisibilityExceptionMapper(@Context HttpHeaders headers,
+                                         @Context UriInfo info, @Context Application application,
+                                         @Context Request request) {
+            super();
+            this.headers = headers;
+            this.info = info;
+            this.application = application;
+            this.request = request;
+        }
+
+        public VisibilityExceptionMapper(@Context HttpHeaders headers,
+                                         @Context UriInfo info, @Context Application application) {
+            super();
+            this.headers = headers;
+            this.info = info;
+            this.application = application;
+        }
+
+        public VisibilityExceptionMapper(@Context HttpHeaders headers,
+                                         @Context UriInfo info) {
+            super();
+            this.headers = headers;
+            this.info = info;
+        }
+
+        public VisibilityExceptionMapper(@Context HttpHeaders headers) {
+            super();
+            this.headers = headers;
+        }
+
+        @Override
+        public Response toResponse(VisibilityException exception) {
+            return Response.ok("visible").build();
+        }
+    }
+
+    @Path("test/visible")
+    public static class TestResource {
+        @GET
+        public String throwVisibleException() {
+            throw new VisibilityException();
+        }
+    }
+
+    @Test
+    public void testJersey1515() {
+        Response res = target().path("test/visible").request().get();
+        Assert.assertEquals(200, res.getStatus());
+        Assert.assertEquals("visible", res.readEntity(String.class));
+    }
+    /**
+     * END: JERSEY-1515 reproducer code
+     */
 }

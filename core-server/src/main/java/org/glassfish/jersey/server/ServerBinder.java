@@ -54,9 +54,11 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
+import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
+import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
@@ -104,15 +106,17 @@ public class ServerBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
+                new JerseyErrorService.Binder(),
                 new ProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
+                new ParameterInjectionBinder(),
+                new JerseyClassAnalyzer.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ContainerFilteringStage.Binder(),
-                new ParameterInjectionBinder(),
                 new ResourceModelBinder(),
                 new RouterBinder(),
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),

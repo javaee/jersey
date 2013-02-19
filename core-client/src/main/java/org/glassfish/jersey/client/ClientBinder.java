@@ -39,18 +39,20 @@
  */
 package org.glassfish.jersey.client;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.ext.MessageBodyReader;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.ext.MessageBodyReader;
-
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
+import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -101,7 +103,9 @@ class ClientBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
+                new JerseyErrorService.Binder(),
                 new ContextInjectionResolver.Binder(),
+                new JerseyClassAnalyzer.Binder(),
                 new MessagingBinders.MessageBodyProviders(),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),

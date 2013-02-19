@@ -51,6 +51,7 @@ import javax.ws.rs.core.Feature;
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -354,6 +355,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             markAsShared();
 
             final ServiceLocator locator = Injections.createLocator(new ClientBinder());
+            locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
 

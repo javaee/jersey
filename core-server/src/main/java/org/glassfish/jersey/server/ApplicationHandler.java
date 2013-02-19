@@ -78,6 +78,7 @@ import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -229,6 +230,8 @@ public final class ApplicationHandler {
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
+
         this.application = createApplication(jaxrsApplicationClass);
         this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
 
@@ -249,6 +252,8 @@ public final class ApplicationHandler {
      */
     public ApplicationHandler(Application application) {
         this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
+
         this.application = application;
         if (application instanceof ResourceConfig) {
             final ResourceConfig rc = (ResourceConfig) application;

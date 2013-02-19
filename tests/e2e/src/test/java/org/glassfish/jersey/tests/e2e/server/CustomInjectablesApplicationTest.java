@@ -42,34 +42,33 @@ package org.glassfish.jersey.tests.e2e.server;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Singleton;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
-import org.glassfish.hk2.api.AnnotationLiteral;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import javax.inject.Inject;
+import javax.inject.Qualifier;
+import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 
+import org.glassfish.hk2.api.AnnotationLiteral;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
@@ -207,13 +206,15 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
     @Test
     public void plainHK2Test() throws Exception {
-        final ServiceLocator locator = Injections.createLocator(new RequestScope.Binder(), new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bindAsContract(MyInjectablePerRequest.class).in(RequestScoped.class);
-                bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
-            }
-        });
+        final ServiceLocator locator = Injections.createLocator(new RequestScope.Binder(), new JerseyErrorService.Binder(),
+
+                new AbstractBinder() {
+                    @Override
+                    protected void configure() {
+                        bindAsContract(MyInjectablePerRequest.class).in(RequestScoped.class);
+                        bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
+                    }
+                });
 
         final RequestScope requestScope = locator.getService(RequestScope.class);
 
