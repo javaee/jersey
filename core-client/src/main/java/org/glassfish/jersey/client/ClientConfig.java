@@ -372,19 +372,19 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             // Bind providers.
             ProviderBinder.bindProviders(runtimeConfig.getComponentBag(), RuntimeType.CLIENT, null, locator);
 
-            final ClientRuntime runtime = new ClientRuntime(configuration, connector, locator);
+            final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
             client.addListener(new JerseyClient.LifecycleListener() {
                 @Override
                 public void onClose() {
                     try {
-                        runtime.close();
+                        crt.close();
                     } finally {
                         ServiceLocatorFactory.getInstance().destroy(locator.getName());
                     }
                 }
             });
 
-            return runtime;
+            return crt;
         }
 
         @Override

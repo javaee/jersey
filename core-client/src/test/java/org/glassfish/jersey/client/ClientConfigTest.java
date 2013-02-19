@@ -109,7 +109,7 @@ public class ClientConfigTest {
     @Test
     public void testGetProperties() {
         ClientConfig instance = new ClientConfig();
-        Map result = instance.getProperties();
+        Map<String, Object> result = instance.getProperties();
         assertNotNull(result);
 
         instance.property("name", "value");
@@ -184,7 +184,7 @@ public class ClientConfigTest {
     }
 
     /**
-     * Copied from DefaultConfigTest#
+     * Copied from DefaultConfigTest.
      */
     @Test
     public void testGetFeatures() {

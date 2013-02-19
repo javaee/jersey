@@ -42,17 +42,17 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.util.concurrent.Future;
 
-import javax.inject.Inject;
-
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
@@ -65,13 +65,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.common.net.HttpHeaders;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.google.common.net.HttpHeaders;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -161,17 +160,17 @@ public class JerseyClientTest {
      */
     @Test
     public void testCreateLinkBasedInvocation() {
-        JerseyClient client = new JerseyClient();
+        final JerseyClient jerseyClient = new JerseyClient();
 
         try {
-            client.invocation(null);
+            jerseyClient.invocation(null);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // success.
         }
 
         try {
-            client.invocation(null);
+            jerseyClient.invocation(null);
             fail("NullPointerException expected.");
         } catch (NullPointerException ex) {
             // success.
@@ -186,19 +185,19 @@ public class JerseyClientTest {
                         .build();
 
 
-        assertNotNull(client.invocation(link1).buildPost(null));
-        assertNotNull(client.invocation(link2).buildPost(null));
+        assertNotNull(jerseyClient.invocation(link1).buildPost(null));
+        assertNotNull(jerseyClient.invocation(link2).buildPost(null));
 
-        assertNotNull(client.invocation(link1).buildPost(Entity.text("Test.")));
-        assertNotNull(client.invocation(link2).buildPost(Entity.text("Test.")));
+        assertNotNull(jerseyClient.invocation(link1).buildPost(Entity.text("Test.")));
+        assertNotNull(jerseyClient.invocation(link2).buildPost(Entity.text("Test.")));
 
-        assertNotNull(client.invocation(link1).buildPost(Entity.xml("Test.")));
-        assertNotNull(client.invocation(link2).buildPost(Entity.xml("Test.")));
+        assertNotNull(jerseyClient.invocation(link1).buildPost(Entity.xml("Test.")));
+        assertNotNull(jerseyClient.invocation(link2).buildPost(Entity.xml("Test.")));
     }
 
     @Test
     public void userAgentTest() {
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new Connector() {
+        final Client customClient = ClientBuilder.newClient(new ClientConfig().connector(new Connector() {
             @Override
             public ClientResponse apply(ClientRequest request) throws ProcessingException {
                 throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
@@ -222,13 +221,13 @@ public class JerseyClientTest {
         }));
 
         try {
-            client.target("test").request().get();
+            customClient.target("test").request().get();
         } catch (ProcessingException e) {
             assertEquals("Jersey/" + Version.getVersion(), e.getMessage());
         }
 
         try {
-            client.target("test").request().async().get().get();
+            customClient.target("test").request().async().get().get();
         } catch (Exception e) {
             assertEquals("Jersey/" + Version.getVersion(), e.getCause().getMessage());
         }
