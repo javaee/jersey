@@ -87,7 +87,7 @@ public final class ConfigHelper {
             @Override
             public void onShutdown(Container container) {
                 for (ContainerLifecycleListener listener : listeners) {
-                    listener.onReload(container);
+                    listener.onShutdown(container);
                 }
             }
         };
