@@ -60,11 +60,9 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.ValidationFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -83,7 +81,6 @@ public class BasicValidationTest extends JerseyTest {
         final ResourceConfig resourceConfig = new ResourceConfig(BasicResource.class);
 
         resourceConfig.register(MoxyXmlFeature.class);
-        resourceConfig.register(ValidationFeature.class);
 
         resourceConfig.property(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY, true);
 

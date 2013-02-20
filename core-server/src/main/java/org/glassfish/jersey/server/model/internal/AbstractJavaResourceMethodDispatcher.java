@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.model.internal;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Set;
 
@@ -54,6 +56,7 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
 import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
@@ -76,6 +79,9 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     private final Method method;
     private final InvocationHandler methodHandler;
 
+    private final Class<?> handlerClass;
+    private Method validationMethod;
+
     /**
      * Initialize common java resource method dispatcher structures.
      *
@@ -85,6 +91,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
         this.method = resourceMethod.getHandlingMethod();
         this.methodHandler = methodHandler;
+
+        this.handlerClass = resourceMethod.getHandler().getHandlerClass();
     }
 
     @Override
@@ -168,7 +176,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             constraintViolations.addAll(validator.validate(resource));
 
             // Resource method validation - input parameters.
-            constraintViolations.addAll(validator.forExecutables().validateParameters(resource, method, args));
+            final Method validationMethod = getValidationMethod();
+            constraintViolations.addAll(validator.forExecutables().validateParameters(resource, validationMethod, args));
 
             if (!constraintViolations.isEmpty()) {
                 throw new ConstraintViolationException(constraintViolations);
@@ -189,18 +198,69 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         // Resource method validation - return invocationResult.
         if (validator != null) {
             final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
+            final Method validationMethod = getValidationMethod();
 
-            constraintViolations.addAll(validator.forExecutables().validateReturnValue(resource, method, invocationResult));
+            constraintViolations.addAll(validator.forExecutables()
+                    .validateReturnValue(resource, validationMethod, invocationResult));
 
             if (invocationResult instanceof Response) {
-                constraintViolations.addAll(
-                        validator.forExecutables().validateReturnValue(resource, method, ((Response) invocationResult).getEntity()));
+                constraintViolations.addAll(validator.forExecutables()
+                        .validateReturnValue(resource, validationMethod, ((Response) invocationResult).getEntity()));
             }
 
             if (!constraintViolations.isEmpty()) {
                 throw new ConstraintViolationException(constraintViolations);
             }
         }
+    }
+
+    /**
+     * Returns parameterized version of the handling method suitable for validation purposes.
+     * <p/>
+     * Currently supported methods to look for their parameterized alternatives are:
+     * <ul>
+     *     <li>{@link Inflector#apply(Object)}</li>
+     * </ul>
+     *
+     * @return method to be validated.
+     */
+    private Method getValidationMethod() {
+        if (validationMethod == null) {
+            if (Inflector.class.equals(method.getDeclaringClass())) {
+                final Method applyInflectorMethod = getApplyInflectorMethod();
+                this.validationMethod = applyInflectorMethod == null ? method : applyInflectorMethod;
+            } else {
+                this.validationMethod = method;
+            }
+        }
+        return validationMethod;
+    }
+
+    /**
+     * Return parameterized {@link Inflector#apply(Object)} method if found.
+     *
+     * @return parameterized {@link Inflector#apply(Object)} method or {@code null} if the method cannot be found.
+     */
+    private Method getApplyInflectorMethod() {
+        final Class<?> inflectorClass = handlerClass;
+
+        try {
+            for (final Type type : inflectorClass.getGenericInterfaces()) {
+                if (type instanceof ParameterizedType) {
+                    final ParameterizedType parameterizedType = (ParameterizedType) type;
+
+                    if (Inflector.class.equals(parameterizedType.getRawType())) {
+                        final Class<?> dataType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+
+                        return inflectorClass.getMethod("apply", dataType);
+                    }
+                }
+            }
+        } catch (NoSuchMethodException e) {
+            // Do nothing.
+        }
+
+        return null;
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2011 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.UriConnegFilter;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class UriConnegMediaTypeTest extends JerseyTest {
         }
 
         ResourceConfig rc = new ResourceConfig(classes);
-        UriConnegFilter.enableFor(rc, mediaTypes, null);
+        rc.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypes);
         return rc;
     }
 
@@ -135,7 +135,7 @@ public class UriConnegMediaTypeTest extends JerseyTest {
     public static class PathWithSuffixSegment extends Base {
     }
 
-    @Path("")
+    @Path("/")
     public static class SubResourceMethods extends Base {
         @Path("sub")
         @GET

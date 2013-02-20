@@ -52,6 +52,7 @@ import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.model.internal.CommonConfig;
@@ -355,6 +356,13 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             final ServiceLocator locator = Injections.createLocator(new ClientBinder());
 
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
+
+            // AutoDiscoverable.
+            if (!PropertiesHelper.isProperty(getProperties().get(ClientProperties.DISABLE_AUTO_DISCOVERY))) {
+                runtimeConfig.configureAutoDiscoverableProviders(locator);
+            }
+
+            // Configure binders and features.
             runtimeConfig.configureMetaProviders(locator);
 
             // Bind configuration.

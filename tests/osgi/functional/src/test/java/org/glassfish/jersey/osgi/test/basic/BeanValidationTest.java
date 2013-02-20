@@ -103,8 +103,21 @@ public class BeanValidationTest {
     }
 
     @Test
-    public void testBeanValidationResource() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(BeanValidationResource.class, ValidationFeature.class);
+    public void testBeanValidationResourceFeature() throws Exception {
+        _test(true);
+    }
+
+    @Test
+    public void testBeanValidationResourceAutoDiscovery() throws Exception {
+        _test(false);
+    }
+
+    private void _test(final boolean registerFeature) {
+        final ResourceConfig resourceConfig = new ResourceConfig(BeanValidationResource.class);
+        if (registerFeature) {
+            resourceConfig.register(ValidationFeature.class);
+        }
+
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         final Form form = new Form();

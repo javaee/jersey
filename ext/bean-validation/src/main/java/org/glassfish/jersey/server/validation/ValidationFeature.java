@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,8 @@ package org.glassfish.jersey.server.validation;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.internal.ConstraintViolationExceptionMapper;
 import org.glassfish.jersey.server.validation.internal.ValidationBinder;
 import org.glassfish.jersey.server.validation.internal.ValidationErrorMessageBodyWriter;
@@ -56,9 +58,15 @@ public class ValidationFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
+        final Object disableProperty = context.getConfiguration().getProperty(ServerProperties.FEATURE_DISABLE_BEAN_VALIDATION);
+        if (PropertiesHelper.isProperty(disableProperty)) {
+            return false;
+        }
+
         context.register(new ValidationBinder());
         context.register(ConstraintViolationExceptionMapper.class);
         context.register(ValidationErrorMessageBodyWriter.class);
+
         return true;
     }
 }

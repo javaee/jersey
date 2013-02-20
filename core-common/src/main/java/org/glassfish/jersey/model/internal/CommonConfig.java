@@ -49,8 +49,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
@@ -59,6 +61,8 @@ import javax.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -501,6 +505,26 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     private void checkComponentClassNotNull(Class<?> componentClass) {
         if (componentClass == null) {
             throw new IllegalArgumentException(LocalizationMessages.COMPONENT_CLASS_CANNOT_BE_NULL());
+        }
+    }
+
+    /**
+     * Configure {@link AutoDiscoverable auto-discoverables} in the HK2 service locator.
+     *
+     * @param locator locator in which the auto-discoverables should be configured.
+     */
+    public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
+        for (final AutoDiscoverable autoDiscoverable : Providers.getProviders(locator, AutoDiscoverable.class)) {
+            final ConstrainedTo constrainedTo = autoDiscoverable.getClass().getAnnotation(ConstrainedTo.class);
+
+            if (constrainedTo == null || type.equals(constrainedTo.value())) {
+                try {
+                    autoDiscoverable.configure(this);
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE,
+                            LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
+                }
+            }
         }
     }
 

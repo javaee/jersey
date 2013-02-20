@@ -54,7 +54,6 @@ import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.validation.ValidationConfiguration;
-import org.glassfish.jersey.server.validation.ValidationFeature;
 import org.glassfish.jersey.server.validation.internal.InjectingConstraintValidatorFactory;
 
 /**
@@ -69,7 +68,6 @@ public class MyApplication extends ResourceConfig {
         packages(ContactCardResource.class.getPackage().getName());
 
         // Validation.
-        register(ValidationFeature.class);
         register(ValidationConfigurationContextResolver.class);
 
         // Providers - JSON.
