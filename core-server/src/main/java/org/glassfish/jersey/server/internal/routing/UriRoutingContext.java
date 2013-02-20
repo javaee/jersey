@@ -482,17 +482,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public URI resolve(URI baseUri, URI uri) {
-        return null;  // TODO: implement method.
-    }
-
-    @Override
     public URI relativize(URI uri) {
-        return null;  // TODO: implement method.
-    }
-
-    @Override
-    public URI relativize(URI from, URI uri) {
         return null;  // TODO: implement method.
     }
 }

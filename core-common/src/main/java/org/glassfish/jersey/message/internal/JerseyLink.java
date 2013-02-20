@@ -48,7 +48,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
@@ -146,12 +145,12 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
         }
 
         @Override
-        public JerseyLink buildRelativized(UriInfo uriInfo, Object... values) {
+        public Link buildRelativized(URI uri, Object... values) {
             return null;  // TODO: implement method.
         }
 
         @Override
-        public JerseyLink buildResolved(UriInfo uriInfo, Object... values) {
+        public Link buildResolved(URI uri, Object... values) {
             return null;  // TODO: implement method.
         }
     }

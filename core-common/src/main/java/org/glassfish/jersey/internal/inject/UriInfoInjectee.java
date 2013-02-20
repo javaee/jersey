@@ -180,21 +180,9 @@ public class UriInfoInjectee implements UriInfo {
     }
 
     @Override
-    public URI resolve(URI baseUri, URI uri) {
-        checkStatus();
-        return wrapped.resolve(baseUri, uri);
-    }
-
-    @Override
     public URI relativize(URI uri) {
         checkStatus();
         return wrapped.relativize(uri);
-    }
-
-    @Override
-    public URI relativize(URI from, URI uri) {
-        checkStatus();
-        return wrapped.relativize(from, uri);
     }
 
     private void checkStatus() throws IllegalStateException {
