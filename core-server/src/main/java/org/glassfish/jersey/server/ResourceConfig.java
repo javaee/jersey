@@ -1078,6 +1078,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
                 super.addProperties(rc.getProperties());
 
                 rc.lock();
+            } else if (application != null) {
+                super.addProperties(application.getProperties());
             }
         }
 
