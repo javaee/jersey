@@ -44,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configuration;
@@ -52,6 +51,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -73,7 +73,9 @@ import com.sun.research.ws.wadl.Application;
 
 /**
  * WADL {@link ModelProcessor model processor} which enhance resource model by WADL related resources (like "/application.wadl").
- * The provider should be registered using {@link WadlModelProcessorFeature}.
+ * The provider should be registered using
+ * {@link org.glassfish.jersey.server.wadl.processor.internal.WadlModelProcessorAutoDiscoverable} or by
+ * {@link WadlModelProcessorFeature} if auto-discovery is disabled.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *

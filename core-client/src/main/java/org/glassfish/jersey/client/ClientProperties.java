@@ -186,6 +186,20 @@ public final class ClientProperties {
     public static final String HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND =
             "jersey.config.client.httpUrlConnection.setMethodWorkaround";
 
+    /**
+     * If {@code true} then disable auto-discovery on the client.
+     * <p>
+     * By default auto-discovery is automatically enabled.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String DISABLE_AUTO_DISCOVERY = "jersey.config.client.disableAutoDiscovery";
+
     private ClientProperties() {
         // prevents instantiation
     }

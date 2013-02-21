@@ -54,6 +54,7 @@ import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
@@ -67,7 +68,6 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.internal.Errors;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
@@ -274,6 +274,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         @Override
         public State setProperties(Map<String, ?> properties) {
+            throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
+        }
+
+        @Override
+        public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -750,6 +755,15 @@ public class ResourceConfig extends Application implements Configurable<Resource
      */
     final ComponentBag getComponentBag() {
         return state.getComponentBag();
+    }
+
+    /**
+     * Configure auto-discoverables.
+     *
+     * @param locator service locator to obtain auto-discoverables from.
+     */
+    final void configureAutoDiscoverableProviders(final ServiceLocator locator) {
+        state.configureAutoDiscoverableProviders(locator);
     }
 
     /**

@@ -226,7 +226,8 @@ public final class ServerProperties {
      * If {@code true} then disable WADL generation.
      * <p>
      * By default WADL generation is automatically enabled, if JAXB is
-     * present in the classpath.
+     * present in the classpath and the value of {@value #FEATURE_DISABLE_AUTO_DISCOVERY} is on default/{@code false}
+     * or if an appropriate {@link javax.ws.rs.core.Feature feature} is enabled.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -236,6 +237,39 @@ public final class ServerProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
+
+    /**
+     * If {@code true} then disable Bean Validation.
+     * <p>
+     * By default Bean Validation is automatically enabled, if appropriate Jersey module is
+     * present in the classpath and the value of {@value #FEATURE_DISABLE_AUTO_DISCOVERY} is on default{@code false}
+     * or if an appropriate {@link javax.ws.rs.core.Feature feature} is enabled.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.server.disableBeanValidation";
+
+    /**
+     * If {@code true} then disable auto discovery on server.
+     * <p>
+     * By default auto discovery is automatically enabled.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     *
+     * @see #FEATURE_DISABLE_BEAN_VALIDATION
+     * @see #FEATURE_DISABLE_WADL
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = "jersey.config.server.disableAutoDiscovery";
 
     /**
      * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering

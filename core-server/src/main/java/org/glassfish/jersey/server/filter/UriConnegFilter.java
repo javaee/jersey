@@ -107,24 +107,6 @@ public class UriConnegFilter implements ContainerRequestFilter {
     protected final Map<String, String> languageMappings;
 
     /**
-     * Registers this filter into the passed {@link ResourceConfig} instance and
-     * configures it.
-     *
-     * @param rc ResourceConfig instance where the filter should be registered.
-     * @param mediaTypeMappings the suffix to media type mappings.
-     * @param languageMappings the suffix to language mappings.
-     */
-    public static void enableFor(ResourceConfig rc, Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
-        rc.registerClasses(UriConnegFilter.class);
-        setIfNull(rc, ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypeMappings);
-        setIfNull(rc, ServerProperties.LANGUAGE_MAPPINGS, languageMappings);
-    }
-
-    public static void enableFor(ResourceConfig rc, String mediaTypeMappings, String languageMappings) {
-        enableFor(rc, extractMediaTypeMappings(mediaTypeMappings), extractLanguageMappings(languageMappings));
-    }
-
-    /**
      * Create a filter that reads the configuration (media type and language mappings)
      * from the provided {@link ResourceConfig} instance.
      * This constructor will be called by the Jersey runtime when the filter
@@ -227,12 +209,6 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
         if (length != path.length()) {
             rc.setRequestUri(uriInfo.getRequestUriBuilder().replacePath(path).build());
-        }
-    }
-
-    private static void setIfNull(ResourceConfig rc, String property, Object value) {
-        if (value != null && rc.getProperty(property) == null) {
-            rc.property(property, value);
         }
     }
 

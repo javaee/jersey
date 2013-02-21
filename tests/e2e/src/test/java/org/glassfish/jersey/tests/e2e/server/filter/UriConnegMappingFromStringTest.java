@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,32 +39,21 @@
  */
 package org.glassfish.jersey.tests.e2e.server.filter;
 
-import java.util.Map;
-
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.UriConnegFilter;
-
-import com.google.common.collect.Maps;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class UriConnegMappingFromStringTest extends UriConnegLanguageMediaTypeTest {
+
     @Override
     protected Application configure() {
-        Map<String, MediaType> mediaTypes = Maps.newHashMap();
-        mediaTypes.put("foo", MediaType.valueOf("application/foo"));
-        mediaTypes.put("bar", MediaType.valueOf("application/bar"));
-
-        Map<String, String> languages = Maps.newHashMap();
-        languages.put("english", "en");
-        languages.put("french", "fr");
-
         ResourceConfig rc = new ResourceConfig(LanguageVariantResource.class);
-        UriConnegFilter.enableFor(rc, "foo : application/foo, bar : application/bar", "english : en, french : fr");
+        rc.property(ServerProperties.LANGUAGE_MAPPINGS,  "english : en, french : fr");
+        rc.property(ServerProperties.MEDIA_TYPE_MAPPINGS, "foo : application/foo, bar : application/bar");
         return rc;
     }
 }

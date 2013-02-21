@@ -1,0 +1,3 @@
+org.glassfish.jersey.tests.e2e.common.AutoDiscoverableTest$CommonAutoDiscoverable
+org.glassfish.jersey.tests.e2e.common.AutoDiscoverableTest$ClientAutoDiscoverable
+org.glassfish.jersey.tests.e2e.common.AutoDiscoverableTest$ServerAutoDiscoverable
