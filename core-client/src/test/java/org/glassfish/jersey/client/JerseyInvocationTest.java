@@ -40,13 +40,18 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -139,6 +144,50 @@ public class JerseyInvocationTest {
             } catch (IllegalArgumentException iae) {
                 // OK.
             }
+        }
+    }
+
+    @Test
+    public void failedCallbackTest() {
+        final Invocation.Builder builder = ClientBuilder.newClient().target("http://localhost:888/").request();
+        for (int i = 0; i < 1; i++) {
+            final AtomicInteger ai = new AtomicInteger(0);
+            InvocationCallback<String> callback = new InvocationCallback<String>() {
+                @Override
+                public void completed(String arg0) {
+                    ai.set(ai.get() + 1);
+                }
+
+                @Override
+                public void failed(Throwable throwable) {
+                    int result = 10;
+                    if (throwable instanceof ProcessingException) {
+                        result += 100;
+                    }
+                    final Throwable ioe = throwable.getCause();
+                    if (ioe instanceof IOException) {
+                        result += 1000;
+                    }
+                    ai.set(ai.get() + result);
+                }
+            };
+
+            Invocation invocation = builder.buildGet();
+            Future<String> future = invocation.submit(callback);
+            try {
+                future.get();
+                fail("future.get() should have failed.");
+            } catch (ExecutionException e) {
+                final Throwable pe = e.getCause();
+                assertTrue("Execution exception cause is not a ProcessingException: " + pe.toString(),
+                        pe instanceof ProcessingException);
+                final Throwable ioe = pe.getCause();
+                assertTrue("Execution exception cause is not an IOException: " + ioe.toString(),
+                        ioe instanceof IOException);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            assertEquals(1110, ai.get());
         }
     }
 }
