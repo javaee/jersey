@@ -49,9 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -62,6 +59,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -347,7 +347,10 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     }
 
     private Response invoke(ContainerRequest requestContext, Object resource) {
-        final Response jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+        Response jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+        if (jaxrsResponse == null) {
+            jaxrsResponse = Response.noContent().build();
+        }
 
         respondingContextProvider.get().push(new Function<ContainerResponse, ContainerResponse>() {
             @Override

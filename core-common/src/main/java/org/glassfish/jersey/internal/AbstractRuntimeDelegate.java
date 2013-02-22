@@ -51,7 +51,6 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
@@ -110,7 +109,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
 
     @Override
     public ResponseBuilder createResponseBuilder() {
-        return new OutboundJaxrsResponse.Builder(Response.Status.NO_CONTENT, new OutboundMessageContext());
+        return new OutboundJaxrsResponse.Builder(new OutboundMessageContext());
     }
 
     @Override

@@ -122,7 +122,7 @@ public class OutboundJaxrsResponseTest {
 
     @Before
     public void setUp() {
-        rb = new OutboundJaxrsResponse.Builder(Response.Status.OK, new OutboundMessageContext());
+        rb = new OutboundJaxrsResponse.Builder(new OutboundMessageContext()).status(Response.Status.OK);
     }
 
 

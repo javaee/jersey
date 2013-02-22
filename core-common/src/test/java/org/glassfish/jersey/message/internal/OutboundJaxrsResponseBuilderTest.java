@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.message.internal;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
@@ -69,16 +68,19 @@ public class OutboundJaxrsResponseBuilderTest {
      */
     @Test
     public void testMediaType() {
-        final Response r = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext())
+        final Response r = new OutboundJaxrsResponse.Builder(new OutboundMessageContext())
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML)
                 .build();
-        assertEquals(200, r.getStatus());
-        assertEquals(Response.Status.OK, r.getStatusInfo());
+        assertEquals(204, r.getStatus());
+        assertEquals(Response.Status.NO_CONTENT, r.getStatusInfo());
+        assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
     }
 
     @Test
     public void testIssue1297Fix() {
-        final Response response = new OutboundJaxrsResponse.Builder(Status.OK, new OutboundMessageContext()).entity("1234567890")
+        final Response response = new OutboundJaxrsResponse.Builder(new OutboundMessageContext())
+                .status(Response.Status.OK)
+                .entity("1234567890")
                 .build();
         final int len = response.getLength();
         assertEquals(-1, len);

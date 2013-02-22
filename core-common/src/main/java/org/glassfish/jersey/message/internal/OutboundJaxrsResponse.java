@@ -312,23 +312,25 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         /**
          * Create new outbound JAX-RS response builder.
          *
-         * @param status  response status.
          * @param context underlying outbound message context.
          */
-        public Builder(final StatusType status, final OutboundMessageContext context) {
-            this.status = status;
+        public Builder(final OutboundMessageContext context) {
             this.context = context;
         }
 
         @Override
         public javax.ws.rs.core.Response build() {
-            return new OutboundJaxrsResponse(status, new OutboundMessageContext(context));
+            StatusType st = status;
+            if (st == null) {
+                st = context.hasEntity() ? Status.OK : Status.NO_CONTENT;
+            }
+            return new OutboundJaxrsResponse(st, new OutboundMessageContext(context));
         }
 
         @SuppressWarnings({"CloneDoesntCallSuperClone", "CloneDoesntDeclareCloneNotSupportedException"})
         @Override
         public ResponseBuilder clone() {
-            return new Builder(status, new OutboundMessageContext(context));
+            return new Builder(new OutboundMessageContext(context)).status(status);
         }
 
         @Override

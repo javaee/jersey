@@ -48,6 +48,7 @@ import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
@@ -56,13 +57,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 
 /**
@@ -223,17 +227,56 @@ public class ResponseE2ETest extends JerseyTest {
         }
     }
 
-    @Path("resource")
-    public static class Resource {
+    @Path("response")
+    public static class ResponseTestResource {
         @GET
+        @Path("custom")
         public OkResponse subresponse() {
             return new OkResponse("subresponse");
+        }
+
+        @GET
+        @Path("null")
+        public Response nullResponse() {
+            return null;
+        }
+
+        @GET
+        @Path("no-status-with-entity")
+        public Response entityResponseTest() {
+            return RuntimeDelegate.getInstance().createResponseBuilder().entity("1234567890").build();
+        }
+
+        @GET
+        @Path("no-status-without-entity")
+        public Response noEntityResponseTest() {
+            return RuntimeDelegate.getInstance().createResponseBuilder().build();
+        }
+
+        @Uri("response/internal")
+        WebTarget target;
+
+        @GET
+        @Path("external")
+        public Response external() {
+            Response response;
+            if (target == null)
+                response = Response.serverError().entity("injected WebTarget is null").build();
+            else
+                response = target.request().buildGet().invoke();
+            return response;
+        }
+
+        @GET
+        @Path("internal")
+        public String internal() {
+            return "internal";
         }
     }
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class);
+        return new ResourceConfig(ResponseTestResource.class);
     }
 
     /**
@@ -241,10 +284,55 @@ public class ResponseE2ETest extends JerseyTest {
      */
     @Test
     public void testCustomResponse() {
-        final Response response = target("resource").request().get();
+        final Response response = target("response").path("custom").request().get();
 
         assertNotNull("Response is null.", response);
         assertEquals("Unexpected response status.", 200, response.getStatus());
         assertEquals("Unexpected response entity.", "subresponse", response.readEntity(String.class));
+    }
+
+    /**
+     * JERSEY-1527 reproducer.
+     */
+    @Test
+    public void testNoStatusResponse() {
+        final WebTarget target = target("response").path("no-status-{param}-entity");
+        Response response;
+
+        response = target.resolveTemplate("param", "with").request().get();
+        assertNotNull("Response is null.", response);
+        assertEquals("Unexpected response status.", 200, response.getStatus());
+        assertEquals("Unexpected response entity.", "1234567890", response.readEntity(String.class));
+
+        response = target.resolveTemplate("param", "without").request().get();
+        assertNotNull("Response is null.", response);
+        assertEquals("Unexpected response status.", 204, response.getStatus());
+        assertFalse("Unexpected non-empty response entity.", response.hasEntity());
+    }
+
+    /**
+     * JERSEY-1528 reproducer.
+     */
+    @Test
+    public void testNullResponse() {
+        final Response response = target("response").path("null").request().get();
+
+        assertNotNull("Response is null.", response);
+        assertEquals("Unexpected response status.", 204, response.getStatus());
+        assertFalse("Unexpected non-empty response entity.", response.hasEntity());
+    }
+
+    /**
+     * JERSEY-1531 reproducer.
+     */
+    @Test
+    public void testInboundOutboundResponseMixing() {
+        final WebTarget target = target("response").path("external");
+        Response response;
+
+        response = target.request().get();
+        assertNotNull("Response is null.", response);
+        assertEquals("Unexpected response status.", 200, response.getStatus());
+        assertEquals("Unexpected response entity.", "internal", response.readEntity(String.class));
     }
 }
