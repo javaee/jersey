@@ -45,16 +45,19 @@ import javax.ws.rs.core.HttpHeaders;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.server.mvc.Template;
+
 /**
  * Generates a header display resource which is useful for displaying the
  * various headers browsers use for making test cases
- * 
  */
+@Template
 @Path("/happy")
 @Singleton
 public class Happy {
+
     @Context
-    HttpHeaders headers;
+    private HttpHeaders headers;
 
     public String getHeaders() {
         StringBuilder buf = new StringBuilder();

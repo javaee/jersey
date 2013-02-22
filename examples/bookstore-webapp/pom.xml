@@ -51,7 +51,7 @@
 
     <artifactId>bookstore-webapp</artifactId>
     <packaging>war</packaging>
-    <name>jersey-examples-bean-validation-webapp</name>
+    <name>jersey-examples-bookstore-webapp</name>
 
     <description>Jersey MVC Bookstore example</description>
 

@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 
@@ -113,8 +112,8 @@ public class Main {
                         echoResource.resolveTemplate("echo", reqId).request().async().get(this);
                     } else {
                         System.out.print("!");
-                        latch.countDown();
                         errors.offer(String.format("Request '%d' has failed: %s", reqId, error.toString()));
+                        latch.countDown();
                     }
                 }
             });
@@ -148,7 +147,7 @@ public class Main {
         /**
          * Default base URI of the async echo web application.
          */
-        public static final String DEFAULT_BASE_URI = "http://localhost:8080/server-async-webapp/";
+        public static final String DEFAULT_BASE_URI = "http://localhost:8080/server-async-standalone-webapp/";
 
         final String baseUri;
         final boolean sync;

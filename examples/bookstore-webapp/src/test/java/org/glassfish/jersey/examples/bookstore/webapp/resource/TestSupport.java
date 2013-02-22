@@ -43,8 +43,6 @@ package org.glassfish.jersey.examples.bookstore.webapp.resource;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.examples.bookstore.webapp.MyApplication;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -61,7 +59,7 @@ public abstract class TestSupport extends JerseyTest {
     @Override
     protected Application configure() {
         final MyApplication application = new MyApplication();
-        application.setProperty(ServletProperties.FILTER_FORWARD_ON_404, true);
+        application.property(ServletProperties.FILTER_FORWARD_ON_404, true);
         return application;
     }
 
