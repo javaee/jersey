@@ -40,8 +40,10 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.ProcessingException;
@@ -109,7 +111,7 @@ public class JerseyInvocationTest {
         final WebTarget target = client.target("http://localhost:8080/mypath");
 
         final Class<Response> responseType = null;
-        final String[] methods = new String[] {"GET", "PUT", "POST", "DELETE", "OPTIONS"};
+        final String[] methods = new String[]{"GET", "PUT", "POST", "DELETE", "OPTIONS"};
 
         for (final String method : methods) {
             final Invocation.Builder request = target.request();
@@ -148,27 +150,37 @@ public class JerseyInvocationTest {
     }
 
     @Test
-    public void failedCallbackTest() {
+    public void failedCallbackTest() throws InterruptedException {
         final Invocation.Builder builder = ClientBuilder.newClient().target("http://localhost:888/").request();
         for (int i = 0; i < 1; i++) {
+            final CountDownLatch latch = new CountDownLatch(1);
             final AtomicInteger ai = new AtomicInteger(0);
             InvocationCallback<String> callback = new InvocationCallback<String>() {
                 @Override
                 public void completed(String arg0) {
-                    ai.set(ai.get() + 1);
+                    try {
+                        ai.set(ai.get() + 1);
+                    } finally {
+                        latch.countDown();
+                    }
                 }
 
                 @Override
                 public void failed(Throwable throwable) {
-                    int result = 10;
-                    if (throwable instanceof ProcessingException) {
-                        result += 100;
+                    try {
+
+                        int result = 10;
+                        if (throwable instanceof ProcessingException) {
+                            result += 100;
+                        }
+                        final Throwable ioe = throwable.getCause();
+                        if (ioe instanceof IOException) {
+                            result += 1000;
+                        }
+                        ai.set(ai.get() + result);
+                    } finally {
+                        latch.countDown();
                     }
-                    final Throwable ioe = throwable.getCause();
-                    if (ioe instanceof IOException) {
-                        result += 1000;
-                    }
-                    ai.set(ai.get() + result);
                 }
             };
 
@@ -187,6 +199,9 @@ public class JerseyInvocationTest {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+
+            latch.await(1, TimeUnit.SECONDS);
+
             assertEquals(1110, ai.get());
         }
     }
