@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,15 +45,15 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
- * An exception mapper to return 404 responses when a {@link NotFoundException} is thrown.
+ * An exception mapper to return 404 responses when a {@link CustomNotFoundException} is thrown.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @Provider
-public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
+public class NotFoundExceptionMapper implements ExceptionMapper<CustomNotFoundException> {
 
     @Override
-    public Response toResponse(NotFoundException exception) {
+    public Response toResponse(CustomNotFoundException exception) {
         return Response.status(404).build();
     }
 

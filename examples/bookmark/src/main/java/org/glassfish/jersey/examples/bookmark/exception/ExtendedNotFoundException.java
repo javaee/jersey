@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.examples.bookmark.exception;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class NotFoundException extends WebApplicationException {
+public class ExtendedNotFoundException extends NotFoundException {
 
-    public NotFoundException(final String message) {
+    public ExtendedNotFoundException(final String message) {
         super(Response.status(Response.Status.NOT_FOUND).entity(message).build());
     }
 }

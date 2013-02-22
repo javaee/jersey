@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
 
 import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -84,7 +84,7 @@ public final class ParameterValueHelper {
         } catch (WebApplicationException e) {
             throw e;
         } catch (MessageBodyProviderNotFoundException e) {
-            throw new WebApplicationException(Status.UNSUPPORTED_MEDIA_TYPE);
+            throw new NotSupportedException(e);
         } catch (ProcessingException e) {
             throw e;
         } catch (RuntimeException e) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,16 +45,16 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response.Status;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -97,9 +97,9 @@ public final class DocumentProvider extends AbstractMessageReaderWriterProvider<
         try {
             return dbf.get().newDocumentBuilder().parse(entityStream);
         } catch (SAXException ex) {
-            throw new WebApplicationException(ex, Status.BAD_REQUEST);
+            throw new BadRequestException(ex);
         } catch (ParserConfigurationException ex) {
-            throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException(ex);
         }
     }
 
@@ -121,7 +121,7 @@ public final class DocumentProvider extends AbstractMessageReaderWriterProvider<
             StreamResult sr = new StreamResult(entityStream);
             tf.get().newTransformer().transform(new DOMSource(t), sr);
         } catch (TransformerException ex) {
-            throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException(ex);
         }
     }
 }

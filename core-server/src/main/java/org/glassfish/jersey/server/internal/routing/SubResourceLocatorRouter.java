@@ -45,9 +45,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.List;
 
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ProcessingException;
@@ -114,7 +112,7 @@ class SubResourceLocatorRouter implements Router {
 
         Object subResourceInstance = getResource(routingCtx);
         if (subResourceInstance == null) {
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+            throw new NotFoundException();
         }
 
         Resource subResource;

@@ -48,6 +48,7 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotAllowedException;
@@ -1017,6 +1018,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     break;
                 case UNAUTHORIZED:
                     webAppException = new NotAuthorizedException(response);
+                    break;
+                case FORBIDDEN:
+                    webAppException = new ForbiddenException(response);
                     break;
                 case NOT_FOUND:
                     webAppException = new NotFoundException(response);

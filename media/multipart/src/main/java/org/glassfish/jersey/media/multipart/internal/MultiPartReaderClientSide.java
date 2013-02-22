@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.RuntimeType;
@@ -54,7 +55,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
@@ -154,7 +154,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         try {
             return readMultiPart(type, genericType, annotations, mediaType, headers, stream);
         } catch (MIMEParsingException ex) {
-            throw new WebApplicationException(ex, Status.BAD_REQUEST);
+            throw new BadRequestException(ex);
         }
     }
 
@@ -212,7 +212,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
                 bodyPart.getContentDisposition();
             } catch (IllegalArgumentException ex) {
-                throw new WebApplicationException(ex, Status.BAD_REQUEST);
+                throw new BadRequestException(ex);
             }
 
             // Copy data into a BodyPartEntity structure.

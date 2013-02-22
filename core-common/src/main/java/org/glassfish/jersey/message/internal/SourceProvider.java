@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,16 +45,17 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+
+import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -67,6 +68,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.glassfish.hk2.api.Factory;
+
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -138,11 +140,11 @@ public final class SourceProvider {
                 return new SAXSource(spf.provide().newSAXParser().getXMLReader(),
                         new InputSource(entityStream));
             } catch (SAXParseException ex) {
-                throw new WebApplicationException(ex, Status.BAD_REQUEST);
+                throw new BadRequestException(ex);
             } catch (SAXException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             } catch (ParserConfigurationException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             }
         }
     }
@@ -178,11 +180,11 @@ public final class SourceProvider {
                 Document d = dbf.provide().newDocumentBuilder().parse(entityStream);
                 return new DOMSource(d);
             } catch (SAXParseException ex) {
-                throw new WebApplicationException(ex, Status.BAD_REQUEST);
+                throw new BadRequestException(ex);
             } catch (SAXException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             } catch (ParserConfigurationException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             }
         }
     }
@@ -232,11 +234,11 @@ public final class SourceProvider {
                 transformerFactory.provide().newTransformer().transform(source, sr);
 
             } catch (SAXException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             } catch (ParserConfigurationException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             } catch (TransformerException ex) {
-                throw new WebApplicationException(ex, Status.INTERNAL_SERVER_ERROR);
+                throw new InternalServerErrorException(ex);
             }
         }
     }

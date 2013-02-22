@@ -47,13 +47,12 @@ import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -187,7 +186,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
                 contentEncoding = acceptedEncodings.first();
             } else {
                 // no acceptable encoding can be sent -> return NOT ACCEPTABLE status code back to the client
-                throw new WebApplicationException(Response.status(Response.Status.NOT_ACCEPTABLE).build());
+                throw new NotAcceptableException();
             }
         }
 

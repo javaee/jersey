@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,14 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.jersey_ejb.exceptions;
+package org.glassfish.jersey.examples.bookmark_em.exception;
+
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 
 /**
- * This exceptions will get mapped to a 404 response with the application exception mapper
- * implemented by {@link NotFoundExceptionMapper} class.
- *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class NotFoundException extends Exception {
+public class ExtendedNotFoundException extends NotFoundException {
 
+    public ExtendedNotFoundException(final String message) {
+        super(Response.status(Response.Status.NOT_FOUND).entity(message).build());
+    }
 }

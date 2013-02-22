@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,10 +46,10 @@ import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -58,7 +58,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import org.glassfish.jersey.examples.jersey_ejb.entities.Message;
-import org.glassfish.jersey.examples.jersey_ejb.exceptions.NotFoundException;
+import org.glassfish.jersey.examples.jersey_ejb.exceptions.CustomNotFoundException;
 
 /**
  * A stateless EJB bean to handle REST requests to the messages resource.
@@ -98,7 +98,7 @@ public class MessageBoardResourceBean {
             // This exception will be passed through to the JAX-RS runtime
             // No other runtime exception will behave this way unless the
             // exception is annotated with javax.ejb.ApplicationException
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
+            throw new NotFoundException();
         }
 
         return m;
@@ -107,12 +107,12 @@ public class MessageBoardResourceBean {
 
     @Path("{msgNum}")
     @DELETE
-    public void deleteMessage(@PathParam("msgNum") int msgNum) throws NotFoundException {
+    public void deleteMessage(@PathParam("msgNum") int msgNum) throws CustomNotFoundException {
         boolean deleted = singleton.deleteMessage(msgNum);
 
         if(!deleted) {
             // This exception will be mapped to a 404 response
-            throw new NotFoundException();
+            throw new CustomNotFoundException();
         }
     }
 }

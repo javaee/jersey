@@ -48,7 +48,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.NotAcceptableException;
+import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -378,7 +380,7 @@ final class MethodSelectingRouter implements Router {
     private List<Router> getMethodRouter(final ContainerRequest requestContext) {
         List<ConsumesProducesAcceptor> acceptors = consumesProducesAcceptors.get(requestContext.getMethod());
         if (acceptors == null) {
-            throw new WebApplicationException(
+            throw new NotAllowedException(
                     Response.status(Status.METHOD_NOT_ALLOWED).allow(consumesProducesAcceptors.keySet()).build());
         }
         List<ConsumesProducesAcceptor> satisfyingAcceptors = new LinkedList<ConsumesProducesAcceptor>();
@@ -388,7 +390,7 @@ final class MethodSelectingRouter implements Router {
             }
         }
         if (satisfyingAcceptors.isEmpty()) {
-            throw new WebApplicationException(Status.UNSUPPORTED_MEDIA_TYPE);
+            throw new NotSupportedException();
         }
 
         final List<MediaType> acceptableMediaTypes = requestContext.getAcceptableMediaTypes();
@@ -433,7 +435,7 @@ final class MethodSelectingRouter implements Router {
                                             .equalsIgnoreCase("application")) {
                                         effectiveResponseType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
                                     } else {
-                                        throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
+                                        throw new NotAcceptableException();
                                     }
                                 }
                                 responseContext.setMediaType(effectiveResponseType);
@@ -444,7 +446,7 @@ final class MethodSelectingRouter implements Router {
             return selected.methodAcceptorPair.router;
         }
 
-        throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).build());
+        throw new NotAcceptableException();
     }
 
     private boolean isWildcard(final MediaType effectiveResponseType) {

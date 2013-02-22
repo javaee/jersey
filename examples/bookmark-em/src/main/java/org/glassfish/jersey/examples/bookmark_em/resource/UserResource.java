@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import javax.persistence.EntityManager;
 import javax.transaction.UserTransaction;
 
 import org.glassfish.jersey.examples.bookmark_em.entity.UserEntity;
-import org.glassfish.jersey.examples.bookmark_em.exception.NotFoundException;
+import org.glassfish.jersey.examples.bookmark_em.exception.ExtendedNotFoundException;
 import org.glassfish.jersey.examples.bookmark_em.util.tx.TransactionManager;
 import org.glassfish.jersey.examples.bookmark_em.util.tx.Transactional;
 
@@ -87,7 +87,7 @@ public class UserResource {
     @Path("bookmarks/")
     public BookmarksResource getBookmarksResource() {
         if (null == userEntity) {
-            throw new NotFoundException("userid " + userid + " does not exist!");
+            throw new ExtendedNotFoundException("userid " + userid + " does not exist!");
         }
         return new BookmarksResource(uriInfo, em, utx, this);
     }
@@ -96,7 +96,7 @@ public class UserResource {
     @Produces("application/json")
     public JSONObject getUser() throws JSONException {
         if (null == userEntity) {
-            throw new NotFoundException("userid " + userid + "does not exist!");
+            throw new ExtendedNotFoundException("userid " + userid + "does not exist!");
         }
         return new JSONObject().
                 put("userid", userEntity.getUserid()).
@@ -147,7 +147,7 @@ public class UserResource {
     @DELETE
     public void deleteUser() {
         if (null == userEntity) {
-            throw new NotFoundException("userid " + userid + "does not exist!");
+            throw new ExtendedNotFoundException("userid " + userid + "does not exist!");
         }
 
         TransactionManager.manage(utx, new Transactional(em) {

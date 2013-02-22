@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -95,8 +95,8 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
             } else {
                 value = requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
                 if (rawType.isPrimitive() && value == null) {
-                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(LocalizationMessages
-                            .ERROR_PRIMITIVE_TYPE_NULL()).build());
+                    throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+                                    .entity(LocalizationMessages.ERROR_PRIMITIVE_TYPE_NULL()).build());
                 }
             }
             return value;

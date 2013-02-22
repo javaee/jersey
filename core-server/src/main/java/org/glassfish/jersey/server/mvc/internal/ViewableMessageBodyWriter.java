@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ResourceInfo;
@@ -130,7 +131,7 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
             httpHeaders.putSingle(HttpHeaders.CONTENT_TYPE, resolvedViewable.getMediaType());
             resolvedViewable.writeTo(entityStream);
         } catch (ViewableContextException vce) {
-            throw new WebApplicationException(vce, Response.Status.NOT_FOUND);
+            throw new NotFoundException(vce);
         }
     }
 

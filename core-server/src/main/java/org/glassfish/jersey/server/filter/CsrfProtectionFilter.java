@@ -44,8 +44,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response.Status;
@@ -85,7 +85,7 @@ public class CsrfProtectionFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext rc) throws IOException {
         if (!METHODS_TO_IGNORE.contains(rc.getMethod()) && !rc.getHeaders().containsKey(HEADER_NAME)) {
-            throw new WebApplicationException(Status.BAD_REQUEST);
+            throw new BadRequestException();
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import javax.transaction.UserTransaction;
 import org.glassfish.jersey.examples.bookmark_em.entity.BookmarkEntity;
 import org.glassfish.jersey.examples.bookmark_em.entity.BookmarkEntityPK;
 import org.glassfish.jersey.examples.bookmark_em.entity.UserEntity;
-import org.glassfish.jersey.examples.bookmark_em.exception.NotFoundException;
+import org.glassfish.jersey.examples.bookmark_em.exception.ExtendedNotFoundException;
 import org.glassfish.jersey.examples.bookmark_em.util.tx.TransactionManager;
 import org.glassfish.jersey.examples.bookmark_em.util.tx.Transactional;
 
@@ -84,7 +84,7 @@ public class BookmarkResource {
 
         bookmarkEntity = em.find(BookmarkEntity.class, new BookmarkEntityPK(bmid, userEntity.getUserid()));
         if (null == bookmarkEntity) {
-            throw new NotFoundException("bookmark with userid=" +
+            throw new ExtendedNotFoundException("bookmark with userid=" +
                     userEntity.getUserid() + " and bmid=" +
                     bmid + " not found\n");
         }

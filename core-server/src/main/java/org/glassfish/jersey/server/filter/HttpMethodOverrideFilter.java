@@ -44,8 +44,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
@@ -54,8 +54,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
 import javax.annotation.Priority;
@@ -271,7 +269,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
             override = header;
             if (query != null && !query.equals(header)) {
                 // inconsistent query and header param values
-                throw new WebApplicationException(Response.status(Status.BAD_REQUEST).build());
+                throw new BadRequestException();
             }
         }
 
