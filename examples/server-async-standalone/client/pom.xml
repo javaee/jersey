@@ -45,7 +45,7 @@
 
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>server-async-standalone-project</artifactId>
+        <artifactId>server-async-standalone</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
@@ -120,6 +120,27 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xslt-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <skipAssembly>true</skipAssembly>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

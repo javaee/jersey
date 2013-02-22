@@ -74,11 +74,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-            <artifactId>jersey-gf-ejb</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jettison</artifactId>
             <version>${project.version}</version>
@@ -104,7 +99,7 @@
     </dependencies>
 
     <build>
-        <finalName>bookmark</finalName>
+        <finalName>${artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

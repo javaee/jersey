@@ -12,7 +12,7 @@ and the overall throughput of the system is greatly increased.
 
 The example consists of 2 modules:
 
-  1. web application module "webapp" (produces server-async-webapp.war)
+  1. web application module "webapp" (produces server-async-standalone-webapp.war)
      - the module contains an long-running echo service deployed under application
        context root on path templates:
        - "long-running/sync/{echo}", served by a synchronously executed, blocking
@@ -35,7 +35,7 @@ built, the web application may be deployed to the application server. E.g. to de
 the application to a running GlassFish instance, you may do (while still being in
 the root example directory):
 
-  > $AS_HOME/bin/as-admin deploy ./webapp/target/server-async-webapp.war
+  > $AS_HOME/bin/as-admin deploy ./webapp/target/server-async-standalone-webapp.war
 
 Once deployed, the client can be run as follows:
 
@@ -69,7 +69,7 @@ Following properties may be customized in the command-line client runtime:
        defaults to "async"
 
   3. uri=<base_webapp_uri>
-     : base URI of the deployed web application, defaults to "http://localhost:8080/server-async-webapp"
+     : base URI of the deployed web application, defaults to "http://localhost:8080/server-async-standalone-webapp"
 
 These properties may be passed throug maven to the client runtime as command-line arguments
 using the -Dexec.args="<arguments>" flag, e.g.:

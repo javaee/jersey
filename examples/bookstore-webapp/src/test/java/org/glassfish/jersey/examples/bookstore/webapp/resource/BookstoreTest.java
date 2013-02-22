@@ -56,6 +56,14 @@ public class BookstoreTest extends TestSupport {
     }
 
     @Test
+    public void testHappyResourceAsHtml() throws Exception {
+        final String response = target("bookstore-webapp/happy").request().get(String.class);
+
+        assertHtmlResponse(response);
+        assertResponseContains(response, "Happy");
+    }
+
+    @Test
     public void testResourceAsXml() throws Exception {
         final Bookstore response = target("bookstore-webapp").request("application/xml").get(Bookstore.class);
 
