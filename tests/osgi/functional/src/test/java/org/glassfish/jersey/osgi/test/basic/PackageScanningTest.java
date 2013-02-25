@@ -92,7 +92,10 @@ public class PackageScanningTest {
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").
                         versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-servlet").
-                        versionAsInProject()
+                        versionAsInProject(),
+
+                // MBR/MBW for JSON-P is on the classpath.
+                mavenBundle().groupId("javax.json").artifactId("javax.json-api").versionAsInProject()
         ));
 
         options = Helper.addPaxExamMavenLocalRepositoryProperty(options);

@@ -48,6 +48,7 @@ import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -360,7 +361,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
 
             // AutoDiscoverable.
-            if (!PropertiesHelper.isProperty(getProperties().get(ClientProperties.DISABLE_AUTO_DISCOVERY))) {
+            if (!PropertiesHelper.isFeatureDisabledByProperty(runtimeConfig, CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY)) {
                 runtimeConfig.configureAutoDiscoverableProviders(locator);
             }
 

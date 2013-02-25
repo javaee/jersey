@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import org.glassfish.jersey.CommonProperties;
+
 /**
  * Jersey server-side configuration properties.
  *
@@ -226,8 +228,8 @@ public final class ServerProperties {
      * If {@code true} then disable WADL generation.
      * <p>
      * By default WADL generation is automatically enabled, if JAXB is
-     * present in the classpath and the value of {@value #FEATURE_DISABLE_AUTO_DISCOVERY} is on default/{@code false}
-     * or if an appropriate {@link javax.ws.rs.core.Feature feature} is enabled.
+     * present in the classpath and the auto-discovery feature is enabled or if an appropriate {@link javax.ws.rs.core.Feature
+     * feature} is enabled.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -242,8 +244,8 @@ public final class ServerProperties {
      * If {@code true} then disable Bean Validation.
      * <p>
      * By default Bean Validation is automatically enabled, if appropriate Jersey module is
-     * present in the classpath and the value of {@value #FEATURE_DISABLE_AUTO_DISCOVERY} is on default{@code false}
-     * or if an appropriate {@link javax.ws.rs.core.Feature feature} is enabled.
+     * present in the classpath and the auto-discovery feature is enabled or if an appropriate {@link javax.ws.rs.core.Feature
+     * feature} is enabled.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -253,23 +255,6 @@ public final class ServerProperties {
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.server.disableBeanValidation";
-
-    /**
-     * If {@code true} then disable auto discovery on server.
-     * <p>
-     * By default auto discovery is automatically enabled.
-     * <p>
-     * The default value is {@code false}.
-     * </p>
-     * <p>
-     * The name of the configuration property is <code>{@value}</code>.
-     * </p>
-     *
-     * @see #FEATURE_DISABLE_BEAN_VALIDATION
-     * @see #FEATURE_DISABLE_WADL
-     */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = "jersey.config.server.disableAutoDiscovery";
 
     /**
      * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering
@@ -284,6 +269,42 @@ public final class ServerProperties {
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY
             = "jersey.config.server.validation.enableOutputValidationErrorEntity";
+
+    /**
+     * If {@code true} then disable auto discovery on server.
+     * <p>
+     * By default auto discovery is automatically enabled if global property {@value org.glassfish.jersey
+     * .CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. Server property cannot override the global property.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
+     * @see #FEATURE_DISABLE_BEAN_VALIDATION
+     * @see #FEATURE_DISABLE_WADL
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".server";
+
+    /**
+     * If {@code true} then disable registration of Json Processing (JSR-353) feature on server.
+     * <p>
+     * By default Json Processing is automatically enabled if global property {@value org.glassfish.jersey
+     * .CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. Server property cannot override the global property.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".server";
 
     private ServerProperties() {
         // prevents instantiation

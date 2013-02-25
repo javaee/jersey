@@ -74,6 +74,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
@@ -304,7 +305,7 @@ public final class ApplicationHandler {
         }
 
         // AutoDiscoverable.
-        if (!PropertiesHelper.isProperty(runtimeConfig.getProperty(ServerProperties.FEATURE_DISABLE_AUTO_DISCOVERY))) {
+        if (!PropertiesHelper.isFeatureDisabledByProperty(runtimeConfig, CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY)) {
             runtimeConfig.configureAutoDiscoverableProviders(locator);
         }
 

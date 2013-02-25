@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,9 +43,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import javax.ws.rs.core.Configuration;
+
 /**
  * Helper class containing convenience methods for reading
- * {@code org.glassfish.jersey.server.ResourceConfig} and {@link javax.ws.rs.client.Configuration} properties.
+ * {@code org.glassfish.jersey.server.ResourceConfig} and {@link javax.ws.rs.core.Configuration} properties.
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
@@ -153,5 +155,30 @@ public class PropertiesHelper {
         } else {
             return value != null && Boolean.parseBoolean(value.toString());
         }
+    }
+
+    /**
+     * Determine whether a Jersey feature ({@link javax.ws.rs.core.Feature}/
+     * {@link org.glassfish.jersey.internal.spi.AutoDiscoverable}) is disabled based on given global property name and it's
+     * client/server variants. If global property is set then the value of this property is returned, otherwise the return value
+     * is value of client/server variant of the property.
+     * <p/>
+     * Client/Server variant of the property is derived using this pattern:
+     * {@code globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase()}
+     *
+     * @param config configuration to check the property.
+     * @param globalPropertyName global property name to be checked and to derive client/server variant of the property.
+     * @return {@code true} if the feature is disabled by the property value, {@code false} otherwise.
+     * @see org.glassfish.jersey.CommonProperties
+     */
+    public static boolean isFeatureDisabledByProperty(final Configuration config, final String globalPropertyName) {
+        // Global.
+        final Object globalProperty = config.getProperty(globalPropertyName);
+        if (globalProperty != null) {
+            return isProperty(globalProperty);
+        }
+
+        // Runtime type property
+        return isProperty(config.getProperty(globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase()));
     }
 }

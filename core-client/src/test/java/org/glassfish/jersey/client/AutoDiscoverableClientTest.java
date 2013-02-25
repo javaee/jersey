@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response;
 
 import javax.annotation.Priority;
 
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
@@ -97,28 +98,65 @@ public class AutoDiscoverableClientTest {
     }
 
     @Test
-    public void testAutoDiscoverable() throws Exception {
-        final ClientConfig config = new ClientConfig();
-        config.register(AbortFilter.class);
-        config.property(PROPERTY, true);
-
-        final Client client = ClientBuilder.newClient(config);
-        final Invocation.Builder request = client.target("").request();
-
-        assertEquals("CommonAutoDiscoverable", request.get().readEntity(String.class));
+    public void testAutoDiscoverableGlobalDefaultServerDefault() throws Exception {
+        _test("CommonAutoDiscoverable", null, null);
     }
 
     @Test
-    public void testAutoDiscoverableDisabled() throws Exception {
+    public void testAutoDiscoverableGlobalDefaultServerEnabled() throws Exception {
+        _test("CommonAutoDiscoverable", null, false);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalDefaultServerDisabled() throws Exception {
+        _test("AbortFilter", null, true);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalDisabledServerDefault() throws Exception {
+        _test("AbortFilter", true, null);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalDisabledServerEnabled() throws Exception {
+        _test("AbortFilter", true, false);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalDisabledServerDisabled() throws Exception {
+        _test("AbortFilter", true, true);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalEnabledServerDefault() throws Exception {
+        _test("CommonAutoDiscoverable", false, null);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalEnabledServerEnabled() throws Exception {
+        _test("CommonAutoDiscoverable", false, false);
+    }
+
+    @Test
+    public void testAutoDiscoverableGlobalEnabledServerDisabled() throws Exception {
+        _test("CommonAutoDiscoverable", false, true);
+    }
+
+    private void _test(final String response, final Boolean globalDisable, final Boolean clientDisable) throws Exception {
         final ClientConfig config = new ClientConfig();
         config.register(AbortFilter.class);
-
         config.property(PROPERTY, true);
-        config.property(ClientProperties.DISABLE_AUTO_DISCOVERY, true);
+
+        if (globalDisable != null) {
+            config.property(CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, globalDisable);
+        }
+        if (clientDisable != null) {
+            config.property(ClientProperties.FEATURE_DISABLE_AUTO_DISCOVERY, clientDisable);
+        }
 
         final Client client = ClientBuilder.newClient(config);
         final Invocation.Builder request = client.target("").request();
 
-        assertEquals("AbortFilter", request.get().readEntity(String.class));
+        assertEquals(response, request.get().readEntity(String.class));
     }
 }

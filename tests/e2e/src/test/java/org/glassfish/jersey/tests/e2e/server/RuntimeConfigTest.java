@@ -108,7 +108,6 @@ public class RuntimeConfigTest extends JerseyTest {
 
         @Override
         public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
-            assertEquals(2, config.getClasses().size());
             assertTrue(config.isRegistered(ClientFeature.class));
             assertTrue(config.isRegistered(ClientReaderInterceptor.class));
 

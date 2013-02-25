@@ -107,6 +107,14 @@
             <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
+        <!-- Un-comment once the JERSEY-1748 is resolved. -->
+        <!--<dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>json-processing-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.bundles</groupId>
             <artifactId>apidocs</artifactId>

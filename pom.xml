@@ -955,6 +955,22 @@
                 <version>${fasterxml.classmate.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>javax.json</groupId>
+                <artifactId>javax.json-api</artifactId>
+                <version>${jsonp.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish</groupId>
+                <artifactId>javax.json</artifactId>
+                <version>${jsonp.ri.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish</groupId>
+                <artifactId>jsonp-jaxrs</artifactId>
+                <version>${jsonp.ri.version}</version>
+            </dependency>
+
             <!-- Test scope -->
 
             <dependency>
@@ -1075,6 +1091,9 @@
         <validation.ri.version>5.0.0.Beta1</validation.ri.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
+
+        <jsonp.api.version>1.0-b04</jsonp.api.version>
+        <jsonp.ri.version>1.0-b04</jsonp.ri.version>
 
         <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

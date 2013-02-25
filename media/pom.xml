@@ -61,6 +61,7 @@
     <modules>
         <module>json-jackson</module>
         <module>json-jettison</module>
+        <module>json-processing</module>
         <module>moxy</module>
         <module>multipart</module>
         <module>sse</module>

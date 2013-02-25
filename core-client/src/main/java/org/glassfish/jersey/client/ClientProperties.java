@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.client;
 
+import org.glassfish.jersey.CommonProperties;
+
 /**
  * Jersey client implementation configuration properties.
  *
@@ -189,16 +191,36 @@ public final class ClientProperties {
     /**
      * If {@code true} then disable auto-discovery on the client.
      * <p>
-     * By default auto-discovery is automatically enabled.
+     * By default auto-discovery on client is automatically enabled if global property {@value org.glassfish.jersey
+     * .CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. Client property cannot override the global property.
      * <p>
      * The default value is {@code false}.
      * </p>
      * <p>
      * The name of the configuration property is <code>{@value}</code>.
      * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
      */
     @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String DISABLE_AUTO_DISCOVERY = "jersey.config.client.disableAutoDiscovery";
+    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".client";
+
+    /**
+     * If {@code true} then disable registration of Json Processing (JSR-353) feature on client.
+     * <p>
+     * By default Json Processing on client is automatically enabled if global property {@value org.glassfish.jersey
+     * .CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. Client property cannot override the global property.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <code>{@value}</code>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
+     */
+    @SuppressWarnings("HtmlTagCanBeJavadocTag")
+    public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".client";
 
     private ClientProperties() {
         // prevents instantiation
