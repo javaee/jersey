@@ -804,9 +804,9 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     @Override
     public String toString() {
-        return "Resource {"
+        return "Resource{"
                 + ((path == null) ? "[unbound], " : "\"" + path + "\", ")
-                + childResources.size() + " child resources,"
+                + childResources.size() + " child resources, "
                 + resourceMethods.size() + " resource methods, "
                 + (subResourceLocator == null ? "0" : "1") + " sub-resource locators, "
                 + handlerClasses.size() + " method handler classes, "

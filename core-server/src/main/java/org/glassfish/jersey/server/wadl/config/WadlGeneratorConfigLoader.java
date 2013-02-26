@@ -43,9 +43,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * Loads a {@link WadlGeneratorConfig} and provides access to the {@link org.glassfish.jersey.server.wadl.WadlGenerator}
@@ -74,43 +76,38 @@ public class WadlGeneratorConfigLoader {
     public static WadlGeneratorConfig loadWadlGeneratorsFromConfig(Map<String, Object> properties) {
         final Object wadlGeneratorConfigProperty = properties.get(
                 ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG);
-        if ( wadlGeneratorConfigProperty == null ) {
+        if (wadlGeneratorConfigProperty == null) {
             return new WadlGeneratorConfig() {
-                        @Override
-                        public List configure() {
-                            return Collections.EMPTY_LIST;
-                        }
-                    };
-        }
-        else {
+                @Override
+                public List configure() {
+                    return Collections.EMPTY_LIST;
+                }
+            };
+        } else {
 
             try {
 
-                if ( wadlGeneratorConfigProperty instanceof WadlGeneratorConfig ) {
-                    return ( (WadlGeneratorConfig)wadlGeneratorConfigProperty );
+                if (wadlGeneratorConfigProperty instanceof WadlGeneratorConfig) {
+                    return ((WadlGeneratorConfig) wadlGeneratorConfigProperty);
                 }
 
                 final Class<? extends WadlGeneratorConfig> configClazz;
-                if ( wadlGeneratorConfigProperty instanceof Class ) {
-                    configClazz = ( (Class<?>)wadlGeneratorConfigProperty ).
-                            asSubclass( WadlGeneratorConfig.class );
-                }
-                else if ( wadlGeneratorConfigProperty instanceof String ) {
+                if (wadlGeneratorConfigProperty instanceof Class) {
+                    configClazz = ((Class<?>) wadlGeneratorConfigProperty).
+                            asSubclass(WadlGeneratorConfig.class);
+                } else if (wadlGeneratorConfigProperty instanceof String) {
                     configClazz = ReflectionHelper.classForNameWithException((String) wadlGeneratorConfigProperty).
-                            asSubclass( WadlGeneratorConfig.class );
+                            asSubclass(WadlGeneratorConfig.class);
+                } else {
+                    throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER_PROPERTY(
+                            ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
+                            wadlGeneratorConfigProperty.getClass().getName()));
                 }
-                else {
-                    throw new RuntimeException( "The property " + ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG +
-                            " is an invalid type: " + wadlGeneratorConfigProperty.getClass().getName() +
-                            " (supported: String, Class<? extends WadlGeneratorConfiguration>," +
-                            " WadlGeneratorConfiguration)" );
-                }
-
                 return configClazz.newInstance();
 
-            } catch ( Exception e ) {
-                throw new RuntimeException( "Could not load WadlGeneratorConfiguration," +
-                        " check the configuration of " + ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, e );
+            } catch (Exception e) {
+                throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
+                        ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG), e);
             }
         }
     }

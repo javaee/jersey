@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.wadl.internal;
 import java.net.URI;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
@@ -52,6 +53,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.glassfish.jersey.server.ExtendedResourceContext;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
@@ -93,7 +95,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             this.jaxbContext = JAXBContext.newInstance(
                     this.wadlGeneratorConfig.createWadlGenerator().getRequiredJaxbContextPath());
         } catch (JAXBException ex) {
-            this.jaxbContext = null;
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
         }
     }
 
@@ -174,58 +176,60 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         // Massage the application.wadl URI slightly to get the right effect
         //
 
-        final String requestURIPath = requestURI.getPath();
+        try {
+            final String requestURIPath = requestURI.getPath();
 
-        if (requestURIPath.endsWith("application.wadl")) {
-            requestURI = UriBuilder.fromUri(requestURI)
-                    .replacePath(
-                            requestURIPath
-                                    .substring(0, requestURIPath.lastIndexOf('/') + 1))
-                    .build();
-        }
-
-
-        String root = application.getResources().get(0).getBase();
-        UriBuilder extendedPath = root != null ?
-                UriBuilder.fromPath(root).path("/application.wadl/")
-                : UriBuilder.fromPath("./application.wadl/");
-        URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
+            if (requestURIPath.endsWith("application.wadl")) {
+                requestURI = UriBuilder.fromUri(requestURI)
+                        .replacePath(
+                                requestURIPath
+                                        .substring(0, requestURIPath.lastIndexOf('/') + 1))
+                        .build();
+            }
 
 
-        // Add a reference to this grammar
-        //
+            String root = application.getResources().get(0).getBase();
+            UriBuilder extendedPath = root != null ?
+                    UriBuilder.fromPath(root).path("/application.wadl/")
+                    : UriBuilder.fromPath("./application.wadl/");
+            URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
 
-        Grammars grammars;
-        if (application.getGrammars() != null) {
-            LOG.info("The wadl application already contains a grammars element," +
-                    " we're adding elements of the provided grammars file.");
-            grammars = application.getGrammars();
-        } else {
-            grammars = new Grammars();
-            application.setGrammars(grammars);
-        }
 
-        // Create a reference back to the root WADL
-        //
+            // Add a reference to this grammar
+            //
 
-        for (String path : applicationDescription.getExternalMetadataKeys()) {
-            URI schemaURI =
-                    extendedPath.clone().path(path).build();
+            Grammars grammars;
+            if (application.getGrammars() != null) {
+                LOG.info(LocalizationMessages.ERROR_WADL_GRAMMAR_ALREADY_CONTAINS());
+                grammars = application.getGrammars();
+            } else {
+                grammars = new Grammars();
+                application.setGrammars(grammars);
+            }
 
-            String schemaPath = rootURI != null ?
-                    requestURI.relativize(schemaURI).toString()
-                    : schemaURI.toString();
+            // Create a reference back to the root WADL
+            //
 
-            Include include = new Include();
-            include.setHref(schemaPath);
-            Doc doc = new Doc();
-            doc.setLang("en");
-            doc.setTitle("Generated");
-            include.getDoc().add(doc);
+            for (String path : applicationDescription.getExternalMetadataKeys()) {
+                URI schemaURI =
+                        extendedPath.clone().path(path).build();
 
-            // Finally add to list
-            grammars.getInclude().add(include);
+                String schemaPath = rootURI != null ?
+                        requestURI.relativize(schemaURI).toString()
+                        : schemaURI.toString();
+
+                Include include = new Include();
+                include.setHref(schemaPath);
+                Doc doc = new Doc();
+                doc.setLang("en");
+                doc.setTitle("Generated");
+                include.getDoc().add(doc);
+
+                // Finally add to list
+                grammars.getInclude().add(include);
+            }
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_EXTERNAL_GRAMMAR(), e);
         }
     }
-
 }

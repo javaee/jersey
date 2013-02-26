@@ -614,4 +614,10 @@ public class Parameter implements AnnotatedElement {
     public Annotation[] getDeclaredAnnotations() {
         return annotations.clone();
     }
+
+    @Override
+    public String toString() {
+        return String.format("Parameter [type=%s, source=%s, defaultValue=%s]",
+                getRawType(), getSourceName(), getDefaultValue());
+    }
 }

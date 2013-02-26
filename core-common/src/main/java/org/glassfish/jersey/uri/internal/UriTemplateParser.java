@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.UriComponent;
+
 
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
@@ -237,10 +239,8 @@ public class UriTemplateParser {
             }
             processLiteralCharacters();
         } catch (NoSuchElementException ex) {
-            throw new IllegalArgumentException(
-                    "Invalid syntax for the template, \"" + template
-                            + "\". Check if a path parameter is terminated with a '}'.",
-                    ex);
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_INVALID_SYNTAX_TERMINATED(
+                    template), ex);
         }
     }
 
@@ -302,8 +302,8 @@ public class UriTemplateParser {
             // Template name character
             nameBuffer.append(c);
         } else {
-            throw new IllegalArgumentException("Illegal character '" + c
-                    + "' at position " + ci.pos() + " is not as the start of a name");
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_ILLEGAL_CHAR_START_NAME(c, ci.pos(),
+                    template));
         }
 
         String nameRegexString = "";
@@ -328,12 +328,12 @@ public class UriTemplateParser {
                     break;
                 } else {
                     // Error
-                    throw new IllegalArgumentException("Illegal character '" + c
-                            + "' at position " + ci.pos() + " is not allowed after a name");
+                    throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_ILLEGAL_CHAR_AFTER_NAME(c,
+                            ci.pos(), template));
                 }
             } else {
-                throw new IllegalArgumentException("Illegal character '" + c
-                        + "' at position " + ci.pos() + " is not allowed as part of a name");
+                throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_ILLEGAL_CHAR_PART_OF_NAME(c,
+                        ci.pos(), template));
             }
         }
         String name = nameBuffer.toString();
@@ -347,9 +347,8 @@ public class UriTemplateParser {
                     ? TEMPLATE_VALUE_PATTERN : Pattern.compile(nameRegexString);
             if (nameToPattern.containsKey(name)) {
                 if (!nameToPattern.get(name).equals(namePattern)) {
-                    throw new IllegalArgumentException("The name '" + name
-                            + "' is declared "
-                            + "more than once with different regular expressions");
+                    throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_NAME_MORE_THAN_ONCE(name,
+                            template));
                 }
             } else {
                 nameToPattern.put(name, namePattern);
@@ -367,9 +366,8 @@ public class UriTemplateParser {
                     append(name).
                     append('}');
         } catch (PatternSyntaxException ex) {
-            throw new IllegalArgumentException("Invalid syntax for the expression '" + nameRegexString
-                    + "' associated with the name '" + name + "'",
-                    ex);
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_TEMPLATE_PARSER_INVALID_SYNTAX(nameRegexString, name,
+                    template), ex);
         }
     }
 

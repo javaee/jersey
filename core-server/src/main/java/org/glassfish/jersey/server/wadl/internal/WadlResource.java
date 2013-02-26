@@ -45,8 +45,6 @@ import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -59,6 +57,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.inject.Singleton;
 import javax.xml.bind.Marshaller;
 
+import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 
 import com.sun.research.ws.wadl.Application;
@@ -72,7 +72,6 @@ import com.sun.research.ws.wadl.Application;
 public final class WadlResource {
 
     public static final String HTTPDATEFORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
-    private static final Logger LOGGER = Logger.getLogger(WadlResource.class.getName());
 
     private URI lastBaseUri;
     private byte[] wadlXmlRepresentation;
@@ -89,32 +88,35 @@ public final class WadlResource {
     @Produces({"application/vnd.sun.wadl+xml", "application/xml"})
     @GET
     public synchronized Response getWadl(@Context UriInfo uriInfo) {
-        if (!wadlContext.isWadlGenerationEnabled()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        if ((wadlXmlRepresentation == null) || ((lastBaseUri != null) && !lastBaseUri.equals(uriInfo.getBaseUri()))) {
-            this.lastBaseUri = uriInfo.getBaseUri();
-            this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
-
-            ApplicationDescription applicationDescription =
-                    wadlContext.getApplication(uriInfo);
-            Application application = applicationDescription.getApplication();
-
-            try {
-                final Marshaller marshaller = wadlContext.getJAXBContext().createMarshaller();
-                marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-                final ByteArrayOutputStream os = new ByteArrayOutputStream();
-                marshaller.marshal(application, os);
-                wadlXmlRepresentation = os.toByteArray();
-                os.close();
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Could not marshal wadl Application.", e);
-                return Response.ok(applicationDescription).build();
+        try {
+            if (!wadlContext.isWadlGenerationEnabled()) {
+                return Response.status(Response.Status.NOT_FOUND).build();
             }
-        }
 
-        return Response.ok(new ByteArrayInputStream(wadlXmlRepresentation)).header("Last-modified", lastModified).build();
+            if ((wadlXmlRepresentation == null) || ((lastBaseUri != null) && !lastBaseUri.equals(uriInfo.getBaseUri()))) {
+                this.lastBaseUri = uriInfo.getBaseUri();
+                this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
+
+                ApplicationDescription applicationDescription =
+                        wadlContext.getApplication(uriInfo);
+                Application application = applicationDescription.getApplication();
+
+                try {
+                    final Marshaller marshaller = wadlContext.getJAXBContext().createMarshaller();
+                    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+                    final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    marshaller.marshal(application, os);
+                    wadlXmlRepresentation = os.toByteArray();
+                    os.close();
+                } catch (Exception e) {
+                    throw new ProcessingException("Could not marshal the wadl Application.", e);
+                }
+            }
+
+            return Response.ok(new ByteArrayInputStream(wadlXmlRepresentation)).header("Last-modified", lastModified).build();
+        } catch (Exception e) {
+            throw new ProcessingException("Error generating /application.wadl.", e);
+        }
     }
 
     @Produces({"application/xml"})
@@ -123,25 +125,28 @@ public final class WadlResource {
     public synchronized Response geExternalGrammar(
             @Context UriInfo uriInfo,
             @PathParam("path") String path) {
+        try {
+            // Fail if wadl generation is disabled
+            if (!wadlContext.isWadlGenerationEnabled()) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
 
-        // Fail if wadl generation is disabled
-        if (!wadlContext.isWadlGenerationEnabled()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            ApplicationDescription applicationDescription =
+                    wadlContext.getApplication(uriInfo);
+
+            // Fail is we don't have any metadata for this path
+            ApplicationDescription.ExternalGrammar externalMetadata = applicationDescription.getExternalGrammar(path);
+
+            if (externalMetadata == null) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+
+            // Return the data
+            return Response.ok().type(externalMetadata.getType())
+                    .entity(externalMetadata.getContent())
+                    .build();
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_RESOURCE_EXTERNAL_GRAMMAR(), e);
         }
-
-        ApplicationDescription applicationDescription =
-                wadlContext.getApplication(uriInfo);
-
-        // Fail is we don't have any metadata for this path
-        ApplicationDescription.ExternalGrammar externalMetadata = applicationDescription.getExternalGrammar(path);
-
-        if (externalMetadata == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        // Return the data
-        return Response.ok().type(externalMetadata.getType())
-                .entity(externalMetadata.getContent())
-                .build();
     }
 }

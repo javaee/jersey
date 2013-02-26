@@ -51,7 +51,9 @@ import javax.ws.rs.core.MediaType;
 
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
@@ -100,7 +102,7 @@ public class WadlBuilder {
 
         // for each resource
         for (org.glassfish.jersey.server.model.Resource r : resources) {
-            Resource wadlResource = generateResource(r, null);
+            Resource wadlResource = generateResource(r, r.getPath());
             wadlResources.getResource().add(wadlResource);
         }
         wadlApplication.getResources().add(wadlResources);
@@ -111,7 +113,6 @@ public class WadlBuilder {
 
         WadlGenerator.ExternalGrammarDefinition external =
                 _wadlGenerator.createExternalGrammar();
-
         //
 
         ApplicationDescription description = new ApplicationDescription(wadlApplication, external);
@@ -134,21 +135,25 @@ public class WadlBuilder {
     public Application generate(
             ApplicationDescription description,
             org.glassfish.jersey.server.model.Resource resource) {
-        Application wadlApplication = _wadlGenerator.createApplication();
-        Resources wadlResources = _wadlGenerator.createResources();
-        Resource wadlResource = generateResource(resource, null);
-        wadlResources.getResource().add(wadlResource);
-        wadlApplication.getResources().add(wadlResources);
+        try {
+            Application wadlApplication = _wadlGenerator.createApplication();
+            Resources wadlResources = _wadlGenerator.createResources();
+            Resource wadlResource = generateResource(resource, null);
+            wadlResources.getResource().add(wadlResource);
+            wadlApplication.getResources().add(wadlResources);
 
-        addVersion(wadlApplication);
+            addVersion(wadlApplication);
 
-        // Attach the data to the parts of the model
+            // Attach the data to the parts of the model
 
-        _wadlGenerator.attachTypes(description);
+            _wadlGenerator.attachTypes(description);
 
-        // Return the WADL
+            // Return the WADL
 
-        return wadlApplication;
+            return wadlApplication;
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_RESOURCE(resource), e);
+        }
     }
 
     private void addVersion(Application wadlApplication) {
@@ -162,85 +167,93 @@ public class WadlBuilder {
     private com.sun.research.ws.wadl.Method generateMethod(org.glassfish.jersey.server.model.Resource r,
                                                            final Map<String, Param> wadlResourceParams,
                                                            final org.glassfish.jersey.server.model.ResourceMethod m) {
-        com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
-        // generate the request part
-        Request wadlRequest = generateRequest(r, m, wadlResourceParams);
-        if (wadlRequest != null) {
-            wadlMethod.setRequest(wadlRequest);
+        try {
+            com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
+            // generate the request part
+            Request wadlRequest = generateRequest(r, m, wadlResourceParams);
+            if (wadlRequest != null) {
+                wadlMethod.setRequest(wadlRequest);
+            }
+            // generate the response part
+            final List<Response> responses = generateResponses(r, m);
+            if (responses != null) {
+                wadlMethod.getResponse().addAll(responses);
+            }
+            return wadlMethod;
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_METHOD(m, r), e);
         }
-        // generate the response part
-        final List<Response> responses = generateResponses(r, m);
-        if (responses != null) {
-            wadlMethod.getResponse().addAll(responses);
-        }
-        return wadlMethod;
     }
 
     private Request generateRequest(org.glassfish.jersey.server.model.Resource r,
                                     final org.glassfish.jersey.server.model.ResourceMethod m,
                                     Map<String, Param> wadlResourceParams) {
-        if (m.getInvocable().getParameters().isEmpty()) {
-            return null;
-        }
+        try {
+            if (m.getInvocable().getParameters().isEmpty()) {
+                return null;
+            }
 
-        Request wadlRequest = _wadlGenerator.createRequest(r, m);
+            Request wadlRequest = _wadlGenerator.createRequest(r, m);
 
-        for (Parameter p : m.getInvocable().getParameters()) {
-            if (p.getSource() == Parameter.Source.ENTITY) {
-                for (MediaType mediaType : m.getConsumedTypes()) {
-                    setRepresentationForMediaType(r, m, mediaType, wadlRequest);
-                }
-            } else if (p.getSourceAnnotation().annotationType() == FormParam.class) {
-                // Use application/x-www-form-urlencoded if no @Consumes
-                List<MediaType> supportedInputTypes = m.getConsumedTypes();
-                if (supportedInputTypes.isEmpty()
-                        || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
-                    supportedInputTypes = Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
-                }
+            for (Parameter p : m.getInvocable().getParameters()) {
+                if (p.getSource() == Parameter.Source.ENTITY) {
+                    for (MediaType mediaType : m.getConsumedTypes()) {
+                        setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                    }
+                } else if (p.getSourceAnnotation().annotationType() == FormParam.class) {
+                    // Use application/x-www-form-urlencoded if no @Consumes
+                    List<MediaType> supportedInputTypes = m.getConsumedTypes();
+                    if (supportedInputTypes.isEmpty()
+                            || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
+                        supportedInputTypes = Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+                    }
 
-                for (MediaType mediaType : supportedInputTypes) {
-                    final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
-                    if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                        final Param wadlParam = generateParam(r, m, p);
-                        if (wadlParam != null) {
-                            wadlRepresentation.getParam().add(wadlParam);
+                    for (MediaType mediaType : supportedInputTypes) {
+                        final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                        if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
+                            final Param wadlParam = generateParam(r, m, p);
+                            if (wadlParam != null) {
+                                wadlRepresentation.getParam().add(wadlParam);
+                            }
                         }
                     }
-                }
-            } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart" +
-                    ".FormDataParam")) { // jersey-multipart support
-                // Use multipart/form-data if no @Consumes
-                List<MediaType> supportedInputTypes = m.getConsumedTypes();
-                if (supportedInputTypes.isEmpty()
-                        || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
-                    supportedInputTypes = Collections.singletonList(MediaType.MULTIPART_FORM_DATA_TYPE);
-                }
+                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart" +
+                        ".FormDataParam")) { // jersey-multipart support
+                    // Use multipart/form-data if no @Consumes
+                    List<MediaType> supportedInputTypes = m.getConsumedTypes();
+                    if (supportedInputTypes.isEmpty()
+                            || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
+                        supportedInputTypes = Collections.singletonList(MediaType.MULTIPART_FORM_DATA_TYPE);
+                    }
 
-                for (MediaType mediaType : supportedInputTypes) {
-                    final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
-                    if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                        final Param wadlParam = generateParam(r, m, p);
-                        if (wadlParam != null) {
-                            wadlRepresentation.getParam().add(wadlParam);
+                    for (MediaType mediaType : supportedInputTypes) {
+                        final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                        if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
+                            final Param wadlParam = generateParam(r, m, p);
+                            if (wadlParam != null) {
+                                wadlRepresentation.getParam().add(wadlParam);
+                            }
                         }
                     }
-                }
-            } else {
-                Param wadlParam = generateParam(r, m, p);
-                if (wadlParam == null) {
-                    continue;
-                }
-                if (wadlParam.getStyle() == ParamStyle.TEMPLATE || wadlParam.getStyle() == ParamStyle.MATRIX) {
-                    wadlResourceParams.put(wadlParam.getName(), wadlParam);
                 } else {
-                    wadlRequest.getParam().add(wadlParam);
+                    Param wadlParam = generateParam(r, m, p);
+                    if (wadlParam == null) {
+                        continue;
+                    }
+                    if (wadlParam.getStyle() == ParamStyle.TEMPLATE || wadlParam.getStyle() == ParamStyle.MATRIX) {
+                        wadlResourceParams.put(wadlParam.getName(), wadlParam);
+                    } else {
+                        wadlRequest.getParam().add(wadlParam);
+                    }
                 }
             }
-        }
-        if (wadlRequest.getRepresentation().size() + wadlRequest.getParam().size() == 0) {
-            return null;
-        } else {
-            return wadlRequest;
+            if (wadlRequest.getRepresentation().size() + wadlRequest.getParam().size() == 0) {
+                return null;
+            } else {
+                return wadlRequest;
+            }
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_REQUEST(m, r), e);
         }
     }
 
@@ -267,12 +280,17 @@ public class WadlBuilder {
                                                          final org.glassfish.jersey.server.model.ResourceMethod m,
                                                          MediaType mediaType,
                                                          Request wadlRequest) {
-        Representation wadlRepresentation = getRepresentationByMediaType(wadlRequest.getRepresentation(), mediaType);
-        if (wadlRepresentation == null) {
-            wadlRepresentation = _wadlGenerator.createRequestRepresentation(r, m, mediaType);
-            wadlRequest.getRepresentation().add(wadlRepresentation);
+        try {
+            Representation wadlRepresentation = getRepresentationByMediaType(wadlRequest.getRepresentation(), mediaType);
+            if (wadlRepresentation == null) {
+                wadlRepresentation = _wadlGenerator.createRequestRepresentation(r, m, mediaType);
+                wadlRequest.getRepresentation().add(wadlRepresentation);
+            }
+            return wadlRepresentation;
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_REQUEST_MEDIA_TYPE(mediaType,
+                    m, r), e);
         }
-        return wadlRepresentation;
     }
 
     private Representation getRepresentationByMediaType(
@@ -288,10 +306,14 @@ public class WadlBuilder {
     private Param generateParam(org.glassfish.jersey.server.model.Resource resource,
                                 org.glassfish.jersey.server.model.ResourceMethod
                                         method, final Parameter param) {
-        if (param.getSource() == Parameter.Source.ENTITY || param.getSource() == Parameter.Source.CONTEXT) {
-            return null;
+        try {
+            if (param.getSource() == Parameter.Source.ENTITY || param.getSource() == Parameter.Source.CONTEXT) {
+                return null;
+            }
+            return _wadlGenerator.createParam(resource, method, param);
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_PARAM(param, resource, method), e);
         }
-        return _wadlGenerator.createParam(resource, method, param);
     }
 
     private Resource generateResource(org.glassfish.jersey.server.model.Resource r, String path) {
@@ -300,74 +322,87 @@ public class WadlBuilder {
 
     private Resource generateResource(final org.glassfish.jersey.server.model.Resource resource, String path,
                                       Set<org.glassfish.jersey.server.model.Resource> visitedResources) {
-        Resource wadlResource = _wadlGenerator.createResource(resource, path);
+        try {
+            Resource wadlResource = _wadlGenerator.createResource(resource, path);
 
-        // prevent infinite recursion
-        if (visitedResources.contains(resource)) {
-            return wadlResource;
-        } else {
-            visitedResources = new HashSet<org.glassfish.jersey.server.model.Resource>(visitedResources);
-            visitedResources.add(resource);
-        }
-
-
-        // if the resource contains subresource locator create new resource for this locator and return it instead
-        // of this resource
-        final ResourceMethod locator = resource.getResourceLocator();
-        if (locator != null) {
-
-            org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
-                    .builder(locator.getInvocable().getRawResponseType());
-            if (builder == null) {
-                // for example in the case the return type of the sub resource locator is Object
-                builder = org.glassfish.jersey.server.model.Resource.builder().path(resource.getPath());
+            // prevent infinite recursion
+            if (visitedResources.contains(resource)) {
+                return wadlResource;
+            } else {
+                visitedResources = new HashSet<org.glassfish.jersey.server.model.Resource>(visitedResources);
+                visitedResources.add(resource);
             }
-            org.glassfish.jersey.server.model.Resource subResource =
-                    builder.build();
 
-            Resource wadlSubResource = generateResource(subResource,
-                    resource.getPath(), visitedResources);
 
-            for (Parameter param : locator.getInvocable().getParameters()) {
-                Param wadlParam = generateParam(resource, locator, param);
+            // if the resource contains subresource locator create new resource for this locator and return it instead
+            // of this resource
+            final ResourceMethod locator = resource.getResourceLocator();
+            if (locator != null) {
+                try {
+                    org.glassfish.jersey.server.model.Resource.Builder builder = org.glassfish.jersey.server.model.Resource
+                            .builder(locator.getInvocable().getRawResponseType());
+                    if (builder == null) {
+                        // for example in the case the return type of the sub resource locator is Object
+                        builder = org.glassfish.jersey.server.model.Resource.builder().path(resource.getPath());
+                    }
+                    org.glassfish.jersey.server.model.Resource subResource =
+                            builder.build();
 
-                if (wadlParam != null && wadlParam.getStyle() == ParamStyle.TEMPLATE) {
-                    wadlSubResource.getParam().add(wadlParam);
+                    Resource wadlSubResource = generateResource(subResource,
+                            resource.getPath(), visitedResources);
+
+                    for (Parameter param : locator.getInvocable().getParameters()) {
+                        Param wadlParam = generateParam(resource, locator, param);
+
+                        if (wadlParam != null && wadlParam.getStyle() == ParamStyle.TEMPLATE) {
+                            wadlSubResource.getParam().add(wadlParam);
+                        }
+                    }
+                    return wadlSubResource;
+                } catch (RuntimeException e) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_RESOURCE_LOCATOR(locator,
+                            resource), e);
                 }
             }
-            return wadlSubResource;
-        }
 
-        Map<String, Param> wadlResourceParams = new HashMap<String, Param>();
-        // for each resource method
-        for (org.glassfish.jersey.server.model.ResourceMethod method : resource.getResourceMethods()) {
-            com.sun.research.ws.wadl.Method wadlMethod = generateMethod(resource, wadlResourceParams, method);
-            wadlResource.getMethodOrResource().add(wadlMethod);
-        }
-        // add method parameters that are associated with the resource PATH template
-        for (Param wadlParam : wadlResourceParams.values()) {
-            wadlResource.getParam().add(wadlParam);
-        }
+            Map<String, Param> wadlResourceParams = new HashMap<String, Param>();
+            // for each resource method
+            for (org.glassfish.jersey.server.model.ResourceMethod method : resource.getResourceMethods()) {
+                com.sun.research.ws.wadl.Method wadlMethod = generateMethod(resource, wadlResourceParams, method);
+                wadlResource.getMethodOrResource().add(wadlMethod);
+            }
+            // add method parameters that are associated with the resource PATH template
+            for (Param wadlParam : wadlResourceParams.values()) {
+                wadlResource.getParam().add(wadlParam);
+            }
 
-        // for each sub-resource method
-        Map<String, Resource> wadlSubResources = new HashMap<String, Resource>();
-        Map<String, Map<String, Param>> wadlSubResourcesParams =
-                new HashMap<String, Map<String, Param>>();
+            // for each sub-resource method
+            Map<String, Resource> wadlSubResources = new HashMap<String, Resource>();
+            Map<String, Map<String, Param>> wadlSubResourcesParams =
+                    new HashMap<String, Map<String, Param>>();
 
-        for (org.glassfish.jersey.server.model.Resource childResource : resource.getChildResources()) {
-            Resource childWadlResource = generateResource(childResource, childResource.getPath(),
-                    visitedResources);
-            wadlResource.getMethodOrResource().add(childWadlResource);
+            for (org.glassfish.jersey.server.model.Resource childResource : resource.getChildResources()) {
+                Resource childWadlResource = generateResource(childResource, childResource.getPath(),
+                        visitedResources);
+                wadlResource.getMethodOrResource().add(childWadlResource);
+            }
+
+
+            return wadlResource;
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_RESOURCE_PATH(resource, path), e);
         }
-
-        return wadlResource;
     }
 
 
     private List<Response> generateResponses(org.glassfish.jersey.server.model.Resource r, final ResourceMethod m) {
-        if (m.getInvocable().getRawResponseType() == void.class) {
-            return null;
+        try {
+            if (m.getInvocable().getRawResponseType() == void.class) {
+                return null;
+            }
+            return _wadlGenerator.createResponses(r, m);
+        } catch (Exception e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_RESPONSE(m, r), e);
         }
-        return _wadlGenerator.createResponses(r, m);
     }
 }
