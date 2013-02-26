@@ -96,7 +96,7 @@ public class JsonProcessingAutoDiscoverableClientTest {
 
     @Test
     public void testAutoDiscoverableGlobalDisabledServerEnabled() throws Exception {
-        _test("Disabled", true, false);
+        _test("Enabled", true, false);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class JsonProcessingAutoDiscoverableClientTest {
 
     @Test
     public void testAutoDiscoverableGlobalEnabledServerDisabled() throws Exception {
-        _test("Enabled", false, true);
+        _test("Disabled", false, true);
     }
 
     private void _test(final String response, final Boolean globalDisable, final Boolean clientDisable) throws Exception {

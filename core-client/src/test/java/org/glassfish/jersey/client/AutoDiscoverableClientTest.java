@@ -119,7 +119,7 @@ public class AutoDiscoverableClientTest {
 
     @Test
     public void testAutoDiscoverableGlobalDisabledServerEnabled() throws Exception {
-        _test("AbortFilter", true, false);
+        _test("CommonAutoDiscoverable", true, false);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class AutoDiscoverableClientTest {
 
     @Test
     public void testAutoDiscoverableGlobalEnabledServerDisabled() throws Exception {
-        _test("CommonAutoDiscoverable", false, true);
+        _test("AbortFilter", false, true);
     }
 
     private void _test(final String response, final Boolean globalDisable, final Boolean clientDisable) throws Exception {

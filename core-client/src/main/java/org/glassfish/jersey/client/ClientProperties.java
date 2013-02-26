@@ -191,8 +191,9 @@ public final class ClientProperties {
     /**
      * If {@code true} then disable auto-discovery on the client.
      * <p>
-     * By default auto-discovery on client is automatically enabled if global property {@value org.glassfish.jersey
-     * .CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. Client property cannot override the global property.
+     * By default auto-discovery on client is automatically enabled if global property
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. If set then the client
+     * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -208,8 +209,9 @@ public final class ClientProperties {
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature on client.
      * <p>
-     * By default Json Processing on client is automatically enabled if global property {@value org.glassfish.jersey
-     * .CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. Client property cannot override the global property.
+     * By default Json Processing on client is automatically enabled if global property
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. If set then the client
+     * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
      * </p>

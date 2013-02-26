@@ -273,8 +273,9 @@ public final class ServerProperties {
     /**
      * If {@code true} then disable auto discovery on server.
      * <p>
-     * By default auto discovery is automatically enabled if global property {@value org.glassfish.jersey
-     * .CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. Server property cannot override the global property.
+     * By default auto discovery is automatically enabled if global property
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. If set then the server
+     * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -292,8 +293,9 @@ public final class ServerProperties {
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature on server.
      * <p>
-     * By default Json Processing is automatically enabled if global property {@value org.glassfish.jersey
-     * .CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. Server property cannot override the global property.
+     * By default Json Processing is automatically enabled if global property
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. If set then the server
+     * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
      * </p>

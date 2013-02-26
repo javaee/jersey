@@ -160,8 +160,8 @@ public class PropertiesHelper {
     /**
      * Determine whether a Jersey feature ({@link javax.ws.rs.core.Feature}/
      * {@link org.glassfish.jersey.internal.spi.AutoDiscoverable}) is disabled based on given global property name and it's
-     * client/server variants. If global property is set then the value of this property is returned, otherwise the return value
-     * is value of client/server variant of the property.
+     * client/server variants. If runtime (client/server) variant of the global property is set then the value of this property is
+     * returned, otherwise the return value is value of the global property.
      * <p/>
      * Client/Server variant of the property is derived using this pattern:
      * {@code globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase()}
@@ -172,13 +172,13 @@ public class PropertiesHelper {
      * @see org.glassfish.jersey.CommonProperties
      */
     public static boolean isFeatureDisabledByProperty(final Configuration config, final String globalPropertyName) {
-        // Global.
-        final Object globalProperty = config.getProperty(globalPropertyName);
-        if (globalProperty != null) {
-            return isProperty(globalProperty);
+        // Runtime property.
+        final Object runtimeProperty = config.getProperty(globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase());
+        if (runtimeProperty != null) {
+            return isProperty(runtimeProperty);
         }
 
-        // Runtime type property
-        return isProperty(config.getProperty(globalPropertyName + '.' + config.getRuntimeType().name().toLowerCase()));
+        // Global.
+        return isProperty(config.getProperty(globalPropertyName));
     }
 }
