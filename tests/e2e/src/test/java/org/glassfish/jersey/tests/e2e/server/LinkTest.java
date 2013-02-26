@@ -85,16 +85,16 @@ public class LinkTest extends JerseyTest {
 
     @Test
     public void testEquals() {
-//        Link link = Link.fromResourceMethod(Resource.class, "producesXml").build();
-//        String string = link.toString();
-//        Link fromValueOf = Link.valueOf(string);
-//        assertEquals(link, fromValueOf);
+        Link link = Link.fromMethod(Resource.class, "producesXml").build();
+        String string = link.toString();
+        Link fromValueOf = Link.valueOf(string);
+        assertEquals(link, fromValueOf);
     }
 
     @Test
     public void testFromResourceMethod() {
-//        Link link = Link.fromResourceMethod(Resource.class, "producesXml").build();
-//        assertEquals("resource/producesxml", link.getUri().toString());
+        Link link = Link.fromMethod(Resource.class, "producesXml").build();
+        assertEquals("producesxml", link.getUri().toString());
     }
 
     @Test

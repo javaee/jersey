@@ -56,7 +56,7 @@ import java.lang.annotation.Target;
  * In case a resource method is annotated with {@link Template} annotation then the return value of the method is the model.
  * Otherwise the processing of such a method is the same as if the  return type of the method was {@link Viewable} class.
  * If a method is annotated with {@link Template} and also returning a {@link Viewable} instance then the values
- * ({@code resolvingClass}) from the {@link Viewable viewable} take precedence over those defined by the annotation.
+ * (<tt>resolvingClass</tt>) from the {@link Viewable viewable} take precedence over those defined by the annotation.
  * Producible {@link javax.ws.rs.core.MediaType media types} are determined from the method's {@link javax.ws.rs.Produces}
  * annotation.
  * <p/>
