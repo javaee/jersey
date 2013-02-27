@@ -50,8 +50,8 @@ public final class CommonProperties {
     /**
      * If {@code true} then disable auto discovery on client/server.
      * <p>
-     * By default auto discovery is automatically enabled. If set then value of this property takes precedence over the value of
-     * client/server variant of this property.
+     * By default auto discovery is automatically enabled. The value of this property may be overridden by the client/server
+     * variant of this property.
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -65,8 +65,8 @@ public final class CommonProperties {
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature.
      * <p>
-     * By default Json Processing is automatically enabled. If set then value of this property takes precedence over the value of
-     * client/server variant of this property.
+     * By default Json Processing is automatically enabled. The value of this property may be overridden by the client/server
+     * variant of this property.
      * <p>
      * The default value is {@code false}.
      * </p>
