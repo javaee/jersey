@@ -58,7 +58,6 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
@@ -73,21 +72,18 @@
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-bundle</artifactId>
             <type>pom</type>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-servlet</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Extended Wadl Config: Dependency to jersey-wadl-doclet is needed here to keep the correct build order. -->
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-wadl-doclet</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

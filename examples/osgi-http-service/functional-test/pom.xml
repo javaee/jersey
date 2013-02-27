@@ -74,13 +74,11 @@
                     <groupId>org.glassfish.jersey.containers</groupId>
                     <artifactId>jersey-container-grizzly2-servlet</artifactId>
                     <scope>test</scope>
-                    <version>${project.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.glassfish.jersey.core</groupId>
                     <artifactId>jersey-client</artifactId>
                     <scope>test</scope>
-                    <version>${project.version}</version>
                 </dependency>
             </dependencies>
         </profile>

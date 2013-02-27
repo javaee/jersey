@@ -736,6 +736,7 @@
 
     <modules>
         <module>archetypes</module>
+        <module>bom</module>
         <module>bundles</module>
         <module>connectors</module>
         <module>containers</module>
@@ -1049,7 +1050,6 @@
 
         <!--
             Change jaxrs.api.version also in:
-                examples/osgi-helloworld-webapp/lib-bundle/pom.xml
                 examples/osgi-helloworld-webapp/war-bundle/pom.xml
         -->
         <jaxrs.api.version>2.0-rc1</jaxrs.api.version>
