@@ -66,9 +66,8 @@ public final class ServletProperties {
      * <p></p>
      * A default value is not set.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_STATIC_CONTENT_REGEX = "jersey.config.servlet.filter.staticContentRegex";
 
     /**
@@ -92,9 +91,8 @@ public final class ServletProperties {
      * <p>
      * The default value is {@code false}.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOn404";
 
     /**
@@ -116,9 +114,8 @@ public final class ServletProperties {
      * <p></p>
      * A default value is not set.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
 
     /**
@@ -127,10 +124,9 @@ public final class ServletProperties {
      * <p></p>
      * A default value is not set.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     // TODO implement generic support
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String JAXRS_APPLICATION_CLASS = "javax.ws.rs.Application";
 
     /**
@@ -144,9 +140,8 @@ public final class ServletProperties {
      * <p></p>
      * A default value is not set.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
 
     /**
@@ -156,7 +151,7 @@ public final class ServletProperties {
      * <p></p>
      * The default value is {@code false}.
      * <p></p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String FEATURE_DISABLE_JSP_TEMPLATE_PROCESSOR = "jersey.config.servlet.jsp.disableJspTemplateProcessor";
 

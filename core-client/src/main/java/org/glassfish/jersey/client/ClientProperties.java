@@ -56,9 +56,8 @@ public final class ClientProperties {
      * <p />
      * The default value is {@code true}.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FOLLOW_REDIRECTS =
             "jersey.config.client.followRedirects";
 
@@ -71,11 +70,9 @@ public final class ClientProperties {
      * <p />
      * The default value is infinity (0).
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String READ_TIMEOUT =
-            "jersey.config.client.readTimeout";
+    public static final String READ_TIMEOUT = "jersey.config.client.readTimeout";
 
     /**
      * Connect timeout interval, in milliseconds.
@@ -85,11 +82,9 @@ public final class ClientProperties {
      * <p />
      * The default value is infinity (0).
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String CONNECT_TIMEOUT =
-            "jersey.config.client.connectTimeout";
+    public static final String CONNECT_TIMEOUT = "jersey.config.client.connectTimeout";
 
     /**
      * Chunked encoding size.
@@ -103,12 +98,10 @@ public final class ClientProperties {
      * <p />
      * A default value is not set.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     // TODO add support (ported from Jersey 1.x).
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String CHUNKED_ENCODING_SIZE =
-            "jersey.config.client.chunkedEncodingSize";
+    public static final String CHUNKED_ENCODING_SIZE = "jersey.config.client.chunkedEncodingSize";
 
     /**
      * Automatic response buffering in case of an exception.
@@ -121,12 +114,10 @@ public final class ClientProperties {
      * <p />
      * The default value is {@code true}.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     // TODO add support (ported from Jersey 1.x).
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String BUFFER_RESPONSE_ENTITY_ON_EXCEPTION =
-            "jersey.config.client.bufferResponseEntityOnException";
+    public static final String BUFFER_RESPONSE_ENTITY_ON_EXCEPTION = "jersey.config.client.bufferResponseEntityOnException";
 
     /**
      * Asynchronous thread pool size.
@@ -141,12 +132,10 @@ public final class ClientProperties {
      * <p />
      * A default value is not set.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     // TODO add support (ported from Jersey 1.x).
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String ASYNC_THREADPOOL_SIZE =
-            "jersey.config.client.async.threadPoolSize";
+    public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
 
     /**
      * Support for specifying SSL configuration for HTTPS connections. Used only when making HTTPS requests.
@@ -155,11 +144,9 @@ public final class ClientProperties {
      *
      * <p>A default value is not set.</p>
      *
-     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String SSL_CONFIG =
-            "jersey.config.client.ssl.sslConfig";
+    public static final String SSL_CONFIG = "jersey.config.client.ssl.sslConfig";
 
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is registered, this property indicates the value
@@ -167,11 +154,9 @@ public final class ClientProperties {
      *
      * <p>The value MUST be an instance of {@link String}.</p>
      * <p>The default value is {@code null}.</p>
-     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
-    public static final String USE_ENCODING =
-            "jersey.config.client.useEncoding";
+    public static final String USE_ENCODING = "jersey.config.client.useEncoding";
 
     /**
      * A value of {@code true} declares that the client will try to set unsupported HTTP method
@@ -182,9 +167,8 @@ public final class ClientProperties {
      * </p>
      * <p>The value MUST be an instance of {@link java.lang.Boolean}.</p>
      * <p>The default value is {@code false}.</p>
-     * <p>The name of the configuration property is <code>{@value}</code>.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND =
             "jersey.config.client.httpUrlConnection.setMethodWorkaround";
 
@@ -198,12 +182,11 @@ public final class ClientProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".client";
 
     /**
@@ -216,12 +199,11 @@ public final class ClientProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".client";
 
     private ClientProperties() {

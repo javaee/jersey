@@ -108,7 +108,7 @@ import javax.ws.rs.core.Configuration;
  * In case a managed client needs special properties, these properties can also be provided via custom {@code Configuration}
  * implementation class. Another way how to pass custom properties to a managed client configuration is to define the managed
  * client properties in the server configuration using a special
- * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.property.</code> prefix. This can be either done programmatically,
+ * <tt><em>&lt;client.binding.annotation.FQN&gt;</em>.property.</tt> prefix. This can be either done programmatically,
  * for example:
  * <pre>
  * MyResourceConfig.property(
@@ -133,7 +133,6 @@ import javax.ws.rs.core.Configuration;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@SuppressWarnings("HtmlTagCanBeJavadocTag")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 @Documented
@@ -143,7 +142,7 @@ public @interface ClientBinding {
      * If not set, a default client-side configuration implementation class will be used.
      * <p>
      * Hard-coded value of this property may be overridden at deploy-time by providing a new value for a
-     * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.configClass</code> property.
+     * <tt><em>&lt;client.binding.annotation.FQN&gt;</em>.configClass</tt> property.
      * </p>
      * <p>
      * For example:
@@ -171,7 +170,7 @@ public @interface ClientBinding {
      * the annotation property defaults to {@code true}.
      * <p>
      * Hard-coded value of this property may be overridden at deploy-time by providing a new value for a
-     * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.inheritServerProviders</code> property.
+     * <tt><em>&lt;client.binding.annotation.FQN&gt;</em>.inheritServerProviders</tt> property.
      * </p>
      * <p>
      * For example:
@@ -203,7 +202,7 @@ public @interface ClientBinding {
      * </p>
      * <p>
      * Hard-coded value of this property may be overridden at deploy-time by providing a new value for a
-     * <code><em>&lt;client.binding.annotation.FQN&gt;</em>.baseUri</code> property.
+     * <tt><em>&lt;client.binding.annotation.FQN&gt;</em>.baseUri</tt> property.
      * </p>
      * <p>
      * For example:

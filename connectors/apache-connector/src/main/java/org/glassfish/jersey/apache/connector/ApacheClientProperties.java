@@ -58,9 +58,8 @@ public final class ApacheClientProperties {
      * <p/>
      * If the property is absent a default provider will be used.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CREDENTIALS_PROVIDER =
             "jersey.config.apache.client.credentialsProvider";
 
@@ -73,9 +72,8 @@ public final class ApacheClientProperties {
      * <p/>
      * The default value is {@code false}.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String DISABLE_COOKIES =
             "jersey.config.apache.client.handleCookies";
 
@@ -91,9 +89,8 @@ public final class ApacheClientProperties {
      * <p/>
      * The default value is {@code false}.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
             "jersey.config.apache.client.preemptiveBasicAuthentication";
 
@@ -107,9 +104,8 @@ public final class ApacheClientProperties {
      * If you want to use this client in multi-threaded environment, be sure you override default value with
      * {@link org.apache.http.impl.conn.PoolingClientConnectionManager} instance.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String CONNECTION_MANAGER =
             "jersey.config.apache.client.connectionManager";
 
@@ -120,9 +116,8 @@ public final class ApacheClientProperties {
      * <p/>
      * If the property is absent default http parameters will be used.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_PARAMS =
             "jersey.config.apache.client.httpParams";
 
@@ -135,9 +130,8 @@ public final class ApacheClientProperties {
      * <p/>
      * If the property absent then no proxy will be utilized.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_URI =
             "jersey.config.apache.client.proxyUri";
 
@@ -148,9 +142,8 @@ public final class ApacheClientProperties {
      * <p/>
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_USERNAME =
             "jersey.config.apache.client.proxyUsername";
 
@@ -161,9 +154,8 @@ public final class ApacheClientProperties {
      * <p/>
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROXY_PASSWORD =
             "jersey.config.apache.client.proxyPassword";
 
