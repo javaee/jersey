@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client;
 
 import java.io.ByteArrayInputStream;
@@ -201,7 +200,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * Get chunk data media type.
      *
      * Default chunk data media type is derived from the value of the response
-     * <code>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</code> header field.
+     * <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</tt> header field.
      * This default value may be manually overridden by {@link #setChunkType(javax.ws.rs.core.MediaType) setting}
      * a custom non-{@code null} chunk media type value.
      * <p>
@@ -211,7 +210,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *
      * @return media type specific to each chunk of data.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public MediaType getChunkType() {
         return mediaType;
     }
@@ -220,7 +218,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * Set custom chunk data media type.
      *
      * By default, chunk data media type is derived from the value of the response
-     * <code>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</code> header field.
+     * <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</tt> header field.
      * Using this methods will override the default chunk media type value and set it
      * to a custom non-{@code null} chunk media type. Once this method is invoked,
      * all subsequent {@link #read chunk reads} will use the newly set chunk media
@@ -234,7 +232,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * @param mediaType custom chunk data media type. Must not be {@code null}.
      * @throws IllegalArgumentException in case the {@code mediaType} is {@code null}.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public void setChunkType(MediaType mediaType) throws IllegalArgumentException {
         if (mediaType == null) {
             throw new IllegalArgumentException(LocalizationMessages.CHUNKED_INPUT_MEDIA_TYPE_NULL());
@@ -254,7 +251,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *                                  a valid {@link MediaType} instance or is {@code null}.
      * @see #setChunkType(javax.ws.rs.core.MediaType)
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public void setChunkType(String mediaType) throws IllegalArgumentException {
         this.mediaType = MediaType.valueOf(mediaType);
     }
@@ -295,7 +291,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *         has been closed while reading next chunk data.
      * @throws IllegalStateException in case this chunked input has been closed.
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public T read() throws IllegalStateException {
         if (closed.get()) {
             throw new IllegalStateException(LocalizationMessages.CHUNKED_INPUT_CLOSED());

@@ -85,8 +85,8 @@ public interface Connector extends Inflector<ClientRequest, ClientResponse> {
      * Should contain identification of underlying specification and optionally version number.
      * Will be used in User-Agent header.
      *
-     * @return name of current connector. Returning {@code null} or empty string means not including this information
-     * in generated User-Agent header.
+     * @return name of current connector. Returning {@code null} or empty string means not including
+     * this information in a generated <tt>{@value javax.ws.rs.core.HttpHeaders#USER_AGENT}</tt> header.
      */
     public String getName();
 

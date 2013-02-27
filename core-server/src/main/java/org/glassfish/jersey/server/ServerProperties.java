@@ -64,12 +64,11 @@ public final class ServerProperties {
      * A default value is not set.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_PACKAGES = "jersey.config.server.provider.packages";
 
     /**
@@ -85,12 +84,11 @@ public final class ServerProperties {
      * A default value is {@code true}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
      * @see #PROVIDER_PACKAGES
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_SCANNING_RECURSIVE = "jersey.config.server.provider.scanning.recursive";
 
     /**
@@ -111,12 +109,11 @@ public final class ServerProperties {
      * A default value is not set.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
     // TODO add support for ':' and any (number of consecutive) whitespace(s).
     // TODO implement generic support
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_CLASSPATH = "jersey.config.server.provider.classpath";
 
     /**
@@ -135,11 +132,10 @@ public final class ServerProperties {
      * A default value is not set.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
     // TODO implement generic support
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROVIDER_CLASSNAMES = "jersey.config.server.provider.classnames";
 
     /**
@@ -157,10 +153,9 @@ public final class ServerProperties {
      * A default value is not set.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String MEDIA_TYPE_MAPPINGS = "jersey.config.server.mediaTypeMappings";
 
     /**
@@ -179,10 +174,9 @@ public final class ServerProperties {
      * A default value is not set.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String LANGUAGE_MAPPINGS = "jersey.config.server.languageMappings";
 
     /**
@@ -202,10 +196,9 @@ public final class ServerProperties {
      * The default value is {@code "HEADER, QUERY"}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String HTTP_METHOD_OVERRIDE = "jersey.config.server.httpMethodOverride";
 
     /**
@@ -218,10 +211,9 @@ public final class ServerProperties {
      * If this property is not set the default wadl generator will be used for generating wadl.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String PROPERTY_WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
 
     /**
@@ -234,10 +226,9 @@ public final class ServerProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
 
     /**
@@ -250,10 +241,9 @@ public final class ServerProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.server.disableBeanValidation";
 
     /**
@@ -263,10 +253,9 @@ public final class ServerProperties {
      * The default value is {@code false} and only status code is sent in the {@code Response}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY
             = "jersey.config.server.validation.enableOutputValidationErrorEntity";
 
@@ -280,14 +269,13 @@ public final class ServerProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
      * @see #FEATURE_DISABLE_BEAN_VALIDATION
      * @see #FEATURE_DISABLE_WADL
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".server";
 
     /**
@@ -300,12 +288,11 @@ public final class ServerProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".server";
 
     private ServerProperties() {

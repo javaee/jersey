@@ -56,10 +56,9 @@ public final class CommonProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_AUTO_DISCOVERY = "jersey.config.disableAutoDiscovery";
 
     /**
@@ -71,10 +70,9 @@ public final class CommonProperties {
      * The default value is {@code false}.
      * </p>
      * <p>
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    @SuppressWarnings("HtmlTagCanBeJavadocTag")
     public static final String FEATURE_DISABLE_JSON_PROCESSING = "jersey.config.disableJsonProcessing";
 
     /**
