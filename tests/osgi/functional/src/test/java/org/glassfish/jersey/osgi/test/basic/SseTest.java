@@ -58,7 +58,6 @@ import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEvent;
-import org.glassfish.jersey.media.sse.OutboundEventWriter;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -125,7 +124,7 @@ public class SseTest {
 
     @Test
     public void testSse() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(SseResource.class, OutboundEventWriter.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(SseResource.class, SseFeature.class);
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         Client c = ClientBuilder.newClient();

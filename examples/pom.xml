@@ -92,6 +92,7 @@
         <module>server-async-standalone</module>
         <module>server-sent-events</module>
         <module>simple-console</module>
+        <module>sse-item-store-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
         <module>xml-moxy</module>

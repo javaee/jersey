@@ -47,7 +47,6 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
-import org.glassfish.jersey.media.sse.OutboundEventWriter;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -65,7 +64,7 @@ public class EventChannelTest extends JerseyTest {
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        return new ResourceConfig(MyResource.class, OutboundEventWriter.class);
+        return new ResourceConfig(MyResource.class, SseFeature.class);
     }
 
     @Path("/test")

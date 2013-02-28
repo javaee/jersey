@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,12 +52,10 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ChunkedInput;
 import org.glassfish.jersey.media.sse.EventInput;
-import org.glassfish.jersey.media.sse.EventInputReader;
 import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
-import org.glassfish.jersey.media.sse.InboundEventReader;
-import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -73,7 +71,7 @@ public class ServerSentEventsTest extends JerseyTest {
     @Override
     protected Application configure() {
         // enable(TestProperties.LOG_TRAFFIC);
-        return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, OutboundEventWriter.class);
+        return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, SseFeature.class);
     }
 
     @Test
@@ -113,7 +111,7 @@ public class ServerSentEventsTest extends JerseyTest {
             @Override
             public void run() {
                 final WebTarget target = target(App.ROOT_PATH);
-                target.register(InboundEventReader.class).register(EventInputReader.class);
+                target.register(SseFeature.class);
                 final EventInput eventInput = target.request().get(EventInput.class);
 
                 startLatch.countDown();

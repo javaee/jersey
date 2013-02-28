@@ -42,6 +42,8 @@ package org.glassfish.jersey.servlet.mvc.internal;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -55,8 +57,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -127,15 +131,12 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
     }
 
     @Override
-    public void writeTo(String templateReference, Viewable viewable, MediaType mediaType, OutputStream out) throws IOException {
+    public void writeTo(String templateReference, Viewable viewable, MediaType mediaType, final OutputStream out) throws IOException {
         // TODO uncomment when HttpContext inherits from Traceable
         /*if (httpContext.isTracingEnabled()) {
             httpContext.trace(String.format("forwarding view to JSP page: \"%s\", it = %s", resolvedPath,
                     ReflectionHelper.objectToString(viewable.getModel())));
         }*/
-
-        // Commit the status and headers to the HttpServletResponse
-        out.flush();
 
         RequestDispatcher dispatcher = servletContext.getRequestDispatcher(templateReference);
         if (dispatcher == null) {
@@ -144,10 +145,32 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
 
         dispatcher = new RequestDispatcherWrapper(dispatcher, getBasePath(), httpContext, viewable);
 
+        // OutputStream and Writer for HttpServletResponseWrapper.
+        final ServletOutputStream responseStream = new ServletOutputStream() {
+            @Override
+            public void write(final int b) throws IOException {
+                out.write(b);
+            }
+        };
+        final PrintWriter responseWriter = new PrintWriter(new OutputStreamWriter(responseStream));
+
         try {
-            dispatcher.forward(requestProviderRef.get().get(), responseProviderRef.get().get());
+            dispatcher.forward(requestProviderRef.get().get(), new HttpServletResponseWrapper(responseProviderRef.get().get()) {
+
+                @Override
+                public ServletOutputStream getOutputStream() throws IOException {
+                    return responseStream;
+                }
+
+                @Override
+                public PrintWriter getWriter() throws IOException {
+                    return responseWriter;
+                }
+            });
         } catch (Exception e) {
             throw new ContainerException(e);
+        } finally {
+            responseWriter.flush();
         }
     }
 }

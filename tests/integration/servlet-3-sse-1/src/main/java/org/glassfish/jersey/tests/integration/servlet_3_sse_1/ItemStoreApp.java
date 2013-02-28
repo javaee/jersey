@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.sse;
 
-import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.core.MediaType;
+package org.glassfish.jersey.tests.integration.servlet_3_sse_1;
+
+import javax.ws.rs.ApplicationPath;
+
+import org.glassfish.jersey.media.sse.SseFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- * A JAX-RS {@link Feature feature} that enables Server-Sent Events support.
+ * SSE item store JAX-RS application class.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class SseFeature implements Feature {
+@ApplicationPath("resources")
+public class ItemStoreApp extends ResourceConfig {
     /**
-     * {@link String} representation of Server sent events media type. ("{@value}").
+     * Create new SSE Item Store Example JAX-RS application.
      */
-    public static final String SERVER_SENT_EVENTS = "text/event-stream";
-    /**
-     * Server sent events media type.
-     */
-    public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
-
-    @Override
-    public boolean configure(FeatureContext context) {
-        if (context.getConfiguration().isEnabled(this.getClass())) {
-            return false;
-        }
-
-        switch (context.getConfiguration().getRuntimeType()) {
-            case CLIENT:
-                context.register(EventInputReader.class);
-                context.register(InboundEventReader.class);
-                break;
-            case SERVER:
-                context.register(OutboundEventWriter.class);
-                break;
-        }
-        return true;
-    }
-
-    /**
-     * Safely register a {@code SseFeature} in a given configurable context.
-     *
-     * @param ctx configurable context in which the SSE feature should be registered.
-     * @return updated configurable context.
-     */
-    static <T extends Configurable<T>> T register(T ctx) {
-        if (!ctx.getConfiguration().isRegistered(SseFeature.class)) {
-            ctx.register(SseFeature.class);
-        }
-
-        return ctx;
+    public ItemStoreApp() {
+        super(ItemStoreResource.class, SseFeature.class);
     }
 }

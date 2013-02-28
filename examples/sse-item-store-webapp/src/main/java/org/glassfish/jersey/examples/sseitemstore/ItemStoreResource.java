@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.sse;
+package org.glassfish.jersey.examples.sseitemstore;
 
-import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.media.sse.EventOutput;
+import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.media.sse.SseBroadcaster;
+import org.glassfish.jersey.media.sse.SseFeature;
+
 /**
- * A JAX-RS {@link Feature feature} that enables Server-Sent Events support.
+ * A resource for storing named items.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class SseFeature implements Feature {
-    /**
-     * {@link String} representation of Server sent events media type. ("{@value}").
-     */
-    public static final String SERVER_SENT_EVENTS = "text/event-stream";
-    /**
-     * Server sent events media type.
-     */
-    public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
+@Path("items")
+public class ItemStoreResource {
 
-    @Override
-    public boolean configure(FeatureContext context) {
-        if (context.getConfiguration().isEnabled(this.getClass())) {
-            return false;
-        }
+    private static final Queue<String> ITEMS = new ConcurrentLinkedQueue<String>();
+    private static final SseBroadcaster BROADCASTER = new SseBroadcaster();
 
-        switch (context.getConfiguration().getRuntimeType()) {
-            case CLIENT:
-                context.register(EventInputReader.class);
-                context.register(InboundEventReader.class);
-                break;
-            case SERVER:
-                context.register(OutboundEventWriter.class);
-                break;
-        }
-        return true;
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String listItems() {
+        return ITEMS.toString();
     }
 
-    /**
-     * Safely register a {@code SseFeature} in a given configurable context.
-     *
-     * @param ctx configurable context in which the SSE feature should be registered.
-     * @return updated configurable context.
-     */
-    static <T extends Configurable<T>> T register(T ctx) {
-        if (!ctx.getConfiguration().isRegistered(SseFeature.class)) {
-            ctx.register(SseFeature.class);
-        }
+    @GET
+    @Path("events")
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
+    public EventOutput itemEvents() {
+        final EventOutput eventOutput = new EventOutput();
+        BROADCASTER.add(eventOutput);
+        return eventOutput;
+    }
 
-        return ctx;
+    @POST
+    public void addItem(@FormParam("name") String name) {
+        ITEMS.add(name);
+        // Broadcasting an un-named event with the name of the newly added item in data
+        BROADCASTER.broadcast(new OutboundEvent.Builder().data(String.class, name).build());
+        // Broadcasting a named "add" event with the current size of the items collection in data
+        BROADCASTER.broadcast(new OutboundEvent.Builder().name("size").data(Integer.class, ITEMS.size()).build());
     }
 }

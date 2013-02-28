@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.media.sse.OutboundEventWriter;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -143,7 +143,7 @@ public class App {
      */
     public static ResourceConfig createResourceConfig() {
         return new ResourceConfig()
-                .registerClasses(MessageStreamResource.class, OutboundEventWriter.class, MoxyJsonFeature.class);
+                .registerClasses(MessageStreamResource.class, SseFeature.class, MoxyJsonFeature.class);
     }
 
     /**

@@ -1,0 +1,120 @@
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms of either the GNU
+  ~ General Public License Version 2 only ("GPL") or the Common Development
+  ~ and Distribution License("CDDL") (collectively, the "License").  You
+  ~ may not use this file except in compliance with the License.  You can
+  ~ obtain a copy of the License at
+  ~ http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  ~ or packager/legal/LICENSE.txt.  See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  ~
+  ~ When distributing the software, include this License Header Notice in each
+  ~ file and include the License file at packager/legal/LICENSE.txt.
+  ~
+  ~ GPL Classpath Exception:
+  ~ Oracle designates this particular file as subject to the "Classpath"
+  ~ exception as provided by Oracle in the GPL Version 2 section of the License
+  ~ file that accompanied this code.
+  ~
+  ~ Modifications:
+  ~ If applicable, add the following below the License Header, with the fields
+  ~ enclosed by brackets [] replaced by your own identifying information:
+  ~ "Portions Copyright [year] [name of copyright owner]"
+  ~
+  ~ Contributor(s):
+  ~ If you wish your version of this file to be governed by only the CDDL or
+  ~ only the GPL Version 2, indicate your decision by adding "[Contributor]
+  ~ elects to include this software in this distribution under the [CDDL or GPL
+  ~ Version 2] license."  If you don't indicate a single choice of license, a
+  ~ recipient has the option to distribute your version of this file under
+  ~ either the CDDL, the GPL Version 2 or to extend the choice of license to
+  ~ its licensees as provided above.  However, if you add GPL Version 2 code
+  ~ and therefore, elected the GPL Version 2 license, then the option applies
+  ~ only if the new code is made subject to such option by the copyright
+  ~ holder.
+  -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <title>SSE Item Store Jersey Example</title>
+    <style type="text/css"><!--
+    .figure {
+        text-align: center;
+        margin: 20px
+    }
+
+    .cliSample {
+        background-color: lightgray
+    }
+
+    --></style>
+</head>
+<body>
+
+<h1>SSE Item Store Jersey Example</h1>
+
+<p>
+    An example demonstrating how Server Sent Events (SSE) Jersey support can be used to notify clients about
+    changes in server-side managed data (collection of items). The example also outlines how SSE events can
+    be consumed using javascript browser-based clients.
+</p>
+
+<h2>Contents</h2>
+
+<p>
+    The example consists of a web-based client application and a server-side application deployed on
+    a <a href="http://www.eclipse.org/jetty/documentation/current/">Jetty servlet container</a>.
+</p>
+
+<p>
+    The server side part of the application consists of a JAX-RS resource managing collection of string items
+    and a simple HTML page that includes a browser SSE client written in Javascript as well as a basic CSS stylesheet.
+    The SSE Javascript client connects to the JAX-RS resource and transforms the streamed messages into HTML code
+    that is rendered by the browser. The javascript client also demonstrates how named and unnamed SSE events are
+    handled by HTML5 <code>EventSource</code> component.
+    The mapping of the URI path space of the server-side part of the application is presented in the following table:
+</p>
+<table border="1">
+    <tr>
+        <th>URI path</th>
+        <th>Resource class</th>
+        <th>HTTP methods</th>
+    </tr>
+
+    <tr>
+        <td><code>/resources/items</code></td>
+        <td><code>ItemStoreResource</code></td>
+        <td><code>GET, POST</code></td>
+    </tr>
+    <tr>
+        <td><code>/resources/items/events</code></td>
+        <td><code>ItemStoreResource</code></td>
+        <td><code>GET (SSE)</code></td>
+    </tr>
+</table>
+
+<p>Application is configured to run using Jetty maven plugin under base path <code>sse-item-store-webapp</code>.
+</p>
+
+<h2>Running the Example</h2>
+<blockquote><code>mvn clean compile jetty:run</code></blockquote>
+<p>
+    The command above deploys the current example.
+    After successful deployment, you should be able to access the browser SSE client page at
+    <a href="http://localhost:8080/sse-item-store-webapp/index.html">http://localhost:8080/sse-item-store-webapp/index.html</a>.
+    To see the raw SSE event stream, you may also point your browser directly at the
+    <a href="http://localhost:8080/sse-item-store-webapp/resources/items/events"><code>ItemStoreResource</code></a>.
+</p>
+
+<h2>Deploying the example to another servlet container.</h2>
+<blockquote><code>mvn clean package</code></blockquote>
+<p>
+    The command above creates a Servlet 3.x compliant WAR located in the target directory. The WAR can be then deployed to your
+    Servlet 3.x compliant container.
+</p>
+</body>
+</html>

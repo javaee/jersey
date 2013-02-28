@@ -42,7 +42,6 @@ package org.glassfish.jersey.servlet.internal;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -52,7 +51,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.server.ContainerException;
@@ -123,7 +121,11 @@ public class ResponseWriter implements ContainerResponseWriter {
         MultivaluedMap<String, String> headers = getResponseContext().getStringHeaders();
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
             for (String v : e.getValue()) {
-                response.addHeader(e.getKey(), v);
+                final String header = e.getKey();
+
+                if (!response.containsHeader(header)) {
+                    response.addHeader(header, v);
+                }
             }
         }
         response.setStatus(responseContext.getStatus());
@@ -131,7 +133,11 @@ public class ResponseWriter implements ContainerResponseWriter {
         if (!responseContext.hasEntity()) {
             return null;
         } else {
-            return new FlushDelayingOutputStream();
+            try {
+                return response.getOutputStream();
+            } catch (IOException e) {
+                throw new ContainerException(e);
+            }
         }
     }
 
@@ -210,76 +216,6 @@ public class ResponseWriter implements ContainerResponseWriter {
             throw new ContainerException(ex);
         } catch (ExecutionException ex) {
             throw new ContainerException(ex);
-        }
-    }
-
-    private class FlushDelayingOutputStream extends OutputStream {
-
-        private ServletOutputStream responseOutputStream;
-        private PrintWriter responsePrintWriter;
-
-        @Override
-        public void write(final int b) throws IOException {
-            try {
-                getResponseOutputStream().write(b);
-            } catch (IllegalStateException ise) {
-                getResponsePrintWriter().write(b);
-            }
-        }
-
-        @Override
-        public void write(final byte[] b) throws IOException {
-            if (b.length > 0) {
-                try {
-                    getResponseOutputStream().write(b);
-                } catch (IllegalStateException ise) {
-                    getResponsePrintWriter().write(new String(b, response.getCharacterEncoding()));
-                }
-            }
-        }
-
-        @Override
-        public void write(final byte[] b, final int off, final int len) throws IOException {
-            if (len > 0) {
-                try {
-                getResponseOutputStream().write(b, off, len);
-                } catch (IllegalStateException ise) {
-                    getResponsePrintWriter().write(new String(b, response.getCharacterEncoding()), off, len);
-                }
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-            if (responseOutputStream != null) {
-                responseOutputStream.flush();
-            } else
-            if (responsePrintWriter != null) {
-                responsePrintWriter.flush();
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                getResponseOutputStream().close();
-            } catch (IllegalStateException ise) {
-                getResponsePrintWriter().close();
-            }
-        }
-
-        private OutputStream getResponseOutputStream() throws IOException {
-            if (responseOutputStream == null) {
-                responseOutputStream = response.getOutputStream();
-            }
-            return responseOutputStream;
-        }
-
-        private PrintWriter getResponsePrintWriter() throws IOException {
-            if (responsePrintWriter == null) {
-                responsePrintWriter = response.getWriter();
-            }
-            return responsePrintWriter;
         }
     }
 }

@@ -74,6 +74,7 @@
         <module>servlet-2.5-mvc-2</module>
         <module>servlet-2.5-mvc-3</module>
         <module>servlet-2.5-reload</module>
+        <module>servlet-3-sse-1</module>
         <module>servlet-3-init-1</module>
         <module>servlet-3-init-2</module>
         <module>servlet-3-async</module>
