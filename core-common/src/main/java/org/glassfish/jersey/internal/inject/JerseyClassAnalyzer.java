@@ -200,7 +200,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         if (!Modifier.isPublic(constructor.getModifiers())) {
             // return true for a default constructor, return false otherwise.
             return paramSize == 0 &&
-                    (constructor.getDeclaringClass().getModifiers() & Modifier.constructorModifiers())
+                    (constructor.getDeclaringClass().getModifiers() &  (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE))
                             == constructor.getModifiers();
         }
 
