@@ -43,6 +43,8 @@ package org.glassfish.jersey.tests.e2e.server.validation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.client.Entity;
@@ -187,17 +189,17 @@ public class CustomConfigValidationTest extends JerseyTest {
         }
 
         @Override
-        public String[] getParameterNames(final Constructor<?> constructor) {
+        public List<String> getParameterNames(final Constructor<?> constructor) {
             return nameProvider.getParameterNames(constructor);
         }
 
         @Override
-        public String[] getParameterNames(final Method method) {
+        public List<String> getParameterNames(final Method method) {
             try {
                 final Method post = CustomConfigResource.class.getMethod("post", String.class, CustomBean.class);
 
                 if (method.equals(post)) {
-                    return new String[] {"path", "beanParameter"};
+                    return Arrays.asList("path", "beanParameter");
                 }
             } catch (NoSuchMethodException e) {
                 // Do nothing.

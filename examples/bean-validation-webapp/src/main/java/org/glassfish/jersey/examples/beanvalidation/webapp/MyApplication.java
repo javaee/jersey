@@ -41,6 +41,8 @@ package org.glassfish.jersey.examples.beanvalidation.webapp;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
@@ -108,15 +110,15 @@ public class MyApplication extends ResourceConfig {
             }
 
             @Override
-            public String[] getParameterNames(final Constructor<?> constructor) {
+            public List<String> getParameterNames(final Constructor<?> constructor) {
                 return nameProvider.getParameterNames(constructor);
             }
 
             @Override
-            public String[] getParameterNames(final Method method) {
+            public List<String> getParameterNames(final Method method) {
                 // See ContactCardTest#testAddInvalidContact.
                 if ("addContact".equals(method.getName())) {
-                    return new String[] {"contact"};
+                    return Arrays.asList("contact");
                 }
                 return nameProvider.getParameterNames(method);
             }

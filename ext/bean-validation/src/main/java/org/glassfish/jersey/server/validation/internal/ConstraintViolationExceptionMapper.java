@@ -61,8 +61,8 @@ import javax.annotation.Priority;
 import javax.inject.Provider;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.ElementKind;
 import javax.validation.Path;
-import javax.validation.metadata.ElementDescriptor;
 
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationError;
@@ -149,9 +149,9 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
 
     private Response.Status getResponseStatus(final ConstraintViolation<?> constraintViolation) {
         for (final Path.Node node : constraintViolation.getPropertyPath()) {
-            final ElementDescriptor.Kind kind = node.getElementDescriptor().getKind();
+            final ElementKind kind = node.getKind();
 
-            if (ElementDescriptor.Kind.RETURN_VALUE.equals(kind)) {
+            if (ElementKind.RETURN_VALUE.equals(kind)) {
                 return Response.Status.INTERNAL_SERVER_ERROR;
             }
         }

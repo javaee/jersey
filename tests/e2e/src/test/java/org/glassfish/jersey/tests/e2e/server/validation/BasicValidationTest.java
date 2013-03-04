@@ -440,7 +440,7 @@ public class BasicValidationTest extends JerseyTest {
         assertEquals(500, response.getStatus());
 
         final String message = response.readEntity(String.class);
-        assertTrue(message.contains("retval"));
+        assertTrue(message.contains("return value"));
     }
 
     @Test
@@ -461,7 +461,7 @@ public class BasicValidationTest extends JerseyTest {
         assertEquals(500, response.getStatus());
 
         final String message = response.readEntity(String.class);
-        assertTrue(message.contains("retval"));
+        assertTrue(message.contains("return value"));
     }
 
     @Test
@@ -482,7 +482,7 @@ public class BasicValidationTest extends JerseyTest {
         assertEquals(500, response.getStatus());
 
         final String message = response.readEntity(String.class);
-        assertTrue(message.contains("retval"));
+        assertTrue(message.contains("return value"));
     }
 
     @Test
@@ -505,7 +505,7 @@ public class BasicValidationTest extends JerseyTest {
         assertEquals(500, response.getStatus());
 
         final String message = response.readEntity(String.class);
-        assertTrue(message.contains("retval"));
+        assertTrue(message.contains("return value"));
     }
 
     @Test

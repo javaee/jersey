@@ -955,6 +955,11 @@
                 <artifactId>classmate</artifactId>
                 <version>${fasterxml.classmate.version}</version>
             </dependency>
+            <dependency>
+                <groupId>javax.el</groupId>
+                <artifactId>javax.el-api</artifactId>
+                <version>${javax.el.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>javax.json</groupId>
@@ -1053,7 +1058,7 @@
                 examples/osgi-helloworld-webapp/war-bundle/pom.xml
         -->
         <jaxrs.api.version>2.0-rc1</jaxrs.api.version>
-        <hk2.version>2.1.64</hk2.version>
+        <hk2.version>2.1.66</hk2.version>
         <grizzly2.version>2.3-rc4</grizzly2.version>
         <jackson.version>1.9.8</jackson.version>
         <jersey1.version>1.17</jersey1.version>
@@ -1087,10 +1092,14 @@
         <jetty-version>6.1.22</jetty-version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
 
-        <validation.api.version>1.1.0.Beta3</validation.api.version>
-        <validation.ri.version>5.0.0.Beta1</validation.ri.version>
+        <!-- Change validation.api.version also in:
+                 examples/osgi-helloworld-webapp/functional-test/pom.xml
+                 examples/osgi-http-service/functional-test/pom.xml -->
+        <validation.api.version>1.1.0.CR1</validation.api.version>
+        <validation.ri.version>5.0.0.CR1</validation.ri.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
+        <javax.el.version>2.2.4</javax.el.version>
 
         <jsonp.api.version>1.0-b04</jsonp.api.version>
         <jsonp.ri.version>1.0-b04</jsonp.ri.version>

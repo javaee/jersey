@@ -43,8 +43,8 @@ package org.glassfish.jersey.server.validation.internal;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
-import javax.validation.ExecutableValidator;
 import javax.validation.Validator;
+import javax.validation.executable.ExecutableValidator;
 import javax.validation.metadata.BeanDescriptor;
 
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
