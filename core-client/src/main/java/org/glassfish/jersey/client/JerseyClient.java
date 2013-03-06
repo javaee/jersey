@@ -48,7 +48,10 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+
+import org.glassfish.jersey.SslConfigurator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -62,6 +65,8 @@ import static com.google.common.base.Preconditions.checkState;
 public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
+    private final HostnameVerifier hostnameVerifier;
+    private final SSLContext sslContext;
     private final LinkedBlockingDeque<LifecycleListener> listeners = new LinkedBlockingDeque<LifecycleListener>();
 
     /**
@@ -79,15 +84,21 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      */
     protected JerseyClient() {
         this.config = new ClientConfig(this);
+        this.hostnameVerifier = null;
+        this.sslContext = SslConfigurator.getDefaultContext();
     }
 
     /**
      * Create a new Jersey client instance.
      *
-     * @param config jersey client configuration.
+     * @param config     jersey client configuration.
+     * @param sslContext jersey client SSL context.
+     * @param verifier   jersey client host name verifier.
      */
-    protected JerseyClient(final Configuration config) {
-        this.config = new ClientConfig(this, config);
+    protected JerseyClient(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier) {
+        this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
+        this.sslContext = sslContext == null ? SslConfigurator.getDefaultContext() : sslContext;
+        this.hostnameVerifier = verifier;
     }
 
     @Override
@@ -248,7 +259,16 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
     @Override
     public SSLContext getSslContext() {
-        return null;  // TODO: implement method.
+        return sslContext;
+    }
+
+    /**
+     * Get the {@link javax.net.ssl.HostnameVerifier hostname verifier}.
+     *
+     * @return the configured hostname verifier, or {@code null} if not set.
+     */
+    public HostnameVerifier getHostnameVerifier() {
+        return hostnameVerifier;
     }
 
     /**
@@ -256,7 +276,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * performance during the first request.
      * <p/>
      * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized {@link JerseyClient} otherwise configuration will change back to uninitialized.
+     * on this pre initialized {@code JerseyClient} instance, otherwise configuration will change back to uninitialized.
      *
      * @return Jersey client.
      */

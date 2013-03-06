@@ -65,6 +65,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
+ * {@link ClientConfig} unit test.
+ *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ClientConfigTest {
@@ -150,7 +152,7 @@ public class ClientConfigTest {
         assertEquals(1, instance.getInstances().size());
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(instance);
+        final JerseyClient jerseyClient = new JerseyClient(instance, null, null);
         ClientConfig config = jerseyClient.getConfiguration();
         final ClientRuntime runtime = config.getRuntime();
 
@@ -196,7 +198,7 @@ public class ClientConfigTest {
         clientConfig.register(unconfigurableFeature);
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(clientConfig);
+        final JerseyClient jerseyClient = new JerseyClient(clientConfig, null, null);
         clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 
@@ -230,7 +232,7 @@ public class ClientConfigTest {
         ClientConfig clientConfig = clientConfig2.replaceWith(clientConfig1);
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(clientConfig);
+        final JerseyClient jerseyClient = new JerseyClient(clientConfig, null, null);
         clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 

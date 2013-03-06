@@ -37,11 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.aggregator;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -57,19 +54,15 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-
 import org.glassfish.jersey.client.ChunkedInput;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.SslConfig;
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 /**
- * TODO: javadoc.
+ * Twitter message-based data aggregator implementation.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -79,6 +72,11 @@ public final class TwitterAggregator implements DataAggregator {
     private volatile boolean cancelled;
     private final String rgbColor;
 
+    /**
+     * Create new twitter message aggregator with a specific message color.
+     *
+     * @param rgbColor message color.
+     */
     public TwitterAggregator(String rgbColor) {
         this.rgbColor = rgbColor;
     }
@@ -98,27 +96,15 @@ public final class TwitterAggregator implements DataAggregator {
         final Future<?> readerHandle = Executors.newSingleThreadExecutor().submit(new Runnable() {
             @Override
             public void run() {
-                SSLContext context = null;
-                try {
-                    context = SSLContext.getInstance("SSL");
+                SslConfigurator sslConfig = SslConfigurator.newInstance()
+                        .trustStoreFile("./truststore_client")
+                        .trustStorePassword("asdfgh")
 
-                    TrustManager mytm[] =
-                            new TrustManager[]{new MyX509TrustManager("./truststore_client", "asdfgh".toCharArray())};
-                    KeyManager mykm[] =
-                            new KeyManager[]{new MyX509KeyManager("./keystore_client", "asdfgh".toCharArray())};
+                        .keyStoreFile("./keystore_client")
+                        .keyPassword("asdfgh");
 
-                    context.init(mykm, mytm, null);
-                } catch (NoSuchAlgorithmException nsae) {
-                    nsae.printStackTrace();
-                } catch (KeyManagementException kme) {
-                    kme.printStackTrace();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                final Client client = ClientBuilder.newClient();
-                client.property(ClientProperties.SSL_CONFIG, new SslConfig(context))
-                        .property(ClientProperties.CONNECT_TIMEOUT, 2000)
+                final Client client = ClientBuilder.newBuilder().sslContext(sslConfig.createSSLContext()).build();
+                client.property(ClientProperties.CONNECT_TIMEOUT, 2000)
                         .register(new MoxyJsonFeature())
                         .register(new HttpBasicAuthFilter(App.getTwitterUserName(), App.getTwitterUserPassword()))
                         .register(GZipEncoder.class);

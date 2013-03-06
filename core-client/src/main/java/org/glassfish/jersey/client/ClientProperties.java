@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client;
 
 import org.glassfish.jersey.CommonProperties;
@@ -136,17 +135,6 @@ public final class ClientProperties {
      */
     // TODO add support (ported from Jersey 1.x).
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
-
-    /**
-     * Support for specifying SSL configuration for HTTPS connections. Used only when making HTTPS requests.
-     *
-     * <p>The value MUST be an instance of {@link SslConfig}.</p>
-     *
-     * <p>A default value is not set.</p>
-     *
-     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
-     */
-    public static final String SSL_CONFIG = "jersey.config.client.ssl.sslConfig";
 
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is registered, this property indicates the value

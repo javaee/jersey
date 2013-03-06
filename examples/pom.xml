@@ -73,6 +73,7 @@
         <module>helloworld-webapp</module>
         <module>http-trace</module>
         <module>https-clientserver-grizzly</module>
+        <module>https-server-glassfish</module>
         <module>jaxb</module>
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>

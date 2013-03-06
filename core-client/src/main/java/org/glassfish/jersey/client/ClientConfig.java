@@ -105,12 +105,10 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         };
 
         private volatile StateChangeStrategy strategy;
-
         private final CommonConfig commonConfig;
-
         private final JerseyClient client;
-
         private Connector connector;
+
 
         private final Value<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
             @Override
@@ -195,12 +193,6 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
 
         }
 
-        public State setProperties(final Map<String, ?> properties) {
-            final State state = strategy.onChange(this);
-            state.commonConfig.setProperties(properties);
-            return state;
-        }
-
         @Override
         public State property(final String name, final Object value) {
             final State state = strategy.onChange(this);
@@ -271,7 +263,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             return state;
         }
 
-        public State setConnector(Connector connector) {
+        State setConnector(Connector connector) {
             final State state = strategy.onChange(this);
             state.connector = connector;
             return state;
