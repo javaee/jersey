@@ -56,7 +56,9 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -66,6 +68,7 @@ import static junit.framework.Assert.assertTrue;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BookmarkTest extends JerseyTest {
 
     @Override
@@ -91,13 +94,13 @@ public class BookmarkTest extends JerseyTest {
     }
 
     @Test
-    public void getUsers() {
+    public void step1_getUsers() {
         final JSONArray users = target().path("resources/users/").request("application/json").get(JSONArray.class);
         assertTrue(users != null);
     }
 
     @Test
-    public void createUser() {
+    public void step2_createUser() {
         boolean thrown = false;
         JSONObject user = new JSONObject();
 
@@ -113,14 +116,14 @@ public class BookmarkTest extends JerseyTest {
     }
 
     @Test
-    public void getUsers2() {
+    public void step3_getUsers2() {
         final JSONArray users = target().path("resources/users/").request("application/json").get(JSONArray.class);
         assertTrue(users != null);
         assertTrue(users.length() == 1);
     }
 
     @Test
-    public void updateUser() {
+    public void step4_updateUser() {
         boolean thrown = false;
 
         try {
@@ -145,7 +148,7 @@ public class BookmarkTest extends JerseyTest {
 
     // ugly.. but separation into separate test cases would be probably uglier
     @Test
-    public void getUserBookmarkList() {
+    public void step5_getUserBookmarkList() {
         boolean thrown = false;
 
         try {
@@ -182,7 +185,7 @@ public class BookmarkTest extends JerseyTest {
     }
 
     @Test
-    public void deleteUser() {
+    public void step6_deleteUser() {
         boolean thrown = false;
 
         try {
