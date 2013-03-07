@@ -61,9 +61,7 @@ import org.glassfish.jersey.internal.Version;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -73,6 +71,8 @@ import static org.junit.Assert.fail;
 import com.google.common.net.HttpHeaders;
 
 /**
+ * {@link JerseyClient} unit test.
+ *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClientTest {
@@ -80,14 +80,6 @@ public class JerseyClientTest {
     private JerseyClient client;
 
     public JerseyClientTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
     }
 
     @Before

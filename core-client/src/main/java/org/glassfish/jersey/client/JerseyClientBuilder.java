@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client;
 
 import java.security.KeyStore;
@@ -49,6 +48,9 @@ import javax.ws.rs.core.Configuration;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.internal.LocalizationMessages;
+
 /**
  * Jersey provider of {@link javax.ws.rs.client.ClientBuilder JAX-RS client builder}.
  *
@@ -57,6 +59,9 @@ import javax.net.ssl.SSLContext;
 public class JerseyClientBuilder extends ClientBuilder {
 
     private final ClientConfig config;
+    private HostnameVerifier hostnameVerifier;
+    private SslConfigurator sslConfigurator;
+    private SSLContext sslContext;
 
     /**
      * Create new Jersey client builder instance.
@@ -67,27 +72,61 @@ public class JerseyClientBuilder extends ClientBuilder {
 
     @Override
     public JerseyClientBuilder sslContext(SSLContext sslContext) {
-        return this;  // TODO: implement method.
+        if (sslContext == null) {
+            throw new NullPointerException(LocalizationMessages.NULL_SSL_CONTEXT());
+        }
+        this.sslContext = sslContext;
+        sslConfigurator = null;
+        return this;
     }
 
     @Override
-    public JerseyClientBuilder keyStore(KeyStore keyStore, char[] chars) {
-        return this;  // TODO: implement method.
+    public JerseyClientBuilder keyStore(KeyStore keyStore, char[] password) {
+        if (keyStore == null) {
+            throw new NullPointerException(LocalizationMessages.NULL_KEYSTORE());
+        }
+        if (password == null) {
+            throw new NullPointerException(LocalizationMessages.NULL_KEYSTORE_PASWORD());
+        }
+        if (sslConfigurator == null) {
+            sslConfigurator = SslConfigurator.newInstance();
+        }
+        sslConfigurator.keyStore(keyStore);
+        sslConfigurator.keyPassword(password);
+        sslContext = null;
+        return this;
     }
 
     @Override
-    public JerseyClientBuilder trustStore(KeyStore keyStore) {
-        return this;  // TODO: implement method.
+    public JerseyClientBuilder trustStore(KeyStore trustStore) {
+        if (trustStore == null) {
+            throw new NullPointerException(LocalizationMessages.NULL_TRUSTSTORE());
+        }
+        if (sslConfigurator == null) {
+            sslConfigurator = SslConfigurator.newInstance();
+        }
+        sslConfigurator.trustStore(trustStore);
+        sslContext = null;
+        return this;
     }
 
     @Override
     public JerseyClientBuilder hostnameVerifier(HostnameVerifier hostnameVerifier) {
-        return this;  // TODO: implement method.
+        this.hostnameVerifier = hostnameVerifier;
+        return this;
     }
 
     @Override
     public JerseyClient build() {
-        return new JerseyClient(config);
+        SSLContext ctx = sslContext;
+        if (ctx == null) {
+            if (sslConfigurator != null) {
+                ctx = sslConfigurator.createSSLContext();
+            } else {
+                ctx = SslConfigurator.getDefaultContext();
+            }
+        }
+        return new JerseyClient(config, ctx, hostnameVerifier);
     }
 
     @Override

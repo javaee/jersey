@@ -47,7 +47,6 @@ import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -57,8 +56,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
@@ -256,19 +255,13 @@ public class HttpUrlConnector extends RequestWriter implements Connector {
 
         if (uc instanceof HttpsURLConnection) {
             HttpsURLConnection suc = (HttpsURLConnection) uc;
-            SslConfig sslConfig = PropertiesHelper.getValue(configurationProperties, ClientProperties.SSL_CONFIG, SslConfig.class);
-            if (sslConfig==null){
-            	try {
-            		SSLContext defaultSSLContext=SSLContext.getDefault();
-            		sslConfig=new SslConfig(defaultSSLContext);
-				} catch (NoSuchAlgorithmException e) {
-					throw new ProcessingException("Unable to obtain the default SSL engine", e);
-				}
+
+            final JerseyClient client = request.getClient();
+            final HostnameVerifier verifier = client.getHostnameVerifier();
+            if (verifier != null) {
+                suc.setHostnameVerifier(verifier);
             }
-            if (sslConfig.isHostnameVerifierSet()) {
-                suc.setHostnameVerifier(sslConfig.getHostnameVerifier());
-            }
-            suc.setSSLSocketFactory(sslConfig.getSSLContext().getSocketFactory());
+            suc.setSSLSocketFactory(client.getSslContext().getSocketFactory());
         }
 
         final Object entity = request.getEntity();
