@@ -64,7 +64,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -101,9 +105,20 @@ public class ResourceFilterTest extends JerseyTest {
         test("postMatching");
     }
 
+    // See JERSEY-1554
+    @Test
+    public void testGlobalPostMatchingNotInvokedOn404() {
+        Response r = target("not-found").request().get();
+        assertEquals(404, r.getStatus());
+        if (r.hasEntity()) {
+            assertThat(r.readEntity(String.class), not(containsString("postMatching")));
+        }
+    }
+
     private void test(String name) {
         Response r = target(name).request().get();
         assertEquals(200, r.getStatus());
+        assertTrue(r.hasEntity());
         assertEquals(name, r.readEntity(String.class));
     }
 
