@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
@@ -45,16 +44,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Type;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.NameBinding;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -66,6 +71,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -73,13 +79,12 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 
-import junit.framework.Assert;
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Tests throwing exceptions in {@link MessageBodyReader} and {@link MessageBodyWriter}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class ExceptionMapperTest extends JerseyTest {
     @Override
@@ -92,34 +97,37 @@ public class ExceptionMapperTest extends JerseyTest {
                 MyExceptionMapperCauseAnotherException.class,
                 // JERSEY-1515
                 TestResource.class,
-                VisibilityExceptionMapper.class
-                );
+                VisibilityExceptionMapper.class,
+                // JERSEY-1525
+                ExceptionTestResource.class,
+                ExceptionThrowingFilter.class,
+                ThrowableMapper.class
+        );
     }
-
 
     @Test
     public void testReaderThrowsException() {
         Response res = target().path("test").request("test/test").header("reader-exception", "throw").post(Entity.entity
                 ("post", "test/test"));
-        Assert.assertEquals(200, res.getStatus());
+        assertEquals(200, res.getStatus());
         final String entity = res.readEntity(String.class);
-        Assert.assertEquals("reader-exception-mapper", entity);
+        assertEquals("reader-exception-mapper", entity);
     }
 
 
     @Test
     public void testWriterThrowsExceptionBeforeFirstBytesAreWritten() {
         Response res = target().path("test/before").request("test/test").get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("exception-before-first-bytes-exception-mapper", res.readEntity(String.class));
+        assertEquals(200, res.getStatus());
+        assertEquals("exception-before-first-bytes-exception-mapper", res.readEntity(String.class));
     }
 
 
     @Test
     public void testWriterThrowsExceptionAfterFirstBytesAreWritten() {
         Response res = target().path("test/after").request("test/test").get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("something", res.readEntity(String.class));
+        assertEquals(200, res.getStatus());
+        assertEquals("something", res.readEntity(String.class));
     }
 
 
@@ -128,7 +136,7 @@ public class ExceptionMapperTest extends JerseyTest {
         Response res = target().path("test/exception").request("test/test").get();
         // firstly exception is thrown in the resource method and is correctly mapped. Then it is again thrown in MBWriter but
         // exception can be mapped only once, so second exception in MBWriter cause 500 response code.
-        Assert.assertEquals(500, res.getStatus());
+        assertEquals(500, res.getStatus());
     }
 
     @Path("test")
@@ -349,10 +357,62 @@ public class ExceptionMapperTest extends JerseyTest {
     @Test
     public void testJersey1515() {
         Response res = target().path("test/visible").request().get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("visible", res.readEntity(String.class));
+        assertEquals(200, res.getStatus());
+        assertEquals("visible", res.readEntity(String.class));
     }
     /**
      * END: JERSEY-1515 reproducer code
+     */
+
+    /**
+     * BEGIN: JERSEY-1525 reproducer code.
+     */
+    @Path("test/responseFilter")
+    public static class ExceptionTestResource {
+        @GET
+        @ThrowsNPE
+        public String getData() {
+            return "method";
+        }
+    }
+
+    @NameBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    private static @interface ThrowsNPE {
+    }
+
+    @ThrowsNPE
+    public static class ExceptionThrowingFilter implements ContainerResponseFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext,
+                           ContainerResponseContext responseContext) throws IOException {
+            // The if clause prevents throwing exception on a mapped response.
+            // Not doing so would result in a second exception being thrown
+            // which would not be mapped again; instead, it would be propagated
+            // to the hosting container directly.
+            if (!"mapped-response-filter-exception".equals(responseContext.getEntity())) {
+                throw new NullPointerException("response-filter-exception");
+            }
+        }
+    }
+
+    @Provider
+    public static class ThrowableMapper implements ExceptionMapper<Throwable> {
+
+        @Override
+        public Response toResponse(Throwable throwable) {
+            return Response.status(Response.Status.OK).entity("mapped-" + throwable.getMessage()).build();
+        }
+
+    }
+
+    @Test
+    public void testJersey1525() {
+        Response res = target().path("test/responseFilter").request().get();
+        assertEquals(200, res.getStatus());
+        assertEquals("mapped-response-filter-exception", res.readEntity(String.class));
+    }
+    /**
+     * END: JERSEY-1525 reproducer code
      */
 }
