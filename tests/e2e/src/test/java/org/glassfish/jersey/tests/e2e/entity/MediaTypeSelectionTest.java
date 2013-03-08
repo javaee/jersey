@@ -44,6 +44,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -104,6 +105,30 @@ public class MediaTypeSelectionTest extends AbstractTypeTester {
         public String wildCard(String wc) {
             return wc;
         }
+    }
+
+    @Path("jira/1518")
+    public static class Issue1518Resource {
+        @POST
+        @Consumes("text/plain;qs=0.7")
+        public String never() {
+            throw new WebApplicationException(Response.Status.CONFLICT);
+        }
+
+        @POST
+        @Consumes("text/*")
+        public String text() {
+            return "1518";
+        }
+    }
+
+    // JERSEY-1518 reproducer test
+    @Test
+    public void testQsInConsumes() {
+        Response r = target("jira/1518").request(MediaType.TEXT_PLAIN_TYPE).post(Entity.text("request"));
+        assertEquals(200, r.getStatus());
+        assertEquals(MediaType.TEXT_PLAIN_TYPE, r.getMediaType());
+        assertEquals("1518", r.readEntity(String.class));
     }
 
     // JERSEY-1187 regression test
