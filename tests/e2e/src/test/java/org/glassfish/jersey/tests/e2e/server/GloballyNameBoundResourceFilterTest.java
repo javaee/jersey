@@ -65,7 +65,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * JAX-RS global name-bound filter tests.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see ResourceFilterTest
  */
 public class GloballyNameBoundResourceFilterTest extends JerseyTest {
 

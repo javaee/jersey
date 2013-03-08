@@ -57,6 +57,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.Priority;
 
@@ -71,17 +72,29 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * JAX-RS name-bound filter tests.
+ *
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see GloballyNameBoundResourceFilterTest
  */
 public class ResourceFilterTest extends JerseyTest {
     @Override
     protected Application configure() {
         return new ResourceConfig(
                 MyDynamicFeature.class,
-                MyResource.class,
+                BasicTestsResource.class,
                 NameBoundRequestFilter.class,
                 NameBoundResponseFilter.class,
-                PostMatchingFilter.class
+                PostMatchingFilter.class,
+                // exception tests
+                ExceptionTestsResource.class,
+                ExceptionPreMatchRequestFilter.class,
+                ExceptionPostMatchRequestFilter.class,
+                ExceptionTestBoundResponseFilter.class,
+                ExceptionTestGlobalResponseFilter.class,
+                TestExceptionMapper.class
+
         );
     }
 
@@ -108,7 +121,7 @@ public class ResourceFilterTest extends JerseyTest {
     // See JERSEY-1554
     @Test
     public void testGlobalPostMatchingNotInvokedOn404() {
-        Response r = target("not-found").request().get();
+        Response r = target("basic").path("not-found").request().get();
         assertEquals(404, r.getStatus());
         if (r.hasEntity()) {
             assertThat(r.readEntity(String.class), not(containsString("postMatching")));
@@ -116,14 +129,14 @@ public class ResourceFilterTest extends JerseyTest {
     }
 
     private void test(String name) {
-        Response r = target(name).request().get();
+        Response r = target("basic").path(name).request().get();
         assertEquals(200, r.getStatus());
         assertTrue(r.hasEntity());
         assertEquals(name, r.readEntity(String.class));
     }
 
-    @Path("/")
-    public static class MyResource {
+    @Path("/basic")
+    public static class BasicTestsResource {
         @Path("dynamicBinder")
         @GET
         public String getDynamicBinder() {
@@ -179,7 +192,9 @@ public class ResourceFilterTest extends JerseyTest {
     public static class PostMatchingFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
-            requestContext.abortWith(Response.ok("postMatching", MediaType.TEXT_PLAIN_TYPE).build());
+            if (requestContext.getUriInfo().getPath().startsWith("/basic")) {
+                requestContext.abortWith(Response.ok("postMatching", MediaType.TEXT_PLAIN_TYPE).build());
+            }
         }
     }
 
@@ -201,5 +216,94 @@ public class ResourceFilterTest extends JerseyTest {
                 context.register(filter);
             }
         }
+    }
+
+    @Path("/exception")
+    public static class ExceptionTestsResource {
+        @Path("matched")
+        @GET
+        @ExceptionTestBound
+        public String getPostMatching() {
+            return "method";
+        }
+    }
+
+    @PreMatching
+    public static class ExceptionPreMatchRequestFilter implements ContainerRequestFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            if ("/exception/not-found".equals(requestContext.getUriInfo().getPath())) {
+                throw new TestException("globalRequest");
+            }
+        }
+    }
+
+    @NameBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    private static @interface ExceptionTestBound {}
+
+    @ExceptionTestBound
+    public static class ExceptionPostMatchRequestFilter implements ContainerRequestFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            throw new TestException("nameBoundRequest");
+        }
+    }
+
+    @ExceptionTestBound
+    @Priority(10)
+    public static class ExceptionTestBoundResponseFilter implements ContainerResponseFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            responseContext.setEntity(
+                    (responseContext.hasEntity()) ? responseContext.getEntity() + "-nameBoundResponse" : "nameBoundResponse",
+                    responseContext.getEntityAnnotations(),
+                    MediaType.TEXT_PLAIN_TYPE);
+        }
+    }
+
+    @Priority(1)
+    public static class ExceptionTestGlobalResponseFilter implements ContainerResponseFilter {
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            if (!requestContext.getUriInfo().getPath().startsWith("/exception")) {
+                return;
+            }
+
+            responseContext.setEntity(
+                    (responseContext.hasEntity()) ? responseContext.getEntity() + "-globalResponse" : "globalResponse",
+                    responseContext.getEntityAnnotations(),
+                    MediaType.TEXT_PLAIN_TYPE);
+        }
+    }
+
+    public static class TestException extends RuntimeException {
+        public TestException(String message) {
+            super(message);
+        }
+    }
+
+    public static class TestExceptionMapper implements ExceptionMapper<TestException> {
+
+        @Override
+        public Response toResponse(TestException exception) {
+            return Response.ok(exception.getMessage() + "-mappedTestException").build();
+        }
+    }
+
+    @Test
+    public void testNameBoundResponseFilterNotInvokedOnPreMatchFilterException() {
+        Response r = target("exception").path("not-found").request().get();
+        assertEquals(200, r.getStatus());
+        assertTrue(r.hasEntity());
+        assertEquals("globalRequest-mappedTestException-globalResponse", r.readEntity(String.class));
+    }
+
+    @Test
+    public void testNameBoundResponseFilterInvokedOnPostMatchFilterException() {
+        Response r = target("exception").path("matched").request().get();
+        assertEquals(200, r.getStatus());
+        assertTrue(r.hasEntity());
+        assertEquals("nameBoundRequest-mappedTestException-nameBoundResponse-globalResponse", r.readEntity(String.class));
     }
 }
