@@ -1,0 +1,125 @@
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms of either the GNU
+  ~ General Public License Version 2 only ("GPL") or the Common Development
+  ~ and Distribution License("CDDL") (collectively, the "License").  You
+  ~ may not use this file except in compliance with the License.  You can
+  ~ obtain a copy of the License at
+  ~ http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  ~ or packager/legal/LICENSE.txt.  See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  ~
+  ~ When distributing the software, include this License Header Notice in each
+  ~ file and include the License file at packager/legal/LICENSE.txt.
+  ~
+  ~ GPL Classpath Exception:
+  ~ Oracle designates this particular file as subject to the "Classpath"
+  ~ exception as provided by Oracle in the GPL Version 2 section of the License
+  ~ file that accompanied this code.
+  ~
+  ~ Modifications:
+  ~ If applicable, add the following below the License Header, with the fields
+  ~ enclosed by brackets [] replaced by your own identifying information:
+  ~ "Portions Copyright [year] [name of copyright owner]"
+  ~
+  ~ Contributor(s):
+  ~ If you wish your version of this file to be governed by only the CDDL or
+  ~ only the GPL Version 2, indicate your decision by adding "[Contributor]
+  ~ elects to include this software in this distribution under the [CDDL or GPL
+  ~ Version 2] license."  If you don't indicate a single choice of license, a
+  ~ recipient has the option to distribute your version of this file under
+  ~ either the CDDL, the GPL Version 2 or to extend the choice of license to
+  ~ its licensees as provided above.  However, if you add GPL Version 2 code
+  ~ and therefore, elected the GPL Version 2 license, then the option applies
+  ~ only if the new code is made subject to such option by the copyright
+  ~ holder.
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <title>Managed client sample</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=MacRoman">
+
+    <style>
+        table, tr, th, td {
+            border: 1px solid;
+            border-collapse: collapse;
+            padding: 2px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Managed client simple sample</h1>
+    <p>This sample shows using client injected by @Uri into the resource methods. The following table contains description
+    of all accessible resource.</p>
+    <table>
+        <tr>
+            <td>uri</td>
+            <td>http method</td>
+            <td>description</td>
+        </tr>
+        <tr>
+            <td>/index.html</td>
+            <td>GET</td>
+            <td>this page</td>
+        </tr>
+        <tr>
+            <td>/app/*</td>
+            <td></td>
+            <td>rest application is deployed under this path</td>
+        </tr>
+        <tr>
+            <td>/app/resource/*</td>
+            <td></td>
+            <td>standard sample resource with sub resource methods</td>
+        </tr>
+        <tr>
+            <td><a href="./app/resource/dog">./app/resource/dog</a></td>
+            <td>GET</td>
+            <td>resource (plain/text)</td>
+        </tr>
+        <tr>
+            <td><a href="./app/resource/cat">./app/resource/cat</a></td>
+            <td>GET</td>
+            <td>resource (plain/text)</td>
+        </tr>
+        <tr>
+            <td><a href="./app/resource/elefant">./app/resource/elefant</a></td>
+            <td>GET</td>
+            <td>resource (plain/text)</td>
+        </tr>
+        <tr>
+            <td><a href="./app/resource/car/80">./app/resource/car/{id}</a></td>
+            <td>GET</td>
+            <td>resource with path param (plain/text). {id} is a string path parameter. Example: ./app/resource/car/80</td>
+        </tr>
+
+        <tr>
+            <td>/app/client/*</td>
+            <td></td>
+            <td>Resource with sub resources that use injected clients to query sub resources of <b>/app/resource/*</b> and other resources</td>
+        </tr>
+        <tr>
+            <td><a href="./app/client/glassfish">./app/client/glassfish</a></td>
+            <td>GET</td>
+            <td>Queries by GET <a href="http://glassfish.java.net">http://glassfish.java.net</a> and returns target html page.</td>
+        </tr>
+        <tr>
+            <td><a href="./app/client/animals">./app/client/animals</a></td>
+            <td>GET</td>
+            <td>Queries <a href="./app/resource/dog">./app/resource/dog</a>, <a href="./app/resource/cat">./app/resource/cat</a> and <a href="./app/resource/elefant">./app/resource/elefant</a> and returns merged result</td>
+        </tr>
+        <tr>
+        <td><a href="./app/client/car/15">./app/client/car/{id}</a></td>
+            <td>GET</td>
+            <td>Queries /app/resource/car/{id} and returns result. {id} is a string path parameter. Example: ./app/resource/client/car/15</td>
+        </tr>
+    </table>
+</body>
+</html>
