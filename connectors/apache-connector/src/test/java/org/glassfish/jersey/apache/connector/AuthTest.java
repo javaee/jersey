@@ -63,6 +63,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -243,6 +244,8 @@ public class AuthTest extends JerseyTest {
     }
 
     @Test
+    @Ignore("JERSEY-1750: Cannot retry request with a non-repeatable request entity. How to buffer the entity?" +
+            " Allow repeatable write in jersey?")
     public void testAuthPost() {
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(
@@ -314,6 +317,8 @@ public class AuthTest extends JerseyTest {
     }
 
     @Test
+    @Ignore("JERSEY-1750: Cannot retry request with a non-repeatable request entity. How to buffer the entity?" +
+            " Allow repeatable write in jersey?")
     public void testAuthInteractivePost() {
         CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
         credentialsProvider.setCredentials(

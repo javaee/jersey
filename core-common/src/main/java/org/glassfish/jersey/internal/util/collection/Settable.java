@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,18 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.util.collection;
 
 /**
- * A possibly mutable value reference. Reference can be initialized by {@link #set(Object)}
- * and the reference can be get by {@link #get()}.
+ * A generic settable value container.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @param <T> referred value type
- *
- * @see Refs
+ * @param <T> Type of the value.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public interface Ref<T> extends Value<T>, Settable<T> {
+public interface Settable<T> {
+    /**
+     * Set a new value.
+     *
+     * @param value value to be set.
+     */
+    public void set(T value);
 }

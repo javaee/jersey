@@ -61,10 +61,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.RequestWriter;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.message.internal.Statuses;
 
@@ -94,7 +94,6 @@ import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -153,7 +152,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  *
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
-public class ApacheConnector extends RequestWriter implements Connector {
+public class ApacheConnector implements Connector {
 
     private final static Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
 
@@ -268,6 +267,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
      *
      * @return the {@link HttpClient}.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public HttpClient getHttpClient() {
         return client;
     }
@@ -411,7 +411,7 @@ public class ApacheConnector extends RequestWriter implements Connector {
         }
         request.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
                 PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
-                true));
+                        true));
         if (entity != null && request instanceof HttpEntityEnclosingRequestBase) {
             ((HttpEntityEnclosingRequestBase) request).setEntity(entity);
         } else if (entity != null) {
@@ -421,54 +421,45 @@ public class ApacheConnector extends RequestWriter implements Connector {
         return request;
     }
 
-    private HttpEntity getHttpEntity(final ClientRequest cr) {
-        final Object entity = cr.getEntity();
+    private HttpEntity getHttpEntity(final ClientRequest clientRequest) {
+        final Object entity = clientRequest.getEntity();
 
         if (entity == null) {
             return null;
         }
 
-        final RequestEntityWriter requestEntityWriter = getRequestEntityWriter(cr);
-
-        try {
-            HttpEntity httpEntity = new AbstractHttpEntity() {
-                @Override
-                public boolean isRepeatable() {
-                    return false;
-                }
-
-                @Override
-                public long getContentLength() {
-                    return -1;
-                }
-
-                @Override
-                public InputStream getContent() throws IOException, IllegalStateException {
-                    return null;
-                }
-
-                @Override
-                public void writeTo(OutputStream outputStream) throws IOException {
-                    requestEntityWriter.writeRequestEntity(outputStream);
-                }
-
-                @Override
-                public boolean isStreaming() {
-                    return false;
-                }
-            };
-
-            if (cr.getConfiguration().getProperties().get(ClientProperties.CHUNKED_ENCODING_SIZE) != null) {
-                // TODO return InputStreamEntity
-                return httpEntity;
-            } else {
-                return new BufferedHttpEntity(httpEntity);
+        return new AbstractHttpEntity() {
+            @Override
+            public boolean isRepeatable() {
+                return false;
             }
-        } catch (Exception ex) {
-            // TODO warning/error?
-        }
 
-        return null;
+            @Override
+            public long getContentLength() {
+                return -1;
+            }
+
+            @Override
+            public InputStream getContent() throws IOException, IllegalStateException {
+                return null;
+            }
+
+            @Override
+            public void writeTo(final OutputStream outputStream) throws IOException {
+                clientRequest.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+                    @Override
+                    public OutputStream getOutputStream(int contentLength) throws IOException {
+                        return outputStream;
+                    }
+                });
+                clientRequest.writeEntity();
+            }
+
+            @Override
+            public boolean isStreaming() {
+                return false;
+            }
+        };
     }
 
     private void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {

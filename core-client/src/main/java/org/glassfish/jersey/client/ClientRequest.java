@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,24 +39,33 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Jersey client request context.
@@ -78,6 +87,10 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     private MessageBodyWorkers workers;
     // Flag indicating whether the request is asynchronous
     private boolean asynchronous;
+    // true if writeEntity() was already called
+    private boolean entityWritten;
+
+    private static final Logger LOGGER = Logger.getLogger(ClientRequest.class.getName());
 
     /**
      * Create new Jersey client request context.
@@ -285,7 +298,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param encoding message encoding to be set.
      */
     public void encoding(String encoding) {
-        if(encoding == null) {
+        if (encoding == null) {
             getHeaders().remove(HttpHeaders.CONTENT_ENCODING);
         } else {
             getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, encoding);
@@ -298,7 +311,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(String language) {
-        if(language == null) {
+        if (language == null) {
             getHeaders().remove(HttpHeaders.CONTENT_LANGUAGE);
         } else {
             getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
@@ -311,7 +324,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      * @param language message language to be set.
      */
     public void language(Locale language) {
-        if(language == null) {
+        if (language == null) {
             getHeaders().remove(HttpHeaders.CONTENT_LANGUAGE);
         } else {
             getHeaders().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
@@ -371,5 +384,90 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      */
     void setAsynchronous(boolean async) {
         asynchronous = async;
+    }
+
+
+    /**
+     * Enable a buffering of serialized entity. The buffering will be configured from runtime configuration
+     * associated with this request. The property determining the size of the buffer
+     * is {@link org.glassfish.jersey.CommonProperties#CONTENT_LENGTH_BUFFER}.
+     * <p/>
+     * The buffering functionality is by default disabled and could be enabled by calling this method. In this case
+     * this method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
+     *
+     */
+    public void enableBuffering() {
+        enableBuffering(getConfiguration());
+    }
+
+    /**
+     * Write (serialize) the entity set in this request into the {@link #getEntityStream() entity stream}. The method
+     * use {@link javax.ws.rs.ext.WriterInterceptor writer interceptors} and {@link javax.ws.rs.ext.MessageBodyWriter
+     * message body writer}.
+     * <p/>
+     * This method modifies the state of this request and therefore it can be called only once per request life cycle otherwise
+     * IllegalStateException is thrown.
+     * <p/>
+     * Note that {@link #setStreamProvider(org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider)}
+     * and optionally {@link #enableBuffering()} must be called before calling this method.
+     *
+     * @throws IOException In the case of IO error.
+     */
+    public void writeEntity() throws IOException {
+        Preconditions.checkState(!entityWritten, LocalizationMessages.REQUEST_ENTITY_ALREADY_WRITTEN());
+        entityWritten = true;
+        ensureMediaType();
+        final GenericType<?> entityType = new GenericType(getEntityType());
+        OutputStream entityStream = null;
+        try {
+            entityStream = workers.writeTo(
+                    getEntity(),
+                    entityType.getRawType(),
+                    entityType.getType(),
+                    getEntityAnnotations(),
+                    getMediaType(),
+                    getHeaders(),
+                    getPropertiesDelegate(),
+                    getEntityStream(),
+                    true);
+            setEntityStream(entityStream);
+        } finally {
+            if (entityStream != null) {
+                try {
+                    entityStream.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
+                }
+            }
+
+            try {
+                commitStream();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM());
+            }
+        }
+    }
+
+    private void ensureMediaType() {
+        if (getMediaType() == null) {
+            // Content-Type is not present choose a default type
+            final GenericType<?> entityType = new GenericType(getEntityType());
+            final List<MediaType> mediaTypes = workers.getMessageBodyWriterMediaTypes(
+                    entityType.getRawType(), entityType.getType(), getEntityAnnotations());
+
+            setMediaType(getMediaType(mediaTypes));
+        }
+    }
+
+    private MediaType getMediaType(List<MediaType> mediaTypes) {
+        if (mediaTypes.isEmpty()) {
+            return MediaType.APPLICATION_OCTET_STREAM_TYPE;
+        } else {
+            MediaType mediaType = mediaTypes.get(0);
+            if (mediaType.isWildcardType() || mediaType.isWildcardSubtype()) {
+                mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+            }
+            return mediaType;
+        }
     }
 }

@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -71,7 +72,6 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOption;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
@@ -160,20 +160,20 @@ public class ExtendedWadlWebappOsgiTest {
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
                         .versionAsInProject(),
                 provision(TinyBundles.newBundle()
-                                        .add(MyApplication.class)
-                                        .add(ItemResource.class)
-                                        .add(ItemsResource.class)
-                                        .add(Examples.class)
-                                        .add(SampleWadlGeneratorConfig.class)
-                                        .add(Item.class)
-                                        .add(Items.class)
-                                        .add(ObjectFactory.class)
-                                        .add("application-doc.xml", ClassLoader.getSystemResourceAsStream("application-doc.xml"))
-                                        .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
-                                        .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
-                                        .set(Constants.EXPORT_PACKAGE, MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
-                                        .set(Constants.IMPORT_PACKAGE, "*")
-                                        .set(Constants.BUNDLE_SYMBOLICNAME, "webapp").build(TinyBundles.withBnd())),
+                        .add(MyApplication.class)
+                        .add(ItemResource.class)
+                        .add(ItemsResource.class)
+                        .add(Examples.class)
+                        .add(SampleWadlGeneratorConfig.class)
+                        .add(Item.class)
+                        .add(Items.class)
+                        .add(ObjectFactory.class)
+                        .add("application-doc.xml", ClassLoader.getSystemResourceAsStream("application-doc.xml"))
+                        .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
+                        .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
+                        .set(Constants.EXPORT_PACKAGE, MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
+                        .set(Constants.IMPORT_PACKAGE, "*")
+                        .set(Constants.BUNDLE_SYMBOLICNAME, "webapp").build(TinyBundles.withBnd())),
                 // start felix framework
                 felix());
     }
@@ -214,6 +214,8 @@ public class ExtendedWadlWebappOsgiTest {
     }
 
     @Test
+    @Ignore("Jersey 1775: extended wadl serialization fails in MBW on the client side. JAXBContext miss" +
+            " classes added by WadlGeneratorResourceDocSupport.")
     public void testWadlOptionsMethod() throws Exception {
 
         final ResourceConfig resourceConfig = createResourceConfig();

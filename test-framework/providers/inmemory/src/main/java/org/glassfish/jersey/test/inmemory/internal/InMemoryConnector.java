@@ -44,12 +44,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.concurrent.ExecutionException;
+import java.security.Principal;
+import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -59,13 +65,14 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
@@ -75,6 +82,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  */
 public class InMemoryConnector implements Connector {
 
+    private static final Logger LOGGER = Logger.getLogger(InMemoryConnector.class.getName());
     private final ApplicationHandler appHandler;
     private final URI baseUri;
 
@@ -89,51 +97,157 @@ public class InMemoryConnector implements Connector {
         this.appHandler = application;
     }
 
+
+    /**
+     * In memory container response writer.
+     */
+    public static class InMemoryResponseWriter implements ContainerResponseWriter {
+        private MultivaluedMap<String, String> headers;
+        private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        private boolean committed;
+        private Response.StatusType statusInfo;
+
+
+        @Override
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) throws ContainerException {
+            List<Object> length = Lists.newArrayList();
+            length.add(String.valueOf(contentLength));
+
+            responseContext.getHeaders().put(HttpHeaders.CONTENT_LENGTH, length);
+            headers = responseContext.getStringHeaders();
+            statusInfo = responseContext.getStatusInfo();
+            return baos;
+        }
+
+        @Override
+        public boolean suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) {
+            return false;
+        }
+
+        @Override
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+            throw new UnsupportedOperationException("not supported");
+        }
+
+        @Override
+        public void commit() {
+            committed = true;
+        }
+
+        @Override
+        public void failure(Throwable error) {
+            throw new RuntimeException("InMemoryResponseWriter.failure called.", error);
+        }
+
+        @Override
+        public boolean enableResponseBuffering() {
+            return true;
+        }
+
+        /**
+         * Get the written entity.
+         * @return Byte array which contains the entity written by the server.
+         */
+        public byte[] getEntity() {
+            if (!committed) {
+                throw new IllegalStateException("Response is not committed yet.");
+            }
+            return baos.toByteArray();
+        }
+
+        /**
+         * Return response headers.
+         * @return headers.
+         */
+        public MultivaluedMap<String, String> getHeaders() {
+            return headers;
+        }
+
+        /**
+         * Returns response status info.
+         * @return status info.
+         */
+        public Response.StatusType getStatusInfo() {
+            return statusInfo;
+        }
+    }
+
+
     /**
      * {@inheritDoc}
      * <p/>
      * Transforms client-side request to server-side and invokes it on provided application ({@link ApplicationHandler}
      * instance).
      *
-     * @param requestContext client side request to be invoked.
+     * @param clientRequest client side request to be invoked.
      */
     @Override
-    public ClientResponse apply(final ClientRequest requestContext) {
-        // TODO replace request building with a common request cloning functionality
-        Future<ContainerResponse> responseListenableFuture;
+    public ClientResponse apply(final ClientRequest clientRequest) {
         PropertiesDelegate propertiesDelegate = new MapPropertiesDelegate();
 
-        final ContainerRequest containerRequestContext = new ContainerRequest(baseUri,
-                requestContext.getUri(), requestContext.getMethod(),
+        final ContainerRequest containerRequest = new ContainerRequest(baseUri,
+                clientRequest.getUri(), clientRequest.getMethod(),
                 null, propertiesDelegate);
-        outboundToInbound(requestContext, containerRequestContext, propertiesDelegate, requestContext.getWorkers(), null);
 
-        boolean followRedirects = PropertiesHelper.getValue(requestContext.getConfiguration().getProperties(),
+        final ByteArrayOutputStream clientOutput = new ByteArrayOutputStream();
+        if (clientRequest.getEntity() != null) {
+            clientRequest.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+                @Override
+                public OutputStream getOutputStream(int contentLength) throws IOException {
+                    containerRequest.getHeaders().putAll(clientRequest.getStringHeaders());
+                    List<String> length = Lists.newArrayList();
+                    length.add(String.valueOf(contentLength));
+                    containerRequest.getHeaders().put(HttpHeaders.CONTENT_LENGTH, length);
+                    return clientOutput;
+                }
+            });
+            clientRequest.enableBuffering();
+
+            try {
+                clientRequest.writeEntity();
+            } catch (IOException e) {
+                final String msg = "Error while writing entity to the output stream.";
+                LOGGER.log(Level.SEVERE, msg, e);
+                throw new ProcessingException(msg, e);
+            }
+        }
+        containerRequest.setEntityStream(new ByteArrayInputStream(clientOutput.toByteArray()));
+
+
+        boolean followRedirects = PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true);
 
-        ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
-
-        responseListenableFuture = appHandler.apply(containerRequestContext, entityStream);
-
-        try {
-            if (responseListenableFuture != null) {
-                return tryFollowRedirects(followRedirects,
-                        createClientResponseContext(requestContext,
-                                responseListenableFuture.get(),
-                                propertiesDelegate,
-                                containerRequestContext.getWorkers(),
-                                entityStream),
-                        new ClientRequest(requestContext));
+        final InMemoryResponseWriter inMemoryResponseWriter = new InMemoryResponseWriter();
+        containerRequest.setWriter(inMemoryResponseWriter);
+        containerRequest.setSecurityContext(new SecurityContext() {
+            @Override
+            public Principal getUserPrincipal() {
+                return null;
             }
-        } catch (InterruptedException e) {
-            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new ProcessingException("In-memory transport can't process incoming request", e);
-        } catch (ExecutionException e) {
-            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.SEVERE, null, e);
-            throw new ProcessingException("In-memory transport can't process incoming request", e);
-        }
 
-        throw new ProcessingException("In-memory transport can't process incoming request");
+            @Override
+            public boolean isUserInRole(String role) {
+                return false;
+            }
+
+            @Override
+            public boolean isSecure() {
+                return false;
+            }
+
+            @Override
+            public String getAuthenticationScheme() {
+                return null;
+            }
+        });
+        appHandler.handle(containerRequest);
+
+        return tryFollowRedirects(followRedirects,
+                createClientResponse(
+                        clientRequest,
+                        inMemoryResponseWriter),
+                new ClientRequest(clientRequest));
+
     }
 
     @Override
@@ -157,77 +271,14 @@ public class InMemoryConnector implements Connector {
         // do nothing
     }
 
-    private void outboundToInbound(final OutboundMessageContext outboundContext,
-                                   final InboundMessageContext inboundContext,
-                                   final PropertiesDelegate propertiesDelegate,
-                                   final MessageBodyWorkers workers,
-                                   final ByteArrayOutputStream entityBaos) {
-        if (entityBaos == null) {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            outboundContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-                @Override
-                public OutputStream getOutputStream() throws IOException {
-                    return baos;
-                }
-
-                @Override
-                public void commit() throws IOException {
-                }
-            });
-
-            if (outboundContext.hasEntity()) {
-                OutputStream entityStream = outboundContext.getEntityStream();
-
-                try {
-                    entityStream = workers.writeTo(
-                            outboundContext.getEntity(),
-                            outboundContext.getEntity().getClass(),
-                            outboundContext.getEntityType(),
-                            outboundContext.getEntityAnnotations(),
-                            outboundContext.getMediaType(),
-                            outboundContext.getHeaders(),
-                            propertiesDelegate,
-                            entityStream,
-                            null,
-                            true);
-                    outboundContext.setEntityStream(entityStream);
-                    outboundContext.commitStream();
-                } catch (IOException e) {
-                    throw new ProcessingException(e.getMessage(), e);
-                } finally {
-                    if (entityStream != null) {
-                        try {
-                            entityStream.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(InMemoryConnector.class.getName()).log(Level.FINE, "Error closing output stream", ex);
-                        }
-                    }
-                }
-
-                inboundContext.setEntityStream(new ByteArrayInputStream(baos.toByteArray()));
-            }
-        } else {
-            inboundContext.setEntityStream(new ByteArrayInputStream(entityBaos.toByteArray()));
-        }
-
-        inboundContext.getHeaders().putAll(outboundContext.getStringHeaders());
-    }
-
-    private ClientResponse createClientResponseContext(final ClientRequest requestContext,
-                                                                    final ContainerResponse containerResponseContext,
-                                                                    final PropertiesDelegate propertiesDelegate,
-                                                                    final MessageBodyWorkers workers,
-                                                                    final ByteArrayOutputStream entityStream) {
-
-        final ClientResponse responseContext =
-                new ClientResponse(containerResponseContext.getStatusInfo(), requestContext);
-
-        outboundToInbound(
-                containerResponseContext.getWrappedMessageContext(), responseContext, propertiesDelegate, workers, entityStream);
-        responseContext.setStatus(containerResponseContext.getStatus());
-
-        return responseContext;
+    private ClientResponse createClientResponse(final ClientRequest clientRequest,
+                                                final InMemoryResponseWriter responseWriter) {
+        final ClientResponse clientResponse = new ClientResponse(responseWriter.getStatusInfo(), clientRequest);
+        clientResponse.getHeaders().putAll(responseWriter.getHeaders());
+        clientResponse.setEntityStream(new ByteArrayInputStream(responseWriter.getEntity()));
+        clientResponse.setStatus(responseWriter.getStatusInfo().getStatusCode());
+        return clientResponse;
     }
 
     private ClientResponse tryFollowRedirects(boolean followRedirects, ClientResponse response, ClientRequest request) {

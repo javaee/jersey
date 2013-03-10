@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -49,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
@@ -72,6 +74,7 @@ public class ContainerResponse implements ContainerResponseContext {
     private final ContainerRequest requestContext;
     private final OutboundMessageContext messageContext;
     private boolean mappedFromException;
+    private boolean closed;
 
     /**
      * Create a new Jersey container response context.
@@ -345,19 +348,37 @@ public class ContainerResponse implements ContainerResponseContext {
         messageContext.setEntityStream(outputStream);
     }
 
+
     /**
-     * Set the output stream provider.
+     * Set the output stream provider callback.
+     * <p/>
+     * This method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
      *
-     * @param streamProvider output stream provider.
+     * @param streamProvider non-{@code null} output stream provider.
      */
     public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
         messageContext.setStreamProvider(streamProvider);
     }
 
     /**
-     * Commits the {@link #getEntityStream() entity stream} if it wasn't already committed.
+     * Enable a buffering of serialized entity. The buffering will be configured from configuration. The property
+     * determining the size of the buffer is {@link org.glassfish.jersey.CommonProperties#CONTENT_LENGTH_BUFFER}.
+     * <p/>
+     * The buffering functionality is by default disabled and could be enabled by calling this method. In this case
+     * this method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
+     *
+     * @param configuration runtime configuration.
      */
-    public void commitStream() {
+    public void enableBuffering(Configuration configuration) {
+        messageContext.enableBuffering(configuration);
+    }
+
+    /**
+     * Commit the {@link #getEntityStream() entity stream} unless already committed.
+     *
+     * @throws IOException in case of the IO error.
+     */
+    public void commitStream() throws IOException {
         messageContext.commitStream();
     }
 
@@ -374,8 +395,11 @@ public class ContainerResponse implements ContainerResponseContext {
      * the corresponding request.
      */
     public void close() {
-        messageContext.close();
-        requestContext.getResponseWriter().commit();
+        if (!closed) {
+            closed = true;
+            messageContext.close();
+            requestContext.getResponseWriter().commit();
+        }
     }
 
     /**

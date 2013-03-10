@@ -99,15 +99,11 @@ public class OutboundJaxrsResponseTest {
         }
     }
 
-    private static final OutboundMessageContext.StreamProvider TEST_PROVIDER = new OutboundMessageContext.StreamProvider() {
+    private static final OutboundMessageContext.StreamProvider TEST_PROVIDER
+            = new OutboundMessageContext.StreamProvider() {
         @Override
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream(int contentLength) throws IOException {
             return new ByteArrayOutputStream();
-        }
-
-        @Override
-        public void commit() throws IOException {
-            // noop
         }
     };
 

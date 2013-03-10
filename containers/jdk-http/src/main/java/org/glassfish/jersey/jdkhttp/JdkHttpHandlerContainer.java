@@ -80,7 +80,7 @@ import com.sun.net.httpserver.HttpsExchange;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
-     private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
 
     private volatile ApplicationHandler appHandler;
     private volatile ContainerLifecycleListener containerListener;
@@ -291,6 +291,11 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                 commit();
                 rethrow(error);
             }
+        }
+
+        @Override
+        public boolean enableResponseBuffering() {
+            return true;
         }
 
         @Override

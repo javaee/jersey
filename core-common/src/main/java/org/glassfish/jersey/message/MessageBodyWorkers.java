@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -219,7 +219,7 @@ public interface MessageBodyWorkers {
      * @return the best media types
      */
     <T> MediaType getMessageBodyWriterMediaType(Class<T> type, Type genericType, Annotation[] annotations,
-            List<MediaType> acceptableMediaTypes);
+                                                List<MediaType> acceptableMediaTypes);
 
     /**
      * Returns global reader interceptors.
@@ -264,8 +264,8 @@ public interface MessageBodyWorkers {
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
-            boolean intercept) throws WebApplicationException, IOException;
+                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
+                               boolean intercept) throws WebApplicationException, IOException;
 
     /**
      * Writers a type to the {@link OutputStream entityStream} using interceptors. If the
@@ -284,9 +284,6 @@ public interface MessageBodyWorkers {
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
      * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link OutputStream} for the HTTP entity.
-     * @param sizeCallback the {@link MessageBodySizeCallback} which will be invoked to
-     *            pass the size of the written entity. The callback will be invoked before
-     *            the first byte is written to the {@code entityStream}.
      * @param intercept true if the user interceptors should be executed. Otherwise only
      *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
      *            be executed in the client.
@@ -296,68 +293,7 @@ public interface MessageBodyWorkers {
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-            MessageBodySizeCallback sizeCallback, boolean intercept) throws java.io.IOException,
+                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
+                                    boolean intercept) throws java.io.IOException,
             javax.ws.rs.WebApplicationException;
-
-    /**
-     * Writers a type to the {@link OutputStream entityStream} using interceptors. If the
-     * parameter {@code intercept} is true then {@link WriterInterceptor writer
-     * interceptors} are excecuted before calling the {@link MessageBodyWriter message
-     * body writer}. The appropriate {@link MessageBodyWriter message body writer} is
-     * chosen after the interceptor execution based on parameter passed to this method
-     * and modified by the interceptors.
-     *
-     * @param entity Entity to be written to the entityStream
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations an array of the annotations on the resource method that returns
-     *            the object.
-     * @param mediaType the media type of the HTTP entity.
-     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
-     * @param propertiesDelegate request-scoped properties delegate.
-     * @param entityStream the {@link OutputStream} for the HTTP entity.
-     * @param sizeCallback the {@link MessageBodySizeCallback} which will be invoked to
-     *            pass the size of the written entity. The callback will be invoked before
-     *            the first byte is written to the {@code entityStream}.
-     * @param intercept true if the user interceptors should be executed. Otherwise only
-     *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed in the client.
-     * @param writeEntity true if the entity should be written. Otherwise only headers will
-     *            be written to underlying {@link OutputStream}.
-     * @return Outer output stream that should be closed by the caller.
-     * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
-     *             reader} fails.
-     * @throws IOException Thrown when reading from the {@code entityStream} fails.
-     */
-    public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-            MessageBodySizeCallback sizeCallback, boolean intercept, boolean writeEntity) throws java.io.IOException,
-            javax.ws.rs.WebApplicationException;
-
-    /**
-     * Callback which will be used to pass back the size of the entity. It will be invoked
-     * in method
-     * {@link MessageBodyWorkers#writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap,
-     * PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean)} and
-     * {@link MessageBodyWorkers#writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap,
-     * PropertiesDelegate, OutputStream, MessageBodySizeCallback, boolean, boolean)} and
-     * after selection of the {@link MessageBodyWriter message body writer} and before
-     * writing to the output stream.
-     */
-    public interface MessageBodySizeCallback {
-
-        /**
-         * Called when the size of the request entity is obtained. <p>Enables the appropriate
-         * setting of HTTP headers for the size of the request entity and/or configure
-         * an appropriate transport encoding.</p>
-         *
-         * @param size Size in bytes of the request
-         *            entity, otherwise -1 if the size cannot be determined before
-         *            serialization.
-         * @throws IOException When IO operations fail
-         */
-        public void onRequestEntitySize(long size) throws IOException;
-    }
-
 }

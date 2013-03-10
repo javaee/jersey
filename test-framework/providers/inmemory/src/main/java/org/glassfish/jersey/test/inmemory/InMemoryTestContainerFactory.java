@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,13 +56,13 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  */
 public class InMemoryTestContainerFactory implements TestContainerFactory {
 
-    private static class InMemoryContainer implements TestContainer {
+    private static class InMemoryTestContainer implements TestContainer {
 
         private final URI baseUri;
         private final ApplicationHandler appHandler;
-        private static final Logger LOGGER = Logger.getLogger(InMemoryContainer.class.getName());
+        private static final Logger LOGGER = Logger.getLogger(InMemoryTestContainer.class.getName());
 
-        private InMemoryContainer(final URI baseUri, final ApplicationHandler application) {
+        private InMemoryTestContainer(final URI baseUri, final ApplicationHandler application) {
             this.baseUri = baseUri;
             this.appHandler = application;
         }
@@ -94,6 +94,6 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
     @Override
     public TestContainer create(final URI baseUri, final ApplicationHandler application) throws IllegalArgumentException {
-        return new InMemoryContainer(baseUri, application);
+        return new InMemoryTestContainer(baseUri, application);
     }
 }

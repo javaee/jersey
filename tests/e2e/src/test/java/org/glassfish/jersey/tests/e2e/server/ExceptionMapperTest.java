@@ -77,9 +77,9 @@ import javax.ws.rs.ext.Providers;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests throwing exceptions in {@link MessageBodyReader} and {@link MessageBodyWriter}.
@@ -124,10 +124,16 @@ public class ExceptionMapperTest extends JerseyTest {
 
 
     @Test
-    public void testWriterThrowsExceptionAfterFirstBytesAreWritten() {
+    public void testWriterThrowsExceptionAfterFirstBytesAreWritten() throws IOException {
         Response res = target().path("test/after").request("test/test").get();
         assertEquals(200, res.getStatus());
-        assertEquals("something", res.readEntity(String.class));
+        final InputStream inputStream = res.readEntity(InputStream.class);
+        byte b;
+        inputStream.read();
+        MyMessageBodyWritter.firstBytesReceived = true;
+        while ((b = (byte) inputStream.read()) >= 0) {
+            Assert.assertEquals('a', b);
+        }
     }
 
 
@@ -153,7 +159,7 @@ public class ExceptionMapperTest extends JerseyTest {
         @Path("after")
         @Produces("test/test")
         public Response exceptionAfterFirstBytesAreWritten() {
-            return Response.status(200).header("writer-exception", "after-first-byte").entity("ok").build();
+            return Response.status(200).header("writer-exception", "after-first-byte").entity("aaaaa").build();
         }
 
         @POST
@@ -193,6 +199,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Produces("test/test")
     public static class MyMessageBodyWritter implements MessageBodyWriter<String> {
+        public volatile static boolean firstBytesReceived;
 
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -208,21 +215,26 @@ public class ExceptionMapperTest extends JerseyTest {
         public void writeTo(String s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
                             MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException,
                 WebApplicationException {
-            final List<Object> header = httpHeaders.get("writer-exception");
+            firstBytesReceived = false;
 
-            OutputStreamWriter osw = new OutputStreamWriter(entityStream);
+            final List<Object> header = httpHeaders.get("writer-exception");
 
             if (header != null && header.size() > 0) {
                 if (header.get(0).equals("before-first-byte")) {
                     throw new MyException("exception-before-first-bytes");
                 } else if (header.get(0).equals("after-first-byte")) {
-                    osw.write("something");
-                    osw.flush();
+                    int i = 0;
+                    while (!firstBytesReceived && i++ < 500000) {
+                        entityStream.write('a');
+                        entityStream.flush();
+                    }
                     throw new MyException("exception-after-first-bytes");
                 }
+            } else {
+                OutputStreamWriter osw = new OutputStreamWriter(entityStream);
+                osw.write(s);
+                osw.flush();
             }
-            osw.write(s);
-            osw.flush();
         }
     }
 
@@ -282,6 +294,7 @@ public class ExceptionMapperTest extends JerseyTest {
             super(message, cause);
         }
     }
+
 
     /**
      * BEGIN: JERSEY-1515 reproducer code
