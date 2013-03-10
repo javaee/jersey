@@ -55,16 +55,15 @@ import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.NotSupportedException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
@@ -416,81 +415,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Builder property(String name, Object value) {
-            requestContext.getClientConfig().property(name, value);
-            return this;
-        }
-
-        @Override
-        public Builder register(Class<?> providerClass) {
-            requestContext.getClientConfig().register(providerClass);
-            return this;
-        }
-
-        @Override
-        public Builder register(Class<?> providerClass, int bindingPriority) {
-            requestContext.getClientConfig().register(providerClass, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public Builder register(Class<?> providerClass, Class<?>... contracts) {
-            requestContext.getClientConfig().register(providerClass, contracts);
-            return this;
-        }
-
-        @Override
-        public Builder register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
-            requestContext.getClientConfig().register(providerClass, contracts);
-            return this;
-        }
-
-        @Override
-        public Builder register(Object provider) {
-            requestContext.getClientConfig().register(provider);
-            return this;
-        }
-
-        @Override
-        public Builder register(Object provider, int bindingPriority) {
-            requestContext.getClientConfig().register(provider, bindingPriority);
-            return this;
-        }
-
-        @Override
-        public Builder register(Object provider, Class<?>... contracts) {
-            requestContext.getClientConfig().register(provider, contracts);
-            return this;
-        }
-
-        @Override
-        public Builder register(Object provider, Map<Class<?>, Integer> contracts) {
-            requestContext.getClientConfig().register(provider, contracts);
-            return this;
-        }
-
-        @Override
-        public Builder replaceWith(Configuration config) {
-            requestContext.getClientConfig().replaceWith(config);
-            return this;
-        }
-
-        @Override
-        public ClientConfig getConfiguration() {
-            return requestContext.getClientConfig();
-        }
-
-
-        /**
-         * Pre initializes the {@link Configuration configuration} of this invocation builder in order to improve
-         * performance during the first request.
-         * <p/>
-         * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} must be called
-         * on this pre initialized invocation builder otherwise invocation builder will change back to uninitialized.
-         *
-         * @return Jersey invocation builder.
-         */
-        public Builder preInitialize() {
-            this.getConfiguration().preInitialize();
+            requestContext.setProperty(name, value);
             return this;
         }
     }
@@ -940,67 +865,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public JerseyInvocation property(String name, Object value) {
-        requestContext.getClientConfig().property(name, value);
+        requestContext.setProperty(name, value);
         return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Class<?> providerClass) {
-        requestContext.getClientConfig().register(providerClass);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Class<?> providerClass, int bindingPriority) {
-        requestContext.getClientConfig().register(providerClass, bindingPriority);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Class<?> providerClass, Class<?>... contracts) {
-        requestContext.getClientConfig().register(providerClass, contracts);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
-        requestContext.getClientConfig().register(providerClass, contracts);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Object provider) {
-        requestContext.getClientConfig().register(provider);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Object provider, int bindingPriority) {
-        requestContext.getClientConfig().register(provider, bindingPriority);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Object provider, Class<?>... contracts) {
-        requestContext.getClientConfig().register(provider, contracts);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation register(Object provider, Map<Class<?>, Integer> contracts) {
-        requestContext.getClientConfig().register(provider, contracts);
-        return this;
-    }
-
-    @Override
-    public JerseyInvocation replaceWith(Configuration config) {
-        requestContext.getClientConfig().replaceWith(config);
-        return this;
-    }
-
-    @Override
-    public ClientConfig getConfiguration() {
-        return requestContext.getClientConfig();
     }
 
     private ProcessingException convertToException(Response response) {
@@ -1076,19 +942,5 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     ClientRequest request() {
         return requestContext;
-    }
-
-    /**
-     * Pre initializes the {@link Configuration configuration} of this invocation in order to improve
-     * performance during the first request.
-     * <p/>
-     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized invocation builder otherwise invocation will change back to uninitialized.
-     *
-     * @return Jersey invocation.
-     */
-    public JerseyInvocation preInitialize() {
-        this.getConfiguration().preInitialize();
-        return this;
     }
 }

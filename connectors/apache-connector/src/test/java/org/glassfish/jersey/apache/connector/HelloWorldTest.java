@@ -39,23 +39,27 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -224,36 +228,15 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
-    public void testLoggingFilterInvocationClass() {
-        Invocation.Builder inv = target().path(ROOT_PATH).request();
-        inv.register(CustomLoggingFilter.class).property("foo", "bar");
-        CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
-        String s = inv.get(String.class);
-        assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
-        assertEquals(1, CustomLoggingFilter.preFilterCalled);
-        assertEquals(1, CustomLoggingFilter.postFilterCalled);
-    }
-
-    @Test
-    public void testLoggingFilterInvocationInstance() {
-        Invocation.Builder inv = target().path(ROOT_PATH).request();
-        inv.register(new CustomLoggingFilter()).property("foo", "bar");
-        CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
-        String s = inv.get(String.class);
-        assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
-        assertEquals(1, CustomLoggingFilter.preFilterCalled);
-        assertEquals(1, CustomLoggingFilter.postFilterCalled);
-    }
-
-    @Test
     public void testConfigurationUpdate() {
-        Client client = client();
-        client.register(CustomLoggingFilter.class).property("foo", "bar");
-        client.replaceWith(ClientBuilder.newClient().getConfiguration());
+        Client client1 = client();
+        client1.register(CustomLoggingFilter.class).property("foo", "bar");
+
+        Client client = ClientBuilder.newClient(client1.getConfiguration());
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
         String s = target().path(ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
-        assertEquals(0, CustomLoggingFilter.preFilterCalled);
-        assertEquals(0, CustomLoggingFilter.postFilterCalled);
+        assertEquals(1, CustomLoggingFilter.preFilterCalled);
+        assertEquals(1, CustomLoggingFilter.postFilterCalled);
     }
 }

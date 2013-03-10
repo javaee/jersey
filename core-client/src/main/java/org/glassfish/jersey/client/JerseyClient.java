@@ -182,13 +182,6 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public JerseyClient replaceWith(Configuration configuration) {
-        checkNotClosed();
-        this.config.replaceWith(configuration);
-        return this;
-    }
-
-    @Override
     public JerseyClient register(Class<?> providerClass) {
         checkNotClosed();
         config.register(providerClass);
@@ -267,6 +260,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      *
      * @return the configured hostname verifier, or {@code null} if not set.
      */
+    @Override
     public HostnameVerifier getHostnameVerifier() {
         return hostnameVerifier;
     }

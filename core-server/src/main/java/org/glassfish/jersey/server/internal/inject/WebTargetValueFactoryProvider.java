@@ -416,6 +416,6 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
         final Configuration cfg = Injections.getOrCreate(getLocator(), configClass);
 
-        return (cfg instanceof ClientConfig) ? (ClientConfig) cfg : new ClientConfig().replaceWith(cfg);
+        return (cfg instanceof ClientConfig) ? (ClientConfig) cfg : new ClientConfig().loadFrom(cfg);
     }
 }

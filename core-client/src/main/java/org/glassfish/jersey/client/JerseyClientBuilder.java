@@ -189,8 +189,8 @@ public class JerseyClientBuilder extends ClientBuilder {
     }
 
     @Override
-    public JerseyClientBuilder replaceWith(Configuration config) {
-        this.config.replaceWith(config);
+    public JerseyClientBuilder withConfig(Configuration config) {
+        this.config.loadFrom(config);
         return this;
     }
 }

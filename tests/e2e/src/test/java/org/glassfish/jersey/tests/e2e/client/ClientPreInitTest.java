@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.client;
 
 import java.io.IOException;
@@ -55,7 +54,6 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -64,15 +62,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.client.JerseyWebTarget;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test pre initialization of the client.
@@ -146,47 +144,11 @@ public class ClientPreInitTest extends JerseyTest {
         client.register(MyResponseFilter.class);
         client.register(TestReader.class);
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
-        Assert.assertFalse(TestReader.initialized);
+        assertFalse(TestReader.initialized);
         final Response resourceResponse = target.request().get();
         checkResponse(resourceResponse, "resource:<null>");
-        Assert.assertTrue(TestReader.initialized);
+        assertTrue(TestReader.initialized);
     }
-
-    @Test
-    public void tesInitialitionSteps() {
-        Client client = ClientBuilder.newClient();
-        client.register(TestReader.class);
-        final WebTarget target = client.target(super.getBaseUri()).path("resource");
-        final WebTarget childTarget = target.path("child");
-        final Invocation.Builder invocationBuilder = childTarget.request();
-        final Invocation invocation = invocationBuilder.buildGet();
-        invocation.register(MyResponseFilter.class);
-        target.register(MyRequestFilter.class);
-        Assert.assertFalse(TestReader.initialized);
-        final Response response = invocation.invoke();
-        Assert.assertTrue(TestReader.initialized);
-        checkResponse(response, "child:<null>");
-    }
-
-
-    @Test
-    public void tesInitialitionSteps2() {
-        Client client = ClientBuilder.newClient();
-        client.register(TestReader.class);
-        final WebTarget target = client.target(super.getBaseUri()).path("resource");
-        final WebTarget childTarget = target.path("child");
-        childTarget.register(MyResponseFilter.class);
-        final Invocation.Builder invocationBuilder = childTarget.request();
-        Assert.assertFalse(TestReader.initialized);
-        ((JerseyInvocation.Builder) invocationBuilder).preInitialize();
-        Assert.assertTrue(TestReader.initialized);
-        final Invocation invocation = invocationBuilder.buildGet();
-
-        target.register(MyRequestFilter.class);
-        final Response response = invocation.invoke();
-        checkResponse(response, "child:<null>");
-    }
-
 
     @Test
     public void testSimplePreinitialize() {
@@ -198,11 +160,9 @@ public class ClientPreInitTest extends JerseyTest {
         final Response response = childTarget.request().get();
         checkResponse(response, "child:<null>");
 
-
         final Response resourceResponse = target.request().get();
         checkResponse(resourceResponse, "resource:<null>");
     }
-
 
     @Test
     public void testReusingPreinitializedConfig() {
@@ -211,17 +171,15 @@ public class ClientPreInitTest extends JerseyTest {
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         target.register(MyResponseFilter.class);
         ((JerseyWebTarget) target).preInitialize();
-        Assert.assertTrue(TestReader.initialized);
+        assertTrue(TestReader.initialized);
         final WebTarget childTarget = target.path("child");
         final Response response = childTarget.request().get();
 
         checkResponse(response, "child:<null>");
 
-
         final Response resourceResponse = target.request().get();
         checkResponse(resourceResponse, "resource:<null>");
     }
-
 
     @Test
     public void testReusingPreinitializedConfig2() {
@@ -229,9 +187,9 @@ public class ClientPreInitTest extends JerseyTest {
         client.register(TestReader.class);
         client.register(MyResponseFilter.class);
 
-        Assert.assertFalse(TestReader.initialized);
+        assertFalse(TestReader.initialized);
         ((JerseyClient) client).preInitialize();
-        Assert.assertTrue(TestReader.initialized);
+        assertTrue(TestReader.initialized);
 
         final WebTarget target = client.target(super.getBaseUri()).path("resource");
         final WebTarget childTarget = target.path("child");
@@ -243,9 +201,9 @@ public class ClientPreInitTest extends JerseyTest {
     }
 
     private void checkResponse(Response response, String entity) {
-        Assert.assertEquals("called", response.getHeaders().get("filter-response").get(0));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(entity, response.readEntity(String.class));
+        assertEquals("called", response.getHeaders().get("filter-response").get(0));
+        assertEquals(200, response.getStatus());
+        assertEquals(entity, response.readEntity(String.class));
     }
 
     @Test

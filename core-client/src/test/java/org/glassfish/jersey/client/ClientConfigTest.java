@@ -229,7 +229,7 @@ public class ClientConfigTest {
         clientConfig1.register(EmptyFeature.class);
         clientConfig2.register(unconfigurableFeature);
 
-        ClientConfig clientConfig = clientConfig2.replaceWith(clientConfig1);
+        ClientConfig clientConfig = clientConfig2.loadFrom(clientConfig1);
 
         // Features are registered at the time of provider bindings.
         final JerseyClient jerseyClient = new JerseyClient(clientConfig, null, null);

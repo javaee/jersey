@@ -152,8 +152,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public State replaceWith(Configuration config) {
-            super.replaceWith(config);
+        public State loadFrom(Configuration config) {
+            super.loadFrom(config);
             this.resourceFinders.clear();
             this.resources.clear();
 
@@ -454,13 +454,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
     public ResourceConfig register(final Object component, final Map<Class<?>, Integer> contracts) {
         invalidateCache();
         state.register(component, contracts);
-        return this;
-    }
-
-    @Override
-    public ResourceConfig replaceWith(Configuration config) {
-        invalidateCache();
-        state.replaceWith(config);
         return this;
     }
 

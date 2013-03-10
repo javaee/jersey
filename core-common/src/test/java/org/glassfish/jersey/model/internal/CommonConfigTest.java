@@ -200,7 +200,7 @@ public class CommonConfigTest {
         assertTrue(other.getContracts(ComplexEmptyProvider.class).containsKey(ReaderInterceptor.class));
         assertTrue(other.getContracts(ComplexEmptyProvider.class).containsKey(ContainerRequestFilter.class));
 
-        other.replaceWith(config);
+        other.loadFrom(config);
 
         assertEquals("bar", other.getProperty("foo"));
         assertEquals(1, other.getProperties().size());

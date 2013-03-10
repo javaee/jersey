@@ -200,10 +200,9 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
             return state;
         }
 
-        @Override
-        public State replaceWith(Configuration config) {
+        public State loadFrom(Configuration config) {
             final State state = strategy.onChange(this);
-            state.commonConfig.replaceWith(config);
+            state.commonConfig.loadFrom(config);
             return state;
         }
 
@@ -473,7 +472,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         } else {
             state = new State(parent);
             state.setConnector(new HttpUrlConnector());
-            state.replaceWith(that);
+            state.loadFrom(that);
         }
     }
 
@@ -501,15 +500,24 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         return new ClientConfig(state);
     }
 
-    @Override
-    public ClientConfig replaceWith(Configuration config) {
+    /**
+     * Load the internal configuration state from an externally provided configuration state.
+     *
+     * Calling this method effectively replaces existing configuration state of the instance
+     * with the state represented by the externally provided configuration.
+     *
+     * @param config external configuration state to replace the configuration of this configurable
+     *               instance.
+     * @return the updated client configuration instance.
+     */
+    public ClientConfig loadFrom(Configuration config) {
         if (config instanceof ClientConfig) {
             state = ((ClientConfig) config).state.copy();
             if (state.getConnector() == null) {
                 state.setConnector(new HttpUrlConnector());
             }
         } else {
-            state.replaceWith(config);
+            state.loadFrom(config);
         }
         return this;
     }
@@ -678,6 +686,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
      * on this pre initialized configuration otherwise configuration will change back to uninitialized.
      * <p/>
      * Note that this method must be called only when configuration is attached to the client.
+     *
      * @return Client configuration.
      */
     ClientConfig preInitialize() {

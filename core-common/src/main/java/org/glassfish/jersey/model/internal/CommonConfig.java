@@ -469,8 +469,17 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         }
     }
 
-    @Override
-    public CommonConfig replaceWith(Configuration config) {
+    /**
+     * Load the internal configuration state from an externally provided configuration state.
+     *
+     * Calling this method effectively replaces existing configuration state of the instance
+     * with the state represented by the externally provided configuration.
+     *
+     * @param config external configuration state to replace the configuration of this configurable
+     *               instance.
+     * @return the updated common configuration instance.
+     */
+    public CommonConfig loadFrom(Configuration config) {
         setProperties(config.getProperties());
 
         this.enabledFeatures.clear();

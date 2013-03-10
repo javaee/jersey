@@ -127,7 +127,7 @@ public class ImmutableCommonConfig extends CommonConfig {
     }
 
     @Override
-    public CommonConfig replaceWith(Configuration config) {
+    public CommonConfig loadFrom(Configuration config) {
         throw new IllegalStateException(errorMessage);
     }
 }

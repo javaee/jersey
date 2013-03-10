@@ -306,13 +306,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
     }
 
     @Override
-    public JerseyWebTarget replaceWith(Configuration configuration) {
-        checkNotClosed();
-        this.config.replaceWith(configuration);
-        return this;
-    }
-
-    @Override
     public JerseyWebTarget register(Class<?> providerClass) {
         checkNotClosed();
         config.register(providerClass);

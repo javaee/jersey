@@ -75,6 +75,10 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
          */
         private UriBuilder uriBuilder = new JerseyUriBuilder();
         /**
+         * Base URI for resolution of a link URI (if relative).
+         */
+        private URI baseUri = null;
+        /**
          * A map for all the link parameters such as "rel", "type", etc.
          */
         private Map<String, String> params = new HashMap<String, String>();
@@ -112,6 +116,18 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
         }
 
         @Override
+        public Link.Builder baseUri(URI uri) {
+            this.baseUri = uri;
+            return this;
+        }
+
+        @Override
+        public Link.Builder baseUri(String uri) {
+            this.baseUri = URI.create(uri);
+            return this;
+        }
+
+        @Override
         public Builder rel(String rel) {
             final String rels = params.get(REL);
             param(REL, rels == null ? rel : rels + " " + rel);
@@ -141,16 +157,15 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
 
         @Override
         public JerseyLink build(Object... values) {
-            return new JerseyLink(uriBuilder.build(values), Collections.unmodifiableMap(new HashMap<String, String>(params)));
+            final URI linkUri = uriBuilder.build(values);
+            if (baseUri != null) {
+                // TODO add resolving support of relative URIs.
+            }
+            return new JerseyLink(linkUri, Collections.unmodifiableMap(new HashMap<String, String>(params)));
         }
 
         @Override
         public Link buildRelativized(URI uri, Object... values) {
-            return null;  // TODO: implement method.
-        }
-
-        @Override
-        public Link buildResolved(URI uri, Object... values) {
             return null;  // TODO: implement method.
         }
     }
