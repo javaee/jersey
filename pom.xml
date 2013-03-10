@@ -1060,7 +1060,7 @@
         -->
         <jaxrs.api.version>2.0-rc2</jaxrs.api.version>
         <hk2.version>2.1.67</hk2.version>
-        <grizzly2.version>2.3-rc4</grizzly2.version>
+        <grizzly2.version>2.3-rc6</grizzly2.version>
         <jackson.version>1.9.11</jackson.version>
         <jersey1.version>1.17</jersey1.version>
         <servlet2.version>2.4</servlet2.version>
